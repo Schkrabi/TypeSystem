@@ -1,7 +1,7 @@
 package expression;
 
-public class Subtraction extends Application {
-	public Subtraction(Expression larg, Expression rarg) {
-		super(new Lambda(new Variable("_y"), new Application(new Lambda(new Variable("_x"), Sub.singleton), larg)), rarg);
+public class Subtraction extends Lambda {
+	public Subtraction() {
+		super(new Tuple(new Variable[]{new Variable("_x"), new Variable("_y")}), Sub.singleton);
 	}
 }

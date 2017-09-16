@@ -5,11 +5,16 @@ import interpretation.Environment;
 public class Application extends Expression {
 	
 	public final Expression fun;
-	public final Expression arg;
+	public final Tuple args;
 	
 	public Application(Expression fun, Expression arg) {
 		this.fun = fun;
-		this.arg = arg;
+		this.args = new Tuple(new Expression[]{arg});
+	}
+	
+	public Application(Expression fun, Tuple args){
+		this.fun = fun;
+		this.args = args;
 	}
 
 	@Override
@@ -20,13 +25,22 @@ public class Application extends Expression {
 			throw new Exception(fun + " is not a fucntion");
 		}
 		
+		Lambda lambda = (Lambda)ifun;
+		
+		if(lambda.args.values.length != this.args.values.length){
+			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected " + lambda.args.values.length + " got " + this.args.values.length);
+		}
+		
 		Environment childEnv = new Environment(env);
-		childEnv.put(((Lambda)ifun).arg, this.arg);
+		for(int i = 0; i < lambda.args.values.length; i++){
+			childEnv.put((Variable) lambda.args.values[i], this.args.values[i]);
+		}
+		
 		return ((Lambda)ifun).body.interpret(childEnv);
 	}
 
 	@Override
 	public String toString() {
-		return this.fun.toString() + " " + this.arg.toString();
+		return this.fun.toString() + " " + this.args.toString();
 	}
 }

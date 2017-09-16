@@ -4,11 +4,16 @@ import interpretation.Environment;
 
 public class Lambda extends Expression {
 	
-	public final Variable arg;
+	public final Tuple args;
 	public final Expression body;
 	
 	public Lambda(Variable arg, Expression body) {
-		this.arg = arg;
+		this.args = new Tuple(new Expression[]{arg});
+		this.body = body;
+	}
+	
+	public Lambda(Tuple args, Expression body){
+		this.args = args;
 		this.body = body;
 	}
 
@@ -19,6 +24,6 @@ public class Lambda extends Expression {
 
 	@Override
 	public String toString() {
-		return "lambda " + this.arg.toString() + " " + this.body.toString();
+		return "lambda " + this.args.toString() + " " + this.body.toString();
 	}
 }

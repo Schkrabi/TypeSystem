@@ -22,7 +22,7 @@ public class Sub extends Expression {
 	
 	@Override
 	public String toString() {
-		return "-";
+		return "- _x _y";
 	}
 
 }

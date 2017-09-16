@@ -22,7 +22,7 @@ public class Add extends Expression {
 	
 	@Override
 	public String toString() {
-		return "+";
+		return "+ _x _y";
 	}
 
 }
