@@ -1,5 +1,7 @@
 package expression;
 
+import types.Type;
+import types.TypeArrow;
 import interpretation.Environment;
 
 public class Lambda extends Expression {
@@ -25,5 +27,15 @@ public class Lambda extends Expression {
 	@Override
 	public String toString() {
 		return "lambda " + this.args.toString() + " " + this.body.toString();
+	}
+
+	@Override
+	public Type infer() throws Exception {
+		Type argsType = this.args.infer();
+		Type bodyType = this.body.infer();
+		
+		//TODO Add universal quantifier
+		
+		return new TypeArrow(argsType, bodyType);
 	}
 }

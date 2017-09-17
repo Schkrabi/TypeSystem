@@ -1,5 +1,8 @@
 package expression;
 
+import types.Type;
+import types.TypeVariable;
+import util.NameGenerator;
 import interpretation.Environment;
 
 public class Variable extends Expression implements Comparable<Variable> {
@@ -26,6 +29,11 @@ public class Variable extends Expression implements Comparable<Variable> {
 	@Override
 	public String toString() {
 		return this.name;
+	}
+
+	@Override
+	public Type infer() throws Exception {
+		return new TypeVariable(NameGenerator.next());
 	}
 
 }

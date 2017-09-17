@@ -1,5 +1,7 @@
 package expression;
 
+import types.Type;
+import types.TypeTuple;
 import interpretation.Environment;
 
 public class Tuple extends Expression {
@@ -29,5 +31,14 @@ public class Tuple extends Expression {
 		}
 		s.append("]");
 		return s.toString();
+	}
+
+	@Override
+	public Type infer() throws Exception {
+		Type types[] = new Type[this.values.length];
+		for(int i = 0; i < this.values.length; i++){
+			types[i] = this.values[i].infer();
+		}
+		return new TypeTuple(types);
 	}
 }

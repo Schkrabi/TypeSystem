@@ -1,5 +1,7 @@
 package expression;
 
+import types.Type;
+import types.TypeConcrete;
 import interpretation.Environment;
 
 public class LitBoolean extends Literal {
@@ -22,4 +24,9 @@ public class LitBoolean extends Literal {
 	
 	public static final LitBoolean TRUE = new LitBoolean(true);
 	public static final LitBoolean FALSE = new LitBoolean(false);
+
+	@Override
+	public Type infer() throws Exception {
+		return TypeConcrete.TypeBool;
+	}
 }

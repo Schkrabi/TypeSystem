@@ -1,5 +1,11 @@
 package expression;
 
+import types.Type;
+import types.TypeArrow;
+import types.TypeConcrete;
+import types.TypeTuple;
+import types.TypeVariable;
+import util.NameGenerator;
 import interpretation.Environment;
 
 public class IfExpression extends Expression {
@@ -28,5 +34,11 @@ public class IfExpression extends Expression {
 	@Override
 	public String toString() {
 		return "if " + this.condition.toString() + " then " + this.trueBranch.toString() + " else " + this.falseBranch.toString();
+	}
+
+	@Override
+	public Type infer() throws Exception {
+		TypeVariable tv = new TypeVariable(NameGenerator.next());
+		return new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeBool, tv, tv}), tv);
 	}
 }

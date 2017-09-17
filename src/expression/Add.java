@@ -1,5 +1,9 @@
 package expression;
 
+import types.Type;
+import types.TypeArrow;
+import types.TypeConcrete;
+import types.TypeTuple;
 import interpretation.Environment;
 
 public class Add extends Expression {
@@ -23,6 +27,11 @@ public class Add extends Expression {
 	@Override
 	public String toString() {
 		return "+ _x _y";
+	}
+
+	@Override
+	public Type infer() throws Exception {
+		return new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}), TypeConcrete.TypeInt);
 	}
 
 }

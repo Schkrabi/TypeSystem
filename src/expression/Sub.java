@@ -1,5 +1,6 @@
 package expression;
 
+import types.Type;
 import interpretation.Environment;
 
 public class Sub extends Expression {
@@ -25,4 +26,8 @@ public class Sub extends Expression {
 		return "- _x _y";
 	}
 
+	@Override
+	public Type infer() throws Exception {
+		throw new Exception("Trying to infer a function wrapper!");
+	}
 }

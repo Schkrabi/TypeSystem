@@ -1,5 +1,7 @@
 package expression;
 
+import types.Type;
+import types.TypeArrow;
 import interpretation.Environment;
 
 public class Application extends Expression {
@@ -42,5 +44,22 @@ public class Application extends Expression {
 	@Override
 	public String toString() {
 		return this.fun.toString() + " " + this.args.toString();
+	}
+
+	@Override
+	public Type infer() throws Exception {
+		Type funType = this.fun.infer();
+		Type argsType = this.args.infer();
+		
+		if(!(funType instanceof TypeArrow)){
+			throw new Exception(fun + " is not a fucntion");
+		}
+		TypeArrow funArrType = (TypeArrow)funType;
+		
+		if(!Type.unify(funArrType.ltype, argsType)){
+			throw new Exception("Arguments of " + this.fun + " does not unify with args " + this.args + " expected " + funArrType.ltype + " got " + argsType);
+		}
+		
+		return funArrType.rtype;
 	}
 }
