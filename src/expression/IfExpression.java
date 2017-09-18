@@ -4,8 +4,6 @@ import types.Type;
 import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeTuple;
-import types.TypeVariable;
-import util.NameGenerator;
 import interpretation.Environment;
 
 public class IfExpression extends Expression {
@@ -37,8 +35,19 @@ public class IfExpression extends Expression {
 	}
 
 	@Override
-	public Type infer() throws Exception {
-		TypeVariable tv = new TypeVariable(NameGenerator.next());
-		return new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeBool, tv, tv}), tv);
+	public Type infer() throws Exception {		
+		Type condType = this.condition.infer();
+		Type tBranchType = this.trueBranch.infer();
+		Type fBranchType = this.falseBranch.infer();
+		
+		if(!Type.unify(tBranchType, fBranchType)) {
+			throw new Exception("Types of if branches do to unify, got: " + tBranchType + " " + fBranchType);
+		}
+		
+		if(!Type.unify(TypeConcrete.TypeBool, condType)) {
+			throw new Exception("Condition of if do not unify with Bool got: " + condType);
+		}
+		
+		return new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeBool, tBranchType, tBranchType}), tBranchType);
 	}
 }
