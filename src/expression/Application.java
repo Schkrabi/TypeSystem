@@ -1,5 +1,6 @@
 package expression;
 
+import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import interpretation.Environment;
@@ -51,10 +52,20 @@ public class Application extends Expression {
 		Type funType = this.fun.infer();
 		Type argsType = this.args.infer();
 		
-		if(!(funType instanceof TypeArrow)){
+		if(!(funType.isApplicableType())){
 			throw new Exception(fun + " is not a fucntion");
 		}
-		TypeArrow funArrType = (TypeArrow)funType;
+		TypeArrow funArrType;
+		
+		if(funType instanceof TypeArrow){
+			funArrType = (TypeArrow)funType;
+		}
+		else if(funType instanceof ForallType){
+			funArrType = (TypeArrow)((ForallType)funType).getBoundType();
+		}
+		else {
+			throw new Exception("Instance of " + funType + " was evaluated as applicable");
+		}
 		
 		if(!Type.unify(funArrType.ltype, argsType)){
 			throw new Exception("Arguments of " + this.fun + " does not unify with args " + this.args + " expected " + funArrType.ltype + " got " + argsType);

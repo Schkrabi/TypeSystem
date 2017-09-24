@@ -1,5 +1,8 @@
 package types;
 
+import java.util.Set;
+import java.util.TreeSet;
+
 public class TypeTuple extends Type {
 	
 	public final Type[] values;
@@ -37,5 +40,19 @@ public class TypeTuple extends Type {
 			}
 		}
 		return true;
+	}
+
+	@Override
+	public Set<TypeVariable> getUnconstrainedVariables() {
+		Set<TypeVariable> s = new TreeSet<TypeVariable>();
+		if(this.getRep() != this){
+			s.addAll(this.getRep().getUnconstrainedVariables());
+			return s;
+		}
+		
+		for(int i = 0; i < this.values.length; i++){
+			s.addAll(this.values[i].getUnconstrainedVariables());
+		}
+		return s;
 	}
 }

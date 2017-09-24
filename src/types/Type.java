@@ -1,11 +1,19 @@
 package types;
 
+import java.util.Set;
+
 public abstract class Type {
 	
 	private Type rep;
 	
 	public Type(){
 		this.rep = this;
+	}
+	
+	public abstract Set<TypeVariable> getUnconstrainedVariables();
+	
+	public boolean isApplicableType(){
+		return false;
 	}
 
 	public static boolean unify(Type m, Type n){

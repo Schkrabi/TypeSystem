@@ -1,5 +1,8 @@
 package types;
 
+import java.util.Set;
+import java.util.TreeSet;
+
 public class TypeConcrete extends Type {
 	public final String name;
 	
@@ -22,5 +25,11 @@ public class TypeConcrete extends Type {
 	}
 
 	public static final TypeConcrete TypeBool = new TypeConcrete("Bool");
-	public static final TypeConcrete TypeInt = new TypeConcrete("Int");	
+	public static final TypeConcrete TypeInt = new TypeConcrete("Int");
+
+	@Override
+	public Set<TypeVariable> getUnconstrainedVariables() {
+		Set<TypeVariable> s = new TreeSet<TypeVariable>();
+		return s;
+	}	
 }

@@ -1,7 +1,9 @@
 package expression;
 
+import types.ForallType;
 import types.Type;
 import types.TypeArrow;
+import types.TypeVariable;
 import interpretation.Environment;
 
 public class Lambda extends Expression {
@@ -34,8 +36,12 @@ public class Lambda extends Expression {
 		Type argsType = this.args.infer();
 		Type bodyType = this.body.infer();
 		
-		//TODO Add universal quantifier
+		Type t = new TypeArrow(argsType, bodyType);
 		
-		return new TypeArrow(argsType, bodyType);
+		for(TypeVariable v : t.getUnconstrainedVariables()){
+			t = new ForallType(v, t);
+		}
+		
+		return t;
 	}
 }
