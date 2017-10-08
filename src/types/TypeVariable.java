@@ -3,7 +3,7 @@ package types;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class TypeVariable extends Type implements Comparable<TypeVariable>{
+public class TypeVariable extends Type{
 	public final String name;
 	
 	public TypeVariable(String name){
@@ -25,7 +25,11 @@ public class TypeVariable extends Type implements Comparable<TypeVariable>{
 	}
 
 	@Override
-	public int compareTo(TypeVariable arg) {
+	public int compareTo(Type o) {
+		if(!(o instanceof TypeVariable)){
+			return super.compareTo(o);
+		}
+		TypeVariable arg = (TypeVariable)o;
 		return this.name.compareTo(arg.name);
 	}
 

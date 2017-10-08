@@ -44,4 +44,16 @@ public class TypeArrow extends Type {
 	public boolean isApplicableType(){
 		return true;
 	}
+
+	@Override
+	public int compareTo(Type o) {
+		if(!(o instanceof TypeArrow)){
+			return super.compareTo(o);
+		}
+		TypeArrow other = (TypeArrow)o;
+		if(this.ltype != other.ltype){
+			return ltype.compareTo(other.ltype);
+		}
+		return this.rtype.compareTo(other.rtype);
+	}
 }

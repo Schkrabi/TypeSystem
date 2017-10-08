@@ -31,5 +31,14 @@ public class TypeConcrete extends Type {
 	public Set<TypeVariable> getUnconstrainedVariables() {
 		Set<TypeVariable> s = new TreeSet<TypeVariable>();
 		return s;
+	}
+
+	@Override
+	public int compareTo(Type o) {
+		if(!(o instanceof TypeConcrete)){
+			return super.compareTo(o);
+		}
+		TypeConcrete other = (TypeConcrete)o;
+		return this.name.compareTo(other.name);
 	}	
 }

@@ -8,7 +8,6 @@ public class IntBinary extends LitInteger {
 	public final int value;
 	
 	public IntBinary(int value) {
-		super(value);
 		this.value = value;
 	}
 

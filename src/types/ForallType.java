@@ -52,4 +52,16 @@ public class ForallType extends Type {
 		}
 		return t;
 	}
+
+	@Override
+	public int compareTo(Type o) {
+		if(!(o instanceof ForallType)){
+			return super.compareTo(o);
+		}
+		ForallType other = (ForallType)o;
+		if(this.bound != other.bound){
+			return this.bound.compareTo(other.bound);
+		}
+		return this.type.compareTo(other.type);
+	}
 }

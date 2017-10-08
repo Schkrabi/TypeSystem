@@ -7,6 +7,8 @@ public class TypeTuple extends Type {
 	
 	public final Type[] values;
 	
+	public static final TypeTuple EMPTY_TUPLE = new TypeTuple(new Type[]{});
+	
 	public TypeTuple(Type[] values){
 		this.values = values;
 	}
@@ -54,5 +56,23 @@ public class TypeTuple extends Type {
 			s.addAll(this.values[i].getUnconstrainedVariables());
 		}
 		return s;
+	}
+
+	@Override
+	public int compareTo(Type o) {
+		if(!(o instanceof TypeTuple)){
+			return super.compareTo(o);
+		}
+		TypeTuple other = (TypeTuple)o;
+		if(this.values.length != other.values.length){
+			return Integer.compare(this.values.length, other.values.length);
+		}
+		for(int i = 0; i < this.values.length; i++){
+			int cmp = this.values[i].compareTo(other.values[i]);
+			if(cmp != 0){
+				return cmp;
+			}
+		}
+		return 0;
 	}
 }

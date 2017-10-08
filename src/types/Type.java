@@ -1,10 +1,18 @@
 package types;
 
+import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
 
-public abstract class Type {
+public abstract class Type implements Comparable<Type> {
 	
 	private Type rep;
+	
+	private static List<Class<? extends Type>> ordering = Arrays.asList(TypeConcrete.class,
+																		TypeVariable.class,
+																		ForallType.class,
+																		TypeArrow.class,
+																		TypeTuple.class	);
 	
 	public Type(){
 		this.rep = this;
@@ -60,6 +68,10 @@ public abstract class Type {
 			return this.rep;
 		}
 		return this.rep.getRep();
+	}
+	
+	public int compareTo(Type other){
+		return (int) Math.signum(ordering.indexOf(this.getClass()) - ordering.indexOf(other.getClass()));
 	}
 	
 	private static void union(Type t1, Type t2){
