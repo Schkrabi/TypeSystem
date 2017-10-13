@@ -6,19 +6,18 @@ import types.TypeArrow;
 import types.TypeVariable;
 import interpretation.Environment;
 
-public class Lambda extends Expression {
-	
-	public final Tuple args;
-	public final Expression body;
+public class Lambda extends ExtendedLambda {
 	
 	public Lambda(Variable arg, Expression body) {
-		this.args = new Tuple(new Expression[]{arg});
-		this.body = body;
+		super(new Tuple(new Expression[]{arg}), body);
 	}
 	
 	public Lambda(Tuple args, Expression body){
-		this.args = args;
-		this.body = body;
+		super(args, body);
+	}
+	
+	public Expression getBody(){
+		return this.getDefaultUmplementation();
 	}
 
 	@Override
@@ -28,13 +27,13 @@ public class Lambda extends Expression {
 
 	@Override
 	public String toString() {
-		return "lambda " + this.args.toString() + " " + this.body.toString();
+		return "lambda " + this.args.toString() + " " + this.getBody().toString();
 	}
 
 	@Override
 	public Type infer() throws Exception {
 		Type argsType = this.args.infer();
-		Type bodyType = this.body.infer();
+		Type bodyType = this.getBody().infer();
 		
 		Type t = new TypeArrow(argsType, bodyType);
 		

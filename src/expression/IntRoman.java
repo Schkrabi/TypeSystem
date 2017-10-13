@@ -1,5 +1,7 @@
 package expression;
 
+import types.Type;
+import types.TypeConcrete;
 import interpretation.Environment;
 
 public class IntRoman extends LitInteger {
@@ -74,4 +76,9 @@ public class IntRoman extends LitInteger {
             return 1000;
         return -1;
     }
+    
+    @Override
+	public Type infer() throws Exception {
+		return TypeConcrete.TypeIntRoman;
+	}
 }

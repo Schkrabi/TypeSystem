@@ -23,19 +23,19 @@ public class Subtraction extends Lambda {
 
 		@Override
 		public Expression interpret(Environment env) throws Exception {
-			LitInteger x = (LitInteger) env.getVariableValue(new Variable("_x"));
-			LitInteger y = (LitInteger) env.getVariableValue(new Variable("_y"));
+			IntBinary x = (IntBinary) env.getVariableValue(new Variable("_x"));
+			IntBinary y = (IntBinary) env.getVariableValue(new Variable("_y"));
 			
 			if(x == null || y == null) {
 				return this;
 			}
 			
-			return new LitInteger(x.value - y.value);
+			return new IntBinary(x.value - y.value); //TODO HOTFIX
 		}
 
 		@Override
 		public Type infer() throws Exception {
-			return TypeConcrete.TypeInt;
+			return TypeConcrete.TypeIntBinary;
 		}
 		
 	}

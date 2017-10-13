@@ -5,27 +5,46 @@ import java.util.TreeSet;
 
 public class TypeConcrete extends Type {
 	public final String name;
+	public final String implementation;
 	
 	private TypeConcrete(String name){
 		this.name = name;
+		this.implementation = "";
+	}
+	
+	private TypeConcrete(String name, String implementation){
+		this.name = name;
+		this.implementation = implementation;
 	}
 	
 	@Override
 	public String toString(){
-		return this.name;
+		if(this.implementation == ""){
+			return this.name;
+		}
+		else {
+			return this.name + ":" + this.implementation;
+		}
 	}
 	
 	@Override
-	public boolean equals(Object o){
+	public boolean equals(Object o){ 
 		if(!(o instanceof TypeConcrete)){
 			return false;
 		}
 		TypeConcrete other = (TypeConcrete)o;
+		return this.name.equals(other.name) && this.implementation.equals(other.implementation);
+	}
+	
+	public boolean isSameBasicType(TypeConcrete other){
 		return this.name.equals(other.name);
 	}
 
 	public static final TypeConcrete TypeBool = new TypeConcrete("Bool");
-	public static final TypeConcrete TypeInt = new TypeConcrete("Int");
+	//public static final TypeConcrete TypeInt = new TypeConcrete("Int");
+	public static final TypeConcrete TypeIntBinary = new TypeConcrete("Int", "Binary");
+	public static final TypeConcrete TypeIntString = new TypeConcrete("Int", "String");
+	public static final TypeConcrete TypeIntRoman = new TypeConcrete("Int", "Roman");
 
 	@Override
 	public Set<TypeVariable> getUnconstrainedVariables() {

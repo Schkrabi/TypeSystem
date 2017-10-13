@@ -1,5 +1,7 @@
 package expression;
 
+import types.Type;
+import types.TypeConcrete;
 import interpretation.Environment;
 
 public class IntString extends LitInteger {
@@ -21,5 +23,10 @@ public class IntString extends LitInteger {
 	@Override
 	public String toString(){
 		return this.value;
+	}
+	
+	@Override
+	public Type infer() throws Exception {
+		return TypeConcrete.TypeIntString;
 	}
 }

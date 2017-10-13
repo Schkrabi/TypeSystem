@@ -6,6 +6,7 @@ import types.TypeConcrete;
 import types.TypeTuple;
 import interpretation.Environment;
 
+/** @deprecated */
 public class Add extends Expression {
 	
 	private Add() {}
@@ -14,14 +15,14 @@ public class Add extends Expression {
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		LitInteger x = (LitInteger) env.getVariableValue(new Variable("_x"));
-		LitInteger y = (LitInteger) env.getVariableValue(new Variable("_y"));
+		IntBinary x = (IntBinary) env.getVariableValue(new Variable("_x"));
+		IntBinary y = (IntBinary) env.getVariableValue(new Variable("_y"));
 		
 		if(x == null || y == null) {
 			return this;
 		}
 		
-		return new LitInteger(x.value + y.value);
+		return new IntBinary(x.value + y.value);
 	}
 	
 	@Override
@@ -31,7 +32,7 @@ public class Add extends Expression {
 
 	@Override
 	public Type infer() throws Exception {
-		return new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}), TypeConcrete.TypeInt);
+		return new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeIntBinary, TypeConcrete.TypeIntBinary}), TypeConcrete.TypeIntBinary);
 	}
 
 }

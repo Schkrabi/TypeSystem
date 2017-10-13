@@ -23,6 +23,6 @@ public class IntBinary extends LitInteger {
 
 	@Override
 	public Type infer() throws Exception {
-		return TypeConcrete.TypeInt;
+		return TypeConcrete.TypeIntBinary;
 	}
 }

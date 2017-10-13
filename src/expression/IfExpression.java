@@ -1,9 +1,7 @@
 package expression;
 
 import types.Type;
-import types.TypeArrow;
 import types.TypeConcrete;
-import types.TypeTuple;
 import interpretation.Environment;
 
 public class IfExpression extends Expression {
@@ -48,6 +46,6 @@ public class IfExpression extends Expression {
 			throw new Exception("Condition of if do not unify with Bool got: " + condType);
 		}
 		
-		return new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeBool, tBranchType, tBranchType}), tBranchType);
+		return tBranchType;
 	}
 }

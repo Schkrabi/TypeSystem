@@ -28,8 +28,12 @@ public abstract class Type implements Comparable<Type> {
 		Type s = m.getRep();
 		Type t = n.getRep();
 		
-		if(s == t){ //Also covers if the nodes represents same basic type
+		if(s == t){ 
 			return true;
+		}
+		else if(	s instanceof TypeConcrete
+				&& 	t instanceof TypeConcrete){
+			return ((TypeConcrete)s).isSameBasicType((TypeConcrete)t);
 		}
 		else if(	s instanceof TypeArrow
 				&&	t instanceof TypeArrow){
