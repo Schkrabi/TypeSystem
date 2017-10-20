@@ -46,6 +46,8 @@ public class IfExpression extends Expression {
 			throw new Exception("Condition of if do not unify with Bool got: " + condType);
 		}
 		
+		this.setType(tBranchType);
+		
 		return tBranchType;
 	}
 }

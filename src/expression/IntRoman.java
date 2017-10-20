@@ -79,6 +79,7 @@ public class IntRoman extends LitInteger {
     
     @Override
 	public Type infer() throws Exception {
+    	this.setType(TypeConcrete.TypeIntRoman);
 		return TypeConcrete.TypeIntRoman;
 	}
 }

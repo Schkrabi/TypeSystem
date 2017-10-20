@@ -1,6 +1,5 @@
 package main;
 
-import expression.Add;
 import expression.Addition;
 import expression.Application;
 import expression.Expression;

@@ -1,5 +1,7 @@
 package expression;
 
+import types.Type;
+import types.TypeConcrete;
 import interpretation.Environment;
 
 public abstract class LitInteger extends Literal {
@@ -11,5 +13,10 @@ public abstract class LitInteger extends Literal {
 	
 	public static LitInteger initializeDefaultImplementation(int value){
 		return new IntBinary(value);
+	}
+	
+	@Override
+	public Type getDefaultImplementationType() {
+		return TypeConcrete.TypeIntBinary;
 	}
 }

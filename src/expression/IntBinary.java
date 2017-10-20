@@ -25,4 +25,14 @@ public class IntBinary extends LitInteger {
 	public Type infer() throws Exception {
 		return TypeConcrete.TypeIntBinary;
 	}
+
+	@Override
+	public Literal fromDefaultImplementation(Literal l) {
+		return l; //TODO ??
+	}
+
+	@Override
+	public Literal toDefaultImplementaion() {
+		return this;
+	}
 }

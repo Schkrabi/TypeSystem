@@ -41,6 +41,8 @@ public class Lambda extends ExtendedLambda {
 			t = new ForallType(v, t);
 		}
 		
+		this.setType(t);
+		
 		return t;
 	}
 }

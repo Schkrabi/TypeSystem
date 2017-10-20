@@ -3,6 +3,7 @@ package expression;
 import types.ForallType;
 import types.Type;
 import types.TypeArrow;
+import types.TypeTuple;
 import interpretation.Environment;
 
 public class Application extends Expression {
@@ -28,23 +29,31 @@ public class Application extends Expression {
 			throw new Exception(fun + " is not a fucntion");
 		}
 		
-		//Std lambda
-		if(ifun instanceof Lambda){
-			Lambda lambda = (Lambda)ifun;
-			
-			if(lambda.args.values.length != this.args.values.length){
-				throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected " + lambda.args.values.length + " got " + this.args.values.length);
-			}
-			
-			Environment childEnv = new Environment(env);
-			for(int i = 0; i < lambda.args.values.length; i++){
-				childEnv.put((Variable) lambda.args.values[i], this.args.values[i]);
-			}
-			
-			return ((Lambda)ifun).getBody().interpret(childEnv);
+		ExtendedLambda elambda = (ExtendedLambda)ifun;
+		
+		if(elambda.args.values.length != this.args.values.length){
+			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected " + elambda.args.values.length + " got " + this.args.values.length);
 		}
-		//Extended lambda
-		throw new Exception("Not Implemented");
+		
+		Environment childEnv = new Environment(env);
+		for(int i = 0; i < elambda.args.values.length; i++){
+			childEnv.put((Variable) elambda.args.values[i], this.args.values[i]);
+		}
+		
+		//Std lambda
+		if(elambda instanceof Lambda){	
+			//TODO type conversion for default types?
+			return ((Lambda)elambda).getBody().interpret(childEnv);
+		}
+		
+		Expression impl = elambda.getImplementation((TypeTuple)args.getType().getRep()); 
+		//Optimized implementation not found
+		if(impl == null){
+			//TODO type conversion for default types?
+			return elambda.getDefaultUmplementation().interpret(childEnv);
+		}
+		
+		return impl.interpret(childEnv);
 	}
 
 	@Override
@@ -75,6 +84,8 @@ public class Application extends Expression {
 		if(!Type.unify(funArrType.ltype, argsType)){
 			throw new Exception("Arguments of " + this.fun + " does not unify with args " + this.args + " expected " + funArrType.ltype + " got " + argsType);
 		}
+		
+		this.setType(funArrType.rtype);
 		
 		return funArrType.rtype;
 	}

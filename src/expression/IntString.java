@@ -27,6 +27,7 @@ public class IntString extends LitInteger {
 	
 	@Override
 	public Type infer() throws Exception {
+		this.setType(TypeConcrete.TypeIntString);
 		return TypeConcrete.TypeIntString;
 	}
 }

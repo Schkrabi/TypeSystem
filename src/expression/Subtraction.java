@@ -2,7 +2,9 @@ package expression;
 
 import interpretation.Environment;
 import types.Type;
+import types.TypeArrow;
 import types.TypeConcrete;
+import types.TypeTuple;
 
 public class Subtraction extends Lambda {
 	
@@ -35,6 +37,7 @@ public class Subtraction extends Lambda {
 
 		@Override
 		public Type infer() throws Exception {
+			this.setType(TypeConcrete.TypeIntBinary);
 			return TypeConcrete.TypeIntBinary;
 		}
 		

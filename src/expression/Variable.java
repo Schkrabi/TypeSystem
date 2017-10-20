@@ -33,7 +33,9 @@ public class Variable extends Expression implements Comparable<Variable> {
 
 	@Override
 	public Type infer() throws Exception {
-		return new TypeVariable(NameGenerator.next());
+		Type t = new TypeVariable(NameGenerator.next());
+		this.setType(t);
+		return t;
 	}
 
 }

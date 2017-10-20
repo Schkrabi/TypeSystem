@@ -1,7 +1,9 @@
 package expression;
 
 import types.Type;
+import types.TypeArrow;
 import types.TypeConcrete;
+import types.TypeTuple;
 import interpretation.Environment;
 
 public class Addition extends Lambda {
@@ -36,6 +38,7 @@ public class Addition extends Lambda {
 
 		@Override
 		public Type infer() throws Exception {
+			this.setType(TypeConcrete.TypeIntBinary);
 			return TypeConcrete.TypeIntBinary;
 		}
 	}

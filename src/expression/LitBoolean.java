@@ -27,6 +27,22 @@ public class LitBoolean extends Literal {
 
 	@Override
 	public Type infer() throws Exception {
+		this.setType(TypeConcrete.TypeBool);
 		return TypeConcrete.TypeBool;
+	}
+
+	@Override
+	public Type getDefaultImplementationType() {
+		return TypeConcrete.TypeBool;
+	}
+
+	@Override
+	public Literal fromDefaultImplementation(Literal l) {
+		return l; //TODO ??
+	}
+
+	@Override
+	public Literal toDefaultImplementaion() {
+		return this;
 	}
 }

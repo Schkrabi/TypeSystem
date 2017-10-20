@@ -39,6 +39,9 @@ public class Tuple extends Expression {
 		for(int i = 0; i < this.values.length; i++){
 			types[i] = this.values[i].infer();
 		}
-		return new TypeTuple(types);
+		
+		Type t = new TypeTuple(types);
+		this.setType(t);
+		return t;
 	}
 }

@@ -72,6 +72,8 @@ public class ExtendedLambda extends Expression {
 			t = new ForallType(v, t);
 		}
 		
+		this.setType(t);
+		
 		return t;
 	}
 
