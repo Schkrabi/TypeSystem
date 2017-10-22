@@ -30,4 +30,15 @@ public class IntString extends LitInteger {
 		this.setType(TypeConcrete.TypeIntString);
 		return TypeConcrete.TypeIntString;
 	}
+
+	@Override
+	public Literal fromDefaultImplementation(Literal l) {
+		IntBinary def = (IntBinary)l;
+		return new IntString(Integer.toString(def.value));
+	}
+
+	@Override
+	public Literal toDefaultImplementaion() {
+		return new IntBinary(Integer.parseInt(this.value));
+	}
 }

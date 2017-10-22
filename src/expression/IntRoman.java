@@ -25,8 +25,7 @@ public class IntRoman extends LitInteger {
 		return this.value;
 	}
 	
-	public static int roman2int(IntRoman value){
-		String str = value.value;
+	public static int roman2int(String str){
         int res = 0;
  
         for (int i=0; i<str.length(); i++)
@@ -57,6 +56,28 @@ public class IntRoman extends LitInteger {
         return res;
 	}
 	
+	private static final String[] hundreds = {"", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"};
+	private static final String[] tens = {"", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"};
+	private static final String[] ones = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"};
+	
+	public static String int2roman(int val){
+		int tmpVal = val;
+		StringBuilder s = new StringBuilder();
+		
+		while(tmpVal > 1000){
+			s.append("M");
+			tmpVal -= 1000;
+		}
+		
+		s.append(hundreds[tmpVal/100]);
+		tmpVal = tmpVal % 100;
+		s.append(tens[tmpVal/10]);
+		tmpVal = tmpVal % 10;
+		s.append(ones[tmpVal]);
+		
+		return s.toString();
+	}
+	
 	/** This function returns value of a Roman symbol */
     private static int value(char r)
     {
@@ -81,5 +102,16 @@ public class IntRoman extends LitInteger {
 	public Type infer() throws Exception {
     	this.setType(TypeConcrete.TypeIntRoman);
 		return TypeConcrete.TypeIntRoman;
+	}
+
+	@Override
+	public Literal fromDefaultImplementation(Literal l) {
+		IntBinary def = (IntBinary)l;
+		return new IntRoman(IntRoman.int2roman(def.value));
+	}
+
+	@Override
+	public Literal toDefaultImplementaion() {
+		return new IntBinary(IntRoman.roman2int(this.value));
 	}
 }

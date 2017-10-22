@@ -1,5 +1,7 @@
 package expression;
 
+import java.util.Map;
+
 import types.ForallType;
 import types.Type;
 import types.TypeArrow;
@@ -42,18 +44,28 @@ public class Application extends Expression {
 		
 		//Std lambda
 		if(elambda instanceof Lambda){	
-			//TODO type conversion for default types?
+			childEnv = Application.autoConvertForDefaultImplementation(childEnv);
 			return ((Lambda)elambda).getBody().interpret(childEnv);
 		}
 		
 		Expression impl = elambda.getImplementation((TypeTuple)args.getType().getRep()); 
 		//Optimized implementation not found
 		if(impl == null){
-			//TODO type conversion for default types?
+			childEnv = Application.autoConvertForDefaultImplementation(childEnv);
 			return elambda.getDefaultUmplementation().interpret(childEnv);
 		}
 		
 		return impl.interpret(childEnv);
+	}
+	
+	private static Environment autoConvertForDefaultImplementation(Environment e){
+		Environment ret = new Environment(e.parent);
+		
+		for(Map.Entry<Variable, Expression> entry : e.entrySet()){
+			ret.put(entry.getKey(), Literal.defaultImplementationLazy(entry.getValue()));
+		}
+		
+		return ret;
 	}
 
 	@Override
