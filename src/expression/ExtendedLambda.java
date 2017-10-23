@@ -34,6 +34,9 @@ public class ExtendedLambda extends Expression {
 	}
 	
 	public Expression getImplementation(TypeTuple prefferedType){
+		if(!this.implementations.containsKey(prefferedType)) {
+			return null;
+		}
 		return this.implementations.get(prefferedType);
 	}
 
@@ -50,6 +53,10 @@ public class ExtendedLambda extends Expression {
 		for(Map.Entry<TypeTuple, Expression> e : this.implementations.entrySet()){
 			TypeTuple targs = e.getKey();
 			Type timpl = e.getValue().infer();
+			
+			if(targs == TypeTuple.EMPTY_TUPLE) {
+				continue;
+			}
 			
 			if(!Type.unify(targs, argsType)){
 				throw new Exception(	"Bad extended lambda specialized arguments of type " 

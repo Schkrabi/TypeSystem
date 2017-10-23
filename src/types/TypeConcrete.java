@@ -58,6 +58,11 @@ public class TypeConcrete extends Type {
 			return super.compareTo(o);
 		}
 		TypeConcrete other = (TypeConcrete)o;
-		return this.name.compareTo(other.name);
+		int cmp = this.name.compareTo(other.name);
+		if(cmp != 0) {
+			return cmp;
+		}
+		
+		return this.implementation.compareTo(other.implementation);
 	}	
 }

@@ -13,6 +13,7 @@ import expression.ExtendedLambda;
 import expression.IfExpression;
 import expression.IntBinary;
 import expression.IntRoman;
+import expression.IntString;
 import expression.Lambda;
 import expression.LitBoolean;
 import expression.LitInteger;
@@ -33,7 +34,7 @@ public class Main {
 			@Override
 			public Expression interpret(Environment env) throws Exception {
 				Expression e = env.get(new Variable("x")).interpret(env);
-				System.out.println(e.toString());
+				System.out.println("Roman Implementation");
 				return e;
 			}
 
@@ -48,9 +49,9 @@ public class Main {
 
 			@Override
 			public Expression interpret(Environment env) throws Exception {
-				Expression e = env.get(new Variable("x")).interpret(env);
-				System.out.println(e.toString());
-				return e;
+				IntBinary e = (IntBinary)env.get(new Variable("x")).interpret(env);
+				System.out.println("Binary Implementation");
+				return new IntBinary(e.value + 5);
 			}
 
 			@Override
@@ -65,8 +66,9 @@ public class Main {
 		
 		ExtendedLambda elambda = new ExtendedLambda(new Tuple(new Variable[]{new Variable("x")}), binId, impls);
 		
-		Expression expr = new Application(elambda, new Tuple(new Expression[]{LitInteger.initializeDefaultImplementation(1024)}));
+		//Expression expr = new Application(elambda, new Tuple(new Expression[]{LitInteger.initializeDefaultImplementation(1024)}));
 		//Expression expr = new Application(elambda, new Tuple(new Expression[]{new IntRoman("MCM")}));
+		Expression expr = new Application(elambda, new Tuple(new Expression[] {new IntString("2048")}));
 		
 		System.out.println(expr);
 		try {
