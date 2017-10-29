@@ -105,13 +105,27 @@ public class IntRoman extends LitInteger {
 	}
 
 	@Override
-	public Literal fromDefaultImplementation(Literal l) {
+	public Literal fromDefaultRepresentation(Literal l) {
 		IntBinary def = (IntBinary)l;
 		return new IntRoman(IntRoman.int2roman(def.value));
 	}
 
 	@Override
-	public Literal toDefaultImplementaion() {
+	public Literal toDefaultRepresentation() {
 		return new IntBinary(IntRoman.roman2int(this.value));
+	}
+
+	@Override
+	public Literal convertRepresentation(Class<? extends Literal> c) throws Exception {
+		if(c == IntRoman.class){
+			return this;
+		}
+		if(c == IntBinary.class){
+			return this.toDefaultRepresentation();
+		}
+		if(c == IntString.class){
+			return new IntString(Integer.toString(IntRoman.roman2int(this.value)));
+		}
+		return super.convertRepresentation(c);
 	}
 }

@@ -32,17 +32,23 @@ public class LitBoolean extends Literal {
 	}
 
 	@Override
-	public Type getDefaultImplementationType() {
+	public Type getDefaultRepresentationType() {
 		return TypeConcrete.TypeBool;
 	}
 
 	@Override
-	public Literal fromDefaultImplementation(Literal l) {
+	public Literal fromDefaultRepresentation(Literal l) {
 		return l; //TODO ??
 	}
 
 	@Override
-	public Literal toDefaultImplementaion() {
+	public Literal toDefaultRepresentation() {
+		return this;
+	}
+
+	@Override
+	public Literal convertRepresentation(Class<? extends Literal> c) {
+		//No non-default representations for Bool
 		return this;
 	}
 }

@@ -2,9 +2,7 @@ package expression;
 
 import interpretation.Environment;
 import types.Type;
-import types.TypeArrow;
 import types.TypeConcrete;
-import types.TypeTuple;
 
 public class Subtraction extends Lambda {
 	

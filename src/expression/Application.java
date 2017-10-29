@@ -8,17 +8,29 @@ import types.TypeArrow;
 import types.TypeTuple;
 import interpretation.Environment;
 
+/**
+ * Expression for function application
+ * 
+ * @author schkrabi
+ * 
+ */
 public class Application extends Expression {
-	
+
+	/**
+	 * Expression that should yield function
+	 */
 	public final Expression fun;
+	/**
+	 * Arguments with which the function will be applicated
+	 */
 	public final Tuple args;
-	
+
 	public Application(Expression fun, Expression arg) {
 		this.fun = fun;
-		this.args = new Tuple(new Expression[]{arg});
+		this.args = new Tuple(new Expression[] { arg });
 	}
-	
-	public Application(Expression fun, Tuple args){
+
+	public Application(Expression fun, Tuple args) {
 		this.fun = fun;
 		this.args = args;
 	}
@@ -26,45 +38,61 @@ public class Application extends Expression {
 	@Override
 	public Expression interpret(Environment env) throws Exception {
 		Expression ifun = fun.interpret(env);
-		
-		if(!(ifun instanceof ExtendedLambda)) {
+
+		if (!(ifun instanceof ExtendedLambda)) {
 			throw new Exception(fun + " is not a fucntion");
 		}
-		
-		ExtendedLambda elambda = (ExtendedLambda)ifun;
-		
-		if(elambda.args.values.length != this.args.values.length){
-			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected " + elambda.args.values.length + " got " + this.args.values.length);
+
+		ExtendedLambda elambda = (ExtendedLambda) ifun;
+
+		if (elambda.args.values.length != this.args.values.length) {
+			throw new Exception("In aplication of " + fun
+					+ "number of arguments mismatch, expected "
+					+ elambda.args.values.length + " got "
+					+ this.args.values.length);
 		}
-		
+
 		Environment childEnv = new Environment(env);
-		for(int i = 0; i < elambda.args.values.length; i++){
+		for (int i = 0; i < elambda.args.values.length; i++) {
 			childEnv.put((Variable) elambda.args.values[i], this.args.values[i]);
 		}
-		
-		//Std lambda
-		if(elambda instanceof Lambda){	
-			childEnv = Application.autoConvertForDefaultImplementation(childEnv);
-			return ((Lambda)elambda).getBody().interpret(childEnv);
+
+		// Std lambda
+		if (elambda instanceof Lambda) {
+			childEnv = Application
+					.autoConvertForDefaultRepresentation(childEnv);
+			return ((Lambda) elambda).getBody().interpret(childEnv);
 		}
-		
-		Expression impl = elambda.getImplementation((TypeTuple)args.getType().getRep()); 
-		//Optimized implementation not found
-		if(impl == null){
-			childEnv = Application.autoConvertForDefaultImplementation(childEnv);
-			return elambda.getDefaultUmplementation().interpret(childEnv);
+
+		Expression impl = elambda.getImplementation((TypeTuple) args.getType()
+				.getRep());
+		// Optimized implementation not found
+		if (impl == null) {
+			childEnv = Application
+					.autoConvertForDefaultRepresentation(childEnv);
+			return elambda.defaultImplementation.interpret(childEnv);
 		}
-		
+
 		return impl.interpret(childEnv);
 	}
-	
-	private static Environment autoConvertForDefaultImplementation(Environment e){
+
+	/**
+	 * Lazily converts all the arguments to their default representation
+	 * 
+	 * @param e
+	 *            environment containing the arguments asociated with their
+	 *            names
+	 * @return new environment where all the arguments will be in their default
+	 *         representation when interpreted
+	 */
+	private static Environment autoConvertForDefaultRepresentation(Environment e) {
 		Environment ret = new Environment(e.parent);
-		
-		for(Map.Entry<Variable, Expression> entry : e.entrySet()){
-			ret.put(entry.getKey(), Literal.defaultImplementationLazy(entry.getValue()));
+
+		for (Map.Entry<Variable, Expression> entry : e.entrySet()) {
+			ret.put(entry.getKey(),
+					Literal.defaultRepresentationLazy(entry.getValue()));
 		}
-		
+
 		return ret;
 	}
 
@@ -77,28 +105,29 @@ public class Application extends Expression {
 	public Type infer() throws Exception {
 		Type funType = this.fun.infer();
 		Type argsType = this.args.infer();
-		
-		if(!(funType.isApplicableType())){
-			throw new Exception(fun + " is not a fucntion");
+
+		if (!(funType.isApplicableType())) {
+			throw new Exception(fun + " is not a function");
 		}
 		TypeArrow funArrType;
-		
-		if(funType instanceof TypeArrow){
-			funArrType = (TypeArrow)funType;
+
+		if (funType instanceof TypeArrow) {
+			funArrType = (TypeArrow) funType;
+		} else if (funType instanceof ForallType) {
+			funArrType = (TypeArrow) ((ForallType) funType).getBoundType();
+		} else {
+			throw new Exception("Instance of " + funType
+					+ " was evaluated as applicable");
 		}
-		else if(funType instanceof ForallType){
-			funArrType = (TypeArrow)((ForallType)funType).getBoundType();
+
+		if (!Type.unify(funArrType.ltype, argsType)) {
+			throw new Exception("Arguments of " + this.fun
+					+ " does not unify with args " + this.args + " expected "
+					+ funArrType.ltype + " got " + argsType);
 		}
-		else {
-			throw new Exception("Instance of " + funType + " was evaluated as applicable");
-		}
-		
-		if(!Type.unify(funArrType.ltype, argsType)){
-			throw new Exception("Arguments of " + this.fun + " does not unify with args " + this.args + " expected " + funArrType.ltype + " got " + argsType);
-		}
-		
+
 		this.setType(funArrType.rtype);
-		
+
 		return funArrType.rtype;
 	}
 }

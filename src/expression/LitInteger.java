@@ -16,7 +16,7 @@ public abstract class LitInteger extends Literal {
 	}
 	
 	@Override
-	public Type getDefaultImplementationType() {
+	public Type getDefaultRepresentationType() {
 		return TypeConcrete.TypeIntBinary;
 	}
 }

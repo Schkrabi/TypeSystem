@@ -17,7 +17,7 @@ public class Lambda extends ExtendedLambda {
 	}
 	
 	public Expression getBody(){
-		return this.getDefaultUmplementation();
+		return this.defaultImplementation;
 	}
 
 	@Override

@@ -22,8 +22,17 @@ import expression.Tuple;
 import expression.Variable;
 import interpretation.Environment;
 
+/**
+ * Main entry point for testing
+ * @author Mgr. Radomir Skrabal
+ *
+ */
 public class Main {
 
+	/**
+	 * Main entrypoint for testing
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		//Expression expr = new Application(Addition.singleton, new Tuple(new Expression[]{LitInteger.initializeDefaultImplementation(4), LitInteger.initializeDefaultImplementation(5)}));
 		//Expression expr = new Application(Subtraction.singleton, new Tuple(new Expression[]{LitInteger.initializeDefaultImplementation(4), LitInteger.initializeDefaultImplementation(5)}));

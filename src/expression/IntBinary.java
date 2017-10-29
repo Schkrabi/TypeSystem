@@ -27,12 +27,27 @@ public class IntBinary extends LitInteger {
 	}
 
 	@Override
-	public Literal fromDefaultImplementation(Literal l) {
+	public Literal fromDefaultRepresentation(Literal l) {
 		return l; //TODO ??
 	}
 
 	@Override
-	public Literal toDefaultImplementaion() {
+	public Literal toDefaultRepresentation() {
 		return this;
+	}
+	
+
+	@Override
+	public Literal convertRepresentation(Class<? extends Literal> c) throws Exception {
+		if(c == IntBinary.class){
+			return this;
+		}
+		if(c == IntRoman.class){
+			return new IntRoman(IntRoman.int2roman(this.value));
+		}
+		if(c == IntString.class){
+			return new IntString(Integer.toString(this.value));
+		}
+		return super.convertRepresentation(c);
 	}
 }
