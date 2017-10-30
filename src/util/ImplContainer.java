@@ -3,11 +3,24 @@ package util;
 import expression.Expression;
 import types.TypeTuple;
 
-public class ImplContainer  implements Comparable<ImplContainer>{
+/**
+ * Untility container class for type representation tuples asociated with lambda
+ * body implementations
+ * 
+ * @author Mgr. Radomir Skrabal
+ *
+ */
+public class ImplContainer implements Comparable<ImplContainer> {
+	/**
+	 * Type representation tuple
+	 */
 	public final TypeTuple typeSpec;
+	/**
+	 * Expression - body of the lambda
+	 */
 	public final Expression implementation;
-	
-	public ImplContainer(TypeTuple typeSpec, Expression implementation){
+
+	public ImplContainer(TypeTuple typeSpec, Expression implementation) {
 		this.typeSpec = typeSpec;
 		this.implementation = implementation;
 	}
@@ -16,16 +29,18 @@ public class ImplContainer  implements Comparable<ImplContainer>{
 	public int compareTo(ImplContainer o) {
 		return this.typeSpec.compareTo(o.typeSpec);
 	}
-	
-	public boolean equals(Object o){
-		if(!(o instanceof ImplContainer)){
+
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof ImplContainer)) {
 			return false;
 		}
-		ImplContainer other = (ImplContainer)o;
+		ImplContainer other = (ImplContainer) o;
 		return typeSpec.equals(other.typeSpec);
 	}
-	
-	public String toString(){
+
+	@Override
+	public String toString() {
 		return "I: " + this.typeSpec.toString() + " :: " + this.implementation.toString();
 	}
 

@@ -5,10 +5,19 @@ import types.TypeVariable;
 import util.NameGenerator;
 import interpretation.Environment;
 
+/**
+ * Variable expression
+ * 
+ * @author Mgr. Radomir Skrabal
+ *
+ */
 public class Variable extends Expression implements Comparable<Variable> {
-	
+
+	/**
+	 * Name of the variable
+	 */
 	public final String name;
-	
+
 	public Variable(String name) {
 		this.name = name;
 	}
@@ -20,12 +29,12 @@ public class Variable extends Expression implements Comparable<Variable> {
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		if(!env.containsVariable(this)) {
+		if (!env.containsVariable(this)) {
 			throw new Exception("Unbound variable");
 		}
-		return env.getVariableValue(this); //Lazy?
+		return env.getVariableValue(this); // Lazy?
 	}
-	
+
 	@Override
 	public String toString() {
 		return this.name;

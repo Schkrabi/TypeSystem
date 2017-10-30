@@ -4,10 +4,19 @@ import types.Type;
 import types.TypeConcrete;
 import interpretation.Environment;
 
+/**
+ * Boolean literal implementation
+ * 
+ * @author Mgr. Radomir Skrabal
+ *
+ */
 public class LitBoolean extends Literal {
-	
+
+	/**
+	 * Literal value
+	 */
 	public final boolean value;
-	
+
 	private LitBoolean(boolean value) {
 		this.value = value;
 	}
@@ -16,12 +25,12 @@ public class LitBoolean extends Literal {
 	public Expression interpret(Environment env) {
 		return this;
 	}
-	
+
 	@Override
 	public String toString() {
-		return Boolean.toString(this.value);	
+		return Boolean.toString(this.value);
 	}
-	
+
 	public static final LitBoolean TRUE = new LitBoolean(true);
 	public static final LitBoolean FALSE = new LitBoolean(false);
 
@@ -38,7 +47,7 @@ public class LitBoolean extends Literal {
 
 	@Override
 	public Literal fromDefaultRepresentation(Literal l) {
-		return l; //TODO ??
+		return l; // TODO ??
 	}
 
 	@Override
@@ -48,7 +57,7 @@ public class LitBoolean extends Literal {
 
 	@Override
 	public Literal convertRepresentation(Class<? extends Literal> c) {
-		//No non-default representations for Bool
+		// No non-default representations for Bool
 		return this;
 	}
 }

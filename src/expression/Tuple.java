@@ -4,28 +4,37 @@ import types.Type;
 import types.TypeTuple;
 import interpretation.Environment;
 
+/**
+ * Tuple expression
+ * 
+ * @author Mgr. Radomir Skrabal
+ *
+ */
 public class Tuple extends Expression {
-	
+
+	/**
+	 * Values of the tuple
+	 */
 	public final Expression[] values;
-	
-	public Tuple(Expression[] values){
+
+	public Tuple(Expression[] values) {
 		this.values = new Expression[values.length];
-		for(int i = 0; i < values.length; i++){
+		for (int i = 0; i < values.length; i++) {
 			this.values[i] = values[i];
 		}
 	}
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		return this; //Should tuple intepret to itself? Probably yes due to lazyness
+		return this; // Should tuple intepret to itself? Probably yes due to lazyness
 	}
 
 	@Override
-	public String toString(){
+	public String toString() {
 		StringBuilder s = new StringBuilder("[");
-		for(int i = 0; i < this.values.length; i++){
+		for (int i = 0; i < this.values.length; i++) {
 			s.append(this.values[i].toString());
-			if(i + 1 < this.values.length){
+			if (i + 1 < this.values.length) {
 				s.append(", ");
 			}
 		}
@@ -36,10 +45,10 @@ public class Tuple extends Expression {
 	@Override
 	public Type infer() throws Exception {
 		Type types[] = new Type[this.values.length];
-		for(int i = 0; i < this.values.length; i++){
+		for (int i = 0; i < this.values.length; i++) {
 			types[i] = this.values[i].infer();
 		}
-		
+
 		Type t = new TypeTuple(types);
 		this.setType(t);
 		return t;

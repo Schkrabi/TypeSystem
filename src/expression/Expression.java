@@ -6,12 +6,12 @@ import interpretation.Environment;
 /**
  * Abstract superclass for all expressions
  * 
- * @author schkrabi
+ * @author Mgr. Radomir Skrabal
  * 
  */
 public abstract class Expression {
 	/**
-	 * Type infered by the infer method when it is run
+	 * Type inferred by the infer method when it is run
 	 */
 	private Type inferedType = null;
 
@@ -19,23 +19,23 @@ public abstract class Expression {
 	 * Interprets the expression in given environment
 	 * 
 	 * @param env
-	 *            environment where the expression should be intepreted
+	 *            environment where the expression should be interpreted
 	 * @return Expression
 	 * @throws Exception
 	 */
 	public abstract Expression interpret(Environment env) throws Exception;
 
 	/**
-	 * Ifers the type of the expression and all its subexpression and returns
-	 * it. Also sets the inferedType variable of each infered expression
+	 * Infers the type of the expression and all its subexpression and returns
+	 * it. Also sets the inferedType variable of each inferred expression
 	 * 
-	 * @return infered type
+	 * @return inferred type
 	 * @throws Exception
 	 */
 	public abstract Type infer() throws Exception;
 
 	/**
-	 * Returns the ifered type of this expression or null if inference was not
+	 * Returns the inferred type of this expression or null if inference was not
 	 * run
 	 * 
 	 * @return Type or null
@@ -47,7 +47,7 @@ public abstract class Expression {
 	/**
 	 * Sets the type of the expression
 	 * 
-	 * @warning Disougradge of use outsiode of the infer methos!
+	 * @warning Discourage of use outside of the infer methods!
 	 * @param value
 	 *            type to be set
 	 */

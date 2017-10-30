@@ -18,7 +18,7 @@ import util.ImplContainer;
  * Extended lambda expression allowing for the different implementation of body
  * based on the arguments representation
  * 
- * @author schkrabi
+ * @author Mgr. Radomir Skrabal
  * 
  */
 public class ExtendedLambda extends Expression {
@@ -29,7 +29,7 @@ public class ExtendedLambda extends Expression {
 	public final Tuple args;
 
 	/**
-	 * Basic fallback implementation of the lambda body
+	 * Basic fall back implementation of the lambda body
 	 */
 	public final Expression defaultImplementation;
 

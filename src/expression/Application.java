@@ -11,7 +11,7 @@ import interpretation.Environment;
 /**
  * Expression for function application
  * 
- * @author schkrabi
+ * @author Mgr. Radomir Skrabal
  * 
  */
 public class Application extends Expression {
@@ -21,7 +21,7 @@ public class Application extends Expression {
 	 */
 	public final Expression fun;
 	/**
-	 * Arguments with which the function will be applicated
+	 * Arguments of the function
 	 */
 	public final Tuple args;
 
@@ -80,7 +80,7 @@ public class Application extends Expression {
 	 * Lazily converts all the arguments to their default representation
 	 * 
 	 * @param e
-	 *            environment containing the arguments asociated with their
+	 *            environment containing the arguments associated with their
 	 *            names
 	 * @return new environment where all the arguments will be in their default
 	 *         representation when interpreted

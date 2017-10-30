@@ -7,7 +7,7 @@ import interpretation.Environment;
 /**
  * Wrapper class for addition lambda
  * 
- * @author schkrabi
+ * @author Mgr. Radomir Skrabal
  * 
  */
 public class Addition extends Lambda {
@@ -31,12 +31,12 @@ public class Addition extends Lambda {
 	/**
 	 * Private wrapper class for the body of addition
 	 * 
-	 * @author schkrabi
+	 * @author Mgr. Radomir Skrabal
 	 * 
 	 */
 	private static class AddWrapper extends Expression {
 		/**
-		 * The body object
+		 * The body expression object
 		 */
 		public static final AddWrapper singleton = new AddWrapper();
 
@@ -52,7 +52,7 @@ public class Addition extends Lambda {
 				return this;
 			}
 
-			return new IntBinary(x.value + y.value); // TODO HOTFIX
+			return new IntBinary(x.value + y.value);
 		}
 
 		@Override

@@ -4,12 +4,27 @@ import types.Type;
 import types.TypeConcrete;
 import interpretation.Environment;
 
+/**
+ * Expression for special form if
+ * 
+ * @author Mgr. Radomir Skrabal
+ *
+ */
 public class IfExpression extends Expression {
-	
+
+	/**
+	 * Condition of the if expression
+	 */
 	public final Expression condition;
+	/**
+	 * Branch for interpretation for the true condition
+	 */
 	public final Expression trueBranch;
+	/**
+	 * Branch for interpretation for the false condition
+	 */
 	public final Expression falseBranch;
-	
+
 	public IfExpression(Expression condition, Expression trueBranch, Expression falseBranch) {
 		this.condition = condition;
 		this.trueBranch = trueBranch;
@@ -18,36 +33,36 @@ public class IfExpression extends Expression {
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		LitBoolean b = (LitBoolean)this.condition.interpret(env);
-		if(b.value) {
+		LitBoolean b = (LitBoolean) this.condition.interpret(env);
+		if (b.value) {
 			return this.trueBranch.interpret(env);
-		}
-		else {
+		} else {
 			return this.falseBranch.interpret(env);
 		}
 	}
 
 	@Override
 	public String toString() {
-		return "if " + this.condition.toString() + " then " + this.trueBranch.toString() + " else " + this.falseBranch.toString();
+		return "if " + this.condition.toString() + " then " + this.trueBranch.toString() + " else "
+				+ this.falseBranch.toString();
 	}
 
 	@Override
-	public Type infer() throws Exception {		
+	public Type infer() throws Exception {
 		Type condType = this.condition.infer();
 		Type tBranchType = this.trueBranch.infer();
 		Type fBranchType = this.falseBranch.infer();
-		
-		if(!Type.unify(tBranchType, fBranchType)) {
+
+		if (!Type.unify(tBranchType, fBranchType)) {
 			throw new Exception("Types of if branches do to unify, got: " + tBranchType + " " + fBranchType);
 		}
-		
-		if(!Type.unify(TypeConcrete.TypeBool, condType)) {
+
+		if (!Type.unify(TypeConcrete.TypeBool, condType)) {
 			throw new Exception("Condition of if do not unify with Bool got: " + condType);
 		}
-		
+
 		this.setType(tBranchType);
-		
+
 		return tBranchType;
 	}
 }

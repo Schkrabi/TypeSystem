@@ -4,9 +4,18 @@ import interpretation.Environment;
 import types.Type;
 import types.TypeConcrete;
 
+/**
+ * Implementation of Binary Integer Literal
+ * 
+ * @author Mgr. Radomir Skrabal
+ *
+ */
 public class IntBinary extends LitInteger {
+	/**
+	 * Value of the integer literal
+	 */
 	public final int value;
-	
+
 	public IntBinary(int value) {
 		this.value = value;
 	}
@@ -15,7 +24,7 @@ public class IntBinary extends LitInteger {
 	public Expression interpret(Environment env) {
 		return this;
 	}
-	
+
 	@Override
 	public String toString() {
 		return Integer.toString(this.value);
@@ -28,24 +37,23 @@ public class IntBinary extends LitInteger {
 
 	@Override
 	public Literal fromDefaultRepresentation(Literal l) {
-		return l; //TODO ??
+		return l;
 	}
 
 	@Override
 	public Literal toDefaultRepresentation() {
 		return this;
 	}
-	
 
 	@Override
 	public Literal convertRepresentation(Class<? extends Literal> c) throws Exception {
-		if(c == IntBinary.class){
+		if (c == IntBinary.class) {
 			return this;
 		}
-		if(c == IntRoman.class){
+		if (c == IntRoman.class) {
 			return new IntRoman(IntRoman.int2roman(this.value));
 		}
-		if(c == IntString.class){
+		if (c == IntString.class) {
 			return new IntString(Integer.toString(this.value));
 		}
 		return super.convertRepresentation(c);
