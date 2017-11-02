@@ -1,11 +1,14 @@
 package expression;
 
 import java.util.Map;
+import java.util.PriorityQueue;
 
 import types.ForallType;
 import types.Type;
 import types.TypeArrow;
+import types.TypeConcrete;
 import types.TypeTuple;
+import util.ImplContainer;
 import interpretation.Environment;
 
 /**
@@ -59,19 +62,19 @@ public class Application extends Expression {
 
 		// Std lambda
 		if (elambda instanceof Lambda) {
+			// Do I want to do this?
 			childEnv = Application
 					.autoConvertForDefaultRepresentation(childEnv);
 			return ((Lambda) elambda).getBody().interpret(childEnv);
 		}
 
-		Expression impl = elambda.getImplementation((TypeTuple) args.getType()
-				.getRep());
-		// Optimized implementation not found
-		if (impl == null) {
-			childEnv = Application
-					.autoConvertForDefaultRepresentation(childEnv);
-			return elambda.defaultImplementation.interpret(childEnv);
-		}
+		// Ready for comparator
+		PriorityQueue<ImplContainer> queue = elambda.getSortedImplementations();
+
+		Expression impl = queue.peek().implementation;
+		TypeTuple argsType = queue.peek().typeSpec;
+		childEnv = Application
+				.autoConvertArgs(childEnv, elambda.args, argsType);
 
 		return impl.interpret(childEnv);
 	}
@@ -91,6 +94,32 @@ public class Application extends Expression {
 		for (Map.Entry<Variable, Expression> entry : e.entrySet()) {
 			ret.put(entry.getKey(),
 					Literal.defaultRepresentationLazy(entry.getValue()));
+		}
+
+		return ret;
+	}
+
+	/**
+	 * Lazily converts all the arguments to given representation
+	 * 
+	 * @param e
+	 *            environment containing the arguments associated with their
+	 *            names
+	 * @param args
+	 *            argument names in the environment
+	 * @param argTypes
+	 *            formal inferred types of the arguments
+	 * @return new environment where all the arguments will be converted
+	 */
+	private static Environment autoConvertArgs(Environment e, Tuple args,
+			TypeTuple argTypes) {
+		Environment ret = new Environment(e.parent);
+
+		for (int i = 0; i < args.values.length; i++) {
+			ret.put((Variable) args.values[i], Literal
+					.convertRepresentationLazy(
+							e.get((Variable) args.values[i]),
+							((TypeConcrete) argTypes.values[i]).implementation));
 		}
 
 		return ret;
