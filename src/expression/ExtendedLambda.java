@@ -1,6 +1,7 @@
 package expression;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -227,5 +228,30 @@ public class ExtendedLambda extends Expression {
 		}
 
 		return this.transformStaticDispatch(impl);
+	}
+	
+	@Override
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("ExtendedLabmbda ");
+		sb.append(this.args.toString());
+		sb.append(" ");
+		sb.append(this.defaultImplementation);
+		sb.append("[");
+		
+		Iterator<ImplContainer> i = this.implementations.iterator();
+		
+		while(i.hasNext()){
+			ImplContainer c = i.next();
+			sb.append(c.toString());
+			if(i.hasNext()){
+				sb.append(", ");
+			}
+		}
+		
+		sb.append("]");
+		
+		return sb.toString();
 	}
 }

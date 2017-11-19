@@ -1,0 +1,14 @@
+T__0=1
+T__1=2
+T__2=3
+TRUE=4
+FALSE=5
+INT=6
+FLOAT=7
+SYMBOL=8
+COMMENT=9
+WS=10
+STRING=11
+'('=1
+')'=2
+'\''=3
