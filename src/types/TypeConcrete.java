@@ -7,6 +7,7 @@ import expression.IntBinary;
 import expression.IntRoman;
 import expression.IntString;
 import expression.LitBoolean;
+import expression.LitString;
 import expression.Literal;
 
 /**
@@ -87,6 +88,14 @@ public class TypeConcrete extends Type {
 	 * Type of Int reprented by Roman number string
 	 */
 	public static final TypeConcrete TypeIntRoman = new TypeConcrete("Int", IntRoman.class, "Roman");
+	/**
+	 * Type of String
+	 */
+	public static final TypeConcrete TypeString = new TypeConcrete("String", LitString.class);
+	/**
+	 * Type of Double
+	 */
+	public static final TypeConcrete TypeDouble = new TypeConcrete("Double", LitDouble.class);
 
 	@Override
 	public Set<TypeVariable> getUnconstrainedVariables() {

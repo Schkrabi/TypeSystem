@@ -6,6 +6,9 @@ import java.util.LinkedList;
 import expression.Expression;
 
 public class ExtendedTypeSystemListener extends SchemeBaseListener {
+	/**
+	 * Stack used for store the intermediate values
+	 */
 	Deque<Expression> stack = new LinkedList<Expression>();
 	
 	@Override 
@@ -25,7 +28,6 @@ public class ExtendedTypeSystemListener extends SchemeBaseListener {
 	
 	@Override 
 	public void exitAtom(SchemeParser.AtomContext ctx) {
-		//String s = ctx.getToken(0, 0).toString();
 		System.out.println(ctx.getText());
 	}
 	
