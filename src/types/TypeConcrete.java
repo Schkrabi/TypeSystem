@@ -7,6 +7,7 @@ import expression.IntBinary;
 import expression.IntRoman;
 import expression.IntString;
 import expression.LitBoolean;
+import expression.LitDouble;
 import expression.LitString;
 import expression.Literal;
 
@@ -16,7 +17,7 @@ import expression.Literal;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class TypeConcrete extends Type {
+public abstract class TypeConcrete extends Type {
 	/**
 	 * Name of the type
 	 */
@@ -29,14 +30,16 @@ public class TypeConcrete extends Type {
 	 * Associated literal class of the representation/complete type
 	 */
 	public final Class<? extends Literal> implementation;
+	
+	protected final Map<String, >
 
-	private TypeConcrete(String name, Class<? extends Literal> implementation) {
+	public TypeConcrete(String name, Class<? extends Literal> implementation) {
 		this.name = name;
 		this.representation = "";
 		this.implementation = implementation;
 	}
 
-	private TypeConcrete(String name, Class<? extends Literal> implementation, String representation) {
+	public TypeConcrete(String name, Class<? extends Literal> implementation, String representation) {
 		this.name = name;
 		this.representation = representation;
 		this.implementation = implementation;
@@ -116,4 +119,6 @@ public class TypeConcrete extends Type {
 
 		return this.representation.compareTo(other.representation);
 	}
+	
+	public abstract Literal instantiateLiteral(Object value) throws Exception;
 }

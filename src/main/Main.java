@@ -55,16 +55,24 @@ public class Main {
 		Scanner input = new Scanner(System.in);
 		System.out.println("Parser interactive test");
 		try {
-			CharStream charStream = new ANTLRInputStream(input.nextLine());	
-			TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
-			SchemeParser parser = new SchemeParser(tokens);
-			
-			ExprsContext exprsContext = parser.exprs();
-			
-			ParseTreeWalker walker = new ParseTreeWalker();
-			
-			SchemeListener listener = new ExtendedTypeSystemListener();
-			walker.walk(listener, exprsContext);
+			while(true){
+				CharStream charStream = new ANTLRInputStream(input.nextLine());	
+				TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
+				SchemeParser parser = new SchemeParser(tokens);
+				
+				ExprsContext exprsContext = parser.exprs();
+				
+				/*ParseTreeWalker walker = new ParseTreeWalker();
+				
+				SchemeListener listener = new SchemeBaseListener();
+				walker.walk(listener, exprsContext);*/
+				
+				for(Expression e : exprsContext.val){
+					System.out.println(e);
+					System.out.println(e.infer());
+					System.out.println(e.interpret(new Environment()));
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

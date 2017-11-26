@@ -1,5 +1,7 @@
-package types;
+package expression;
 
+import types.Type;
+import types.TypeConcrete;
 import expression.Expression;
 import expression.Literal;
 import interpretation.Environment;
