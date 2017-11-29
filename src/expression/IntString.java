@@ -1,7 +1,7 @@
 package expression;
 
 import types.Type;
-import types.TypeConcrete;
+import types.TypeRepresentation;
 import interpretation.Environment;
 
 /**
@@ -41,8 +41,8 @@ public class IntString extends LitInteger {
 
 	@Override
 	public Type infer() throws Exception {
-		this.setType(TypeConcrete.TypeIntString);
-		return TypeConcrete.TypeIntString;
+		this.setType(TypeRepresentation.TypeIntString);
+		return TypeRepresentation.TypeIntString;
 	}
 
 	@Override

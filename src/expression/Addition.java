@@ -57,8 +57,8 @@ public class Addition extends Lambda {
 
 		@Override
 		public Type infer() throws Exception {
-			this.setType(TypeConcrete.TypeIntBinary);
-			return TypeConcrete.TypeIntBinary;
+			this.setType(TypeConcrete.TypeInt);
+			return TypeConcrete.TypeInt;
 		}
 	}
 }

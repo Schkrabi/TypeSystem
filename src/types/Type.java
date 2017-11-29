@@ -19,7 +19,7 @@ public abstract class Type implements Comparable<Type> {
 	/**
 	 * Ordering of subclasses for Comparable interface
 	 */
-	private static List<Class<? extends Type>> ordering = Arrays.asList(TypeConcrete.class, TypeVariable.class,
+	private static List<Class<? extends Type>> ordering = Arrays.asList(TypeConcrete.class, TypeRepresentation.class, TypeVariable.class,
 			ForallType.class, TypeArrow.class, TypeTuple.class);
 
 	public Type() {
@@ -59,8 +59,8 @@ public abstract class Type implements Comparable<Type> {
 
 		if (s == t) {
 			return true;
-		} else if (s instanceof TypeConcrete && t instanceof TypeConcrete) {
-			return ((TypeConcrete) s).isSameBasicType((TypeConcrete) t);
+		} else if (t instanceof TypeConcrete && s instanceof TypeConcrete) {
+			return ((TypeConcrete)s).isSameBasicType((TypeConcrete)t);
 		} else if (s instanceof TypeArrow && t instanceof TypeArrow) {
 			Type.union(s, t);
 			TypeArrow as = (TypeArrow) s;

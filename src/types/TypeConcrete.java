@@ -4,15 +4,13 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import expression.IntBinary;
-import expression.IntRoman;
-import expression.IntString;
 import expression.LitBoolean;
 import expression.LitDouble;
 import expression.LitString;
 import expression.Literal;
 
 /**
- * Class for concrete types and complete types representations
+ * Class for concrete types
  * 
  * @author Mgr. Radomir Skrabal
  *
@@ -22,36 +20,46 @@ public abstract class TypeConcrete extends Type {
 	 * Name of the type
 	 */
 	public final String name;
-	/**
-	 * Representation of the type (if applicable)
-	 */
-	public final String representation;
+
 	/**
 	 * Associated literal class of the representation/complete type
 	 */
 	public final Class<? extends Literal> implementation;
-	
-	protected final Map<String, >
 
 	public TypeConcrete(String name, Class<? extends Literal> implementation) {
 		this.name = name;
-		this.representation = "";
 		this.implementation = implementation;
 	}
 
-	public TypeConcrete(String name, Class<? extends Literal> implementation, String representation) {
-		this.name = name;
-		this.representation = representation;
-		this.implementation = implementation;
+	/**
+	 * Returns true if this and other are TypeConcrete or TypeRepresentation and
+	 * represents the same basic type
+	 * 
+	 * @param other
+	 *            the other type
+	 * @return true or false
+	 */
+	protected void throwInitializationError(Class<? extends TypeConcrete> type, Object value) throws Exception {
+		throw new Exception("Instantiating " + type.getName() + ":" + this.name + "with value of type "
+				+ value.getClass().getName() + " of value " + value.toString());
 	}
+
+	/**
+	 * Instantiates the literal of given type. Must return literal of implementation
+	 * class.
+	 * 
+	 * @param value
+	 *            Initialization value
+	 * @return Literal object
+	 * @throws Exception
+	 *             thrown if instantiated with incorrect value
+	 * @see TypeConcrete.implementation
+	 */
+	public abstract Literal instantiateLiteral(Object value) throws Exception;
 
 	@Override
 	public String toString() {
-		if (this.representation == "") {
-			return this.name;
-		} else {
-			return this.name + ":" + this.representation;
-		}
+		return this.name;
 	}
 
 	@Override
@@ -60,45 +68,8 @@ public abstract class TypeConcrete extends Type {
 			return false;
 		}
 		TypeConcrete other = (TypeConcrete) o;
-		return this.name.equals(other.name) && this.representation.equals(other.representation);
-	}
-
-	/**
-	 * Returns true if the other object is the same basic type (ommiting
-	 * representations), otherwise returns false
-	 * 
-	 * @param other
-	 *            Type
-	 * @return true or false
-	 */
-	public boolean isSameBasicType(TypeConcrete other) {
 		return this.name.equals(other.name);
 	}
-
-	/**
-	 * Type of Bool
-	 */
-	public static final TypeConcrete TypeBool = new TypeConcrete("Bool", LitBoolean.class);
-	/**
-	 * Type of Int represented by Binary integer
-	 */
-	public static final TypeConcrete TypeIntBinary = new TypeConcrete("Int", IntBinary.class, "Binary");
-	/**
-	 * Type of Int represented by decimal string
-	 */
-	public static final TypeConcrete TypeIntString = new TypeConcrete("Int", IntString.class, "String");
-	/**
-	 * Type of Int reprented by Roman number string
-	 */
-	public static final TypeConcrete TypeIntRoman = new TypeConcrete("Int", IntRoman.class, "Roman");
-	/**
-	 * Type of String
-	 */
-	public static final TypeConcrete TypeString = new TypeConcrete("String", LitString.class);
-	/**
-	 * Type of Double
-	 */
-	public static final TypeConcrete TypeDouble = new TypeConcrete("Double", LitDouble.class);
 
 	@Override
 	public Set<TypeVariable> getUnconstrainedVariables() {
@@ -112,13 +83,76 @@ public abstract class TypeConcrete extends Type {
 			return super.compareTo(o);
 		}
 		TypeConcrete other = (TypeConcrete) o;
-		int cmp = this.name.compareTo(other.name);
-		if (cmp != 0) {
-			return cmp;
+		return this.name.compareTo(other.name);
+	}
+
+	public boolean isSameBasicType(Type o) {
+		if (o instanceof TypeRepresentation) {
+			TypeRepresentation other = (TypeRepresentation) o;
+			return this.equals(other.baseType);
+		}
+		if (o instanceof TypeConcrete) {
+			TypeConcrete other = (TypeConcrete) o;
+			return this.equals(other);
+		}
+		return false;
+	}
+
+	/**
+	 * Type of Bool
+	 */
+	public static final TypeConcrete TypeBool = new TypeConcrete("Bool", LitBoolean.class) {
+		@Override
+		public Literal instantiateLiteral(Object value) throws Exception {
+			if (!(value instanceof Boolean)) {
+				this.throwInitializationError(TypeConcrete.TypeBool.getClass(), value);
+			}
+			Boolean b = (Boolean) value;
+			return b ? LitBoolean.TRUE : LitBoolean.FALSE;
+		}
+	};
+	/**
+	 * Type of Integer
+	 */
+	public static final TypeConcrete TypeInt = new TypeConcrete("Int", IntBinary.class) {
+
+		@Override
+		public Literal instantiateLiteral(Object value) throws Exception {
+			if (!(value instanceof Integer)) {
+				this.throwInitializationError(TypeConcrete.TypeInt.getClass(), value);
+			}
+			Integer i = (Integer) value;
+			return new IntBinary(i.intValue());
+		}
+	};
+
+	/**
+	 * Type of String
+	 */
+	public static final TypeConcrete TypeString = new TypeConcrete("String", LitString.class) {
+
+		@Override
+		public Literal instantiateLiteral(Object value) throws Exception {
+			if (!(value instanceof String)) {
+				this.throwInitializationError(TypeConcrete.TypeString.getClass(), value);
+			}
+			String s = (String) value;
+			return new LitString(s);
 		}
 
-		return this.representation.compareTo(other.representation);
-	}
-	
-	public abstract Literal instantiateLiteral(Object value) throws Exception;
+	};
+	/**
+	 * Type of Double
+	 */
+	public static final TypeConcrete TypeDouble = new TypeConcrete("Double", LitDouble.class) {
+
+		@Override
+		public Literal instantiateLiteral(Object value) throws Exception {
+			if (!(value instanceof Double)) {
+				this.throwInitializationError(TypeConcrete.TypeDouble.getClass(), value);
+			}
+			Double d = (Double) value;
+			return new LitDouble(d);
+		}
+	};
 }

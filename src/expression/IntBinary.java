@@ -32,7 +32,7 @@ public class IntBinary extends LitInteger {
 
 	@Override
 	public Type infer() throws Exception {
-		return TypeConcrete.TypeIntBinary;
+		return TypeConcrete.TypeInt;
 	}
 
 	@Override

@@ -47,4 +47,7 @@ public class Variable extends Expression implements Comparable<Variable> {
 		return t;
 	}
 
+	public void setType(Type type) {
+		this.inferedType = type;
+	}
 }

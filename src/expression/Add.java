@@ -8,23 +8,24 @@ import interpretation.Environment;
 
 /** @deprecated */
 public class Add extends Expression {
-	
-	private Add() {}
-	
+
+	private Add() {
+	}
+
 	public static final Add singleton = new Add();
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
 		IntBinary x = (IntBinary) env.getVariableValue(new Variable("_x"));
 		IntBinary y = (IntBinary) env.getVariableValue(new Variable("_y"));
-		
-		if(x == null || y == null) {
+
+		if (x == null || y == null) {
 			return this;
 		}
-		
+
 		return new IntBinary(x.value + y.value);
 	}
-	
+
 	@Override
 	public String toString() {
 		return "+ _x _y";
@@ -32,7 +33,8 @@ public class Add extends Expression {
 
 	@Override
 	public Type infer() throws Exception {
-		return new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeIntBinary, TypeConcrete.TypeIntBinary}), TypeConcrete.TypeIntBinary);
+		return new TypeArrow(new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
+				TypeConcrete.TypeInt);
 	}
 
 }

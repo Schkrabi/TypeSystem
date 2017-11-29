@@ -21,6 +21,7 @@ import parser.SchemeParser.ExprsContext;
 
 import types.Type;
 import types.TypeConcrete;
+import types.TypeRepresentation;
 import types.TypeTuple;
 import expression.Addition;
 import expression.Application;
@@ -53,24 +54,21 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		Scanner input = new Scanner(System.in);
+		Environment topLevel = Main.initTopLevelEnvironment();
+		
 		System.out.println("Parser interactive test");
 		try {
-			while(true){
-				CharStream charStream = new ANTLRInputStream(input.nextLine());	
+			while (true) {
+				CharStream charStream = new ANTLRInputStream(input.nextLine());
 				TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
 				SchemeParser parser = new SchemeParser(tokens);
-				
+
 				ExprsContext exprsContext = parser.exprs();
-				
-				/*ParseTreeWalker walker = new ParseTreeWalker();
-				
-				SchemeListener listener = new SchemeBaseListener();
-				walker.walk(listener, exprsContext);*/
-				
-				for(Expression e : exprsContext.val){
+
+				for (Expression e : exprsContext.val) {
 					System.out.println(e);
 					System.out.println(e.infer());
-					System.out.println(e.interpret(new Environment()));
+					System.out.println(e.interpret(topLevel));
 				}
 			}
 		} catch (Exception e) {
@@ -106,7 +104,7 @@ public class Main {
 
 			@Override
 			public Type infer() throws Exception {
-				return TypeConcrete.TypeIntRoman;
+				return TypeRepresentation.TypeIntRoman;
 			}
 
 		};
@@ -115,32 +113,28 @@ public class Main {
 
 			@Override
 			public Expression interpret(Environment env) throws Exception {
-				IntBinary e = (IntBinary) env.get(new Variable("x")).interpret(
-						env);
+				IntBinary e = (IntBinary) env.get(new Variable("x")).interpret(env);
 				System.out.println("Binary Implementation");
 				return new IntBinary(e.value + 5);
 			}
 
 			@Override
 			public Type infer() throws Exception {
-				return TypeConcrete.TypeIntBinary;
+				return TypeConcrete.TypeInt;
 			}
 
 		};
 
 		Map<TypeTuple, Expression> impls = new TreeMap<TypeTuple, Expression>();
-		impls.put(new TypeTuple(new Type[] { TypeConcrete.TypeIntRoman }),
-				romanId);
+		impls.put(new TypeTuple(new Type[] { TypeRepresentation.TypeIntRoman }), romanId);
 
-		ExtendedLambda elambda = new ExtendedLambda(new Tuple(
-				new Variable[] { new Variable("x") }), binId, impls);
+		ExtendedLambda elambda = new ExtendedLambda(new Tuple(new Variable[] { new Variable("x") }), binId, impls);
 
 		// Expression expr = new Application(elambda, new Tuple(new
 		// Expression[]{LitInteger.initializeDefaultImplementation(1024)}));
 		// Expression expr = new Application(elambda, new Tuple(new
 		// Expression[]{new IntRoman("MCM")}));
-		Expression expr = new Application(elambda, new Tuple(
-				new Expression[] { new IntString("2048") }));
+		Expression expr = new Application(elambda, new Tuple(new Expression[] { new IntString("2048") }));
 
 		System.out.println(expr);
 		try {
@@ -153,4 +147,11 @@ public class Main {
 		}
 	}
 
+	private static Environment initTopLevelEnvironment() {
+		Environment env = new Environment();
+		env.put(new Variable("+"), Addition.singleton);
+		env.put(new Variable("-"), Subtraction.singleton);
+		
+		return env;
+	}
 }

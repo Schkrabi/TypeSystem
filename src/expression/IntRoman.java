@@ -1,7 +1,7 @@
 package expression;
 
 import types.Type;
-import types.TypeConcrete;
+import types.TypeRepresentation;
 import interpretation.Environment;
 
 /**
@@ -141,8 +141,8 @@ public class IntRoman extends LitInteger {
 
 	@Override
 	public Type infer() throws Exception {
-		this.setType(TypeConcrete.TypeIntRoman);
-		return TypeConcrete.TypeIntRoman;
+		this.setType(TypeRepresentation.TypeIntRoman);
+		return TypeRepresentation.TypeIntRoman;
 	}
 
 	@Override

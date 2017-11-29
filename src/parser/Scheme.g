@@ -9,13 +9,47 @@ options {
 
 @header {package parser;
 import expression.*;
+import types.TypeConcrete;
+import types.TypeRepresentation;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.HashMap;
 }
 
 @parser::members {
-	public static Map<String, class<? extends 
+	public static Map<String, Map<String, TypeConcrete>> typeTable = new HashMap<String, Map<String, TypeConcrete>>();
+	public static Map<Class<? extends Object>, TypeConcrete> untypedTable = new HashMap<Class<? extends Object>, TypeConcrete>();
 	
+	static{
+		Map<String, TypeConcrete> map;
+		
+		//Int
+		map = new HashMap<String, TypeConcrete>();
+		map.put("", TypeConcrete.TypeInt); //Default
+		map.put("Binary", TypeConcrete.TypeInt); //Alias
+		map.put(TypeRepresentation.TypeIntString.name, TypeRepresentation.TypeIntString);
+		map.put(TypeRepresentation.TypeIntRoman.name, TypeRepresentation.TypeIntRoman);
+		
+		typeTable.put(TypeConcrete.TypeInt.name, map);
+		untypedTable.put(Integer.class, TypeConcrete.TypeInt);
+		
+		//Bool
+		map = new HashMap<String, TypeConcrete>();
+		map.put("", TypeConcrete.TypeBool);
+		typeTable.put(TypeConcrete.TypeBool.name, map);
+		untypedTable.put(Boolean.class, TypeConcrete.TypeBool);
+		
+		//String
+		map = new HashMap<String, TypeConcrete>();
+		map.put("", TypeConcrete.TypeString);
+		typeTable.put(TypeConcrete.TypeString.name, map);
+		untypedTable.put(String.class, TypeConcrete.TypeString);
+		
+		//Double
+		map = new HashMap<String, TypeConcrete>();
+		map.put("", TypeConcrete.TypeDouble);
+		typeTable.put(TypeConcrete.TypeDouble.name, map);
+		untypedTable.put(Double.class, TypeConcrete.TypeDouble);
+	}
 	
 	public static String unescapeString(String s) {
 		StringBuilder result = new StringBuilder();
@@ -48,6 +82,38 @@ import java.util.TreeMap;
 		}
 		throw new Exception("Argument name list expected, got " + e.toString());
 	}
+	
+	public static Expression instantiateTypedLiteral(String typeName, Object value){
+		return instantiateTypedLiteral(typeName, "", value);
+	}
+	
+	public static Expression instantiateTypedLiteral(String typeName, String representationName, Object value){
+		TypeConcrete type = typeTable.get(typeName).get(representationName); 
+		
+		if(type == null){
+			throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName) + " for " + value.toString());
+		}
+		
+		if(value instanceof Variable){
+			Variable v = (Variable) value;
+			v.setType(type);
+			return v;
+		}	
+		return type.instantiateLiteral(value);
+	}
+	
+	public static Expression instantiateUntypedLiteral(Object value){
+		if(value instanceof Variable){
+			return (Variable)value;
+		}
+	
+		TypeConcrete type = untypedTable.get(value.getClass());
+		if(type == null){
+			throw new Exception("Unrecognized untyped value " + value.toString() + " of type " + value.getClass());
+		}
+		
+		return type.instantiateLiteral(value);
+	}
 }
 
 
@@ -58,7 +124,7 @@ exprs returns [List<Expression> val]
 	;
 
 expr returns [Expression val] 
-	: atom 	{ $val = $atom.val; }
+	: atom 	{ $val = instantiateUntypedLiteral($atom.val); }
 	| seq 	{ $val = $seq.val; }
 	| quote { $val = $quote.val; }
 	| typed { $val = $typed.val; }
@@ -77,17 +143,21 @@ seq returns [Expression val]
 	;
 	
 typed returns [Expression val]
-	: '<' atom SYMBOL ':' SYMBOL '>'
-	| '<' atom SYMBOL '>'
+	: '<' 	{ Object value; String typeName, representationName; }
+	  atom 	{ value = $atom.val; } SYMBOL { typeName = $SYMBOL.text; } ':' SYMBOL { representationName = $SYMBOL.text; }
+	  '>'	{ $val = instantiateTypedLiteral(typeName, representationName, value); }
+	| '<'	{ Object value; String typeName; }
+	  atom 	{ value = $atom.val; } SYMBOL { typeName = $SYMBOL.text; }
+	  '>'	{ $val = instantiateTypedLiteral(typeName, value); }
 	;
 
-atom returns [Expression val]
-	: INT 		{ $val = new IntBinary(Integer.parseInt($INT.text)); }
-	| FLOAT		{ $val = new LitDouble(Double.parseDouble($FLOAT.text)); }
+atom returns [Object val]
+	: INT 		{ $val = Integer.parseInt($INT.text); }
+	| FLOAT		{ $val = Double.parseDouble($FLOAT.text); }
 	| SYMBOL 	{ $val = new Variable($SYMBOL.text); }
-	| TRUE 		{ $val = LitBoolean.TRUE; }
-	| FALSE 	{ $val = LitBoolean.FALSE; }
-	| STRING	{ $val = new LitString(unescapeString($STRING.text.substring(1, $STRING.text.length() - 1))); }
+	| TRUE 		{ $val = Boolean.TRUE; }
+	| FALSE 	{ $val = Boolean.FALSE; }
+	| STRING	{ $val = unescapeString($STRING.text.substring(1, $STRING.text.length() - 1)); }
 	;
 
 quote returns [Expression val]

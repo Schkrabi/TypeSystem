@@ -13,7 +13,7 @@ public abstract class Expression {
 	/**
 	 * Type inferred by the infer method when it is run
 	 */
-	private Type inferedType = null;
+	protected Type inferedType = null;
 
 	/**
 	 * Interprets the expression in given environment

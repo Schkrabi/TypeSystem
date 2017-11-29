@@ -1,6 +1,10 @@
 // Generated from Scheme.g by ANTLR 4.7
 package parser;
 import expression.*;
+import types.TypeConcrete;
+import types.TypeRepresentation;
+import java.util.Map;
+import java.util.HashMap;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -49,6 +53,18 @@ public class SchemeBaseListener implements SchemeListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitSeq(SchemeParser.SeqContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterTyped(SchemeParser.TypedContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitTyped(SchemeParser.TypedContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
