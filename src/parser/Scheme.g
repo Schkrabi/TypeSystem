@@ -11,6 +11,7 @@ options {
 import expression.*;
 import types.TypeConcrete;
 import types.TypeRepresentation;
+import util.ImplContainer;
 import java.util.Map;
 import java.util.HashMap;
 }
@@ -83,23 +84,7 @@ import java.util.HashMap;
 		throw new Exception("Argument name list expected, got " + e.toString());
 	}
 	
-	public static Expression instantiateTypedLiteral(String typeName, Object value){
-		return instantiateTypedLiteral(typeName, "", value);
-	}
-	
-	public static Expression instantiateTypedLiteral(String typeName, String representationName, Object value) throws Exception{
-		Map<String, TypeConcrete> reps = typeTable.get(typeName);
-		
-		if(reps == null){
-			throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName) + " for " + value.toString());
-		}
-		
-		TypeConcrete type = reps.get(representationName); 
-		
-		if(type == null){
-			throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName) + " for " + value.toString());
-		}
-		
+	public static Expression instantiateTypedLiteral(TypeConcrete type, Object value) throws Exception{
 		if(value instanceof Variable){
 			Variable v = (Variable) value;
 			v.setType(type);
@@ -108,7 +93,7 @@ import java.util.HashMap;
 		return type.instantiateLiteral(value);
 	}
 	
-	public static Expression instantiateUntypedLiteral(Object value){
+	public static Expression instantiateUntypedLiteral(Object value) throws Exception{
 		if(value instanceof Variable){
 			return (Variable)value;
 		}
@@ -119,6 +104,26 @@ import java.util.HashMap;
 		}
 		
 		return type.instantiateLiteral(value);
+	}
+	
+	public static TypeConcrete getTypeByName(String typeName) throws Exception{
+		return getTypeByName(typeName, "");
+	}
+	
+	public static TypeConcrete getTypeByName(String typeName, String representationName) throws Exception{
+		Map<String, TypeConcrete> reps = typeTable.get(typeName);
+		
+		if(reps == null){
+			throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName));
+		}
+		
+		TypeConcrete type = reps.get(representationName); 
+		
+		if(type == null){
+			throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName));
+		}
+		
+		return type;
 	}
 }
 
@@ -137,7 +142,8 @@ expr returns [Expression val]
 	;
 
 seq returns [Expression val]
-	: '('	{ Expression argList, body; }
+	: '(' ELAMBDA expr expr '[' (impl)* ']' ')'
+	| '('	{ Expression argList, body; }
 	  LAMBDA expr { argList = $expr.val; } expr { body = $expr.val; }
 	  ')'	{ $val = new Lambda(lambdaArgsTuple(argList), body); }
 	| '(' 	{ Expression cond, tBranch, fBranch; } 
@@ -149,12 +155,21 @@ seq returns [Expression val]
 	;
 	
 typed returns [Expression val]
-	: '<' 	{ Object value; String typeName, representationName; }
-	  atom 	{ value = $atom.val; } SYMBOL { typeName = $SYMBOL.text; } ':' SYMBOL { representationName = $SYMBOL.text; }
-	  '>'	{ $val = instantiateTypedLiteral(typeName, representationName, value); }
-	| '<'	{ Object value; String typeName; }
-	  atom 	{ value = $atom.val; } SYMBOL { typeName = $SYMBOL.text; }
-	  '>'	{ $val = instantiateTypedLiteral(typeName, value); }
+	: '<' 	{ Object value; TypeConcrete type; }
+	  atom 	{ value = $atom.val; } type { type = $type.val; }
+	  '>'	{ $val = instantiateTypedLiteral(type, value); }
+	;
+	
+type returns [TypeConcrete val]
+	: SYMBOL { $val = getTypeByName($SYMBOL.text); }
+	| {String typeName; }
+	  SYMBOL { typeName = $SYMBOL.text; } 
+	  ':' 
+	  SYMBOL { $val = getTypeByName(typeName, $SYMBOL.text); } 
+	;
+	
+impl returns [ImplContainer val]
+	: '(' (type)* ')' expr
 	;
 
 atom returns [Object val]
@@ -173,6 +188,7 @@ quote returns [Expression val]
 
 IF		: 'i' 'f';
 LAMBDA  : 'l' 'a' 'm' 'b' 'd' 'a';
+ELAMBDA : 'e' 'l' 'a' 'm' 'b' 'd' 'a';
 TRUE	: '#' 't';
 FALSE	: '#' 'f';
 INT 	: '-'?[0-9]+ ;

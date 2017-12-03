@@ -54,6 +54,16 @@ public interface SchemeListener extends ParseTreeListener {
 	 */
 	void exitTyped(SchemeParser.TypedContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SchemeParser#type}.
+	 * @param ctx the parse tree
+	 */
+	void enterType(SchemeParser.TypeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SchemeParser#type}.
+	 * @param ctx the parse tree
+	 */
+	void exitType(SchemeParser.TypeContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SchemeParser#atom}.
 	 * @param ctx the parse tree
 	 */
