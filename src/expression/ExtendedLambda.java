@@ -102,10 +102,6 @@ public class ExtendedLambda extends Expression {
 			TypeTuple targs = c.typeSpec;
 			Type timpl = c.implementation.infer();
 
-			if (targs == TypeTuple.EMPTY_TUPLE) {
-				continue;
-			}
-
 			if (!Type.unify(targs, argsType)) {
 				throw new Exception(
 						"Bad extended lambda specialized arguments of type "
@@ -253,5 +249,21 @@ public class ExtendedLambda extends Expression {
 		sb.append("]");
 		
 		return sb.toString();
+	}
+
+	@Override
+	public Expression substituteTopLevelVariables(Environment topLevel) {
+		Environment e = new Environment(topLevel);
+		//Mask locally redefined variables
+		for(Expression expr : this.args){
+			e.put((Variable) expr, expr);
+		}
+		
+		Set<ImplContainer> s = new TreeSet<ImplContainer>();
+		for(ImplContainer i : this.implementations){
+			s.add(new ImplContainer(i.typeSpec, i.implementation.substituteTopLevelVariables(e)));
+		}
+		
+		return new ExtendedLambda(this.args, this.defaultImplementation.substituteTopLevelVariables(e), s);
 	}
 }

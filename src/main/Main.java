@@ -1,6 +1,8 @@
 package main;
 
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
@@ -34,6 +36,7 @@ import expression.IntString;
 import expression.Lambda;
 import expression.LitBoolean;
 import expression.LitInteger;
+import expression.Sequence;
 import expression.Subtraction;
 import expression.Tuple;
 import expression.Variable;
@@ -66,9 +69,11 @@ public class Main {
 				ExprsContext exprsContext = parser.exprs();
 
 				for (Expression e : exprsContext.val) {
-					System.out.println(e);
-					System.out.println(e.infer());
-					System.out.println(e.interpret(topLevel));
+					Expression expr = e.substituteTopLevelVariables(topLevel);
+					System.out.println(expr);
+					Type t = expr.infer();
+					System.out.println(t.getRep());
+					System.out.println(expr.interpret(topLevel));
 				}
 			}
 		} catch (Exception e) {
@@ -107,6 +112,11 @@ public class Main {
 				return TypeRepresentation.TypeIntRoman;
 			}
 
+			@Override
+			public Expression substituteTopLevelVariables(Environment topLevel) {
+				return this;
+			}
+
 		};
 
 		Expression binId = new Expression() {
@@ -121,6 +131,11 @@ public class Main {
 			@Override
 			public Type infer() throws Exception {
 				return TypeConcrete.TypeInt;
+			}
+
+			@Override
+			public Expression substituteTopLevelVariables(Environment topLevel) {
+				return this;
 			}
 
 		};

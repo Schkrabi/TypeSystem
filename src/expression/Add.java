@@ -37,4 +37,8 @@ public class Add extends Expression {
 				TypeConcrete.TypeInt);
 	}
 
+	@Override
+	public Expression substituteTopLevelVariables(Environment topLevel) {
+		return this;
+	}
 }

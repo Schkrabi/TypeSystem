@@ -8,7 +8,7 @@ import interpretation.Environment;
  * Expression for special form if
  * 
  * @author Mgr. Radomir Skrabal
- *
+ * 
  */
 public class IfExpression extends Expression {
 
@@ -25,7 +25,8 @@ public class IfExpression extends Expression {
 	 */
 	public final Expression falseBranch;
 
-	public IfExpression(Expression condition, Expression trueBranch, Expression falseBranch) {
+	public IfExpression(Expression condition, Expression trueBranch,
+			Expression falseBranch) {
 		this.condition = condition;
 		this.trueBranch = trueBranch;
 		this.falseBranch = falseBranch;
@@ -43,7 +44,8 @@ public class IfExpression extends Expression {
 
 	@Override
 	public String toString() {
-		return "if " + this.condition.toString() + " then " + this.trueBranch.toString() + " else "
+		return "if " + this.condition.toString() + " then "
+				+ this.trueBranch.toString() + " else "
 				+ this.falseBranch.toString();
 	}
 
@@ -54,15 +56,25 @@ public class IfExpression extends Expression {
 		Type fBranchType = this.falseBranch.infer();
 
 		if (!Type.unify(tBranchType, fBranchType)) {
-			throw new Exception("Types of if branches do to unify, got: " + tBranchType + " " + fBranchType);
+			throw new Exception("Types of if branches do to unify, got: "
+					+ tBranchType + " " + fBranchType);
 		}
 
 		if (!Type.unify(TypeConcrete.TypeBool, condType)) {
-			throw new Exception("Condition of if do not unify with Bool got: " + condType);
+			throw new Exception("Condition of if do not unify with Bool got: "
+					+ condType);
 		}
 
 		this.setType(tBranchType);
 
 		return tBranchType;
+	}
+
+	@Override
+	public Expression substituteTopLevelVariables(Environment topLevel) {
+		return new IfExpression(
+				this.condition.substituteTopLevelVariables(topLevel),
+				this.trueBranch.substituteTopLevelVariables(topLevel),
+				this.falseBranch.substituteTopLevelVariables(topLevel));
 	}
 }

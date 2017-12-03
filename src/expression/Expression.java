@@ -54,4 +54,6 @@ public abstract class Expression {
 	protected void setType(Type value) {
 		this.inferedType = value;
 	}
+	
+	public abstract Expression substituteTopLevelVariables(Environment topLevel);
 }

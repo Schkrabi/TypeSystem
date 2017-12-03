@@ -1,5 +1,7 @@
 package expression;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import types.Type;
 import types.TypeTuple;
 import interpretation.Environment;
@@ -8,9 +10,9 @@ import interpretation.Environment;
  * Tuple expression
  * 
  * @author Mgr. Radomir Skrabal
- *
+ * 
  */
-public class Tuple extends Expression {
+public class Tuple extends Expression implements Iterable<Expression> {
 
 	/**
 	 * Values of the tuple
@@ -26,7 +28,8 @@ public class Tuple extends Expression {
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		return this; // Should tuple intepret to itself? Probably yes due to lazyness
+		return this; // Should tuple intepret to itself? Probably yes due to
+						// lazyness
 	}
 
 	@Override
@@ -52,5 +55,48 @@ public class Tuple extends Expression {
 		Type t = new TypeTuple(types);
 		this.setType(t);
 		return t;
+	}
+
+	@Override
+	public Iterator<Expression> iterator() {
+		return new TupleIterator();
+	}
+
+	@Override
+	public Expression substituteTopLevelVariables(Environment topLevel) {
+		Expression[] a = new Expression[this.values.length];
+		int i = 0;
+		for (Expression e : this) {
+			a[i] = e.substituteTopLevelVariables(topLevel);
+			i++;
+		}
+		return new Tuple(a);
+	}
+
+	private class TupleIterator implements Iterator<Expression> {
+
+		private int cursor = 0;
+
+		@Override
+		public boolean hasNext() {
+			return cursor < Tuple.this.values.length;
+		}
+
+		@Override
+		public Expression next() {
+			if (this.hasNext()) {
+				Expression e = Tuple.this.values[this.cursor];
+				cursor++;
+				return e;
+			}
+			throw new NoSuchElementException();
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+
+		}
+
 	}
 }

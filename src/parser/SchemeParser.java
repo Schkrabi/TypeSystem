@@ -157,7 +157,13 @@ public class SchemeParser extends Parser {
 		}
 		
 		public static Expression instantiateTypedLiteral(String typeName, String representationName, Object value) throws Exception{
-			TypeConcrete type = typeTable.get(typeName).get(representationName); 
+			Map<String, TypeConcrete> reps = typeTable.get(typeName);
+			
+			if(reps == null){
+				throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName) + " for " + value.toString());
+			}
+			
+			TypeConcrete type = reps.get(representationName); 
 			
 			if(type == null){
 				throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName) + " for " + value.toString());

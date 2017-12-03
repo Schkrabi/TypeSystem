@@ -72,6 +72,11 @@ public abstract class Literal extends Expression {
 	public static Expression convertRepresentationLazy(Expression expr, Class<? extends Literal> c) {
 		return new ConversionWrapper(expr, c);
 	}
+	
+	@Override
+	public Expression substituteTopLevelVariables(Environment topLevel) {
+		return this;
+	}
 
 	/**
 	 * Wrapper for conversion of Literals to their default representation
@@ -105,6 +110,10 @@ public abstract class Literal extends Expression {
 			return this.wraped.infer(); // ??
 		}
 
+		@Override
+		public Expression substituteTopLevelVariables(Environment topLevel) {
+			return this;
+		}
 	}
 
 	/**
@@ -142,5 +151,9 @@ public abstract class Literal extends Expression {
 			return this.wrapped.infer();
 		}
 
+		@Override
+		public Expression substituteTopLevelVariables(Environment topLevel) {
+			return this;
+		}
 	}
 }

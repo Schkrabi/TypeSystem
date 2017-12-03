@@ -32,7 +32,7 @@ public class Variable extends Expression implements Comparable<Variable> {
 		if (!env.containsVariable(this)) {
 			throw new Exception("Unbound variable");
 		}
-		return env.getVariableValue(this); // Lazy?
+		return env.getVariableValue(this).interpret(env);
 	}
 
 	@Override
@@ -42,6 +42,9 @@ public class Variable extends Expression implements Comparable<Variable> {
 
 	@Override
 	public Type infer() throws Exception {
+		if(this.inferedType != null){
+			return this.getType();
+		}
 		Type t = new TypeVariable(NameGenerator.next());
 		this.setType(t);
 		return t;
@@ -49,5 +52,14 @@ public class Variable extends Expression implements Comparable<Variable> {
 
 	public void setType(Type type) {
 		this.inferedType = type;
+	}
+
+	@Override
+	public Expression substituteTopLevelVariables(Environment topLevel) {
+		Expression e = topLevel.getVariableValue(this);
+		if(e != null){
+			return e;
+		}
+		return this;
 	}
 }

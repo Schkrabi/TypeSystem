@@ -27,6 +27,11 @@ public class Addition extends Lambda {
 	public String toString() {
 		return "+ _x _y";
 	}
+	
+	@Override
+	public Expression substituteTopLevelVariables(Environment topLevel) {
+		return this;
+	}
 
 	/**
 	 * Private wrapper class for the body of addition
@@ -45,8 +50,8 @@ public class Addition extends Lambda {
 
 		@Override
 		public Expression interpret(Environment env) throws Exception {
-			IntBinary x = (IntBinary) env.getVariableValue(new Variable("_x"));
-			IntBinary y = (IntBinary) env.getVariableValue(new Variable("_y"));
+			IntBinary x = (IntBinary) (env.getVariableValue(new Variable("_x")).interpret(env));
+			IntBinary y = (IntBinary) (env.getVariableValue(new Variable("_y")).interpret(env));
 
 			if (x == null || y == null) {
 				return this;
@@ -59,6 +64,11 @@ public class Addition extends Lambda {
 		public Type infer() throws Exception {
 			this.setType(TypeConcrete.TypeInt);
 			return TypeConcrete.TypeInt;
+		}
+
+		@Override
+		public Expression substituteTopLevelVariables(Environment topLevel) {
+			return this;
 		}
 	}
 }

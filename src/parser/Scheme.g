@@ -87,8 +87,14 @@ import java.util.HashMap;
 		return instantiateTypedLiteral(typeName, "", value);
 	}
 	
-	public static Expression instantiateTypedLiteral(String typeName, String representationName, Object value){
-		TypeConcrete type = typeTable.get(typeName).get(representationName); 
+	public static Expression instantiateTypedLiteral(String typeName, String representationName, Object value) throws Exception{
+		Map<String, TypeConcrete> reps = typeTable.get(typeName);
+		
+		if(reps == null){
+			throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName) + " for " + value.toString());
+		}
+		
+		TypeConcrete type = reps.get(representationName); 
 		
 		if(type == null){
 			throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName) + " for " + value.toString());
@@ -177,7 +183,7 @@ WS 	: [ \r\t\n]+ -> skip ;
 STRING: '"' ~('\n'|'"')* '"' ;
 
 fragment SYMBOL_HEAD
-	:   'a'..'z' | 'A'..'Z' | '*' | '+' | '!' | '-' | '_' | '?' | '>' | '<' | '=' | '$' | '@' | '&' | ':' | '#' | '/'
+	:   'a'..'z' | 'A'..'Z' | '*' | '+' | '!' | '-' | '_' | '?' | '=' | '$' | '@' | '&' | '#' | '/'
 	;
     
 fragment SYMBOL_REST

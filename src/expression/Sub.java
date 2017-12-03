@@ -31,4 +31,9 @@ public class Sub extends Expression {
 	public Type infer() throws Exception {
 		throw new Exception("Trying to infer a function wrapper!");
 	}
+
+	@Override
+	public Expression substituteTopLevelVariables(Environment topLevel) {
+		return this;
+	}
 }

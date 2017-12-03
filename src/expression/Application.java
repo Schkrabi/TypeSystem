@@ -60,18 +60,19 @@ public class Application extends Expression {
 			childEnv.put((Variable) elambda.args.values[i], this.args.values[i]);
 		}
 
+		// Ready for comparator
+		PriorityQueue<ImplContainer> queue = elambda.getSortedImplementations();
+		ImplContainer implContainer = queue.peek();
+
 		// Std lambda
-		if (elambda instanceof Lambda) {
+		if (elambda instanceof Lambda || implContainer == null) {
 			// Do I want to do this?
 			childEnv = Application
 					.autoConvertForDefaultRepresentation(childEnv);
-			return ((Lambda) elambda).getBody().interpret(childEnv);
+			return elambda.defaultImplementation.interpret(childEnv);
 		}
 
-		// Ready for comparator
-		PriorityQueue<ImplContainer> queue = elambda.getSortedImplementations();
-
-		Expression impl = queue.peek().implementation;
+		Expression impl = implContainer.implementation;
 		TypeTuple argsType = queue.peek().typeSpec;
 		childEnv = Application
 				.autoConvertArgs(childEnv, elambda.args, argsType);
@@ -158,5 +159,11 @@ public class Application extends Expression {
 		this.setType(funArrType.rtype);
 
 		return funArrType.rtype;
+	}
+
+	@Override
+	public Expression substituteTopLevelVariables(Environment topLevel) {
+		return new Application(this.fun.substituteTopLevelVariables(topLevel),
+				this.args.substituteTopLevelVariables(topLevel));
 	}
 }
