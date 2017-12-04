@@ -3,8 +3,13 @@ package parser;
 import expression.*;
 import types.TypeConcrete;
 import types.TypeRepresentation;
+import types.Type;
+import types.TypeTuple;
+import util.ImplContainer;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.TreeSet;
+import java.util.Set;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -77,6 +82,18 @@ public class SchemeBaseListener implements SchemeListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitType(SchemeParser.TypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterImpl(SchemeParser.ImplContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitImpl(SchemeParser.ImplContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

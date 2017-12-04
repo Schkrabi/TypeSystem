@@ -11,9 +11,13 @@ options {
 import expression.*;
 import types.TypeConcrete;
 import types.TypeRepresentation;
+import types.Type;
+import types.TypeTuple;
 import util.ImplContainer;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.TreeSet;
+import java.util.Set;
 }
 
 @parser::members {
@@ -142,7 +146,11 @@ expr returns [Expression val]
 	;
 
 seq returns [Expression val]
-	: '(' ELAMBDA expr expr '[' (impl)* ']' ')'
+	: '(' { Set<ImplContainer> s = new TreeSet<ImplContainer>(); Expression argList, body; } 
+	  ELAMBDA expr { argList = $expr.val; } 
+	  expr { body = $expr.val; }
+	  '[' (impl { s.add($impl.val); })* ']' 
+	  ')' { $val = new ExtendedLambda(lambdaArgsTuple(argList), body, s); }
 	| '('	{ Expression argList, body; }
 	  LAMBDA expr { argList = $expr.val; } expr { body = $expr.val; }
 	  ')'	{ $val = new Lambda(lambdaArgsTuple(argList), body); }
@@ -169,7 +177,9 @@ type returns [TypeConcrete val]
 	;
 	
 impl returns [ImplContainer val]
-	: '(' (type)* ')' expr
+	: '(' { List<Type> ll = new ArrayList<Type>(); }
+	  (type { ll.add($type.val); })* 
+	  ')' expr { $val = new ImplContainer(new TypeTuple(ll), $expr.val); }
 	;
 
 atom returns [Object val]

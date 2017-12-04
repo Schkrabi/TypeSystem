@@ -1,5 +1,6 @@
 package types;
 
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -20,6 +21,12 @@ public class TypeTuple extends Type {
 	 * Empty type tuple object
 	 */
 	public static final TypeTuple EMPTY_TUPLE = new TypeTuple(new Type[] {});
+	
+	public TypeTuple(List<Type> values) {
+		Type[] ar = new Type[values.size()];
+		ar = values.toArray(ar);
+		this.values = ar;
+	}
 
 	public TypeTuple(Type[] values) {
 		this.values = values;

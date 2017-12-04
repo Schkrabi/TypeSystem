@@ -3,8 +3,13 @@ package parser;
 import expression.*;
 import types.TypeConcrete;
 import types.TypeRepresentation;
+import types.Type;
+import types.TypeTuple;
+import util.ImplContainer;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.TreeSet;
+import java.util.Set;
 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
@@ -63,6 +68,16 @@ public interface SchemeListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitType(SchemeParser.TypeContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SchemeParser#impl}.
+	 * @param ctx the parse tree
+	 */
+	void enterImpl(SchemeParser.ImplContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SchemeParser#impl}.
+	 * @param ctx the parse tree
+	 */
+	void exitImpl(SchemeParser.ImplContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SchemeParser#atom}.
 	 * @param ctx the parse tree
