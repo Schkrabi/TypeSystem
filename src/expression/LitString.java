@@ -48,4 +48,9 @@ public class LitString extends Literal {
 	public String toString() {
 		return "\"" + this.value + "\"";
 	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		return '"' + this.value + '"';
+	}
 }

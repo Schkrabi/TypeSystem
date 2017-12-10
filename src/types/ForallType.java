@@ -3,6 +3,8 @@ package types;
 import java.util.Set;
 import java.util.TreeSet;
 
+import expression.Expression;
+
 /**
  * Universally quantified type
  * 
@@ -74,5 +76,14 @@ public class ForallType extends Type {
 			return this.bound.compareTo(other.bound);
 		}
 		return this.type.compareTo(other.type);
+	}
+
+	@Override
+	public Expression convertTo(Expression expr, Type toType) throws Exception {
+		if(!(toType instanceof ForallType)){
+			this.throwConversionError(expr, toType);
+		}
+		ForallType t = (ForallType)toType;
+		return this.type.convertTo(expr, t); //??		
 	}
 }

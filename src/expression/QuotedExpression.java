@@ -32,4 +32,9 @@ public class QuotedExpression extends Expression {
 				quoted.substituteTopLevelVariables(topLevel));
 	}
 
+	@Override
+	public String toClojureCode() throws Exception {
+		return this.quoted.toClojureCode();
+	}
+
 }

@@ -51,4 +51,9 @@ public class LitDouble extends Literal {
 	public String toString() {
 		return Double.toString(this.value);
 	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		return Double.toString(this.value);
+	}
 }

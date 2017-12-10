@@ -41,7 +41,7 @@ public abstract class Expression {
 	 * @return Type or null
 	 */
 	public Type getType() {
-		return this.inferedType;
+		return this.inferedType.getRep();
 	}
 
 	/**
@@ -56,4 +56,6 @@ public abstract class Expression {
 	}
 	
 	public abstract Expression substituteTopLevelVariables(Environment topLevel);
+	
+	public abstract String toClojureCode() throws Exception;
 }

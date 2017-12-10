@@ -169,4 +169,9 @@ public class IntRoman extends LitInteger {
 		}
 		return super.convertRepresentation(c);
 	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		return '"' + this.value + '"';
+	}
 }

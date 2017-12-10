@@ -77,4 +77,17 @@ public class IfExpression extends Expression {
 				this.trueBranch.substituteTopLevelVariables(topLevel),
 				this.falseBranch.substituteTopLevelVariables(topLevel));
 	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		StringBuilder s = new StringBuilder();
+		s.append("(if ");
+		s.append(this.condition.toClojureCode());
+		s.append(' ');
+		s.append(this.trueBranch.toClojureCode());
+		s.append(' ');
+		s.append(this.falseBranch.toClojureCode());
+		s.append(')');
+		return s.toString();
+	}
 }

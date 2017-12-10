@@ -133,4 +133,9 @@ public class Sequence extends Expression implements Iterable<Expression> {
 		}
 
 	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		return this.transform().toClojureCode();
+	}
 }

@@ -2,6 +2,9 @@ package expression;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.function.Consumer;
+
 import types.Type;
 import types.TypeTuple;
 import interpretation.Environment;
@@ -98,5 +101,22 @@ public class Tuple extends Expression implements Iterable<Expression> {
 
 		}
 
+	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		StringBuilder s = new StringBuilder();
+		s.append('[');
+		
+		Iterator<Expression> i = this.iterator();
+		while(i.hasNext()){
+			Expression e = i.next();
+			s.append(e.toClojureCode());
+			if(i.hasNext()){
+				s.append(' ');
+			}
+		}
+		s.append(']');
+		return s.toString();
 	}
 }

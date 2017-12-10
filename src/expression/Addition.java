@@ -2,6 +2,8 @@ package expression;
 
 import types.Type;
 import types.TypeConcrete;
+import types.TypeArrow;
+import types.TypeTuple;
 import interpretation.Environment;
 
 /**
@@ -25,12 +27,24 @@ public class Addition extends Lambda {
 
 	@Override
 	public String toString() {
-		return "+ _x _y";
+		return "(+ _x _y)";
 	}
 	
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) {
 		return this;
+	}
+	
+	@Override
+	public Type infer(){
+		Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}), TypeConcrete.TypeInt);
+		this.setType(t);
+		return t;
+	}
+	
+	@Override
+	public String toClojureCode() throws Exception {
+		return "(fn [x y] (+ x y))";
 	}
 
 	/**
@@ -69,6 +83,11 @@ public class Addition extends Lambda {
 		@Override
 		public Expression substituteTopLevelVariables(Environment topLevel) {
 			return this;
+		}
+
+		@Override
+		public String toClojureCode() throws Exception {
+			throw new Exception("Use of AddWrapper for Clojure compilation is not supported.");
 		}
 	}
 }

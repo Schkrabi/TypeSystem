@@ -1,5 +1,6 @@
 package expression;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 
@@ -165,5 +166,35 @@ public class Application extends Expression {
 	public Expression substituteTopLevelVariables(Environment topLevel) {
 		return new Application(this.fun.substituteTopLevelVariables(topLevel),
 				this.args.substituteTopLevelVariables(topLevel));
+	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		StringBuilder s = new StringBuilder();
+		s.append('(');
+		s.append(this.fun.toClojureCode());
+		s.append(' ');
+		
+		TypeArrow funType = (TypeArrow)this.fun.getType().getRep();
+		TypeTuple argsType = (TypeTuple)funType.ltype;
+		
+		Iterator<Expression> i = this.args.iterator();
+		Iterator<Type> j = argsType.iterator();
+		while(i.hasNext()){
+			Expression e = i.next();
+			Type argType = j.next().getRep();
+			
+			if(!argType.equals(e.getType())){
+				e = e.getType().convertTo(e, argType);
+			}
+			
+			s.append(e.toClojureCode());
+			
+			if(i.hasNext()){
+				s.append(" ");
+			}
+		}
+		s.append(')');
+		return s.toString();
 	}
 }

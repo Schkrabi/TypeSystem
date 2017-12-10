@@ -3,6 +3,8 @@ package types;
 import java.util.Set;
 import java.util.TreeSet;
 
+import expression.Expression;
+
 /**
  * Type variable
  * 
@@ -51,5 +53,10 @@ public class TypeVariable extends Type {
 		}
 		s.addAll(this.getRep().getUnconstrainedVariables());
 		return s;
+	}
+
+	@Override
+	public Expression convertTo(Expression expr, Type toType) throws Exception {
+		throw new Exception("Cannot convert to Variable type!");
 	}
 }

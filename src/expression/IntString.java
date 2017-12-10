@@ -69,4 +69,9 @@ public class IntString extends LitInteger {
 		}
 		return super.convertRepresentation(c);
 	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		return '"' + this.value + '"';
+	}
 }

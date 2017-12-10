@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Arrays;
 
+import expression.Expression;
+
 /**
  * Abstract class for types
  * 
@@ -102,6 +104,12 @@ public abstract class Type implements Comparable<Type> {
 	@Override
 	public int compareTo(Type other) {
 		return (int) Math.signum(ordering.indexOf(this.getClass()) - ordering.indexOf(other.getClass()));
+	}
+	
+	public abstract Expression convertTo(Expression expr,  Type toType) throws Exception;
+	
+	protected void throwConversionError(Expression expr, Type toType) throws Exception{
+		throw new Exception("Trying to convert uncovertable types " + this.toString() + " to " + toType.toString() + " on expression " + expr.toString());
 	}
 
 	/**

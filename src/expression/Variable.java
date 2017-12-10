@@ -62,4 +62,9 @@ public class Variable extends Expression implements Comparable<Variable> {
 		}
 		return this;
 	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		return this.name;
+	}
 }

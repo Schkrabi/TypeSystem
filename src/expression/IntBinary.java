@@ -58,4 +58,9 @@ public class IntBinary extends LitInteger {
 		}
 		return super.convertRepresentation(c);
 	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		return Integer.toString(this.value);
+	}
 }

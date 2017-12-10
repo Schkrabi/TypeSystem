@@ -41,4 +41,9 @@ public class Add extends Expression {
 	public Expression substituteTopLevelVariables(Environment topLevel) {
 		return this;
 	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		throw new Exception("Obsolete Add used!");
+	}
 }

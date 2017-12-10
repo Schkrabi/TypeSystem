@@ -1,16 +1,20 @@
 package types;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
+import expression.Expression;
+import expression.Tuple;
 
 /**
  * Tuple of types
  * 
  * @author Mgr. Radomir Skrabal
- *
+ * 
  */
-public class TypeTuple extends Type {
+public class TypeTuple extends Type implements Iterable<Type> {
 
 	/**
 	 * Values of the tuple
@@ -21,7 +25,7 @@ public class TypeTuple extends Type {
 	 * Empty type tuple object
 	 */
 	public static final TypeTuple EMPTY_TUPLE = new TypeTuple(new Type[] {});
-	
+
 	public TypeTuple(List<Type> values) {
 		Type[] ar = new Type[values.size()];
 		ar = values.toArray(ar);
@@ -93,5 +97,58 @@ public class TypeTuple extends Type {
 			}
 		}
 		return 0;
+	}
+
+	@Override
+	public Iterator<Type> iterator() {
+		return new TypeTupleIterator();
+	}
+
+	private class TypeTupleIterator implements Iterator<Type> {
+
+		private int cursor = 0;
+
+		@Override
+		public boolean hasNext() {
+			return cursor < TypeTuple.this.values.length;
+		}
+
+		@Override
+		public Type next() {
+			if (this.hasNext()) {
+				Type t = TypeTuple.this.values[this.cursor];
+				cursor++;
+				return t;
+			}
+			throw new NoSuchElementException();
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+
+		}
+
+	}
+
+	@Override
+	public Expression convertTo(Expression expr, Type toType) throws Exception {
+		if (!(toType instanceof TypeTuple) || (!(expr instanceof Tuple))
+				|| (this.values.length != ((TypeTuple) toType).values.length)
+				|| (this.values.length != ((Tuple) expr).values.length)) {
+			this.throwConversionError(expr, toType);
+		}
+		TypeTuple ttpl = (TypeTuple) toType;
+		Tuple tpl = (Tuple) expr;
+		Expression[] ts = new Expression[ttpl.values.length];
+
+		for (int i = 0; i < ts.length; i++) {
+			Expression e = tpl.values[i];
+			Type to = ttpl.values[i];
+			Type from = this.values[i];
+			ts[i] = from.convertTo(e, to);
+		}
+
+		return new Tuple(ts);
 	}
 }

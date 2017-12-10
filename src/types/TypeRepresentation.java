@@ -1,5 +1,6 @@
 package types;
 
+import expression.Expression;
 import expression.IntRoman;
 import expression.IntString;
 import expression.Literal;
@@ -53,6 +54,12 @@ public abstract class TypeRepresentation extends TypeConcrete {
 			return this.baseType.equals(other);
 		}
 		return false;
+	}
+	
+	@Override
+	public Expression convertTo(Expression expr, Type toType)
+			throws Exception {
+		return this.baseType.convertTo(expr, toType);
 	}
 
 	/**

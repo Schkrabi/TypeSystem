@@ -117,6 +117,11 @@ public class Main {
 				return this;
 			}
 
+			@Override
+			public String toClojureCode() throws Exception {
+				return "(fn [x] x)";
+			}
+
 		};
 
 		Expression binId = new Expression() {
@@ -136,6 +141,11 @@ public class Main {
 			@Override
 			public Expression substituteTopLevelVariables(Environment topLevel) {
 				return this;
+			}
+			
+			@Override
+			public String toClojureCode() throws Exception {
+				return "(fn [x] x)";
 			}
 
 		};

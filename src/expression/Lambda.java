@@ -46,7 +46,7 @@ public class Lambda extends ExtendedLambda {
 		Type argsType = this.args.infer();
 		Type bodyType = this.getBody().infer();
 
-		Type t = new TypeArrow(argsType, bodyType);
+		Type t = new TypeArrow(argsType.getRep(), bodyType.getRep());
 
 		for (TypeVariable v : t.getUnconstrainedVariables()) {
 			t = new ForallType(v, t);
@@ -55,5 +55,22 @@ public class Lambda extends ExtendedLambda {
 		this.setType(t);
 
 		return t;
+	}
+	
+	@Override
+	public String toClojureCode() throws Exception{
+		StringBuilder s = new StringBuilder();
+		s.append("(fn [");
+		for(Expression e : this.args){
+			if(!(e instanceof Variable)){
+				throw new Exception("Invalid expression in lambda variable list!");
+			}
+			Variable v = (Variable)e;
+			s.append(v.toClojureCode());
+		}
+		s.append("] ");
+		s.append(this.getBody().toClojureCode());
+		s.append(')');
+		return s.toString();
 	}
 }

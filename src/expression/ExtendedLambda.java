@@ -120,8 +120,18 @@ public class ExtendedLambda extends Expression {
 								+ " of type " + defImplType.toString());
 			}
 		}
+		
+		Type t;
 
-		Type t = new TypeArrow(argsType, defImplType);
+		if(this.implementations.isEmpty()){
+			t = new TypeArrow(argsType.getRep(), defImplType.getRep());
+		}
+		else{
+			//Need to know comparator at compile time!
+			ImplContainer impl = this.getSortedImplementations().peek();
+			//Types should be unified from previous code
+			t = new TypeArrow(impl.typeSpec.getRep(), impl.implementation.getType().getRep()); 
+		}
 
 		for (TypeVariable v : t.getUnconstrainedVariables()) {
 			t = new ForallType(v, t);
@@ -265,5 +275,15 @@ public class ExtendedLambda extends Expression {
 		}
 		
 		return new ExtendedLambda(this.args, this.defaultImplementation.substituteTopLevelVariables(e), s);
+	}
+
+	//@Override
+	public String toClojureCode() throws Exception {
+		/*if(this.implementations.isEmpty()){
+			return (new Lambda(this.args, this.defaultImplementation)).toClojureCode();
+		}
+		ImplContainer impl = this.getSortedImplementations().peek();//Comparator here?
+		return (new Lambda(this.args, impl.implementation))*/
+		return "";//TODO
 	}
 }

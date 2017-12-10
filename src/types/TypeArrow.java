@@ -3,6 +3,12 @@ package types;
 import java.util.Set;
 import java.util.TreeSet;
 
+import util.NameGenerator;
+
+import expression.Expression;
+import expression.Lambda;
+import expression.Variable;
+
 /**
  * Class for functions types
  * 
@@ -66,5 +72,16 @@ public class TypeArrow extends Type {
 			return ltype.compareTo(other.ltype);
 		}
 		return this.rtype.compareTo(other.rtype);
+	}
+
+	@Override
+	public Expression convertTo(Expression expr, Type toType) throws Exception {
+		if(!(toType instanceof TypeArrow)){
+			this.throwConversionError(expr, toType);
+		}
+		TypeArrow t = (TypeArrow)toType;
+		Variable v = new Variable(NameGenerator.next());
+		Expression e = this.rtype.convertTo(new Lambda(v, this.ltype.convertTo(expr, t.ltype)), t.rtype);
+		return e;
 	}
 }

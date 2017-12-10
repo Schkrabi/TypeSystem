@@ -3,9 +3,11 @@ package types;
 import java.util.Set;
 import java.util.TreeSet;
 
+import expression.Expression;
 import expression.IntBinary;
 import expression.LitBoolean;
 import expression.LitDouble;
+import expression.LitInteger;
 import expression.LitString;
 import expression.Literal;
 
@@ -15,7 +17,7 @@ import expression.Literal;
  * @author Mgr. Radomir Skrabal
  *
  */
-public abstract class TypeConcrete extends Type {
+public abstract class TypeConcrete extends Type { //TODO Try adding generic type argument for implementation
 	/**
 	 * Name of the type
 	 */
@@ -110,6 +112,16 @@ public abstract class TypeConcrete extends Type {
 			Boolean b = (Boolean) value;
 			return b ? LitBoolean.TRUE : LitBoolean.FALSE;
 		}
+
+		@Override
+		public Expression convertTo(Expression expr, Type toType)
+				throws Exception {
+			if(!(toType instanceof TypeConcrete)){
+				this.throwConversionError(expr, toType);
+			}
+			TypeConcrete t = (TypeConcrete)toType;
+			return LitBoolean.convertRepresentationLazy(expr, t.implementation);
+		}
 	};
 	/**
 	 * Type of Integer
@@ -123,6 +135,16 @@ public abstract class TypeConcrete extends Type {
 			}
 			Integer i = (Integer) value;
 			return new IntBinary(i.intValue());
+		}
+
+		@Override
+		public Expression convertTo(Expression expr, Type toType)
+				throws Exception {
+			if(!(toType instanceof TypeConcrete)){
+				this.throwConversionError(expr, toType);
+			}
+			TypeConcrete t = (TypeConcrete)toType;
+			return LitInteger.convertRepresentationLazy(expr, t.implementation);
 		}
 	};
 
@@ -140,6 +162,16 @@ public abstract class TypeConcrete extends Type {
 			return new LitString(s);
 		}
 
+		@Override
+		public Expression convertTo(Expression expr, Type toType)
+				throws Exception {
+			if(!(toType instanceof TypeConcrete)){
+				this.throwConversionError(expr, toType);
+			}
+			TypeConcrete t = (TypeConcrete)toType;
+			return LitString.convertRepresentationLazy(expr, t.implementation);
+		}
+
 	};
 	/**
 	 * Type of Double
@@ -153,6 +185,16 @@ public abstract class TypeConcrete extends Type {
 			}
 			Double d = (Double) value;
 			return new LitDouble(d);
+		}
+
+		@Override
+		public Expression convertTo(Expression expr, Type toType)
+				throws Exception {
+			if(!(toType instanceof TypeConcrete)){
+				this.throwConversionError(expr, toType);
+			}
+			TypeConcrete t = (TypeConcrete)toType;
+			return LitDouble.convertRepresentationLazy(expr, t.implementation);
 		}
 	};
 }
