@@ -106,7 +106,22 @@ public abstract class Type implements Comparable<Type> {
 		return (int) Math.signum(ordering.indexOf(this.getClass()) - ordering.indexOf(other.getClass()));
 	}
 	
+	/**
+	 * Creates expression that converts expr in different type (if possible)
+	 * @param expr Expression to be converted
+	 * @param toType target type
+	 * @return a new expression that will interpret/infer into a targeted type
+	 * @throws Exception
+	 */
 	public abstract Expression convertTo(Expression expr,  Type toType) throws Exception;
+	
+	/**
+	 * Creates expression that converts expr in type consisting only of Basic types (not specialized type representations)
+	 * @param expr Expression to be converted
+	 * @return a new expression that will intepret/infer into a basic type
+	 * @throws Exception
+	 */
+	public abstract Expression convertToDefaultRepresentation(Expression expr) throws Exception;
 	
 	protected void throwConversionError(Expression expr, Type toType) throws Exception{
 		throw new Exception("Trying to convert uncovertable types " + this.toString() + " to " + toType.toString() + " on expression " + expr.toString());

@@ -57,9 +57,11 @@ public abstract class TypeRepresentation extends TypeConcrete {
 	}
 	
 	@Override
-	public Expression convertTo(Expression expr, Type toType)
-			throws Exception {
-		return this.baseType.convertTo(expr, toType);
+	public Expression convertToDefaultRepresentation(Expression expr) throws Exception{
+		if(expr.getType() != this) {
+			throw new Exception("Invalid converison of " + expr.getType() + " carried out by " + this);
+		}
+		return this.convertTo(expr, this.baseType);
 	}
 
 	/**
@@ -67,6 +69,17 @@ public abstract class TypeRepresentation extends TypeConcrete {
 	 */
 	public static final TypeRepresentation TypeIntString = new TypeRepresentation("String", IntString.class,
 			TypeConcrete.TypeInt) {
+		
+		@Override
+		protected void init() {
+			try {
+				this.addConversion(TypeConcrete.TypeInt, IntString.ToIntBinaryWrapper.class);
+				this.addConversion(TypeRepresentation.TypeIntRoman, IntString.ToIntRomanWrapper.class);
+			}catch(Exception e) {
+				//Unlikely
+			}
+		}
+		
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {
 			if (!(value instanceof String)) {
@@ -82,6 +95,17 @@ public abstract class TypeRepresentation extends TypeConcrete {
 	 */
 	public static final TypeRepresentation TypeIntRoman = new TypeRepresentation("Roman", IntRoman.class,
 			TypeConcrete.TypeInt) {
+		
+		@Override
+		protected void init() {
+			try {
+				this.addConversion(TypeConcrete.TypeInt, IntRoman.ToIntBinaryWrapper.class);
+				this.addConversion(TypeRepresentation.TypeIntString, IntRoman.ToIntStringWrapper.class);
+			}catch(Exception e) {
+				//Unlikely
+			}
+		}
+		
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {
 			if (!(value instanceof String)) {

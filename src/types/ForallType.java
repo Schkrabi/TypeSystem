@@ -84,6 +84,15 @@ public class ForallType extends Type {
 			this.throwConversionError(expr, toType);
 		}
 		ForallType t = (ForallType)toType;
-		return this.type.convertTo(expr, t); //??		
+		Expression e = this.type.convertTo(expr, t);
+		e.infer();
+		return e;		
+	}
+
+	@Override
+	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
+		Expression e = this.type.convertToDefaultRepresentation(expr);
+		e.infer();
+		return e;
 	}
 }

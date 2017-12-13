@@ -1,6 +1,7 @@
 package expression;
 
 import types.Type;
+import types.TypeConcrete;
 import types.TypeRepresentation;
 import interpretation.Environment;
 
@@ -46,32 +47,84 @@ public class IntString extends LitInteger {
 	}
 
 	@Override
-	public Literal fromDefaultRepresentation(Literal l) {
-		IntBinary def = (IntBinary) l;
-		return new IntString(Integer.toString(def.value));
-	}
-
-	@Override
-	public Literal toDefaultRepresentation() {
-		return new IntBinary(Integer.parseInt(this.value));
-	}
-
-	@Override
-	public Literal convertRepresentation(Class<? extends Literal> c) throws Exception {
-		if (c == IntString.class) {
-			return this;
-		}
-		if (c == IntBinary.class) {
-			return this.toDefaultRepresentation();
-		}
-		if (c == IntRoman.class) {
-			return new IntRoman(IntRoman.int2roman(Integer.parseInt(this.value)));
-		}
-		return super.convertRepresentation(c);
-	}
-
-	@Override
 	public String toClojureCode() throws Exception {
 		return '"' + this.value + '"';
+	}
+	
+	public static class ToIntBinaryWrapper extends ConversionWrapper{
+
+		public ToIntBinaryWrapper(Expression wrapped) {
+			super(wrapped);
+		}
+
+		@Override
+		public Expression interpret(Environment env) throws Exception {
+			Expression e = this.wrapped.interpret(env);
+			if(!(e instanceof IntString)) {
+				throw new Exception("Invalid wrapped conversion from IntString to IntBinary");
+			}
+			IntString s = (IntString)e;
+			return new IntBinary(Integer.parseInt(s.value));
+		}
+
+		@Override
+		public Expression substituteTopLevelVariables(Environment topLevel) {
+			return new ToIntBinaryWrapper(this.wrapped.substituteTopLevelVariables(topLevel));
+		}
+
+		@Override
+		public String toClojureCode() throws Exception {
+			return "(Integer/parseInt " + this.wrapped.toClojureCode() + ")";
+		}
+
+		@Override
+		public Type infer() throws Exception {
+			Type t = this.wrapped.infer();
+			if(t != TypeRepresentation.TypeIntString) {
+				throw new Exception("Invalid wrapped conversion from IntString to IntBinary");
+			}
+			this.setType(TypeConcrete.TypeInt);
+			return TypeConcrete.TypeInt;
+		}
+	}
+	
+	public static class ToIntRomanWrapper extends ConversionWrapper{
+
+		public ToIntRomanWrapper(Expression wrapped) {
+			super(wrapped);
+		}
+
+		@Override
+		public Expression interpret(Environment env) throws Exception {
+			Expression e = this.wrapped.interpret(env);
+			if(!(e instanceof IntString)) {
+				throw new Exception("Invalid wrapped conversion from IntString to IntRoman");
+			}
+			IntString s = (IntString)e;
+			return new IntRoman(IntRoman.int2roman(Integer.parseInt(s.value)));
+		}
+
+		@Override
+		public Type infer() throws Exception {
+			Type t = this.wrapped.infer();
+			if(t != TypeRepresentation.TypeIntString) {
+				throw new Exception("Invalid wrapped conversion from IntString to IntRoman");
+			}
+			this.setType(TypeRepresentation.TypeIntRoman);
+			return TypeRepresentation.TypeIntRoman;
+		}
+
+		@Override
+		public Expression substituteTopLevelVariables(Environment topLevel) {
+			return new ToIntRomanWrapper(this.wrapped.substituteTopLevelVariables(topLevel));
+		}
+
+		@Override
+		public String toClojureCode() throws Exception {
+			//TODO library
+			throw new Exception("Not Implemented");
+			//return "(IntRoman/roman2int (Integer/parseInt " + this.wrapped.toClojureCode() + "))";
+		}
+		
 	}
 }

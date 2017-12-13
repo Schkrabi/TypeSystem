@@ -2,9 +2,6 @@ package expression;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Spliterator;
-import java.util.function.Consumer;
-
 import types.Type;
 import types.TypeTuple;
 import interpretation.Environment;

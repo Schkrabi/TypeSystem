@@ -47,22 +47,6 @@ public class LitBoolean extends Literal {
 	}
 
 	@Override
-	public Literal fromDefaultRepresentation(Literal l) {
-		return l; // TODO ??
-	}
-
-	@Override
-	public Literal toDefaultRepresentation() {
-		return this;
-	}
-
-	@Override
-	public Literal convertRepresentation(Class<? extends Literal> c) {
-		// No non-default representations for Bool
-		return this;
-	}
-
-	@Override
 	public String toClojureCode() throws Exception {
 		return Boolean.toString(this.value);
 	}

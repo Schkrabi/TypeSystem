@@ -81,7 +81,17 @@ public class TypeArrow extends Type {
 		}
 		TypeArrow t = (TypeArrow)toType;
 		Variable v = new Variable(NameGenerator.next());
-		Expression e = this.rtype.convertTo(new Lambda(v, this.ltype.convertTo(expr, t.ltype)), t.rtype);
+		Lambda l = new Lambda(v, this.ltype.convertTo(expr, t.ltype));
+		l.infer();
+		Expression e = this.rtype.convertTo(l, t.rtype);
 		return e;
+	}
+
+	@Override
+	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
+		Variable v = new Variable(NameGenerator.next());
+		Lambda l = new Lambda(v, this.ltype.convertToDefaultRepresentation(expr));
+		l.infer();
+		return this.rtype.convertToDefaultRepresentation(l);
 	}
 }

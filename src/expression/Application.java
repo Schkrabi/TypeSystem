@@ -7,7 +7,6 @@ import java.util.PriorityQueue;
 import types.ForallType;
 import types.Type;
 import types.TypeArrow;
-import types.TypeConcrete;
 import types.TypeTuple;
 import util.ImplContainer;
 import interpretation.Environment;
@@ -50,10 +49,8 @@ public class Application extends Expression {
 		ExtendedLambda elambda = (ExtendedLambda) ifun;
 
 		if (elambda.args.values.length != this.args.values.length) {
-			throw new Exception("In aplication of " + fun
-					+ "number of arguments mismatch, expected "
-					+ elambda.args.values.length + " got "
-					+ this.args.values.length);
+			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected "
+					+ elambda.args.values.length + " got " + this.args.values.length);
 		}
 
 		Environment childEnv = new Environment(env);
@@ -68,15 +65,13 @@ public class Application extends Expression {
 		// Std lambda
 		if (elambda instanceof Lambda || implContainer == null) {
 			// Do I want to do this?
-			childEnv = Application
-					.autoConvertForDefaultRepresentation(childEnv);
+			childEnv = Application.autoConvertForDefaultRepresentation(childEnv);
 			return elambda.defaultImplementation.interpret(childEnv);
 		}
 
 		Expression impl = implContainer.implementation;
 		TypeTuple argsType = queue.peek().typeSpec;
-		childEnv = Application
-				.autoConvertArgs(childEnv, elambda.args, argsType);
+		childEnv = Application.autoConvertArgs(childEnv, elambda.args, argsType);
 
 		return impl.interpret(childEnv);
 	}
@@ -85,17 +80,17 @@ public class Application extends Expression {
 	 * Lazily converts all the arguments to their default representation
 	 * 
 	 * @param e
-	 *            environment containing the arguments associated with their
-	 *            names
+	 *            environment containing the arguments associated with their names
 	 * @return new environment where all the arguments will be in their default
 	 *         representation when interpreted
+	 * @throws Exception 
 	 */
-	private static Environment autoConvertForDefaultRepresentation(Environment e) {
+	private static Environment autoConvertForDefaultRepresentation(Environment e) throws Exception {
 		Environment ret = new Environment(e.parent);
 
 		for (Map.Entry<Variable, Expression> entry : e.entrySet()) {
-			ret.put(entry.getKey(),
-					Literal.defaultRepresentationLazy(entry.getValue()));
+			Type t = entry.getValue().getType(); //Requires to run infer before interpret!			
+			ret.put(entry.getKey(), t.convertToDefaultRepresentation(entry.getValue()));
 		}
 
 		return ret;
@@ -105,23 +100,20 @@ public class Application extends Expression {
 	 * Lazily converts all the arguments to given representation
 	 * 
 	 * @param e
-	 *            environment containing the arguments associated with their
-	 *            names
+	 *            environment containing the arguments associated with their names
 	 * @param args
 	 *            argument names in the environment
 	 * @param argTypes
 	 *            formal inferred types of the arguments
 	 * @return new environment where all the arguments will be converted
+	 * @throws Exception
 	 */
-	private static Environment autoConvertArgs(Environment e, Tuple args,
-			TypeTuple argTypes) {
+	private static Environment autoConvertArgs(Environment e, Tuple args, TypeTuple argTypes) throws Exception {
 		Environment ret = new Environment(e.parent);
 
 		for (int i = 0; i < args.values.length; i++) {
-			ret.put((Variable) args.values[i], Literal
-					.convertRepresentationLazy(
-							e.get((Variable) args.values[i]),
-							((TypeConcrete) argTypes.values[i]).implementation));
+			ret.put((Variable) args.values[i], e.get((Variable) args.values[i]).getType()
+					.convertTo(e.get((Variable) args.values[i]), argTypes.values[i]));
 		}
 
 		return ret;
@@ -147,13 +139,11 @@ public class Application extends Expression {
 		} else if (funType instanceof ForallType) {
 			funArrType = (TypeArrow) ((ForallType) funType).getBoundType();
 		} else {
-			throw new Exception("Instance of " + funType
-					+ " was evaluated as applicable");
+			throw new Exception("Instance of " + funType + " was evaluated as applicable");
 		}
 
 		if (!Type.unify(funArrType.ltype, argsType)) {
-			throw new Exception("Arguments of " + this.fun
-					+ " does not unify with args " + this.args + " expected "
+			throw new Exception("Arguments of " + this.fun + " does not unify with args " + this.args + " expected "
 					+ funArrType.ltype + " got " + argsType);
 		}
 
@@ -174,23 +164,23 @@ public class Application extends Expression {
 		s.append('(');
 		s.append(this.fun.toClojureCode());
 		s.append(' ');
-		
-		TypeArrow funType = (TypeArrow)this.fun.getType().getRep();
-		TypeTuple argsType = (TypeTuple)funType.ltype;
-		
+
+		TypeArrow funType = (TypeArrow) this.fun.getType().getRep();
+		TypeTuple argsType = (TypeTuple) funType.ltype;
+
 		Iterator<Expression> i = this.args.iterator();
 		Iterator<Type> j = argsType.iterator();
-		while(i.hasNext()){
+		while (i.hasNext()) {
 			Expression e = i.next();
 			Type argType = j.next().getRep();
-			
-			if(!argType.equals(e.getType())){
+
+			if (!argType.equals(e.getType())) {
 				e = e.getType().convertTo(e, argType);
 			}
-			
+
 			s.append(e.toClojureCode());
-			
-			if(i.hasNext()){
+
+			if (i.hasNext()) {
 				s.append(" ");
 			}
 		}

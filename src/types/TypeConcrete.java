@@ -1,15 +1,17 @@
 package types;
 
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import expression.Expression;
 import expression.IntBinary;
 import expression.LitBoolean;
 import expression.LitDouble;
-import expression.LitInteger;
 import expression.LitString;
 import expression.Literal;
+import expression.Literal.ConversionWrapper;
 
 /**
  * Class for concrete types
@@ -27,10 +29,19 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 	 * Associated literal class of the representation/complete type
 	 */
 	public final Class<? extends Literal> implementation;
+	
+	/**
+	 * Map for type converting
+	 */
+	private Map<TypeConcrete, Class<? extends ConversionWrapper>> conversionTable = new TreeMap<TypeConcrete, Class<? extends ConversionWrapper>>();
 
 	public TypeConcrete(String name, Class<? extends Literal> implementation) {
 		this.name = name;
 		this.implementation = implementation;
+		this.init();
+	}
+	
+	protected void init() {
 	}
 
 	/**
@@ -99,6 +110,52 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 		}
 		return false;
 	}
+	
+	public void addConversion(TypeConcrete toType, Class<? extends ConversionWrapper> conversionWrapperClass) throws Exception {
+		if(this.conversionTable.containsKey(toType)) {
+			throw new Exception("Conversion of " + this.getClass().getName() + " to " + toType.name + " already exists.");
+		}
+		this.conversionTable.put(toType, conversionWrapperClass);
+	}
+	
+	private ConversionWrapper instantiateWrapperToType(TypeConcrete type, Expression arg) throws Exception {
+		Class<? extends ConversionWrapper> wrapperClass = this.conversionTable.get(type);
+		if(wrapperClass == null) {
+			throw new Exception("No conversion from literal " + this.getClass().getName() + " to type " + type.name + " exists");
+		}
+		
+		return wrapperClass.getConstructor(new Class<?>[] {Expression.class}).newInstance(arg);
+	}
+	
+	@Override
+	public Expression convertTo(Expression expr, Type toType)
+			throws Exception {
+		if(!(toType instanceof TypeConcrete)){
+			this.throwConversionError(expr, toType);
+		}
+		if(expr.getType() != this) {
+			throw new Exception("Invalid converison of " + expr.getType() + " carried out by " + this);
+		}
+		
+		TypeConcrete t = (TypeConcrete)toType;
+		
+		if(toType == this) {
+			return expr;
+		}
+		
+		
+		Expression e = this.instantiateWrapperToType(t, expr);
+		e.infer();
+		return e;
+	}
+	
+	@Override
+	public Expression convertToDefaultRepresentation(Expression expr) throws Exception{
+		if(expr.getType() != this) {
+			throw new Exception("Invalid converison of " + expr.getType() + " carried out by " + this);
+		}
+		return expr;
+	}
 
 	/**
 	 * Type of Bool
@@ -112,39 +169,29 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 			Boolean b = (Boolean) value;
 			return b ? LitBoolean.TRUE : LitBoolean.FALSE;
 		}
-
-		@Override
-		public Expression convertTo(Expression expr, Type toType)
-				throws Exception {
-			if(!(toType instanceof TypeConcrete)){
-				this.throwConversionError(expr, toType);
-			}
-			TypeConcrete t = (TypeConcrete)toType;
-			return LitBoolean.convertRepresentationLazy(expr, t.implementation);
-		}
 	};
 	/**
 	 * Type of Integer
 	 */
 	public static final TypeConcrete TypeInt = new TypeConcrete("Int", IntBinary.class) {
-
+		
+		protected void init() {
+			try {
+				this.addConversion(TypeRepresentation.TypeIntRoman, IntBinary.ToIntRomanWrapper.class);
+				this.addConversion(TypeRepresentation.TypeIntString, IntBinary.ToIntStringWrapper.class);
+			}catch(Exception e) {
+				//Unlikely
+			}
+		}
+		
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {
 			if (!(value instanceof Integer)) {
 				this.throwInitializationError(TypeConcrete.TypeInt.getClass(), value);
 			}
+			
 			Integer i = (Integer) value;
 			return new IntBinary(i.intValue());
-		}
-
-		@Override
-		public Expression convertTo(Expression expr, Type toType)
-				throws Exception {
-			if(!(toType instanceof TypeConcrete)){
-				this.throwConversionError(expr, toType);
-			}
-			TypeConcrete t = (TypeConcrete)toType;
-			return LitInteger.convertRepresentationLazy(expr, t.implementation);
 		}
 	};
 
@@ -161,17 +208,6 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 			String s = (String) value;
 			return new LitString(s);
 		}
-
-		@Override
-		public Expression convertTo(Expression expr, Type toType)
-				throws Exception {
-			if(!(toType instanceof TypeConcrete)){
-				this.throwConversionError(expr, toType);
-			}
-			TypeConcrete t = (TypeConcrete)toType;
-			return LitString.convertRepresentationLazy(expr, t.implementation);
-		}
-
 	};
 	/**
 	 * Type of Double
@@ -185,16 +221,6 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 			}
 			Double d = (Double) value;
 			return new LitDouble(d);
-		}
-
-		@Override
-		public Expression convertTo(Expression expr, Type toType)
-				throws Exception {
-			if(!(toType instanceof TypeConcrete)){
-				this.throwConversionError(expr, toType);
-			}
-			TypeConcrete t = (TypeConcrete)toType;
-			return LitDouble.convertRepresentationLazy(expr, t.implementation);
 		}
 	};
 }

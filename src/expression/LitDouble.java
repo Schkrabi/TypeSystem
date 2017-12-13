@@ -28,16 +28,6 @@ public class LitDouble extends Literal {
 	}
 
 	@Override
-	public Literal fromDefaultRepresentation(Literal l) {
-		return this;
-	}
-
-	@Override
-	public Literal toDefaultRepresentation() throws Exception {
-		return this;
-	}
-
-	@Override
 	public Expression interpret(Environment env) throws Exception {
 		return this;
 	}
