@@ -28,6 +28,7 @@ public class IntString extends LitInteger {
 			return;
 		}
 		this.value = value;
+		this.setType(TypeRepresentation.TypeIntString);
 	}
 
 	@Override
@@ -121,9 +122,7 @@ public class IntString extends LitInteger {
 
 		@Override
 		public String toClojureCode() throws Exception {
-			//TODO library
-			throw new Exception("Not Implemented");
-			//return "(IntRoman/roman2int (Integer/parseInt " + this.wrapped.toClojureCode() + "))";
+			return "(IntRoman/roman2int (Integer/parseInt " + this.wrapped.toClojureCode() + "))";
 		}
 		
 	}

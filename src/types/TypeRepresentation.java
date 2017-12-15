@@ -70,7 +70,7 @@ public abstract class TypeRepresentation extends TypeConcrete {
 	public static final TypeRepresentation TypeIntString = new TypeRepresentation("String", IntString.class,
 			TypeConcrete.TypeInt) {
 		
-		@Override
+		/*@Override
 		protected void init() {
 			try {
 				this.addConversion(TypeConcrete.TypeInt, IntString.ToIntBinaryWrapper.class);
@@ -78,7 +78,7 @@ public abstract class TypeRepresentation extends TypeConcrete {
 			}catch(Exception e) {
 				//Unlikely
 			}
-		}
+		}*/
 		
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {
@@ -96,7 +96,7 @@ public abstract class TypeRepresentation extends TypeConcrete {
 	public static final TypeRepresentation TypeIntRoman = new TypeRepresentation("Roman", IntRoman.class,
 			TypeConcrete.TypeInt) {
 		
-		@Override
+		/*@Override
 		protected void init() {
 			try {
 				this.addConversion(TypeConcrete.TypeInt, IntRoman.ToIntBinaryWrapper.class);
@@ -104,7 +104,7 @@ public abstract class TypeRepresentation extends TypeConcrete {
 			}catch(Exception e) {
 				//Unlikely
 			}
-		}
+		}*/
 		
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {

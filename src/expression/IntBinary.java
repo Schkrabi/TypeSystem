@@ -19,6 +19,7 @@ public class IntBinary extends LitInteger {
 
 	public IntBinary(int value) {
 		this.value = value;
+		this.setType(TypeConcrete.TypeInt);
 	}
 
 	@Override
@@ -74,9 +75,8 @@ public class IntBinary extends LitInteger {
 
 		@Override
 		public String toClojureCode() throws Exception {
-			throw new Exception("Not Implemented");
 			//TODO import
-			//return "(IntRoman/int2roman " + this.wrapped.toClojureCode() + ")";
+			return "(IntRoman/int2roman " + this.wrapped.toClojureCode() + ")";
 		}
 	}
 	

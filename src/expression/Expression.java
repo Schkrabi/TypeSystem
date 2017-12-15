@@ -41,6 +41,9 @@ public abstract class Expression {
 	 * @return Type or null
 	 */
 	public Type getType() {
+		if(this.inferedType == null){
+			return null;
+		}
 		return this.inferedType.getRep();
 	}
 

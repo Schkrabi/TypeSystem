@@ -20,6 +20,7 @@ public class LitBoolean extends Literal {
 
 	private LitBoolean(boolean value) { 
 		this.value = value;
+		this.setType(TypeConcrete.TypeBool);
 	}
 
 	@Override

@@ -277,13 +277,14 @@ public class ExtendedLambda extends Expression {
 		return new ExtendedLambda(this.args, this.defaultImplementation.substituteTopLevelVariables(e), s);
 	}
 
-	//@Override
+	@Override
 	public String toClojureCode() throws Exception {
-		/*if(this.implementations.isEmpty()){
+		if(this.implementations.isEmpty()){
 			return (new Lambda(this.args, this.defaultImplementation)).toClojureCode();
 		}
 		ImplContainer impl = this.getSortedImplementations().peek();//Comparator here?
-		return (new Lambda(this.args, impl.implementation))*/
-		return "";//TODO
+		Lambda l = new Lambda(this.args, impl.implementation);
+		l.infer();
+		return l.toClojureCode();
 	}
 }

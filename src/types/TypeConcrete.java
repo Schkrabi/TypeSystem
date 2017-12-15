@@ -38,10 +38,6 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 	public TypeConcrete(String name, Class<? extends Literal> implementation) {
 		this.name = name;
 		this.implementation = implementation;
-		this.init();
-	}
-	
-	protected void init() {
 	}
 
 	/**
@@ -175,14 +171,14 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 	 */
 	public static final TypeConcrete TypeInt = new TypeConcrete("Int", IntBinary.class) {
 		
-		protected void init() {
+		/*protected void init() {
 			try {
 				this.addConversion(TypeRepresentation.TypeIntRoman, IntBinary.ToIntRomanWrapper.class);
 				this.addConversion(TypeRepresentation.TypeIntString, IntBinary.ToIntStringWrapper.class);
 			}catch(Exception e) {
 				//Unlikely
 			}
-		}
+		}*/
 		
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {

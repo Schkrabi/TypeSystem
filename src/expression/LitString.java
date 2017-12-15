@@ -17,6 +17,7 @@ public class LitString extends Literal {
 	
 	public LitString(String value) {
 		this.value = value;
+		this.setType(TypeConcrete.TypeString);
 	}
 
 	@Override

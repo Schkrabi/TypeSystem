@@ -20,6 +20,7 @@ public class LitDouble extends Literal {
 	
 	public LitDouble(double value) {
 		this.value = value;
+		this.setType(TypeConcrete.TypeDouble);
 	}
 
 	@Override

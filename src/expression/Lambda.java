@@ -1,5 +1,7 @@
 package expression;
 
+import java.util.Iterator;
+
 import types.ForallType;
 import types.Type;
 import types.TypeArrow;
@@ -61,12 +63,18 @@ public class Lambda extends ExtendedLambda {
 	public String toClojureCode() throws Exception{
 		StringBuilder s = new StringBuilder();
 		s.append("(fn [");
-		for(Expression e : this.args){
+		
+		Iterator<Expression> i = this.args.iterator();
+		while(i.hasNext()){
+			Expression e = i.next();
 			if(!(e instanceof Variable)){
 				throw new Exception("Invalid expression in lambda variable list!");
 			}
 			Variable v = (Variable)e;
 			s.append(v.toClojureCode());
+			if(i.hasNext()){
+				s.append(' ');
+			}
 		}
 		s.append("] ");
 		s.append(this.getBody().toClojureCode());

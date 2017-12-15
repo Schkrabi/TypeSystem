@@ -28,6 +28,7 @@ public class IntRoman extends LitInteger {
 			return;
 		}
 		this.value = value;
+		this.setType(TypeRepresentation.TypeIntRoman);
 	}
 
 	@Override
@@ -185,9 +186,8 @@ public class IntRoman extends LitInteger {
 
 		@Override
 		public String toClojureCode() throws Exception {
-			throw new Exception("Not Implemented");
 			//TODO import library
-			//return "(IntRoman/roman2int " + this.expr.toClojureCode() + ")";
+			return "(IntRoman/roman2int " + this.wrapped.toClojureCode() + ")";
 		}
 	}
 	
@@ -225,9 +225,8 @@ public class IntRoman extends LitInteger {
 
 		@Override
 		public String toClojureCode() throws Exception {
-			throw new Exception("Not Implemented");
 			//TODO import library
-			//return "(Integer/toString (IntRoman/roman2int " + this.expr.toClojureCode() + "))";
+			return "(Integer/toString (IntRoman/roman2int " + this.wrapped.toClojureCode() + "))";
 		}
 	}
 }

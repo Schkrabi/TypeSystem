@@ -1,46 +1,36 @@
 package main;
 
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.TreeMap;
+import interpretation.Environment;
 
-import org.antlr.runtime.tree.CommonTree;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Scanner;
+
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
-import parser.ExtendedTypeSystemListener;
-import parser.SchemeBaseListener;
 import parser.SchemeLexer;
-import parser.SchemeListener;
 import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
-
-import types.Type;
 import types.TypeConcrete;
 import types.TypeRepresentation;
-import types.TypeTuple;
+import util.ClojureCodeGenerator;
 import expression.Addition;
-import expression.Application;
 import expression.Expression;
-import expression.ExtendedLambda;
-import expression.IfExpression;
 import expression.IntBinary;
 import expression.IntRoman;
 import expression.IntString;
-import expression.Lambda;
-import expression.LitBoolean;
-import expression.LitInteger;
-import expression.Sequence;
 import expression.Subtraction;
-import expression.Tuple;
 import expression.Variable;
-import interpretation.Environment;
 
 /**
  * Main entry point for testing
@@ -51,124 +41,29 @@ import interpretation.Environment;
 public class Main {
 
 	/**
-	 * Main entrypoint for testing
+	 * Main entrypoint
 	 * 
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Scanner input = new Scanner(System.in);
-		Environment topLevel = Main.initTopLevelEnvironment();
-		
-		System.out.println("Parser interactive test");
-		try {
-			while (true) {
-				CharStream charStream = new ANTLRInputStream(input.nextLine());
-				TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
-				SchemeParser parser = new SchemeParser(tokens);
-
-				ExprsContext exprsContext = parser.exprs();
-
-				for (Expression e : exprsContext.val) {
-					Expression expr = e.substituteTopLevelVariables(topLevel);
-					System.out.println(expr);
-					Type t = expr.infer();
-					System.out.println(t.getRep());
-					System.out.println(expr.interpret(topLevel));
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			input.close();
+		try{
+		Main.init();
+		//Very basic options, didn't wanted to add more external libraries etc...
+		if(args.length == 0){
+			//Interactive parser mode
+			Main.interpretLoop();
 		}
-	}
-
-	/**
-	 * Old entrypoint
-	 * 
-	 * @param args
-	 */
-	public static void main_legacy(String[] args) {
-		// Expression expr = new Application(Addition.singleton, new Tuple(new
-		// Expression[]{LitInteger.initializeDefaultImplementation(4),
-		// LitInteger.initializeDefaultImplementation(5)}));
-		// Expression expr = new Application(Subtraction.singleton, new
-		// Tuple(new Expression[]{LitInteger.initializeDefaultImplementation(4),
-		// LitInteger.initializeDefaultImplementation(5)}));
-		// Expression expr = new IfExpression(LitBoolean.FALSE, new
-		// IntBinary(3), new IntBinary(2));
-
-		Expression romanId = new Expression() {
-
-			@Override
-			public Expression interpret(Environment env) throws Exception {
-				Expression e = env.get(new Variable("x")).interpret(env);
-				System.out.println("Roman Implementation");
-				return e;
-			}
-
-			@Override
-			public Type infer() throws Exception {
-				return TypeRepresentation.TypeIntRoman;
-			}
-
-			@Override
-			public Expression substituteTopLevelVariables(Environment topLevel) {
-				return this;
-			}
-
-			@Override
-			public String toClojureCode() throws Exception {
-				return "(fn [x] x)";
-			}
-
-		};
-
-		Expression binId = new Expression() {
-
-			@Override
-			public Expression interpret(Environment env) throws Exception {
-				IntBinary e = (IntBinary) env.get(new Variable("x")).interpret(env);
-				System.out.println("Binary Implementation");
-				return new IntBinary(e.value + 5);
-			}
-
-			@Override
-			public Type infer() throws Exception {
-				return TypeConcrete.TypeInt;
-			}
-
-			@Override
-			public Expression substituteTopLevelVariables(Environment topLevel) {
-				return this;
-			}
-			
-			@Override
-			public String toClojureCode() throws Exception {
-				return "(fn [x] x)";
-			}
-
-		};
-
-		Map<TypeTuple, Expression> impls = new TreeMap<TypeTuple, Expression>();
-		impls.put(new TypeTuple(new Type[] { TypeRepresentation.TypeIntRoman }), romanId);
-
-		ExtendedLambda elambda = new ExtendedLambda(new Tuple(new Variable[] { new Variable("x") }), binId, impls);
-
-		// Expression expr = new Application(elambda, new Tuple(new
-		// Expression[]{LitInteger.initializeDefaultImplementation(1024)}));
-		// Expression expr = new Application(elambda, new Tuple(new
-		// Expression[]{new IntRoman("MCM")}));
-		Expression expr = new Application(elambda, new Tuple(new Expression[] { new IntString("2048") }));
-
-		System.out.println(expr);
-		try {
-			System.out.println(expr.infer());
-			Environment env = new Environment();
-			System.out.println(expr.interpret(env));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+		else if(args.length == 2){
+			//Compiler mode
+			Main.compile(Paths.get(args[0]), Paths.get(args[1]));
+		}
+		else{
+			System.out.println("Wrong number of arguments specified.");
+			return;
+		}
+		}catch(Exception e){
 			e.printStackTrace();
+			return;
 		}
 	}
 
@@ -178,5 +73,77 @@ public class Main {
 		env.put(new Variable("-"), Subtraction.singleton);
 		
 		return env;
+	}
+	
+	private static void initTypesConversions() throws Exception{
+		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntRoman, IntBinary.ToIntRomanWrapper.class);
+		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntString, IntBinary.ToIntStringWrapper.class);
+		TypeRepresentation.TypeIntRoman.addConversion(TypeConcrete.TypeInt, IntRoman.ToIntBinaryWrapper.class);
+		TypeRepresentation.TypeIntRoman.addConversion(TypeRepresentation.TypeIntString, IntRoman.ToIntStringWrapper.class);
+		TypeRepresentation.TypeIntString.addConversion(TypeConcrete.TypeInt, IntString.ToIntBinaryWrapper.class);
+		TypeRepresentation.TypeIntString.addConversion(TypeRepresentation.TypeIntRoman, IntString.ToIntRomanWrapper.class);
+	}
+	
+	private static void init() throws Exception{
+		Main.initTypesConversions();
+	}
+	
+	private static void interpretLoop(){
+		Scanner input = new Scanner(System.in);
+		Environment topLevel = Main.initTopLevelEnvironment();
+		
+		try {			
+			while (true) {
+				System.out.print(">");
+				CharStream charStream = new ANTLRInputStream(input.nextLine());
+				TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
+				SchemeParser parser = new SchemeParser(tokens);
+
+				ExprsContext exprsContext = parser.exprs();
+
+				for (Expression e : exprsContext.val) {
+					Expression expr = e.substituteTopLevelVariables(topLevel);
+					expr.infer();
+					System.out.println(expr.interpret(topLevel));
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			input.close();
+		}
+	}
+	
+	private static void compile(Path inputPath, Path outputPath) throws IOException{
+		Reader input = null;
+		Writer output = null;
+		try{
+			input = Files.newBufferedReader(inputPath);
+			
+			CharStream charStream = new ANTLRInputStream(input);
+			TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
+			SchemeParser parser = new SchemeParser(tokens);
+			ExprsContext exprsContext = parser.exprs();
+			
+			List<Expression> l = new LinkedList<Expression>();
+			
+			for(Expression e : exprsContext.val){
+				Expression expr = e.substituteTopLevelVariables(new Environment());
+				expr.infer();
+				l.add(expr);
+			}
+			
+			output = Files.newBufferedWriter(outputPath, Charset.defaultCharset());
+			ClojureCodeGenerator.toClojureCode(l, output);
+		}catch(Exception e){
+			e.printStackTrace();
+		}finally{
+			if(input != null){
+				input.close();
+			}
+			if(output != null){
+				output.close();
+			}
+		}
 	}
 }
