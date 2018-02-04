@@ -34,11 +34,6 @@ public class LitDouble extends Literal {
 	}
 
 	@Override
-	public Type infer() throws Exception {
-		return TypeConcrete.TypeDouble;
-	}
-
-	@Override
 	public String toString() {
 		return Double.toString(this.value);
 	}

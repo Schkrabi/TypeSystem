@@ -9,7 +9,13 @@ import interpretation.Environment;
  * @author Mgr. Radomir Skrabal
  *
  */
-public abstract class LitInteger extends Literal {
+public class LitInteger extends Literal {
+	
+	public final int value;
+	
+	public LitInteger(int value){
+		this.value = value;
+	}
 
 	@Override
 	public Expression interpret(Environment env) {
@@ -17,11 +23,23 @@ public abstract class LitInteger extends Literal {
 	}
 	
 	public static LitInteger initializeDefaultImplementation(int value){
-		return new IntBinary(value);
+		LitInteger l = new LitInteger(value);;
+		l.setLiteralType(TypeConcrete.TypeInt); //TODO Deprecate?
+		return l;
 	}
 	
 	@Override
 	public Type getDefaultRepresentationType() {
 		return TypeConcrete.TypeInt;
+	}
+
+	@Override
+	public String toClojureCode() throws Exception {
+		return Integer.toString(this.value);
+	}
+	
+	@Override
+	public String toString(){
+		return Integer.toString(this.value);
 	}
 }

@@ -18,6 +18,13 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
 
+import conversions.IntBinaryToIntRomanWrapper;
+import conversions.IntBinaryToIntStringWrapper;
+import conversions.IntRomanToIntBinaryWrapper;
+import conversions.IntRomanToIntStringWrapper;
+import conversions.IntStringToIntBinaryWrapper;
+import conversions.IntStringToIntRomanWrapper;
+
 import parser.SchemeLexer;
 import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
@@ -26,9 +33,6 @@ import types.TypeRepresentation;
 import util.ClojureCodeGenerator;
 import expression.Addition;
 import expression.Expression;
-import expression.IntBinary;
-import expression.IntRoman;
-import expression.IntString;
 import expression.Subtraction;
 import expression.Variable;
 
@@ -76,12 +80,12 @@ public class Main {
 	}
 	
 	private static void initTypesConversions() throws Exception{
-		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntRoman, IntBinary.ToIntRomanWrapper.class);
-		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntString, IntBinary.ToIntStringWrapper.class);
-		TypeRepresentation.TypeIntRoman.addConversion(TypeConcrete.TypeInt, IntRoman.ToIntBinaryWrapper.class);
-		TypeRepresentation.TypeIntRoman.addConversion(TypeRepresentation.TypeIntString, IntRoman.ToIntStringWrapper.class);
-		TypeRepresentation.TypeIntString.addConversion(TypeConcrete.TypeInt, IntString.ToIntBinaryWrapper.class);
-		TypeRepresentation.TypeIntString.addConversion(TypeRepresentation.TypeIntRoman, IntString.ToIntRomanWrapper.class);
+		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntRoman, IntBinaryToIntRomanWrapper.class);
+		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntString, IntBinaryToIntStringWrapper.class);
+		TypeRepresentation.TypeIntRoman.addConversion(TypeConcrete.TypeInt, IntRomanToIntBinaryWrapper.class);
+		TypeRepresentation.TypeIntRoman.addConversion(TypeRepresentation.TypeIntString, IntRomanToIntStringWrapper.class);
+		TypeRepresentation.TypeIntString.addConversion(TypeConcrete.TypeInt, IntStringToIntBinaryWrapper.class);
+		TypeRepresentation.TypeIntString.addConversion(TypeRepresentation.TypeIntRoman, IntStringToIntRomanWrapper.class);
 	}
 	
 	private static void init() throws Exception{

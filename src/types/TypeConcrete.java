@@ -5,10 +5,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import expression.Constructor;
 import expression.Expression;
-import expression.IntBinary;
 import expression.LitBoolean;
 import expression.LitDouble;
+import expression.LitInteger;
 import expression.LitString;
 import expression.Literal;
 import expression.Literal.ConversionWrapper;
@@ -19,25 +20,21 @@ import expression.Literal.ConversionWrapper;
  * @author Mgr. Radomir Skrabal
  *
  */
-public abstract class TypeConcrete extends Type { //TODO Try adding generic type argument for implementation
+public abstract class TypeConcrete extends Type { 
 	/**
 	 * Name of the type
 	 */
 	public final String name;
-
-	/**
-	 * Associated literal class of the representation/complete type
-	 */
-	public final Class<? extends Literal> implementation;
+	
+	public final Constructor constructor;
 	
 	/**
 	 * Map for type converting
 	 */
 	private Map<TypeConcrete, Class<? extends ConversionWrapper>> conversionTable = new TreeMap<TypeConcrete, Class<? extends ConversionWrapper>>();
 
-	public TypeConcrete(String name, Class<? extends Literal> implementation) {
+	public TypeConcrete(String name) {
 		this.name = name;
-		this.implementation = implementation;
 	}
 
 	/**
@@ -156,7 +153,7 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 	/**
 	 * Type of Bool
 	 */
-	public static final TypeConcrete TypeBool = new TypeConcrete("Bool", LitBoolean.class) {
+	public static final TypeConcrete TypeBool = new TypeConcrete("Bool") {
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {
 			if (!(value instanceof Boolean)) {
@@ -169,16 +166,7 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 	/**
 	 * Type of Integer
 	 */
-	public static final TypeConcrete TypeInt = new TypeConcrete("Int", IntBinary.class) {
-		
-		/*protected void init() {
-			try {
-				this.addConversion(TypeRepresentation.TypeIntRoman, IntBinary.ToIntRomanWrapper.class);
-				this.addConversion(TypeRepresentation.TypeIntString, IntBinary.ToIntStringWrapper.class);
-			}catch(Exception e) {
-				//Unlikely
-			}
-		}*/
+	public static final TypeConcrete TypeInt = new TypeConcrete("Int") {
 		
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {
@@ -187,14 +175,16 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 			}
 			
 			Integer i = (Integer) value;
-			return new IntBinary(i.intValue());
+			Literal l = new LitInteger(i);
+			l.setLiteralType(this);
+			return l;
 		}
 	};
 
 	/**
 	 * Type of String
 	 */
-	public static final TypeConcrete TypeString = new TypeConcrete("String", LitString.class) {
+	public static final TypeConcrete TypeString = new TypeConcrete("String") {
 
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {
@@ -202,13 +192,15 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 				this.throwInitializationError(TypeConcrete.TypeString.getClass(), value);
 			}
 			String s = (String) value;
-			return new LitString(s);
+			Literal l = new LitString(s);
+			l.setLiteralType(this);
+			return l;
 		}
 	};
 	/**
 	 * Type of Double
 	 */
-	public static final TypeConcrete TypeDouble = new TypeConcrete("Double", LitDouble.class) {
+	public static final TypeConcrete TypeDouble = new TypeConcrete("Double") {
 
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {
@@ -216,7 +208,9 @@ public abstract class TypeConcrete extends Type { //TODO Try adding generic type
 				this.throwInitializationError(TypeConcrete.TypeDouble.getClass(), value);
 			}
 			Double d = (Double) value;
-			return new LitDouble(d);
+			Literal l = new LitDouble(d);
+			l.setLiteralType(this);
+			return l;
 		}
 	};
 }

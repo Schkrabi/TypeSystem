@@ -29,12 +29,7 @@ public class LitString extends Literal {
 	public Expression interpret(Environment env) throws Exception {
 		return this;
 	}
-
-	@Override
-	public Type infer() throws Exception {
-		return TypeConcrete.TypeString;
-	}
-
+	
 	@Override
 	public String toString() {
 		return "\"" + this.value + "\"";

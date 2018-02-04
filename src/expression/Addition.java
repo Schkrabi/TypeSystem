@@ -64,14 +64,14 @@ public class Addition extends Lambda {
 
 		@Override
 		public Expression interpret(Environment env) throws Exception {
-			IntBinary x = (IntBinary) (env.getVariableValue(new Variable("_x")).interpret(env));
-			IntBinary y = (IntBinary) (env.getVariableValue(new Variable("_y")).interpret(env));
+			LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
+			LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
 			if (x == null || y == null) {
 				return this;
 			}
 
-			return new IntBinary(x.value + y.value);
+			return new LitInteger(x.value + y.value);
 		}
 
 		@Override

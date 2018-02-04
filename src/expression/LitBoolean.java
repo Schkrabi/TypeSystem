@@ -37,12 +37,6 @@ public class LitBoolean extends Literal {
 	public static final LitBoolean FALSE = new LitBoolean(false);
 
 	@Override
-	public Type infer() throws Exception {
-		this.setType(TypeConcrete.TypeBool);
-		return TypeConcrete.TypeBool;
-	}
-
-	@Override
 	public Type getDefaultRepresentationType() {
 		return TypeConcrete.TypeBool;
 	}

@@ -22,6 +22,15 @@ public abstract class Literal extends Expression {
 	public Expression substituteTopLevelVariables(Environment topLevel) {
 		return this;
 	}
+	
+	public void setLiteralType(Type type){
+		this.setType(type);
+	}
+	
+	@Override
+	public Type infer(){
+		return this.getType();
+	}
 
 	/**
 	 * Wrapper for conversion of Literals

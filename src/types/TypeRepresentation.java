@@ -1,8 +1,8 @@
 package types;
 
+import util.RomanNumbers;
 import expression.Expression;
-import expression.IntRoman;
-import expression.IntString;
+import expression.LitString;
 import expression.Literal;
 
 public abstract class TypeRepresentation extends TypeConcrete {
@@ -11,8 +11,8 @@ public abstract class TypeRepresentation extends TypeConcrete {
 	 */
 	public final TypeConcrete baseType;
 
-	public TypeRepresentation(String name, Class<? extends Literal> implementation, TypeConcrete baseType) {
-		super(name, implementation);
+	public TypeRepresentation(String name, TypeConcrete baseType) {
+		super(name);
 		this.baseType = baseType;
 	}
 
@@ -67,18 +67,8 @@ public abstract class TypeRepresentation extends TypeConcrete {
 	/**
 	 * String representation of int
 	 */
-	public static final TypeRepresentation TypeIntString = new TypeRepresentation("String", IntString.class,
+	public static final TypeRepresentation TypeIntString = new TypeRepresentation("String",
 			TypeConcrete.TypeInt) {
-		
-		/*@Override
-		protected void init() {
-			try {
-				this.addConversion(TypeConcrete.TypeInt, IntString.ToIntBinaryWrapper.class);
-				this.addConversion(TypeRepresentation.TypeIntRoman, IntString.ToIntRomanWrapper.class);
-			}catch(Exception e) {
-				//Unlikely
-			}
-		}*/
 		
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {
@@ -86,25 +76,17 @@ public abstract class TypeRepresentation extends TypeConcrete {
 				this.throwInitializationError(TypeConcrete.TypeInt.getClass(), value);
 			}
 			String s = (String) value;
-			return new IntString(s);
+			Literal l = new LitString(s);
+			l.setLiteralType(this);
+			return l;
 		}
 	};
 
 	/**
 	 * Roman representation of int
 	 */
-	public static final TypeRepresentation TypeIntRoman = new TypeRepresentation("Roman", IntRoman.class,
+	public static final TypeRepresentation TypeIntRoman = new TypeRepresentation("Roman",
 			TypeConcrete.TypeInt) {
-		
-		/*@Override
-		protected void init() {
-			try {
-				this.addConversion(TypeConcrete.TypeInt, IntRoman.ToIntBinaryWrapper.class);
-				this.addConversion(TypeRepresentation.TypeIntString, IntRoman.ToIntStringWrapper.class);
-			}catch(Exception e) {
-				//Unlikely
-			}
-		}*/
 		
 		@Override
 		public Literal instantiateLiteral(Object value) throws Exception {
@@ -112,7 +94,12 @@ public abstract class TypeRepresentation extends TypeConcrete {
 				this.throwInitializationError(TypeConcrete.TypeInt.getClass(), value);
 			}
 			String s = (String) value;
-			return new IntRoman(s);
+			if(!RomanNumbers.check(s)){
+				throw new Exception("Invalid string " + s + " used for roman number.");
+			}			
+			Literal l = new LitString(s);
+			l.setLiteralType(this);
+			return l;
 		}
 	};
 }
