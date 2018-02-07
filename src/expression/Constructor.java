@@ -2,21 +2,30 @@ package expression;
 
 import types.Type;
 import types.TypeArrow;
+import types.TypeConcrete;
+import types.TypeRepresentation;
+import types.TypeTuple;
 
+/**
+ * A class for type constructors. Basically a special case of lambda.
+ * @author r.SKRABAL
+ *
+ */
 public class Constructor extends Lambda {
 	
-	private Type constructedType;
+	/**
+	 * Constructed type
+	 */
+	public final Type constructedType;
+	/**
+	 * Type of constructor arguments
+	 */
+	public final TypeTuple argsType;
 
-	public Constructor(Tuple args, Expression body) {
+	public Constructor(Type constructedType, TypeTuple argsType, Tuple args, Expression body) {
 		super(args, body);
-	}
-	
-	public Type getConstructedType(){
-		return this.constructedType;
-	}
-	
-	public void setConstructedType(Type constructedType){
-		this.constructedType = constructedType;
+		this.constructedType = constructedType; 
+		this.argsType = argsType;
 	}
 
 	@Override
@@ -25,8 +34,13 @@ public class Constructor extends Lambda {
 		if(!(infered instanceof TypeArrow)){
 			throw new Exception("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
 		}
-		TypeArrow type = (TypeArrow)infered;
-		return new TypeArrow(type.ltype, this.constructedType);
+		TypeArrow inferedType = (TypeArrow)infered;
+		
+		if(!Type.unify(inferedType.ltype, this.argsType)) {
+			throw new Exception("Real constructor arguments " + inferedType.ltype + " and declared constructor argument type " + this.argsType + " do not unify");
+		}		
+		
+		return new TypeArrow(this.argsType, this.constructedType);
 	}
 	
 	@Override
@@ -34,4 +48,48 @@ public class Constructor extends Lambda {
 		String s = super.toString();
 		return "(construct " + this.constructedType.toString() + " " + s + ")";
 	}
+	
+	/**
+	 * Constructor for primitive Int
+	 */
+	public static Constructor IntPrimitiveConstructor = new Constructor(TypeConcrete.TypeInt,
+																		new TypeTuple(new Type[] {TypeConcrete.TypeInt}), 
+																		new Tuple(new Expression[] {new Variable("x")}),
+																		new Variable("x"));
+	/**
+	 * Constructor for primitive String
+	 */
+	public static Constructor StringPrimitiveConstructor = new Constructor(	TypeConcrete.TypeString,
+																			new TypeTuple(new Type[] {TypeConcrete.TypeString}),
+																			new Tuple(new Expression[] {new Variable("x")}),
+																			new Variable("x"));
+	/**
+	 * Constructor for primitive Double
+	 */
+	public static Constructor DoublePrimitiveConstructor = new Constructor(	TypeConcrete.TypeDouble,
+																			new TypeTuple(new Type[] {TypeConcrete.TypeDouble}),
+																			new Tuple(new Expression[] {new Variable("x")}),
+																			new Variable("x"));
+	/**
+	 * Constructor for primitive Boolean
+	 */
+	public static Constructor BoolPrimitiveConstructor = new Constructor(TypeConcrete.TypeBool,
+																		 new TypeTuple(new Type[] {TypeConcrete.TypeBool}),
+																		 new Tuple(new Expression[] {new Variable("x")}),
+																		 new Variable("x"));
+	
+	/**
+	 * Constructor for Int represented by String value
+	 */
+	public static Constructor IntStringConstructor = new Constructor(	TypeRepresentation.TypeIntString,
+																		new TypeTuple(new Type[] {TypeConcrete.TypeString}),
+																		new Tuple(new Expression[] {new Variable("x")}),
+																		new Variable("x"));
+	/**
+	 * Constructor for Int represented by Roman String value
+	 */
+	public static Constructor IntRomanConstructor = new Constructor(	TypeRepresentation.TypeIntRoman,
+																		new TypeTuple(new Type[] {TypeConcrete.TypeString}),
+																		new Tuple(new Expression[] {new Variable("x")}),
+																		new Variable("x"));
 }

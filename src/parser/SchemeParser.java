@@ -92,39 +92,34 @@ public class SchemeParser extends Parser {
 	public ATN getATN() { return _ATN; }
 
 
-		public static Map<String, Map<String, TypeConcrete>> typeTable = new HashMap<String, Map<String, TypeConcrete>>();
-		public static Map<Class<? extends Object>, TypeConcrete> untypedTable = new HashMap<Class<? extends Object>, TypeConcrete>();
+		public static Map<String, Map<String, Constructor>> typeTable = new HashMap<String, Map<String, Constructor>>();
 		
 		static{
-			Map<String, TypeConcrete> map;
-			
-			//Int
-			map = new HashMap<String, TypeConcrete>();
-			map.put("", TypeConcrete.TypeInt); //Default
-			map.put("Binary", TypeConcrete.TypeInt); //Alias
-			map.put(TypeRepresentation.TypeIntString.name, TypeRepresentation.TypeIntString);
-			map.put(TypeRepresentation.TypeIntRoman.name, TypeRepresentation.TypeIntRoman);
-			
-			typeTable.put(TypeConcrete.TypeInt.name, map);
-			untypedTable.put(Integer.class, TypeConcrete.TypeInt);
-			
-			//Bool
-			map = new HashMap<String, TypeConcrete>();
-			map.put("", TypeConcrete.TypeBool);
-			typeTable.put(TypeConcrete.TypeBool.name, map);
-			untypedTable.put(Boolean.class, TypeConcrete.TypeBool);
-			
-			//String
-			map = new HashMap<String, TypeConcrete>();
-			map.put("", TypeConcrete.TypeString);
-			typeTable.put(TypeConcrete.TypeString.name, map);
-			untypedTable.put(String.class, TypeConcrete.TypeString);
-			
-			//Double
-			map = new HashMap<String, TypeConcrete>();
-			map.put("", TypeConcrete.TypeDouble);
-			typeTable.put(TypeConcrete.TypeDouble.name, map);
-			untypedTable.put(Double.class, TypeConcrete.TypeDouble);
+			Map<String, Constructor> map;
+				
+				//Int
+				map = new HashMap<String, Constructor>();
+				map.put("", Constructor.IntPrimitiveConstructor); //Default
+				map.put("Binary", Constructor.IntPrimitiveConstructor); //Alias
+				map.put(TypeRepresentation.TypeIntString.name, Constructor.IntStringConstructor);
+				map.put(TypeRepresentation.TypeIntRoman.name, Constructor.IntRomanConstructor);
+				
+				typeTable.put(TypeConcrete.TypeInt.name, map);
+				
+				//Bool
+				map = new HashMap<String, Constructor>();
+				map.put("", Constructor.BoolPrimitiveConstructor);
+				typeTable.put(TypeConcrete.TypeBool.name, map);
+				
+				//String
+				map = new HashMap<String, Constructor>();
+				map.put("", Constructor.StringPrimitiveConstructor);
+				typeTable.put(TypeConcrete.TypeString.name, map);
+				
+				//Double
+				map = new HashMap<String, Constructor>();
+				map.put("", Constructor.DoublePrimitiveConstructor);
+				typeTable.put(TypeConcrete.TypeDouble.name, map);
 		}
 		
 		public static String unescapeString(String s) {
@@ -159,46 +154,60 @@ public class SchemeParser extends Parser {
 			throw new Exception("Argument name list expected, got " + e.toString());
 		}
 		
-		public static Expression instantiateTypedLiteral(TypeConcrete type, Object value) throws Exception{
-			if(value instanceof Variable){
-				Variable v = (Variable) value;
-				v.setType(type);
-				return v;
-			}	
-			return type.instantiateLiteral(value);
-		}
+		public static Expression instantiateTyped(Constructor constructor, Expression value) throws Exception{
+				if(value instanceof Variable){
+					Variable v = (Variable) value;
+					v.setType(constructor.constructedType);
+					return v;
+				}	
+				return new Application(constructor, value);
+			}
 		
 		public static Expression instantiateUntypedLiteral(Object value) throws Exception{
 			if(value instanceof Variable){
 				return (Variable)value;
 			}
-		
-			TypeConcrete type = untypedTable.get(value.getClass());
-			if(type == null){
-				throw new Exception("Unrecognized untyped value " + value.toString() + " of type " + value.getClass());
-			}
 			
-			return type.instantiateLiteral(value);
+			if(value instanceof String) {
+				Literal l = new LitString((String)value);
+				l.setLiteralType(TypeConcrete.TypeString);
+				return l;
+			}
+			if(value instanceof Integer) {
+				Literal l = new LitInteger((Integer)value);
+				l.setLiteralType(TypeConcrete.TypeInt);
+				return l;
+			}
+			if(value instanceof Double) {
+				Literal l = new LitDouble((Double)value);
+				l.setLiteralType(TypeConcrete.TypeDouble);
+				return l;
+			}
+			if(value instanceof Boolean) {
+				return (Boolean)value ? LitBoolean.TRUE : LitBoolean.FALSE; //TODO Mohlo by delat bordel, co kdyz nekdo udela typeAlias Boolu?
+			}
+		
+			throw new Exception("Unrecognized untyped value " + value.toString() + " of type " + value.getClass());
 		}
 		
-		public static TypeConcrete getTypeByName(String typeName) throws Exception{
-			return getTypeByName(typeName, "");
+		public static Constructor getConstructorByTypeName(String typeName) throws Exception{
+			return getConstructorByTypeName(typeName, "");
 		}
 		
-		public static TypeConcrete getTypeByName(String typeName, String representationName) throws Exception{
-			Map<String, TypeConcrete> reps = typeTable.get(typeName);
+		public static Constructor getConstructorByTypeName(String typeName, String representationName) throws Exception{
+			Map<String, Constructor> reps = typeTable.get(typeName);
 			
 			if(reps == null){
 				throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName));
 			}
 			
-			TypeConcrete type = reps.get(representationName); 
+			Constructor constructor = reps.get(representationName); 
 			
-			if(type == null){
+			if(constructor == null){
 				throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName));
 			}
 			
-			return type;
+			return constructor;
 		}
 
 	public SchemeParser(TokenStream input) {
@@ -517,10 +526,10 @@ public class SchemeParser extends Parser {
 
 	public static class TypedContext extends ParserRuleContext {
 		public Expression val;
-		public AtomContext atom;
+		public ExprContext expr;
 		public TypeContext type;
-		public AtomContext atom() {
-			return getRuleContext(AtomContext.class,0);
+		public ExprContext expr() {
+			return getRuleContext(ExprContext.class,0);
 		}
 		public TypeContext type() {
 			return getRuleContext(TypeContext.class,0);
@@ -547,16 +556,16 @@ public class SchemeParser extends Parser {
 			{
 			setState(97);
 			match(T__4);
-			 Object value; TypeConcrete type; 
+			 Expression value; Constructor type; 
 			setState(99);
-			((TypedContext)_localctx).atom = atom();
-			 value = ((TypedContext)_localctx).atom.val; 
+			((TypedContext)_localctx).expr = expr();
+			 value = ((TypedContext)_localctx).expr.val; 
 			setState(101);
 			((TypedContext)_localctx).type = type();
 			 type = ((TypedContext)_localctx).type.val; 
 			setState(103);
 			match(T__5);
-			 ((TypedContext)_localctx).val =  instantiateTypedLiteral(type, value); 
+			 ((TypedContext)_localctx).val =  instantiateTyped(type, value); 
 			}
 		}
 		catch (RecognitionException re) {
@@ -571,7 +580,7 @@ public class SchemeParser extends Parser {
 	}
 
 	public static class TypeContext extends ParserRuleContext {
-		public TypeConcrete val;
+		public Constructor val;
 		public Token SYMBOL;
 		public List<TerminalNode> SYMBOL() { return getTokens(SchemeParser.SYMBOL); }
 		public TerminalNode SYMBOL(int i) {
@@ -603,7 +612,7 @@ public class SchemeParser extends Parser {
 				{
 				setState(106);
 				((TypeContext)_localctx).SYMBOL = match(SYMBOL);
-				 ((TypeContext)_localctx).val =  getTypeByName((((TypeContext)_localctx).SYMBOL!=null?((TypeContext)_localctx).SYMBOL.getText():null)); 
+				 ((TypeContext)_localctx).val =  getConstructorByTypeName((((TypeContext)_localctx).SYMBOL!=null?((TypeContext)_localctx).SYMBOL.getText():null)); 
 				}
 				break;
 			case 2:
@@ -617,7 +626,7 @@ public class SchemeParser extends Parser {
 				match(T__6);
 				setState(112);
 				((TypeContext)_localctx).SYMBOL = match(SYMBOL);
-				 ((TypeContext)_localctx).val =  getTypeByName(typeName, (((TypeContext)_localctx).SYMBOL!=null?((TypeContext)_localctx).SYMBOL.getText():null)); 
+				 ((TypeContext)_localctx).val =  getConstructorByTypeName(typeName, (((TypeContext)_localctx).SYMBOL!=null?((TypeContext)_localctx).SYMBOL.getText():null)); 
 				}
 				break;
 			}
@@ -678,7 +687,7 @@ public class SchemeParser extends Parser {
 				{
 				setState(118);
 				((ImplContext)_localctx).type = type();
-				 ll.add(((ImplContext)_localctx).type.val); 
+				 ll.add(((ImplContext)_localctx).type.val.constructedType); 
 				}
 				}
 				setState(125);
@@ -870,7 +879,7 @@ public class SchemeParser extends Parser {
 		"\3\2QR\b\4\1\2RS\7\6\2\2ST\b\4\1\2Tb\3\2\2\2UV\7\3\2\2V\\\b\4\1\2WX\5"+
 		"\4\3\2XY\b\4\1\2Y[\3\2\2\2ZW\3\2\2\2[^\3\2\2\2\\Z\3\2\2\2\\]\3\2\2\2]"+
 		"_\3\2\2\2^\\\3\2\2\2_`\7\6\2\2`b\b\4\1\2a+\3\2\2\2a?\3\2\2\2aI\3\2\2\2"+
-		"aU\3\2\2\2b\7\3\2\2\2cd\7\7\2\2de\b\5\1\2ef\5\16\b\2fg\b\5\1\2gh\5\n\6"+
+		"aU\3\2\2\2b\7\3\2\2\2cd\7\7\2\2de\b\5\1\2ef\5\4\3\2fg\b\5\1\2gh\5\n\6"+
 		"\2hi\b\5\1\2ij\7\b\2\2jk\b\5\1\2k\t\3\2\2\2lm\7\22\2\2mu\b\6\1\2no\b\6"+
 		"\1\2op\7\22\2\2pq\b\6\1\2qr\7\t\2\2rs\7\22\2\2su\b\6\1\2tl\3\2\2\2tn\3"+
 		"\2\2\2u\13\3\2\2\2vw\7\3\2\2w}\b\7\1\2xy\5\n\6\2yz\b\7\1\2z|\3\2\2\2{"+

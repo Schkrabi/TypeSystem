@@ -21,39 +21,34 @@ import java.util.Set;
 }
 
 @parser::members {
-	public static Map<String, Map<String, TypeConcrete>> typeTable = new HashMap<String, Map<String, TypeConcrete>>();
-	public static Map<Class<? extends Object>, TypeConcrete> untypedTable = new HashMap<Class<? extends Object>, TypeConcrete>();
+	public static Map<String, Map<String, Constructor>> typeTable = new HashMap<String, Map<String, Constructor>>();
 	
 	static{
-		Map<String, TypeConcrete> map;
-		
-		//Int
-		map = new HashMap<String, TypeConcrete>();
-		map.put("", TypeConcrete.TypeInt); //Default
-		map.put("Binary", TypeConcrete.TypeInt); //Alias
-		map.put(TypeRepresentation.TypeIntString.name, TypeRepresentation.TypeIntString);
-		map.put(TypeRepresentation.TypeIntRoman.name, TypeRepresentation.TypeIntRoman);
-		
-		typeTable.put(TypeConcrete.TypeInt.name, map);
-		untypedTable.put(Integer.class, TypeConcrete.TypeInt);
-		
-		//Bool
-		map = new HashMap<String, TypeConcrete>();
-		map.put("", TypeConcrete.TypeBool);
-		typeTable.put(TypeConcrete.TypeBool.name, map);
-		untypedTable.put(Boolean.class, TypeConcrete.TypeBool);
-		
-		//String
-		map = new HashMap<String, TypeConcrete>();
-		map.put("", TypeConcrete.TypeString);
-		typeTable.put(TypeConcrete.TypeString.name, map);
-		untypedTable.put(String.class, TypeConcrete.TypeString);
-		
-		//Double
-		map = new HashMap<String, TypeConcrete>();
-		map.put("", TypeConcrete.TypeDouble);
-		typeTable.put(TypeConcrete.TypeDouble.name, map);
-		untypedTable.put(Double.class, TypeConcrete.TypeDouble);
+		Map<String, Constructor> map;
+			
+			//Int
+			map = new HashMap<String, Constructor>();
+			map.put("", Constructor.IntPrimitiveConstructor); //Default
+			map.put("Binary", Constructor.IntPrimitiveConstructor); //Alias
+			map.put(TypeRepresentation.TypeIntString.name, Constructor.IntStringConstructor);
+			map.put(TypeRepresentation.TypeIntRoman.name, Constructor.IntRomanConstructor);
+			
+			typeTable.put(TypeConcrete.TypeInt.name, map);
+			
+			//Bool
+			map = new HashMap<String, Constructor>();
+			map.put("", Constructor.BoolPrimitiveConstructor);
+			typeTable.put(TypeConcrete.TypeBool.name, map);
+			
+			//String
+			map = new HashMap<String, Constructor>();
+			map.put("", Constructor.StringPrimitiveConstructor);
+			typeTable.put(TypeConcrete.TypeString.name, map);
+			
+			//Double
+			map = new HashMap<String, Constructor>();
+			map.put("", Constructor.DoublePrimitiveConstructor);
+			typeTable.put(TypeConcrete.TypeDouble.name, map);
 	}
 	
 	public static String unescapeString(String s) {
@@ -88,46 +83,60 @@ import java.util.Set;
 		throw new Exception("Argument name list expected, got " + e.toString());
 	}
 	
-	public static Expression instantiateTypedLiteral(TypeConcrete type, Object value) throws Exception{
-		if(value instanceof Variable){
-			Variable v = (Variable) value;
-			v.setType(type);
-			return v;
-		}	
-		return type.instantiateLiteral(value);
-	}
+	public static Expression instantiateTyped(Constructor constructor, Expression value) throws Exception{
+			if(value instanceof Variable){
+				Variable v = (Variable) value;
+				v.setType(constructor.constructedType);
+				return v;
+			}	
+			return new Application(constructor, value);
+		}
 	
 	public static Expression instantiateUntypedLiteral(Object value) throws Exception{
 		if(value instanceof Variable){
 			return (Variable)value;
 		}
-	
-		TypeConcrete type = untypedTable.get(value.getClass());
-		if(type == null){
-			throw new Exception("Unrecognized untyped value " + value.toString() + " of type " + value.getClass());
-		}
 		
-		return type.instantiateLiteral(value);
+		if(value instanceof String) {
+			Literal l = new LitString((String)value);
+			l.setLiteralType(TypeConcrete.TypeString);
+			return l;
+		}
+		if(value instanceof Integer) {
+			Literal l = new LitInteger((Integer)value);
+			l.setLiteralType(TypeConcrete.TypeInt);
+			return l;
+		}
+		if(value instanceof Double) {
+			Literal l = new LitDouble((Double)value);
+			l.setLiteralType(TypeConcrete.TypeDouble);
+			return l;
+		}
+		if(value instanceof Boolean) {
+			return (Boolean)value ? LitBoolean.TRUE : LitBoolean.FALSE; //TODO Mohlo by delat bordel, co kdyz nekdo udela typeAlias Boolu?
+		}
+	
+		throw new Exception("Unrecognized untyped value " + value.toString() + " of type " + value.getClass());
 	}
 	
-	public static TypeConcrete getTypeByName(String typeName) throws Exception{
-		return getTypeByName(typeName, "");
+	public static Constructor getConstructorByTypeName(String typeName) throws Exception{
+		return getConstructorByTypeName(typeName, "");
 	}
 	
-	public static TypeConcrete getTypeByName(String typeName, String representationName) throws Exception{
-		Map<String, TypeConcrete> reps = typeTable.get(typeName);
+	public static Constructor getConstructorByTypeName(String typeName, String representationName) throws Exception{
+		Map<String, Constructor> reps = typeTable.get(typeName);
 		
 		if(reps == null){
 			throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName));
 		}
 		
-		TypeConcrete type = reps.get(representationName); 
+		Constructor constructor = reps.get(representationName); 
 		
-		if(type == null){
+		if(constructor == null){
 			throw new Exception("Invalid type: " + typeName + (representationName == "" ? "" : ":" + representationName));
 		}
 		
-		return type;
+		return constructor;
 	}
 }
 
@@ -163,22 +172,22 @@ seq returns [Expression val]
 	;
 	
 typed returns [Expression val]
-	: '<' 	{ Object value; TypeConcrete type; }
-	  atom 	{ value = $atom.val; } type { type = $type.val; }
-	  '>'	{ $val = instantiateTypedLiteral(type, value); }
+	: '<' 	{ Expression value; Constructor type; }
+	  expr 	{ value = $expr.val; } type { type = $type.val; }
+	  '>'	{ $val = instantiateTyped(type, value); }
 	;
 	
-type returns [TypeConcrete val]
-	: SYMBOL { $val = getTypeByName($SYMBOL.text); }
+type returns [Constructor val]
+	: SYMBOL { $val = getConstructorByTypeName($SYMBOL.text); }
 	| {String typeName; }
 	  SYMBOL { typeName = $SYMBOL.text; } 
 	  ':' 
-	  SYMBOL { $val = getTypeByName(typeName, $SYMBOL.text); } 
+	  SYMBOL { $val = getConstructorByTypeName(typeName, $SYMBOL.text); } 
 	;
 	
 impl returns [ImplContainer val]
 	: '(' { List<Type> ll = new ArrayList<Type>(); }
-	  (type { ll.add($type.val); })* 
+	  (type { ll.add($type.val.constructedType); })* 
 	  ')' expr { $val = new ImplContainer(new TypeTuple(ll), $expr.val); }
 	;
 

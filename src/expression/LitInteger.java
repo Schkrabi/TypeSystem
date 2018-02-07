@@ -41,5 +41,5 @@ public class LitInteger extends Literal {
 	@Override
 	public String toString(){
 		return Integer.toString(this.value);
-	}
+	} 
 }

@@ -1,11 +1,8 @@
 package types;
 
-import util.RomanNumbers;
 import expression.Expression;
-import expression.LitString;
-import expression.Literal;
 
-public abstract class TypeRepresentation extends TypeConcrete {
+public class TypeRepresentation extends TypeConcrete {
 	/**
 	 * Base Type of this representation
 	 */
@@ -26,7 +23,7 @@ public abstract class TypeRepresentation extends TypeConcrete {
 		if (!(o instanceof TypeRepresentation)) {
 			return false;
 		}
-		TypeRepresentation other = (TypeRepresentation)o;
+		TypeRepresentation other = (TypeRepresentation) o;
 		return this.baseType.equals(other) && this.name == other.name;
 	}
 
@@ -35,9 +32,9 @@ public abstract class TypeRepresentation extends TypeConcrete {
 		if (!(o instanceof TypeRepresentation)) {
 			return super.compareTo(o);
 		}
-		TypeRepresentation other = (TypeRepresentation)o;
+		TypeRepresentation other = (TypeRepresentation) o;
 		int cmp = this.baseType.compareTo(other.baseType);
-		if(cmp != 0) {
+		if (cmp != 0) {
 			return cmp;
 		}
 		return this.name.compareTo(other.name);
@@ -55,10 +52,10 @@ public abstract class TypeRepresentation extends TypeConcrete {
 		}
 		return false;
 	}
-	
+
 	@Override
-	public Expression convertToDefaultRepresentation(Expression expr) throws Exception{
-		if(expr.getType() != this) {
+	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
+		if (expr.getType() != this) {
 			throw new Exception("Invalid converison of " + expr.getType() + " carried out by " + this);
 		}
 		return this.convertTo(expr, this.baseType);
@@ -67,39 +64,10 @@ public abstract class TypeRepresentation extends TypeConcrete {
 	/**
 	 * String representation of int
 	 */
-	public static final TypeRepresentation TypeIntString = new TypeRepresentation("String",
-			TypeConcrete.TypeInt) {
-		
-		@Override
-		public Literal instantiateLiteral(Object value) throws Exception {
-			if (!(value instanceof String)) {
-				this.throwInitializationError(TypeConcrete.TypeInt.getClass(), value);
-			}
-			String s = (String) value;
-			Literal l = new LitString(s);
-			l.setLiteralType(this);
-			return l;
-		}
-	};
+	public static final TypeRepresentation TypeIntString = new TypeRepresentation("String", TypeConcrete.TypeInt);
 
 	/**
 	 * Roman representation of int
 	 */
-	public static final TypeRepresentation TypeIntRoman = new TypeRepresentation("Roman",
-			TypeConcrete.TypeInt) {
-		
-		@Override
-		public Literal instantiateLiteral(Object value) throws Exception {
-			if (!(value instanceof String)) {
-				this.throwInitializationError(TypeConcrete.TypeInt.getClass(), value);
-			}
-			String s = (String) value;
-			if(!RomanNumbers.check(s)){
-				throw new Exception("Invalid string " + s + " used for roman number.");
-			}			
-			Literal l = new LitString(s);
-			l.setLiteralType(this);
-			return l;
-		}
-	};
+	public static final TypeRepresentation TypeIntRoman = new TypeRepresentation("Roman", TypeConcrete.TypeInt);
 }

@@ -165,7 +165,15 @@ public class Application extends Expression {
 		s.append(this.fun.toClojureCode());
 		s.append(' ');
 
-		TypeArrow funType = (TypeArrow) this.fun.getType().getRep();
+		Type rawFunType = this.fun.getType().getRep();
+		if(rawFunType instanceof ForallType) {
+			rawFunType = ((ForallType)rawFunType).getBoundType();
+		}
+		if(!(rawFunType instanceof TypeArrow)) {
+			throw new Exception("Invalid elambda type " + this.fun.getType().getRep() + " in " + this);
+		}
+		TypeArrow funType = (TypeArrow)rawFunType;
+	
 		TypeTuple argsType = (TypeTuple) funType.ltype;
 
 		Iterator<Expression> i = this.args.iterator();

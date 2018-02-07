@@ -5,13 +5,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import expression.Constructor;
 import expression.Expression;
-import expression.LitBoolean;
-import expression.LitDouble;
-import expression.LitInteger;
-import expression.LitString;
-import expression.Literal;
 import expression.Literal.ConversionWrapper;
 
 /**
@@ -20,14 +14,12 @@ import expression.Literal.ConversionWrapper;
  * @author Mgr. Radomir Skrabal
  *
  */
-public abstract class TypeConcrete extends Type { 
+public class TypeConcrete extends Type {
 	/**
 	 * Name of the type
 	 */
 	public final String name;
-	
-	public final Constructor constructor;
-	
+
 	/**
 	 * Map for type converting
 	 */
@@ -61,7 +53,7 @@ public abstract class TypeConcrete extends Type {
 	 *             thrown if instantiated with incorrect value
 	 * @see TypeConcrete.implementation
 	 */
-	public abstract Literal instantiateLiteral(Object value) throws Exception;
+	// public abstract Literal instantiateLiteral(Object value) throws Exception;
 
 	@Override
 	public String toString() {
@@ -103,48 +95,49 @@ public abstract class TypeConcrete extends Type {
 		}
 		return false;
 	}
-	
-	public void addConversion(TypeConcrete toType, Class<? extends ConversionWrapper> conversionWrapperClass) throws Exception {
-		if(this.conversionTable.containsKey(toType)) {
-			throw new Exception("Conversion of " + this.getClass().getName() + " to " + toType.name + " already exists.");
+
+	public void addConversion(TypeConcrete toType, Class<? extends ConversionWrapper> conversionWrapperClass)
+			throws Exception {
+		if (this.conversionTable.containsKey(toType)) {
+			throw new Exception(
+					"Conversion of " + this.getClass().getName() + " to " + toType.name + " already exists.");
 		}
 		this.conversionTable.put(toType, conversionWrapperClass);
 	}
-	
+
 	private ConversionWrapper instantiateWrapperToType(TypeConcrete type, Expression arg) throws Exception {
 		Class<? extends ConversionWrapper> wrapperClass = this.conversionTable.get(type);
-		if(wrapperClass == null) {
-			throw new Exception("No conversion from literal " + this.getClass().getName() + " to type " + type.name + " exists");
+		if (wrapperClass == null) {
+			throw new Exception(
+					"No conversion from literal " + this.getClass().getName() + " to type " + type.name + " exists");
 		}
-		
-		return wrapperClass.getConstructor(new Class<?>[] {Expression.class}).newInstance(arg);
+
+		return wrapperClass.getConstructor(new Class<?>[] { Expression.class }).newInstance(arg);
 	}
-	
+
 	@Override
-	public Expression convertTo(Expression expr, Type toType)
-			throws Exception {
-		if(!(toType instanceof TypeConcrete)){
+	public Expression convertTo(Expression expr, Type toType) throws Exception {
+		if (!(toType instanceof TypeConcrete)) {
 			this.throwConversionError(expr, toType);
 		}
-		if(expr.getType() != this) {
+		if (expr.getType() != this) {
 			throw new Exception("Invalid converison of " + expr.getType() + " carried out by " + this);
 		}
-		
-		TypeConcrete t = (TypeConcrete)toType;
-		
-		if(toType == this) {
+
+		TypeConcrete t = (TypeConcrete) toType;
+
+		if (toType == this) {
 			return expr;
 		}
-		
-		
+
 		Expression e = this.instantiateWrapperToType(t, expr);
 		e.infer();
 		return e;
 	}
-	
+
 	@Override
-	public Expression convertToDefaultRepresentation(Expression expr) throws Exception{
-		if(expr.getType() != this) {
+	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
+		if (expr.getType() != this) {
 			throw new Exception("Invalid converison of " + expr.getType() + " carried out by " + this);
 		}
 		return expr;
@@ -153,64 +146,18 @@ public abstract class TypeConcrete extends Type {
 	/**
 	 * Type of Bool
 	 */
-	public static final TypeConcrete TypeBool = new TypeConcrete("Bool") {
-		@Override
-		public Literal instantiateLiteral(Object value) throws Exception {
-			if (!(value instanceof Boolean)) {
-				this.throwInitializationError(TypeConcrete.TypeBool.getClass(), value);
-			}
-			Boolean b = (Boolean) value;
-			return b ? LitBoolean.TRUE : LitBoolean.FALSE;
-		}
-	};
+	public static final TypeConcrete TypeBool = new TypeConcrete("Bool");
 	/**
 	 * Type of Integer
 	 */
-	public static final TypeConcrete TypeInt = new TypeConcrete("Int") {
-		
-		@Override
-		public Literal instantiateLiteral(Object value) throws Exception {
-			if (!(value instanceof Integer)) {
-				this.throwInitializationError(TypeConcrete.TypeInt.getClass(), value);
-			}
-			
-			Integer i = (Integer) value;
-			Literal l = new LitInteger(i);
-			l.setLiteralType(this);
-			return l;
-		}
-	};
+	public static final TypeConcrete TypeInt = new TypeConcrete("Int");
 
 	/**
 	 * Type of String
 	 */
-	public static final TypeConcrete TypeString = new TypeConcrete("String") {
-
-		@Override
-		public Literal instantiateLiteral(Object value) throws Exception {
-			if (!(value instanceof String)) {
-				this.throwInitializationError(TypeConcrete.TypeString.getClass(), value);
-			}
-			String s = (String) value;
-			Literal l = new LitString(s);
-			l.setLiteralType(this);
-			return l;
-		}
-	};
+	public static final TypeConcrete TypeString = new TypeConcrete("String");
 	/**
 	 * Type of Double
 	 */
-	public static final TypeConcrete TypeDouble = new TypeConcrete("Double") {
-
-		@Override
-		public Literal instantiateLiteral(Object value) throws Exception {
-			if (!(value instanceof Double)) {
-				this.throwInitializationError(TypeConcrete.TypeDouble.getClass(), value);
-			}
-			Double d = (Double) value;
-			Literal l = new LitDouble(d);
-			l.setLiteralType(this);
-			return l;
-		}
-	};
+	public static final TypeConcrete TypeDouble = new TypeConcrete("Double");
 }
