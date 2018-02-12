@@ -126,7 +126,15 @@ public class Application extends Expression {
 
 	@Override
 	public Type infer() throws Exception {
-		Type funType = this.fun.infer();
+		Type funType;
+		
+		if(this.fun instanceof Constructor) {
+			Constructor constr = (Constructor)this.fun;
+			funType = constr.infer();
+		}else {
+			funType = this.fun.infer();
+		}
+		
 		Type argsType = this.args.infer();
 
 		if (!(funType.isApplicableType())) {
@@ -154,8 +162,15 @@ public class Application extends Expression {
 
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) {
-		return new Application(this.fun.substituteTopLevelVariables(topLevel),
-				this.args.substituteTopLevelVariables(topLevel));
+		Expression f = this.fun.substituteTopLevelVariables(topLevel);
+		Expression a = this.args.substituteTopLevelVariables(topLevel);
+		
+		if(a instanceof Tuple) {
+			Tuple t = (Tuple)a;
+			return new Application(f, t);
+		}else {
+			return new Application(f, a);
+		}
 	}
 
 	@Override

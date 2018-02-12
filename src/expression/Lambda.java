@@ -81,4 +81,10 @@ public class Lambda extends ExtendedLambda {
 		s.append(')');
 		return s.toString();
 	}
+	
+	@Override
+	public Expression substituteTopLevelVariables(Environment topLevel) {
+		ExtendedLambda el = (ExtendedLambda) super.substituteTopLevelVariables(topLevel);
+		return new Lambda(el.args, el.defaultImplementation);
+	}
 }

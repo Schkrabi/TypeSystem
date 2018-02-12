@@ -1,5 +1,7 @@
 package expression;
 
+import interpretation.Environment;
+import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeConcrete;
@@ -31,9 +33,13 @@ public class Constructor extends Lambda {
 	@Override
 	public Type infer() throws Exception{
 		Type infered = super.infer();
-		if(!(infered instanceof TypeArrow)){
+		if(!infered.isApplicableType()){
 			throw new Exception("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
 		}
+		if(infered instanceof ForallType) {
+			infered = ((ForallType)infered).getBoundType();
+		}
+		
 		TypeArrow inferedType = (TypeArrow)infered;
 		
 		if(!Type.unify(inferedType.ltype, this.argsType)) {
@@ -46,7 +52,13 @@ public class Constructor extends Lambda {
 	@Override
 	public String toString(){
 		String s = super.toString();
-		return "(construct " + this.constructedType.toString() + " " + s + ")";
+		return "<" + this.constructedType.toString() + " " + s + ">";
+	}
+	
+	@Override
+	public Expression substituteTopLevelVariables(Environment topLevel) {
+		Lambda l = (Lambda)super.substituteTopLevelVariables(topLevel);
+		return new Constructor(this.constructedType, this.argsType, l.args, l.getBody());
 	}
 	
 	/**
