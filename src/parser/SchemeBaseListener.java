@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.Set;
+import java.util.HashSet;
+import java.util.Optional;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -58,6 +60,54 @@ public class SchemeBaseListener implements SchemeListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitSeq(SchemeParser.SeqContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterElambda(SchemeParser.ElambdaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitElambda(SchemeParser.ElambdaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterLambda(SchemeParser.LambdaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitLambda(SchemeParser.LambdaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDeftype(SchemeParser.DeftypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDeftype(SchemeParser.DeftypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDefrep(SchemeParser.DefrepContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDefrep(SchemeParser.DefrepContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
