@@ -1,6 +1,7 @@
 package expression;
 
 import types.Type;
+import types.TypeTuple;
 import interpretation.Environment;
 
 /**
@@ -61,4 +62,33 @@ public abstract class Expression {
 	public abstract Expression substituteTopLevelVariables(Environment topLevel);
 	
 	public abstract String toClojureCode() throws Exception;
+	
+	/**
+	 * Empty expression
+	 */
+	public static final Expression EMPTY_EXPRESSION = new EmptyExpression();
+	
+	private static class EmptyExpression extends Expression{
+
+		@Override
+		public Expression interpret(Environment env) throws Exception {
+			return this;
+		}
+
+		@Override
+		public Type infer() throws Exception {
+			return TypeTuple.EMPTY_TUPLE;
+		}
+
+		@Override
+		public Expression substituteTopLevelVariables(Environment topLevel) {
+			return this;
+		}
+
+		@Override
+		public String toClojureCode() throws Exception {
+			return "";
+		}
+		
+	}
 }

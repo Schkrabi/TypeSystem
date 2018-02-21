@@ -32,8 +32,8 @@ import java.util.Optional;
 			constructorMap.put(TypeConcrete.TypeInt, Constructor.IntPrimitiveConstructor);
 			types.add(TypeRepresentation.TypeIntRoman);
 			constructorMap.put(TypeRepresentation.TypeIntRoman, Constructor.IntRomanConstructor);
-			types.add(TypeRepresentation.TypeString);
-			constructorMap.put(TypeRepresentation.TypeString, Constructor.IntStringConstructor);
+			types.add(TypeRepresentation.TypeIntString);
+			constructorMap.put(TypeRepresentation.TypeIntString, Constructor.IntStringConstructor);
 			
 			//Bool
 			types.add(TypeConcrete.TypeBool);
@@ -123,11 +123,11 @@ import java.util.Optional;
 		public static Constructor getConstructorByTypeName(String typeName, String representationName) throws Exception{
 			Optional<TypeConcrete> o;
 			
-			if(representationName == "") {
-				o = types.stream().filter(x -> (x instanceof TypeConcrete) && x.name == typeName).findAny();
+			if(representationName == "") {					
+				o = types.stream().filter(x -> (x instanceof TypeConcrete) && x.name.equals(typeName)).findAny();
 			}
 			else {
-				o = types.stream().filter(x -> (x instanceof TypeRepresentation) && x.name == representationName && ((TypeRepresentation)x).baseType.name == typeName).findAny();
+				o = types.stream().filter(x -> (x instanceof TypeRepresentation) && x.name.equals(representationName) && ((TypeRepresentation)x).baseType.name.equals(typeName)).findAny();
 			}
 			
 			if(!o.isPresent()) {
@@ -145,16 +145,16 @@ import java.util.Optional;
 			return constructor;
 		}
 		
-		public static void defineType(String typeName, Lambda lConstructor) throws Exception{
-			TypeConcrete newType = new TypeConcrete(typeName);
-			Constructor constructor = new Constructor(newType, lConstructor.args, lConstructor.getBody());
+		public static void defineType(String typeName, TypeTuple constructorArgsType, Lambda lConstructor) throws Exception{
+				TypeConcrete newType = new TypeConcrete(typeName);
+				Constructor constructor = new Constructor(newType, lConstructor.args, constructorArgsType, lConstructor.getBody());
+				
+				addType(newType);
+				addConstructor(newType, constructor);
+			}
 			
-			addType(newType);
-			addConstructor(newType, constructor);
-		}
-		
-		public static void defineRepresentation(String typeName, String repName, Lambda lConstructor) throws Exception{
-			Optional<TypeConcrete> o = types.stream().filter(x -> (x instanceof TypeConcrete) && x.name == typeName).findAny(); 
+		public static void defineRepresentation(String typeName, String repName, TypeTuple constructorArgsType, Lambda lConstructor) throws Exception{
+			Optional<TypeConcrete> o = types.stream().filter(x -> (x instanceof TypeConcrete) && x.name.equals(typeName)).findAny(); 
 			if(!o.isPresent()) {
 				throw new Exception("Unknown base type: " + typeName);
 			}
@@ -163,7 +163,7 @@ import java.util.Optional;
 			TypeRepresentation newType = new TypeRepresentation(repName, baseType);
 			addType(newType);
 			
-			Constructor constructor = new Constructor(newType, lConstructor.args, lConstructor.getBody());
+			Constructor constructor = new Constructor(newType, lConstructor.args, constructorArgsType, lConstructor.getBody());
 			addConstructor(newType, constructor);
 		}
 		
@@ -198,10 +198,10 @@ expr returns [Expression val]
 	;
 
 seq returns [Expression val]
-	: deftype
-	| defrep
-	| elambda
-	| lambda
+	: lambda { $val = $lambda.val; }
+	| elambda { $val = $elambda.val; }
+	| deftype { $val = $deftype.val; }
+	| defrep { $val = $defrep.val; }
 	| '(' 	{ Expression cond, tBranch, fBranch; } 
 	  IF expr { cond = $expr.val; } expr { tBranch = $expr.val; } expr { fBranch = $expr.val; } 
 	  ')' 	{ $val = new IfExpression(cond, tBranch, fBranch); }
@@ -224,16 +224,16 @@ lambda returns [Lambda val]
 	  ')'	{ $val = new Lambda(lambdaArgsTuple(argList), body); }
 	;
 
-deftype
-	: '(' { String name; Lambda lambda; } 
-	  DEFTYPE SYMBOL { name = $SYMBOL.text; } lambda { lambda = $lambda.val; } 
-	  ')' { defineType(name, lambda); }
+deftype returns [Expression val]
+	: '(' { String name; TypeTuple t; Lambda lambda; } 
+	  DEFTYPE SYMBOL { name = $SYMBOL.text; } typelist { t = $typelist.val; } lambda { lambda = $lambda.val; } 
+	  ')' { defineType(name, t, lambda); $val = Expression.EMPTY_EXPRESSION; }
 	;
 	
-defrep
-	: '(' { String typeName, repName; Lambda lambda; }
-	  DEFREP SYMBOL { repName = $SYMBOL.text; } SYMBOL { typeName = $SYMBOL.text; } lambda { lambda = $lambda.val; } 
-	  ')' { defineRepresentation(typeName, repName, lambda); }
+defrep returns [Expression val]
+	: '(' { String typeName, repName; TypeTuple t; Lambda lambda; }
+	  DEFREP SYMBOL { repName = $SYMBOL.text; } SYMBOL { typeName = $SYMBOL.text; } typelist { t = $typelist.val; } lambda { lambda = $lambda.val; } 
+	  ')' { defineRepresentation(typeName, repName, t, lambda); $val = Expression.EMPTY_EXPRESSION; }
 	;
 	
 typed returns [Expression val]
@@ -251,9 +251,15 @@ type returns [Constructor val]
 	;
 	
 impl returns [ImplContainer val]
+	: { TypeTuple t; }
+	  typelist { t = $typelist.val; } 
+	  expr { $val = new ImplContainer(t, $expr.val); }
+	;
+	
+typelist returns [TypeTuple val]
 	: '(' { List<Type> ll = new ArrayList<Type>(); }
 	  (type { ll.add($type.val.constructedType); })* 
-	  ')' expr { $val = new ImplContainer(new TypeTuple(ll), $expr.val); }
+	  ')' { $val = new TypeTuple(ll); }
 	;
 
 atom returns [Object val]

@@ -149,6 +149,18 @@ public class SchemeBaseListener implements SchemeListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterTypelist(SchemeParser.TypelistContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitTypelist(SchemeParser.TypelistContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterAtom(SchemeParser.AtomContext ctx) { }
 	/**
 	 * {@inheritDoc}

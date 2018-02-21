@@ -121,6 +121,16 @@ public interface SchemeListener extends ParseTreeListener {
 	 */
 	void exitImpl(SchemeParser.ImplContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SchemeParser#typelist}.
+	 * @param ctx the parse tree
+	 */
+	void enterTypelist(SchemeParser.TypelistContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SchemeParser#typelist}.
+	 * @param ctx the parse tree
+	 */
+	void exitTypelist(SchemeParser.TypelistContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SchemeParser#atom}.
 	 * @param ctx the parse tree
 	 */
