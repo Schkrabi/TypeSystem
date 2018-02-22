@@ -40,7 +40,7 @@ public class IntRomanToIntStringWrapper extends ConversionWrapper{
 	}
 
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		return new IntRomanToIntStringWrapper(this.wrapped.substituteTopLevelVariables(topLevel));
 	}
 

@@ -27,7 +27,7 @@ public class QuotedExpression extends Expression {
 	}
 
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		return new QuotedExpression(
 				quoted.substituteTopLevelVariables(topLevel));
 	}

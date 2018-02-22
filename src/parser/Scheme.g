@@ -24,163 +24,185 @@ import java.util.Optional;
 
 @parser::members {
 	public static Set<TypeConcrete> types = new HashSet<TypeConcrete>();
-		public static Map<TypeConcrete, Constructor> constructorMap = new HashMap<TypeConcrete, Constructor>();
+	public static Map<TypeConcrete, Constructor> constructorMap = new HashMap<TypeConcrete, Constructor>();
+	
+	static{
+		//Int
+		types.add(TypeConcrete.TypeInt);
+		constructorMap.put(TypeConcrete.TypeInt, Constructor.IntPrimitiveConstructor);
+		types.add(TypeRepresentation.TypeIntRoman);
+		constructorMap.put(TypeRepresentation.TypeIntRoman, Constructor.IntRomanConstructor);
+		types.add(TypeRepresentation.TypeIntString);
+		constructorMap.put(TypeRepresentation.TypeIntString, Constructor.IntStringConstructor);
 		
-		static{
-			//Int
-			types.add(TypeConcrete.TypeInt);
-			constructorMap.put(TypeConcrete.TypeInt, Constructor.IntPrimitiveConstructor);
-			types.add(TypeRepresentation.TypeIntRoman);
-			constructorMap.put(TypeRepresentation.TypeIntRoman, Constructor.IntRomanConstructor);
-			types.add(TypeRepresentation.TypeIntString);
-			constructorMap.put(TypeRepresentation.TypeIntString, Constructor.IntStringConstructor);
+		//Bool
+		types.add(TypeConcrete.TypeBool);
+		constructorMap.put(TypeConcrete.TypeBool, Constructor.BoolPrimitiveConstructor);
+		
+		//String
+		types.add(TypeConcrete.TypeString);
+		constructorMap.put(TypeConcrete.TypeString, Constructor.StringPrimitiveConstructor);
 			
-			//Bool
-			types.add(TypeConcrete.TypeBool);
-			constructorMap.put(TypeConcrete.TypeBool, Constructor.BoolPrimitiveConstructor);
-			
-			//String
-			types.add(TypeConcrete.TypeString);
-			constructorMap.put(TypeConcrete.TypeString, Constructor.StringPrimitiveConstructor);
-				
-			//Double
-			types.add(TypeConcrete.TypeDouble);
-			constructorMap.put(TypeConcrete.TypeDouble, Constructor.DoublePrimitiveConstructor);
+		//Double
+		types.add(TypeConcrete.TypeDouble);
+		constructorMap.put(TypeConcrete.TypeDouble, Constructor.DoublePrimitiveConstructor);
+	}
+	
+	public static String unescapeString(String s) {
+		StringBuilder result = new StringBuilder();
+		for (int i = 0; i < s.length(); i++) {
+			char c1 = s.charAt(i); 
+			if ((c1 == '\\') && (i + 1 < s.length())) {
+				char c2 = s.charAt(i + 1);
+				switch (c2) {
+					case 'n': result.append('\n'); i++; break;
+					case 't': result.append('\t'); i++; break;
+					case 'r': result.append('\r'); i++; break;
+					case '\\': result.append('\\'); i++; break;
+					default: result.append(c1);
+				}
+			} else result.append(c1);
 		}
-		
-		public static String unescapeString(String s) {
-			StringBuilder result = new StringBuilder();
-			for (int i = 0; i < s.length(); i++) {
-				char c1 = s.charAt(i); 
-				if ((c1 == '\\') && (i + 1 < s.length())) {
-					char c2 = s.charAt(i + 1);
-					switch (c2) {
-						case 'n': result.append('\n'); i++; break;
-						case 't': result.append('\t'); i++; break;
-						case 'r': result.append('\r'); i++; break;
-						case '\\': result.append('\\'); i++; break;
-						default: result.append(c1);
-					}
-				} else result.append(c1);
-			}
-			return result.toString();
+		return result.toString();
+	}
+	
+	public static Tuple lambdaArgsTuple(Expression e) throws Exception {
+		if(e instanceof Variable){
+			return new Tuple(new Expression[]{e});
 		}
-		
-		public static Tuple lambdaArgsTuple(Expression e) throws Exception {
-			if(e instanceof Variable){
-				return new Tuple(new Expression[]{e});
-			}
-			if(e instanceof Tuple){ //Unlikely,
-				return (Tuple) e;
-			}
-			if(e instanceof Sequence){
-				Sequence s = (Sequence) e;
-				return s.asTuple();
-			}
-			throw new Exception("Argument name list expected, got " + e.toString());
+		if(e instanceof Tuple){ //Unlikely,
+			return (Tuple) e;
 		}
-		
-		public static Expression instantiateTyped(Constructor constructor, Expression value) throws Exception{
-				if(value instanceof Variable){
-					Variable v = (Variable) value;
-					v.setType(constructor.constructedType);
-					return v;
-				}	
-				return new Application(constructor, value);
-			}
-		
-		public static Expression instantiateUntypedLiteral(Object value) throws Exception{
+		if(e instanceof Sequence){
+			Sequence s = (Sequence) e;
+			return s.asTuple();
+		}
+		throw new Exception("Argument name list expected, got " + e.toString());
+	}
+	
+	public static Expression instantiateTyped(Constructor constructor, Expression value) throws Exception{
 			if(value instanceof Variable){
-				return (Variable)value;
+				Variable v = (Variable) value;
+				v.setType(constructor.constructedType);
+				return v;
+			}	
+			if(value instanceof Tuple){
+				return new Application(constructor, (Tuple)value);
+			}
+			if(value instanceof Sequence){
+				return new Application(constructor, ((Sequence)value).asTuple());
 			}
 			
-			if(value instanceof String) {
-				Literal l = new LitString((String)value);
-				l.setLiteralType(TypeConcrete.TypeString);
-				return l;
-			}
-			if(value instanceof Integer) {
-				Literal l = new LitInteger((Integer)value);
-				l.setLiteralType(TypeConcrete.TypeInt);
-				return l;
-			}
-			if(value instanceof Double) {
-				Literal l = new LitDouble((Double)value);
-				l.setLiteralType(TypeConcrete.TypeDouble);
-				return l;
-			}
-			if(value instanceof Boolean) {
-				return (Boolean)value ? LitBoolean.TRUE : LitBoolean.FALSE; //TODO Mohlo by delat bordel, co kdyz nekdo udela typeAlias Boolu?
-			}
-		
-			throw new Exception("Unrecognized untyped value " + value.toString() + " of type " + value.getClass());
+			return new Application(constructor, new Tuple(new Expression[]{value}));
+		}
+	
+	public static Expression instantiateUntypedLiteral(Object value) throws Exception{
+		if(value instanceof Variable){
+			return (Variable)value;
 		}
 		
-		public static Constructor getConstructorByTypeName(String typeName) throws Exception{
-			return getConstructorByTypeName(typeName, "");
+		if(value instanceof String) {
+			Literal l = new LitString((String)value);
+			l.setLiteralType(TypeConcrete.TypeString);
+			return l;
+		}
+		if(value instanceof Integer) {
+			Literal l = new LitInteger((Integer)value);
+			l.setLiteralType(TypeConcrete.TypeInt);
+			return l;
+		}
+		if(value instanceof Double) {
+			Literal l = new LitDouble((Double)value);
+			l.setLiteralType(TypeConcrete.TypeDouble);
+			return l;
+		}
+		if(value instanceof Boolean) {
+			return (Boolean)value ? LitBoolean.TRUE : LitBoolean.FALSE; //TODO Mohlo by delat bordel, co kdyz nekdo udela typeAlias Boolu?
+		}
+	
+		throw new Exception("Unrecognized untyped value " + value.toString() + " of type " + value.getClass());
+	}
+	
+	public static Constructor getConstructorByTypeName(String typeName) throws Exception{
+		return getConstructorByTypeName(typeName, "");
+	}
+	
+	public static Constructor getConstructorByTypeName(final String typeName, final String representationName) throws Exception{
+		Optional<TypeConcrete> o;
+		
+		if(representationName == "") {	
+			//o = types.stream().filter(x -> (x instanceof TypeConcrete) && x.name.equals(typeName)).findAny();
+			o = types.stream().filter(new java.util.function.Predicate<TypeConcrete>(){
+
+				@Override
+				public boolean test(TypeConcrete x) {
+					return (!(x instanceof TypeRepresentation)) && x.name.equals(typeName);
+				}}).findAny();
+		}
+		else {
+			//o = types.stream().filter(x -> (x instanceof TypeRepresentation) && x.name.equals(representationName) && ((TypeRepresentation)x).baseType.name.equals(typeName)).findAny();
+			o = types.stream().filter(new java.util.function.Predicate<TypeConcrete>(){
+				@Override
+				public boolean test(TypeConcrete x) {
+					return (x instanceof TypeRepresentation) && x.name.equals(representationName) && ((TypeRepresentation)x).baseType.name.equals(typeName);
+				}}).findAny();
 		}
 		
-		public static Constructor getConstructorByTypeName(String typeName, String representationName) throws Exception{
-			Optional<TypeConcrete> o;
-			
-			if(representationName == "") {					
-				o = types.stream().filter(x -> (x instanceof TypeConcrete) && x.name.equals(typeName)).findAny();
-			}
-			else {
-				o = types.stream().filter(x -> (x instanceof TypeRepresentation) && x.name.equals(representationName) && ((TypeRepresentation)x).baseType.name.equals(typeName)).findAny();
-			}
-			
-			if(!o.isPresent()) {
-				throw new Exception("Unknown type " + typeName + representationName != "" ? ":" + representationName : "");
-			}
-			
-			TypeConcrete type = o.get();
-			
-			Constructor constructor = constructorMap.get(type);
-			
-			if(constructor == null){
-				throw new Exception("No constructor exists for: " + typeName + (representationName == "" ? "" : ":" + representationName));
-			}
-			
-			return constructor;
+		if(!o.isPresent()) {
+			throw new Exception("Unknown type " + typeName + representationName != "" ? ":" + representationName : "");
 		}
 		
-		public static void defineType(String typeName, TypeTuple constructorArgsType, Lambda lConstructor) throws Exception{
-				TypeConcrete newType = new TypeConcrete(typeName);
-				Constructor constructor = new Constructor(newType, lConstructor.args, constructorArgsType, lConstructor.getBody());
-				
-				addType(newType);
-				addConstructor(newType, constructor);
-			}
-			
-		public static void defineRepresentation(String typeName, String repName, TypeTuple constructorArgsType, Lambda lConstructor) throws Exception{
-			Optional<TypeConcrete> o = types.stream().filter(x -> (x instanceof TypeConcrete) && x.name.equals(typeName)).findAny(); 
-			if(!o.isPresent()) {
-				throw new Exception("Unknown base type: " + typeName);
-			}
-			
-			TypeConcrete baseType = o.get();
-			TypeRepresentation newType = new TypeRepresentation(repName, baseType);
-			addType(newType);
-			
+		TypeConcrete type = o.get();
+		
+		Constructor constructor = constructorMap.get(type);
+		
+		if(constructor == null){
+			throw new Exception("No constructor exists for: " + typeName + (representationName == "" ? "" : ":" + representationName));
+		}
+		
+		return constructor;
+	}
+	
+	public static void defineType(String typeName, TypeTuple constructorArgsType, Lambda lConstructor) throws Exception{
+			TypeConcrete newType = new TypeConcrete(typeName);
 			Constructor constructor = new Constructor(newType, lConstructor.args, constructorArgsType, lConstructor.getBody());
+			
+			addType(newType);
 			addConstructor(newType, constructor);
 		}
 		
-		public static void addType(TypeConcrete newType) throws Exception {
-			if(types.contains(newType)) {
-				throw new Exception("Type " + newType + " is already defined");
-			}
-			types.add(newType);
+	public static void defineRepresentation(final String typeName, String repName, TypeTuple constructorArgsType, Lambda lConstructor) throws Exception{
+		Optional<TypeConcrete> o = types.stream().filter(new java.util.function.Predicate<TypeConcrete>(){
+			@Override
+			public boolean test(TypeConcrete x) {
+				return (!(x instanceof TypeRepresentation)) && x.name.equals(typeName);
+			}}).findAny(); 
+		if(!o.isPresent()) {
+			throw new Exception("Unknown base type: " + typeName);
 		}
 		
-		public static void addConstructor(TypeConcrete newType, Constructor constructor) throws Exception {
-			
-			if(constructorMap.containsKey(newType)) {
-				throw new Exception("Constructor for " + newType + " is already defined");
-			}
-			constructorMap.put(newType, constructor);
+		TypeConcrete baseType = o.get();
+		TypeRepresentation newType = new TypeRepresentation(repName, baseType);
+		addType(newType);
+		
+		Constructor constructor = new Constructor(newType, lConstructor.args, constructorArgsType, lConstructor.getBody());
+		addConstructor(newType, constructor);
+	}
+	
+	public static void addType(TypeConcrete newType) throws Exception {
+		if(types.contains(newType)) {
+			throw new Exception("Type " + newType + " is already defined");
 		}
+		types.add(newType);
+	}
+	
+	public static void addConstructor(TypeConcrete newType, Constructor constructor) throws Exception {
+		
+		if(constructorMap.containsKey(newType)) {
+			throw new Exception("Constructor for " + newType + " is already defined");
+		}
+		constructorMap.put(newType, constructor);
+	}
 }
 
 

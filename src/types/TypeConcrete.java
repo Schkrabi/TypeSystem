@@ -109,7 +109,7 @@ public class TypeConcrete extends Type {
 		Class<? extends ConversionWrapper> wrapperClass = this.conversionTable.get(type);
 		if (wrapperClass == null) {
 			throw new Exception(
-					"No conversion from literal " + this.getClass().getName() + " to type " + type.name + " exists");
+					"No conversion from " + this + " to type " + type + " exists");
 		}
 
 		return wrapperClass.getConstructor(new Class<?>[] { Expression.class }).newInstance(arg);

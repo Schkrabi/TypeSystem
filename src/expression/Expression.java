@@ -59,7 +59,7 @@ public abstract class Expression {
 		this.inferedType = value;
 	}
 	
-	public abstract Expression substituteTopLevelVariables(Environment topLevel);
+	public abstract Expression substituteTopLevelVariables(Environment topLevel) throws Exception;
 	
 	public abstract String toClojureCode() throws Exception;
 	

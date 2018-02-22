@@ -71,7 +71,7 @@ public class IfExpression extends Expression {
 	}
 
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		return new IfExpression(
 				this.condition.substituteTopLevelVariables(topLevel),
 				this.trueBranch.substituteTopLevelVariables(topLevel),

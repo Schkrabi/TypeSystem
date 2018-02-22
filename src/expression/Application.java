@@ -28,10 +28,10 @@ public class Application extends Expression {
 	 */
 	public final Tuple args;
 
-	public Application(Expression fun, Expression arg) {
+	/*public Application(Expression fun, Expression arg) {
 		this.fun = fun;
 		this.args = new Tuple(new Expression[] { arg });
-	}
+	}*/
 
 	public Application(Expression fun, Tuple args) {
 		this.fun = fun;
@@ -161,7 +161,7 @@ public class Application extends Expression {
 	}
 
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		Expression f = this.fun.substituteTopLevelVariables(topLevel);
 		Expression a = this.args.substituteTopLevelVariables(topLevel);
 		
@@ -169,7 +169,8 @@ public class Application extends Expression {
 			Tuple t = (Tuple)a;
 			return new Application(f, t);
 		}else {
-			return new Application(f, a);
+		//	return new Application(f, a);
+			throw new Exception("Argument is always tuple");
 		}
 	}
 

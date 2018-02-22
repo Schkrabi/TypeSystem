@@ -39,7 +39,7 @@ public class IntBinaryToIntStringWrapper extends ConversionWrapper{
 	}
 
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		return new IntBinaryToIntStringWrapper(this.wrapped.substituteTopLevelVariables(topLevel));
 	}
 

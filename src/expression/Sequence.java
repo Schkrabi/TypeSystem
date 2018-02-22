@@ -104,7 +104,7 @@ public class Sequence extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		List<Expression> l = new ArrayList<Expression>();
 		for (Expression e : this) {
 			l.add(e.substituteTopLevelVariables(topLevel));

@@ -63,7 +63,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		Expression[] a = new Expression[this.values.length];
 		int i = 0;
 		for (Expression e : this) {

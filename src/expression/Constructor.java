@@ -54,7 +54,7 @@ public class Constructor extends Lambda {
 	}
 	
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		Lambda l = (Lambda)super.substituteTopLevelVariables(topLevel);
 		return new Constructor(this.constructedType, l.args, this.argsType, l.getBody());
 	}

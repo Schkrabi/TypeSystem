@@ -262,7 +262,7 @@ public class ExtendedLambda extends Expression {
 	}
 
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		Environment e = new Environment(topLevel);
 		//Mask locally redefined variables
 		for(Expression expr : this.args){

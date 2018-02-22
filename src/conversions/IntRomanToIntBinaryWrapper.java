@@ -41,7 +41,7 @@ public class IntRomanToIntBinaryWrapper extends ConversionWrapper{
 	}
 
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		return new IntRomanToIntBinaryWrapper(this.wrapped.substituteTopLevelVariables(topLevel));
 	}
 

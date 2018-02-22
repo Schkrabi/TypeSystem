@@ -83,7 +83,7 @@ public class Lambda extends ExtendedLambda {
 	}
 	
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		ExtendedLambda el = (ExtendedLambda) super.substituteTopLevelVariables(topLevel);
 		return new Lambda(el.args, el.defaultImplementation);
 	}
