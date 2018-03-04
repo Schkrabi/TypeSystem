@@ -9,9 +9,11 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.Function;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
@@ -28,6 +30,8 @@ import conversions.IntStringToIntRomanWrapper;
 import parser.SchemeLexer;
 import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
+import parser.SemanticNode;
+import semantic.SemanticParser;
 import types.TypeConcrete;
 import types.TypeRepresentation;
 import util.ClojureCodeGenerator;
@@ -97,6 +101,7 @@ public class Main {
 		Environment topLevel = Main.initTopLevelEnvironment();
 		
 		try {			
+			SemanticParser semanticParser = new SemanticParser();
 			while (true) {
 				System.out.print(">");
 				CharStream charStream = new ANTLRInputStream(input.nextLine());
@@ -104,8 +109,13 @@ public class Main {
 				SchemeParser parser = new SchemeParser(tokens);
 
 				ExprsContext exprsContext = parser.exprs();
+				List<Expression> exprs = new ArrayList<Expression>();
+				
+				for(SemanticNode s : exprsContext.val){
+					exprs.add(semanticParser.parseToken(s));
+				}
 
-				for (Expression e : exprsContext.val) {
+				for (Expression e : exprs) {
 					Expression expr = e.substituteTopLevelVariables(topLevel);
 					expr.infer();
 					System.out.println(expr.interpret(topLevel));
@@ -130,8 +140,14 @@ public class Main {
 			ExprsContext exprsContext = parser.exprs();
 			
 			List<Expression> l = new LinkedList<Expression>();
+			List<Expression> exprs = new ArrayList<Expression>();
+			SemanticParser semanticParser = new SemanticParser();
 			
-			for(Expression e : exprsContext.val){
+			for(SemanticNode s : exprsContext.val){
+				exprs.add(semanticParser.parseToken(s));
+			}
+			
+			for(Expression e : exprs){
 				Expression expr = e.substituteTopLevelVariables(new Environment());
 				expr.infer();
 				l.add(expr);
