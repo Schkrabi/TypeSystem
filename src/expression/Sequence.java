@@ -27,7 +27,7 @@ public class Sequence extends Expression implements Iterable<Expression> {
 	public Expression interpret(Environment env) throws Exception {
 		Expression head = this.head().interpret(env);
 
-		if (head instanceof ExtendedLambda) {
+		if (head instanceof ExtendedLambda || head instanceof Lambda) {
 			// Will interpret head again, but doesnt matter, lambda interprets
 			// to itself and no side effects here
 			Application tmp = new Application(head, this.tail());
@@ -46,8 +46,8 @@ public class Sequence extends Expression implements Iterable<Expression> {
 		if (headType.isApplicableType()) {
 			Application tmp = new Application(this.head(), this.tail());
 			ret = tmp.infer();
-		}else{
-			ret = this.asTuple().infer(); 
+		} else {
+			ret = this.asTuple().infer();
 		}
 
 		this.setType(ret);

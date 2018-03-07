@@ -2,18 +2,17 @@ package expression;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 
 import interpretation.Environment;
 import types.ForallType;
 import types.Type;
-import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
-import util.ImplContainer;
 
 /**
  * Extended lambda expression allowing for the different implementation of body
@@ -25,67 +24,26 @@ import util.ImplContainer;
 public class ExtendedLambda extends Expression {
 
 	/**
-	 * Formal arguments (names) of the lambda expression
+	 * Various implementations of this function
 	 */
-	public final Tuple args;
-
-	/**
-	 * Basic fall back implementation of the lambda body
-	 */
-	public final Expression defaultImplementation;
-
-	/**
-	 * Alternative implementations of the lambda body associated with the
-	 * argument representation types
-	 */
-	public final Set<ImplContainer> implementations;
+	public final Set<Lambda> implementations;
 
 	public ExtendedLambda(Tuple args, Expression expr) {
-		this.args = args;
-		this.implementations = new TreeSet<ImplContainer>();
-		this.defaultImplementation = expr;
+		Set<Lambda> aux = new TreeSet<Lambda>();
+		aux.add(new Lambda(args, expr));
+		this.implementations = aux;
 	}
 
 	public ExtendedLambda(Tuple args, Expression defaultImplementation,
-			Set<ImplContainer> specificImplementations) {
-		this.args = args;
-		this.implementations = new TreeSet<ImplContainer>();
-		this.implementations.addAll(specificImplementations);
-		this.defaultImplementation = defaultImplementation;
+			Set<Lambda> specificImplementations) {
+		Set<Lambda> aux = new TreeSet<Lambda>();
+		aux.add(new Lambda(args, defaultImplementation));
+		aux.addAll(specificImplementations);
+		this.implementations = aux;
 	}
-
-	/**
-	 * Backward compatibility constructor
-	 * 
-	 * @param args
-	 * @param defaultImplementation
-	 * @param specificImplementations
-	 */
-	public ExtendedLambda(Tuple args, Expression defaultImplementation,
-			Map<TypeTuple, Expression> specificImplementations) {
-		this.args = args;
-		this.implementations = new TreeSet<ImplContainer>();
-		for (Map.Entry<TypeTuple, Expression> e : specificImplementations
-				.entrySet()) {
-			this.implementations
-					.add(new ImplContainer(e.getKey(), e.getValue()));
-		}
-		this.defaultImplementation = defaultImplementation;
-	}
-
-	@Deprecated
-	public Expression getDefaultUmplementation() {
-		return this.defaultImplementation;
-	}
-
-	@Deprecated
-	public Expression getImplementation(TypeTuple prefferedType) {
-		for (ImplContainer c : this.implementations) {
-			if (c.typeSpec.equals(prefferedType)) {
-				return c.implementation;
-			}
-		}
-		return null;
+	
+	public ExtendedLambda(Set<Lambda> implementations) {
+		this.implementations = implementations;
 	}
 
 	@Override
@@ -95,44 +53,29 @@ public class ExtendedLambda extends Expression {
 
 	@Override
 	public Type infer() throws Exception {
-		Type argsType = this.args.infer();
-		Type defImplType = this.defaultImplementation.infer();
+		Type lastType = null;
 
-		for (ImplContainer c : this.implementations) {
-			TypeTuple targs = c.typeSpec;
-			Type timpl = c.implementation.infer();
-
-			if (!Type.unify(targs, argsType)) {
-				throw new Exception(
-						"Bad extended lambda specialized arguments of type "
-								+ targs.getRep().toString()
-								+ " do not unify with default arguments "
-								+ argsType.getRep().toString());
+		for (Lambda l : this.implementations) {
+			Type currentType = l.infer();
+			
+			if(lastType == null) {
+				lastType = currentType;
+				continue;
 			}
-
-			if (!Type.unify(defImplType, timpl)) {
-				throw new Exception(
-						"Bad extended lambda specialized implementation "
-								+ c.implementation.toString() + "of type "
-								+ timpl.toString()
-								+ "do not unify with default implementation "
-								+ this.defaultImplementation.toString()
-								+ " of type " + defImplType.toString());
+			
+			//Maybe add some exception for the Forall type
+			if(!Type.unify(lastType, currentType)) {
+				throw new Exception("Types " + lastType + " and " + currentType + " in " + this + " does not unify");
 			}
+			
+			//Is this transitive?
+			lastType = currentType;
 		}
 		
-		Type t;
-
-		if(this.implementations.isEmpty()){
-			t = new TypeArrow(argsType.getRep(), defImplType.getRep());
-		}
-		else{
-			//Need to know comparator at compile time!
-			ImplContainer impl = this.getSortedImplementations().peek();
-			//Types should be unified from previous code
-			t = new TypeArrow(impl.typeSpec.getRep(), impl.implementation.getType().getRep()); 
-		}
-
+		Type t = lastType.getRep();
+		
+		//Might want to add comparator into the scope...
+		
 		for (TypeVariable v : t.getUnconstrainedVariables()) {
 			t = new ForallType(v, t);
 		}
@@ -148,8 +91,8 @@ public class ExtendedLambda extends Expression {
 	 * 
 	 * @return priority queue of ImplContainers
 	 */
-	public PriorityQueue<ImplContainer> getSortedImplementations() {
-		PriorityQueue<ImplContainer> q = new PriorityQueue<ImplContainer>();
+	public PriorityQueue<Lambda> getSortedImplementations() {
+		PriorityQueue<Lambda> q = new PriorityQueue<Lambda>();
 		q.addAll(this.implementations);
 		return q;
 	}
@@ -162,9 +105,9 @@ public class ExtendedLambda extends Expression {
 	 *            comparator determining the ordering of the implementations
 	 * @return priority queue of ImplContainers
 	 */
-	public PriorityQueue<ImplContainer> getSortedImplementations(
-			Comparator<? super ImplContainer> c) {
-		PriorityQueue<ImplContainer> q = new PriorityQueue<ImplContainer>(c);
+	public PriorityQueue<Lambda> getSortedImplementations(
+			Comparator<? super Lambda> c) {
+		PriorityQueue<Lambda> q = new PriorityQueue<Lambda>(c);
 		q.addAll(this.implementations);
 		return q;
 	}
@@ -179,7 +122,7 @@ public class ExtendedLambda extends Expression {
 	 *             if the impl is not default implementation or one of the
 	 *             specific implementations
 	 */
-	public Lambda transformStaticDispatch(ImplContainer impl) throws Exception {
+	/*public Lambda transformStaticDispatch(ImplContainer impl) throws Exception {
 		if (impl.implementation == this.defaultImplementation) {
 			return new Lambda(this.args, this.defaultImplementation);
 		}
@@ -188,7 +131,7 @@ public class ExtendedLambda extends Expression {
 		}
 		throw new Exception("Implementation " + impl.toString()
 				+ " do not belong to extended lambda " + this.toString());
-	}
+	}*/
 
 	/**
 	 * Transforms this extended lambda to normal lambda based its implementation
@@ -200,10 +143,10 @@ public class ExtendedLambda extends Expression {
 	 *             Exception if the impl is not default implementation or one of
 	 *             the specific implementations
 	 */
-	public Lambda transformStaticDispatch(Comparator<? super ImplContainer> c)
+	public Lambda transformStaticDispatch(Comparator<? super Lambda> c)
 			throws Exception {
-		PriorityQueue<ImplContainer> queue = this.getSortedImplementations(c);
-		return this.transformStaticDispatch(queue.peek());
+		PriorityQueue<Lambda> queue = this.getSortedImplementations(c);
+		return queue.peek();
 	}
 
 	/**
@@ -217,11 +160,11 @@ public class ExtendedLambda extends Expression {
 	 *             the specific implementations
 	 */
 	public Lambda transformStaticDispatch(TypeTuple argsType) throws Exception {
-		ImplContainer impl = null;
+		Lambda impl = null;
 
 		// Maybe better search in Java 8?
-		for (ImplContainer i : this.implementations) {
-			if (i.typeSpec == argsType) {
+		for (Lambda i : this.implementations) {
+			if (i.argsType == argsType) {
 				impl = i;
 				break;
 			}
@@ -233,58 +176,68 @@ public class ExtendedLambda extends Expression {
 					+ argsType.toString());
 		}
 
-		return this.transformStaticDispatch(impl);
+		return impl;
+	}
+	
+	public Lambda defaultImplementation() {
+		Optional<Lambda> o = this.implementations.stream().filter(new Predicate<Lambda>() {
+
+			@Override
+			public boolean test(Lambda arg0) {
+				return arg0.argsType == null;
+			}}).findAny();
+		
+		return o.get();
 	}
 	
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append("ExtendedLabmbda ");
-		sb.append(this.args.toString());
-		sb.append(" ");
-		sb.append(this.defaultImplementation);
-		sb.append("[");
+		Lambda di = this.defaultImplementation();
 		
-		Iterator<ImplContainer> i = this.implementations.iterator();
+		sb.append("ExtendedLabmbda ");
+		sb.append(di.args);
+		sb.append(" ");
+		sb.append(di.body);
+		if(this.implementations.size() > 1) {
+			sb.append(" ");
+		}
+		
+		Iterator<Lambda> i = this.implementations.iterator();
 		
 		while(i.hasNext()){
-			ImplContainer c = i.next();
-			sb.append(c.toString());
-			if(i.hasNext()){
-				sb.append(", ");
+			Lambda c = i.next();
+			if(c.argsType != null) {
+				sb.append("(");
+				sb.append(c.argsType);
+				sb.append(" ");
+				sb.append(c.body);
+				sb.append(")");
+				if(i.hasNext()){
+					sb.append(" ");
+				}
 			}
 		}
 		
-		sb.append("]");
+		sb.append(")");
 		
 		return sb.toString();
 	}
 
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		Environment e = new Environment(topLevel);
-		//Mask locally redefined variables
-		for(Expression expr : this.args){
-			e.put((Variable) expr, expr);
+		Set<Lambda> tmp = new TreeSet<Lambda>();
+		for(Lambda l : this.implementations){
+			tmp.add((Lambda)l.substituteTopLevelVariables(topLevel));
 		}
 		
-		Set<ImplContainer> s = new TreeSet<ImplContainer>();
-		for(ImplContainer i : this.implementations){
-			s.add(new ImplContainer(i.typeSpec, i.implementation.substituteTopLevelVariables(e)));
-		}
-		
-		return new ExtendedLambda(this.args, this.defaultImplementation.substituteTopLevelVariables(e), s);
+		return new ExtendedLambda(tmp);
 	}
 
 	@Override
 	public String toClojureCode() throws Exception {
-		if(this.implementations.isEmpty()){
-			return (new Lambda(this.args, this.defaultImplementation)).toClojureCode();
-		}
-		ImplContainer impl = this.getSortedImplementations().peek();//Comparator here?
-		Lambda l = new Lambda(this.args, impl.implementation);
-		l.infer();
+		Lambda l = this.getSortedImplementations().peek(); //Comparator?
 		return l.toClojureCode();
 	}
 }

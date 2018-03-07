@@ -1,7 +1,6 @@
 package parser;
 
 import java.util.List;
-import java.util.stream.Collector;
 
 public class SemanticNode {
 	public final NodeType type;
@@ -15,7 +14,7 @@ public class SemanticNode {
 		this.value = value;
 	}
 	
-	private static boolean isAdequateType(NodeType type, Object value){
+	public static boolean isAdequateType(NodeType type, Object value){
 		switch(type){
 		case SYMBOL:
 			return value instanceof String;

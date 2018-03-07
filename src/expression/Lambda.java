@@ -5,6 +5,7 @@ import java.util.Iterator;
 import types.ForallType;
 import types.Type;
 import types.TypeArrow;
+import types.TypeTuple;
 import types.TypeVariable;
 import interpretation.Environment;
 
@@ -14,23 +15,39 @@ import interpretation.Environment;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Lambda extends ExtendedLambda {
+public class Lambda extends Expression implements Comparable<Lambda>{
+
+	/**
+	 * Formal arguments (names) of the lambda expression
+	 */
+	public final Tuple args;
+
+	/**
+	 * Body
+	 */
+	public final Expression body;
+
+	/**
+	 * Non mandatory type of the lambda arguments
+	 */
+	public final TypeTuple argsType;
 
 	public Lambda(Variable arg, Expression body) {
-		super(new Tuple(new Expression[] { arg }), body);
+		this.args = new Tuple(new Expression[] { arg });
+		this.body = body;
+		this.argsType = null;
 	}
 
 	public Lambda(Tuple args, Expression body) {
-		super(args, body);
+		this.args = args;
+		this.body = body;
+		this.argsType = null;
 	}
 
-	/**
-	 * Returns the body of the lambda expression
-	 * 
-	 * @return Expression
-	 */
-	public Expression getBody() {
-		return this.defaultImplementation;
+	public Lambda(Tuple args, TypeTuple argsType, Expression body) {
+		this.args = args;
+		this.body = body;
+		this.argsType = argsType;
 	}
 
 	@Override
@@ -40,15 +57,20 @@ public class Lambda extends ExtendedLambda {
 
 	@Override
 	public String toString() {
-		return "lambda " + this.args.toString() + " " + this.getBody().toString();
+		return "lambda " + this.args.toString() + " " + this.body.toString();
 	}
 
 	@Override
 	public Type infer() throws Exception {
-		Type argsType = this.args.infer();
-		Type bodyType = this.getBody().infer();
+		Type inferedArgsType = this.args.infer();
+		Type bodyType = this.body.infer();
 
-		Type t = new TypeArrow(argsType.getRep(), bodyType.getRep());
+		if (this.argsType != null && !Type.unify(this.argsType, inferedArgsType)) {
+			throw new Exception("Infered arguments type " + inferedArgsType + " do not unify with specified args type "
+					+ this.argsType + " in " + this);
+		}
+
+		Type t = new TypeArrow(this.argsType == null ? inferedArgsType : this.argsType, bodyType.getRep());
 
 		for (TypeVariable v : t.getUnconstrainedVariables()) {
 			t = new ForallType(v, t);
@@ -58,33 +80,53 @@ public class Lambda extends ExtendedLambda {
 
 		return t;
 	}
-	
+
 	@Override
-	public String toClojureCode() throws Exception{
+	public String toClojureCode() throws Exception {
 		StringBuilder s = new StringBuilder();
 		s.append("(fn [");
-		
+
 		Iterator<Expression> i = this.args.iterator();
-		while(i.hasNext()){
+		while (i.hasNext()) {
 			Expression e = i.next();
-			if(!(e instanceof Variable)){
+			if (!(e instanceof Variable)) {
 				throw new Exception("Invalid expression in lambda variable list!");
 			}
-			Variable v = (Variable)e;
+			Variable v = (Variable) e;
 			s.append(v.toClojureCode());
-			if(i.hasNext()){
+			if (i.hasNext()) {
 				s.append(' ');
 			}
 		}
 		s.append("] ");
-		s.append(this.getBody().toClojureCode());
+		s.append(this.body.toClojureCode());
 		s.append(')');
 		return s.toString();
 	}
-	
+
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		ExtendedLambda el = (ExtendedLambda) super.substituteTopLevelVariables(topLevel);
-		return new Lambda(el.args, el.defaultImplementation);
+		Environment e = new Environment(topLevel);
+		// Mask locally redefined variables
+		for (Expression expr : this.args) {
+			e.put((Variable) expr, expr);
+		}
+
+		return new Lambda(this.args, this.argsType, this.body.substituteTopLevelVariables(e));
+	}
+
+	@Override
+	public int compareTo(Lambda o) {
+		if(this.argsType == o.argsType) {
+			return 0; 
+		}
+		if(this.argsType == null) {
+			return 1;
+		}
+		if(o.argsType == null) {
+			return -1;
+		}
+		
+		return this.argsType.compareTo(o.argsType);
 	}
 }

@@ -30,7 +30,6 @@ import types.Type;
 import types.TypeConcrete;
 import types.TypeRepresentation;
 import types.TypeTuple;
-import util.ImplContainer;
 
 public class SemanticParser {
 	private Set<TypeConcrete> types = new HashSet<TypeConcrete>();
@@ -244,6 +243,7 @@ public class SemanticParser {
 	private Lambda parseLambda(List<SemanticNode> l) throws Exception {
 		// Lambda has form:
 		// (lambda ARGS BODY)
+		//TODO rewrite!!!
 		if (l.size() != 3) {
 			throw new Exception("Badly formed lambda " + l);
 		}
@@ -265,6 +265,7 @@ public class SemanticParser {
 	private ExtendedLambda parseElambda(List<SemanticNode> l) throws Exception {
 		// Extended lambda has form:
 		// (elambda ARGS DEFAULTIMPL (TYPELIST IMPL)*)
+		//TODO rewrite!!!
 		if (l.size() < 3) {
 			throw new Exception("Badly formed extended lambda " + l);
 		}
@@ -281,7 +282,7 @@ public class SemanticParser {
 		Expression defaultImplementation = this.parseToken(l.get(2));
 
 		// Implementations
-		Set<ImplContainer> implementations = new TreeSet<ImplContainer>();
+		Set<Lambda> implementations = new TreeSet<Lambda>();
 		int i = 0;
 		for (SemanticNode t : l) {
 			if (i < 3) {
@@ -303,7 +304,7 @@ public class SemanticParser {
 			}
 			TypeTuple typeList = this.parseTypeList(typeListToken.asList());
 			Expression impl = this.parseToken(implToken);
-			implementations.add(new ImplContainer(typeList, impl));
+			implementations.add(new Lambda(argsTuple, typeList, impl));
 		}
 
 		return new ExtendedLambda(argsTuple, defaultImplementation,
@@ -371,7 +372,7 @@ public class SemanticParser {
 			Lambda lConstructor) throws Exception {
 		TypeConcrete newType = new TypeConcrete(typeName);
 		Constructor constructor = new Constructor(newType, lConstructor.args,
-				constructorArgsType, lConstructor.getBody());
+				constructorArgsType, lConstructor.body);
 
 		addType(newType);
 		addConstructor(newType, constructor);
@@ -397,7 +398,7 @@ public class SemanticParser {
 		addType(newType);
 
 		Constructor constructor = new Constructor(newType, lConstructor.args,
-				constructorArgsType, lConstructor.getBody());
+				constructorArgsType, lConstructor.body);
 		addConstructor(newType, constructor);
 	}
 

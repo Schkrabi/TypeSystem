@@ -19,13 +19,10 @@ public class Constructor extends Lambda {
 	 * Constructed type
 	 */
 	public final Type constructedType;
-	
-	public final TypeTuple argsType;
 
 	public Constructor(Type constructedType, Tuple args, TypeTuple argsType, Expression body) {
-		super(args, body);
+		super(args, argsType, body);
 		this.constructedType = constructedType; 
-		this.argsType = argsType;
 	}
 
 	@Override
@@ -36,12 +33,6 @@ public class Constructor extends Lambda {
 		}
 		if(infered instanceof ForallType) {
 			infered = ((ForallType)infered).getBoundType();
-		}
-		
-		TypeArrow inferedType = (TypeArrow)infered;
-		
-		if(!Type.unify(this.argsType, inferedType.ltype)) {
-			throw new Exception("Infered type of constructor arguments " + inferedType.ltype + " do not infer with specified type of constructor arguments " + this.argsType);
 		}
 		
 		return new TypeArrow(this.argsType, this.constructedType);
@@ -56,7 +47,7 @@ public class Constructor extends Lambda {
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		Lambda l = (Lambda)super.substituteTopLevelVariables(topLevel);
-		return new Constructor(this.constructedType, l.args, this.argsType, l.getBody());
+		return new Constructor(this.constructedType, l.args, this.argsType, l.body);
 	}
 	
 	/**

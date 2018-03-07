@@ -2,13 +2,10 @@ package expression;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.PriorityQueue;
-
 import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
-import util.ImplContainer;
 import interpretation.Environment;
 
 /**
@@ -41,39 +38,30 @@ public class Application extends Expression {
 	@Override
 	public Expression interpret(Environment env) throws Exception {
 		Expression ifun = fun.interpret(env);
-
-		if (!(ifun instanceof ExtendedLambda)) {
+		Lambda lambda;
+		
+		if(ifun instanceof Lambda) {
+			lambda = (Lambda)ifun;
+		}
+		else if(ifun instanceof ExtendedLambda) {
+			ExtendedLambda elambda = (ExtendedLambda) ifun;
+			lambda = elambda.getSortedImplementations().peek(); //Might want to add comparator here
+		}
+		else {
 			throw new Exception(fun + " is not a fucntion");
-		}
-
-		ExtendedLambda elambda = (ExtendedLambda) ifun;
-
-		if (elambda.args.values.length != this.args.values.length) {
+		}		
+		
+		if(lambda.args.values.length != this.args.values.length) {
 			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected "
-					+ elambda.args.values.length + " got " + this.args.values.length);
+					+ lambda.args.values.length + " got " + this.args.values.length);
 		}
-
+		
 		Environment childEnv = new Environment(env);
-		for (int i = 0; i < elambda.args.values.length; i++) {
-			childEnv.put((Variable) elambda.args.values[i], this.args.values[i]);
+		for (int i = 0; i < lambda.args.values.length; i++) {
+			childEnv.put((Variable) lambda.args.values[i], this.args.values[i]);
 		}
-
-		// Ready for comparator
-		PriorityQueue<ImplContainer> queue = elambda.getSortedImplementations();
-		ImplContainer implContainer = queue.peek();
-
-		// Std lambda
-		if (elambda instanceof Lambda || implContainer == null) {
-			// Do I want to do this?
-			childEnv = Application.autoConvertForDefaultRepresentation(childEnv);
-			return elambda.defaultImplementation.interpret(childEnv);
-		}
-
-		Expression impl = implContainer.implementation;
-		TypeTuple argsType = queue.peek().typeSpec;
-		childEnv = Application.autoConvertArgs(childEnv, elambda.args, argsType);
-
-		return impl.interpret(childEnv);
+		
+		return lambda.body.interpret(childEnv);
 	}
 
 	/**
@@ -85,6 +73,7 @@ public class Application extends Expression {
 	 *         representation when interpreted
 	 * @throws Exception 
 	 */
+	@Deprecated
 	private static Environment autoConvertForDefaultRepresentation(Environment e) throws Exception {
 		Environment ret = new Environment(e.parent);
 
@@ -108,6 +97,7 @@ public class Application extends Expression {
 	 * @return new environment where all the arguments will be converted
 	 * @throws Exception
 	 */
+	@Deprecated
 	private static Environment autoConvertArgs(Environment e, Tuple args, TypeTuple argTypes) throws Exception {
 		Environment ret = new Environment(e.parent);
 
