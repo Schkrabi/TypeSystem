@@ -35,11 +35,7 @@ public class SemanticParser {
 	private Set<TypeConcrete> types = new HashSet<TypeConcrete>();
 	private Map<TypeConcrete, Constructor> constructorMap = new HashMap<TypeConcrete, Constructor>();
 
-	private static final String DEFTYPE = "deftype";
-	private static final String DEFREP = "defrep";
-	private static final String LAMBDA = "lambda";
-	private static final String ELAMBDA = "elambda";
-	private static final String IF = "if";
+	
 
 	public SemanticParser() {
 		// Int
@@ -114,14 +110,14 @@ public class SemanticParser {
 		List<Expression> tmp = new ArrayList<Expression>();
 
 		for (SemanticNode t : l) {
-			Expression e = this.parseToken(t);
+			Expression e = this.parseAtom(t);
 			tmp.add(e);
 		}
 
 		return new Sequence(tmp);
 	}
 
-	public Expression parseToken(SemanticNode token) throws Exception {
+	public Expression parseAtom(SemanticNode token) throws Exception {
 		Literal l;
 		switch (token.type) {
 		case SYMBOL:
@@ -263,7 +259,7 @@ public class SemanticParser {
 				.size()]));
 
 		// Body
-		Expression e = this.parseToken(l.get(2));
+		Expression e = this.parseAtom(l.get(2));
 
 		if (isTyped) {
 			List<Type> typeList = new ArrayList<Type>();
@@ -295,7 +291,7 @@ public class SemanticParser {
 		Tuple argsTuple = this.parseArgsList(argsListToken.asList());
 
 		// Default implementation
-		Expression defaultImplementation = this.parseToken(l.get(2));
+		Expression defaultImplementation = this.parseAtom(l.get(2));
 
 		// Implementations
 		Set<Lambda> implementations = new TreeSet<Lambda>();
@@ -318,7 +314,7 @@ public class SemanticParser {
 						+ " got " + typeListToken);
 			}
 			TypeTuple typeList = this.parseTypeList(typeListToken.asList());
-			Expression impl = this.parseToken(implToken);
+			Expression impl = this.parseAtom(implToken);
 			implementations.add(new Lambda(argsTuple, typeList, impl));
 		}
 
@@ -332,9 +328,9 @@ public class SemanticParser {
 		if (l.size() != 4) {
 			throw new Exception("Badly formed if " + l);
 		}
-		Expression pred = this.parseToken(l.get(1));
-		Expression trueBranch = this.parseToken(l.get(2));
-		Expression falseBranch = this.parseToken(l.get(3));
+		Expression pred = this.parseAtom(l.get(1));
+		Expression trueBranch = this.parseAtom(l.get(2));
+		Expression falseBranch = this.parseAtom(l.get(3));
 
 		return new IfExpression(pred, trueBranch, falseBranch);
 	}
@@ -365,22 +361,6 @@ public class SemanticParser {
 					}
 				}).findAny();
 		return o;
-	}
-
-	private Expression constructType(TypeConcrete type,
-			List<SemanticNode> argsList) throws Exception {
-		Constructor c = this.constructorMap.get(type);
-		List<SemanticNode> l = argsList.subList(1, argsList.size());
-		Expression[] args = new Expression[argsList.size() - 1];
-		int i = 0;
-		for (SemanticNode t : l) {
-			Expression e = this.parseToken(t);
-			args[i] = e;
-			i++;
-		}
-		Tuple argsTuple = new Tuple(args);
-
-		return new Application(c, argsTuple);
 	}
 
 	private void defineType(String typeName, Lambda lConstructor)
@@ -545,5 +525,106 @@ public class SemanticParser {
 		}
 
 		return parsed;
+	}
+	
+	/**
+	 * Checks if given semantic node is special form reserved word
+	 * @param node inspected node
+	 * @return true if node is a symbol node containing special form, false otherwise
+	 */
+	private boolean isSpecialForm(SemanticNode node){
+		if(node.type != SemanticNode.NodeType.SYMBOL){
+			return false;
+		}
+		try {
+			return SemanticParserConstants.isSpecialForm(node.asSymbol());
+		} catch (Exception e) {
+			return false;
+		}
+	}
+	
+	/**
+	 * Checks if given semantic node is previously defined type
+	 * @param node inspected node
+	 * @return true if node is a node containing type identificator
+	 */
+	private boolean isType(SemanticNode node){
+		if(node.type == SemanticNode.NodeType.SYMBOL){
+			try {
+				return this.getType(node.asSymbol()).isPresent();
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		if(node.type == SemanticNode.NodeType.PAIR){
+			Pair p;
+			try {
+				p = node.asPair();
+			} catch (Exception e) {
+				return false;
+			}
+			return this.getType(p.lvalue, p.rvalue).isPresent();
+		}
+		return false;
+	}
+	
+	private Expression parseSpecialForm(String specialForm, List<SemanticNode> args){
+		Expression e;
+		switch(specialForm){
+		case SemanticParserConstants.DEFREP:
+			//TODO
+			e = Expression.EMPTY_EXPRESSION;
+			break;
+		case SemanticParserConstants.DEFTYPE:
+			//TODO
+			e = Expression.EMPTY_EXPRESSION;
+			break;
+		case SemanticParserConstants.ELAMBDA:
+			//TODO;
+			e = null;
+			break;
+		case SemanticParserConstants.IF:
+			//TODO;
+			e = null;
+			break;
+		case SemanticParserConstants.LAMBDA:
+			e = null;
+			break;
+		default:
+			//TODO exception	
+			e = null;
+		}
+		
+		return e;
+	}
+	
+	private Expression parseTypeConstruction(TypeConcrete type,
+			List<SemanticNode> argsList) throws Exception {
+		Constructor c = this.constructorMap.get(type);
+		Expression[] args = new Expression[argsList.size()];
+		int i = 0;
+		for (SemanticNode t : argsList) {
+			Expression e = this.parseAtom(t);
+			args[i] = e;
+			i++;
+		}
+		Tuple argsTuple = new Tuple(args);
+
+		return new Application(c, argsTuple);
+	}
+	
+	private Expression parseList(List<SemanticNode> list) throws Exception{
+		List<Expression> l = new ArrayList<Expression>();
+		
+		for(SemanticNode n : list){
+			try{
+				l.add(this.parseAtom(n));
+			}catch(Exception e){
+				throw new Exception(e.getMessage() + ": in " +  list);
+			}
+			
+		}
+		
+		return new Sequence(l);	
 	}
 }

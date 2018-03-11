@@ -112,7 +112,7 @@ public class Main {
 				List<Expression> exprs = new ArrayList<Expression>();
 				
 				for(SemanticNode s : exprsContext.val){
-					exprs.add(semanticParser.parseToken(s));
+					exprs.add(semanticParser.parseAtom(s));
 				}
 
 				for (Expression e : exprs) {
@@ -144,7 +144,7 @@ public class Main {
 			SemanticParser semanticParser = new SemanticParser();
 			
 			for(SemanticNode s : exprsContext.val){
-				exprs.add(semanticParser.parseToken(s));
+				exprs.add(semanticParser.parseAtom(s));
 			}
 			
 			for(Expression e : exprs){
