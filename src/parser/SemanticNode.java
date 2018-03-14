@@ -2,6 +2,8 @@ package parser;
 
 import java.util.List;
 
+import util.AppendableException;
+
 public class SemanticNode {
 	public final NodeType type;
 	private final Object value;
@@ -34,51 +36,51 @@ public class SemanticNode {
 		return false;
 	}
 	
-	public String asSymbol() throws Exception{
+	public String asSymbol() throws AppendableException{
 		if(this.type != NodeType.SYMBOL){
-			throw new Exception("" + this +  " is not a symbol");
+			throw new AppendableException("" + this +  " is not a symbol");
 		}
 		return (String)this.value;
 	}
 	
-	public Pair asPair() throws Exception{
+	public Pair asPair() throws AppendableException{
 		if(this.type != NodeType.PAIR){
-			throw new Exception("" + this + " is not a pair");
+			throw new AppendableException("" + this + " is not a pair");
 		}
 		return (Pair)this.value;
 	}
 	
-	public Integer asInt() throws Exception{
+	public Integer asInt() throws AppendableException{
 		if(this.type != NodeType.INT){
-			throw new Exception("" + this + " is not an integer");
+			throw new AppendableException("" + this + " is not an integer");
 		}
 		return (Integer)this.value;
 	}
 	
-	public Double asDouble() throws Exception{
+	public Double asDouble() throws AppendableException{
 		if(this.type != NodeType.DOUBLE){
-			throw new Exception("" + this + " is not a double");
+			throw new AppendableException("" + this + " is not a double");
 		}
 		return (Double)this.value;
 	}
 	
-	public String asString() throws Exception{
+	public String asString() throws AppendableException{
 		if(this.type != NodeType.STRING){
-			throw new Exception("" + this + " is not a string");
+			throw new AppendableException("" + this + " is not a string");
 		}
 		return (String)this.value;
 	}
 	
-	public Boolean asBool() throws Exception{
+	public Boolean asBool() throws AppendableException{
 		if(this.type != NodeType.BOOL){
-			throw new Exception("" + this + " is not a bool");
+			throw new AppendableException("" + this + " is not a bool");
 		}
 		return (Boolean)this.value;
 	}
 	
-	public List<SemanticNode> asList() throws Exception{
+	public List<SemanticNode> asList() throws AppendableException{
 		if(this.type != NodeType.LIST){
-			throw new Exception("" + this + " is not a list");
+			throw new AppendableException("" + this + " is not a list");
 		}
 		//TODO add generic type check
 		return (List<SemanticNode>)this.value;
