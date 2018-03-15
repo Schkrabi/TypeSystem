@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 import interpretation.Environment;
 import types.Type;
-import types.TypeArrow;
 
 /**
  * Class for parsed Scheme sequence. Allows to transform into Application
@@ -89,7 +88,7 @@ public class Sequence extends Expression implements Iterable<Expression> {
 		if (this.getType() == null) {
 			return this;
 		}
-		if (this.head().getType() instanceof TypeArrow) {
+		if (this.head().getType().isApplicableType()) {
 			return new Application(this.head(), this.tail());
 		}
 

@@ -1,7 +1,6 @@
 package expression;
 
 import java.util.Iterator;
-import java.util.Map;
 import types.ForallType;
 import types.Type;
 import types.TypeArrow;
@@ -24,11 +23,6 @@ public class Application extends Expression {
 	 * Arguments of the function
 	 */
 	public final Tuple args;
-
-	/*public Application(Expression fun, Expression arg) {
-		this.fun = fun;
-		this.args = new Tuple(new Expression[] { arg });
-	}*/
 
 	public Application(Expression fun, Tuple args) {
 		this.fun = fun;
@@ -62,51 +56,6 @@ public class Application extends Expression {
 		}
 		
 		return lambda.body.interpret(childEnv);
-	}
-
-	/**
-	 * Lazily converts all the arguments to their default representation
-	 * 
-	 * @param e
-	 *            environment containing the arguments associated with their names
-	 * @return new environment where all the arguments will be in their default
-	 *         representation when interpreted
-	 * @throws Exception 
-	 */
-	@Deprecated
-	private static Environment autoConvertForDefaultRepresentation(Environment e) throws Exception {
-		Environment ret = new Environment(e.parent);
-
-		for (Map.Entry<Variable, Expression> entry : e.entrySet()) {
-			Type t = entry.getValue().getType(); //Requires to run infer before interpret!			
-			ret.put(entry.getKey(), t.convertToDefaultRepresentation(entry.getValue()));
-		}
-
-		return ret;
-	}
-
-	/**
-	 * Lazily converts all the arguments to given representation
-	 * 
-	 * @param e
-	 *            environment containing the arguments associated with their names
-	 * @param args
-	 *            argument names in the environment
-	 * @param argTypes
-	 *            formal inferred types of the arguments
-	 * @return new environment where all the arguments will be converted
-	 * @throws Exception
-	 */
-	@Deprecated
-	private static Environment autoConvertArgs(Environment e, Tuple args, TypeTuple argTypes) throws Exception {
-		Environment ret = new Environment(e.parent);
-
-		for (int i = 0; i < args.values.length; i++) {
-			ret.put((Variable) args.values[i], e.get((Variable) args.values[i]).getType()
-					.convertTo(e.get((Variable) args.values[i]), argTypes.values[i]));
-		}
-
-		return ret;
 	}
 
 	@Override

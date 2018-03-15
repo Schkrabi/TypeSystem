@@ -8,20 +8,21 @@ import java.util.List;
 import expression.Expression;
 
 public class ClojureCodeGenerator {
-	public static void toClojureCode(List<Expression> exprs, Writer target) throws IOException, Exception{
+	public static void toClojureCode(List<Expression> exprs, Writer target)
+			throws IOException, Exception {
 		ClojureCodeGenerator.writeHeaders(target);
-		
+
 		Iterator<Expression> i = exprs.iterator();
-		while(i.hasNext()){
+		while (i.hasNext()) {
 			Expression e = i.next();
 			target.write(e.toClojureCode());
-			if(i.hasNext()){
+			if (i.hasNext() && e != Expression.EMPTY_EXPRESSION) {
 				target.write('\n');
 			}
 		}
 	}
-	
-	private static void writeHeaders(Writer target) throws IOException{
+
+	private static void writeHeaders(Writer target) throws IOException {
 		target.write("(import Expression.IntRoman)\n");
 	}
 }

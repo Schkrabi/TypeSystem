@@ -69,9 +69,9 @@ public class SemanticParser {
 			return Expression.EMPTY_EXPRESSION;
 		}
 		
-		SemanticNode head = SemanticParser.listHead(l);
+		SemanticNode head = SemanticParserStatic.listHead(l);
 
-		if(SemanticParser.isSpecialForm(head)) {
+		if(SemanticParserStatic.isSpecialForm(head)) {
 			return this.parseSpecialForm(head.asSymbol(), l);
 		}
 		if(this.isType(head)) {
@@ -114,36 +114,24 @@ public class SemanticParser {
 		throw new AppendableException("Unrecognized token type!");
 	}
 
+	/**
+	 * Parses the extended lambda special form
+	 * @param l list containing the extendedLambda special form
+	 * @return Expression represeting the parsed extended lambda
+	 * @throws AppendableException
+	 */
 	private ExtendedLambda parseElambda(List<SemanticNode> l) throws AppendableException {
 		try {
-			SemanticParser.validateElambdaList(l);
+			Validations.validateElambdaList(l);
 		}catch(AppendableException e) {
 			e.appendMessage("in " + l);
 			throw e;
 		}
 
-		Tuple argsTuple = SemanticParser.parseArgsList(l.get(1).asList());
-
+		Tuple argsTuple = SemanticParserStatic.parseArgsList(l.get(1).asList());
 		Expression defaultImplementation = this.parseNode(l.get(2));
-
-		Set<Lambda> implementations = new TreeSet<Lambda>();
-		int i = 0;
-		for (SemanticNode t : l) {
-			if (i < 3) {
-				i++;
-				continue;
-			}
-
-			SemanticNode typeListToken = t.asList().get(0);
-			SemanticNode implToken = t.asList().get(1);
-
-			if (typeListToken.type != SemanticNode.NodeType.LIST) {
-				throw new Exception("Expected type list in implementation " + t + " got " + typeListToken);
-			}
-			TypeTuple typeList = this.parseTypeList(typeListToken.asList());
-			Expression impl = this.parseNode(implToken);
-			implementations.add(new Lambda(argsTuple, typeList, impl));
-		}
+		List<SemanticNode> impls = l.subList(3, l.size());
+		Set<Lambda> implementations = this.parseImplementations(argsTuple, impls);
 
 		return new ExtendedLambda(argsTuple, defaultImplementation, implementations);
 	}
@@ -156,7 +144,7 @@ public class SemanticParser {
 	 */
 	private Expression parseIf(List<SemanticNode> l) throws AppendableException {
 		try {
-			SemanticParser.validateIfList(l);
+			Validations.validateIfList(l);
 		}catch(AppendableException e) {
 			e.appendMessage("in " + l);
 			throw e;
@@ -168,6 +156,11 @@ public class SemanticParser {
 		return new IfExpression(pred, trueBranch, falseBranch);
 	}
 
+	/**
+	 * Gets the type by given name
+	 * @param typeName name of the type
+	 * @return Optional containing the type if it exists
+	 */
 	private Optional<TypeConcrete> getType(final String typeName) {
 		Optional<TypeConcrete> o = types.stream().filter(new java.util.function.Predicate<TypeConcrete>() {
 
@@ -179,6 +172,12 @@ public class SemanticParser {
 		return o;
 	}
 
+	/**
+	 * Gets te type by given base type name and representation name
+	 * @param typeName name of the base type
+	 * @param representationName name of the representaion
+	 * @return Optional containing the type if it exists
+	 */
 	private Optional<TypeConcrete> getType(final String typeName, final String representationName) {
 		Optional<TypeConcrete> o = types.stream().filter(new java.util.function.Predicate<TypeConcrete>() {
 			@Override
@@ -190,64 +189,12 @@ public class SemanticParser {
 		return o;
 	}
 
-	private TypeTuple parseTypeList(List<SemanticNode> l) throws Exception {
-		Type[] realTypes = new Type[l.size()];
-		int i = 0;
-		for (SemanticNode t : l) {
-			Optional<TypeConcrete> o;
-			if (t.type == SemanticNode.NodeType.SYMBOL) {
-				o = this.getType(t.asSymbol());
-			} else if (t.type == SemanticNode.NodeType.PAIR) {
-				Pair p = t.asPair();
-				o = this.getType(p.lvalue, p.rvalue);
-			} else {
-				throw new Exception("Invalid token " + t + " in type list");
-			}
-
-			if (!o.isPresent()) {
-				throw new Exception("Unknown type " + t);
-			}
-			realTypes[i] = o.get();
-			i++;
-		}
-		return new TypeTuple(realTypes);
-	}
-
-	private static class VariableTypePair {
-		public final Type type;
-		public final Variable variable;
-
-		public VariableTypePair(Type type, Variable variable) {
-			this.type = type;
-			this.variable = variable;
-		}
-	}
-
-	/**
-	 * Checks if given semantic node is special form reserved word
-	 * 
-	 * @param node
-	 *            inspected node
-	 * @return true if node is a symbol node containing special form, false
-	 *         otherwise
-	 */
-	private static boolean isSpecialForm(SemanticNode node) {
-		if (node.type != SemanticNode.NodeType.SYMBOL) {
-			return false;
-		}
-		try {
-			return SemanticParserConstants.isSpecialForm(node.asSymbol());
-		} catch (Exception e) {
-			return false;
-		}
-	}
-
 	/**
 	 * Checks if given semantic node is previously defined type
 	 * 
 	 * @param node
 	 *            inspected node
-	 * @return true if node is a node containing type identificator
+	 * @return true if node is a node containing type name
 	 */
 	private boolean isType(SemanticNode node) {
 		if (node.type == SemanticNode.NodeType.SYMBOL) {
@@ -275,32 +222,30 @@ public class SemanticParser {
 	 * @param specialForm
 	 *            special form reserved word
 	 * @param specialFormList
-	 *            arguments of the spedcial form
+	 *            arguments of the special form
 	 * @return
 	 * @throws Exception
 	 */
 	private Expression parseSpecialForm(String specialForm, List<SemanticNode> specialFormList) throws AppendableException {
 		Expression e;
 		switch (specialForm) {
-		case SemanticParserConstants.DEFREP:
+		case SemanticParserStatic.DEFREP:
 			e = this.parseDefrep(specialFormList);
 			break;
-		case SemanticParserConstants.DEFTYPE:
+		case SemanticParserStatic.DEFTYPE:
 			e = this.parseDeftype(specialFormList);
 			break;
-		case SemanticParserConstants.ELAMBDA:
+		case SemanticParserStatic.ELAMBDA:
 			e = this.parseElambda(specialFormList);
-			e = null;
 			break;
-		case SemanticParserConstants.IF:
+		case SemanticParserStatic.IF:
 			e = this.parseIf(specialFormList);
 			break;
-		case SemanticParserConstants.LAMBDA:
+		case SemanticParserStatic.LAMBDA:
 			e = this.parseLambda(specialFormList);
 			break;
 		default:
-			// TODO exception
-			e = null;
+			throw new AppendableException("Unrecognized special form " + specialForm);
 		}
 
 		return e;
@@ -321,7 +266,7 @@ public class SemanticParser {
 		Constructor c = this.constructorMap.get(type);
 		Expression[] args = new Expression[typeConstructionList.size() - 1];
 		int i = 0;
-		for (SemanticNode t : SemanticParser.listTail(typeConstructionList)) {
+		for (SemanticNode t : SemanticParserStatic.listTail(typeConstructionList)) {
 			Expression e = this.parseNode(t);
 			args[i] = e;
 			i++;
@@ -345,8 +290,9 @@ public class SemanticParser {
 		for (SemanticNode n : list) {
 			try {
 				l.add(this.parseNode(n));
-			} catch (Exception e) {
-				throw new AppendableException(e.getMessage() + ": in " + list);
+			} catch (AppendableException e) {
+				e.appendMessage(" in " + list);
+				throw e;
 			}
 
 		}
@@ -364,7 +310,7 @@ public class SemanticParser {
 	 */
 	private Lambda parseLambda(List<SemanticNode> lambdaList) throws AppendableException {
 		try {
-			SemanticParser.validateLambdaList(lambdaList);
+			Validations.validateLambdaList(lambdaList);
 		} catch (AppendableException e) {
 			e.appendMessage(" in Lambda " + lambdaList);
 			throw e;
@@ -373,16 +319,16 @@ public class SemanticParser {
 		List<VariableTypePair> typedArgs = this.parseTypedArgList(lambdaList.get(1).asList());
 
 		TypeTuple argsTypes = null;
-		if (SemanticParser.isArgListFullyTyped(typedArgs)) {
-			List<Type> tmp = SemanticParser.filterTypesFromTypedArgsList(typedArgs);
+		if (SemanticParserStatic.isArgListFullyTyped(typedArgs)) {
+			List<Type> tmp = SemanticParserStatic.filterTypesFromTypedArgsList(typedArgs);
 			argsTypes = new TypeTuple(tmp.toArray(new Type[tmp.size()]));
 		} else {
-			if (!SemanticParser.isArgListUntypped(typedArgs)) {
+			if (!SemanticParserStatic.isArgListUntypped(typedArgs)) {
 				throw new AppendableException("Partially typed argument lists are not supported");
 			}
 		}
 
-		List<Variable> tmp = SemanticParser.filterVariablesFromTypedArgsList(typedArgs);
+		List<Variable> tmp = SemanticParserStatic.filterVariablesFromTypedArgsList(typedArgs);
 		Tuple lambdaArgs = new Tuple(tmp.toArray(new Expression[tmp.size()]));
 
 		Expression body = this.parseNode(lambdaList.get(2));
@@ -398,9 +344,10 @@ public class SemanticParser {
 	 */
 	private Expression parseDeftype(List<SemanticNode> deftypeList) throws AppendableException {
 		try {
-			SemanticParser.validateDefTypeList(deftypeList);
+			Validations.validateDefTypeList(deftypeList);
 		} catch (AppendableException e) {
 			e.appendMessage(" in deftype " + deftypeList);
+			throw e;
 		}
 
 		String typeName = deftypeList.get(1).asSymbol();
@@ -410,9 +357,15 @@ public class SemanticParser {
 		return Expression.EMPTY_EXPRESSION;
 	}
 	
+	/**
+	 * Parses defrep speial form and defines given type representastion and constructor
+	 * @param defrepList
+	 * @return
+	 * @throws AppendableException
+	 */
 	private Expression parseDefrep(List<SemanticNode> defrepList) throws AppendableException {
 		try {
-			SemanticParser.validateDefRepList(defrepList);
+			Validations.validateDefRepList(defrepList);
 		}catch(AppendableException e) {
 			e.appendMessage("in " + defrepList);
 			throw e;
@@ -428,15 +381,15 @@ public class SemanticParser {
 	}
 	
 	/**
-	 * Creates 
-	 * @param type
-	 * @param lambdaList
-	 * @return
+	 * Parses constructor from given lambda list
+	 * @param type type that constructor constructs
+	 * @param lambdaList lambda list containing the definition of constructor
+	 * @return Constructor represented by the lamdbaList, that constructs given type
 	 * @throws AppendableException
 	 */
 	private Constructor parseConstructor(TypeConcrete type, List<SemanticNode> lambdaList) throws AppendableException {
 		try {
-			SemanticParser.validateLambdaList(lambdaList);
+			Validations.validateLambdaList(lambdaList);
 		}catch(AppendableException e) {
 			e.appendMessage("in " + lambdaList);
 			throw e;
@@ -537,7 +490,7 @@ public class SemanticParser {
 	
 	/**
 	 * Parses types
-	 * @param typeNode node with type anotation
+	 * @param typeNode node with type annotation
 	 * @return Representation of the type
 	 * @throws AppendableException
 	 */
@@ -568,323 +521,72 @@ public class SemanticParser {
 	 */
 	private VariableTypePair parseVariableTypePair(SemanticNode pair) throws AppendableException {
 		try {
-			SemanticParser.validateVariableTypePair(pair);
+			Validations.validateVariableTypePair(pair);
 		}catch(AppendableException e) {
 			e.appendMessage("in " + pair);
 			throw e;
 		}
 		
-		if(SemanticParser.isSimpleSymbol(pair)) {
+		if(SemanticParserStatic.isSimpleSymbol(pair)) {
 			return new VariableTypePair(null, new Variable(pair.asSymbol()));
 		}
 		
 		TypeConcrete type = this.parseType(pair.asList().get(0));
-		Variable variable = new Variable(pair.asList().get(0).asSymbol());
+		Variable variable = new Variable(pair.asList().get(1).asSymbol());
 		return new VariableTypePair(type, variable);
 	}
-
-	/**
-	 * Checks the arguments of the Lambda special form
-	 * 
-	 * @param lambdaList
-	 *            checked arguments
-	 * @return true if the arguments are valid lambda arguments, false otherwivse
-	 * @throws Exception
-	 */
-	private static boolean validateLambdaList(List<SemanticNode> lambdaList) throws AppendableException {
-		if (lambdaList.size() != 3) {
-			throw new InvalidNumberOfArgsException(2, lambdaList.size());
-		}
-		SemanticNode lambdaSymbol = lambdaList.get(0);
-		if (lambdaSymbol.type != SemanticNode.NodeType.SYMBOL
-				|| lambdaSymbol.asSymbol() != SemanticParserConstants.LAMBDA) {
-			throw new UnexpectedExpressionException(lambdaSymbol);
-		}
-
-		SemanticNode lambdaArgs = lambdaList.get(1);
-
-		if (lambdaArgs.type != SemanticNode.NodeType.LIST) {
-			throw new UnexpectedExpressionException(lambdaArgs);
-		}
-
-		return true;
-	}
-
-	/**
-	 * Checks the arguments of the Deftype special form
-	 * 
-	 * @param defTypeList
-	 *            checked arguments
-	 * @return true if the arguments are valid otherwise throws Exception
-	 * @throws Exception
-	 */
-	private static boolean validateDefTypeList(List<SemanticNode> defTypeList) throws AppendableException {
-		if (defTypeList.size() != 3) {
-			throw new InvalidNumberOfArgsException(2, defTypeList.size());
-		}
-		SemanticNode deftypeSymbol = defTypeList.get(0);
-		if (deftypeSymbol.type != SemanticNode.NodeType.SYMBOL
-				|| deftypeSymbol.asSymbol() != SemanticParserConstants.DEFTYPE) {
-			throw new UnexpectedExpressionException(deftypeSymbol);
-		}
-
-		SemanticNode name = defTypeList.get(1);
-
-		if (name.type != SemanticNode.NodeType.SYMBOL) {
-			throw new UnexpectedExpressionException(name);
-		}
-
-		SemanticNode constructor = defTypeList.get(2);
-		if (constructor.type != SemanticNode.NodeType.LIST) {
-			throw new UnexpectedExpressionException(constructor);
-		}
-
-		return true;
-	}
 	
 	/**
-	 * Checks the arguments of the Defrep special form
-	 * @param defRepList checked arguments
-	 * @return true if the arguments are valid, otherwise throws exception
+	 * Parses list of types
+	 * @param l parsed list
+	 * @return Tuple of types that list represents
 	 * @throws AppendableException
 	 */
-	private static boolean validateDefRepList(List<SemanticNode> defRepList) throws AppendableException{
-		if(defRepList.size() != 4) {
-			throw new InvalidNumberOfArgsException(3, defRepList.size() - 1);
-		}
-		SemanticNode defRepSymbol = defRepList.get(0);
-		if(defRepSymbol.type != SemanticNode.NodeType.SYMBOL
-				|| defRepSymbol.asSymbol() != SemanticParserConstants.DEFREP) {
-			throw new UnexpectedExpressionException(defRepSymbol);
-		}
-		
-		SemanticNode rName = defRepList.get(1);
-		if(rName.type != SemanticNode.NodeType.SYMBOL) {
-			throw new UnexpectedExpressionException(rName);
-		}
-		
-		SemanticNode tName = defRepList.get(2);
-		if(tName.type != SemanticNode.NodeType.SYMBOL) {
-			throw new UnexpectedExpressionException(tName);
-		}
-		
-		SemanticNode constructor = defRepList.get(3);
-		if(constructor.type != SemanticNode.NodeType.LIST) {
-			throw new UnexpectedExpressionException(constructor);
-		}
-		
-		return true;
-	}
-	
-	/**
-	 * Checks the arguments of the if special form
-	 * @param ifList validated list of id special form 
-	 * @return true if it is valid if special form list, throws exception otherwise
-	 * @throws AppendableException
-	 */
-	private static boolean validateIfList(List<SemanticNode> ifList) throws AppendableException{
-		if(ifList.size() != 4) {
-			throw new InvalidNumberOfArgsException(3, ifList.size() - 1);
-		}
-		
-		return true;
-	}
-	
-	/**
-	 * Validates extended lambda special form list
-	 * @param l validated list
-	 * @return true if list validates, throws exception otherwise
-	 * @throws AppendableException
-	 */
-	private static boolean validateElambdaList(List<SemanticNode> l) throws AppendableException{
-		if(l.size() < 3) {
-			throw new AppendableException("Too few arguments (" + l.size() + ")");
-		}
-		
-		SemanticNode argsList = l.get(1);
-		if (argsList.type != SemanticNode.NodeType.LIST) {
-			throw new UnexpectedExpressionException(argsList);
-		}
-
+	private TypeTuple parseTypeList(List<SemanticNode> l) throws AppendableException {
+		Type[] types = new Type[l.size()];
 		int i = 0;
 		for (SemanticNode t : l) {
-			if (i < 3) {
-				i++;
-				continue;
-			}
-			
-			SemanticParser.validateVariableTypePair(t);
-		}
-		
-		return true;
-	}
-	
-	private static boolean validateImplementations(List<SemanticNode> l) throws AppendableException{
-		for(SemanticNode n : l) {
-			if(n.type != SemanticNode.NodeType.LIST) {
-				throw new UnexpectedExpressionException(n);
-			}
-			SemanticParser.validateImplementation(n.asList());
-		}
-		return true;
-	}
-	
-	/**
-	 * Validates
-	 * @param l
-	 * @return
-	 * @throws AppendableException
-	 */
-	private static boolean validateImplementation(List<SemanticNode> l) throws AppendableException{
-		if(l.size() != 2) {
-			throw new AppendableException("Badly formed implementation" + l);
-		}
-		
-		SemanticNode typeList = l.get(0);
-		
-		if(typeList.type != SemanticNode.NodeType.LIST) {
-			throw new UnexpectedExpressionException(typeList);
-		}
-		return true;
-	}
-
-	/**
-	 * Checks if the variable-type list is fully typed
-	 * 
-	 * @param l
-	 * @return false if some VariableTypePair has type of null, true otherwise
-	 */
-	private static boolean isArgListFullyTyped(List<VariableTypePair> l) {
-		for (VariableTypePair p : l) {
-			if (p.type == null) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * Returns true if the VariableTypePair list is completely untyped - every pair
-	 * has type of null. Returns false otherwise
-	 * 
-	 * @param l
-	 *            checked list
-	 * @return true or false
-	 */
-	private static boolean isArgListUntypped(List<VariableTypePair> l) {
-		for (VariableTypePair p : l) {
-			if (p.type != null) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * Filters the variables from the variableTypePair list
-	 * 
-	 * @param l
-	 *            VariableTypePair list
-	 * @return list of variables
-	 */
-	private static List<Variable> filterVariablesFromTypedArgsList(List<VariableTypePair> l) {
-		List<Variable> r = new ArrayList<Variable>();
-		for (VariableTypePair p : l) {
-			r.add(p.variable);
-		}
-		return r;
-	}
-
-	/**
-	 * Filters the types from the variableTypePair list
-	 * 
-	 * @param l
-	 *            VariableTypePair list
-	 * @return list of types
-	 */
-	private static List<Type> filterTypesFromTypedArgsList(List<VariableTypePair> l) {
-		List<Type> r = new ArrayList<Type>();
-		for (VariableTypePair p : l) {
-			r.add(p.type);
-		}
-		return r;
-	}
-
-	/**
-	 * Gets the tail of a list
-	 * 
-	 * @param l
-	 * @return
-	 */
-	public static <E> List<E> listTail(List<E> l) {
-		return l.subList(1, l.size() - 1);
-	}
-	
-	/**
-	 * Gets the head of a list
-	 * @param l
-	 * @return
-	 */
-	public static <E> E listHead(List<E> l) {
-		return l.get(0);
-	}
-	
-	/**
-	 * Validates if semantic node is valid variable type pair
-	 * @param pair validated semantic node
-	 * @return true if node is valid variable type pair, throws exception otherwise
-	 * @throws AppendableException
-	 */
-	private static boolean validateVariableTypePair(SemanticNode pair) throws AppendableException{
-		if(SemanticParser.isSimpleSymbol(pair)) {
-			return true;
-		}
-		
-		if(pair.type != SemanticNode.NodeType.LIST
-				|| pair.asList().size() != 2) {
-			throw new UnexpectedExpressionException(pair);
-		}
-		List<SemanticNode> l = pair.asList();
-		
-		SemanticNode type = l.get(0);
-		if(type.type != SemanticNode.NodeType.SYMBOL
-				&& type.type != SemanticNode.NodeType.PAIR) {
-			throw new UnexpectedExpressionException(type);
-		}
-		
-		SemanticNode variable = l.get(1);
-		if(variable.type != SemanticNode.NodeType.SYMBOL) {
-			throw new UnexpectedExpressionException(variable);
-		}
-			
-		return true;
-	}
-	
-	/**
-	 * Returns true if the semantic node is simple symbol
-	 * @param s
-	 * @return
-	 */
-	private static boolean isSimpleSymbol(SemanticNode s) {
-		return s.type == SemanticNode.NodeType.SYMBOL;
-	}
-	
-	/**
-	 * Parses simple list of formal arguments
-	 * @param l parsed argument list
-	 * @return tuple of formal arguments
-	 * @throws AppendableException
-	 */
-	private static Tuple parseArgsList(List<SemanticNode> l) throws AppendableException {
-		Expression[] args = new Expression[l.size()];
-		int i = 0;
-		for (SemanticNode t : l) {
-			if (t.type != SemanticNode.NodeType.SYMBOL) {
-				throw new UnexpectedExpressionException(t);
-			}
-			args[i] = new Variable(t.asSymbol());
+			types[i] = this.parseType(t);
 			i++;
 		}
-		return new Tuple(args);
+		return new TypeTuple(types);
+	}
+	
+	/**
+	 * Parses list containing the implementations of extended lambda
+	 * @param lambdaArgs extended lambda formal arguments
+	 * @param l list of implementations
+	 * @return Set of Lambdas containing the implementations
+	 * @throws AppendableException
+	 */
+	private Set<Lambda> parseImplementations(Tuple lambdaArgs, List<SemanticNode> l) throws AppendableException{
+		Validations.validateImplementations(l);
+		
+		Set<Lambda> s = new TreeSet<Lambda>();
+		
+		for(SemanticNode n : l){
+			s.add(this.parseImplementation(lambdaArgs, n.asList()));
+		}
+		
+		return s;
+	}
+	
+	/**
+	 * Parses single implementation of extended lambda
+	 * @param args formal arguments of the implementation
+	 * @param l list containing unparsed implementation
+	 * @return Lambda representing parsed implementation
+	 * @throws AppendableException
+	 */
+	private Lambda parseImplementation(Tuple args, List<SemanticNode> l) throws AppendableException{
+		try{
+			Validations.validateImplementation(l);
+		}catch(AppendableException e){
+			e.appendMessage("in implementation " + l);
+			throw e;
+		}
+		TypeTuple argsType = this.parseTypeList(l.get(0).asList());
+		Expression body = this.parseNode(l.get(1));
+		return new Lambda(args, argsType, body);
 	}
 }

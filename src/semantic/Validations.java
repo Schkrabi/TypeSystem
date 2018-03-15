@@ -1,0 +1,215 @@
+package semantic;
+
+import java.util.List;
+
+import parser.SemanticNode;
+import util.AppendableException;
+
+/**
+ * This class contains static validation methods used by SemanticParser
+ * @author Mgr. Radomir Skrabal
+ *
+ */
+public class Validations {
+
+	/**
+	 * Checks the arguments of the Lambda special form
+	 * 
+	 * @param lambdaList
+	 *            checked arguments
+	 * @return true if the arguments are valid lambda arguments, false otherwise
+	 * @throws Exception
+	 */
+	static boolean validateLambdaList(List<SemanticNode> lambdaList) throws AppendableException {
+		if (lambdaList.size() != 3) {
+			throw new InvalidNumberOfArgsException(2, lambdaList.size());
+		}
+		SemanticNode lambdaSymbol = lambdaList.get(0);
+		if (lambdaSymbol.type != SemanticNode.NodeType.SYMBOL
+				|| !lambdaSymbol.asSymbol().equals(SemanticParserStatic.LAMBDA)) {
+			throw new UnexpectedExpressionException(lambdaSymbol);
+		}
+	
+		SemanticNode lambdaArgs = lambdaList.get(1);
+	
+		if (lambdaArgs.type != SemanticNode.NodeType.LIST) {
+			throw new UnexpectedExpressionException(lambdaArgs);
+		}
+	
+		return true;
+	}
+
+	/**
+	 * Checks the arguments of the deftype special form
+	 * 
+	 * @param defTypeList
+	 *            checked arguments
+	 * @return true if the arguments are valid otherwise throws Exception
+	 * @throws Exception
+	 */
+	static boolean validateDefTypeList(List<SemanticNode> defTypeList) throws AppendableException {
+		if (defTypeList.size() != 3) {
+			throw new InvalidNumberOfArgsException(2, defTypeList.size());
+		}
+		SemanticNode deftypeSymbol = defTypeList.get(0);
+		if (deftypeSymbol.type != SemanticNode.NodeType.SYMBOL
+				|| !deftypeSymbol.asSymbol().equals(SemanticParserStatic.DEFTYPE)) {
+			throw new UnexpectedExpressionException(deftypeSymbol);
+		}
+	
+		SemanticNode name = defTypeList.get(1);
+	
+		if (name.type != SemanticNode.NodeType.SYMBOL) {
+			throw new UnexpectedExpressionException(name);
+		}
+	
+		SemanticNode constructor = defTypeList.get(2);
+		if (constructor.type != SemanticNode.NodeType.LIST) {
+			throw new UnexpectedExpressionException(constructor);
+		}
+	
+		return true;
+	}
+
+	/**
+	 * Checks the arguments of the defrep special form
+	 * @param defRepList checked arguments
+	 * @return true if the arguments are valid, otherwise throws exception
+	 * @throws AppendableException
+	 */
+	static boolean validateDefRepList(List<SemanticNode> defRepList) throws AppendableException{
+		if(defRepList.size() != 4) {
+			throw new InvalidNumberOfArgsException(3, defRepList.size() - 1);
+		}
+		SemanticNode defRepSymbol = defRepList.get(0);
+		if(defRepSymbol.type != SemanticNode.NodeType.SYMBOL
+				|| !defRepSymbol.asSymbol().equals(SemanticParserStatic.DEFREP)) {
+			throw new UnexpectedExpressionException(defRepSymbol);
+		}
+		
+		SemanticNode rName = defRepList.get(1);
+		if(rName.type != SemanticNode.NodeType.SYMBOL) {
+			throw new UnexpectedExpressionException(rName);
+		}
+		
+		SemanticNode tName = defRepList.get(2);
+		if(tName.type != SemanticNode.NodeType.SYMBOL) {
+			throw new UnexpectedExpressionException(tName);
+		}
+		
+		SemanticNode constructor = defRepList.get(3);
+		if(constructor.type != SemanticNode.NodeType.LIST) {
+			throw new UnexpectedExpressionException(constructor);
+		}
+		
+		return true;
+	}
+
+	/**
+	 * Checks the arguments of the if special form
+	 * @param ifList validated list of id special form 
+	 * @return true if it is valid if special form list, throws exception otherwise
+	 * @throws AppendableException
+	 */
+	static boolean validateIfList(List<SemanticNode> ifList) throws AppendableException{
+		if(ifList.size() != 4) {
+			throw new InvalidNumberOfArgsException(3, ifList.size() - 1);
+		}
+		
+		return true;
+	}
+
+	/**
+	 * Validates extended lambda special form list
+	 * @param l validated list
+	 * @return true if list validates, throws exception otherwise
+	 * @throws AppendableException
+	 */
+	static boolean validateElambdaList(List<SemanticNode> l) throws AppendableException{
+		if(l.size() < 3) {
+			throw new AppendableException("Too few arguments (" + l.size() + ")");
+		}
+		
+		SemanticNode argsList = l.get(1);
+		if (argsList.type != SemanticNode.NodeType.LIST) {
+			throw new UnexpectedExpressionException(argsList);
+		}
+	
+		try{
+			Validations.validateImplementations(l.subList(3, l.size()-1));
+		}catch(AppendableException e){
+			e.appendMessage(" in " + l);
+			throw e;
+		}
+		
+		
+		return true;
+	}
+
+	/**
+	 * Validates the list of implementations for extended lambda
+	 * @param l list of implementations
+	 * @return true if list validates, otherwise throws AppendableException
+	 * @throws AppendableException
+	 */
+	static boolean validateImplementations(List<SemanticNode> l) throws AppendableException{
+		for(SemanticNode n : l) {
+			if(n.type != SemanticNode.NodeType.LIST) {
+				throw new UnexpectedExpressionException(n);
+			}
+			Validations.validateImplementation(n.asList());
+		}
+		return true;
+	}
+
+	/**
+	 * Validates a single implementation for extended lambda
+	 * @param l list containing the implementation
+	 * @return true if implementation validates, otherwise throws excetpion
+	 * @throws AppendableException
+	 */
+	static boolean validateImplementation(List<SemanticNode> l) throws AppendableException{
+		if(l.size() != 2) {
+			throw new AppendableException("Badly formed implementation" + l);
+		}
+		
+		SemanticNode typeList = l.get(0);
+		
+		if(typeList.type != SemanticNode.NodeType.LIST) {
+			throw new UnexpectedExpressionException(typeList);
+		}
+		return true;
+	}
+
+	/**
+	 * Validates if semantic node is valid variable type pair
+	 * @param pair validated semantic node
+	 * @return true if node is valid variable type pair, throws exception otherwise
+	 * @throws AppendableException
+	 */
+	static boolean validateVariableTypePair(SemanticNode pair) throws AppendableException{
+		if(SemanticParserStatic.isSimpleSymbol(pair)) {
+			return true;
+		}
+		
+		if(pair.type != SemanticNode.NodeType.LIST
+				|| pair.asList().size() != 2) {
+			throw new UnexpectedExpressionException(pair);
+		}
+		List<SemanticNode> l = pair.asList();
+		
+		SemanticNode type = l.get(0);
+		if(type.type != SemanticNode.NodeType.SYMBOL
+				&& type.type != SemanticNode.NodeType.PAIR) {
+			throw new UnexpectedExpressionException(type);
+		}
+		
+		SemanticNode variable = l.get(1);
+		if(variable.type != SemanticNode.NodeType.SYMBOL) {
+			throw new UnexpectedExpressionException(variable);
+		}
+			
+		return true;
+	}
+
+}

@@ -79,7 +79,8 @@ public class SemanticNode {
 	}
 	
 	public List<SemanticNode> asList() throws AppendableException{
-		if(this.type != NodeType.LIST){
+		if(this.type != NodeType.LIST
+				|| !(this.value instanceof List<?>)){
 			throw new AppendableException("" + this + " is not a list");
 		}
 		//TODO add generic type check
