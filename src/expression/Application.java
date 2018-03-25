@@ -32,19 +32,13 @@ public class Application extends Expression {
 	@Override
 	public Expression interpret(Environment env) throws Exception {
 		Expression ifun = fun.interpret(env);
-		Lambda lambda;
 		
-		if(ifun instanceof Lambda) {
-			lambda = (Lambda)ifun;
+		if(!MetaLambda.isApplicableExpression(ifun)){
+			throw new Exception(ifun.toString() + "is not a function");
 		}
-		else if(ifun instanceof ExtendedLambda) {
-			ExtendedLambda elambda = (ExtendedLambda) ifun;
-			lambda = elambda.getSortedImplementations().peek(); //Might want to add comparator here
-		}
-		else {
-			throw new Exception(fun + " is not a fucntion");
-		}		
 		
+		Lambda lambda = ((MetaLambda)ifun).getLambda(); //Might want to add comparator here
+				
 		if(lambda.args.values.length != this.args.values.length) {
 			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected "
 					+ lambda.args.values.length + " got " + this.args.values.length);
@@ -54,6 +48,10 @@ public class Application extends Expression {
 		for (int i = 0; i < lambda.args.values.length; i++) {
 			childEnv.put((Variable) lambda.args.values[i], this.args.values[i]);
 		}
+		
+		TypeArrow lambdaType = TypeArrow.getFunctionType(lambda.getType());
+		
+		childEnv = Application.autoConvertArgs(childEnv, lambda.args, (TypeTuple)lambdaType.ltype);
 		
 		return lambda.body.interpret(childEnv);
 	}
@@ -117,18 +115,18 @@ public class Application extends Expression {
 	public String toClojureCode() throws Exception {
 		StringBuilder s = new StringBuilder();
 		s.append('(');
-		s.append(this.fun.toClojureCode());
+		
+		if(!MetaLambda.isApplicableExpression(this.fun)){
+			throw new Exception(this.fun.toString() + " is not a function");
+		}
+		
+		Lambda lambda = ((MetaLambda)this.fun).getLambda(); //Maybe comparator here?
+		
+		s.append(lambda.toClojureCode());
 		s.append(' ');
 
-		Type rawFunType = this.fun.getType().getRep();
-		if(rawFunType instanceof ForallType) {
-			rawFunType = ((ForallType)rawFunType).getBoundType();
-		}
-		if(!(rawFunType instanceof TypeArrow)) {
-			throw new Exception("Invalid elambda type " + this.fun.getType().getRep() + " in " + this);
-		}
-		TypeArrow funType = (TypeArrow)rawFunType;
-	
+		TypeArrow funType = TypeArrow.getFunctionType(lambda.getType());
+		
 		TypeTuple argsType = (TypeTuple) funType.ltype;
 
 		Iterator<Expression> i = this.args.iterator();
@@ -150,4 +148,27 @@ public class Application extends Expression {
 		s.append(')');
 		return s.toString();
 	}
+	
+	/**
+	 * Lazily converts all the arguments to given representation
+	 * 
+	 * @param e
+	 *            environment containing the arguments associated with their names
+	 * @param args
+	 *            argument names in the environment
+	 * @param argTypes
+	 *            formal inferred types of the arguments
+	 * @return new environment where all the arguments will be converted
+	 * @throws Exception
+	 */
+	private static Environment autoConvertArgs(Environment e, Tuple args, TypeTuple argTypes) throws Exception {
+		Environment ret = new Environment(e.parent);
+
+		for (int i = 0; i < args.values.length; i++) {
+			ret.put((Variable) args.values[i], e.get((Variable) args.values[i]).getType()
+					.convertTo(e.get((Variable) args.values[i]), argTypes.values[i]));
+		}
+
+		return ret;
+}
 }

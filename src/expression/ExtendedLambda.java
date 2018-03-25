@@ -11,7 +11,6 @@ import java.util.function.Predicate;
 import interpretation.Environment;
 import types.ForallType;
 import types.Type;
-import types.TypeTuple;
 import types.TypeVariable;
 
 /**
@@ -21,7 +20,7 @@ import types.TypeVariable;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class ExtendedLambda extends Expression {
+public class ExtendedLambda extends MetaLambda {
 
 	/**
 	 * Various implementations of this function
@@ -111,73 +110,6 @@ public class ExtendedLambda extends Expression {
 		q.addAll(this.implementations);
 		return q;
 	}
-
-	/**
-	 * Transforms this extended lambda to normal lambda based its implementation
-	 * 
-	 * @param impl
-	 *            implementation to be used in tranformation
-	 * @return new Lambda expression
-	 * @throws Exception
-	 *             if the impl is not default implementation or one of the
-	 *             specific implementations
-	 */
-	/*public Lambda transformStaticDispatch(ImplContainer impl) throws Exception {
-		if (impl.implementation == this.defaultImplementation) {
-			return new Lambda(this.args, this.defaultImplementation);
-		}
-		if (this.implementations.contains(impl)) {
-			return new Lambda(this.args, impl.implementation);
-		}
-		throw new Exception("Implementation " + impl.toString()
-				+ " do not belong to extended lambda " + this.toString());
-	}*/
-
-	/**
-	 * Transforms this extended lambda to normal lambda based its implementation
-	 * 
-	 * @param c
-	 *            comparator used to select the implementation
-	 * @return new Lambda expression
-	 * @throws Exception
-	 *             Exception if the impl is not default implementation or one of
-	 *             the specific implementations
-	 */
-	public Lambda transformStaticDispatch(Comparator<? super Lambda> c)
-			throws Exception {
-		PriorityQueue<Lambda> queue = this.getSortedImplementations(c);
-		return queue.peek();
-	}
-
-	/**
-	 * Transforms this extended lambda to normal lambda based its implementation
-	 * 
-	 * @param argsType
-	 *            Type of arguments to search the implementation
-	 * @return new Lambda expression
-	 * @throws Exception
-	 *             Exception if the impl is not default implementation or one of
-	 *             the specific implementations
-	 */
-	public Lambda transformStaticDispatch(TypeTuple argsType) throws Exception {
-		Lambda impl = null;
-
-		// Maybe better search in Java 8?
-		for (Lambda i : this.implementations) {
-			if (i.argsType == argsType) {
-				impl = i;
-				break;
-			}
-		}
-
-		if (impl == null) {
-			throw new Exception("Extended lambda " + this.toString()
-					+ " has no implementation for argument types "
-					+ argsType.toString());
-		}
-
-		return impl;
-	}
 	
 	public Lambda defaultImplementation() {
 		Optional<Lambda> o = this.implementations.stream().filter(new Predicate<Lambda>() {
@@ -239,5 +171,16 @@ public class ExtendedLambda extends Expression {
 	public String toClojureCode() throws Exception {
 		Lambda l = this.getSortedImplementations().peek(); //Comparator?
 		return l.toClojureCode();
+	}
+
+	@Override
+	public Lambda getLambda(Comparator<? super Lambda> c) {
+		PriorityQueue<Lambda> queue = this.getSortedImplementations(c);
+		return queue.peek();
+	}
+
+	@Override
+	public Lambda getLambda() {
+		return this.defaultImplementation();
 	}
 }

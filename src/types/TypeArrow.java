@@ -94,4 +94,23 @@ public class TypeArrow extends Type {
 		l.infer();
 		return this.rtype.convertToDefaultRepresentation(l);
 	}
+	
+	/**
+	 * Unfolds the applicable type to TypeArrow
+	 * @param t unfolded type
+	 * @return TypeArrow type
+	 * @throws Exception if unfolded type is not an applicable type
+	 */
+	public static TypeArrow getFunctionType(Type t) throws Exception{
+		Type type = t.getRep();
+		if(type instanceof TypeArrow){
+			return (TypeArrow)type;
+		}
+		else if(type instanceof ForallType){
+			return getFunctionType(((ForallType)type).getBoundType());
+		}
+		else{
+			throw new Exception(t.toString() + " is not an applicable type");
+		}
+	}
 }

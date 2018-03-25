@@ -1,5 +1,6 @@
 package expression;
 
+import java.util.Comparator;
 import java.util.Iterator;
 
 import types.ForallType;
@@ -15,7 +16,7 @@ import interpretation.Environment;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Lambda extends Expression implements Comparable<Lambda>{
+public class Lambda extends MetaLambda implements Comparable<Lambda>{
 
 	/**
 	 * Formal arguments (names) of the lambda expression
@@ -128,5 +129,15 @@ public class Lambda extends Expression implements Comparable<Lambda>{
 		}
 		
 		return this.argsType.compareTo(o.argsType);
+	}
+
+	@Override
+	public Lambda getLambda(Comparator<? super Lambda> c) {
+		return this;
+	}
+
+	@Override
+	public Lambda getLambda() {
+		return this;
 	}
 }
