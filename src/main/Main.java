@@ -129,6 +129,8 @@ public class Main {
 	private static void compile(Path inputPath, Path outputPath) throws IOException{
 		Reader input = null;
 		Writer output = null;
+		Environment topLevel = Main.initTopLevelEnvironment();
+		
 		try{
 			input = Files.newBufferedReader(inputPath);
 			
@@ -146,7 +148,7 @@ public class Main {
 			}
 			
 			for(Expression e : exprs){
-				Expression expr = e.substituteTopLevelVariables(new Environment());
+				Expression expr = e.substituteTopLevelVariables(topLevel);
 				expr.infer();
 				l.add(expr);
 			}
