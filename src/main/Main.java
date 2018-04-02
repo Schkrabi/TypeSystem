@@ -13,16 +13,27 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+
+import operators.Addition;
+import operators.Subtraction;
+import operators.Multiplication;
+import operators.Division;
+import operators.And;
+import operators.Or;
+import operators.Not;
+import operators.BitAnd;
+import operators.BitOr;
+
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
 
-import conversions.IntBinaryToIntRomanWrapper;
-import conversions.IntBinaryToIntStringWrapper;
-import conversions.IntRomanToIntBinaryWrapper;
+import conversions.IntToIntRomanWrapper;
+import conversions.IntToIntStringWrapper;
+import conversions.IntRomanToIntWrapper;
 import conversions.IntRomanToIntStringWrapper;
-import conversions.IntStringToIntBinaryWrapper;
+import conversions.IntStringToIntWrapper;
 import conversions.IntStringToIntRomanWrapper;
 
 import parser.SchemeLexer;
@@ -33,9 +44,7 @@ import semantic.SemanticParser;
 import types.TypeConcrete;
 import types.TypeRepresentation;
 import util.ClojureCodeGenerator;
-import expression.Addition;
 import expression.Expression;
-import expression.Subtraction;
 import expression.Variable;
 
 /**
@@ -77,17 +86,24 @@ public class Main {
 		Environment env = new Environment();
 		env.put(new Variable("+"), Addition.singleton);
 		env.put(new Variable("-"), Subtraction.singleton);
+		env.put(new Variable("*"), Multiplication.singleton);
+		env.put(new Variable("/"), Division.singleton);
+		env.put(new Variable("and"), And.singleton);
+		env.put(new Variable("or"), Or.singleton);
+		env.put(new Variable("not"), Not.singleton);
+		env.put(new Variable("bit-and"), BitAnd.singleton);
+		env.put(new Variable("bit-or"), BitOr.singleton);
 		
 		return env;
 	}
 	
 	private static void initTypesConversions() throws Exception{
-		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntRoman, IntBinaryToIntRomanWrapper.class);
-		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntString, IntBinaryToIntStringWrapper.class);
-		TypeRepresentation.TypeIntRoman.addConversion(TypeConcrete.TypeInt, IntRomanToIntBinaryWrapper.class);
-		TypeRepresentation.TypeIntRoman.addConversion(TypeRepresentation.TypeIntString, IntRomanToIntStringWrapper.class);
-		TypeRepresentation.TypeIntString.addConversion(TypeConcrete.TypeInt, IntStringToIntBinaryWrapper.class);
-		TypeRepresentation.TypeIntString.addConversion(TypeRepresentation.TypeIntRoman, IntStringToIntRomanWrapper.class);
+		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntRoman, IntToIntRomanWrapper.IntToIntRoman);
+		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntString, IntToIntStringWrapper.IntToIntString);
+		TypeRepresentation.TypeIntRoman.addConversion(TypeConcrete.TypeInt, IntRomanToIntWrapper.IntRomanToInt);
+		TypeRepresentation.TypeIntRoman.addConversion(TypeRepresentation.TypeIntString, IntRomanToIntStringWrapper.IntRomanToIntString);
+		TypeRepresentation.TypeIntString.addConversion(TypeConcrete.TypeInt, IntStringToIntWrapper.IntStringToInt);
+		TypeRepresentation.TypeIntString.addConversion(TypeRepresentation.TypeIntRoman, IntStringToIntRomanWrapper.IntStringToIntRoman);
 	}
 	
 	private static void init() throws Exception{

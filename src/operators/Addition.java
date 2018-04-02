@@ -1,5 +1,10 @@
-package expression;
+package operators;
 
+import expression.Expression;
+import expression.Lambda;
+import expression.LitInteger;
+import expression.Tuple;
+import expression.Variable;
 import types.Type;
 import types.TypeConcrete;
 import types.TypeArrow;
@@ -27,7 +32,7 @@ public class Addition extends Lambda {
 
 	@Override
 	public String toString() {
-		return "(+ _x _y)";
+		return "+";
 	}
 	
 	@Override
@@ -44,7 +49,7 @@ public class Addition extends Lambda {
 	
 	@Override
 	public String toClojureCode() throws Exception {
-		return "(fn [x y] (+ x y))";
+		return "+";
 	}
 
 	/**

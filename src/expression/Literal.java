@@ -31,21 +31,18 @@ public abstract class Literal extends Expression {
 	public Type infer(){
 		return this.getType();
 	}
-
+	
 	/**
-	 * Wrapper for conversion of Literals
+	 * Wrapper for conversions
 	 * 
 	 * @author Mgr. Radomir Skrabal
 	 *
 	 */
-	public abstract static class ConversionWrapper extends Expression {
+	public abstract static class ConversionWrapper extends Expression {	
 		/**
-		 * Wrapped expression
+		 * Unified conversion argument
 		 */
-		protected Expression wrapped;
-
-		public ConversionWrapper(Expression wrapped) {
-			this.wrapped = wrapped;
-		}
+		protected static final Expression arg = new Variable("_x");
 	}
 }
+

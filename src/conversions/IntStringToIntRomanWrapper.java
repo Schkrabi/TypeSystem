@@ -3,21 +3,30 @@ package conversions;
 import interpretation.Environment;
 import types.Type;
 import types.TypeRepresentation;
+import types.TypeTuple;
 import util.RomanNumbers;
+import expression.Constructor;
 import expression.Expression;
 import expression.LitString;
 import expression.Literal;
 import expression.Literal.ConversionWrapper;
+import expression.Tuple;
 
+/**
+ * Hard coded wrapper for conversion from IntString to IntRoman
+ * @author Mgr. Radomir Skrabal
+ *
+ */
 public class IntStringToIntRomanWrapper extends ConversionWrapper{
 
-	public IntStringToIntRomanWrapper(Expression wrapped) {
-		super(wrapped);
-	}
+	/**
+	 * Private constructor to isolate the wrapper class
+	 */
+	private IntStringToIntRomanWrapper() {}
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		Expression e = this.wrapped.interpret(env);
+		Expression e = ConversionWrapper.arg.interpret(env);
 		if(!(e instanceof LitString)) {
 			throw new Exception("Invalid wrapped conversion from IntString to IntRoman");
 		}
@@ -29,22 +38,25 @@ public class IntStringToIntRomanWrapper extends ConversionWrapper{
 
 	@Override
 	public Type infer() throws Exception {
-		Type t = this.wrapped.infer();
-		if(t != TypeRepresentation.TypeIntString) {
-			throw new Exception("Invalid wrapped conversion from IntString to IntRoman");
-		}
 		this.setType(TypeRepresentation.TypeIntRoman);
 		return TypeRepresentation.TypeIntRoman;
 	}
 
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		return new IntStringToIntRomanWrapper(this.wrapped.substituteTopLevelVariables(topLevel));
+		return this;
 	}
 
 	@Override
 	public String toClojureCode() throws Exception {
-		return "(RomanNumbers/roman2int (Integer/parseInt " + this.wrapped.toClojureCode() + "))";
+		return "(RomanNumbers/roman2int (Integer/parseInt " + ConversionWrapper.arg.toClojureCode() + "))";
 	}
 	
+	/**
+	 * Conversion constructor from IntString to IntRoman
+	 */
+	public static final Constructor IntStringToIntRoman = new Constructor(	TypeRepresentation.TypeIntRoman,
+																			new Tuple(new Expression[]{ConversionWrapper.arg}),
+																			new TypeTuple(new Type[]{TypeRepresentation.TypeIntString}),
+																			new IntStringToIntRomanWrapper());
 }

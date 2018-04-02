@@ -4,21 +4,25 @@ import interpretation.Environment;
 import types.Type;
 import types.TypeConcrete;
 import types.TypeRepresentation;
+import types.TypeTuple;
+import expression.Constructor;
 import expression.Expression;
 import expression.Literal;
+import expression.Tuple;
 import expression.Literal.ConversionWrapper;
 import expression.LitInteger;
 import expression.LitString;
 
-public class IntBinaryToIntStringWrapper extends ConversionWrapper{
+public class IntToIntStringWrapper extends ConversionWrapper{
 
-	public IntBinaryToIntStringWrapper(Expression wrapped) {
-		super(wrapped);
-	}
+	/**
+	 * Private constructor to isolate the wrapper class
+	 */
+	private IntToIntStringWrapper() {}
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		Expression e = this.wrapped.interpret(env);
+		Expression e = ConversionWrapper.arg.interpret(env);
 		if(!(e instanceof LitInteger)) {
 			throw new Exception("Invalid wrapped conversion from IntBinary to IntString");
 		}
@@ -30,22 +34,25 @@ public class IntBinaryToIntStringWrapper extends ConversionWrapper{
 
 	@Override
 	public Type infer() throws Exception {
-		Type t = this.wrapped.infer();
-		if(t != TypeConcrete.TypeInt) {
-			throw new Exception("Invalid wrapped conversion from IntBinary to IntRoman");
-		}
 		this.setType(TypeRepresentation.TypeIntString);
 		return TypeRepresentation.TypeIntString;
 	}
 
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		return new IntBinaryToIntStringWrapper(this.wrapped.substituteTopLevelVariables(topLevel));
+		return this;
 	}
 
 	@Override
 	public String toClojureCode() throws Exception {
-		return "(Integer/toString " + this.wrapped.toClojureCode() + ")";
+		return "(Integer/toString " + ConversionWrapper.arg.toClojureCode() + ")";
 	}
 	
+	/**
+	 * Conversion constructor from Int to IntString
+	 */
+	public static final Constructor IntToIntString = new Constructor(	TypeRepresentation.TypeIntString,
+																			new Tuple(new Expression[]{ConversionWrapper.arg}),
+																			new TypeTuple(new Type[]{TypeConcrete.TypeInt}),
+																			new IntToIntStringWrapper());
 }

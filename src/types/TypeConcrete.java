@@ -5,8 +5,10 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import expression.Application;
+import expression.Constructor;
 import expression.Expression;
-import expression.Literal.ConversionWrapper;
+import expression.Tuple;
 
 /**
  * Class for concrete types
@@ -23,7 +25,7 @@ public class TypeConcrete extends Type {
 	/**
 	 * Map for type converting
 	 */
-	private Map<TypeConcrete, Class<? extends ConversionWrapper>> conversionTable = new TreeMap<TypeConcrete, Class<? extends ConversionWrapper>>();
+	private Map<TypeConcrete, Constructor> conversionTable = new TreeMap<TypeConcrete, Constructor>();
 
 	public TypeConcrete(String name) {
 		this.name = name;
@@ -41,19 +43,6 @@ public class TypeConcrete extends Type {
 		throw new Exception("Instantiating " + type.getName() + ":" + this.name + "with value of type "
 				+ value.getClass().getName() + " of value " + value.toString());
 	}
-
-	/**
-	 * Instantiates the literal of given type. Must return literal of implementation
-	 * class.
-	 * 
-	 * @param value
-	 *            Initialization value
-	 * @return Literal object
-	 * @throws Exception
-	 *             thrown if instantiated with incorrect value
-	 * @see TypeConcrete.implementation
-	 */
-	// public abstract Literal instantiateLiteral(Object value) throws Exception;
 
 	@Override
 	public String toString() {
@@ -96,23 +85,24 @@ public class TypeConcrete extends Type {
 		return false;
 	}
 
-	public void addConversion(TypeConcrete toType, Class<? extends ConversionWrapper> conversionWrapperClass)
+	public void addConversion(TypeConcrete toType, Constructor conversionConstructor)
 			throws Exception {
 		if (this.conversionTable.containsKey(toType)) {
 			throw new Exception(
 					"Conversion of " + this.getClass().getName() + " to " + toType.name + " already exists.");
 		}
-		this.conversionTable.put(toType, conversionWrapperClass);
+		this.conversionTable.put(toType, conversionConstructor);
 	}
 
-	private ConversionWrapper instantiateWrapperToType(TypeConcrete type, Expression arg) throws Exception {
-		Class<? extends ConversionWrapper> wrapperClass = this.conversionTable.get(type);
-		if (wrapperClass == null) {
+	private Expression instantiateConversionToType(TypeConcrete type, Expression arg) throws Exception {
+		Constructor constructor = this.conversionTable.get(type);
+		
+		if (constructor == null) {
 			throw new Exception(
 					"No conversion from " + this + " to type " + type + " exists");
 		}
 
-		return wrapperClass.getConstructor(new Class<?>[] { Expression.class }).newInstance(arg);
+		return new Application(constructor, new Tuple(new Expression[]{arg}));
 	}
 
 	@Override
@@ -130,7 +120,7 @@ public class TypeConcrete extends Type {
 			return expr;
 		}
 
-		Expression e = this.instantiateWrapperToType(t, expr);
+		Expression e = this.instantiateConversionToType(t, expr);
 		e.infer();
 		return e;
 	}
