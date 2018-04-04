@@ -171,4 +171,21 @@ public class TypeEnvironment {
 		}
 		constructorMap.put(newType, constructor);
 	}
+	
+	/**
+	 * Adds new conversion to the environment
+	 * @param fromType Type which is converted
+	 * @param toType Type to which is converted
+	 * @param conversionConstructor Conversion lambda (constructor)
+	 */
+	public void addConversion(TypeConcrete fromType, TypeConcrete toType, Constructor conversionConstructor) throws AppendableException {
+		if(!this.types.contains(fromType)) {
+			throw new UndefinedTypeException(fromType.toString());
+		}
+		if(!this.types.contains(toType)) {
+			throw new UndefinedTypeException(toType.toString());
+		}
+		
+		fromType.addConversion(toType, conversionConstructor);
+	}
 }

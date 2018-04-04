@@ -9,6 +9,7 @@ import expression.Application;
 import expression.Constructor;
 import expression.Expression;
 import expression.Tuple;
+import util.AppendableException;
 
 /**
  * Class for concrete types
@@ -86,9 +87,9 @@ public class TypeConcrete extends Type {
 	}
 
 	public void addConversion(TypeConcrete toType, Constructor conversionConstructor)
-			throws Exception {
+			throws AppendableException {
 		if (this.conversionTable.containsKey(toType)) {
-			throw new Exception(
+			throw new AppendableException(
 					"Conversion of " + this.getClass().getName() + " to " + toType.name + " already exists.");
 		}
 		this.conversionTable.put(toType, conversionConstructor);

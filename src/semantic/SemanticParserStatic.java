@@ -24,6 +24,7 @@ public final class SemanticParserStatic {
 	public static final String LAMBDA = "lambda";
 	public static final String ELAMBDA = "elambda";
 	public static final String IF = "if";
+	public static final String DEFCONVERSION = "defconversion";
 	
 	public static final Set<String> specialForms;
 	

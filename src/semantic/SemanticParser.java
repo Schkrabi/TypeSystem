@@ -175,6 +175,9 @@ public class SemanticParser {
 		case SemanticParserStatic.LAMBDA:
 			e = this.parseLambda(specialFormList);
 			break;
+		case SemanticParserStatic.DEFCONVERSION:
+			e = this.parseDefconversion(specialFormList);
+			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
 		}
@@ -473,5 +476,33 @@ public class SemanticParser {
 		TypeTuple argsType = this.parseTypeList(l.get(0).asList());
 		Expression body = this.parseNode(l.get(1));
 		return new Lambda(args, argsType, body);
+	}
+	
+	/**
+	 * Parses defconversion special form list
+	 * @param l arguments of the defconversion special form
+	 * @throws AppendableException
+	 */
+	private Expression parseDefconversion(List<SemanticNode> l) throws AppendableException{
+		try {
+			Validations.validateDefconversionList(l);
+		}catch(AppendableException e) {
+			e.appendMessage("in" + l);
+			throw e;
+		}
+		TypeConcrete fromType = this.parseType(l.get(1));
+		TypeConcrete toType = this.parseType(l.get(2));
+		Constructor constructor = this.parseConstructor(toType, l.get(2).asList());
+		
+		if(constructor.argsType.values.length != 1
+				|| constructor.argsType.values[0] != fromType)
+		{
+			AppendableException e = new AppendableException("Conversion must convert from defined type " + fromType + " got " + constructor.argsType);
+			e.appendMessage("in" + l);
+		}
+		
+		this.typeEnvironment.addConversion(fromType, toType, constructor);
+		
+		return Expression.EMPTY_EXPRESSION;
 	}
 }
