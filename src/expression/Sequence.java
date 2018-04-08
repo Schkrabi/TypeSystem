@@ -34,7 +34,10 @@ public class Sequence extends Expression implements Iterable<Expression> {
 			return tmp.interpret(env);
 		}
 
-		return this.asTuple().interpret(env);
+		Tuple t = this.asTuple();
+		t.infer();
+		
+		return t.interpret(env);
 	}
 
 	@Override

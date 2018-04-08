@@ -234,7 +234,7 @@ public class Validations {
 		
 		SemanticNode defConversion = l.get(0);
 		if(defConversion.type != SemanticNode.NodeType.SYMBOL
-				|| defConversion.asSymbol() != SemanticParserStatic.DEFCONVERSION) {
+				|| !defConversion.asSymbol().equals(SemanticParserStatic.DEFCONVERSION)) {
 			throw new UnexpectedExpressionException(defConversion);
 		}
 		

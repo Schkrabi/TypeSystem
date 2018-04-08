@@ -492,7 +492,7 @@ public class SemanticParser {
 		}
 		TypeConcrete fromType = this.parseType(l.get(1));
 		TypeConcrete toType = this.parseType(l.get(2));
-		Constructor constructor = this.parseConstructor(toType, l.get(2).asList());
+		Constructor constructor = this.parseConstructor(toType, l.get(3).asList());
 		
 		if(constructor.argsType.values.length != 1
 				|| constructor.argsType.values[0] != fromType)

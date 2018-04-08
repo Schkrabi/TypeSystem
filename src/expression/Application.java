@@ -46,7 +46,7 @@ public class Application extends Expression {
 		
 		Environment childEnv = new Environment(env);
 		for (int i = 0; i < lambda.args.values.length; i++) {
-			childEnv.put((Variable) lambda.args.values[i], this.args.values[i]);
+			childEnv.put((Variable) lambda.args.values[i], this.args.values[i].interpret(env));
 		}
 		
 		TypeArrow lambdaType = TypeArrow.getFunctionType(lambda.getType());
@@ -165,8 +165,12 @@ public class Application extends Expression {
 		Environment ret = new Environment(e.parent);
 
 		for (int i = 0; i < args.values.length; i++) {
-			ret.put((Variable) args.values[i], e.get((Variable) args.values[i]).getType()
-					.convertTo(e.get((Variable) args.values[i]), argTypes.values[i]));
+			Variable name = (Variable) args.values[i];
+			Type fromType = e.get((Variable) args.values[i]).getType();
+			Expression arg = e.get((Variable) args.values[i]);
+			Type toType = argTypes.values[i];
+			
+			ret.put(name, fromType.convertTo(arg, toType));
 		}
 
 		return ret;

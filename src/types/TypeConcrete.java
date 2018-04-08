@@ -108,6 +108,9 @@ public class TypeConcrete extends Type {
 
 	@Override
 	public Expression convertTo(Expression expr, Type toType) throws Exception {
+		if(toType instanceof TypeVariable){
+			return expr;
+		}		
 		if (!(toType instanceof TypeConcrete)) {
 			this.throwConversionError(expr, toType);
 		}

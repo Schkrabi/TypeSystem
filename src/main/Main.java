@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Scanner;
 
 import operators.Addition;
+import operators.Car;
+import operators.Cdr;
+import operators.Concantenation;
 import operators.Subtraction;
 import operators.Multiplication;
 import operators.Division;
@@ -93,6 +96,9 @@ public class Main {
 		env.put(new Variable("not"), Not.singleton);
 		env.put(new Variable("bit-and"), BitAnd.singleton);
 		env.put(new Variable("bit-or"), BitOr.singleton);
+		env.put(new Variable("concat"), Concantenation.singleton);
+		env.put(new Variable("car"), Car.singleton);
+		env.put(new Variable("cdr"), Cdr.singleton);
 		
 		return env;
 	}
