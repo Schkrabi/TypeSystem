@@ -120,12 +120,10 @@ public class Application extends Expression {
 			throw new Exception(this.fun.toString() + " is not a function");
 		}
 		
-		Lambda lambda = ((MetaLambda)this.fun).getLambda(); //Maybe comparator here?
-		
-		s.append(lambda.toClojureCode());
+		s.append(this.fun.toClojureCode());
 		s.append(' ');
 
-		TypeArrow funType = TypeArrow.getFunctionType(lambda.getType());
+		TypeArrow funType = TypeArrow.getFunctionType(this.fun.getType());
 		
 		TypeTuple argsType = (TypeTuple) funType.ltype;
 

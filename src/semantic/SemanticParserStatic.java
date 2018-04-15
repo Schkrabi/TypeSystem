@@ -11,7 +11,9 @@ import expression.Variable;
 
 import parser.SemanticNode;
 import types.Type;
+import types.TypeVariable;
 import util.AppendableException;
+import util.NameGenerator;
 
 /**
  * This class contains auxiliary static methods and constants for SemanticParser
@@ -91,7 +93,7 @@ public final class SemanticParserStatic {
 	 *            checked list
 	 * @return true or false
 	 */
-	static boolean isArgListUntypped(List<VariableTypePair> l) {
+	static boolean isArgListUntypped(List<VariableTypePair> l) {		
 		for (VariableTypePair p : l) {
 			if (p.type != null) {
 				return false;
@@ -125,6 +127,10 @@ public final class SemanticParserStatic {
 	static List<Type> filterTypesFromTypedArgsList(List<VariableTypePair> l) {
 		List<Type> r = new ArrayList<Type>();
 		for (VariableTypePair p : l) {
+			if(p.type == null){
+				r.add(new TypeVariable(NameGenerator.next()));
+				continue;
+			}
 			r.add(p.type);
 		}
 		return r;

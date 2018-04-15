@@ -178,6 +178,9 @@ public class SemanticParser {
 		case SemanticParserStatic.DEFCONVERSION:
 			e = this.parseDefconversion(specialFormList);
 			break;
+		case SemanticParserStatic.DEFCONSTRUCTOR:
+			e = this.parseDefConstructor(specialFormList);
+			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
 		}
@@ -197,8 +200,9 @@ public class SemanticParser {
 	 */
 	private Expression parseTypeConstruction(TypeConcrete type, List<SemanticNode> typeConstructionList)
 			throws AppendableException {
-		Constructor c = this.typeEnvironment.getConstructor(type);
-		Expression[] args = new Expression[typeConstructionList.size() - 1];
+		int argsCount = typeConstructionList.size() - 1;
+		Constructor c = this.typeEnvironment.getConstructor(type, argsCount);
+		Expression[] args = new Expression[argsCount];
 		int i = 0;
 		for (SemanticNode t : SemanticParserStatic.listTail(typeConstructionList)) {
 			Expression e = this.parseNode(t);
@@ -253,13 +257,10 @@ public class SemanticParser {
 		List<VariableTypePair> typedArgs = this.parseTypedArgList(lambdaList.get(1).asList());
 
 		TypeTuple argsTypes = null;
-		if (SemanticParserStatic.isArgListFullyTyped(typedArgs)) {
+		if (!SemanticParserStatic.isArgListUntypped(typedArgs)
+				|| typedArgs.isEmpty()) {
 			List<Type> tmp = SemanticParserStatic.filterTypesFromTypedArgsList(typedArgs);
 			argsTypes = new TypeTuple(tmp.toArray(new Type[tmp.size()]));
-		} else {
-			if (!SemanticParserStatic.isArgListUntypped(typedArgs)) {
-				throw new AppendableException("Partially typed argument lists are not supported");
-			}
 		}
 
 		List<Variable> tmp = SemanticParserStatic.filterVariablesFromTypedArgsList(typedArgs);
@@ -502,6 +503,28 @@ public class SemanticParser {
 		}
 		
 		this.typeEnvironment.addConversion(fromType, toType, constructor);
+		
+		return Expression.EMPTY_EXPRESSION;
+	}
+	
+	/**
+	 * Parses defconstructor special form list
+	 * @param l arguments of the defconversion special form
+	 * @return Empty Expression (side effect adds constructor to type environment)
+	 * @throws AppendableException
+	 */
+	private Expression parseDefConstructor(List<SemanticNode> l) throws AppendableException{
+		try{
+			Validations.validateDefConstructorList(l);
+		}catch(AppendableException e){
+			e.appendMessage(" in " + l);
+			throw e;
+		}
+		
+		TypeConcrete constructedType = this.parseType(l.get(1));
+		Constructor constructor = this.parseConstructor(constructedType, l.get(2).asList());
+		
+		this.typeEnvironment.addConstructor(constructedType, constructor);
 		
 		return Expression.EMPTY_EXPRESSION;
 	}

@@ -1,0 +1,7 @@
+(deftype Name (lambda ((String x)) x))
+(defrep Structured Name (lambda ((String x) (String y)) (x y)))
+((elambda (x) "default" ((Name) "unstructured") ((Name:Structured) "structured")) (Name "Jan Novak"))
+((elambda (x) "default" ((Name:Structured) "structured")) (Name:Structured "Jan" "Novak"))
+(defconversion Name:Structured Name (lambda ((Name:Structured x)) (concat (car x) (cdr x))))
+((lambda ((Name x)) x) (Name:Structured "Jan" "Novak"))
+
