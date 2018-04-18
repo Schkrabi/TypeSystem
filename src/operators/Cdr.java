@@ -1,7 +1,6 @@
 package operators;
 
 import interpretation.Environment;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
@@ -51,7 +50,7 @@ public class Cdr extends Lambda {
 	
 	@Override
 	public String toClojureCode() throws Exception {
-		throw new NotImplementedException();
+		throw new Exception("Not implemented");
 	}
 
 	/**
@@ -86,7 +85,7 @@ public class Cdr extends Lambda {
 
 		@Override
 		public Type infer() throws Exception {
-			throw new NotImplementedException();
+			throw new Exception("Not implemented");
 		}
 
 		@Override

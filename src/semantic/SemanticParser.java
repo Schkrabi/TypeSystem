@@ -8,6 +8,7 @@ import java.util.TreeSet;
 
 import expression.Application;
 import expression.Constructor;
+import expression.DefExpression;
 import expression.Expression;
 import expression.ExtendedLambda;
 import expression.IfExpression;
@@ -17,7 +18,6 @@ import expression.LitDouble;
 import expression.LitInteger;
 import expression.LitString;
 import expression.Literal;
-import expression.Sequence;
 import expression.Tuple;
 import expression.Variable;
 
@@ -181,6 +181,9 @@ public class SemanticParser {
 		case SemanticParserStatic.DEFCONSTRUCTOR:
 			e = this.parseDefConstructor(specialFormList);
 			break;
+		case SemanticParserStatic.DEFINE:
+			e = this.parseDefine(specialFormList);
+			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
 		}
@@ -224,18 +227,25 @@ public class SemanticParser {
 	 */
 	private Expression parseList(List<SemanticNode> list) throws AppendableException {
 		List<Expression> l = new ArrayList<Expression>();
+		Expression fun = null;
+		Tuple args = null;
 
 		for (SemanticNode n : list) {
 			try {
+				if(fun == null) {
+					fun = this.parseNode(n);
+					continue;
+				}
 				l.add(this.parseNode(n));
 			} catch (AppendableException e) {
 				e.appendMessage(" in " + list);
 				throw e;
 			}
-
 		}
+		
+		args = new Tuple(l.toArray(new Expression[l.size()]));
 
-		return new Sequence(l);
+		return new Application(fun, args);
 	}
 
 	/**
@@ -528,4 +538,25 @@ public class SemanticParser {
 		
 		return Expression.EMPTY_EXPRESSION;
 	}
+	
+	/**
+	 * Parses define special form list
+	 * @param l arguments of the define special form
+	 * @return DefExpression expression
+	 * @throws AppendableException
+	 */
+	private Expression parseDefine(List<SemanticNode> l) throws AppendableException{
+		try {
+			Validations.validateDefineList(l);
+		}catch(AppendableException e) {
+			e.appendMessage("in " + l);
+			throw e;
+		}
+		
+		Variable v = new Variable(l.get(1).asSymbol());
+		Expression e = this.parseNode(l.get(2));
+		return new DefExpression(v, e);
+	}
+	
+	//private Expression parseCons(List<SemanticNode>)
 }

@@ -28,6 +28,8 @@ public final class SemanticParserStatic {
 	public static final String IF = "if";
 	public static final String DEFCONVERSION = "defconversion";
 	public static final String DEFCONSTRUCTOR = "defconstructor";
+	public static final String DEFINE = "define";
+	//public static final String CONS = "cons";
 	
 	public static final Set<String> specialForms;
 	
@@ -40,6 +42,8 @@ public final class SemanticParserStatic {
 		specialForms.add(LAMBDA);
 		specialForms.add(DEFCONVERSION);
 		specialForms.add(DEFCONSTRUCTOR);
+		specialForms.add(DEFINE);
+		//specialForms.add(CONS);
 	}
 	
 	/**

@@ -5,6 +5,9 @@ import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
+import types.TypeVariable;
+import util.AppendableException;
+import util.NameGenerator;
 import interpretation.Environment;
 
 /**
@@ -72,19 +75,24 @@ public class Application extends Expression {
 			funType = this.fun.infer();
 		}
 		
+		if(funType instanceof ForallType) {
+			funType = ((ForallType) funType).getBoundType();
+		}
+		
 		Type argsType = this.args.infer();
 
-		if (!(funType.isApplicableType())) {
+		if (!(funType.isApplicableType())
+				&& !(funType instanceof TypeVariable)) {
 			throw new Exception(fun + " is not a function");
 		}
 		TypeArrow funArrType;
 
-		if (funType instanceof TypeArrow) {
+		if(funType instanceof TypeArrow) {
 			funArrType = (TypeArrow) funType;
-		} else if (funType instanceof ForallType) {
-			funArrType = (TypeArrow) ((ForallType) funType).getBoundType();
-		} else {
-			throw new Exception("Instance of " + funType + " was evaluated as applicable");
+		}else if(funType instanceof TypeVariable) {
+			funArrType = new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()));
+		}else {
+			throw new AppendableException(funType.toString() + "is not an applicable type");
 		}
 
 		if (!Type.unify(funArrType.ltype, argsType)) {

@@ -282,4 +282,28 @@ public class Validations {
 		
 		return true;
 	}
+	
+	/**
+	 * Validates if l is a valid define list, throws exception if valiation fails
+	 * @param l validated list
+	 * @return true if l is valid define list, false otherwise
+	 * @throws AppendableException
+	 */
+	public static boolean validateDefineList(List<SemanticNode> l) throws AppendableException{
+		if(l.size() != 3) {
+			throw new InvalidNumberOfArgsException(2, l.size()-1);
+		}
+		
+		SemanticNode define = l.get(0);
+		if(define.type != SemanticNode.NodeType.SYMBOL
+				|| !define.asSymbol().equals(SemanticParserStatic.DEFINE)) {
+			throw new UnexpectedExpressionException(define);
+		}
+		
+		if(l.get(1).type != SemanticNode.NodeType.SYMBOL) {
+			throw new UnexpectedExpressionException(l.get(1));
+		}
+		
+		return true;
+	}
 }

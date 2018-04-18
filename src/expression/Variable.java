@@ -30,7 +30,8 @@ public class Variable extends Expression implements Comparable<Variable> {
 	@Override
 	public Expression interpret(Environment env) throws Exception {
 		if (!env.containsVariable(this)) {
-			throw new Exception("Unbound variable");
+			//throw new Exception("Unbound variable");
+			return this; //??
 		}
 		return env.getVariableValue(this).interpret(env);
 	}

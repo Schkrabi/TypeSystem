@@ -78,12 +78,12 @@ public class SemanticNode {
 		return (Boolean)this.value;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public List<SemanticNode> asList() throws AppendableException{
 		if(this.type != NodeType.LIST
 				|| !(this.value instanceof List<?>)){
 			throw new AppendableException("" + this + " is not a list");
 		}
-		//TODO add generic type check
 		return (List<SemanticNode>)this.value;
 	}
 	
