@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 
-import expression.Constructor;
+import expression.TypeConstructionLambda;
 import parser.SemanticNode;
 import parser.SemanticNode.Pair;
 import types.TypeConcrete;
@@ -18,39 +18,39 @@ import util.AppendableException;
 public class TypeEnvironment {
 
 	private Set<TypeConcrete> types = new HashSet<TypeConcrete>();
-	private Map<TypeConcrete, Set<Constructor>> constructorMap = new HashMap<TypeConcrete, Set<Constructor>>();
+	private Map<TypeConcrete, Set<TypeConstructionLambda>> constructorMap = new HashMap<TypeConcrete, Set<TypeConstructionLambda>>();
 
 	public TypeEnvironment() {
 		// Int
 		types.add(TypeConcrete.TypeInt);
-		Set<Constructor> set = new TreeSet<Constructor>();
-		set.add(Constructor.IntPrimitiveConstructor);
+		Set<TypeConstructionLambda> set = new TreeSet<TypeConstructionLambda>();
+		set.add(TypeConstructionLambda.IntPrimitiveConstructor);
 		constructorMap.put(TypeConcrete.TypeInt, set);
 		types.add(TypeRepresentation.TypeIntRoman);
-		set = new TreeSet<Constructor>();
-		set.add(Constructor.IntRomanConstructor);
+		set = new TreeSet<TypeConstructionLambda>();
+		set.add(TypeConstructionLambda.IntRomanConstructor);
 		constructorMap.put(TypeRepresentation.TypeIntRoman, set);
 		types.add(TypeRepresentation.TypeIntString);
-		set = new TreeSet<Constructor>();
-		set.add(Constructor.IntStringConstructor);
+		set = new TreeSet<TypeConstructionLambda>();
+		set.add(TypeConstructionLambda.IntStringConstructor);
 		constructorMap.put(TypeRepresentation.TypeIntString, set);
 
 		// Bool
 		types.add(TypeConcrete.TypeBool);
-		set = new TreeSet<Constructor>();
-		set.add(Constructor.BoolPrimitiveConstructor);
+		set = new TreeSet<TypeConstructionLambda>();
+		set.add(TypeConstructionLambda.BoolPrimitiveConstructor);
 		constructorMap.put(TypeConcrete.TypeBool, set);
 
 		// String
 		types.add(TypeConcrete.TypeString);
-		set = new TreeSet<Constructor>();
-		set.add(Constructor.StringPrimitiveConstructor);
+		set = new TreeSet<TypeConstructionLambda>();
+		set.add(TypeConstructionLambda.StringPrimitiveConstructor);
 		constructorMap.put(TypeConcrete.TypeString, set);
 
 		// Double
 		types.add(TypeConcrete.TypeDouble);
-		set = new TreeSet<Constructor>();
-		set.add(Constructor.DoublePrimitiveConstructor);
+		set = new TreeSet<TypeConstructionLambda>();
+		set.add(TypeConstructionLambda.DoublePrimitiveConstructor);
 		constructorMap.put(TypeConcrete.TypeDouble, set);
 	}
 
@@ -126,11 +126,11 @@ public class TypeEnvironment {
 	 *            searched type
 	 * @return constructor for this type if it exists
 	 */
-	public Constructor getConstructor(TypeConcrete type, final int argCount) {
-		return this.constructorMap.get(type).stream().filter(new Predicate<Constructor>(){
+	public TypeConstructionLambda getConstructor(TypeConcrete type, final int argCount) {
+		return this.constructorMap.get(type).stream().filter(new Predicate<TypeConstructionLambda>(){
 
 			@Override
-			public boolean test(Constructor arg) {
+			public boolean test(TypeConstructionLambda arg) {
 				return arg.args.values.length == argCount;
 			}
 			
@@ -185,15 +185,15 @@ public class TypeEnvironment {
 	 * @param constructor
 	 * @throws AppendableException
 	 */
-	public void addConstructor(TypeConcrete newType, final Constructor constructor) throws AppendableException {
-		Set<Constructor> set;
+	public void addConstructor(TypeConcrete newType, final TypeConstructionLambda constructor) throws AppendableException {
+		Set<TypeConstructionLambda> set;
 		
 		if (constructorMap.containsKey(newType)) {
 			set = this.constructorMap.get(newType); 
 			
-			if(set.stream().anyMatch(new Predicate<Constructor>(){
+			if(set.stream().anyMatch(new Predicate<TypeConstructionLambda>(){
 				@Override
-				public boolean test(Constructor arg) {
+				public boolean test(TypeConstructionLambda arg) {
 					return arg.args.values.length == constructor.args.values.length;
 				}})){
 				throw new AppendableException("Constructor for " + newType + " is already defined");
@@ -201,7 +201,7 @@ public class TypeEnvironment {
 			set.add(constructor);
 			return;
 		}
-		set = new TreeSet<Constructor>();
+		set = new TreeSet<TypeConstructionLambda>();
 		set.add(constructor);
 		constructorMap.put(newType, set);
 	}
@@ -212,7 +212,7 @@ public class TypeEnvironment {
 	 * @param toType Type to which is converted
 	 * @param conversionConstructor Conversion lambda (constructor)
 	 */
-	public void addConversion(TypeConcrete fromType, TypeConcrete toType, Constructor conversionConstructor) throws AppendableException {
+	public void addConversion(TypeConcrete fromType, TypeConcrete toType, TypeConstructionLambda conversionConstructor) throws AppendableException {
 		if(!this.types.contains(fromType)) {
 			throw new UndefinedTypeException(fromType.toString());
 		}

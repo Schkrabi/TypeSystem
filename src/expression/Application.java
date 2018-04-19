@@ -56,7 +56,13 @@ public class Application extends Expression {
 		
 		childEnv = Application.autoConvertArgs(childEnv, f.args, (TypeTuple)lambdaType.ltype);
 		
-		return f.body.interpret(childEnv);
+		Expression rslt = f.body.interpret(childEnv); 
+		
+		if(ifun instanceof Constructor){
+			rslt.setType(lambdaType.rtype);
+		}
+		
+		return rslt;
 	}
 
 	@Override
@@ -68,8 +74,8 @@ public class Application extends Expression {
 	public Type infer() throws Exception {
 		Type funType;
 		
-		if(this.fun instanceof Constructor) {
-			Constructor constr = (Constructor)this.fun;
+		if(this.fun instanceof TypeConstructionLambda) {
+			TypeConstructionLambda constr = (TypeConstructionLambda)this.fun;
 			funType = constr.infer();
 		}else {
 			funType = this.fun.infer();

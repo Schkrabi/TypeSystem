@@ -5,7 +5,7 @@ import types.Type;
 import types.TypeConcrete;
 import types.TypeRepresentation;
 import types.TypeTuple;
-import expression.Constructor;
+import expression.TypeConstructionLambda;
 import expression.Expression;
 import expression.LitInteger;
 import expression.LitString;
@@ -51,7 +51,7 @@ public class IntStringToIntWrapper extends ConversionWrapper{
 	/**
 	 * Conversion constructor from IntString to Int
 	 */
-	public static final Constructor IntStringToInt = new Constructor(	TypeConcrete.TypeInt,
+	public static final TypeConstructionLambda IntStringToInt = new TypeConstructionLambda(	TypeConcrete.TypeInt,
 																			new Tuple(new Expression[]{ConversionWrapper.arg}),
 																			new TypeTuple(new Type[]{TypeRepresentation.TypeIntString}),
 																			new IntStringToIntWrapper());

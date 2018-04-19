@@ -5,7 +5,7 @@ import types.Type;
 import types.TypeRepresentation;
 import types.TypeTuple;
 import util.RomanNumbers;
-import expression.Constructor;
+import expression.TypeConstructionLambda;
 import expression.Expression;
 import expression.LitString;
 import expression.Literal;
@@ -55,7 +55,7 @@ public class IntStringToIntRomanWrapper extends ConversionWrapper{
 	/**
 	 * Conversion constructor from IntString to IntRoman
 	 */
-	public static final Constructor IntStringToIntRoman = new Constructor(	TypeRepresentation.TypeIntRoman,
+	public static final TypeConstructionLambda IntStringToIntRoman = new TypeConstructionLambda(	TypeRepresentation.TypeIntRoman,
 																			new Tuple(new Expression[]{ConversionWrapper.arg}),
 																			new TypeTuple(new Type[]{TypeRepresentation.TypeIntString}),
 																			new IntStringToIntRomanWrapper());

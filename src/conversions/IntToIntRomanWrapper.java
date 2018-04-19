@@ -6,7 +6,7 @@ import types.TypeConcrete;
 import types.TypeRepresentation;
 import types.TypeTuple;
 import util.RomanNumbers;
-import expression.Constructor;
+import expression.TypeConstructionLambda;
 import expression.Expression;
 import expression.LitString;
 import expression.Literal;
@@ -52,7 +52,7 @@ public class IntToIntRomanWrapper extends ConversionWrapper{
 	/**
 	 * Conversion constructor from Int to IntRoman
 	 */
-	public static final Constructor IntToIntRoman = new Constructor(	TypeRepresentation.TypeIntRoman,
+	public static final TypeConstructionLambda IntToIntRoman = new TypeConstructionLambda(	TypeRepresentation.TypeIntRoman,
 																			new Tuple(new Expression[]{ConversionWrapper.arg}),
 																			new TypeTuple(new Type[]{TypeConcrete.TypeInt}),
 																			new IntToIntRomanWrapper());

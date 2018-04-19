@@ -6,7 +6,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import expression.Application;
-import expression.Constructor;
+import expression.TypeConstructionLambda;
 import expression.Expression;
 import expression.Tuple;
 import util.AppendableException;
@@ -26,7 +26,7 @@ public class TypeConcrete extends Type {
 	/**
 	 * Map for type converting
 	 */
-	private Map<TypeConcrete, Constructor> conversionTable = new TreeMap<TypeConcrete, Constructor>();
+	private Map<TypeConcrete, TypeConstructionLambda> conversionTable = new TreeMap<TypeConcrete, TypeConstructionLambda>();
 
 	public TypeConcrete(String name) {
 		this.name = name;
@@ -86,7 +86,7 @@ public class TypeConcrete extends Type {
 		return false;
 	}
 
-	public void addConversion(TypeConcrete toType, Constructor conversionConstructor)
+	public void addConversion(TypeConcrete toType, TypeConstructionLambda conversionConstructor)
 			throws AppendableException {
 		if (this.conversionTable.containsKey(toType)) {
 			throw new AppendableException(
@@ -96,7 +96,7 @@ public class TypeConcrete extends Type {
 	}
 
 	private Expression instantiateConversionToType(TypeConcrete type, Expression arg) throws Exception {
-		Constructor constructor = this.conversionTable.get(type);
+		TypeConstructionLambda constructor = this.conversionTable.get(type);
 		
 		if (constructor == null) {
 			throw new Exception(

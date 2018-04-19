@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import expression.Application;
-import expression.Constructor;
+import expression.TypeConstructionLambda;
 import expression.DefExpression;
 import expression.Expression;
 import expression.ExtendedLambda;
@@ -204,7 +204,7 @@ public class SemanticParser {
 	private Expression parseTypeConstruction(TypeConcrete type, List<SemanticNode> typeConstructionList)
 			throws AppendableException {
 		int argsCount = typeConstructionList.size() - 1;
-		Constructor c = this.typeEnvironment.getConstructor(type, argsCount);
+		TypeConstructionLambda c = this.typeEnvironment.getConstructor(type, argsCount);
 		Expression[] args = new Expression[argsCount];
 		int i = 0;
 		for (SemanticNode t : SemanticParserStatic.listTail(typeConstructionList)) {
@@ -300,7 +300,7 @@ public class SemanticParser {
 		String typeName = deftypeList.get(1).asSymbol();
 
 		TypeConcrete type = this.typeEnvironment.addType(typeName);
-		Constructor c = this.parseConstructor(type, deftypeList.get(2).asList());
+		TypeConstructionLambda c = this.parseConstructor(type, deftypeList.get(2).asList());
 		this.typeEnvironment.addConstructor(type, c);
 
 		return Expression.EMPTY_EXPRESSION;
@@ -327,7 +327,7 @@ public class SemanticParser {
 		List<SemanticNode> constructorList = defrepList.get(3).asList();
 
 		TypeConcrete type = this.typeEnvironment.addRepresentation(typeName, repName);
-		Constructor c = this.parseConstructor(type, constructorList);
+		TypeConstructionLambda c = this.parseConstructor(type, constructorList);
 		this.typeEnvironment.addConstructor(type, c);
 
 		return Expression.EMPTY_EXPRESSION;
@@ -343,7 +343,7 @@ public class SemanticParser {
 	 * @return Constructor represented by the lamdbaList, that constructs given type
 	 * @throws AppendableException
 	 */
-	private Constructor parseConstructor(TypeConcrete type, List<SemanticNode> lambdaList) throws AppendableException {
+	private TypeConstructionLambda parseConstructor(TypeConcrete type, List<SemanticNode> lambdaList) throws AppendableException {
 		try {
 			Validations.validateLambdaList(lambdaList);
 		} catch (AppendableException e) {
@@ -357,7 +357,7 @@ public class SemanticParser {
 			throw new AppendableException("Constructor argument list must be fully typed");
 		}
 
-		return new Constructor(type, lambda.args, lambda.argsType, lambda.body);
+		return new TypeConstructionLambda(type, lambda.args, lambda.argsType, lambda.body);
 	}
 
 	/**
@@ -503,7 +503,7 @@ public class SemanticParser {
 		}
 		TypeConcrete fromType = this.parseType(l.get(1));
 		TypeConcrete toType = this.parseType(l.get(2));
-		Constructor constructor = this.parseConstructor(toType, l.get(3).asList());
+		TypeConstructionLambda constructor = this.parseConstructor(toType, l.get(3).asList());
 		
 		if(constructor.argsType.values.length != 1
 				|| constructor.argsType.values[0] != fromType)
@@ -532,7 +532,7 @@ public class SemanticParser {
 		}
 		
 		TypeConcrete constructedType = this.parseType(l.get(1));
-		Constructor constructor = this.parseConstructor(constructedType, l.get(2).asList());
+		TypeConstructionLambda constructor = this.parseConstructor(constructedType, l.get(2).asList());
 		
 		this.typeEnvironment.addConstructor(constructedType, constructor);
 		
