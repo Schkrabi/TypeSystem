@@ -36,27 +36,27 @@ public class Application extends Expression {
 	public Expression interpret(Environment env) throws Exception {
 		Expression ifun = fun.interpret(env);
 		
-		if(!MetaLambda.isApplicableExpression(ifun)){
+		if(!MetaFunction.isFunction(ifun)){
 			throw new Exception(ifun.toString() + "is not a function");
 		}
 		
-		Lambda lambda = ((MetaLambda)ifun).getLambda(); //Might want to add comparator here
+		Function f = ((MetaFunction)ifun).getFunction(); //Might want to add comparator here
 				
-		if(lambda.args.values.length != this.args.values.length) {
+		if(f.args.values.length != this.args.values.length) {
 			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected "
-					+ lambda.args.values.length + " got " + this.args.values.length);
+					+ f.args.values.length + " got " + this.args.values.length);
 		}
 		
-		Environment childEnv = new Environment(env);
-		for (int i = 0; i < lambda.args.values.length; i++) {
-			childEnv.put((Variable) lambda.args.values[i], this.args.values[i].interpret(env));
+		Environment childEnv = new Environment(f.creationEnvironment); //Lexical clojure!!!
+		for (int i = 0; i < f.args.values.length; i++) {
+			childEnv.put((Variable) f.args.values[i], this.args.values[i].interpret(env));
 		}
 		
-		TypeArrow lambdaType = TypeArrow.getFunctionType(lambda.getType());
+		TypeArrow lambdaType = TypeArrow.getFunctionType(f.getType());
 		
-		childEnv = Application.autoConvertArgs(childEnv, lambda.args, (TypeTuple)lambdaType.ltype);
+		childEnv = Application.autoConvertArgs(childEnv, f.args, (TypeTuple)lambdaType.ltype);
 		
-		return lambda.body.interpret(childEnv);
+		return f.body.interpret(childEnv);
 	}
 
 	@Override

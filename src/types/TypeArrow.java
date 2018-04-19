@@ -76,6 +76,9 @@ public class TypeArrow extends Type {
 
 	@Override
 	public Expression convertTo(Expression expr, Type toType) throws Exception {
+		if(toType instanceof TypeVariable){
+			return expr;
+		}
 		if(!(toType instanceof TypeArrow)){
 			this.throwConversionError(expr, toType);
 		}

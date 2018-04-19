@@ -53,7 +53,9 @@ public class Lambda extends MetaLambda implements Comparable<Lambda>{
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		return this;
+		Function f = new Function(this.argsType, this.args, this.body, env);
+		f.infer();
+		return f;
 	}
 
 	@Override

@@ -47,7 +47,16 @@ public class ExtendedLambda extends MetaLambda {
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		return this;
+		Set<Function> s = new TreeSet<Function>();
+		
+		for(Lambda l : this.implementations){
+			Function f = (Function)l.interpret(env);
+			s.add(f);
+		}
+		
+		ExtendedFunction ef = new ExtendedFunction(s, env);
+		ef.infer();
+		return ef;
 	}
 
 	@Override
