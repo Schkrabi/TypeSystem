@@ -48,6 +48,7 @@ import types.TypeConcrete;
 import types.TypeRepresentation;
 import util.ClojureCodeGenerator;
 import expression.Expression;
+import expression.Tuple;
 import expression.Variable;
 
 /**
@@ -97,8 +98,9 @@ public class Main {
 		env.put(new Variable("bit-and"), BitAnd.singleton);
 		env.put(new Variable("bit-or"), BitOr.singleton);
 		env.put(new Variable("concat"), Concantenation.singleton);
-		//env.put(new Variable("car"), Car.singleton);
-		//env.put(new Variable("cdr"), Cdr.singleton);
+		env.put(new Variable("car"), Car.singleton);
+		env.put(new Variable("cdr"), Cdr.singleton);
+		env.put(new Variable("nil"), new Tuple(new Expression[0]));
 		
 		return env;
 	}

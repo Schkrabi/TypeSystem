@@ -48,7 +48,7 @@ public class Validations {
 	 * @throws Exception
 	 */
 	public static boolean validateDefTypeList(List<SemanticNode> defTypeList) throws AppendableException {
-		if (defTypeList.size() != 3) {
+		if (defTypeList.size() != 2) {
 			throw new InvalidNumberOfArgsException(2, defTypeList.size());
 		}
 		SemanticNode deftypeSymbol = defTypeList.get(0);
@@ -63,10 +63,10 @@ public class Validations {
 			throw new UnexpectedExpressionException(name);
 		}
 	
-		SemanticNode constructor = defTypeList.get(2);
-		if (constructor.type != SemanticNode.NodeType.LIST) {
-			throw new UnexpectedExpressionException(constructor);
-		}
+		//SemanticNode constructor = defTypeList.get(2);
+		//if (constructor.type != SemanticNode.NodeType.LIST) {
+		//	throw new UnexpectedExpressionException(constructor);
+		//}
 	
 		return true;
 	}
@@ -78,7 +78,7 @@ public class Validations {
 	 * @throws AppendableException
 	 */
 	public static boolean validateDefRepList(List<SemanticNode> defRepList) throws AppendableException{
-		if(defRepList.size() != 4) {
+		if(defRepList.size() != 3) {
 			throw new InvalidNumberOfArgsException(3, defRepList.size() - 1);
 		}
 		SemanticNode defRepSymbol = defRepList.get(0);
@@ -97,10 +97,10 @@ public class Validations {
 			throw new UnexpectedExpressionException(tName);
 		}
 		
-		SemanticNode constructor = defRepList.get(3);
-		if(constructor.type != SemanticNode.NodeType.LIST) {
-			throw new UnexpectedExpressionException(constructor);
-		}
+		//SemanticNode constructor = defRepList.get(3);
+		//if(constructor.type != SemanticNode.NodeType.LIST) {
+		//	throw new UnexpectedExpressionException(constructor);
+		//}
 		
 		return true;
 	}
@@ -302,6 +302,26 @@ public class Validations {
 		
 		if(l.get(1).type != SemanticNode.NodeType.SYMBOL) {
 			throw new UnexpectedExpressionException(l.get(1));
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Validates if l is a valid cons list, throws exception if validation fails
+	 * @param l validated list
+	 * @return true if l is valid define list, false otherwise
+	 * @throws AppendableException
+	 */
+	public static boolean validateConsList(List<SemanticNode> l) throws AppendableException{
+		if(l.size() != 3){
+			throw new InvalidNumberOfArgsException(2, l.size()-1);
+		}
+		
+		SemanticNode cons = l.get(0);
+		if(cons.type != SemanticNode.NodeType.SYMBOL
+				|| !cons.asSymbol().equals(SemanticParserStatic.CONS)) {
+			throw new UnexpectedExpressionException(cons);
 		}
 		
 		return true;

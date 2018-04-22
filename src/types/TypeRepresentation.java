@@ -60,6 +60,11 @@ public class TypeRepresentation extends TypeConcrete {
 		}
 		return this.convertTo(expr, this.baseType);
 	}
+	
+	@Override
+	public TypeConcrete baseType(){
+		return this.baseType;
+	}
 
 	/**
 	 * String representation of int

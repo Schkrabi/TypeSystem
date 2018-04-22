@@ -1,3 +1,13 @@
-(deftype List (lambda (x (List y)) (x y)))
-(defconstructor List (lambda () ()))
-((lambda (w x y z) (List w (List x (List y (List z (List)))))) 1 2 3 4)
+(define fcons (lambda (x y) (lambda (p) (if p x y))))
+(define fcar (lambda (pair) (pair #t)))
+(define fcdr (lambda (pair) (pair #f)))
+
+(deftype List)
+(defrep List Paired)
+(defconstructor List:Paired (lambda (x (List y)) (cons x y)))
+
+(defrep List Functional)
+(defconstructor List:Functional (lambda (x (List y)) (fcons x y)))
+
+(defrep List Empty)
+(defconstructor List:Empty (lambda () nil))

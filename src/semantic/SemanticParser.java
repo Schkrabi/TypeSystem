@@ -184,6 +184,9 @@ public class SemanticParser {
 		case SemanticParserStatic.DEFINE:
 			e = this.parseDefine(specialFormList);
 			break;
+		case SemanticParserStatic.CONS:
+			e = this.parseCons(specialFormList);
+			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
 		}
@@ -267,14 +270,12 @@ public class SemanticParser {
 		List<VariableTypePair> typedArgs = this.parseTypedArgList(lambdaList.get(1).asList());
 
 		TypeTuple argsTypes = null;
-		if (!SemanticParserStatic.isArgListUntypped(typedArgs)
-				|| typedArgs.isEmpty()) {
-			List<Type> tmp = SemanticParserStatic.filterTypesFromTypedArgsList(typedArgs);
-			argsTypes = new TypeTuple(tmp.toArray(new Type[tmp.size()]));
-		}
+		
+		List<Type> tmp = SemanticParserStatic.filterTypesFromTypedArgsList(typedArgs);
+		argsTypes = new TypeTuple(tmp.toArray(new Type[tmp.size()]));
 
-		List<Variable> tmp = SemanticParserStatic.filterVariablesFromTypedArgsList(typedArgs);
-		Tuple lambdaArgs = new Tuple(tmp.toArray(new Expression[tmp.size()]));
+		List<Variable> vtmp = SemanticParserStatic.filterVariablesFromTypedArgsList(typedArgs);
+		Tuple lambdaArgs = new Tuple(vtmp.toArray(new Expression[vtmp.size()]));
 
 		Expression body = this.parseNode(lambdaList.get(2));
 
@@ -300,8 +301,8 @@ public class SemanticParser {
 		String typeName = deftypeList.get(1).asSymbol();
 
 		TypeConcrete type = this.typeEnvironment.addType(typeName);
-		TypeConstructionLambda c = this.parseConstructor(type, deftypeList.get(2).asList());
-		this.typeEnvironment.addConstructor(type, c);
+		//TypeConstructionLambda c = this.parseConstructor(type, deftypeList.get(2).asList());
+		//this.typeEnvironment.addConstructor(type, c);
 
 		return Expression.EMPTY_EXPRESSION;
 	}
@@ -324,11 +325,11 @@ public class SemanticParser {
 
 		String repName = defrepList.get(1).asSymbol();
 		String typeName = defrepList.get(2).asSymbol();
-		List<SemanticNode> constructorList = defrepList.get(3).asList();
+		//List<SemanticNode> constructorList = defrepList.get(3).asList();
 
 		TypeConcrete type = this.typeEnvironment.addRepresentation(typeName, repName);
-		TypeConstructionLambda c = this.parseConstructor(type, constructorList);
-		this.typeEnvironment.addConstructor(type, c);
+		//TypeConstructionLambda c = this.parseConstructor(type, constructorList);
+		//this.typeEnvironment.addConstructor(type, c);
 
 		return Expression.EMPTY_EXPRESSION;
 	}
@@ -558,5 +559,19 @@ public class SemanticParser {
 		return new DefExpression(v, e);
 	}
 	
-	//private Expression parseCons(List<SemanticNode>)
+	/**
+	 * Parses cons special form list
+	 * @param larguments of the cons special form
+	 * @return Tuple Expression
+	 * @throws AppendableException
+	 */
+	private Expression parseCons(List<SemanticNode> l) throws AppendableException{
+		try{
+			Validations.validateConsList(l);
+		}catch(AppendableException e){
+			e.appendMessage("in " + l);
+		}
+		
+		return new Tuple(new Expression[]{this.parseNode(l.get(1)), this.parseNode(l.get(2))});
+	}
 }

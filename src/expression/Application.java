@@ -130,9 +130,9 @@ public class Application extends Expression {
 		StringBuilder s = new StringBuilder();
 		s.append('(');
 		
-		if(!MetaLambda.isApplicableExpression(this.fun)){
+		/*if(!MetaLambda.isApplicableExpression(this.fun)){
 			throw new Exception(this.fun.toString() + " is not a function");
-		}
+		}*/
 		
 		s.append(this.fun.toClojureCode());
 		s.append(' ');

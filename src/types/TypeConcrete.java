@@ -92,6 +92,11 @@ public class TypeConcrete extends Type {
 			throw new AppendableException(
 					"Conversion of " + this.getClass().getName() + " to " + toType.name + " already exists.");
 		}
+		
+		if(this.baseType() != toType.baseType()){
+			throw new AppendableException("Can only create conversions between the same base types!");
+		}
+		
 		this.conversionTable.put(toType, conversionConstructor);
 	}
 
@@ -135,6 +140,14 @@ public class TypeConcrete extends Type {
 			throw new Exception("Invalid converison of " + expr.getType() + " carried out by " + this);
 		}
 		return expr;
+	}
+	
+	/**
+	 * Get the base type of this type or type representation
+	 * @return
+	 */
+	public TypeConcrete baseType(){
+		return this;
 	}
 
 	/**
