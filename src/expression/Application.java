@@ -139,7 +139,22 @@ public class Application extends Expression {
 
 		TypeArrow funType = TypeArrow.getFunctionType(this.fun.getType());
 		
-		TypeTuple argsType = (TypeTuple) funType.ltype;
+		TypeTuple argsType;
+		
+		if(funType.ltype instanceof TypeTuple) {
+			argsType = (TypeTuple) funType.ltype;
+		}
+		else if(funType.ltype instanceof TypeVariable) {
+			Type[] ts = new Type[this.args.values.length];
+			
+			for(int i = 0; i < this.args.values.length; i++) {
+				ts[i] = new TypeVariable(NameGenerator.next());
+			}
+			
+			argsType = new TypeTuple(ts);
+		} else {
+			throw new AppendableException("Problem with functional type of " + this.fun);
+		}
 
 		Iterator<Expression> i = this.args.iterator();
 		Iterator<Type> j = argsType.iterator();

@@ -112,6 +112,9 @@ public class TypeArrow extends Type {
 		else if(type instanceof ForallType){
 			return getFunctionType(((ForallType)type).getBoundType());
 		}
+		else if(type instanceof TypeVariable) {
+			return new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()));
+		}
 		else{
 			throw new Exception(t.toString() + " is not an applicable type");
 		}

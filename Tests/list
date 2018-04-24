@@ -3,11 +3,16 @@
 (define fcdr (lambda (pair) (pair #f)))
 
 (deftype List)
-(defrep List Paired)
-(defconstructor List:Paired (lambda (x (List y)) (cons x y)))
+(defconstructor List (lambda (x (List y)) (cons x y)))
 
-(defrep List Functional)
+(defrep Functional List)
 (defconstructor List:Functional (lambda (x (List y)) (fcons x y)))
+(defconversion List List:Functional (lambda ((List l)) (fcons (car l) (cdr l))))
+(defconversion List:Functional List (lambda ((List:Functional l)) (cons (fcar l) (fcdr l))))
 
-(defrep List Empty)
+(defrep Empty List)
 (defconstructor List:Empty (lambda () nil))
+(defconversion List:Empty List (lambda ((List:Empty l)) l))
+(defconversion List:Empty List:Functional (lambda ((List:Empty l)) l))
+
+(define x (List:Paired 1 (List:Functional 2 (List:Empty))))
