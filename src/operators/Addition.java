@@ -41,7 +41,7 @@ public class Addition extends Lambda {
 	}
 	
 	@Override
-	public Type infer(){
+	public Type infer(Environment env){
 		Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}), TypeConcrete.TypeInt);
 		this.setType(t);
 		return t;
@@ -80,7 +80,7 @@ public class Addition extends Lambda {
 		}
 
 		@Override
-		public Type infer() throws Exception {
+		public Type infer(Environment env) throws Exception {
 			this.setType(TypeConcrete.TypeInt);
 			return TypeConcrete.TypeInt;
 		}

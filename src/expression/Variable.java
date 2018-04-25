@@ -42,8 +42,12 @@ public class Variable extends Expression implements Comparable<Variable> {
 	}
 
 	@Override
-	public Type infer() throws Exception {
+	public Type infer(Environment env) throws Exception {
 		if(this.inferedType != null){
+			return this.getType();
+		}
+		if(env.containsVariable(this)) {
+			this.setType(env.getVariableValue(this).getType());
 			return this.getType();
 		}
 		Type t = new TypeVariable(NameGenerator.next());

@@ -30,26 +30,26 @@ public class Sequence extends Expression implements Iterable<Expression> {
 			// Will interpret head again, but doesn't matter, lambda interprets
 			// to itself and no side effects here
 			Application tmp = new Application(head, this.tail());
-			tmp.infer();
+			tmp.infer(env);
 			return tmp.interpret(env);
 		}
 
 		Tuple t = this.asTuple();
-		t.infer();
+		t.infer(env);
 		
 		return t.interpret(env);
 	}
 
 	@Override
-	public Type infer() throws Exception {
-		Type headType = this.head().infer();
+	public Type infer(Environment env) throws Exception {
+		Type headType = this.head().infer(env);
 		Type ret;
 
 		if (headType.isApplicableType()) {
 			Application tmp = new Application(this.head(), this.tail());
-			ret = tmp.infer();
+			ret = tmp.infer(env);
 		} else {
-			ret = this.asTuple().infer();
+			ret = this.asTuple().infer(env);
 		}
 
 		this.setType(ret);

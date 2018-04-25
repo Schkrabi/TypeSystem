@@ -37,9 +37,9 @@ public class Function extends MetaFunction implements Comparable<Function>{
 	}
 
 	@Override
-	public Type infer() throws Exception {
-		Type inferedArgsType = this.args.infer();
-		Type bodyType = this.body.infer();
+	public Type infer(Environment env) throws Exception {
+		Type inferedArgsType = this.args.infer(new Environment());
+		Type bodyType = this.body.infer(this.creationEnvironment);
 
 		if (this.argsType != null && !Type.unify(this.argsType, inferedArgsType)) {
 			throw new Exception("Infered arguments type " + inferedArgsType + " do not unify with specified args type "

@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import expression.Expression;
 import expression.Tuple;
+import interpretation.Environment;
 
 /**
  * Tuple of types
@@ -150,7 +151,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		}
 		
 		Tuple r = new Tuple(ts);
-		r.infer();
+		r.infer(new Environment());
 
 		return r;
 	}
@@ -169,7 +170,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 			ts[i] = from.convertToDefaultRepresentation(e);
 		}
 		Tuple r = new Tuple(ts);
-		r.infer();		
+		r.infer(new Environment());		
 
 		return new Tuple(ts);
 	}

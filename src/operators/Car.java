@@ -39,8 +39,8 @@ public class Car extends Lambda {
 	}
 	
 	@Override
-	public Type infer() throws Exception{
-		this.args.infer();
+	public Type infer(Environment env) throws Exception{
+		this.args.infer(env);
 		
 		TypeVariable fst = new TypeVariable("_a");
 		TypeVariable snd = new TypeVariable("_b");
@@ -88,7 +88,7 @@ public class Car extends Lambda {
 		}
 
 		@Override
-		public Type infer() throws Exception {
+		public Type infer(Environment env) throws Exception {
 			throw new Exception("Not implemented");
 		}
 

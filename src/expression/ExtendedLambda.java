@@ -55,16 +55,16 @@ public class ExtendedLambda extends MetaLambda {
 		}
 		
 		ExtendedFunction ef = new ExtendedFunction(s, env);
-		ef.infer();
+		ef.infer(env);
 		return ef;
 	}
 
 	@Override
-	public Type infer() throws Exception {
+	public Type infer(Environment env) throws Exception {
 		Type lastType = null;
 
 		for (Lambda l : this.implementations) {
-			Type currentType = l.infer();
+			Type currentType = l.infer(env);
 			
 			if(lastType == null) {
 				lastType = currentType;

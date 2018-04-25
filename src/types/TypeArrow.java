@@ -8,6 +8,7 @@ import util.NameGenerator;
 import expression.Expression;
 import expression.Lambda;
 import expression.Variable;
+import interpretation.Environment;
 
 /**
  * Class for functions types
@@ -85,7 +86,7 @@ public class TypeArrow extends Type {
 		TypeArrow t = (TypeArrow)toType;
 		Variable v = new Variable(NameGenerator.next());
 		Lambda l = new Lambda(v, this.ltype.convertTo(expr, t.ltype));
-		l.infer();
+		l.infer(new Environment());
 		Expression e = this.rtype.convertTo(l, t.rtype);
 		return e;
 	}
@@ -94,7 +95,7 @@ public class TypeArrow extends Type {
 	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
 		Variable v = new Variable(NameGenerator.next());
 		Lambda l = new Lambda(v, this.ltype.convertToDefaultRepresentation(expr));
-		l.infer();
+		l.infer(new Environment());
 		return this.rtype.convertToDefaultRepresentation(l);
 	}
 	

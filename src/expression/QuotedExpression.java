@@ -17,8 +17,8 @@ public class QuotedExpression extends Expression {
 	}
 
 	@Override
-	public Type infer() throws Exception {
-		return this.quoted.infer();
+	public Type infer(Environment env) throws Exception {
+		return this.quoted.infer(env);
 	}
 
 	@Override

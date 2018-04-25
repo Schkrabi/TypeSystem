@@ -15,4 +15,4 @@
 (defconversion List:Empty List (lambda ((List:Empty l)) l))
 (defconversion List:Empty List:Functional (lambda ((List:Empty l)) l))
 
-(define x (List:Paired 1 (List:Functional 2 (List:Empty))))
+(define x (List 1 (List:Functional 2 (List:Empty))))

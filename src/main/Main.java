@@ -49,6 +49,7 @@ import types.TypeRepresentation;
 import util.ClojureCodeGenerator;
 import expression.Expression;
 import expression.Tuple;
+import expression.TypeConstructionLambda;
 import expression.Variable;
 
 /**
@@ -86,7 +87,7 @@ public class Main {
 		}
 	}
 
-	private static Environment initTopLevelEnvironment() {
+	private static Environment initTopLevelEnvironment() throws Exception {
 		Environment env = new Environment();
 		env.put(new Variable("+"), Addition.singleton);
 		env.put(new Variable("-"), Subtraction.singleton);
@@ -101,6 +102,13 @@ public class Main {
 		env.put(new Variable("car"), Car.singleton);
 		env.put(new Variable("cdr"), Cdr.singleton);
 		env.put(new Variable("nil"), new Tuple(new Expression[0]));
+		
+		env.put(new Variable("Int"), TypeConstructionLambda.IntPrimitiveConstructor/*.interpret(new Environment())*/);
+		env.put(new Variable("Int:String"), TypeConstructionLambda.IntStringConstructor/*.interpret(new Environment())*/);
+		env.put(new Variable("Int:Roman"), TypeConstructionLambda.IntRomanConstructor/*.interpret(new Environment())*/);
+		env.put(new Variable("String"), TypeConstructionLambda.StringPrimitiveConstructor/*.interpret(new Environment())*/);
+		env.put(new Variable("Double"), TypeConstructionLambda.DoublePrimitiveConstructor/*.interpret(new Environment())*/);
+		env.put(new Variable("Bool"), TypeConstructionLambda.BoolPrimitiveConstructor/*.interpret(new Environment())*/);
 		
 		return env;
 	}
@@ -118,7 +126,7 @@ public class Main {
 		Main.initTypesConversions();
 	}
 	
-	private static void interpretLoop(){
+	private static void interpretLoop() throws Exception{
 		Scanner input = new Scanner(System.in);
 		Environment topLevel = Main.initTopLevelEnvironment();
 		
@@ -139,7 +147,7 @@ public class Main {
 
 				for (Expression e : exprs) {
 					Expression expr = e.substituteTopLevelVariables(topLevel);
-					expr.infer();
+					expr.infer(topLevel);
 					System.out.println(expr.interpret(topLevel));
 				}
 			}
@@ -150,7 +158,7 @@ public class Main {
 		}
 	}
 	
-	private static void compile(Path inputPath, Path outputPath) throws IOException{
+	private static void compile(Path inputPath, Path outputPath) throws Exception{
 		Reader input = null;
 		Writer output = null;
 		Environment topLevel = Main.initTopLevelEnvironment();
@@ -173,7 +181,7 @@ public class Main {
 			
 			for(Expression e : exprs){
 				Expression expr = e.substituteTopLevelVariables(topLevel);
-				expr.infer();
+				expr.infer(topLevel);
 				l.add(expr);
 			}
 			

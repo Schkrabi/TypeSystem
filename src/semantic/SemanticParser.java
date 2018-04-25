@@ -59,9 +59,9 @@ public class SemanticParser {
 		if (SemanticParserStatic.isSpecialForm(head)) {
 			return this.parseSpecialForm(head.asSymbol(), l);
 		}
-		if (this.typeEnvironment.isType(head)) {
+		/*if (this.typeEnvironment.isType(head)) {
 			return this.parseTypeConstruction(this.parseType(head), l);
-		}
+		}*/
 
 		return this.parseList(l);
 	}
@@ -75,11 +75,24 @@ public class SemanticParser {
 	 */
 	public Expression parseNode(SemanticNode token) throws AppendableException {
 		Literal l;
+		Variable v;
+		
 		switch (token.type) {
 		case SYMBOL:
-			return new Variable(token.asSymbol());
+			v = new Variable(token.asSymbol());
+			if(this.typeEnvironment.isType(token)) {
+				v.setType(this.typeEnvironment.getType(token.asSymbol()).get());
+			}
+			return v;
 		case PAIR:
-			throw new AppendableException("Unexpected pair " + token);
+			//throw new AppendableException("Unexpected pair " + token);
+			v = token.asPair().asVariable();
+			Optional<TypeConcrete> o = this.typeEnvironment.getType(token.asPair().lvalue, token.asPair().rvalue);
+			if(!o.isPresent()) {
+				throw new AppendableException("stupid");
+			}
+			v.setType(o.get());
+			return v;
 		case INT:
 			l = new LitInteger(token.asInt());
 			l.setLiteralType(TypeConcrete.TypeInt);
@@ -300,9 +313,7 @@ public class SemanticParser {
 
 		String typeName = deftypeList.get(1).asSymbol();
 
-		TypeConcrete type = this.typeEnvironment.addType(typeName);
-		//TypeConstructionLambda c = this.parseConstructor(type, deftypeList.get(2).asList());
-		//this.typeEnvironment.addConstructor(type, c);
+		this.typeEnvironment.addType(typeName);
 
 		return Expression.EMPTY_EXPRESSION;
 	}
@@ -325,11 +336,8 @@ public class SemanticParser {
 
 		String repName = defrepList.get(1).asSymbol();
 		String typeName = defrepList.get(2).asSymbol();
-		//List<SemanticNode> constructorList = defrepList.get(3).asList();
 
-		TypeConcrete type = this.typeEnvironment.addRepresentation(typeName, repName);
-		//TypeConstructionLambda c = this.parseConstructor(type, constructorList);
-		//this.typeEnvironment.addConstructor(type, c);
+		this.typeEnvironment.addRepresentation(typeName, repName);
 
 		return Expression.EMPTY_EXPRESSION;
 	}
@@ -532,12 +540,13 @@ public class SemanticParser {
 			throw e;
 		}
 		
-		TypeConcrete constructedType = this.parseType(l.get(1));
+		SemanticNode type= l.get(1);
+		TypeConcrete constructedType = this.parseType(type);
 		TypeConstructionLambda constructor = this.parseConstructor(constructedType, l.get(2).asList());
 		
-		this.typeEnvironment.addConstructor(constructedType, constructor);
+		//this.typeEnvironment.addConstructor(constructedType, constructor);		
 		
-		return Expression.EMPTY_EXPRESSION;
+		return new DefExpression(new Variable(type.toString()), constructor);//TODO improve semantics
 	}
 	
 	/**

@@ -25,8 +25,8 @@ public class Constructor extends Function {
 	}
 
 	@Override
-	public Type infer() throws Exception{
-		Type infered = super.infer();
+	public Type infer(Environment env) throws Exception{
+		Type infered = super.infer(this.creationEnvironment);
 		if(!infered.isApplicableType()){
 			throw new Exception("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
 		}

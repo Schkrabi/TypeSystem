@@ -46,10 +46,10 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Type infer() throws Exception {
+	public Type infer(Environment env) throws Exception {
 		Type types[] = new Type[this.values.length];
 		for (int i = 0; i < this.values.length; i++) {
-			types[i] = this.values[i].infer();
+			types[i] = this.values[i].infer(env);
 		}
 
 		Type t = new TypeTuple(types);

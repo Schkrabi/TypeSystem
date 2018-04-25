@@ -40,11 +40,11 @@ public class ExtendedFunction extends MetaFunction {
 	}
 
 	@Override
-	public Type infer() throws Exception {
+	public Type infer(Environment env) throws Exception {
 		Type lastType = null;
 
 		for (Function f : this.implementations) {
-			Type currentType = f.infer();
+			Type currentType = f.infer(env);
 			
 			if(lastType == null) {
 				lastType = currentType;

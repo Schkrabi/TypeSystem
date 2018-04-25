@@ -33,7 +33,7 @@ public class IntToIntStringWrapper extends ConversionWrapper{
 	}
 
 	@Override
-	public Type infer() throws Exception {
+	public Type infer(Environment env) throws Exception {
 		this.setType(TypeRepresentation.TypeIntString);
 		return TypeRepresentation.TypeIntString;
 	}

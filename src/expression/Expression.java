@@ -33,7 +33,7 @@ public abstract class Expression {
 	 * @return inferred type
 	 * @throws Exception
 	 */
-	public abstract Type infer() throws Exception;
+	public abstract Type infer(Environment env) throws Exception;
 
 	/**
 	 * Returns the inferred type of this expression or null if inference was not
@@ -76,7 +76,7 @@ public abstract class Expression {
 		}
 
 		@Override
-		public Type infer() throws Exception {
+		public Type infer(Environment env) throws Exception {
 			return TypeTuple.EMPTY_TUPLE;
 		}
 

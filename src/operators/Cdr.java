@@ -39,7 +39,7 @@ public class Cdr extends Lambda {
 	}
 	
 	@Override
-	public Type infer(){
+	public Type infer(Environment env){
 		TypeVariable fst = new TypeVariable("_a");
 		TypeVariable snd = new TypeVariable("_b");
 		
@@ -84,7 +84,7 @@ public class Cdr extends Lambda {
 		}
 
 		@Override
-		public Type infer() throws Exception {
+		public Type infer(Environment env) throws Exception {
 			throw new Exception("Not implemented");
 		}
 

@@ -7,6 +7,7 @@ import java.util.TreeSet;
 
 import expression.Application;
 import expression.TypeConstructionLambda;
+import interpretation.Environment;
 import expression.Expression;
 import expression.Tuple;
 import util.AppendableException;
@@ -130,7 +131,7 @@ public class TypeConcrete extends Type {
 		}
 
 		Expression e = this.instantiateConversionToType(t, expr);
-		e.infer();
+		e.infer(new Environment());
 		return e;
 	}
 

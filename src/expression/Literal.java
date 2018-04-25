@@ -28,7 +28,7 @@ public abstract class Literal extends Expression {
 	}
 	
 	@Override
-	public Type infer(){
+	public Type infer(Environment env){
 		return this.getType();
 	}
 	

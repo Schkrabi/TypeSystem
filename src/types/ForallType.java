@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import expression.Expression;
+import interpretation.Environment;
 
 /**
  * Universally quantified type
@@ -85,14 +86,14 @@ public class ForallType extends Type {
 		}
 		ForallType t = (ForallType)toType;
 		Expression e = this.type.convertTo(expr, t);
-		e.infer();
+		e.infer(new Environment());
 		return e;		
 	}
 
 	@Override
 	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
 		Expression e = this.type.convertToDefaultRepresentation(expr);
-		e.infer();
+		e.infer(new Environment());
 		return e;
 	}
 }

@@ -40,7 +40,7 @@ public class Not extends Lambda {
 	}
 	
 	@Override
-	public Type infer(){
+	public Type infer(Environment env){
 		Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeBool}), TypeConcrete.TypeBool);
 		this.setType(t);
 		return t;
@@ -77,7 +77,7 @@ public class Not extends Lambda {
 		}
 
 		@Override
-		public Type infer() throws Exception {
+		public Type infer(Environment env) throws Exception {
 			this.setType(TypeConcrete.TypeBool);
 			return TypeConcrete.TypeBool;
 		}

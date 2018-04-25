@@ -50,10 +50,10 @@ public class IfExpression extends Expression {
 	}
 
 	@Override
-	public Type infer() throws Exception {
-		Type condType = this.condition.infer();
-		Type tBranchType = this.trueBranch.infer();
-		Type fBranchType = this.falseBranch.infer();
+	public Type infer(Environment env) throws Exception {
+		Type condType = this.condition.infer(env);
+		Type tBranchType = this.trueBranch.infer(env);
+		Type fBranchType = this.falseBranch.infer(env);
 
 		if (!Type.unify(tBranchType, fBranchType)) {
 			throw new Exception("Types of if branches do to unify, got: "

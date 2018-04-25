@@ -54,7 +54,7 @@ public class Lambda extends MetaLambda implements Comparable<Lambda>{
 	@Override
 	public Expression interpret(Environment env) throws Exception {
 		Function f = new Function(this.argsType, this.args, this.body, env);
-		f.infer();
+		f.infer(env);
 		return f;
 	}
 
@@ -64,9 +64,9 @@ public class Lambda extends MetaLambda implements Comparable<Lambda>{
 	}
 
 	@Override
-	public Type infer() throws Exception {
-		Type inferedArgsType = this.args.infer();
-		Type bodyType = this.body.infer();
+	public Type infer(Environment env) throws Exception {
+		Type inferedArgsType = this.args.infer(new Environment());
+		Type bodyType = this.body.infer(env);
 
 		if (this.argsType != null && !Type.unify(this.argsType, inferedArgsType)) {
 			throw new Exception("Infered arguments type " + inferedArgsType + " do not unify with specified args type "

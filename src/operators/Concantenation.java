@@ -39,7 +39,7 @@ public class Concantenation extends Lambda {
 	}
 	
 	@Override
-	public Type infer(){
+	public Type infer(Environment env){
 		Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeString, TypeConcrete.TypeString}), TypeConcrete.TypeString);
 		this.setType(t);
 		return t;
@@ -78,7 +78,7 @@ public class Concantenation extends Lambda {
 		}
 
 		@Override
-		public Type infer() throws Exception {
+		public Type infer(Environment env) throws Exception {
 			this.setType(TypeConcrete.TypeString);
 			return TypeConcrete.TypeString;
 		}

@@ -2,16 +2,14 @@ package parser;
 
 import java.util.List;
 
+import expression.Variable;
 import util.AppendableException;
 
 public class SemanticNode {
 	public final NodeType type;
 	private final Object value;
 	
-	public SemanticNode(NodeType type, Object value) /*throws Exception*/{
-		//if(!isAdequateType(type, value)){
-		//	throw new Exception("invalid token type - object combination " + type + " - " + value);
-		//}		
+	public SemanticNode(NodeType type, Object value) {	
 		this.type = type;
 		this.value = value;
 	}
@@ -87,6 +85,14 @@ public class SemanticNode {
 		return (List<SemanticNode>)this.value;
 	}
 	
+	@Override
+	public String toString(){
+		if(this.value == null){
+			return "null";
+		}
+		return this.value.toString();
+	}
+	
 	public enum NodeType {
 		SYMBOL, PAIR, INT, DOUBLE, STRING, BOOL, LIST
 	}
@@ -99,13 +105,14 @@ public class SemanticNode {
 			this.lvalue = lvalue;
 			this.rvalue = rvalue;
 		}
-	}
-	
-	@Override
-	public String toString(){
-		if(this.value == null){
-			return "null";
+		
+		@Override
+		public String toString() {
+			return this.lvalue + ":" + this.rvalue;
 		}
-		return this.value.toString();
+		
+		public Variable asVariable() {
+			return new Variable(this.toString());
+		}
 	}
 }

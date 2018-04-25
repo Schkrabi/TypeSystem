@@ -37,7 +37,7 @@ public class IntStringToIntRomanWrapper extends ConversionWrapper{
 	}
 
 	@Override
-	public Type infer() throws Exception {
+	public Type infer(Environment env) throws Exception {
 		this.setType(TypeRepresentation.TypeIntRoman);
 		return TypeRepresentation.TypeIntRoman;
 	}

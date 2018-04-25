@@ -71,21 +71,21 @@ public class Application extends Expression {
 	}
 
 	@Override
-	public Type infer() throws Exception {
+	public Type infer(Environment env) throws Exception {
 		Type funType;
 		
 		if(this.fun instanceof TypeConstructionLambda) {
 			TypeConstructionLambda constr = (TypeConstructionLambda)this.fun;
-			funType = constr.infer();
+			funType = constr.infer(env);
 		}else {
-			funType = this.fun.infer();
+			funType = this.fun.infer(env);
 		}
 		
 		if(funType instanceof ForallType) {
 			funType = ((ForallType) funType).getBoundType();
 		}
 		
-		Type argsType = this.args.infer();
+		Type argsType = this.args.infer(env);
 
 		if (!(funType.isApplicableType())
 				&& !(funType instanceof TypeVariable)) {

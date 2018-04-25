@@ -36,8 +36,9 @@ public class DefExpression extends Expression {
 	}
 
 	@Override
-	public Type infer() throws Exception {
-		this.defined.infer();
+	public Type infer(Environment env) throws Exception {
+		this.defined.infer(env);
+		env.put(this.name, this.defined);
 		return TypeTuple.EMPTY_TUPLE;
 		// return type.defined.infer();
 	}

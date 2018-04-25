@@ -26,8 +26,8 @@ public class TypeConstructionLambda extends Lambda {
 	}
 
 	@Override
-	public Type infer() throws Exception{
-		Type infered = super.infer();
+	public Type infer(Environment env) throws Exception{
+		Type infered = super.infer(env);
 		if(!infered.isApplicableType()){
 			throw new Exception("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
 		}
@@ -53,7 +53,7 @@ public class TypeConstructionLambda extends Lambda {
 	@Override
 	public Expression interpret(Environment env) throws Exception{
 		Constructor c = new Constructor(this.argsType, this.args, this.body, this.constructedType, env);
-		c.infer();
+		c.infer(env);
 		return c;
 	}
 	
