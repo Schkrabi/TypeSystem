@@ -48,4 +48,13 @@ public class LitInteger extends Literal {
 		this.setType(TypeConcrete.TypeInt);
 		return TypeConcrete.TypeInt;
 	} 
+	
+	@Override
+	public boolean equals(Object o){
+		if(!(o instanceof LitInteger)){
+			return false;
+		}
+		LitInteger other = (LitInteger) o;
+		return this.value == other.value;
+	}
 }

@@ -12,14 +12,14 @@ import expression.LitInteger;
 import expression.Tuple;
 import expression.Variable;
 
-public class Equality extends Function {
+public class NumericEqual extends Function {
 
 	/**
 	 * Wrapped equality lambda object
 	 */
-	public static final Equality singleton = new Equality();
+	public static final NumericEqual singleton = new NumericEqual();
 
-	private Equality() {
+	private NumericEqual() {
 		super(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}),
 				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }),
 				EqWrapper.singleton, 

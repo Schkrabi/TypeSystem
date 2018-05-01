@@ -18,7 +18,8 @@ import operators.Addition;
 import operators.Car;
 import operators.Cdr;
 import operators.Concantenation;
-import operators.Equality;
+import operators.Equals;
+import operators.NumericEqual;
 import operators.LesserThan;
 import operators.Subtraction;
 import operators.Multiplication;
@@ -95,7 +96,7 @@ public class Main {
 		env.put(new Variable("-"), Subtraction.singleton);
 		env.put(new Variable("*"), Multiplication.singleton);
 		env.put(new Variable("/"), Division.singleton);
-		env.put(new Variable("="), Equality.singleton);
+		env.put(new Variable("="), NumericEqual.singleton);
 		env.put(new Variable("<"), LesserThan.singleton);
 		env.put(new Variable("and"), And.singleton);
 		env.put(new Variable("or"), Or.singleton);
@@ -106,6 +107,7 @@ public class Main {
 		env.put(new Variable("car"), Car.singleton);
 		env.put(new Variable("cdr"), Cdr.singleton);
 		env.put(new Variable("nil"), new Tuple(new Expression[0]));
+		env.put(new Variable("equals?"), Equals.singleton);
 		
 		env.put(new Variable("Int"), TypeConstructionLambda.IntPrimitiveConstructor/*.interpret(new Environment())*/);
 		env.put(new Variable("Int:String"), TypeConstructionLambda.IntStringConstructor/*.interpret(new Environment())*/);

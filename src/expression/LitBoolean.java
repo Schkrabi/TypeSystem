@@ -51,4 +51,13 @@ public class LitBoolean extends Literal {
 		this.setType(TypeConcrete.TypeBool);
 		return TypeConcrete.TypeBool;
 	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(!(o instanceof LitBoolean)){
+			return false;
+		}
+		LitBoolean other = (LitBoolean) o;
+		return this.value == other.value;
+	}
 }

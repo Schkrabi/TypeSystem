@@ -48,4 +48,13 @@ public class LitDouble extends Literal {
 		this.setType(TypeConcrete.TypeDouble);
 		return TypeConcrete.TypeDouble;
 	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(!(o instanceof LitDouble)){
+			return false;
+		}
+		LitDouble other = (LitDouble)o;
+		return this.value == other.value;
+	}
 }

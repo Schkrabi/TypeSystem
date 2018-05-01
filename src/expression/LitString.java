@@ -45,4 +45,13 @@ public class LitString extends Literal {
 		this.setType(TypeConcrete.TypeString);
 		return TypeConcrete.TypeString;
 	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(!(o instanceof LitString)){
+			return false;
+		}
+		LitString other = (LitString) o;
+		return this.value.equals(other.value);
+	}
 }

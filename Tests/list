@@ -16,3 +16,5 @@
 (defconversion List:Empty List:Functional (lambda ((List:Empty l)) l))
 
 (define x (List 1 (List:Functional 2 (List:Empty))))
+
+(define reverse-list (lambda (l) (
