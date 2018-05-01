@@ -26,6 +26,7 @@ public class Concantenation extends Lambda {
 		super(new Tuple(
 				new Variable[] { new Variable("_x"), new Variable("_y") }),
 				ConCatWrapper.singleton);
+		this.infer(new Environment());
 	}
 
 	@Override

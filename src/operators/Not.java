@@ -27,6 +27,7 @@ public class Not extends Lambda {
 		super(new Tuple(
 				new Variable[] { new Variable("_x") }),
 				NotWrapper.singleton);
+		this.infer(new Environment());
 	}
 
 	@Override

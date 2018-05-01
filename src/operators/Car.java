@@ -26,6 +26,7 @@ public class Car extends Lambda {
 		super(new Tuple(
 				new Variable[] { new Variable("_x") }),
 				CarWrapper.singleton);
+		this.infer(new Environment());
 	}
 
 	@Override
@@ -39,9 +40,7 @@ public class Car extends Lambda {
 	}
 	
 	@Override
-	public Type infer(Environment env) throws Exception{
-		this.args.infer(env);
-		
+	public Type infer(Environment env) {		
 		TypeVariable fst = new TypeVariable("_a");
 		TypeVariable snd = new TypeVariable("_b");
 		

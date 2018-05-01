@@ -6,33 +6,30 @@ import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeTuple;
 import expression.Expression;
-import expression.Lambda;
+import expression.Function;
 import expression.LitBoolean;
+import expression.LitInteger;
 import expression.Tuple;
 import expression.Variable;
 
-/**
- * Wrapper class for And lambda
- * 
- * @author Mgr. Radomir Skrabal
- * 
- */
-public class And extends Lambda {
-	/**
-	 * Wrapped addition lambda object
-	 */
-	public static final And singleton = new And();
+public class Equality extends Function {
 
-	private And() {
-		super(new Tuple(
-				new Variable[] { new Variable("_x"), new Variable("_y") }),
-				AndWrapper.singleton);
+	/**
+	 * Wrapped equality lambda object
+	 */
+	public static final Equality singleton = new Equality();
+
+	private Equality() {
+		super(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}),
+				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }),
+				EqWrapper.singleton, 
+				new Environment());
 		this.infer(new Environment());
 	}
 
 	@Override
 	public String toString() {
-		return "AND";
+		return "=";
 	}
 	
 	@Override
@@ -42,40 +39,41 @@ public class And extends Lambda {
 	
 	@Override
 	public Type infer(Environment env){
-		Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeBool, TypeConcrete.TypeBool}), TypeConcrete.TypeBool);
+		Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}), TypeConcrete.TypeBool);
 		this.setType(t);
 		return t;
 	}
 	
 	@Override
 	public String toClojureCode() throws Exception {
-		return "and";
+		return "==";
 	}
 
 	/**
-	 * Private wrapper class for the body of and
+	 * Private wrapper class for the body of addition
 	 * 
 	 * @author Mgr. Radomir Skrabal
 	 * 
 	 */
-	private static class AndWrapper extends Expression {
+	private static class EqWrapper extends Expression {
 		/**
 		 * The body expression object
 		 */
-		public static final AndWrapper singleton = new AndWrapper();
+		public static final EqWrapper singleton = new EqWrapper();
 
-		private AndWrapper() {}
+		private EqWrapper() {
+		}
 
 		@Override
 		public Expression interpret(Environment env) throws Exception {
-			LitBoolean x = (LitBoolean) (env.getVariableValue(new Variable("_x")).interpret(env));
-			LitBoolean y = (LitBoolean) (env.getVariableValue(new Variable("_y")).interpret(env));
+			LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
+			LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
 			if (x == null || y == null) {
 				return this;
 			}
 
-			return x.value && y.value ? LitBoolean.TRUE : LitBoolean.FALSE;
+			return x.value == y.value ? LitBoolean.TRUE : LitBoolean.FALSE;
 		}
 
 		@Override
@@ -91,7 +89,7 @@ public class And extends Lambda {
 
 		@Override
 		public String toClojureCode() throws Exception {
-			throw new Exception("Use of AndWrapper for Clojure compilation is not supported.");
+			throw new Exception("Use of" + this.getClass().getName() + "for Clojure compilation is not supported.");
 		}
 	}
 }

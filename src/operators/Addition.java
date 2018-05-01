@@ -28,6 +28,7 @@ public class Addition extends Lambda {
 		super(new Tuple(
 				new Variable[] { new Variable("_x"), new Variable("_y") }),
 				AddWrapper.singleton);
+		this.infer(new Environment());
 	}
 
 	@Override

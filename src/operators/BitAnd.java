@@ -27,6 +27,7 @@ public class BitAnd extends Lambda {
 		super(new Tuple(
 				new Variable[] { new Variable("_x"), new Variable("_y") }),
 				BitAndWrapper.singleton);
+		this.infer(new Environment());
 	}
 
 	@Override

@@ -39,4 +39,10 @@ public class LitString extends Literal {
 	public String toClojureCode() throws Exception {
 		return '"' + this.value + '"';
 	}
+
+	@Override
+	public Type infer(Environment env) throws Exception {
+		this.setType(TypeConcrete.TypeString);
+		return TypeConcrete.TypeString;
+	}
 }

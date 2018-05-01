@@ -27,6 +27,7 @@ public class Or extends Lambda {
 		super(new Tuple(
 				new Variable[] { new Variable("_x"), new Variable("_y") }),
 				OrWrapper.singleton);
+		this.infer(new Environment());
 	}
 
 	@Override

@@ -49,7 +49,11 @@ public class Application extends Expression {
 		
 		Environment childEnv = new Environment(f.creationEnvironment); //Lexical clojure!!!
 		for (int i = 0; i < f.args.values.length; i++) {
-			childEnv.put((Variable) f.args.values[i], this.args.values[i].interpret(env));
+			Expression e = this.args.values[i].interpret(env);
+			Type t = e.infer(env);
+			Variable v = new Variable(((Variable) f.args.values[i]).name);
+			v.setType(t);
+			childEnv.put(v, e);
 		}
 		
 		TypeArrow lambdaType = TypeArrow.getFunctionType(f.getType());
@@ -193,8 +197,8 @@ public class Application extends Expression {
 
 		for (int i = 0; i < args.values.length; i++) {
 			Variable name = (Variable) args.values[i];
-			Type fromType = e.get((Variable) args.values[i]).getType();
-			Expression arg = e.get((Variable) args.values[i]);
+			Type fromType = e.getVariableValue((Variable) args.values[i]).getType();
+			Expression arg = e.getVariableValue((Variable) args.values[i]);
 			Type toType = argTypes.values[i];
 			
 			ret.put(name, fromType.convertTo(arg, toType));

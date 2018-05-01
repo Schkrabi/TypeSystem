@@ -27,6 +27,7 @@ public class BitOr extends Lambda {
 		super(new Tuple(
 				new Variable[] { new Variable("_x"), new Variable("_y") }),
 				BitOrWrapper.singleton);
+		this.infer(new Environment());
 	}
 
 	@Override

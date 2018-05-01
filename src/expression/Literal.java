@@ -27,11 +27,6 @@ public abstract class Literal extends Expression {
 		this.setType(type);
 	}
 	
-	@Override
-	public Type infer(Environment env){
-		return this.getType();
-	}
-	
 	/**
 	 * Wrapper for conversions
 	 * 

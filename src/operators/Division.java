@@ -27,6 +27,7 @@ public class Division extends Lambda {
 		super(new Tuple(
 				new Variable[] { new Variable("_x"), new Variable("_y") }),
 				DivWrapper.singleton);
+		this.infer(new Environment());
 	}
 
 	@Override

@@ -26,6 +26,7 @@ public class Subtraction extends Lambda {
 
 	private Subtraction() {
 		super(new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }), SubWrapper.singleton);
+		this.infer(new Environment());
 	}
 
 	@Override

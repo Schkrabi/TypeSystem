@@ -42,4 +42,10 @@ public class LitDouble extends Literal {
 	public String toClojureCode() throws Exception {
 		return Double.toString(this.value);
 	}
+
+	@Override
+	public Type infer(Environment env) throws Exception {
+		this.setType(TypeConcrete.TypeDouble);
+		return TypeConcrete.TypeDouble;
+	}
 }

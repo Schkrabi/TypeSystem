@@ -26,6 +26,7 @@ public class Cdr extends Lambda {
 		super(new Tuple(
 				new Variable[] { new Variable("_x") }),
 				CdrWrapper.singleton);
+		this.infer(new Environment());
 	}
 
 	@Override

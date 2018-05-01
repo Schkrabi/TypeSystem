@@ -41,5 +41,11 @@ public class LitInteger extends Literal {
 	@Override
 	public String toString(){
 		return Integer.toString(this.value);
+	}
+
+	@Override
+	public Type infer(Environment env) throws Exception {
+		this.setType(TypeConcrete.TypeInt);
+		return TypeConcrete.TypeInt;
 	} 
 }

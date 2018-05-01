@@ -27,6 +27,7 @@ public class Multiplication extends Lambda{
 		super(new Tuple(
 				new Variable[] { new Variable("_x"), new Variable("_y") }),
 				MultWrapper.singleton);
+		this.infer(new Environment());
 	}
 
 	@Override

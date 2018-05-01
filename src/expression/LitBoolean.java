@@ -45,4 +45,10 @@ public class LitBoolean extends Literal {
 	public String toClojureCode() throws Exception {
 		return Boolean.toString(this.value);
 	}
+
+	@Override
+	public Type infer(Environment env) throws Exception {
+		this.setType(TypeConcrete.TypeBool);
+		return TypeConcrete.TypeBool;
+	}
 }

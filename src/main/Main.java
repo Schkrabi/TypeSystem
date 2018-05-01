@@ -18,6 +18,8 @@ import operators.Addition;
 import operators.Car;
 import operators.Cdr;
 import operators.Concantenation;
+import operators.Equality;
+import operators.LesserThan;
 import operators.Subtraction;
 import operators.Multiplication;
 import operators.Division;
@@ -93,6 +95,8 @@ public class Main {
 		env.put(new Variable("-"), Subtraction.singleton);
 		env.put(new Variable("*"), Multiplication.singleton);
 		env.put(new Variable("/"), Division.singleton);
+		env.put(new Variable("="), Equality.singleton);
+		env.put(new Variable("<"), LesserThan.singleton);
 		env.put(new Variable("and"), And.singleton);
 		env.put(new Variable("or"), Or.singleton);
 		env.put(new Variable("not"), Not.singleton);
