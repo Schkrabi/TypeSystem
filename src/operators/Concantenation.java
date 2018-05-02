@@ -6,7 +6,7 @@ import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeTuple;
 import expression.Expression;
-import expression.Lambda;
+import expression.Function;
 import expression.LitString;
 import expression.Tuple;
 import expression.Variable;
@@ -16,16 +16,17 @@ import expression.Variable;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Concantenation extends Lambda {
+public class Concantenation extends Function {
 	/**
 	 * Wrapped addition lambda object
 	 */
 	public static final Concantenation singleton = new Concantenation();
 
 	private Concantenation() {
-		super(new Tuple(
-				new Variable[] { new Variable("_x"), new Variable("_y") }),
-				ConCatWrapper.singleton);
+		super(	new TypeTuple(new Type[] { TypeConcrete.TypeString, TypeConcrete.TypeString}),
+				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }),
+				ConCatWrapper.singleton,
+				new Environment());
 		this.infer(new Environment());
 	}
 

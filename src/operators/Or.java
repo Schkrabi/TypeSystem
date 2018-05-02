@@ -6,7 +6,7 @@ import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeTuple;
 import expression.Expression;
-import expression.Lambda;
+import expression.Function;
 import expression.LitBoolean;
 import expression.Tuple;
 import expression.Variable;
@@ -17,16 +17,17 @@ import expression.Variable;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class Or extends Lambda {
+public class Or extends Function {
 	/**
 	 * Wrapped addition lambda object
 	 */
 	public static final Or singleton = new Or();
 
 	private Or() {
-		super(new Tuple(
-				new Variable[] { new Variable("_x"), new Variable("_y") }),
-				OrWrapper.singleton);
+		super(	new TypeTuple(new Type[] { TypeConcrete.TypeBool, TypeConcrete.TypeBool}),
+				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }),
+				OrWrapper.singleton,
+				new Environment());
 		this.infer(new Environment());
 	}
 

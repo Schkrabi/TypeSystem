@@ -6,7 +6,7 @@ import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeTuple;
 import expression.Expression;
-import expression.Lambda;
+import expression.Function;
 import expression.LitInteger;
 import expression.Tuple;
 import expression.Variable;
@@ -17,16 +17,17 @@ import expression.Variable;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class Division extends Lambda {
+public class Division extends Function {
 	/**
 	 * Wrapped addition lambda object
 	 */
 	public static final Division singleton = new Division();
 
 	private Division() {
-		super(new Tuple(
-				new Variable[] { new Variable("_x"), new Variable("_y") }),
-				DivWrapper.singleton);
+		super(	new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt}),
+				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }),
+				DivWrapper.singleton,
+				new Environment());
 		this.infer(new Environment());
 	}
 

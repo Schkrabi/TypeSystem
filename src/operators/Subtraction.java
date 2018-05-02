@@ -1,7 +1,7 @@
 package operators;
 
 import expression.Expression;
-import expression.Lambda;
+import expression.Function;
 import expression.LitInteger;
 import expression.Tuple;
 import expression.Variable;
@@ -17,7 +17,7 @@ import types.TypeTuple;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Subtraction extends Lambda {
+public class Subtraction extends Function {
 
 	/**
 	 * Wrapped subtraction lambda object
@@ -25,7 +25,10 @@ public class Subtraction extends Lambda {
 	public static final Subtraction singleton = new Subtraction();
 
 	private Subtraction() {
-		super(new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }), SubWrapper.singleton);
+		super(	new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt}),
+				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }),
+				SubWrapper.singleton,
+				new Environment());
 		this.infer(new Environment());
 	}
 

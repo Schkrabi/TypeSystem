@@ -6,7 +6,7 @@ import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeTuple;
 import expression.Expression;
-import expression.Lambda;
+import expression.Function;
 import expression.LitInteger;
 import expression.Tuple;
 import expression.Variable;
@@ -17,16 +17,17 @@ import expression.Variable;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class BitAnd extends Lambda {
+public class BitAnd extends Function {
 	/**
 	 * Wrapped addition lambda object
 	 */
 	public static final BitAnd singleton = new BitAnd();
 
 	private BitAnd() {
-		super(new Tuple(
-				new Variable[] { new Variable("_x"), new Variable("_y") }),
-				BitAndWrapper.singleton);
+		super(	new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt}),
+				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }),
+				BitAndWrapper.singleton,
+				new Environment());
 		this.infer(new Environment());
 	}
 

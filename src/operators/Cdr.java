@@ -7,7 +7,7 @@ import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
 import expression.Expression;
-import expression.Lambda;
+import expression.Function;
 import expression.Tuple;
 import expression.Variable;
 
@@ -16,16 +16,17 @@ import expression.Variable;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Cdr extends Lambda {
+public class Cdr extends Function {
 	/**
 	 * Wrapped addition lambda object
 	 */
 	public static final Cdr singleton = new Cdr();
 
 	private Cdr() {
-		super(new Tuple(
-				new Variable[] { new Variable("_x") }),
-				CdrWrapper.singleton);
+		super(new TypeTuple(new Type[] {new TypeTuple(new Type[] {new TypeVariable("_a"), new TypeVariable("_b")})}),
+				new Tuple(new Expression[] {new Variable("_x")}),
+				CdrWrapper.singleton,
+				new Environment());
 		this.infer(new Environment());
 	}
 
@@ -41,8 +42,8 @@ public class Cdr extends Lambda {
 	
 	@Override
 	public Type infer(Environment env){
-		TypeVariable fst = new TypeVariable("_a");
-		TypeVariable snd = new TypeVariable("_b");
+		TypeVariable fst = (TypeVariable)((TypeTuple)this.argsType.values[0]).values[0];
+		TypeVariable snd = (TypeVariable)((TypeTuple)this.argsType.values[0]).values[1];
 		
 		Type t = new TypeArrow(new TypeTuple(new Type[]{ new TypeTuple(new Type[]{ fst, snd})}), snd);
 		this.setType(t);

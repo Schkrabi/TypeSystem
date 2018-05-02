@@ -6,7 +6,7 @@ import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeTuple;
 import expression.Expression;
-import expression.Lambda;
+import expression.Function;
 import expression.LitBoolean;
 import expression.Tuple;
 import expression.Variable;
@@ -17,16 +17,17 @@ import expression.Variable;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class Not extends Lambda {
+public class Not extends Function {
 	/**
 	 * Wrapped addition lambda object
 	 */
 	public static final Not singleton = new Not();
 
 	private Not() {
-		super(new Tuple(
-				new Variable[] { new Variable("_x") }),
-				NotWrapper.singleton);
+		super(	new TypeTuple(new Type[] {TypeConcrete.TypeBool}),
+				new Tuple(new Variable[] { new Variable("_x") }),
+				NotWrapper.singleton,
+				new Environment());
 		this.infer(new Environment());
 	}
 

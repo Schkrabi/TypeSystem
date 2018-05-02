@@ -78,12 +78,12 @@ public class Application extends Expression {
 	public Type infer(Environment env) throws Exception {
 		Type funType;
 		
-		if(this.fun instanceof TypeConstructionLambda) {
-			TypeConstructionLambda constr = (TypeConstructionLambda)this.fun;
+		/*if(this.fun instanceof Constructor) { 
+			Constructor constr = (Constructor)this.fun;
 			funType = constr.infer(env);
-		}else {
+		}else {*/
 			funType = this.fun.infer(env);
-		}
+		//}
 		
 		if(funType instanceof ForallType) {
 			funType = ((ForallType) funType).getBoundType();
