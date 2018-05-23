@@ -57,7 +57,13 @@ public abstract class Type implements Comparable<Type> {
 	 */
 	public static boolean unify(Type m, Type n) {
 		Type s = m.getRep();
+		if(s instanceof ForallType) {
+			s = ((ForallType)s).getBoundType();
+		}
 		Type t = n.getRep();
+		if(t instanceof ForallType) {
+			t = ((ForallType)t).getBoundType();
+		}
 
 		if (s == t) {
 			return true;

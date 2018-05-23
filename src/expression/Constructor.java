@@ -39,4 +39,9 @@ public class Constructor extends Function {
 		
 		return cType;
 	}
+	
+	@Override
+	public String toString() {
+		return "(" + this.constructedType.toString() + " " + this.args.toString() + " " + this.body.toString() + ")";
+	}
 }

@@ -60,4 +60,8 @@ public class DefExpression extends Expression {
 		return s.toString();
 	}
 
+	@Override
+	public String toString() {
+		return "(define " + this.name.toString() + " " + this.defined.toString() + ")"; 
+	}
 }

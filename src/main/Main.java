@@ -76,6 +76,10 @@ public class Main {
 			//Interactive parser mode
 			Main.interpretLoop();
 		}
+		else if(args.length == 1) {
+			//Load code and interpret further
+			Main.load(Paths.get(args[0]));
+		}
 		else if(args.length == 2){
 			//Compiler mode
 			Main.compile(Paths.get(args[0]), Paths.get(args[1]));
@@ -201,6 +205,63 @@ public class Main {
 			}
 			if(output != null){
 				output.close();
+			}
+		}
+	}
+	
+	private static void load(Path inputPath) throws Exception {
+		Reader input = null;
+		Writer output = null;
+		Environment topLevel = Main.initTopLevelEnvironment();
+		
+		try{
+			input = Files.newBufferedReader(inputPath);
+			
+			CharStream charStream = new ANTLRInputStream(input);
+			TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
+			SchemeParser parser = new SchemeParser(tokens);
+			ExprsContext exprsContext = parser.exprs();
+			
+			List<Expression> l = new LinkedList<Expression>();
+			List<Expression> exprs = new ArrayList<Expression>();
+			SemanticParser semanticParser = new SemanticParser();
+			
+			for(SemanticNode s : exprsContext.val){
+				exprs.add(semanticParser.parseNode(s));
+			}
+			
+			for(Expression e : exprs){
+				Expression expr = e.substituteTopLevelVariables(topLevel);
+				expr.infer(topLevel);
+				expr.infer(topLevel);
+				System.out.println(expr.interpret(topLevel));
+			}
+			
+			Scanner inputI = new Scanner(System.in);
+			while (true) {
+				System.out.print(">");
+				charStream = new ANTLRInputStream(inputI.nextLine());
+				tokens = new CommonTokenStream(new SchemeLexer(charStream));
+				parser = new SchemeParser(tokens);
+
+				exprsContext = parser.exprs();
+				exprs = new ArrayList<Expression>();
+				
+				for(SemanticNode s : exprsContext.val){
+					exprs.add(semanticParser.parseNode(s));
+				}
+
+				for (Expression e : exprs) {
+					Expression expr = e.substituteTopLevelVariables(topLevel);
+					expr.infer(topLevel);
+					System.out.println(expr.interpret(topLevel));
+				}
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}finally{
+			if(input != null){
+				input.close();
 			}
 		}
 	}

@@ -28,8 +28,15 @@ public class Tuple extends Expression implements Iterable<Expression> {
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		return this; // Should tuple intepret to itself? Probably yes due to
-						// lazyness
+		Expression[] vls = new Expression[this.values.length];
+		
+		for(int i = 0; i < this.values.length; i++) {
+			vls[i] = this.values[i].interpret(env);
+		}
+		Tuple t = new Tuple(vls);
+		t.setType(this.getType());
+		return t;
+		
 	}
 
 	@Override

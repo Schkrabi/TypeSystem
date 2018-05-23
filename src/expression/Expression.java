@@ -55,7 +55,7 @@ public abstract class Expression {
 	 * @param value
 	 *            type to be set
 	 */
-	protected void setType(Type value) {
+	public void setType(Type value) {
 		this.inferedType = value;
 	}
 	

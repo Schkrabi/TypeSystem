@@ -136,7 +136,7 @@ public class Validations {
 		}
 	
 		try{
-			Validations.validateImplementations(l.subList(3, l.size()-1));
+			Validations.validateImplementations(l.subList(3, l.size()));
 		}catch(AppendableException e){
 			e.appendMessage(" in " + l);
 			throw e;
@@ -170,7 +170,7 @@ public class Validations {
 	 */
 	public static boolean validateImplementation(List<SemanticNode> l) throws AppendableException{
 		if(l.size() != 2) {
-			throw new AppendableException("Badly formed implementation" + l);
+			throw new AppendableException("Badly formed implementation " + l);
 		}
 		
 		SemanticNode typeList = l.get(0);

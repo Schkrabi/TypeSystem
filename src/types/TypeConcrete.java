@@ -109,7 +109,9 @@ public class TypeConcrete extends Type {
 					"No conversion from " + this + " to type " + type + " exists");
 		}
 
-		return new Application(constructor, new Tuple(new Expression[]{arg}));
+		Application a = new Application(constructor, new Tuple(new Expression[]{arg}));
+		a.setType(type);
+		return a;
 	}
 
 	@Override
@@ -131,7 +133,7 @@ public class TypeConcrete extends Type {
 		}
 
 		Expression e = this.instantiateConversionToType(t, expr);
-		e.infer(new Environment());
+		
 		return e;
 	}
 

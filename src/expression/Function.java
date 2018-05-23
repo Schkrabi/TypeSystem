@@ -82,4 +82,8 @@ public class Function extends MetaFunction implements Comparable<Function>{
 		return this.argsType.compareTo(o.argsType);
 	}
 
+	@Override
+	public String toString() {
+		return "(func " + this.args.toString() + " " + this.body.toString() + ")";
+	}
 }

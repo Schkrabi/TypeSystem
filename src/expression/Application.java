@@ -50,7 +50,7 @@ public class Application extends Expression {
 		Environment childEnv = new Environment(f.creationEnvironment); //Lexical clojure!!!
 		for (int i = 0; i < f.args.values.length; i++) {
 			Expression e = this.args.values[i].interpret(env);
-			Type t = e.infer(env);
+			Type t = e.getType();
 			Variable v = new Variable(((Variable) f.args.values[i]).name);
 			v.setType(t);
 			childEnv.put(v, e);
