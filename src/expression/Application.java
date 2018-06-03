@@ -58,7 +58,7 @@ public class Application extends Expression {
 		
 		TypeArrow lambdaType = TypeArrow.getFunctionType(f.getType());
 		
-		childEnv = Application.autoConvertArgs(childEnv, f.args, (TypeTuple)lambdaType.ltype);
+		childEnv = Application.autoConvertArgs(childEnv, f.args, lambdaType.ltype);
 		
 		Expression rslt = f.body.interpret(childEnv); 
 		
@@ -192,7 +192,14 @@ public class Application extends Expression {
 	 * @return new environment where all the arguments will be converted
 	 * @throws Exception
 	 */
-	private static Environment autoConvertArgs(Environment e, Tuple args, TypeTuple argTypes) throws Exception {
+	private static Environment autoConvertArgs(Environment e, Tuple args, Type argType) throws Exception {
+		if(argType instanceof TypeVariable){
+			return e;
+		}
+		if(!(argType instanceof TypeTuple)){
+			throw new AppendableException("Args type of function must be single vartiable or typetuple got " + argType);
+		}
+		TypeTuple argTypes = (TypeTuple)argType;
 		Environment ret = new Environment(e.parent);
 
 		for (int i = 0; i < args.values.length; i++) {

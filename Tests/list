@@ -3,23 +3,25 @@
 (define fcdr (lambda (pair) (pair #f)))
 
 (deftype List)
-(defconstructor List (lambda (x (List y)) (cons x y)))
+
+(defrep Default List)
+(defconstructor List:Default (lambda (x (List y)) (cons x y)))
 
 (defrep Functional List)
 (defconstructor List:Functional (lambda (x (List y)) (fcons x y)))
-(defconversion List List:Functional (lambda ((List l)) (fcons (car l) (cdr l))))
-(defconversion List:Functional List (lambda ((List:Functional l)) (cons (fcar l) (fcdr l))))
+(defconversion List:Default List:Functional (lambda ((ListDefault l)) (fcons (car l) (cdr l))))
+(defconversion List:Functional List:Default (lambda ((List:Functional l)) (cons (fcar l) (fcdr l))))
 
 (defrep Empty List)
 (defconstructor List:Empty (lambda () nil))
-(defconversion List:Empty List (lambda ((List:Empty l)) l))
+(defconversion List:Empty List:Default (lambda ((List:Empty l)) l))
 (defconversion List:Empty List:Functional (lambda ((List:Empty l)) l))
 
-(define x (List 1 (List 2 (List 3 (List:Empty)))))
+(define x (List:Default 1 (List:Default 2 (List:Default 3 (List:Empty)))))
 
 (define head-list (elambda (l) (List:Empty)
-					(List) (car l)
-					(List:Functional) (fcar l)
+					(List) (car (deconstruct l))
+					(List:Functional) (fcar (deconstruct l))
 					(List:Empty) (List:Empty)))
 (define tail-list (elambda (l) (List:Empty)
           					(List) (cdr l)
