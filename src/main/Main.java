@@ -18,6 +18,7 @@ import operators.Addition;
 import operators.Car;
 import operators.Cdr;
 import operators.Concantenation;
+import operators.Deconstruct;
 import operators.Equals;
 import operators.NumericEqual;
 import operators.LesserThan;
@@ -96,29 +97,30 @@ public class Main {
 
 	private static Environment initTopLevelEnvironment() throws Exception {
 		Environment env = new Environment();
-		env.put(new Variable("+"), Addition.singleton);
-		env.put(new Variable("-"), Subtraction.singleton);
-		env.put(new Variable("*"), Multiplication.singleton);
-		env.put(new Variable("/"), Division.singleton);
-		env.put(new Variable("="), NumericEqual.singleton);
-		env.put(new Variable("<"), LesserThan.singleton);
-		env.put(new Variable("and"), And.singleton);
-		env.put(new Variable("or"), Or.singleton);
-		env.put(new Variable("not"), Not.singleton);
-		env.put(new Variable("bit-and"), BitAnd.singleton);
-		env.put(new Variable("bit-or"), BitOr.singleton);
-		env.put(new Variable("concat"), Concantenation.singleton);
-		env.put(new Variable("car"), Car.singleton);
-		env.put(new Variable("cdr"), Cdr.singleton);
+		env.put(new Variable(Addition.singleton.toString()), Addition.singleton);
+		env.put(new Variable(Subtraction.singleton.toString()), Subtraction.singleton);
+		env.put(new Variable(Multiplication.singleton.toString()), Multiplication.singleton);
+		env.put(new Variable(Division.singleton.toString()), Division.singleton);
+		env.put(new Variable(NumericEqual.singleton.toString()), NumericEqual.singleton);
+		env.put(new Variable(LesserThan.singleton.toString()), LesserThan.singleton);
+		env.put(new Variable(And.singleton.toString()), And.singleton);
+		env.put(new Variable(Or.singleton.toString()), Or.singleton);
+		env.put(new Variable(Not.singleton.toString()), Not.singleton);
+		env.put(new Variable(BitAnd.singleton.toString()), BitAnd.singleton);
+		env.put(new Variable(BitOr.singleton.toString()), BitOr.singleton);
+		env.put(new Variable(Concantenation.singleton.toString()), Concantenation.singleton);
+		env.put(new Variable(Car.singleton.toString()), Car.singleton);
+		env.put(new Variable(Cdr.singleton.toString()), Cdr.singleton);
 		env.put(new Variable("nil"), new Tuple(new Expression[0]));
-		env.put(new Variable("equals?"), Equals.singleton);
+		env.put(new Variable(Equals.singleton.toString()), Equals.singleton);
+		env.put(new Variable(Deconstruct.singleton.toString()), Deconstruct.singleton);
 		
-		env.put(new Variable("Int"), TypeConstructionLambda.IntPrimitiveConstructor/*.interpret(new Environment())*/);
-		env.put(new Variable("Int:String"), TypeConstructionLambda.IntStringConstructor/*.interpret(new Environment())*/);
-		env.put(new Variable("Int:Roman"), TypeConstructionLambda.IntRomanConstructor/*.interpret(new Environment())*/);
-		env.put(new Variable("String"), TypeConstructionLambda.StringPrimitiveConstructor/*.interpret(new Environment())*/);
-		env.put(new Variable("Double"), TypeConstructionLambda.DoublePrimitiveConstructor/*.interpret(new Environment())*/);
-		env.put(new Variable("Bool"), TypeConstructionLambda.BoolPrimitiveConstructor/*.interpret(new Environment())*/);
+		env.put(new Variable("Int"), TypeConstructionLambda.IntPrimitiveConstructor);
+		env.put(new Variable("Int:String"), TypeConstructionLambda.IntStringConstructor);
+		env.put(new Variable("Int:Roman"), TypeConstructionLambda.IntRomanConstructor);
+		env.put(new Variable("String"), TypeConstructionLambda.StringPrimitiveConstructor);
+		env.put(new Variable("Double"), TypeConstructionLambda.DoublePrimitiveConstructor);
+		env.put(new Variable("Bool"), TypeConstructionLambda.BoolPrimitiveConstructor);
 		
 		return env;
 	}
@@ -211,9 +213,9 @@ public class Main {
 	
 	private static void load(Path inputPath) throws Exception {
 		Reader input = null;
-		Writer output = null;
+		Scanner inputI = null;
 		Environment topLevel = Main.initTopLevelEnvironment();
-		
+
 		try{
 			input = Files.newBufferedReader(inputPath);
 			
@@ -222,7 +224,6 @@ public class Main {
 			SchemeParser parser = new SchemeParser(tokens);
 			ExprsContext exprsContext = parser.exprs();
 			
-			List<Expression> l = new LinkedList<Expression>();
 			List<Expression> exprs = new ArrayList<Expression>();
 			SemanticParser semanticParser = new SemanticParser();
 			
@@ -237,7 +238,7 @@ public class Main {
 				System.out.println(expr.interpret(topLevel));
 			}
 			
-			Scanner inputI = new Scanner(System.in);
+			inputI = new Scanner(System.in);
 			while (true) {
 				System.out.print(">");
 				charStream = new ANTLRInputStream(inputI.nextLine());
@@ -254,7 +255,8 @@ public class Main {
 				for (Expression e : exprs) {
 					Expression expr = e.substituteTopLevelVariables(topLevel);
 					expr.infer(topLevel);
-					System.out.println(expr.interpret(topLevel));
+					Expression interpreted = expr.interpret(topLevel); 
+					System.out.println(interpreted);
 				}
 			}
 		}catch(Exception e){
@@ -262,6 +264,9 @@ public class Main {
 		}finally{
 			if(input != null){
 				input.close();
+			}
+			if(inputI != null){
+				inputI.close();
 			}
 		}
 	}
