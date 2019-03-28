@@ -30,6 +30,7 @@ public final class SemanticParserStatic {
 	public static final String DEFCONSTRUCTOR = "defconstructor";
 	public static final String DEFINE = "define";
 	public static final String CONS = "cons";
+	public static final String ERROR = "error";
 	
 	public static final Set<String> specialForms;
 	
@@ -44,6 +45,7 @@ public final class SemanticParserStatic {
 		specialForms.add(DEFCONSTRUCTOR);
 		specialForms.add(DEFINE);
 		specialForms.add(CONS);
+		specialForms.add(ERROR);
 	}
 	
 	/**

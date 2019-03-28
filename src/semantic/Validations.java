@@ -310,7 +310,7 @@ public class Validations {
 	/**
 	 * Validates if l is a valid cons list, throws exception if validation fails
 	 * @param l validated list
-	 * @return true if l is valid define list, false otherwise
+	 * @return true if l is valid cons list, false otherwise
 	 * @throws AppendableException
 	 */
 	public static boolean validateConsList(List<SemanticNode> l) throws AppendableException{
@@ -322,6 +322,30 @@ public class Validations {
 		if(cons.type != SemanticNode.NodeType.SYMBOL
 				|| !cons.asSymbol().equals(SemanticParserStatic.CONS)) {
 			throw new UnexpectedExpressionException(cons);
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Validates if l is a valid error list, throws exception if validation fails
+	 * @param l validated list
+	 * @return true if l is valid error list, false otherwise
+	 * @throws AppendableException
+	 */
+	public static boolean validateErrorList(List<SemanticNode> l) throws AppendableException{
+		if(l.size() != 2) {
+			throw new InvalidNumberOfArgsException(1, l.size()-1);
+		}
+		
+		SemanticNode error = l.get(0);
+		if(error.type != SemanticNode.NodeType.SYMBOL
+				|| !error.asSymbol().equals(SemanticParserStatic.ERROR)) {
+			throw new UnexpectedExpressionException(error);
+		}
+		SemanticNode msg = l.get(1);
+		if(msg.type != SemanticNode.NodeType.STRING) {
+			throw new UnexpectedExpressionException(msg);
 		}
 		
 		return true;

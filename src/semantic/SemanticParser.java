@@ -9,6 +9,7 @@ import java.util.TreeSet;
 import expression.Application;
 import expression.TypeConstructionLambda;
 import expression.DefExpression;
+import expression.ExceptionExpr;
 import expression.Expression;
 import expression.ExtendedLambda;
 import expression.IfExpression;
@@ -199,6 +200,9 @@ public class SemanticParser {
 			break;
 		case SemanticParserStatic.CONS:
 			e = this.parseCons(specialFormList);
+			break;
+		case SemanticParserStatic.ERROR:
+			e= this.parseError(specialFormList);
 			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
@@ -570,7 +574,7 @@ public class SemanticParser {
 	
 	/**
 	 * Parses cons special form list
-	 * @param larguments of the cons special form
+	 * @param l arguments of the cons special form
 	 * @return Tuple Expression
 	 * @throws AppendableException
 	 */
@@ -582,5 +586,21 @@ public class SemanticParser {
 		}
 		
 		return new Tuple(new Expression[]{this.parseNode(l.get(1)), this.parseNode(l.get(2))});
+	}
+	
+	/**
+	 * Parses error special form list
+	 * @param l error special form list
+	 * @return ExceptionExpr expression
+	 * @throws AppendableException
+	 */
+	private Expression parseError(List<SemanticNode> l) throws AppendableException{
+		try {
+			Validations.validateErrorList(l);
+		}catch(AppendableException e) {
+			e.appendMessage("in " + l);
+		}
+		
+		return new ExceptionExpr(this.parseNode(l.get(1)));
 	}
 }
