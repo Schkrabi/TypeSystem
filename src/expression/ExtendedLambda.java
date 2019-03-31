@@ -7,10 +7,12 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import interpretation.Environment;
 import types.ForallType;
 import types.Type;
+import types.TypeArrow;
 import types.TypeVariable;
 
 /**
@@ -58,31 +60,44 @@ public class ExtendedLambda extends MetaLambda {
 		ef.infer(env);
 		return ef;
 	}
+	
+	/**
+	 * Cannot do this through functional lambdas because throws Exception
+	 * @param env environment in which inference is carried out
+	 * @param exprs set of expressions for which types are unfered
+	 * @return set of infered types
+	 * @throws Exception
+	 */
+	private static Set<Type> inferSet(Environment env, Set<Expression> exprs) throws Exception{
+		Set<Type> s = new TreeSet<Type>();
+		
+		for(Expression e : exprs) {
+			s.add(e.infer(env));
+		}
+		return s;
+	}
 
 	@Override
 	public Type infer(Environment env) throws Exception {
-		Type lastType = null;
-
-		for (Lambda l : this.implementations) {
-			Type currentType = l.infer(env);
-			
-			if(lastType == null) {
-				lastType = currentType;
-				continue;
-			}
-			
-			//Maybe add some exception for the Forall type
-			if(!Type.unify(lastType, currentType)) {
-				throw new Exception("Types " + lastType + " and " + currentType + " in " + this + " does not unify");
-			}
-			
-			//Is this transitive?
-			lastType = currentType;
+		Set<Type> ltypes = this.implementations.stream().map(x -> x.argsType).collect(Collectors.toSet());
+		ltypes = ltypes.stream().filter(x -> x != null).collect(Collectors.toSet());
+		Set<Type> rtypes = ExtendedLambda.inferSet(env, this.implementations.stream().map(x -> x.body).collect(Collectors.toSet()));
+		
+		if(!Type.unifyMany(ltypes)){
+			throw new Exception("Argument types " + ltypes.toString() +  " of extended lambda " + this.toString() + " does not unify!");
+		}
+		if(!Type.unifyMany(rtypes)) {
+			throw new Exception("Body types " + rtypes.toString() + " of extended lambda " + this.toString() + " does not unify!");
 		}
 		
-		Type t = lastType.getRep();
+		Optional<Type> ol = ltypes.stream().findAny();
+		Optional<Type> or = rtypes.stream().findAny();
 		
-		//Might want to add comparator into the scope...
+		if(!ol.isPresent() || !or.isPresent()) {
+			throw new Exception("Mallformed extended lambda? " + this.toString());
+		}
+		
+		Type t = new TypeArrow(ol.get().getRep(), or.get().getRep());
 		
 		for (TypeVariable v : t.getUnconstrainedVariables()) {
 			t = new ForallType(v, t);

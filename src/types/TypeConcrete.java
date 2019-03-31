@@ -7,7 +7,6 @@ import java.util.TreeSet;
 
 import expression.Application;
 import expression.TypeConstructionLambda;
-import interpretation.Environment;
 import expression.Expression;
 import expression.Tuple;
 import util.AppendableException;

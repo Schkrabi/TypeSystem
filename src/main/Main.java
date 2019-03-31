@@ -2,7 +2,6 @@ package main;
 
 import interpretation.Environment;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
