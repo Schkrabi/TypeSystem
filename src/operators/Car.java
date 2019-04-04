@@ -88,8 +88,8 @@ public class Car extends Function {
 		}
 
 		@Override
-		public Type infer(Environment env) throws Exception {
-			throw new Exception("Not implemented");
+		public Type infer(Environment env) throws AppendableException {
+			throw new AppendableException("Not implemented");
 		}
 
 		@Override

@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import interpretation.Environment;
 import types.Type;
+import util.AppendableException;
 
 /**
  * Class for parsed Scheme sequence. Allows to transform into Application
@@ -41,7 +42,7 @@ public class Sequence extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		Type headType = this.head().infer(env);
 		Type ret;
 

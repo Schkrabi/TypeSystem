@@ -2,6 +2,7 @@ package expression;
 
 import types.Type;
 import types.TypeConcrete;
+import util.AppendableException;
 import interpretation.Environment;
 
 /**
@@ -44,7 +45,7 @@ public class LitInteger extends Literal {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		this.setType(TypeConcrete.TypeInt);
 		return TypeConcrete.TypeInt;
 	} 

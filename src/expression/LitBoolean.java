@@ -2,7 +2,7 @@ package expression;
 
 import types.Type;
 import types.TypeConcrete;
-
+import util.AppendableException;
 import interpretation.Environment;
 
 /**
@@ -47,7 +47,7 @@ public class LitBoolean extends Literal {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		this.setType(TypeConcrete.TypeBool);
 		return TypeConcrete.TypeBool;
 	}

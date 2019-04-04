@@ -2,6 +2,7 @@ package expression;
 
 import types.Type;
 import types.TypeTuple;
+import util.AppendableException;
 import interpretation.Environment;
 
 /**
@@ -33,7 +34,7 @@ public abstract class Expression {
 	 * @return inferred type
 	 * @throws Exception
 	 */
-	public abstract Type infer(Environment env) throws Exception;
+	public abstract Type infer(Environment env) throws AppendableException;
 
 	/**
 	 * Returns the inferred type of this expression or null if inference was not
@@ -45,7 +46,7 @@ public abstract class Expression {
 		if(this.inferedType == null){
 			return null;
 		}
-		return this.inferedType.getRep();
+		return this.inferedType;
 	}
 
 	/**
@@ -76,7 +77,7 @@ public abstract class Expression {
 		}
 
 		@Override
-		public Type infer(Environment env) throws Exception {
+		public Type infer(Environment env) throws AppendableException {
 			return TypeTuple.EMPTY_TUPLE;
 		}
 

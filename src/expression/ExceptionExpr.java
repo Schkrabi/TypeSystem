@@ -1,10 +1,14 @@
 package expression;
 
+import java.util.Optional;
+
 import interpretation.Environment;
 import semantic.UserException;
 import types.Type;
 import types.TypeConcrete;
 import types.TypeVariable;
+import types.TypesDoesNotUnifyException;
+import util.AppendableException;
 import util.NameGenerator;
 
 /**
@@ -29,7 +33,7 @@ public class ExceptionExpr extends Expression {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		if(this.getType() == null)
 		{
 			//Creates a new mock type to unify with anything
@@ -37,9 +41,15 @@ public class ExceptionExpr extends Expression {
 		}
 		
 		Type argType = this.message.infer(env);
-		if(!Type.unify(TypeConcrete.TypeString, argType))
-		{
-			throw new Exception("Type of message " + message.toString() + " (" + argType.toString() + ") does not unify with " + TypeConcrete.TypeString.toString());
+		
+		try {
+			Optional<Type> o = Type.unify(TypeConcrete.TypeString, argType);
+			if(!o.isPresent()) {
+				throw new TypesDoesNotUnifyException(TypeConcrete.TypeString, argType);
+			}
+		}catch(AppendableException e) {
+			e.appendMessage("in " + this.toString());
+			throw e;
 		}
 		
 		return this.getType();

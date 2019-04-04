@@ -2,6 +2,7 @@ package expression;
 
 import types.Type;
 import types.TypeConcrete;
+import util.AppendableException;
 import expression.Expression;
 import expression.Literal;
 import interpretation.Environment;
@@ -44,7 +45,7 @@ public class LitDouble extends Literal {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		this.setType(TypeConcrete.TypeDouble);
 		return TypeConcrete.TypeDouble;
 	}

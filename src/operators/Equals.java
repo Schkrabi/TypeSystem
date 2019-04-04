@@ -77,7 +77,7 @@ public class Equals extends Function {
 		}
 
 		@Override
-		public Type infer(Environment env) throws Exception {
+		public Type infer(Environment env) {
 			this.setType(TypeConcrete.TypeBool);
 			return TypeConcrete.TypeBool;
 		}

@@ -80,7 +80,7 @@ public class Division extends Function {
 		}
 
 		@Override
-		public Type infer(Environment env) throws Exception {
+		public Type infer(Environment env) {
 			this.setType(TypeConcrete.TypeInt);
 			return TypeConcrete.TypeInt;
 		}

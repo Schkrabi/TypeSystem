@@ -1,11 +1,14 @@
 package expression;
 
 import java.util.Iterator;
+import java.util.Optional;
+
 import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
+import types.TypesDoesNotUnifyException;
 import util.AppendableException;
 import util.NameGenerator;
 import interpretation.Environment;
@@ -75,15 +78,10 @@ public class Application extends Expression {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		Type funType;
 		
-		/*if(this.fun instanceof Constructor) { 
-			Constructor constr = (Constructor)this.fun;
-			funType = constr.infer(env);
-		}else {*/
-			funType = this.fun.infer(env);
-		//}
+		funType = this.fun.infer(env);
 		
 		if(funType instanceof ForallType) {
 			funType = ((ForallType) funType).getBoundType();
@@ -93,7 +91,7 @@ public class Application extends Expression {
 
 		if (!(funType.isApplicableType())
 				&& !(funType instanceof TypeVariable)) {
-			throw new Exception(fun + " is not a function");
+			throw new AppendableException(fun + " is not a function");
 		}
 		TypeArrow funArrType;
 
@@ -104,12 +102,18 @@ public class Application extends Expression {
 		}else {
 			throw new AppendableException(funType.toString() + "is not an applicable type");
 		}
-
-		if (!Type.unify(funArrType.ltype, argsType)) {
-			throw new Exception("Arguments of " + this.fun + " does not unify with args " + this.args + " expected "
-					+ funArrType.ltype + " got " + argsType);
+		
+		try {
+			Optional<Type> o = Type.unify(funArrType.ltype, argsType);
+			if(!o.isPresent()) {
+				throw new TypesDoesNotUnifyException(funArrType.ltype, argsType);
+			}
+			
+		}catch(AppendableException e) {
+			e.appendMessage("in " + this.toString());
+			throw e;
 		}
-
+		
 		this.setType(funArrType.rtype);
 
 		return funArrType.rtype;
@@ -164,7 +168,7 @@ public class Application extends Expression {
 		Iterator<Type> j = argsType.iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
-			Type argType = j.next().getRep();
+			Type argType = j.next();
 
 			if (!argType.equals(e.getType())) {
 				e = e.getType().convertTo(e, argType);

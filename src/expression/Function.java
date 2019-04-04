@@ -1,6 +1,7 @@
 package expression;
 
 import java.util.Comparator;
+import java.util.Optional;
 
 import interpretation.Environment;
 import types.ForallType;
@@ -8,6 +9,8 @@ import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
+import types.TypesDoesNotUnifyException;
+import util.AppendableException;
 
 /**
  * Expression for representation of interpreted function
@@ -37,16 +40,23 @@ public class Function extends MetaFunction implements Comparable<Function>{
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		Type inferedArgsType = this.args.infer(new Environment());
 		Type bodyType = this.body.infer(this.creationEnvironment);
 
-		if (this.argsType != null && !Type.unify(this.argsType, inferedArgsType)) {
-			throw new Exception("Infered arguments type " + inferedArgsType + " do not unify with specified args type "
-					+ this.argsType + " in " + this);
+		if(this.argsType != null) {
+			try {
+				Optional<Type> o = Type.unify(this.argsType, inferedArgsType);
+				if(!o.isPresent()) {
+					throw new TypesDoesNotUnifyException(this.argsType, inferedArgsType);
+				}
+			}catch(AppendableException e) {
+				e.appendMessage("in " + this.toString());
+				throw e;
+			}
 		}
 
-		Type t = new TypeArrow(this.argsType == null ? inferedArgsType : this.argsType, bodyType.getRep());
+		Type t = new TypeArrow(this.argsType == null ? inferedArgsType : this.argsType, bodyType);
 
 		for (TypeVariable v : t.getUnconstrainedVariables()) {
 			t = new ForallType(v, t);

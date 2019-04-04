@@ -5,6 +5,7 @@ import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
+import util.AppendableException;
 
 /**
  * Expression for representation of interpreted constructor
@@ -25,10 +26,10 @@ public class Constructor extends Function {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception{
+	public Type infer(Environment env) throws AppendableException{
 		Type infered = super.infer(this.creationEnvironment);
 		if(!infered.isApplicableType()){
-			throw new Exception("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
+			throw new AppendableException("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
 		}
 		if(infered instanceof ForallType) {
 			infered = ((ForallType)infered).getBoundType();

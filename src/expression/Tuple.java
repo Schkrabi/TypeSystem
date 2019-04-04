@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import types.Type;
 import types.TypeTuple;
+import util.AppendableException;
 import interpretation.Environment;
 
 /**
@@ -53,7 +54,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		Type types[] = new Type[this.values.length];
 		for (int i = 0; i < this.values.length; i++) {
 			types[i] = this.values[i].infer(env);

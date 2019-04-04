@@ -2,6 +2,7 @@ package expression;
 
 import interpretation.Environment;
 import types.Type;
+import util.AppendableException;
 
 public class QuotedExpression extends Expression {
 
@@ -17,7 +18,7 @@ public class QuotedExpression extends Expression {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		return this.quoted.infer(env);
 	}
 

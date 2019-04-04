@@ -2,6 +2,7 @@ package expression;
 
 import types.Type;
 import types.TypeVariable;
+import util.AppendableException;
 import util.NameGenerator;
 import interpretation.Environment;
 
@@ -42,7 +43,7 @@ public class Variable extends Expression implements Comparable<Variable> {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		if(this.inferedType != null){
 			return this.getType();
 		}

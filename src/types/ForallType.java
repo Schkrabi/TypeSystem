@@ -44,10 +44,10 @@ public class ForallType extends Type {
 	@Override
 	public Set<TypeVariable> getUnconstrainedVariables() {
 		Set<TypeVariable> s = new TreeSet<TypeVariable>();
-		if (this.getRep() != this) {
+		/*if (this.getRep() != this) {
 			s.addAll(this.getRep().getUnconstrainedVariables());
 			return s;
-		}
+		}*/
 
 		s.addAll(this.type.getUnconstrainedVariables());
 		s.remove(this.bound);

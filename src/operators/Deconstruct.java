@@ -78,7 +78,7 @@ public class Deconstruct extends Function {
 		}
 
 		@Override
-		public Type infer(Environment env) throws Exception {
+		public Type infer(Environment env) {
 			return new TypeVariable(NameGenerator.next());
 		}
 

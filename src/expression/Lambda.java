@@ -8,6 +8,8 @@ import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
+import types.TypesDoesNotUnifyException;
+import util.AppendableException;
 import interpretation.Environment;
 
 /**
@@ -64,16 +66,22 @@ public class Lambda extends MetaLambda implements Comparable<Lambda>{
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		Type inferedArgsType = this.args.infer(new Environment());
 		Type bodyType = this.body.infer(env);
 
-		if (this.argsType != null && !Type.unify(this.argsType, inferedArgsType)) {
-			throw new Exception("Infered arguments type " + inferedArgsType + " do not unify with specified args type "
-					+ this.argsType + " in " + this);
+		if(this.argsType != null) {
+			try {
+				if(!Type.unify(this.argsType, inferedArgsType).isPresent()) {
+					throw new TypesDoesNotUnifyException(this.argsType, inferedArgsType);
+				}
+			}catch(AppendableException e) {
+				e.appendMessage("in " + this.toString());
+				throw e;
+			}
 		}
 
-		Type t = new TypeArrow(this.argsType == null ? inferedArgsType : this.argsType, bodyType.getRep());
+		Type t = new TypeArrow(this.argsType == null ? inferedArgsType : this.argsType, bodyType);
 
 		for (TypeVariable v : t.getUnconstrainedVariables()) {
 			t = new ForallType(v, t);

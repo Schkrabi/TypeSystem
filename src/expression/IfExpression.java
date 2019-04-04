@@ -2,6 +2,8 @@ package expression;
 
 import types.Type;
 import types.TypeConcrete;
+import types.TypesDoesNotUnifyException;
+import util.AppendableException;
 import interpretation.Environment;
 
 /**
@@ -50,19 +52,21 @@ public class IfExpression extends Expression {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		Type condType = this.condition.infer(env);
 		Type tBranchType = this.trueBranch.infer(env);
 		Type fBranchType = this.falseBranch.infer(env);
 
-		if (!Type.unify(tBranchType, fBranchType)) {
-			throw new Exception("Types of if branches do to unify, got: "
-					+ tBranchType + " " + fBranchType);
-		}
-
-		if (!Type.unify(TypeConcrete.TypeBool, condType)) {
-			throw new Exception("Condition of if do not unify with Bool got: "
-					+ condType);
+		try {
+			if(!Type.unify(tBranchType, fBranchType).isPresent()) {
+				throw new TypesDoesNotUnifyException(tBranchType, fBranchType);
+			}
+			if(!Type.unify(TypeConcrete.TypeBool, condType).isPresent()) {
+				throw new TypesDoesNotUnifyException(TypeConcrete.TypeBool, condType);
+			}
+		}catch(AppendableException e) {
+			e.appendMessage("in " + this.toString());
+			throw e;
 		}
 
 		this.setType(tBranchType);

@@ -3,6 +3,7 @@ package expression;
 import interpretation.Environment;
 import types.Type;
 import types.TypeConcrete;
+import util.AppendableException;
 
 /**
  * Class for string literals
@@ -41,7 +42,7 @@ public class LitString extends Literal {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		this.setType(TypeConcrete.TypeString);
 		return TypeConcrete.TypeString;
 	}

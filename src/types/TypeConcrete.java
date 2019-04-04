@@ -85,6 +85,17 @@ public class TypeConcrete extends Type {
 		}
 		return false;
 	}
+	
+	/**
+	 * Gets basic type if this type is specific representation, otherwise returns this
+	 * @return TypeConcrete
+	 */
+	public Type getBasicType() {
+		if(this instanceof TypeRepresentation) {
+			return ((TypeRepresentation)this).getBasicType();
+		}
+		return this;
+	}
 
 	public void addConversion(TypeConcrete toType, TypeConstructionLambda conversionConstructor)
 			throws AppendableException {

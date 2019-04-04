@@ -47,11 +47,12 @@ public class TypeVariable extends Type {
 	@Override
 	public Set<TypeVariable> getUnconstrainedVariables() {
 		Set<TypeVariable> s = new TreeSet<TypeVariable>();
-		if (this.getRep() == this) {
+		/*if (this.getRep() == this) {
 			s.add(this);
 			return s;
 		}
-		s.addAll(this.getRep().getUnconstrainedVariables());
+		s.addAll(this.getRep().getUnconstrainedVariables());*/
+		s.add(this);
 		return s;
 	}
 

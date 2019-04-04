@@ -14,6 +14,7 @@ import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeVariable;
+import util.AppendableException;
 
 /**
  * Extended lambda expression allowing for the different implementation of body
@@ -78,26 +79,34 @@ public class ExtendedLambda extends MetaLambda {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		Set<Type> ltypes = this.implementations.stream().map(x -> x.argsType).collect(Collectors.toSet());
 		ltypes = ltypes.stream().filter(x -> x != null).collect(Collectors.toSet());
-		Set<Type> rtypes = ExtendedLambda.inferSet(env, this.implementations.stream().map(x -> x.body).collect(Collectors.toSet()));
+		Set<Type> rtypes;
+		try {
+			rtypes = ExtendedLambda.inferSet(env, this.implementations.stream().map(x -> x.body).collect(Collectors.toSet()));
+		} catch (Exception e) {
+			throw new AppendableException("Not implemented");
+		}
 		
 		if(!Type.unifyMany(ltypes)){
-			throw new Exception("Argument types " + ltypes.toString() +  " of extended lambda " + this.toString() + " does not unify!");
+			//throw new Exception("Argument types " + ltypes.toString() +  " of extended lambda " + this.toString() + " does not unify!");
+			//TODO
 		}
 		if(!Type.unifyMany(rtypes)) {
-			throw new Exception("Body types " + rtypes.toString() + " of extended lambda " + this.toString() + " does not unify!");
+			//throw new Exception("Body types " + rtypes.toString() + " of extended lambda " + this.toString() + " does not unify!");
+			//TODO
 		}
 		
 		Optional<Type> ol = ltypes.stream().findAny();
 		Optional<Type> or = rtypes.stream().findAny();
 		
 		if(!ol.isPresent() || !or.isPresent()) {
-			throw new Exception("Mallformed extended lambda? " + this.toString());
+			//throw new Exception("Mallformed extended lambda? " + this.toString());
+			//TODO
 		}
 		
-		Type t = new TypeArrow(ol.get().getRep(), or.get().getRep());
+		Type t = new TypeArrow(ol.get(), or.get());
 		
 		for (TypeVariable v : t.getUnconstrainedVariables()) {
 			t = new ForallType(v, t);

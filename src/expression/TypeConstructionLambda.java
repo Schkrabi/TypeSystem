@@ -7,6 +7,7 @@ import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeRepresentation;
 import types.TypeTuple;
+import util.AppendableException;
 
 /**
  * A class for type constructors. Basically a special case of lambda.
@@ -26,10 +27,10 @@ public class TypeConstructionLambda extends Lambda {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception{
+	public Type infer(Environment env) throws AppendableException{
 		Type infered = super.infer(env);
 		if(!infered.isApplicableType()){
-			throw new Exception("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
+			throw new AppendableException("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
 		}
 		if(infered instanceof ForallType) {
 			infered = ((ForallType)infered).getBoundType();

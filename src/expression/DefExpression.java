@@ -3,6 +3,7 @@ package expression;
 import interpretation.Environment;
 import types.Type;
 import types.TypeTuple;
+import util.AppendableException;
 
 /**
  * Expression for interpretation and handling the define special form. Purely
@@ -32,15 +33,13 @@ public class DefExpression extends Expression {
 		Expression interpreted = this.defined.interpret(env);
 		env.put(this.name, interpreted);
 		return Expression.EMPTY_EXPRESSION;
-		// return interpreted;
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		this.defined.infer(env);
-		env.put(this.name, this.defined);
+		env.put(this.name, this.defined);// Funny think what one has to do for side effects...
 		return TypeTuple.EMPTY_TUPLE;
-		// return type.defined.infer();
 	}
 
 	@Override

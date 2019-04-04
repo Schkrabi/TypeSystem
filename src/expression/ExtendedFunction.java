@@ -11,6 +11,8 @@ import java.util.function.Predicate;
 import types.ForallType;
 import types.Type;
 import types.TypeVariable;
+import types.TypesDoesNotUnifyException;
+import util.AppendableException;
 
 /**
  * Expression for interpreted function with various implementations
@@ -40,7 +42,7 @@ public class ExtendedFunction extends MetaFunction {
 	}
 
 	@Override
-	public Type infer(Environment env) throws Exception {
+	public Type infer(Environment env) throws AppendableException {
 		Type lastType = null;
 
 		for (Function f : this.implementations) {
@@ -51,16 +53,21 @@ public class ExtendedFunction extends MetaFunction {
 				continue;
 			}
 			
-			//Maybe add some exception for the Forall type
-			if(!Type.unify(lastType, currentType)) {
-				throw new Exception("Types " + lastType + " and " + currentType + " in " + this + " does not unify");
+			try {
+				Optional<Type> o = Type.unify(lastType, currentType);
+				if(!o.isPresent()) {
+					throw new TypesDoesNotUnifyException(lastType, currentType);
+				}
+			}catch(AppendableException e) {
+				e.appendMessage("in " + this.toString());
+				throw e;
 			}
 			
 			//Is this transitive?
 			lastType = currentType;
 		}
 		
-		Type t = lastType.getRep();
+		Type t = lastType;
 		
 		//Might want to add comparator into the scope...
 		

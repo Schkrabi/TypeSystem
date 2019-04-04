@@ -24,9 +24,8 @@ public class BitOr extends Function {
 	public static final BitOr singleton = new BitOr();
 
 	private BitOr() {
-		super(	new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt}),
-				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }),
-				BitOrWrapper.singleton,
+		super(new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
+				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }), BitOrWrapper.singleton,
 				new Environment());
 		this.infer(new Environment());
 	}
@@ -35,19 +34,20 @@ public class BitOr extends Function {
 	public String toString() {
 		return "|";
 	}
-	
+
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) {
 		return this;
 	}
-	
+
 	@Override
-	public Type infer(Environment env){
-		Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}), TypeConcrete.TypeInt);
+	public Type infer(Environment env) {
+		Type t = new TypeArrow(new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
+				TypeConcrete.TypeInt);
 		this.setType(t);
 		return t;
 	}
-	
+
 	@Override
 	public String toClojureCode() throws Exception {
 		return "bit-or";
@@ -65,7 +65,8 @@ public class BitOr extends Function {
 		 */
 		public static final BitOrWrapper singleton = new BitOrWrapper();
 
-		private BitOrWrapper() {}
+		private BitOrWrapper() {
+		}
 
 		@Override
 		public Expression interpret(Environment env) throws Exception {
@@ -80,7 +81,7 @@ public class BitOr extends Function {
 		}
 
 		@Override
-		public Type infer(Environment env) throws Exception {
+		public Type infer(Environment env) {
 			this.setType(TypeConcrete.TypeInt);
 			return TypeConcrete.TypeInt;
 		}

@@ -3,7 +3,6 @@ package types;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.Arrays;
 
@@ -19,7 +18,7 @@ public abstract class Type implements Comparable<Type> {
 	/**
 	 * Type representative
 	 */
-	private Type rep;
+	//private Type rep;
 
 	/**
 	 * Ordering of subclasses for Comparable interface
@@ -28,7 +27,7 @@ public abstract class Type implements Comparable<Type> {
 			TypeVariable.class, ForallType.class, TypeArrow.class, TypeTuple.class);
 
 	public Type() {
-		this.rep = this;
+		//this.rep = this;
 	}
 
 	/**
@@ -47,6 +46,68 @@ public abstract class Type implements Comparable<Type> {
 	public boolean isApplicableType() {
 		return false;
 	}
+	
+	/**
+	 * Returns unified type if the expression if two types unifies, otherwise returns Optional.Empty
+	 * @param m first unified type
+	 * @param n second unified type
+	 * @return Optional<Type>
+	 * @throws TypesDoesNotUnifyException
+	 */
+	public static Optional<Type> unify(Type m, Type n) throws TypesDoesNotUnifyException {
+		if(m == n) {
+			return Optional.of(m);
+		} else if(m instanceof TypeConcrete && n instanceof TypeConcrete) {
+			TypeConcrete mc = (TypeConcrete)m;
+			TypeConcrete nc = (TypeConcrete)n;
+			
+			if(mc.isSameBasicType(nc)) {
+				return Optional.of(mc.getBasicType());
+			}
+		} else if(m instanceof TypeArrow && n instanceof TypeArrow) {
+			TypeArrow ma = (TypeArrow)m;
+			TypeArrow na = (TypeArrow)n;
+			
+			Optional<Type> left = Type.unify(ma.ltype, na.ltype);
+			if(!left.isPresent())
+				throw new TypesDoesNotUnifyException(ma.ltype, ma.rtype);
+			
+			Optional<Type> right = Type.unify(ma.rtype, na.rtype);
+			if(!right.isPresent())
+				throw new TypesDoesNotUnifyException(ma.rtype, na.rtype);
+			
+			return Optional.of(new TypeArrow(left.get(), right.get()));
+		} else if(m instanceof TypeVariable) {
+			return Optional.of(n);
+		} else if(n instanceof TypeVariable) {
+			return Optional.of(m);
+		} else if(m instanceof TypeTuple && n instanceof TypeTuple) {
+			TypeTuple mt = (TypeTuple)m;
+			TypeTuple nt = (TypeTuple)n;
+			
+			if(mt.values.length == nt.values.length) {
+				Type[] ts = new Type[mt.values.length];
+				
+				for(int i = 0; i < mt.values.length; i++) {
+					Optional<Type> ot = Type.unify(mt.values[i], nt.values[i]);
+					
+					if(!ot.isPresent())
+						throw new TypesDoesNotUnifyException(mt.values[i], nt.values[i]);
+					
+					ts[i] = ot.get();
+				}
+				return Optional.of(new TypeTuple(ts));
+			}
+		} else if(m instanceof ForallType) {
+			ForallType mf = (ForallType)m;
+			return Type.unify(mf.getBoundType(), n);
+		}else if (n instanceof ForallType) {
+			ForallType nf = (ForallType)n;
+			return Type.unify(m, nf.getBoundType());
+		}
+		
+		return Optional.empty();
+	}
 
 	/**
 	 * Returns true if two types unifies, otherwise returns false.
@@ -56,7 +117,7 @@ public abstract class Type implements Comparable<Type> {
 	 * @param n Type
 	 * @return true or false
 	 */
-	public static boolean unify(Type m, Type n) {
+	/*public static boolean unify(Type m, Type n) {
 		Type s = m.getRep();
 		if (s instanceof ForallType) {
 			s = ((ForallType) s).getBoundType();
@@ -95,7 +156,7 @@ public abstract class Type implements Comparable<Type> {
 			return true;
 		}
 		return false;
-	}
+	}*/
 
 	/**
 	 * Returns true if all types in set unifies
@@ -109,7 +170,7 @@ public abstract class Type implements Comparable<Type> {
 
 		boolean unifies = false;
 
-		Set<Type> reps = types.stream().map(x -> (x.getRep())).collect(Collectors.toSet());
+		/*Set<Type> reps = types.stream().map(x -> (x.getRep())).collect(Collectors.toSet());
 
 		Set<Type> unbound = reps.stream().map(x -> x instanceof ForallType ? ((ForallType) x).getBoundType() : x)
 				.collect(Collectors.toSet());
@@ -160,7 +221,7 @@ public abstract class Type implements Comparable<Type> {
 			if(sample.isPresent())
 				typeVariables.add(sample.get());
 			Type.unionMany(typeVariables);
-		}
+		}*/
 
 		return unifies;
 	}
@@ -170,12 +231,12 @@ public abstract class Type implements Comparable<Type> {
 	 * 
 	 * @return Type
 	 */
-	public Type getRep() {
+	/*public Type getRep() {
 		if (this.rep == this) {
 			return this.rep;
 		}
 		return this.rep.getRep();
-	}
+	}*/
 
 	@Override
 	public int compareTo(Type other) {
@@ -214,7 +275,7 @@ public abstract class Type implements Comparable<Type> {
 	 * @param t2 Type
 	 */
 	private static void union(Type t1, Type t2) {
-		if (t1 instanceof TypeConcrete) {
+		/*if (t1 instanceof TypeConcrete) {
 			t2.rep = t1.rep;
 			return;
 		}
@@ -223,6 +284,7 @@ public abstract class Type implements Comparable<Type> {
 		}
 		t2.rep = t1.rep;
 		return;
+		*/
 	}
 
 	/**
@@ -240,7 +302,7 @@ public abstract class Type implements Comparable<Type> {
 			concrete = sample.get();
 		}
 		for (Type t : s.stream().filter(x -> !(x instanceof TypeConcrete)).collect(Collectors.toSet())) {
-			t.rep = concrete.rep;
+			//t.rep = concrete.rep;
 		}
 	}
 }
