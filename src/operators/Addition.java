@@ -1,5 +1,8 @@
 package operators;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import expression.Expression;
 import expression.Function;
 import expression.LitInteger;
@@ -25,9 +28,8 @@ public class Addition extends Function {
 	public static final Addition singleton = new Addition();
 
 	private Addition() {
-		super(	new TypeTuple(new Type[] {TypeConcrete.TypeInt, TypeConcrete.TypeInt}),
-				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }),
-				AddWrapper.singleton,
+		super(new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
+				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }), AddWrapper.singleton,
 				new Environment());
 		this.infer(new Environment());
 	}
@@ -36,19 +38,24 @@ public class Addition extends Function {
 	public String toString() {
 		return "+";
 	}
-	
+
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) {
 		return this;
 	}
-	
+
 	@Override
-	public Type infer(Environment env){
-		Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}), TypeConcrete.TypeInt);
-		this.setType(t);
-		return t;
+	public Map<Expression, Type> infer(Environment env) {
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		if (this.typeHypothesis == null) {
+			this.typeHypothesis = new TreeMap<Expression, Type>();
+			this.typeHypothesis.put(this, new TypeArrow(
+					new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }), TypeConcrete.TypeInt));
+		}
+		hyp.putAll(this.typeHypothesis);
+		return hyp;
 	}
-	
+
 	@Override
 	public String toClojureCode() throws Exception {
 		return "+";
@@ -82,9 +89,15 @@ public class Addition extends Function {
 		}
 
 		@Override
-		public Type infer(Environment env) {
-			this.setType(TypeConcrete.TypeInt);
-			return TypeConcrete.TypeInt;
+		public Map<Expression, Type> infer(Environment env) {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if (this.typeHypothesis == null) {
+				Type t = TypeConcrete.TypeInt;
+				this.typeHypothesis = new TreeMap<Expression, Type>();
+				this.typeHypothesis.put(this, t);
+			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
 		}
 
 		@Override

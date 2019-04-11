@@ -1,5 +1,8 @@
 package expression;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import interpretation.Environment;
 import types.Type;
 import util.AppendableException;
@@ -18,8 +21,19 @@ public class QuotedExpression extends Expression {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		return this.quoted.infer(env);
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+		try {
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		if(this.typeHypothesis == null) {
+			this.typeHypothesis = this.quoted.infer(env);
+		}
+		hyp.putAll(this.typeHypothesis);
+		
+		return hyp;
+		}catch(AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
+		}
 	}
 
 	@Override

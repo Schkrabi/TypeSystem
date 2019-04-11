@@ -1,6 +1,8 @@
 package expression;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import interpretation.Environment;
 import semantic.UserException;
@@ -33,26 +35,24 @@ public class ExceptionExpr extends Expression {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		if(this.getType() == null)
-		{
-			//Creates a new mock type to unify with anything
-			this.setType(new TypeVariable(NameGenerator.next()));
-		}
-		
-		Type argType = this.message.infer(env);
-		
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
 		try {
-			Optional<Type> o = Type.unify(TypeConcrete.TypeString, argType);
-			if(!o.isPresent()) {
-				throw new TypesDoesNotUnifyException(TypeConcrete.TypeString, argType);
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if(this.typeHypothesis == null) {
+				Map<Expression, Type> tmp = this.message.infer(env);
+				Optional<Type> o = Type.unify(TypeConcrete.TypeString, tmp.get(this.message));
+				if(!o.isPresent()) {
+					throw new TypesDoesNotUnifyException(TypeConcrete.TypeString, tmp.get(this.message));
+				}
+				tmp.put(this,  new TypeVariable(NameGenerator.next()).quantifyUnconstrainedVariables());
+				this.typeHypothesis = tmp;
 			}
-		}catch(AppendableException e) {
-			e.appendMessage("in " + this.toString());
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
 			throw e;
 		}
-		
-		return this.getType();
 	}
 
 	@Override

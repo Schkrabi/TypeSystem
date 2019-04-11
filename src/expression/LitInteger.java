@@ -2,7 +2,9 @@ package expression;
 
 import types.Type;
 import types.TypeConcrete;
-import util.AppendableException;
+import java.util.Map;
+import java.util.TreeMap;
+
 import interpretation.Environment;
 
 /**
@@ -25,7 +27,6 @@ public class LitInteger extends Literal {
 	
 	public static LitInteger initializeDefaultImplementation(int value){
 		LitInteger l = new LitInteger(value);;
-		l.setLiteralType(TypeConcrete.TypeInt); //TODO Deprecate?
 		return l;
 	}
 	
@@ -45,9 +46,16 @@ public class LitInteger extends Literal {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		this.setType(TypeConcrete.TypeInt);
-		return TypeConcrete.TypeInt;
+	public Map<Expression, Type> infer(Environment env) {
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		
+		if(this.typeHypothesis == null) {
+			this.typeHypothesis = new TreeMap<Expression, Type>();
+			this.typeHypothesis.put(this, TypeConcrete.TypeInt);
+		}
+		
+		hyp.putAll(this.typeHypothesis);
+		return hyp;
 	} 
 	
 	@Override

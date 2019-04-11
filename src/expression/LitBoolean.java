@@ -2,7 +2,9 @@ package expression;
 
 import types.Type;
 import types.TypeConcrete;
-import util.AppendableException;
+import java.util.Map;
+import java.util.TreeMap;
+
 import interpretation.Environment;
 
 /**
@@ -20,7 +22,6 @@ public class LitBoolean extends Literal {
 
 	private LitBoolean(boolean value) { 
 		this.value = value;
-		this.setType(TypeConcrete.TypeBool);
 	}
 
 	@Override
@@ -47,9 +48,16 @@ public class LitBoolean extends Literal {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		this.setType(TypeConcrete.TypeBool);
-		return TypeConcrete.TypeBool;
+	public Map<Expression, Type> infer(Environment env) {
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		
+		if(this.typeHypothesis == null) {
+			this.typeHypothesis = new TreeMap<Expression, Type>();
+			this.typeHypothesis.put(this, TypeConcrete.TypeBool);
+		}
+		
+		hyp.putAll(this.typeHypothesis);
+		return hyp;
 	}
 	
 	@Override

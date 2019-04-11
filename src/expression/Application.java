@@ -1,9 +1,10 @@
 package expression;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
-import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
@@ -38,37 +39,37 @@ public class Application extends Expression {
 	@Override
 	public Expression interpret(Environment env) throws Exception {
 		Expression ifun = fun.interpret(env);
-		
-		if(!MetaFunction.isFunction(ifun)){
+
+		if (!MetaFunction.isFunction(ifun)) {
 			throw new Exception(ifun.toString() + "is not a function");
 		}
-		
-		Function f = ((MetaFunction)ifun).getFunction(); //Might want to add comparator here
-				
-		if(f.args.values.length != this.args.values.length) {
+
+		Function f = ((MetaFunction) ifun).getFunction(); // Might want to add comparator here
+
+		if (f.args.values.length != this.args.values.length) {
 			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected "
 					+ f.args.values.length + " got " + this.args.values.length);
 		}
-		
-		Environment childEnv = new Environment(f.creationEnvironment); //Lexical clojure!!!
+
+		Environment childEnv = new Environment(f.creationEnvironment); // Lexical clojure!!!
 		for (int i = 0; i < f.args.values.length; i++) {
 			Expression e = this.args.values[i].interpret(env);
-			Type t = e.getType();
+			// Type t = e.getType();
 			Variable v = new Variable(((Variable) f.args.values[i]).name);
-			v.setType(t);
+			// v.setType(t);
 			childEnv.put(v, e);
 		}
-		
+
 		TypeArrow lambdaType = TypeArrow.getFunctionType(f.getType());
-		
+
 		childEnv = Application.autoConvertArgs(childEnv, f.args, lambdaType.ltype);
-		
-		Expression rslt = f.body.interpret(childEnv); 
-		
-		if(ifun instanceof Constructor){
-			rslt.setType(lambdaType.rtype);
-		}
-		
+
+		Expression rslt = f.body.interpret(childEnv);
+
+		/*
+		 * if(ifun instanceof Constructor){ rslt.setType(lambdaType.rtype); }
+		 */
+
 		return rslt;
 	}
 
@@ -78,57 +79,52 @@ public class Application extends Expression {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		Type funType;
-		
-		funType = this.fun.infer(env);
-		
-		if(funType instanceof ForallType) {
-			funType = ((ForallType) funType).getBoundType();
-		}
-		
-		Type argsType = this.args.infer(env);
-
-		if (!(funType.isApplicableType())
-				&& !(funType instanceof TypeVariable)) {
-			throw new AppendableException(fun + " is not a function");
-		}
-		TypeArrow funArrType;
-
-		if(funType instanceof TypeArrow) {
-			funArrType = (TypeArrow) funType;
-		}else if(funType instanceof TypeVariable) {
-			funArrType = new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()));
-		}else {
-			throw new AppendableException(funType.toString() + "is not an applicable type");
-		}
-		
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
 		try {
-			Optional<Type> o = Type.unify(funArrType.ltype, argsType);
-			if(!o.isPresent()) {
-				throw new TypesDoesNotUnifyException(funArrType.ltype, argsType);
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+
+			if (this.typeHypothesis == null) {
+				Map<Expression, Type> funHyp = this.fun.infer(env);
+				Map<Expression, Type> argsHyp = this.args.infer(env);
+
+				Optional<Type> unifiedArgsType = Type.unify(funHyp.get(this.args), argsHyp.get(this.args));
+				if (!unifiedArgsType.isPresent()) {
+					throw new TypesDoesNotUnifyException(funHyp.get(this.args), argsHyp.get(this.args));
+				}
+
+				Map<Expression, Type> tmp = new TreeMap<Expression, Type>();
+				tmp.putAll(funHyp);
+				tmp.putAll(argsHyp);
+				tmp.put(this.args, unifiedArgsType.get());
+
+				Type funType = funHyp.get(this.fun);
+				if (!funType.isApplicableType()) {
+					throw new AppendableException("Type " + funType + " of " + this.fun + " is not TypeArrow!");
+				}
+
+				tmp.put(this, ((TypeArrow) funType).rtype);
+
+				this.typeHypothesis = tmp;
 			}
-			
-		}catch(AppendableException e) {
-			e.appendMessage("in " + this.toString());
+			hyp.putAll(this.typeHypothesis);
+
+			return hyp;
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
 			throw e;
 		}
-		
-		this.setType(funArrType.rtype);
-
-		return funArrType.rtype;
 	}
 
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		Expression f = this.fun.substituteTopLevelVariables(topLevel);
 		Expression a = this.args.substituteTopLevelVariables(topLevel);
-		
-		if(a instanceof Tuple) {
-			Tuple t = (Tuple)a;
+
+		if (a instanceof Tuple) {
+			Tuple t = (Tuple) a;
 			return new Application(f, t);
-		}else {
-		//	return new Application(f, a);
+		} else {
+			// return new Application(f, a);
 			throw new Exception("Argument is always tuple");
 		}
 	}
@@ -137,28 +133,28 @@ public class Application extends Expression {
 	public String toClojureCode() throws Exception {
 		StringBuilder s = new StringBuilder();
 		s.append('(');
-		
-		/*if(!MetaLambda.isApplicableExpression(this.fun)){
-			throw new Exception(this.fun.toString() + " is not a function");
-		}*/
-		
+
+		/*
+		 * if(!MetaLambda.isApplicableExpression(this.fun)){ throw new
+		 * Exception(this.fun.toString() + " is not a function"); }
+		 */
+
 		s.append(this.fun.toClojureCode());
 		s.append(' ');
 
 		TypeArrow funType = TypeArrow.getFunctionType(this.fun.getType());
-		
+
 		TypeTuple argsType;
-		
-		if(funType.ltype instanceof TypeTuple) {
+
+		if (funType.ltype instanceof TypeTuple) {
 			argsType = (TypeTuple) funType.ltype;
-		}
-		else if(funType.ltype instanceof TypeVariable) {
+		} else if (funType.ltype instanceof TypeVariable) {
 			Type[] ts = new Type[this.args.values.length];
-			
-			for(int i = 0; i < this.args.values.length; i++) {
+
+			for (int i = 0; i < this.args.values.length; i++) {
 				ts[i] = new TypeVariable(NameGenerator.next());
 			}
-			
+
 			argsType = new TypeTuple(ts);
 		} else {
 			throw new AppendableException("Problem with functional type of " + this.fun);
@@ -183,7 +179,7 @@ public class Application extends Expression {
 		s.append(')');
 		return s.toString();
 	}
-	
+
 	/**
 	 * Lazily converts all the arguments to given representation
 	 * 
@@ -197,13 +193,13 @@ public class Application extends Expression {
 	 * @throws Exception
 	 */
 	private static Environment autoConvertArgs(Environment e, Tuple args, Type argType) throws Exception {
-		if(argType instanceof TypeVariable){
+		if (argType instanceof TypeVariable) {
 			return e;
 		}
-		if(!(argType instanceof TypeTuple)){
+		if (!(argType instanceof TypeTuple)) {
 			throw new AppendableException("Args type of function must be single vartiable or typetuple got " + argType);
 		}
-		TypeTuple argTypes = (TypeTuple)argType;
+		TypeTuple argTypes = (TypeTuple) argType;
 		Environment ret = new Environment(e.parent);
 
 		for (int i = 0; i < args.values.length; i++) {
@@ -211,10 +207,10 @@ public class Application extends Expression {
 			Type fromType = e.getVariableValue((Variable) args.values[i]).getType();
 			Expression arg = e.getVariableValue((Variable) args.values[i]);
 			Type toType = argTypes.values[i];
-			
+
 			ret.put(name, fromType.convertTo(arg, toType));
 		}
 
 		return ret;
-}
+	}
 }

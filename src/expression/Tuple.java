@@ -1,7 +1,10 @@
 package expression;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.TreeMap;
+
 import types.Type;
 import types.TypeTuple;
 import util.AppendableException;
@@ -35,7 +38,6 @@ public class Tuple extends Expression implements Iterable<Expression> {
 			vls[i] = this.values[i].interpret(env);
 		}
 		Tuple t = new Tuple(vls);
-		t.setType(this.getType());
 		return t;
 		
 	}
@@ -54,15 +56,25 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		Type types[] = new Type[this.values.length];
-		for (int i = 0; i < this.values.length; i++) {
-			types[i] = this.values[i].infer(env);
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+		try {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if(this.typeHypothesis == null) {
+				this.typeHypothesis = new TreeMap<Expression, Type>();
+				
+				Type types[] = new Type[this.values.length];
+				for(int i = 0; i < this.values.length; i++) {
+					this.typeHypothesis.putAll(this.values[i].infer(env));
+					types[i] = this.typeHypothesis.get(this.values[i]);
+				}
+				this.typeHypothesis.put(this, new TypeTuple(types).quantifyUnconstrainedVariables());
+			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
+		}catch (AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
 		}
-
-		Type t = new TypeTuple(types);
-		this.setType(t);
-		return t;
 	}
 
 	@Override

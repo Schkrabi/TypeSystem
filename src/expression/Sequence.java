@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import interpretation.Environment;
 import types.Type;
 import util.AppendableException;
@@ -42,19 +45,22 @@ public class Sequence extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		Type headType = this.head().infer(env);
-		Type ret;
-
-		if (headType.isApplicableType()) {
-			Application tmp = new Application(this.head(), this.tail());
-			ret = tmp.infer(env);
-		} else {
-			ret = this.asTuple().infer(env);
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		
+		if(this.typeHypothesis == null) {
+			Map<Expression, Type> headInfer = this.head().infer(env);
+			if (headInfer.get(this.head()).isApplicableType()) {
+				Application tmp = new Application(this.head(), this.tail());
+				this.typeHypothesis = tmp.infer(env);
+			}
+			else {
+				this.typeHypothesis = this.asTuple().infer(env);
+			}			
 		}
-
-		this.setType(ret);
-		return ret;
+		hyp.putAll(this.typeHypothesis);
+		
+		return hyp;
 	}
 
 	@Override

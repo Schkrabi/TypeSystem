@@ -1,10 +1,13 @@
 package expression;
 
+import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -13,8 +16,10 @@ import interpretation.Environment;
 import types.ForallType;
 import types.Type;
 import types.TypeArrow;
+import types.TypeSetDoesNotUnifyException;
 import types.TypeVariable;
 import util.AppendableException;
+import util.ThrowingFunction;
 
 /**
  * Extended lambda expression allowing for the different implementation of body
@@ -36,14 +41,13 @@ public class ExtendedLambda extends MetaLambda {
 		this.implementations = aux;
 	}
 
-	public ExtendedLambda(Tuple args, Expression defaultImplementation,
-			Set<Lambda> specificImplementations) {
+	public ExtendedLambda(Tuple args, Expression defaultImplementation, Set<Lambda> specificImplementations) {
 		Set<Lambda> aux = new TreeSet<Lambda>();
 		aux.add(new Lambda(args, defaultImplementation));
 		aux.addAll(specificImplementations);
 		this.implementations = aux;
 	}
-	
+
 	public ExtendedLambda(Set<Lambda> implementations) {
 		this.implementations = implementations;
 	}
@@ -51,70 +55,60 @@ public class ExtendedLambda extends MetaLambda {
 	@Override
 	public Expression interpret(Environment env) throws Exception {
 		Set<Function> s = new TreeSet<Function>();
-		
-		for(Lambda l : this.implementations){
-			Function f = (Function)l.interpret(env);
+
+		for (Lambda l : this.implementations) {
+			Function f = (Function) l.interpret(env);
 			s.add(f);
 		}
-		
+
 		ExtendedFunction ef = new ExtendedFunction(s, env);
 		ef.infer(env);
 		return ef;
 	}
-	
-	/**
-	 * Cannot do this through functional lambdas because throws Exception
-	 * @param env environment in which inference is carried out
-	 * @param exprs set of expressions for which types are unfered
-	 * @return set of infered types
-	 * @throws Exception
-	 */
-	private static Set<Type> inferSet(Environment env, Set<Expression> exprs) throws Exception{
-		Set<Type> s = new TreeSet<Type>();
-		
-		for(Expression e : exprs) {
-			s.add(e.infer(env));
-		}
-		return s;
-	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		Set<Type> ltypes = this.implementations.stream().map(x -> x.argsType).collect(Collectors.toSet());
-		ltypes = ltypes.stream().filter(x -> x != null).collect(Collectors.toSet());
-		Set<Type> rtypes;
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
 		try {
-			rtypes = ExtendedLambda.inferSet(env, this.implementations.stream().map(x -> x.body).collect(Collectors.toSet()));
-		} catch (Exception e) {
-			throw new AppendableException("Not implemented");
-		}
-		
-		if(!Type.unifyMany(ltypes)){
-			//throw new Exception("Argument types " + ltypes.toString() +  " of extended lambda " + this.toString() + " does not unify!");
-			//TODO
-		}
-		if(!Type.unifyMany(rtypes)) {
-			//throw new Exception("Body types " + rtypes.toString() + " of extended lambda " + this.toString() + " does not unify!");
-			//TODO
-		}
-		
-		Optional<Type> ol = ltypes.stream().findAny();
-		Optional<Type> or = rtypes.stream().findAny();
-		
-		if(!ol.isPresent() || !or.isPresent()) {
-			//throw new Exception("Mallformed extended lambda? " + this.toString());
-			//TODO
-		}
-		
-		Type t = new TypeArrow(ol.get(), or.get());
-		
-		for (TypeVariable v : t.getUnconstrainedVariables()) {
-			t = new ForallType(v, t);
-		}
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if (this.typeHypothesis == null) {
+				final Map<Expression, Map<Expression, Type>> infered = this.implementations.stream().map(
+						(ThrowingFunction<Expression, AbstractMap.SimpleEntry<Expression, Map<Expression, Type>>>) (x -> new AbstractMap.SimpleEntry<Expression, Map<Expression, Type>>(
+								x, x.infer(env))))
+						.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-		this.setType(t);
+				Set<Type> implTypes = infered.entrySet().stream().map(x -> x.getValue().get(x.getKey()))
+						.collect(Collectors.toSet());
 
-		return t;
+				Optional<Type> ltype = Type
+						.unifyMany(implTypes.stream().map(x -> ((TypeArrow) x).ltype).collect(Collectors.toSet()));
+				if (!ltype.isPresent()) {
+					throw new TypeSetDoesNotUnifyException(
+							implTypes.stream().map(x -> ((TypeArrow) x).ltype).collect(Collectors.toSet()));
+				}
+
+				Optional<Type> rtype = Type
+						.unifyMany(implTypes.stream().map(x -> ((TypeArrow) x).rtype).collect(Collectors.toSet()));
+				if (!rtype.isPresent()) {
+					throw new TypeSetDoesNotUnifyException(
+							implTypes.stream().map(x -> ((TypeArrow) x).rtype).collect(Collectors.toSet()));
+				}
+
+				this.typeHypothesis = infered.entrySet().stream().flatMap(x -> x.getValue().entrySet().stream())
+						.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+				Type t = new TypeArrow(ltype.get(), rtype.get());
+				for (TypeVariable tv : t.getUnconstrainedVariables()) {
+					t = new ForallType(tv, t);
+				}
+
+				this.typeHypothesis.put(this, t);
+			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
+		}
 	}
 
 	/**
@@ -137,72 +131,72 @@ public class ExtendedLambda extends MetaLambda {
 	 *            comparator determining the ordering of the implementations
 	 * @return priority queue of ImplContainers
 	 */
-	public PriorityQueue<Lambda> getSortedImplementations(
-			Comparator<? super Lambda> c) {
+	public PriorityQueue<Lambda> getSortedImplementations(Comparator<? super Lambda> c) {
 		PriorityQueue<Lambda> q = new PriorityQueue<Lambda>(c);
 		q.addAll(this.implementations);
 		return q;
 	}
-	
+
 	public Lambda defaultImplementation() {
 		Optional<Lambda> o = this.implementations.stream().filter(new Predicate<Lambda>() {
 
 			@Override
 			public boolean test(Lambda arg0) {
 				return arg0.argsType == null;
-			}}).findAny();
-		
+			}
+		}).findAny();
+
 		return o.get();
 	}
-	
+
 	@Override
-	public String toString(){
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		
+
 		Lambda di = this.defaultImplementation();
-		
+
 		sb.append("ExtendedLabmbda ");
 		sb.append(di.args);
 		sb.append(" ");
 		sb.append(di.body);
-		if(this.implementations.size() > 1) {
+		if (this.implementations.size() > 1) {
 			sb.append(" ");
 		}
-		
+
 		Iterator<Lambda> i = this.implementations.iterator();
-		
-		while(i.hasNext()){
+
+		while (i.hasNext()) {
 			Lambda c = i.next();
-			if(c.argsType != null) {
+			if (c.argsType != null) {
 				sb.append("(");
 				sb.append(c.argsType);
 				sb.append(" ");
 				sb.append(c.body);
 				sb.append(")");
-				if(i.hasNext()){
+				if (i.hasNext()) {
 					sb.append(" ");
 				}
 			}
 		}
-		
+
 		sb.append(")");
-		
+
 		return sb.toString();
 	}
 
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
 		Set<Lambda> tmp = new TreeSet<Lambda>();
-		for(Lambda l : this.implementations){
-			tmp.add((Lambda)l.substituteTopLevelVariables(topLevel));
+		for (Lambda l : this.implementations) {
+			tmp.add((Lambda) l.substituteTopLevelVariables(topLevel));
 		}
-		
+
 		return new ExtendedLambda(tmp);
 	}
 
 	@Override
 	public String toClojureCode() throws Exception {
-		Lambda l = this.getSortedImplementations().peek(); //Comparator?
+		Lambda l = this.getSortedImplementations().peek(); // Comparator?
 		return l.toClojureCode();
 	}
 

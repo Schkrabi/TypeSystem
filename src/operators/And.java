@@ -5,6 +5,10 @@ import types.Type;
 import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeTuple;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 import expression.Expression;
 import expression.Function;
 import expression.LitBoolean;
@@ -24,9 +28,8 @@ public class And extends Function {
 	public static final And singleton = new And();
 
 	private And() {
-		super(	new TypeTuple(new Type[] { TypeConcrete.TypeBool, TypeConcrete.TypeBool}),
-				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }),
-				AndWrapper.singleton,
+		super(new TypeTuple(new Type[] { TypeConcrete.TypeBool, TypeConcrete.TypeBool }),
+				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }), AndWrapper.singleton,
 				new Environment());
 		this.infer(new Environment());
 	}
@@ -35,19 +38,24 @@ public class And extends Function {
 	public String toString() {
 		return "AND";
 	}
-	
+
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) {
 		return this;
 	}
-	
+
 	@Override
-	public Type infer(Environment env){
-		Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeBool, TypeConcrete.TypeBool}), TypeConcrete.TypeBool);
-		this.setType(t);
-		return t;
+	public Map<Expression, Type> infer(Environment env) {
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		if (this.typeHypothesis == null) {
+			this.typeHypothesis = new TreeMap<Expression, Type>();
+			this.typeHypothesis.put(this, new TypeArrow(
+					new TypeTuple(new Type[] { TypeConcrete.TypeBool, TypeConcrete.TypeBool }), TypeConcrete.TypeBool));
+		}
+		hyp.putAll(this.typeHypothesis);
+		return hyp;
 	}
-	
+
 	@Override
 	public String toClojureCode() throws Exception {
 		return "and";
@@ -65,7 +73,8 @@ public class And extends Function {
 		 */
 		public static final AndWrapper singleton = new AndWrapper();
 
-		private AndWrapper() {}
+		private AndWrapper() {
+		}
 
 		@Override
 		public Expression interpret(Environment env) throws Exception {
@@ -80,9 +89,15 @@ public class And extends Function {
 		}
 
 		@Override
-		public Type infer(Environment env) {
-			this.setType(TypeConcrete.TypeBool);
-			return TypeConcrete.TypeBool;
+		public Map<Expression, Type> infer(Environment env) {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if (this.typeHypothesis == null) {
+				Type t = TypeConcrete.TypeBool;
+				this.typeHypothesis = new TreeMap<Expression, Type>();
+				this.typeHypothesis.put(this, t);
+			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
 		}
 
 		@Override

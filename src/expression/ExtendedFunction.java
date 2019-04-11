@@ -2,17 +2,23 @@ package expression;
 
 import interpretation.Environment;
 
+import java.util.AbstractMap;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import types.ForallType;
 import types.Type;
+import types.TypeArrow;
+import types.TypeSetDoesNotUnifyException;
 import types.TypeVariable;
-import types.TypesDoesNotUnifyException;
 import util.AppendableException;
+import util.ThrowingFunction;
 
 /**
  * Expression for interpreted function with various implementations
@@ -42,42 +48,48 @@ public class ExtendedFunction extends MetaFunction {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		Type lastType = null;
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+		try {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if (this.typeHypothesis == null) {
+				final Map<Expression, Map<Expression, Type>> infered = this.implementations.stream().map(
+						(ThrowingFunction<Expression, AbstractMap.SimpleEntry<Expression, Map<Expression, Type>>>) (x -> new AbstractMap.SimpleEntry<Expression, Map<Expression, Type>>(
+								x, x.infer(this.creationEnvironment))))
+						.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-		for (Function f : this.implementations) {
-			Type currentType = f.infer(env);
-			
-			if(lastType == null) {
-				lastType = currentType;
-				continue;
-			}
-			
-			try {
-				Optional<Type> o = Type.unify(lastType, currentType);
-				if(!o.isPresent()) {
-					throw new TypesDoesNotUnifyException(lastType, currentType);
+				Set<Type> implTypes = infered.entrySet().stream().map(x -> x.getValue().get(x.getKey()))
+						.collect(Collectors.toSet());
+
+				Optional<Type> ltype = Type
+						.unifyMany(implTypes.stream().map(x -> ((TypeArrow) x).ltype).collect(Collectors.toSet()));
+				if (!ltype.isPresent()) {
+					throw new TypeSetDoesNotUnifyException(
+							implTypes.stream().map(x -> ((TypeArrow) x).ltype).collect(Collectors.toSet()));
 				}
-			}catch(AppendableException e) {
-				e.appendMessage("in " + this.toString());
-				throw e;
+
+				Optional<Type> rtype = Type
+						.unifyMany(implTypes.stream().map(x -> ((TypeArrow) x).rtype).collect(Collectors.toSet()));
+				if (!rtype.isPresent()) {
+					throw new TypeSetDoesNotUnifyException(
+							implTypes.stream().map(x -> ((TypeArrow) x).rtype).collect(Collectors.toSet()));
+				}
+
+				this.typeHypothesis = infered.entrySet().stream().flatMap(x -> x.getValue().entrySet().stream())
+						.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+				Type t = new TypeArrow(ltype.get(), rtype.get());
+				for (TypeVariable tv : t.getUnconstrainedVariables()) {
+					t = new ForallType(tv, t);
+				}
+
+				this.typeHypothesis.put(this, t);
 			}
-			
-			//Is this transitive?
-			lastType = currentType;
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
 		}
-		
-		Type t = lastType;
-		
-		//Might want to add comparator into the scope...
-		
-		for (TypeVariable v : t.getUnconstrainedVariables()) {
-			t = new ForallType(v, t);
-		}
-
-		this.setType(t);
-
-		return t;
 	}
 	
 	public PriorityQueue<Function> getSortedImplementations(

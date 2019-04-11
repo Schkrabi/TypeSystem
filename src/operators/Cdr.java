@@ -6,6 +6,11 @@ import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
+import util.NameGenerator;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 import expression.Expression;
 import expression.Function;
 import expression.Tuple;
@@ -41,13 +46,19 @@ public class Cdr extends Function {
 	}
 	
 	@Override
-	public Type infer(Environment env){
-		TypeVariable fst = (TypeVariable)((TypeTuple)this.argsType.values[0]).values[0];
-		TypeVariable snd = (TypeVariable)((TypeTuple)this.argsType.values[0]).values[1];
-		
-		Type t = new TypeArrow(new TypeTuple(new Type[]{ new TypeTuple(new Type[]{ fst, snd})}), snd);
-		this.setType(t);
-		return t;
+	public Map<Expression, Type> infer(Environment env){
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		if(this.typeHypothesis == null) {
+			TypeVariable fst = (TypeVariable)((TypeTuple)this.argsType.values[0]).values[0];
+			TypeVariable snd = (TypeVariable)((TypeTuple)this.argsType.values[0]).values[1];
+			
+			Type t = new TypeArrow(new TypeTuple(new Type[]{ new TypeTuple(new Type[]{ fst, snd})}), snd);
+			
+			this.typeHypothesis = new TreeMap<Expression, Type>();
+			this.typeHypothesis.put(this, t.quantifyUnconstrainedVariables());
+		}
+		hyp.putAll(this.typeHypothesis);
+		return hyp;	
 	}
 	
 	@Override
@@ -86,8 +97,15 @@ public class Cdr extends Function {
 		}
 
 		@Override
-		public Type infer(Environment env) throws AppendableException {
-			throw new AppendableException("Not implemented");
+		public Map<Expression, Type> infer(Environment env) {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if (this.typeHypothesis == null) {
+				Type t = new TypeVariable(NameGenerator.next());
+				this.typeHypothesis = new TreeMap<Expression, Type>();
+				this.typeHypothesis.put(this, t.quantifyUnconstrainedVariables());
+			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
 		}
 
 		@Override

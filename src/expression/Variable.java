@@ -1,9 +1,14 @@
 package expression;
 
 import types.Type;
+import types.TypeConcrete;
 import types.TypeVariable;
 import util.AppendableException;
 import util.NameGenerator;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 import interpretation.Environment;
 
 /**
@@ -43,21 +48,24 @@ public class Variable extends Expression implements Comparable<Variable> {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		if(this.inferedType != null){
-			return this.getType();
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+		try {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			
+			if(env.containsVariable(this)) {
+				Expression e = env.getVariableValue(this);
+				Map<Expression, Type> tmp = e.infer(env);
+				hyp.putAll(tmp);
+				hyp.put(this, tmp.get(e));
+			}
+			else {
+				hyp.put(this, new TypeVariable(NameGenerator.next()).quantifyUnconstrainedVariables());
+			}
+			return hyp;
+		}catch(AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
 		}
-		if(env.containsVariable(this)) {
-			this.setType(env.getVariableValue(this).getType());
-			return this.getType();
-		}
-		Type t = new TypeVariable(NameGenerator.next());
-		this.setType(t);
-		return t;
-	}
-
-	public void setType(Type type) {
-		this.inferedType = type;
 	}
 
 	@Override
@@ -72,5 +80,17 @@ public class Variable extends Expression implements Comparable<Variable> {
 	@Override
 	public String toClojureCode() throws Exception {
 		return this.name;
+	}
+
+	/**
+	 * Sets type of a variable, used in semantic parser for type annotated variables
+	 * @param typeConcrete
+	 * @throws AppendableException
+	 */
+	public void setType(TypeConcrete typeConcrete) throws AppendableException {
+		if(this.typeHypothesis == null) {
+			this.infer(new Environment());	
+		}		
+		this.typeHypothesis.put(this, typeConcrete);
 	}
 }

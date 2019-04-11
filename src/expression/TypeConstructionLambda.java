@@ -1,5 +1,8 @@
 package expression;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import interpretation.Environment;
 import types.ForallType;
 import types.Type;
@@ -27,16 +30,32 @@ public class TypeConstructionLambda extends Lambda {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException{
-		Type infered = super.infer(env);
-		if(!infered.isApplicableType()){
-			throw new AppendableException("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
+	public Map<Expression, Type> infer(Environment env) throws AppendableException{
+		try {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			
+			if(this.typeHypothesis == null) {
+				Map<Expression, Type> infered = super.infer(env);
+				Type t = infered.get(this);
+				if(t.isApplicableType()) {
+					throw new AppendableException("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
+				}
+				TypeArrow ta = null;
+				if(t instanceof ForallType) {
+					ta = (TypeArrow)((ForallType)t).getBoundType();
+				}
+				
+				Type newType = new TypeArrow(ta.ltype, this.constructedType);
+				
+				infered.put(this, newType.quantifyUnconstrainedVariables());
+				this.typeHypothesis = infered;
+			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
 		}
-		if(infered instanceof ForallType) {
-			infered = ((ForallType)infered).getBoundType();
-		}
-		
-		return new TypeArrow(this.argsType, this.constructedType);
 	}
 	
 	@Override

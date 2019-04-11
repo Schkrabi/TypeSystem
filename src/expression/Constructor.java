@@ -1,7 +1,8 @@
 package expression;
 
+import java.util.Map;
+
 import interpretation.Environment;
-import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
@@ -9,11 +10,12 @@ import util.AppendableException;
 
 /**
  * Expression for representation of interpreted constructor
+ * 
  * @author Mgr. Radomir Skrabal
  *
  */
 public class Constructor extends Function {
-	
+
 	/**
 	 * Constructed type
 	 */
@@ -26,21 +28,17 @@ public class Constructor extends Function {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException{
-		Type infered = super.infer(this.creationEnvironment);
-		if(!infered.isApplicableType()){
-			throw new AppendableException("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
-		}
-		if(infered instanceof ForallType) {
-			infered = ((ForallType)infered).getBoundType();
-		}
-		
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+		Map<Expression, Type> infered = super.infer(this.creationEnvironment);
+
 		Type cType = new TypeArrow(this.argsType, this.constructedType);
-		this.setType(cType);
-		
-		return cType;
+
+		this.typeHypothesis.put(this, cType.quantifyUnconstrainedVariables());
+		infered.put(this, cType);
+
+		return infered;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "(" + this.constructedType.toString() + " " + this.args.toString() + " " + this.body.toString() + ")";

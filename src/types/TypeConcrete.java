@@ -120,7 +120,7 @@ public class TypeConcrete extends Type {
 		}
 
 		Application a = new Application(constructor, new Tuple(new Expression[]{arg}));
-		a.setType(type);
+
 		return a;
 	}
 

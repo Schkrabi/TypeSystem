@@ -6,6 +6,11 @@ import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeTuple;
 import types.TypeVariable;
+import util.NameGenerator;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 import expression.Expression;
 import expression.Function;
 import expression.LitBoolean;
@@ -20,9 +25,8 @@ public class Equals extends Function {
 	public static final Equals singleton = new Equals();
 
 	private Equals() {
-		super(new TypeTuple(new Type[]{new TypeVariable("_a"), new TypeVariable("_a")}),
-				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }),
-				EqWrapper.singleton, 
+		super(new TypeTuple(new Type[] { new TypeVariable("_a"), new TypeVariable("_a") }),
+				new Tuple(new Variable[] { new Variable("_x"), new Variable("_y") }), EqWrapper.singleton,
 				new Environment());
 		this.infer(new Environment());
 	}
@@ -31,19 +35,27 @@ public class Equals extends Function {
 	public String toString() {
 		return "equals?";
 	}
-	
+
 	@Override
 	public Expression substituteTopLevelVariables(Environment topLevel) {
 		return this;
 	}
-	
+
 	@Override
-	public Type infer(Environment env){
-		Type t = new TypeArrow(this.argsType, TypeConcrete.TypeBool);
-		this.setType(t);
-		return t;
+	public Map<Expression, Type> infer(Environment env) {
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		if (this.typeHypothesis == null) {
+			Type t = new TypeArrow(new TypeTuple(
+					new Type[] { new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()) }),
+					TypeConcrete.TypeBool);
+
+			this.typeHypothesis = new TreeMap<Expression, Type>();
+			this.typeHypothesis.put(this, t.quantifyUnconstrainedVariables());
+		}
+		hyp.putAll(this.typeHypothesis);
+		return hyp;
 	}
-	
+
 	@Override
 	public String toClojureCode() throws Exception {
 		return "=";
@@ -77,9 +89,15 @@ public class Equals extends Function {
 		}
 
 		@Override
-		public Type infer(Environment env) {
-			this.setType(TypeConcrete.TypeBool);
-			return TypeConcrete.TypeBool;
+		public Map<Expression, Type> infer(Environment env) {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if (this.typeHypothesis == null) {
+				Type t = TypeConcrete.TypeBool;
+				this.typeHypothesis = new TreeMap<Expression, Type>();
+				this.typeHypothesis.put(this, t.quantifyUnconstrainedVariables());
+			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
 		}
 
 		@Override

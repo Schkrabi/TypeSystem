@@ -1,5 +1,8 @@
 package operators;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import expression.Expression;
 import expression.Function;
 import expression.LitInteger;
@@ -43,10 +46,16 @@ public class Subtraction extends Function {
 	}
 	
 	@Override
-	public Type infer(Environment env){
-		Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}), TypeConcrete.TypeInt);
-		this.setType(t);
-		return t;
+	public Map<Expression, Type> infer(Environment env){
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		if(this.typeHypothesis == null) {
+			Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}), TypeConcrete.TypeInt);
+			
+			this.typeHypothesis = new TreeMap<Expression, Type>();
+			this.typeHypothesis.put(this, t.quantifyUnconstrainedVariables());
+		}
+		hyp.putAll(this.typeHypothesis);
+		return hyp;
 	}
 	
 	@Override
@@ -82,9 +91,15 @@ public class Subtraction extends Function {
 		}
 
 		@Override
-		public Type infer(Environment env) {
-			this.setType(TypeConcrete.TypeInt);
-			return TypeConcrete.TypeInt;
+		public Map<Expression, Type> infer(Environment env) {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if (this.typeHypothesis == null) {
+				Type t = TypeConcrete.TypeInt;
+				this.typeHypothesis = new TreeMap<Expression, Type>();
+				this.typeHypothesis.put(this, t.quantifyUnconstrainedVariables());
+			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
 		}
 
 		@Override

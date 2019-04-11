@@ -1,14 +1,14 @@
 package expression;
 
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import interpretation.Environment;
-import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
-import types.TypeVariable;
 import types.TypesDoesNotUnifyException;
 import util.AppendableException;
 
@@ -40,31 +40,47 @@ public class Function extends MetaFunction implements Comparable<Function>{
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		Type inferedArgsType = this.args.infer(new Environment());
-		Type bodyType = this.body.infer(this.creationEnvironment);
-
-		if(this.argsType != null) {
-			try {
-				Optional<Type> o = Type.unify(this.argsType, inferedArgsType);
-				if(!o.isPresent()) {
-					throw new TypesDoesNotUnifyException(this.argsType, inferedArgsType);
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+		try {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			
+			if(this.typeHypothesis == null) {
+				Map<Expression, Type> tmp = new TreeMap<Expression, Type>();
+				
+				Map<Expression, Type> inferedArgs = this.args.infer(new Environment());
+				Map<Expression, Type> inferedBody = this.body.infer(this.creationEnvironment);
+				
+				tmp.putAll(inferedBody);
+				
+				for(Map.Entry<Expression, Type> e : inferedArgs.entrySet()) {
+					Optional<Type> t = Type.unify(e.getValue(), inferedBody.get(e.getKey()));
+					
+					if(!t.isPresent()) {
+						throw new TypesDoesNotUnifyException(e.getValue(), inferedBody.get(e.getKey()));
+					}
+					
+					tmp.put(e.getKey(), t.get());
 				}
-			}catch(AppendableException e) {
-				e.appendMessage("in " + this.toString());
-				throw e;
+				
+				if(this.argsType != null) {
+					Optional<Type> o = Type.unify(this.argsType, tmp.get(this.args));
+					
+					if(!o.isPresent()) {
+						throw new TypesDoesNotUnifyException(this.argsType, inferedBody.get(this.args));
+					}
+					
+					tmp.put(this.args, o.get());
+				}
+				
+				tmp.put(this, new TypeArrow(tmp.get(this.args), tmp.get(this.body)).quantifyUnconstrainedVariables());
+				this.typeHypothesis = tmp;
 			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
 		}
-
-		Type t = new TypeArrow(this.argsType == null ? inferedArgsType : this.argsType, bodyType);
-
-		for (TypeVariable v : t.getUnconstrainedVariables()) {
-			t = new ForallType(v, t);
-		}
-
-		this.setType(t);
-
-		return t;
 	}
 
 	@Override

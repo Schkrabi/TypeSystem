@@ -5,7 +5,12 @@ import types.Type;
 import types.TypeConcrete;
 import types.TypeRepresentation;
 import types.TypeTuple;
+import util.AppendableException;
 import expression.TypeConstructionLambda;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 import expression.Expression;
 import expression.Literal;
 import expression.Tuple;
@@ -28,14 +33,23 @@ public class IntToIntStringWrapper extends ConversionWrapper{
 		}
 		LitInteger i = (LitInteger)e;
 		Literal l = new LitString(Integer.toString(i.value));
-		l.setLiteralType(TypeRepresentation.TypeIntString);
 		return l;
 	}
 
 	@Override
-	public Type infer(Environment env) {
-		this.setType(TypeRepresentation.TypeIntString);
-		return TypeRepresentation.TypeIntString;
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+		try {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if (this.typeHypothesis == null) {
+				this.typeHypothesis = ConversionWrapper.arg.infer(env);
+				this.typeHypothesis.put(this, TypeRepresentation.TypeIntString);
+			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
+		}
 	}
 
 	@Override

@@ -2,7 +2,9 @@ package expression;
 
 import types.Type;
 import types.TypeConcrete;
-import util.AppendableException;
+import java.util.Map;
+import java.util.TreeMap;
+
 import expression.Expression;
 import expression.Literal;
 import interpretation.Environment;
@@ -21,7 +23,6 @@ public class LitDouble extends Literal {
 	
 	public LitDouble(double value) {
 		this.value = value;
-		this.setType(TypeConcrete.TypeDouble);
 	}
 
 	@Override
@@ -45,9 +46,16 @@ public class LitDouble extends Literal {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		this.setType(TypeConcrete.TypeDouble);
-		return TypeConcrete.TypeDouble;
+	public Map<Expression, Type> infer(Environment env) {
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		
+		if(this.typeHypothesis == null) {
+			this.typeHypothesis = new TreeMap<Expression, Type>();
+			this.typeHypothesis.put(this, TypeConcrete.TypeDouble);
+		}
+		
+		hyp.putAll(this.typeHypothesis);
+		return hyp;
 	}
 	
 	@Override

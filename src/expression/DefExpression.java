@@ -1,5 +1,8 @@
 package expression;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import interpretation.Environment;
 import types.Type;
 import types.TypeTuple;
@@ -36,10 +39,21 @@ public class DefExpression extends Expression {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		this.defined.infer(env);
-		env.put(this.name, this.defined);// Funny think what one has to do for side effects...
-		return TypeTuple.EMPTY_TUPLE;
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+		try {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if(this.typeHypothesis == null) {
+				Map<Expression, Type> tmp = this.defined.infer(env);
+				tmp.put(this, TypeTuple.EMPTY_TUPLE);
+				this.typeHypothesis = tmp;
+			}
+			hyp.putAll(this.typeHypothesis);
+			
+			return hyp;
+		}catch (AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
+		}
 	}
 
 	@Override

@@ -5,6 +5,10 @@ import types.Type;
 import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeTuple;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 import expression.Expression;
 import expression.Function;
 import expression.LitBoolean;
@@ -38,10 +42,16 @@ public class NumericEqual extends Function {
 	}
 	
 	@Override
-	public Type infer(Environment env){
-		Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}), TypeConcrete.TypeBool);
-		this.setType(t);
-		return t;
+	public Map<Expression, Type> infer(Environment env){
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		if(this.typeHypothesis == null) {
+			Type t = new TypeArrow(new TypeTuple(new Type[]{TypeConcrete.TypeInt, TypeConcrete.TypeInt}), TypeConcrete.TypeBool);
+			
+			this.typeHypothesis = new TreeMap<Expression, Type>();
+			this.typeHypothesis.put(this, t.quantifyUnconstrainedVariables());
+		}
+		hyp.putAll(this.typeHypothesis);
+		return hyp;
 	}
 	
 	@Override
@@ -77,9 +87,15 @@ public class NumericEqual extends Function {
 		}
 
 		@Override
-		public Type infer(Environment env) {
-			this.setType(TypeConcrete.TypeBool);
-			return TypeConcrete.TypeBool;
+		public Map<Expression, Type> infer(Environment env) {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if (this.typeHypothesis == null) {
+				Type t = TypeConcrete.TypeBool;
+				this.typeHypothesis = new TreeMap<Expression, Type>();
+				this.typeHypothesis.put(this, t.quantifyUnconstrainedVariables());
+			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
 		}
 
 		@Override

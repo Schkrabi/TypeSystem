@@ -23,10 +23,6 @@ public abstract class Literal extends Expression {
 		return this;
 	}
 	
-	public void setLiteralType(Type type){
-		this.setType(type);
-	}
-	
 	/**
 	 * Wrapper for conversions
 	 * 

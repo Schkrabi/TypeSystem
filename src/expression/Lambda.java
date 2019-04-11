@@ -2,12 +2,13 @@ package expression;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
 
-import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
-import types.TypeVariable;
 import types.TypesDoesNotUnifyException;
 import util.AppendableException;
 import interpretation.Environment;
@@ -18,7 +19,7 @@ import interpretation.Environment;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Lambda extends MetaLambda implements Comparable<Lambda>{
+public class Lambda extends MetaLambda implements Comparable<Lambda> {
 
 	/**
 	 * Formal arguments (names) of the lambda expression
@@ -66,30 +67,47 @@ public class Lambda extends MetaLambda implements Comparable<Lambda>{
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		Type inferedArgsType = this.args.infer(new Environment());
-		Type bodyType = this.body.infer(env);
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+		try {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
 
-		if(this.argsType != null) {
-			try {
-				if(!Type.unify(this.argsType, inferedArgsType).isPresent()) {
-					throw new TypesDoesNotUnifyException(this.argsType, inferedArgsType);
+			if (this.typeHypothesis == null) {
+				Map<Expression, Type> tmp = new TreeMap<Expression, Type>();
+
+				Map<Expression, Type> inferedArgs = this.args.infer(new Environment());
+				Map<Expression, Type> inferedBody = this.body.infer(env);
+
+				tmp.putAll(inferedBody);
+
+				for (Map.Entry<Expression, Type> e : inferedArgs.entrySet()) {
+					Optional<Type> t = Type.unify(e.getValue(), inferedBody.get(e.getKey()));
+
+					if (!t.isPresent()) {
+						throw new TypesDoesNotUnifyException(e.getValue(), inferedBody.get(e.getKey()));
+					}
+
+					tmp.put(e.getKey(), t.get());
 				}
-			}catch(AppendableException e) {
-				e.appendMessage("in " + this.toString());
-				throw e;
+
+				if (this.argsType != null) {
+					Optional<Type> o = Type.unify(this.argsType, tmp.get(this.args));
+
+					if (!o.isPresent()) {
+						throw new TypesDoesNotUnifyException(this.argsType, inferedBody.get(this.args));
+					}
+
+					tmp.put(this.args, o.get());
+				}
+
+				tmp.put(this, new TypeArrow(tmp.get(this.args), tmp.get(this.body).quantifyUnconstrainedVariables()));
+				this.typeHypothesis = tmp;
 			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
 		}
-
-		Type t = new TypeArrow(this.argsType == null ? inferedArgsType : this.argsType, bodyType);
-
-		for (TypeVariable v : t.getUnconstrainedVariables()) {
-			t = new ForallType(v, t);
-		}
-
-		this.setType(t);
-
-		return t;
 	}
 
 	@Override
@@ -128,16 +146,16 @@ public class Lambda extends MetaLambda implements Comparable<Lambda>{
 
 	@Override
 	public int compareTo(Lambda o) {
-		if(this.argsType == o.argsType) {
-			return 0; 
+		if (this.argsType == o.argsType) {
+			return 0;
 		}
-		if(this.argsType == null) {
+		if (this.argsType == null) {
 			return 1;
 		}
-		if(o.argsType == null) {
+		if (o.argsType == null) {
 			return -1;
 		}
-		
+
 		return this.argsType.compareTo(o.argsType);
 	}
 

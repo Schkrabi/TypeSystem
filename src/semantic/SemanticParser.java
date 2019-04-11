@@ -96,15 +96,12 @@ public class SemanticParser {
 			return v;
 		case INT:
 			l = new LitInteger(token.asInt());
-			l.setLiteralType(TypeConcrete.TypeInt);
 			return l;
 		case DOUBLE:
 			l = new LitDouble(token.asDouble());
-			l.setLiteralType(TypeConcrete.TypeDouble);
 			return l;
 		case STRING:
 			l = new LitString(token.asString());
-			l.setLiteralType(TypeConcrete.TypeString);
 			return l;
 		case BOOL:
 			return token.asBool() ? LitBoolean.TRUE : LitBoolean.FALSE;

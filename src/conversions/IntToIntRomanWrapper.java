@@ -5,8 +5,13 @@ import types.Type;
 import types.TypeConcrete;
 import types.TypeRepresentation;
 import types.TypeTuple;
+import util.AppendableException;
 import util.RomanNumbers;
 import expression.TypeConstructionLambda;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 import expression.Expression;
 import expression.LitString;
 import expression.Literal;
@@ -29,14 +34,23 @@ public class IntToIntRomanWrapper extends ConversionWrapper{
 		}
 		LitInteger i = (LitInteger)e;
 		Literal l = new LitString(RomanNumbers.int2roman(i.value));
-		l.setLiteralType(TypeRepresentation.TypeIntRoman);
 		return l;
 	}
 
 	@Override
-	public Type infer(Environment env) {
-		this.setType(TypeRepresentation.TypeIntRoman);
-		return TypeRepresentation.TypeIntRoman;
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+		try {
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			if (this.typeHypothesis == null) {
+				this.typeHypothesis = ConversionWrapper.arg.infer(env);
+				this.typeHypothesis.put(this, TypeRepresentation.TypeIntRoman);
+			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
+		}
 	}
 
 	@Override

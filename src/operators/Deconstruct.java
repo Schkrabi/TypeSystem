@@ -5,7 +5,12 @@ import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
+import util.AppendableException;
 import util.NameGenerator;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 import expression.Expression;
 import expression.Function;
 import expression.Tuple;
@@ -37,10 +42,16 @@ public class Deconstruct extends Function {
 	}
 	
 	@Override
-	public Type infer(Environment env){
-		Type t = new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()));
-		this.setType(t);
-		return t;
+	public Map<Expression, Type> infer(Environment env){
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		if(this.typeHypothesis == null) {
+			Type t = new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()));
+			
+			this.typeHypothesis = new TreeMap<Expression, Type>();
+			this.typeHypothesis.put(this, t.quantifyUnconstrainedVariables());
+		}
+		hyp.putAll(this.typeHypothesis);
+		return hyp;
 	}
 	
 	@Override
@@ -64,22 +75,15 @@ public class Deconstruct extends Function {
 		}
 
 		@Override
-		public Expression interpret(Environment env) throws Exception {
-			Expression x = (env.getVariableValue(new Variable("_x")).interpret(env));
-			
-			if (x == null) {
-				return this;
-			}
-			
-			Type t = x.infer(env);
-			x.setType(t);
-
-			return x;
+		public Expression interpret(Environment env) throws AppendableException {
+			//TODO not implemented
+			throw new AppendableException("Not implemented");
 		}
 
 		@Override
-		public Type infer(Environment env) {
-			return new TypeVariable(NameGenerator.next());
+		public Map<Expression, Type> infer(Environment env) throws AppendableException {
+			//TODO
+			throw new AppendableException("Not implemented");
 		}
 
 		@Override

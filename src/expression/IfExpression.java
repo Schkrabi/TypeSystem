@@ -4,6 +4,11 @@ import types.Type;
 import types.TypeConcrete;
 import types.TypesDoesNotUnifyException;
 import util.AppendableException;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
+
 import interpretation.Environment;
 
 /**
@@ -52,26 +57,40 @@ public class IfExpression extends Expression {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		Type condType = this.condition.infer(env);
-		Type tBranchType = this.trueBranch.infer(env);
-		Type fBranchType = this.falseBranch.infer(env);
-
+	public Map<Expression, Type> infer(Environment env) throws AppendableException {
 		try {
-			if(!Type.unify(tBranchType, fBranchType).isPresent()) {
-				throw new TypesDoesNotUnifyException(tBranchType, fBranchType);
+			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			
+			if(this.typeHypothesis != null) {
+				Map<Expression, Type> tmp = new TreeMap<Expression, Type>();
+				
+				Map<Expression, Type> condInfer = this.condition.infer(env);
+				Map<Expression, Type> tBranchInfer = this.trueBranch.infer(env);
+				Map<Expression, Type> fBranchInfer = this.falseBranch.infer(env);
+				
+				Optional<Type> o = Type.unify(tBranchInfer.get(this.trueBranch), fBranchInfer.get(this.falseBranch));
+				if(!o.isPresent()) {
+					throw new TypesDoesNotUnifyException(tBranchInfer.get(this.trueBranch), fBranchInfer.get(this.falseBranch));
+				}
+				
+				Optional<Type> t = Type.unify(TypeConcrete.TypeBool, condInfer.get(this.condition));
+				if(!t.isPresent()) {
+					throw new TypesDoesNotUnifyException(TypeConcrete.TypeBool, condInfer.get(this.condition));
+				}
+				
+				tmp.putAll(condInfer);
+				tmp.putAll(tBranchInfer);
+				tmp.putAll(fBranchInfer);
+				tmp.put(this,  o.get());
+				
+				this.typeHypothesis = tmp;
 			}
-			if(!Type.unify(TypeConcrete.TypeBool, condType).isPresent()) {
-				throw new TypesDoesNotUnifyException(TypeConcrete.TypeBool, condType);
-			}
+			hyp.putAll(this.typeHypothesis);
+			return hyp;
 		}catch(AppendableException e) {
-			e.appendMessage("in " + this.toString());
+			e.appendMessage("in " + e);
 			throw e;
 		}
-
-		this.setType(tBranchType);
-
-		return tBranchType;
 	}
 
 	@Override

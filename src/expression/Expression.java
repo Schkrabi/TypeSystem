@@ -3,6 +3,10 @@ package expression;
 import types.Type;
 import types.TypeTuple;
 import util.AppendableException;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 import interpretation.Environment;
 
 /**
@@ -15,7 +19,7 @@ public abstract class Expression {
 	/**
 	 * Type inferred by the infer method when it is run
 	 */
-	protected Type inferedType = null;
+	protected Map<Expression, Type> typeHypothesis = null;
 
 	/**
 	 * Interprets the expression in given environment
@@ -34,7 +38,7 @@ public abstract class Expression {
 	 * @return inferred type
 	 * @throws Exception
 	 */
-	public abstract Type infer(Environment env) throws AppendableException;
+	public abstract Map<Expression, Type> infer(Environment env) throws AppendableException;
 
 	/**
 	 * Returns the inferred type of this expression or null if inference was not
@@ -43,10 +47,10 @@ public abstract class Expression {
 	 * @return Type or null
 	 */
 	public Type getType() {
-		if(this.inferedType == null){
+		if(this.typeHypothesis == null){
 			return null;
 		}
-		return this.inferedType;
+		return this.typeHypothesis.get(this);
 	}
 
 	/**
@@ -56,9 +60,9 @@ public abstract class Expression {
 	 * @param value
 	 *            type to be set
 	 */
-	public void setType(Type value) {
+	/*public void setType(Type value) {
 		this.inferedType = value;
-	}
+	}*/
 	
 	public abstract Expression substituteTopLevelVariables(Environment topLevel) throws Exception;
 	
@@ -77,8 +81,14 @@ public abstract class Expression {
 		}
 
 		@Override
-		public Type infer(Environment env) throws AppendableException {
-			return TypeTuple.EMPTY_TUPLE;
+		public Map<Expression, Type> infer(Environment env) {
+			if(this.typeHypothesis == null) {
+				this.typeHypothesis = new TreeMap<Expression, Type>();
+				this.typeHypothesis.put(this, TypeTuple.EMPTY_TUPLE);
+			}
+			Map<Expression, Type> r = new TreeMap<Expression, Type>();
+			r.putAll(this.typeHypothesis);
+			return r;
 		}
 
 		@Override

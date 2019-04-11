@@ -1,9 +1,11 @@
 package expression;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import interpretation.Environment;
 import types.Type;
 import types.TypeConcrete;
-import util.AppendableException;
 
 /**
  * Class for string literals
@@ -18,7 +20,6 @@ public class LitString extends Literal {
 	
 	public LitString(String value) {
 		this.value = value;
-		this.setType(TypeConcrete.TypeString);
 	}
 
 	@Override
@@ -42,9 +43,16 @@ public class LitString extends Literal {
 	}
 
 	@Override
-	public Type infer(Environment env) throws AppendableException {
-		this.setType(TypeConcrete.TypeString);
-		return TypeConcrete.TypeString;
+	public Map<Expression, Type> infer(Environment env) {
+		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+		
+		if(this.typeHypothesis == null) {
+			this.typeHypothesis = new TreeMap<Expression, Type>();
+			this.typeHypothesis.put(this, TypeConcrete.TypeString);
+		}
+		
+		hyp.putAll(this.typeHypothesis);
+		return hyp;
 	}
 	
 	@Override
