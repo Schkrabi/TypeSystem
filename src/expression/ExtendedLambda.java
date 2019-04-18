@@ -210,4 +210,43 @@ public class ExtendedLambda extends MetaLambda {
 	public Lambda getLambda() {
 		return this.defaultImplementation();
 	}
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof ExtendedLambda) {
+			ExtendedLambda o = (ExtendedLambda)other;
+			
+			int c = (int)Math.signum(this.implementations.size() - o.implementations.size());
+			if(c != 0)
+				return c;
+			
+			Set<Lambda> tmp = new TreeSet<Lambda>();
+			tmp.addAll(this.implementations);
+			tmp.addAll(o.implementations);
+			
+			if(tmp.size() == this.implementations.size())
+				return 0;
+			
+			Set<Lambda> thisSubOther = new TreeSet<Lambda>();
+			thisSubOther.addAll(tmp);
+			thisSubOther.removeAll(o.implementations);
+			
+			Set<Lambda> otherSubThis = tmp;
+			otherSubThis.removeAll(this.implementations);
+			
+			Iterator<Lambda> i = thisSubOther.iterator();
+			Iterator<Lambda> j = otherSubThis.iterator();
+			
+			while(i.hasNext() && j.hasNext()) {
+				Lambda f = i.next();
+				Lambda g = j.next();
+				c = f.compareTo(g);
+				if(c != 0)
+					return c;
+			}
+			
+			return 0;
+		}
+		return super.compareTo(other);
+	}
 }

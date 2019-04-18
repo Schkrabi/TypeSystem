@@ -136,4 +136,29 @@ public class Tuple extends Expression implements Iterable<Expression> {
 		s.append(']');
 		return s.toString();
 	}
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof Tuple) {
+			Tuple o = (Tuple)other;
+			
+			int c = (int)Math.signum(this.values.length - o.values.length);
+			if(c != 0)
+				return c;
+			
+			Iterator<Expression> i = this.iterator();
+			Iterator<Expression> j = o.iterator();
+			
+			while(i.hasNext() && j.hasNext()) {
+				Expression e = i.next();
+				Expression f = j.next();
+				
+				c = e.compareTo(f);
+				if(c != 0)
+					return c;
+			}
+			return 0;
+		}
+		return super.compareTo(other);
+	}
 }

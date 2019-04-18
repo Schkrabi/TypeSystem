@@ -66,4 +66,9 @@ public class TypeVariable extends Type {
 	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
 		throw new Exception("Cannot convert to Variable type!");
 	}
+
+	@Override
+	public boolean isAtomicType() {
+		return true;
+	}
 }

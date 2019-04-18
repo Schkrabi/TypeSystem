@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
+import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
@@ -86,8 +87,18 @@ public class Application extends Expression {
 			if (this.typeHypothesis == null) {
 				Map<Expression, Type> funHyp = this.fun.infer(env);
 				Map<Expression, Type> argsHyp = this.args.infer(env);
+				
+				Type funType = funHyp.get(this.fun);
+				if (!funType.isApplicableType()) {
+					throw new AppendableException("Type " + funType + " of " + this.fun + " is not TypeArrow!");
+				}
+				if(funType instanceof ForallType) {
+					funType = ((ForallType) funType).getBoundType();
+				}
+				
+				TypeArrow funArrType = (TypeArrow)funType;
 
-				Optional<Type> unifiedArgsType = Type.unify(funHyp.get(this.args), argsHyp.get(this.args));
+				Optional<Type> unifiedArgsType = Type.unify(funArrType.ltype, argsHyp.get(this.args));
 				if (!unifiedArgsType.isPresent()) {
 					throw new TypesDoesNotUnifyException(funHyp.get(this.args), argsHyp.get(this.args));
 				}
@@ -96,11 +107,6 @@ public class Application extends Expression {
 				tmp.putAll(funHyp);
 				tmp.putAll(argsHyp);
 				tmp.put(this.args, unifiedArgsType.get());
-
-				Type funType = funHyp.get(this.fun);
-				if (!funType.isApplicableType()) {
-					throw new AppendableException("Type " + funType + " of " + this.fun + " is not TypeArrow!");
-				}
 
 				tmp.put(this, ((TypeArrow) funType).rtype);
 
@@ -178,6 +184,18 @@ public class Application extends Expression {
 		}
 		s.append(')');
 		return s.toString();
+	}
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof Application) {
+			Application o = (Application)other;
+			int c = this.fun.compareTo(o.fun);
+			if(c != 0)
+				return c;
+			return this.args.compareTo(o.args);
+		}
+		return super.compareTo(other);
 	}
 
 	/**

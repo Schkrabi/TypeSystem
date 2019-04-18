@@ -4,11 +4,13 @@ import interpretation.Environment;
 
 import java.util.AbstractMap;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -109,5 +111,46 @@ public class ExtendedFunction extends MetaFunction {
 		
 		return o.get();
 	}
-
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof ExtendedFunction) {
+			ExtendedFunction o = (ExtendedFunction)other;
+			int c = this.creationEnvironment.compareTo(o.creationEnvironment);
+			if(c != 0)
+				return c;
+			
+			c = (int)Math.signum(this.implementations.size() - o.implementations.size());
+			if(c != 0)
+				return c;
+			
+			Set<Function> tmp = new TreeSet<Function>();
+			tmp.addAll(this.implementations);
+			tmp.addAll(o.implementations);
+			
+			if(tmp.size() == this.implementations.size())
+				return 0;
+			
+			Set<Function> thisSubOther = new TreeSet<Function>();
+			thisSubOther.addAll(tmp);
+			thisSubOther.removeAll(o.implementations);
+			
+			Set<Function> otherSubThis = tmp;
+			otherSubThis.removeAll(this.implementations);
+			
+			Iterator<Function> i = thisSubOther.iterator();
+			Iterator<Function> j = otherSubThis.iterator();
+			
+			while(i.hasNext() && j.hasNext()) {
+				Function f = i.next();
+				Function g = j.next();
+				c = f.compareTo(g);
+				if(c != 0)
+					return c;
+			}
+			
+			return 0;
+		}
+		return super.compareTo(other);
+	}
 }

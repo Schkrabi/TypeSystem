@@ -61,7 +61,7 @@ public class IfExpression extends Expression {
 		try {
 			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
 			
-			if(this.typeHypothesis != null) {
+			if(this.typeHypothesis == null) {
 				Map<Expression, Type> tmp = new TreeMap<Expression, Type>();
 				
 				Map<Expression, Type> condInfer = this.condition.infer(env);
@@ -112,5 +112,23 @@ public class IfExpression extends Expression {
 		s.append(this.falseBranch.toClojureCode());
 		s.append(')');
 		return s.toString();
+	}
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof IfExpression) {
+			IfExpression o = (IfExpression)other;
+			
+			int c = this.condition.compareTo(o.condition);
+			if(c != 0)
+				return c;
+			
+			c = this.trueBranch.compareTo(o.trueBranch);
+			if(c != 0)
+				return c;
+			
+			return this.falseBranch.compareTo(o.falseBranch);
+		}
+		return super.compareTo(other);
 	}
 }

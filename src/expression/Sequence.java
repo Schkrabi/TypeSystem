@@ -152,4 +152,28 @@ public class Sequence extends Expression implements Iterable<Expression> {
 	public String toClojureCode() throws Exception {
 		return this.transform().toClojureCode();
 	}
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof Sequence) {
+			Sequence o = (Sequence)other;
+			
+			int c = (int)Math.signum(this.members.size() - o.members.size());
+			if(c != 0)
+				return c;
+			
+			Iterator<Expression> i = this.iterator();
+			Iterator<Expression> j = o.iterator();
+			
+			while(i.hasNext() && j.hasNext()) {
+				Expression e = i.next();
+				Expression f = j.next();
+				c = e.compareTo(f);
+				if(c != 0)
+					return c;
+			}
+			return 0;
+		}
+		return super.compareTo(other);
+	}
 }

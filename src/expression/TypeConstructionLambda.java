@@ -77,6 +77,16 @@ public class TypeConstructionLambda extends Lambda {
 		return c;
 	}
 	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof TypeConstructionLambda) {
+			int c = this.constructedType.compareTo(((TypeConstructionLambda) other).constructedType);
+			if(c != 0)
+				return c;
+		}
+		return super.compareTo(other);
+	}
+	
 	/**
 	 * Constructor for primitive Int
 	 */

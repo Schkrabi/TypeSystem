@@ -77,4 +77,16 @@ public class DefExpression extends Expression {
 	public String toString() {
 		return "(define " + this.name.toString() + " " + this.defined.toString() + ")"; 
 	}
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof DefExpression) {
+			DefExpression o = (DefExpression)other;
+			int c = this.name.compareTo(o.name);
+			if(c != 0)
+				return c;
+			return this.defined.compareTo(o.defined);
+		}
+		return super.compareTo(other);
+	}
 }

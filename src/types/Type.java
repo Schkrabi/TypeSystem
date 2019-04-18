@@ -1,8 +1,11 @@
 package types;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.Arrays;
 
@@ -56,14 +59,12 @@ public abstract class Type implements Comparable<Type> {
 	 * @throws TypesDoesNotUnifyException
 	 */
 	public static Optional<Type> unify(Type m, Type n) throws TypesDoesNotUnifyException {
-		if(m == n) {
-			return Optional.of(m);
-		} else if(m instanceof TypeConcrete && n instanceof TypeConcrete) {
+		if(m instanceof TypeConcrete && n instanceof TypeConcrete) {
 			TypeConcrete mc = (TypeConcrete)m;
 			TypeConcrete nc = (TypeConcrete)n;
 			
 			if(mc.isSameBasicType(nc)) {
-				return Optional.of(mc.getBasicType());
+				return Optional.of(mc.baseType());
 			}
 		} else if(m instanceof TypeArrow && n instanceof TypeArrow) {
 			TypeArrow ma = (TypeArrow)m;
@@ -184,6 +185,45 @@ public abstract class Type implements Comparable<Type> {
 		
 		return Optional.empty();
 	}
+	
+	public static Map<Expression, Type> unionHypothesis(Map<Expression, Type> hyp1, Map<Expression, Type> hyp2) throws AppendableException{
+		Set<Expression> unionKeys = hyp1.keySet();
+		unionKeys.addAll(hyp2.keySet());
+		
+		Map<Expression, Type> unionedHypothesis = new TreeMap<Expression, Type>();
+		
+		while(!unionKeys.isEmpty()) {
+			Set<Expression> toRemove = new TreeSet<Expression>();
+			
+			for(Expression key : unionKeys) {
+				Type t1 = hyp1.get(key);
+				Type t2 = hyp2.get(key);
+				
+				if(t1 == null) {
+					unionedHypothesis.put(key, t2);
+					toRemove.add(key);
+				}else if(t2 == null) {
+					unionedHypothesis.put(key, t1);
+					toRemove.add(key);
+				}else if(t1.isAtomicType() && t2.isAtomicType()) {
+					Optional<Type> o = Type.unify(t1, t2);
+					if(!o.isPresent()) {
+						throw new TypesDoesNotUnifyException(t1, t2);
+					}
+					unionedHypothesis.put(key, o.get());
+					toRemove.add(key);
+				}else if(t1.isCompositeType() && t2.isCompositeType()) {
+					//TODO
+				}else {
+					
+				}
+			}
+			
+			unionKeys.removeAll(toRemove);
+		}
+		
+		return unionedHypothesis;
+	}
 
 	@Override
 	public int compareTo(Type other) {
@@ -225,5 +265,19 @@ public abstract class Type implements Comparable<Type> {
 			t = new ForallType(tv, t);
 		}
 		return t;
+	}
+	
+	/**
+	 * Returns true if this type is an atomic type (it is not composed of other types), otherwise returns false
+	 * @return true or false
+	 */
+	public abstract boolean isAtomicType();
+	
+	/**
+	 * Returns true if this type is composite (it is composed of other types), otherwise returns false
+	 * @return true or false
+	 */
+	public boolean isCompositeType() {
+		return !this.isAtomicType();
 	}
 }

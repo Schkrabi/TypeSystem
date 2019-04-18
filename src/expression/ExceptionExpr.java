@@ -70,5 +70,13 @@ public class ExceptionExpr extends Expression {
 	public String toString() {
 		return "error " + this.message.toString();
 	}
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof ExceptionExpr) {
+			return this.message.compareTo(((ExceptionExpr) other).message);
+		}
+		return super.compareTo(other);
+	}
 
 }

@@ -177,4 +177,9 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 		return new Tuple(ts);
 	}
+
+	@Override
+	public boolean isAtomicType() {
+		return false;
+	}
 }

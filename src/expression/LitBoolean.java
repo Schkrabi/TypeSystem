@@ -68,4 +68,17 @@ public class LitBoolean extends Literal {
 		LitBoolean other = (LitBoolean) o;
 		return this.value == other.value;
 	}
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof LitBoolean) {
+			LitBoolean o = (LitBoolean)other;
+			if(this.value == o.value)
+				return 0;
+			if(this.value)
+				return 1;
+			return -1;
+		}
+		return super.compareTo(other);
+	}
 }

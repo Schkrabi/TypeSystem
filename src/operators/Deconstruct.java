@@ -16,6 +16,7 @@ import expression.Function;
 import expression.Tuple;
 import expression.Variable;
 
+@Deprecated
 public class Deconstruct extends Function {
 
 	/**

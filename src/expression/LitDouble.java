@@ -66,4 +66,12 @@ public class LitDouble extends Literal {
 		LitDouble other = (LitDouble)o;
 		return this.value == other.value;
 	}
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof LitDouble) {
+			return Double.compare(this.value, ((LitDouble) other).value);
+		}
+		return super.compareTo(other);
+	}
 }

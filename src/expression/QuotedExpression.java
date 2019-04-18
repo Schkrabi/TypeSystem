@@ -52,4 +52,12 @@ public class QuotedExpression extends Expression {
 		return this.quoted.toClojureCode();
 	}
 
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof QuotedExpression) {
+			QuotedExpression o = (QuotedExpression)other;
+			return this.quoted.compareTo(o.quoted);
+		}
+		return super.compareTo(other);
+	}
 }

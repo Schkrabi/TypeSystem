@@ -86,14 +86,19 @@ public class ForallType extends Type {
 		}
 		ForallType t = (ForallType)toType;
 		Expression e = this.type.convertTo(expr, t);
-		e.infer(new Environment());
+		//e.getTypeHypothesis(new Environment()); //TODO inspect
 		return e;		
 	}
 
 	@Override
 	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
 		Expression e = this.type.convertToDefaultRepresentation(expr);
-		e.infer(new Environment());
+		//e.infer(new Environment()); //TODO inspect
 		return e;
+	}
+
+	@Override
+	public boolean isAtomicType() {
+		return false;
 	}
 }

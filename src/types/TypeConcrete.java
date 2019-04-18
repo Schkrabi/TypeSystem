@@ -180,4 +180,9 @@ public class TypeConcrete extends Type {
 	 * Type of Double
 	 */
 	public static final TypeConcrete TypeDouble = new TypeConcrete("Double");
+
+	@Override
+	public boolean isAtomicType() {
+		return true;
+	}
 }

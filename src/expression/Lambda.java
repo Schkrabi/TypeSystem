@@ -19,7 +19,7 @@ import interpretation.Environment;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Lambda extends MetaLambda implements Comparable<Lambda> {
+public class Lambda extends MetaLambda implements Comparable<Expression> {
 
 	/**
 	 * Formal arguments (names) of the lambda expression
@@ -80,13 +80,18 @@ public class Lambda extends MetaLambda implements Comparable<Lambda> {
 				tmp.putAll(inferedBody);
 
 				for (Map.Entry<Expression, Type> e : inferedArgs.entrySet()) {
-					Optional<Type> t = Type.unify(e.getValue(), inferedBody.get(e.getKey()));
-
-					if (!t.isPresent()) {
-						throw new TypesDoesNotUnifyException(e.getValue(), inferedBody.get(e.getKey()));
+					if(inferedBody.containsKey(e.getKey())) {
+						Optional<Type> t = Type.unify(e.getValue(), inferedBody.get(e.getKey()));
+	
+						if (!t.isPresent()) {
+							throw new TypesDoesNotUnifyException(e.getValue(), inferedBody.get(e.getKey()));
+						}
+	
+						tmp.put(e.getKey(), t.get());
 					}
-
-					tmp.put(e.getKey(), t.get());
+					else {
+						tmp.put(e.getKey(), e.getValue());
+					}
 				}
 
 				if (this.argsType != null) {
@@ -145,18 +150,22 @@ public class Lambda extends MetaLambda implements Comparable<Lambda> {
 	}
 
 	@Override
-	public int compareTo(Lambda o) {
-		if (this.argsType == o.argsType) {
-			return 0;
+	public int compareTo(Expression other) {
+		if(other instanceof Lambda) {
+			Lambda o = (Lambda)other;
+			if (this.argsType == o.argsType) {
+				return 0;
+			}
+			if (this.argsType == null) {
+				return 1;
+			}
+			if (o.argsType == null) {
+				return -1;
+			}
+	
+			return this.argsType.compareTo(o.argsType);
 		}
-		if (this.argsType == null) {
-			return 1;
-		}
-		if (o.argsType == null) {
-			return -1;
-		}
-
-		return this.argsType.compareTo(o.argsType);
+		return super.compareTo(other);
 	}
 
 	@Override

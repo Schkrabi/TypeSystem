@@ -13,22 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-import operators.Addition;
-import operators.Car;
-import operators.Cdr;
-import operators.Concantenation;
-import operators.Deconstruct;
-import operators.Equals;
-import operators.NumericEqual;
-import operators.LesserThan;
-import operators.Subtraction;
-import operators.Multiplication;
-import operators.Division;
-import operators.And;
-import operators.Or;
-import operators.Not;
-import operators.BitAnd;
-import operators.BitOr;
+import operators.Operator;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
@@ -96,23 +81,23 @@ public class Main {
 
 	private static Environment initTopLevelEnvironment() throws Exception {
 		Environment env = new Environment();
-		env.put(new Variable(Addition.singleton.toString()), Addition.singleton);
-		env.put(new Variable(Subtraction.singleton.toString()), Subtraction.singleton);
-		env.put(new Variable(Multiplication.singleton.toString()), Multiplication.singleton);
-		env.put(new Variable(Division.singleton.toString()), Division.singleton);
-		env.put(new Variable(NumericEqual.singleton.toString()), NumericEqual.singleton);
-		env.put(new Variable(LesserThan.singleton.toString()), LesserThan.singleton);
-		env.put(new Variable(And.singleton.toString()), And.singleton);
-		env.put(new Variable(Or.singleton.toString()), Or.singleton);
-		env.put(new Variable(Not.singleton.toString()), Not.singleton);
-		env.put(new Variable(BitAnd.singleton.toString()), BitAnd.singleton);
-		env.put(new Variable(BitOr.singleton.toString()), BitOr.singleton);
-		env.put(new Variable(Concantenation.singleton.toString()), Concantenation.singleton);
-		env.put(new Variable(Car.singleton.toString()), Car.singleton);
-		env.put(new Variable(Cdr.singleton.toString()), Cdr.singleton);
+		env.put(new Variable(Operator.Addition.toString()), Operator.Addition);
+		env.put(new Variable(Operator.Subtraction.toString()), Operator.Subtraction);
+		env.put(new Variable(Operator.Multiplication.toString()), Operator.Multiplication);
+		env.put(new Variable(Operator.Division.toString()), Operator.Division);
+		env.put(new Variable(Operator.NumericEqual.toString()), Operator.NumericEqual);
+		env.put(new Variable(Operator.LesserThan.toString()), Operator.LesserThan);
+		env.put(new Variable(Operator.And.toString()), Operator.And);
+		env.put(new Variable(Operator.Or.toString()), Operator.Or);
+		env.put(new Variable(Operator.Not.toString()), Operator.Not);
+		env.put(new Variable(Operator.BitAnd.toString()), Operator.BitAnd);
+		env.put(new Variable(Operator.BitOr.toString()), Operator.BitOr);
+		env.put(new Variable(Operator.Concantenation.toString()), Operator.Concantenation);
+		env.put(new Variable(Operator.Car.toString()), Operator.Car);
+		env.put(new Variable(Operator.Cdr.toString()), Operator.Cdr);
 		env.put(new Variable("nil"), new Tuple(new Expression[0]));
-		env.put(new Variable(Equals.singleton.toString()), Equals.singleton);
-		env.put(new Variable(Deconstruct.singleton.toString()), Deconstruct.singleton);
+		env.put(new Variable(Operator.Equals.toString()), Operator.Equals);
+		//env.put(new Variable(Deconstruct.singleton.toString()), Deconstruct.singleton);
 		
 		env.put(new Variable("Int"), TypeConstructionLambda.IntPrimitiveConstructor);
 		env.put(new Variable("Int:String"), TypeConstructionLambda.IntStringConstructor);
@@ -232,7 +217,6 @@ public class Main {
 			
 			for(Expression e : exprs){
 				Expression expr = e.substituteTopLevelVariables(topLevel);
-				expr.infer(topLevel);
 				expr.infer(topLevel);
 				System.out.println(expr.interpret(topLevel));
 			}

@@ -63,4 +63,12 @@ public class LitString extends Literal {
 		LitString other = (LitString) o;
 		return this.value.equals(other.value);
 	}
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof LitString) {
+			return this.value.compareTo(((LitString) other).value);
+		}
+		return super.compareTo(other);
+	}
 }

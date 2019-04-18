@@ -1,5 +1,6 @@
 package interpretation;
 
+import java.util.Map;
 import java.util.TreeMap;
 
 import expression.Expression;
@@ -11,7 +12,7 @@ import expression.Variable;
  * @author r.SKRABAL
  *
  */
-public class Environment extends TreeMap<Variable, Expression> {
+public class Environment extends TreeMap<Variable, Expression> implements Comparable<Environment> {
 
 	/**
 	 * Serial version id
@@ -75,5 +76,42 @@ public class Environment extends TreeMap<Variable, Expression> {
 			return null;
 		}
 		return this.get(var);
+	}
+
+	@Override
+	public int compareTo(Environment o) {
+		if(this.parent == null) {
+			return -1;
+		}
+		if(o.parent == null) {
+			return 1;
+		}
+		if(this.parent != o.parent) {
+			return this.parent.compareTo(o.parent);
+		}
+		int c = (int)Math.signum(this.entrySet().size() - o.entrySet().size());
+		if(c != 0)
+			return c;
+		
+		for(Map.Entry<Variable, Expression> e : this.entrySet()) {
+			if(!o.containsKey(e.getKey())) {
+				return -1; 
+			}
+			c = o.get(e.getKey()).compareTo(e.getValue());
+			if(c != 0) {
+				return c;
+			}
+		}
+		for(Map.Entry<Variable, Expression> e : o.entrySet()) {
+			if(!this.containsKey(e.getKey())) {
+				return 1;
+			}
+			c = this.get(e.getKey()).compareTo(e.getValue());
+			if(c != 0) {
+				return c;
+			}
+		}
+		
+		return 0;
 	}
 }

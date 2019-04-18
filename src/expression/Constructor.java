@@ -43,4 +43,15 @@ public class Constructor extends Function {
 	public String toString() {
 		return "(" + this.constructedType.toString() + " " + this.args.toString() + " " + this.body.toString() + ")";
 	}
+	
+	@Override
+	public int compareTo(Expression other) {
+		if(other instanceof Constructor) {
+			Constructor o = (Constructor)other;
+			int c = this.constructedType.compareTo(o.constructedType);
+			if(c != 0)
+				return c;
+		}
+		return super.compareTo(other);
+	}
 }

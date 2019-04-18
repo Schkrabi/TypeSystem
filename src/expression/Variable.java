@@ -17,7 +17,7 @@ import interpretation.Environment;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Variable extends Expression implements Comparable<Variable> {
+public class Variable extends Expression implements Comparable<Expression> {
 
 	/**
 	 * Name of the variable
@@ -29,8 +29,12 @@ public class Variable extends Expression implements Comparable<Variable> {
 	}
 
 	@Override
-	public int compareTo(Variable other) {
-		return this.name.compareTo(other.name);
+	public int compareTo(Expression o) {
+		if(o instanceof Variable) {
+			Variable other = (Variable)o;
+			return this.name.compareTo(other.name);
+		}
+		return super.compareTo(o);
 	}
 
 	@Override
@@ -46,20 +50,30 @@ public class Variable extends Expression implements Comparable<Variable> {
 	public String toString() {
 		return this.name;
 	}
+	
+	@Override
+	public Map<Expression, Type> getTypeHypothesis(Environment env) throws AppendableException{
+		return this.infer(env);
+	}
 
 	@Override
 	public Map<Expression, Type> infer(Environment env) throws AppendableException {
 		try {
 			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
 			
-			if(env.containsVariable(this)) {
-				Expression e = env.getVariableValue(this);
-				Map<Expression, Type> tmp = e.infer(env);
-				hyp.putAll(tmp);
-				hyp.put(this, tmp.get(e));
+			if(this.typeHypothesis == null) {
+				if(env.containsVariable(this)) {
+					Expression e = env.getVariableValue(this);
+					Map<Expression, Type> tmp = e.infer(env);
+					hyp.putAll(tmp);
+					hyp.put(this, tmp.get(e));
+				}
+				else {
+					hyp.put(this, new TypeVariable(NameGenerator.next()).quantifyUnconstrainedVariables());
+				}
 			}
 			else {
-				hyp.put(this, new TypeVariable(NameGenerator.next()).quantifyUnconstrainedVariables());
+				hyp.putAll(this.typeHypothesis);
 			}
 			return hyp;
 		}catch(AppendableException e) {
@@ -89,7 +103,7 @@ public class Variable extends Expression implements Comparable<Variable> {
 	 */
 	public void setType(TypeConcrete typeConcrete) throws AppendableException {
 		if(this.typeHypothesis == null) {
-			this.infer(new Environment());	
+			this.typeHypothesis = new TreeMap<Expression, Type>();	
 		}		
 		this.typeHypothesis.put(this, typeConcrete);
 	}

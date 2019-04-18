@@ -119,4 +119,9 @@ public class TypeArrow extends Type {
 			throw new Exception(type.toString() + " is not an applicable type");
 		}
 	}
+
+	@Override
+	public boolean isAtomicType() {
+		return false;
+	}
 }

@@ -3,27 +3,25 @@
 (define fcdr (lambda (pair) (pair #f)))
 
 (deftype List)
-
-(defrep Default List)
-(defconstructor List:Default (lambda (x (List y)) (cons x y)))
+(defconstructor List (lambda (x (List y)) (cons x y)))
 
 (defrep Functional List)
 (defconstructor List:Functional (lambda (x (List y)) (fcons x y)))
-(defconversion List:Default List:Functional (lambda ((ListDefault l)) (fcons (car l) (cdr l))))
-(defconversion List:Functional List:Default (lambda ((List:Functional l)) (cons (fcar l) (fcdr l))))
+(defconversion List List:Functional (lambda ((List l)) (fcons (car l) (cdr l))))
+(defconversion List:Functional List (lambda ((List:Functional l)) (cons (fcar l) (fcdr l))))
 
 (defrep Empty List)
 (defconstructor List:Empty (lambda () nil))
-(defconversion List:Empty List:Default (lambda ((List:Empty l)) l))
+(defconversion List:Empty List (lambda ((List:Empty l)) l))
 (defconversion List:Empty List:Functional (lambda ((List:Empty l)) l))
 
-(define x (List:Default 1 (List:Default 2 (List:Default 3 (List:Empty)))))
+(define x (List 1 (List 2 (List 3 (List:Empty)))))
 
 (define head-list (elambda (l) (error "head-list function not implemented for this representation!")
           					((List) (car l))
           					((List:Functional) (fcar l))
           					((List:Empty) (error "Cannot make head of empty list!"))))
-
+          					
 (define tail-list (elambda (l) (error "tail-list function not implemented for this representation")
           					(List) (cdr l)
           					(List:Functional) (fcdr l)
