@@ -77,7 +77,7 @@ public class Function extends MetaFunction implements Comparable<Expression>{
 					tmp.put(this.args, o.get());
 				}
 				
-				tmp.put(this, new TypeArrow(tmp.get(this.args), tmp.get(this.body)).quantifyUnconstrainedVariables());
+				tmp.put(this, new TypeArrow(tmp.get(this.args), tmp.get(this.body)));
 				this.typeHypothesis = tmp;
 			}
 			hyp.putAll(this.typeHypothesis);

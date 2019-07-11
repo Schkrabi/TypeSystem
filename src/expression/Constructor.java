@@ -33,7 +33,7 @@ public class Constructor extends Function {
 
 		Type cType = new TypeArrow(this.argsType, this.constructedType);
 
-		this.typeHypothesis.put(this, cType.quantifyUnconstrainedVariables());
+		this.typeHypothesis.put(this, cType);
 		infered.put(this, cType);
 
 		return infered;

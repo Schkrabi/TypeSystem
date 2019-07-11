@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import interpretation.Environment;
-import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeConcrete;
@@ -40,14 +39,11 @@ public class TypeConstructionLambda extends Lambda {
 				if(t.isApplicableType()) {
 					throw new AppendableException("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
 				}
-				TypeArrow ta = null;
-				if(t instanceof ForallType) {
-					ta = (TypeArrow)((ForallType)t).getBoundType();
-				}
+				TypeArrow ta = (TypeArrow)t;
 				
 				Type newType = new TypeArrow(ta.ltype, this.constructedType);
 				
-				infered.put(this, newType.quantifyUnconstrainedVariables());
+				infered.put(this, newType);
 				this.typeHypothesis = infered;
 			}
 			hyp.putAll(this.typeHypothesis);

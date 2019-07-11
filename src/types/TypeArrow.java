@@ -109,11 +109,8 @@ public class TypeArrow extends Type {
 		if(type instanceof TypeArrow){
 			return (TypeArrow)type;
 		}
-		else if(type instanceof ForallType){
-			return getFunctionType(((ForallType)type).getBoundType());
-		}
 		else if(type instanceof TypeVariable) {
-			return new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()));
+			return new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next())); //TODO how can this happen?
 		}
 		else{
 			throw new Exception(type.toString() + " is not an applicable type");

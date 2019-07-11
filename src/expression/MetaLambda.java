@@ -1,8 +1,6 @@
 package expression;
 
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 
 /**
  * Parent class for all applicable expresion (lambdas and extended lambdas)
@@ -31,15 +29,5 @@ public abstract class MetaLambda extends Expression {
 	 */
 	public static boolean isApplicableExpression(Expression e){
 		return e instanceof MetaLambda;
-	}
-	
-	List<Class<? extends MetaLambda>> lambdaOrdering = Arrays.asList(Lambda.class, ExtendedLambda.class);
-	
-	@Override
-	public int compareTo(Expression other) {
-		if(other instanceof MetaLambda) {
-			return (int) Math.signum(lambdaOrdering.indexOf(this.getClass()) - lambdaOrdering.indexOf(other.getClass()));
-		}
-		return super.compareTo(other);
 	}
 }

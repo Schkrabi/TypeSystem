@@ -29,6 +29,13 @@ public class Tuple extends Expression implements Iterable<Expression> {
 			this.values[i] = values[i];
 		}
 	}
+	
+	/**
+	 * Empty tuple constructor
+	 */
+	private Tuple() {
+		this.values = new Expression[0];
+	}
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
@@ -67,7 +74,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 					this.typeHypothesis.putAll(this.values[i].infer(env));
 					types[i] = this.typeHypothesis.get(this.values[i]);
 				}
-				this.typeHypothesis.put(this, new TypeTuple(types).quantifyUnconstrainedVariables());
+				this.typeHypothesis.put(this, new TypeTuple(types));
 			}
 			hyp.putAll(this.typeHypothesis);
 			return hyp;
@@ -161,4 +168,9 @@ public class Tuple extends Expression implements Iterable<Expression> {
 		}
 		return super.compareTo(other);
 	}
+	
+	/**
+	 * Empty tuple expression
+	 */
+	public static final Tuple EMPTY_TUPLE = new Tuple();
 }

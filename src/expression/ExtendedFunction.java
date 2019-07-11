@@ -14,11 +14,9 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeSetDoesNotUnifyException;
-import types.TypeVariable;
 import util.AppendableException;
 import util.ThrowingFunction;
 
@@ -80,9 +78,6 @@ public class ExtendedFunction extends MetaFunction {
 						.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 				Type t = new TypeArrow(ltype.get(), rtype.get());
-				for (TypeVariable tv : t.getUnconstrainedVariables()) {
-					t = new ForallType(tv, t);
-				}
 
 				this.typeHypothesis.put(this, t);
 			}

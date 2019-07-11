@@ -1,13 +1,11 @@
 package types;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import java.util.Arrays;
 
 import expression.Expression;
 import util.AppendableException;
@@ -23,12 +21,6 @@ public abstract class Type implements Comparable<Type> {
 	 * Type representative
 	 */
 	//private Type rep;
-
-	/**
-	 * Ordering of subclasses for Comparable interface
-	 */
-	private static List<Class<? extends Type>> ordering = Arrays.asList(TypeConcrete.class, TypeRepresentation.class,
-			TypeVariable.class, ForallType.class, TypeArrow.class, TypeTuple.class);
 
 	public Type() {
 		//this.rep = this;
@@ -78,11 +70,11 @@ public abstract class Type implements Comparable<Type> {
 			if(!right.isPresent())
 				throw new TypesDoesNotUnifyException(ma.rtype, na.rtype);
 			
-			return Optional.of(new TypeArrow(left.get(), right.get()).quantifyUnconstrainedVariables());
+			return Optional.of(new TypeArrow(left.get(), right.get()));
 		} else if(m instanceof TypeVariable) {
-			return Optional.of(n.quantifyUnconstrainedVariables());
+			return Optional.of(n);
 		} else if(n instanceof TypeVariable) {
-			return Optional.of(m.quantifyUnconstrainedVariables());
+			return Optional.of(m);
 		} else if(m instanceof TypeTuple && n instanceof TypeTuple) {
 			TypeTuple mt = (TypeTuple)m;
 			TypeTuple nt = (TypeTuple)n;
@@ -98,14 +90,8 @@ public abstract class Type implements Comparable<Type> {
 					
 					ts[i] = ot.get();
 				}
-				return Optional.of(new TypeTuple(ts).quantifyUnconstrainedVariables());
+				return Optional.of(new TypeTuple(ts));
 			}
-		} else if(m instanceof ForallType) {
-			ForallType mf = (ForallType)m;
-			return Type.unify(mf.getBoundType(), n);
-		}else if (n instanceof ForallType) {
-			ForallType nf = (ForallType)n;
-			return Type.unify(m, nf.getBoundType());
 		}
 		
 		return Optional.empty();
@@ -121,30 +107,29 @@ public abstract class Type implements Comparable<Type> {
 		if (types.isEmpty())
 			return Optional.empty();
 		
-		Set<Type> unbound = types.stream().map(x -> (x instanceof ForallType) ? ((ForallType)x).getBoundType() : x).collect(Collectors.toSet());
 		// Save type variables for later unification
-		unbound = unbound.stream().filter(x -> !(x instanceof TypeVariable)).collect(Collectors.toSet());
+		Set<Type> notVariables = types.stream().filter(x -> !(x instanceof TypeVariable)).collect(Collectors.toSet());
 		
-		final Optional<Type> sample = unbound.stream().findAny();
+		final Optional<Type> sample = notVariables.stream().findAny();
 		if(!sample.isPresent()) {
 			return types.stream().findAny();
 		}
 		
-		boolean allTypesEquals = unbound.stream().map(x -> x.equals(sample.get())).reduce(true, Boolean::logicalAnd);
+		boolean allTypesEquals = notVariables.stream().map(x -> x.equals(sample.get())).reduce(true, Boolean::logicalAnd);
 		if(allTypesEquals) {
 			return Optional.of(sample.get());
 		}
 		
-		boolean allTypesConcrete = unbound.stream().map(x -> x instanceof TypeConcrete).reduce(true, Boolean::logicalAnd);	
+		boolean allTypesConcrete = notVariables.stream().map(x -> x instanceof TypeConcrete).reduce(true, Boolean::logicalAnd);	
 		if(allTypesConcrete) {
-			boolean unifies = unbound.stream().map(x -> ((TypeConcrete) x).isSameBasicType((TypeConcrete) sample.get())).reduce(true, Boolean::logicalAnd);
+			boolean unifies = notVariables.stream().map(x -> ((TypeConcrete) x).isSameBasicType((TypeConcrete) sample.get())).reduce(true, Boolean::logicalAnd);
 			if(unifies) {
 				return Optional.of(((TypeConcrete)sample.get()).baseType());
 			}			
 		}
-		boolean allTypesTypeArrow = unbound.stream().map(x -> x instanceof TypeArrow).reduce(true, Boolean::logicalAnd);
+		boolean allTypesTypeArrow = notVariables.stream().map(x -> x instanceof TypeArrow).reduce(true, Boolean::logicalAnd);
 		if(allTypesTypeArrow) {
-			Set<TypeArrow> arrows = unbound.stream().map(x -> (TypeArrow) x).collect(Collectors.toSet());
+			Set<TypeArrow> arrows = notVariables.stream().map(x -> (TypeArrow) x).collect(Collectors.toSet());
 			
 			Set<Type> lefts = arrows.stream().map(x -> x.ltype).collect(Collectors.toSet());
 			Optional<Type> ltype = Type.unifyMany(lefts);
@@ -160,26 +145,26 @@ public abstract class Type implements Comparable<Type> {
 			
 			Type t = new TypeArrow(ltype.get(), rtype.get());
 			
-			return Optional.of(t.quantifyUnconstrainedVariables());
+			return Optional.of(t);
 		}
 		
-		boolean allTypesTypeTuple = unbound.stream().map(x -> x instanceof TypeTuple).reduce(true, Boolean::logicalAnd);
+		boolean allTypesTypeTuple = notVariables.stream().map(x -> x instanceof TypeTuple).reduce(true, Boolean::logicalAnd);
 		if(allTypesTypeTuple) {
-			boolean allTuplesSameLen = unbound.stream().map(x -> ((TypeTuple) x).values.length == ((TypeTuple) sample.get()).values.length).reduce(true, Boolean::logicalAnd);
+			boolean allTuplesSameLen = notVariables.stream().map(x -> ((TypeTuple) x).values.length == ((TypeTuple) sample.get()).values.length).reduce(true, Boolean::logicalAnd);
 			if(allTuplesSameLen) {
 				Type[]  ts = new Type[((TypeTuple)sample.get()).values.length];
 				
 				for(int i = 0; i < ((TypeTuple)sample.get()).values.length; i++) {
 					final int j = i;
-					Optional<Type> o = Type.unifyMany(unbound.stream().map(x -> ((TypeTuple)x).values[j]).collect(Collectors.toSet()));
+					Optional<Type> o = Type.unifyMany(notVariables.stream().map(x -> ((TypeTuple)x).values[j]).collect(Collectors.toSet()));
 					if(!o.isPresent()) {
-						throw new TypeSetDoesNotUnifyException(unbound.stream().map(x -> ((TypeTuple)x).values[j]).collect(Collectors.toSet()));
+						throw new TypeSetDoesNotUnifyException(notVariables.stream().map(x -> ((TypeTuple)x).values[j]).collect(Collectors.toSet()));
 					}
 					
 					ts[i] = o.get();					
 				}
 				Type t = new TypeTuple(ts);
-				return Optional.of(t.quantifyUnconstrainedVariables());
+				return Optional.of(t);
 			}
 		}
 		
@@ -227,7 +212,7 @@ public abstract class Type implements Comparable<Type> {
 
 	@Override
 	public int compareTo(Type other) {
-		return (int) Math.signum(ordering.indexOf(this.getClass()) - ordering.indexOf(other.getClass()));
+		return this.getClass().getName().compareTo(other.getClass().getName());
 	}
 
 	/**
@@ -253,18 +238,6 @@ public abstract class Type implements Comparable<Type> {
 	protected void throwConversionError(Expression expr, Type toType) throws Exception {
 		throw new Exception("Trying to convert uncovertable types " + this.toString() + " to " + toType.toString()
 				+ " on expression " + expr.toString());
-	}
-	
-	/**
-	 * Adds universal quantifies for all unconstrained variables of this type
-	 * @return identic type with all type variables quantified
-	 */
-	public Type quantifyUnconstrainedVariables() {
-		Type t = this;
-		for(TypeVariable tv : this.getUnconstrainedVariables()) {
-			t = new ForallType(tv, t);
-		}
-		return t;
 	}
 	
 	/**

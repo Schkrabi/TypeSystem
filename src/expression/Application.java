@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
-import types.ForallType;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
@@ -16,7 +15,7 @@ import util.NameGenerator;
 import interpretation.Environment;
 
 /**
- * Expression for function application
+ * Expression for function application in form (fun arg1 arg2 ...)
  * 
  * @author Mgr. Radomir Skrabal
  * 
@@ -48,16 +47,14 @@ public class Application extends Expression {
 		Function f = ((MetaFunction) ifun).getFunction(); // Might want to add comparator here
 
 		if (f.args.values.length != this.args.values.length) {
-			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected "
+			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected " //TODO add specific exception here
 					+ f.args.values.length + " got " + this.args.values.length);
 		}
 
 		Environment childEnv = new Environment(f.creationEnvironment); // Lexical clojure!!!
 		for (int i = 0; i < f.args.values.length; i++) {
 			Expression e = this.args.values[i].interpret(env);
-			// Type t = e.getType();
 			Variable v = new Variable(((Variable) f.args.values[i]).name);
-			// v.setType(t);
 			childEnv.put(v, e);
 		}
 
@@ -66,10 +63,6 @@ public class Application extends Expression {
 		childEnv = Application.autoConvertArgs(childEnv, f.args, lambdaType.ltype);
 
 		Expression rslt = f.body.interpret(childEnv);
-
-		/*
-		 * if(ifun instanceof Constructor){ rslt.setType(lambdaType.rtype); }
-		 */
 
 		return rslt;
 	}
@@ -80,7 +73,7 @@ public class Application extends Expression {
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+	public Map<Expression, Type> infer(Environment env) throws AppendableException { //TODO rewrite
 		try {
 			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
 
@@ -91,9 +84,6 @@ public class Application extends Expression {
 				Type funType = funHyp.get(this.fun);
 				if (!funType.isApplicableType()) {
 					throw new AppendableException("Type " + funType + " of " + this.fun + " is not TypeArrow!");
-				}
-				if(funType instanceof ForallType) {
-					funType = ((ForallType) funType).getBoundType();
 				}
 				
 				TypeArrow funArrType = (TypeArrow)funType;
@@ -122,7 +112,7 @@ public class Application extends Expression {
 	}
 
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
+	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception { //TODO Obsolete?
 		Expression f = this.fun.substituteTopLevelVariables(topLevel);
 		Expression a = this.args.substituteTopLevelVariables(topLevel);
 
@@ -139,11 +129,6 @@ public class Application extends Expression {
 	public String toClojureCode() throws Exception {
 		StringBuilder s = new StringBuilder();
 		s.append('(');
-
-		/*
-		 * if(!MetaLambda.isApplicableExpression(this.fun)){ throw new
-		 * Exception(this.fun.toString() + " is not a function"); }
-		 */
 
 		s.append(this.fun.toClojureCode());
 		s.append(' ');

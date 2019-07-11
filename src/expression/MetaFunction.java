@@ -1,8 +1,6 @@
 package expression;
 
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 
 import util.AppendableException;
 
@@ -59,15 +57,5 @@ public abstract class MetaFunction extends Expression {
 	 */
 	public static boolean isFunction(Expression e){
 		return e instanceof MetaFunction;
-	}
-	
-	List<Class<? extends MetaFunction>> functionOrdering = Arrays.asList(Function.class, ExtendedFunction.class);
-	
-	@Override
-	public int compareTo(Expression other) {
-		if(other instanceof MetaFunction) {
-			return (int) Math.signum(functionOrdering.indexOf(this.getClass()) - functionOrdering.indexOf(other.getClass()));
-		}
-		return super.compareTo(other);
 	}
 }

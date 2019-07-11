@@ -44,7 +44,7 @@ public class ExceptionExpr extends Expression {
 				if(!o.isPresent()) {
 					throw new TypesDoesNotUnifyException(TypeConcrete.TypeString, tmp.get(this.message));
 				}
-				tmp.put(this,  new TypeVariable(NameGenerator.next()).quantifyUnconstrainedVariables());
+				tmp.put(this,  new TypeVariable(NameGenerator.next()));
 				this.typeHypothesis = tmp;
 			}
 			hyp.putAll(this.typeHypothesis);

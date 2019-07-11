@@ -49,7 +49,7 @@ public class Deconstruct extends Function {
 			Type t = new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()));
 			
 			this.typeHypothesis = new TreeMap<Expression, Type>();
-			this.typeHypothesis.put(this, t.quantifyUnconstrainedVariables());
+			this.typeHypothesis.put(this, t);
 		}
 		hyp.putAll(this.typeHypothesis);
 		return hyp;

@@ -69,7 +69,7 @@ public class Variable extends Expression implements Comparable<Expression> {
 					hyp.put(this, tmp.get(e));
 				}
 				else {
-					hyp.put(this, new TypeVariable(NameGenerator.next()).quantifyUnconstrainedVariables());
+					hyp.put(this, new TypeVariable(NameGenerator.next()));
 				}
 			}
 			else {
