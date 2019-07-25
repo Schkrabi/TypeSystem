@@ -1,11 +1,10 @@
 package expression;
 
+import types.Substitution;
 import types.Type;
 import types.TypeTuple;
 import util.AppendableException;
-
-import java.util.Map;
-import java.util.TreeMap;
+import util.Pair;
 
 import interpretation.Environment;
 
@@ -27,14 +26,12 @@ public abstract class Expression implements Comparable<Expression> {
 	public abstract Expression interpret(Environment env) throws Exception;
 
 	/**
-	 * Infers the type of the expression and all its subexpression and returns it.
-	 * Also sets the inferedType variable of each inferred expression
+	 * Infers type of expression and returns used substitutions
 	 * 
-	 * @return inferred type
-	 * @throws Exception
+	 * @return Pair of infered type and used substitution
+	 * @throws AppendableException
 	 */
-	public abstract Map<Expression, Type> infer(Environment env) throws AppendableException; // TODO add argument -
-																								// substitutiom
+	public abstract Pair<Type, Substitution> infer(Environment env) throws AppendableException; 
 
 	@Override
 	public int compareTo(Expression other) {
@@ -53,20 +50,8 @@ public abstract class Expression implements Comparable<Expression> {
 		}
 
 		@Override
-		public Map<Expression, Type> infer(Environment env) {
-			/*if (this.typeHypothesis == null) {
-				this.typeHypothesis = new TreeMap<Expression, Type>();
-				this.typeHypothesis.put(this, TypeTuple.EMPTY_TUPLE);
-			}
-			Map<Expression, Type> r = new TreeMap<Expression, Type>();
-			r.putAll(this.typeHypothesis);
-			return r;*/
-			//TODO
-		}
-
-		@Override
-		public Expression substituteTopLevelVariables(Environment topLevel) {
-			return this;
+		public Pair<Type, Substitution> infer(Environment env) {
+			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, new Substitution());
 		}
 
 		@Override

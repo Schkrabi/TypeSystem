@@ -1,15 +1,14 @@
 package expression;
 
-import java.util.Map;
-import java.util.TreeMap;
-
 import interpretation.Environment;
+import types.Substitution;
 import types.Type;
 import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeRepresentation;
 import types.TypeTuple;
 import util.AppendableException;
+import util.Pair;
 
 /**
  * A class for type constructors. Basically a special case of lambda.
@@ -29,25 +28,11 @@ public class TypeConstructionLambda extends Lambda {
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException{
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException{
 		try {
-			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			Pair<Type, Substitution> infered = super.infer(env);
 			
-			if(this.typeHypothesis == null) {
-				Map<Expression, Type> infered = super.infer(env);
-				Type t = infered.get(this);
-				if(t.isApplicableType()) {
-					throw new AppendableException("Badly typed constructor " + this.toString() + " infered to not-Arrow type " + infered);
-				}
-				TypeArrow ta = (TypeArrow)t;
-				
-				Type newType = new TypeArrow(ta.ltype, this.constructedType);
-				
-				infered.put(this, newType);
-				this.typeHypothesis = infered;
-			}
-			hyp.putAll(this.typeHypothesis);
-			return hyp;
+			return new Pair<Type, Substitution>(new TypeArrow(((TypeArrow)infered.first).ltype, this.constructedType), infered.second);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
@@ -58,12 +43,6 @@ public class TypeConstructionLambda extends Lambda {
 	public String toString(){
 		String s = super.toString();
 		return "<" + " " + s + this.constructedType.toString() + ">";
-	}
-	
-	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		Lambda l = (Lambda)super.substituteTopLevelVariables(topLevel);
-		return new TypeConstructionLambda(this.constructedType, l.args, this.argsType, l.body);
 	}
 	
 	@Override

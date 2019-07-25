@@ -1,13 +1,14 @@
 package expression;
 
+import types.Substitution;
 import types.Type;
+import types.TypeArrow;
 import types.TypeConcrete;
-import types.TypesDoesNotUnifyException;
+import types.TypeTuple;
+import types.TypeVariable;
 import util.AppendableException;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
+import util.NameGenerator;
+import util.Pair;
 
 import interpretation.Environment;
 
@@ -17,118 +18,60 @@ import interpretation.Environment;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class IfExpression extends Expression {
-
-	/**
-	 * Condition of the if expression
-	 */
-	public final Expression condition;
-	/**
-	 * Branch for interpretation for the true condition
-	 */
-	public final Expression trueBranch;
-	/**
-	 * Branch for interpretation for the false condition
-	 */
-	public final Expression falseBranch;
-
-	public IfExpression(Expression condition, Expression trueBranch,
-			Expression falseBranch) {
-		this.condition = condition;
-		this.trueBranch = trueBranch;
-		this.falseBranch = falseBranch;
+public class IfExpression extends Application {
+	
+	public IfExpression(Tuple args) {
+		super(IfWrapper.singleton, args);
 	}
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		LitBoolean b = (LitBoolean) this.condition.interpret(env);
+		Expression condition = this.args.values[0];
+		Expression trueBranch = this.args.values[1];
+		Expression falseBranch = this.args.values[2];
+		
+		LitBoolean b = (LitBoolean) condition.interpret(env);
 		if (b.value) {
-			return this.trueBranch.interpret(env);
+			return trueBranch.interpret(env);
 		} else {
-			return this.falseBranch.interpret(env);
+			return falseBranch.interpret(env);
 		}
-	}
-
-	@Override
-	public String toString() {
-		return "if " + this.condition.toString() + " then "
-				+ this.trueBranch.toString() + " else "
-				+ this.falseBranch.toString();
-	}
-
-	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException {
-		try {
-			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
-			
-			if(this.typeHypothesis == null) {
-				Map<Expression, Type> tmp = new TreeMap<Expression, Type>();
-				
-				Map<Expression, Type> condInfer = this.condition.infer(env);
-				Map<Expression, Type> tBranchInfer = this.trueBranch.infer(env);
-				Map<Expression, Type> fBranchInfer = this.falseBranch.infer(env);
-				
-				Optional<Type> o = Type.unify(tBranchInfer.get(this.trueBranch), fBranchInfer.get(this.falseBranch));
-				if(!o.isPresent()) {
-					throw new TypesDoesNotUnifyException(tBranchInfer.get(this.trueBranch), fBranchInfer.get(this.falseBranch));
-				}
-				
-				Optional<Type> t = Type.unify(TypeConcrete.TypeBool, condInfer.get(this.condition));
-				if(!t.isPresent()) {
-					throw new TypesDoesNotUnifyException(TypeConcrete.TypeBool, condInfer.get(this.condition));
-				}
-				
-				tmp.putAll(condInfer);
-				tmp.putAll(tBranchInfer);
-				tmp.putAll(fBranchInfer);
-				tmp.put(this,  o.get());
-				
-				this.typeHypothesis = tmp;
-			}
-			hyp.putAll(this.typeHypothesis);
-			return hyp;
-		}catch(AppendableException e) {
-			e.appendMessage("in " + e);
-			throw e;
-		}
-	}
-
-	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		return new IfExpression(
-				this.condition.substituteTopLevelVariables(topLevel),
-				this.trueBranch.substituteTopLevelVariables(topLevel),
-				this.falseBranch.substituteTopLevelVariables(topLevel));
-	}
-
-	@Override
-	public String toClojureCode() throws Exception {
-		StringBuilder s = new StringBuilder();
-		s.append("(if ");
-		s.append(this.condition.toClojureCode());
-		s.append(' ');
-		s.append(this.trueBranch.toClojureCode());
-		s.append(' ');
-		s.append(this.falseBranch.toClojureCode());
-		s.append(')');
-		return s.toString();
 	}
 	
 	@Override
 	public int compareTo(Expression other) {
-		if(other instanceof IfExpression) {
-			IfExpression o = (IfExpression)other;
-			
-			int c = this.condition.compareTo(o.condition);
-			if(c != 0)
-				return c;
-			
-			c = this.trueBranch.compareTo(o.trueBranch);
-			if(c != 0)
-				return c;
-			
-			return this.falseBranch.compareTo(o.falseBranch);
+		if(other instanceof IfExpression) {			
+			return this.args.compareTo(((IfExpression) other).args);
 		}
 		return super.compareTo(other);
+	}
+	
+	/**
+	 * Wrapper for if
+	 * @author Mgr. Radomir Skrabal
+	 *
+	 */
+	private static final class IfWrapper extends Expression{
+		
+		public static final IfWrapper singleton = new IfWrapper();
+
+		@Override
+		public Expression interpret(Environment env) throws Exception {
+			return this;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			TypeVariable branchType = new TypeVariable(NameGenerator.next());
+			TypeTuple argsType = new TypeTuple(new Type[] {TypeConcrete.TypeBool, branchType, branchType});
+			
+			return new Pair<Type, Substitution>(new TypeArrow(argsType, branchType), new Substitution());
+		}
+
+		@Override
+		public String toClojureCode() throws Exception {
+			return "if";
+		}
+		
 	}
 }

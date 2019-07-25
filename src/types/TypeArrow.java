@@ -90,14 +90,6 @@ public class TypeArrow extends Type {
 		Expression e = this.rtype.convertTo(l, t.rtype);
 		return e;
 	}
-
-	@Override
-	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
-		Variable v = new Variable(NameGenerator.next());
-		Lambda l = new Lambda(v, this.ltype.convertToDefaultRepresentation(expr));
-		l.infer(new Environment());
-		return this.rtype.convertToDefaultRepresentation(l);
-	}
 	
 	/**
 	 * Unfolds the applicable type to TypeArrow
@@ -120,5 +112,10 @@ public class TypeArrow extends Type {
 	@Override
 	public boolean isAtomicType() {
 		return false;
+	}
+
+	@Override
+	public Type apply(Substitution s) {
+		return new TypeArrow(this.ltype.apply(s), this.rtype.apply(s));
 	}
 }

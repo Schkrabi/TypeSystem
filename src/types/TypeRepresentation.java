@@ -1,7 +1,5 @@
 package types;
 
-import expression.Expression;
-
 public class TypeRepresentation extends TypeConcrete {
 	/**
 	 * Base Type of this representation
@@ -51,14 +49,6 @@ public class TypeRepresentation extends TypeConcrete {
 			return this.baseType.equals(other);
 		}
 		return false;
-	}
-
-	@Override
-	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
-		if (expr.getType() != this) {
-			throw new Exception("Invalid converison of " + expr.getType() + " carried out by " + this);
-		}
-		return this.convertTo(expr, this.baseType);
 	}
 	
 	@Override

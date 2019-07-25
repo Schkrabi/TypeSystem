@@ -81,9 +81,9 @@ public class SemanticParser {
 		switch (token.type) {
 		case SYMBOL:
 			v = new Variable(token.asSymbol());
-			if(this.typeEnvironment.isType(token)) {
+			/*if(this.typeEnvironment.isType(token)) {
 				v.setType(this.typeEnvironment.getType(token.asSymbol()).get());
-			}
+			}*/
 			return v;
 		case PAIR:
 			//throw new AppendableException("Unexpected pair " + token);
@@ -92,7 +92,6 @@ public class SemanticParser {
 			if(!o.isPresent()) {
 				throw new AppendableException("stupid");
 			}
-			v.setType(o.get());
 			return v;
 		case INT:
 			l = new LitInteger(token.asInt());
@@ -154,7 +153,7 @@ public class SemanticParser {
 		Expression trueBranch = this.parseNode(l.get(2));
 		Expression falseBranch = this.parseNode(l.get(3));
 
-		return new IfExpression(pred, trueBranch, falseBranch);
+		return new IfExpression(new Tuple(new Expression[] {pred, trueBranch, falseBranch}));
 	}
 
 	/**

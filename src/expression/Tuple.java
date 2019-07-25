@@ -1,13 +1,13 @@
 package expression;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.TreeMap;
 
+import types.Substitution;
 import types.Type;
 import types.TypeTuple;
 import util.AppendableException;
+import util.Pair;
 import interpretation.Environment;
 
 /**
@@ -63,21 +63,18 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
-			if(this.typeHypothesis == null) {
-				this.typeHypothesis = new TreeMap<Expression, Type>();
-				
-				Type types[] = new Type[this.values.length];
-				for(int i = 0; i < this.values.length; i++) {
-					this.typeHypothesis.putAll(this.values[i].infer(env));
-					types[i] = this.typeHypothesis.get(this.values[i]);
-				}
-				this.typeHypothesis.put(this, new TypeTuple(types));
+			Substitution s = new Substitution();
+			Type[] types = new Type[this.values.length];
+			
+			for(int i = 0; i < this.values.length; i++) {
+				Pair<Type, Substitution> infered = this.values[i].infer(env);
+				types[i] = infered.first;
+				s = s.compose(infered.second);
 			}
-			hyp.putAll(this.typeHypothesis);
-			return hyp;
+			return new Pair<Type, Substitution>(new TypeTuple(types), s);
+					
 		}catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
@@ -87,17 +84,6 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	@Override
 	public Iterator<Expression> iterator() {
 		return new TupleIterator();
-	}
-
-	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		Expression[] a = new Expression[this.values.length];
-		int i = 0;
-		for (Expression e : this) {
-			a[i] = e.substituteTopLevelVariables(topLevel);
-			i++;
-		}
-		return new Tuple(a);
 	}
 
 	private class TupleIterator implements Iterator<Expression> {

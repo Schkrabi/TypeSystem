@@ -1,11 +1,10 @@
 package expression;
 
-import java.util.Map;
-import java.util.TreeMap;
-
 import interpretation.Environment;
+import types.Substitution;
 import types.Type;
 import types.TypeConcrete;
+import util.Pair;
 
 /**
  * Class for string literals
@@ -43,16 +42,8 @@ public class LitString extends Literal {
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) {
-		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
-		
-		if(this.typeHypothesis == null) {
-			this.typeHypothesis = new TreeMap<Expression, Type>();
-			this.typeHypothesis.put(this, TypeConcrete.TypeString);
-		}
-		
-		hyp.putAll(this.typeHypothesis);
-		return hyp;
+	public Pair<Type, Substitution> infer(Environment env) {
+		return new Pair<Type, Substitution>(TypeConcrete.TypeString, new Substitution());
 	}
 	
 	@Override

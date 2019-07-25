@@ -1,17 +1,11 @@
 package expression;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
-
 import interpretation.Environment;
 import semantic.UserException;
+import types.Substitution;
 import types.Type;
-import types.TypeConcrete;
-import types.TypeVariable;
-import types.TypesDoesNotUnifyException;
 import util.AppendableException;
-import util.NameGenerator;
+import util.Pair;
 
 /**
  * Expression for user defined exception
@@ -35,30 +29,14 @@ public class ExceptionExpr extends Expression {
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
-			if(this.typeHypothesis == null) {
-				Map<Expression, Type> tmp = this.message.infer(env);
-				Optional<Type> o = Type.unify(TypeConcrete.TypeString, tmp.get(this.message));
-				if(!o.isPresent()) {
-					throw new TypesDoesNotUnifyException(TypeConcrete.TypeString, tmp.get(this.message));
-				}
-				tmp.put(this,  new TypeVariable(NameGenerator.next()));
-				this.typeHypothesis = tmp;
-			}
-			hyp.putAll(this.typeHypothesis);
-			return hyp;
+			//TODO implement
+			throw new AppendableException("Not implemented!");
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
 		}
-	}
-
-	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		//No variables
-		return this;
 	}
 
 	@Override

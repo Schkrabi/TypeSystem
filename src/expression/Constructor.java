@@ -1,12 +1,12 @@
 package expression;
 
-import java.util.Map;
-
 import interpretation.Environment;
+import types.Substitution;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
 import util.AppendableException;
+import util.Pair;
 
 /**
  * Expression for representation of interpreted constructor
@@ -28,28 +28,29 @@ public class Constructor extends Function {
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException {
-		Map<Expression, Type> infered = super.infer(this.creationEnvironment);
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+		try {
+			Pair<Type, Substitution> infered = super.infer(env);
 
-		Type cType = new TypeArrow(this.argsType, this.constructedType);
-
-		this.typeHypothesis.put(this, cType);
-		infered.put(this, cType);
-
-		return infered;
+			return new Pair<Type, Substitution>(new TypeArrow(((TypeArrow) infered.first).ltype, this.constructedType),
+					infered.second);
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
+			throw e;
+		}
 	}
 
 	@Override
 	public String toString() {
 		return "(" + this.constructedType.toString() + " " + this.args.toString() + " " + this.body.toString() + ")";
 	}
-	
+
 	@Override
 	public int compareTo(Expression other) {
-		if(other instanceof Constructor) {
-			Constructor o = (Constructor)other;
+		if (other instanceof Constructor) {
+			Constructor o = (Constructor) other;
 			int c = this.constructedType.compareTo(o.constructedType);
-			if(c != 0)
+			if (c != 0)
 				return c;
 		}
 		return super.compareTo(other);

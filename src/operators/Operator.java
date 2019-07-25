@@ -2,8 +2,6 @@ package operators;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import expression.Expression;
 import expression.Function;
@@ -13,11 +11,13 @@ import expression.LitString;
 import expression.Tuple;
 import expression.Variable;
 import interpretation.Environment;
+import types.Substitution;
 import types.Type;
 import types.TypeConcrete;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
+import util.Pair;
 
 /**
  * Expression for meta-language operators 
@@ -185,19 +185,8 @@ public class Operator extends Function {
 		}
 
 		@Override
-		public Map<Expression, Type> infer(Environment env) throws AppendableException {
-			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
-			if (this.typeHypothesis == null) {
-				this.typeHypothesis = new TreeMap<Expression, Type>();
-				this.typeHypothesis.put(this, this.type);
-			}
-			hyp.putAll(this.typeHypothesis);
-			return hyp;
-		}
-
-		@Override
-		public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-			return this;
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			return new Pair<Type, Substitution>(this.type, new Substitution());
 		}
 
 		@Override

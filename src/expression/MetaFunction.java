@@ -40,12 +40,6 @@ public abstract class MetaFunction extends Expression {
 	}
 	
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel)
-			throws Exception {
-		return this; //Obsolete?
-	}
-	
-	@Override
 	public Expression interpret(Environment env) throws Exception {
 		return this;
 	}

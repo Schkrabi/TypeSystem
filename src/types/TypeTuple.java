@@ -160,26 +160,18 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	}
 
 	@Override
-	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
-		if(!(expr instanceof Tuple)) {
-			throw new Exception("Cannot convert " + expr + " to tuple type");
-		}
-		Tuple tpl = (Tuple) expr;
-		Expression[] ts = new Expression[tpl.values.length];
-		
-		for (int i = 0; i < ts.length; i++) {
-			Expression e = tpl.values[i];
-			Type from = this.values[i];
-			ts[i] = from.convertToDefaultRepresentation(e);
-		}
-		Tuple r = new Tuple(ts);
-		r.infer(new Environment());		
-
-		return new Tuple(ts);
+	public boolean isAtomicType() {
+		return false;
 	}
 
 	@Override
-	public boolean isAtomicType() {
-		return false;
+	public Type apply(Substitution s) {
+		Type[] vls = new Type[this.values.length];
+		
+		for(int i = 0; i < this.values.length; i++) {
+			vls[i] = this.values[i].apply(s);
+		}
+		
+		return new TypeTuple(vls);
 	}
 }

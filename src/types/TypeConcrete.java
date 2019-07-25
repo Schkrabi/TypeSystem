@@ -85,14 +85,16 @@ public class TypeConcrete extends Type {
 		}
 		return false;
 	}
-	
+
 	/**
-	 * Gets basic type if this type is specific representation, otherwise returns this
+	 * Gets basic type if this type is specific representation, otherwise returns
+	 * this
+	 * 
 	 * @return TypeConcrete
 	 */
 	public Type getBasicType() {
-		if(this instanceof TypeRepresentation) {
-			return ((TypeRepresentation)this).getBasicType();
+		if (this instanceof TypeRepresentation) {
+			return ((TypeRepresentation) this).getBasicType();
 		}
 		return this;
 	}
@@ -103,38 +105,39 @@ public class TypeConcrete extends Type {
 			throw new AppendableException(
 					"Conversion of " + this.getClass().getName() + " to " + toType.name + " already exists.");
 		}
-		
-		if(this.baseType() != toType.baseType()){
+
+		if (this.baseType() != toType.baseType()) {
 			throw new AppendableException("Can only create conversions between the same base types!");
 		}
-		
+
 		this.conversionTable.put(toType, conversionConstructor);
 	}
 
 	private Expression instantiateConversionToType(TypeConcrete type, Expression arg) throws Exception {
 		TypeConstructionLambda constructor = this.conversionTable.get(type);
-		
+
 		if (constructor == null) {
-			throw new Exception(
-					"No conversion from " + this + " to type " + type + " exists");
+			throw new Exception("No conversion from " + this + " to type " + type + " exists");
 		}
 
-		Application a = new Application(constructor, new Tuple(new Expression[]{arg}));
+		Application a = new Application(constructor, new Tuple(new Expression[] { arg }));
 
 		return a;
 	}
 
 	@Override
 	public Expression convertTo(Expression expr, Type toType) throws Exception {
-		if(toType instanceof TypeVariable){
+		if (toType instanceof TypeVariable) {
 			return expr;
-		}		
+		}
 		if (!(toType instanceof TypeConcrete)) {
 			this.throwConversionError(expr, toType);
 		}
-		if (expr.getType() != this) {
-			throw new Exception("Invalid converison of " + expr.getType() + " carried out by " + this);
-		}
+		// TODO check this
+		/*
+		 * if (expr.getType() != this) { throw new Exception("Invalid converison of " +
+		 * expr.getType() + " carried out by " + this); }
+		 */
 
 		TypeConcrete t = (TypeConcrete) toType;
 
@@ -143,24 +146,29 @@ public class TypeConcrete extends Type {
 		}
 
 		Expression e = this.instantiateConversionToType(t, expr);
-		
+
 		return e;
 	}
 
-	@Override
-	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
-		if (expr.getType() != this) {
-			throw new Exception("Invalid converison of " + expr.getType() + " carried out by " + this);
-		}
-		return expr;
-	}
-	
 	/**
 	 * Get the base type of this type or type representation
+	 * 
 	 * @return
 	 */
-	public TypeConcrete baseType(){
+	public TypeConcrete baseType() {
 		return this;
+	}
+
+	/**
+	 * Returns true if there exists conversion from this type to argument type.
+	 * Otherwise returns false.
+	 * 
+	 * @param other
+	 *            type to convert to
+	 * @return true or false
+	 */
+	public boolean isConvertableTo(TypeConcrete other) {
+		return this.conversionTable.containsKey(other);
 	}
 
 	/**
@@ -184,5 +192,10 @@ public class TypeConcrete extends Type {
 	@Override
 	public boolean isAtomicType() {
 		return true;
+	}
+
+	@Override
+	public Type apply(Substitution s) {
+		return this;
 	}
 }

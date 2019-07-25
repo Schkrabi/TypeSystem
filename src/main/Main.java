@@ -79,7 +79,7 @@ public class Main {
 		}
 	}
 
-	private static Environment initTopLevelEnvironment() throws Exception {
+	public static Environment initTopLevelEnvironment() throws Exception {
 		Environment env = new Environment();
 		env.put(new Variable(Operator.Addition.toString()), Operator.Addition);
 		env.put(new Variable(Operator.Subtraction.toString()), Operator.Subtraction);
@@ -118,7 +118,7 @@ public class Main {
 		TypeRepresentation.TypeIntString.addConversion(TypeRepresentation.TypeIntRoman, IntStringToIntRomanWrapper.IntStringToIntRoman);
 	}
 	
-	private static void init() throws Exception{
+	public static void init() throws Exception{
 		Main.initTypesConversions();
 	}
 	
@@ -142,9 +142,8 @@ public class Main {
 				}
 
 				for (Expression e : exprs) {
-					Expression expr = e.substituteTopLevelVariables(topLevel);
-					expr.infer(topLevel);
-					System.out.println(expr.interpret(topLevel));
+					e.infer(topLevel);
+					System.out.println(e.interpret(topLevel));
 				}
 			}
 		} catch (Exception e) {
@@ -176,9 +175,8 @@ public class Main {
 			}
 			
 			for(Expression e : exprs){
-				Expression expr = e.substituteTopLevelVariables(topLevel);
-				expr.infer(topLevel);
-				l.add(expr);
+				e.infer(topLevel);
+				l.add(e);
 			}
 			
 			output = Files.newBufferedWriter(outputPath, Charset.defaultCharset());
@@ -216,9 +214,8 @@ public class Main {
 			}
 			
 			for(Expression e : exprs){
-				Expression expr = e.substituteTopLevelVariables(topLevel);
-				expr.infer(topLevel);
-				System.out.println(expr.interpret(topLevel));
+				e.infer(topLevel);
+				System.out.println(e.interpret(topLevel));
 			}
 			
 			inputI = new Scanner(System.in);
@@ -236,9 +233,8 @@ public class Main {
 				}
 
 				for (Expression e : exprs) {
-					Expression expr = e.substituteTopLevelVariables(topLevel);
-					expr.infer(topLevel);
-					Expression interpreted = expr.interpret(topLevel); 
+					e.infer(topLevel);
+					Expression interpreted = e.interpret(topLevel); 
 					System.out.println(interpreted);
 				}
 			}

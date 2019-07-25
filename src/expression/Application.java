@@ -1,10 +1,9 @@
 package expression;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
 
+import types.Substitution;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
@@ -12,6 +11,7 @@ import types.TypeVariable;
 import types.TypesDoesNotUnifyException;
 import util.AppendableException;
 import util.NameGenerator;
+import util.Pair;
 import interpretation.Environment;
 
 /**
@@ -58,7 +58,7 @@ public class Application extends Expression {
 			childEnv.put(v, e);
 		}
 
-		TypeArrow lambdaType = TypeArrow.getFunctionType(f.getType());
+		TypeArrow lambdaType = TypeArrow.getFunctionType(f.infer(env).first);
 
 		childEnv = Application.autoConvertArgs(childEnv, f.args, lambdaType.ltype);
 
@@ -73,55 +73,39 @@ public class Application extends Expression {
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException { //TODO rewrite
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException { 
 		try {
-			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
-
-			if (this.typeHypothesis == null) {
-				Map<Expression, Type> funHyp = this.fun.infer(env);
-				Map<Expression, Type> argsHyp = this.args.infer(env);
-				
-				Type funType = funHyp.get(this.fun);
-				if (!funType.isApplicableType()) {
-					throw new AppendableException("Type " + funType + " of " + this.fun + " is not TypeArrow!");
-				}
-				
-				TypeArrow funArrType = (TypeArrow)funType;
-
-				Optional<Type> unifiedArgsType = Type.unify(funArrType.ltype, argsHyp.get(this.args));
-				if (!unifiedArgsType.isPresent()) {
-					throw new TypesDoesNotUnifyException(funHyp.get(this.args), argsHyp.get(this.args));
-				}
-
-				Map<Expression, Type> tmp = new TreeMap<Expression, Type>();
-				tmp.putAll(funHyp);
-				tmp.putAll(argsHyp);
-				tmp.put(this.args, unifiedArgsType.get());
-
-				tmp.put(this, ((TypeArrow) funType).rtype);
-
-				this.typeHypothesis = tmp;
+			//Infer function type
+			TypeArrow funType = new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()));
+			Pair<Type, Substitution> funInfered = this.fun.infer(env);
+			Optional<Substitution> substFun = Type.unify(funType, funInfered.first);
+			
+			if(!substFun.isPresent()) {
+				throw new TypesDoesNotUnifyException(funType, funInfered.first);
 			}
-			hyp.putAll(this.typeHypothesis);
-
-			return hyp;
+			
+			funType = (TypeArrow)funType.apply(substFun.get());
+			
+			//Infer arguments type
+			Pair<Type, Substitution> argsInfered = this.args.infer(env);
+			
+			//Unify arguments and formal argument types
+			Optional<Substitution> substArgs = Type.unify(argsInfered.first, funType.ltype);
+			if(!substArgs.isPresent()) {
+				throw new TypesDoesNotUnifyException(argsInfered.first, funType.ltype);
+			}
+			
+			//Compose all substitutions (and check if they are compatible)
+			Substitution s = new Substitution();
+			s = s.compose(funInfered.second);
+			s = s.compose(substFun.get());
+			s = s.compose(argsInfered.second);
+			s = s.compose(substArgs.get());
+			
+			return new Pair<Type, Substitution>(funType.rtype.apply(s), s);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
-		}
-	}
-
-	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception { //TODO Obsolete?
-		Expression f = this.fun.substituteTopLevelVariables(topLevel);
-		Expression a = this.args.substituteTopLevelVariables(topLevel);
-
-		if (a instanceof Tuple) {
-			Tuple t = (Tuple) a;
-			return new Application(f, t);
-		} else {
-			// return new Application(f, a);
-			throw new Exception("Argument is always tuple");
 		}
 	}
 
@@ -133,7 +117,7 @@ public class Application extends Expression {
 		s.append(this.fun.toClojureCode());
 		s.append(' ');
 
-		TypeArrow funType = TypeArrow.getFunctionType(this.fun.getType());
+		TypeArrow funType = TypeArrow.getFunctionType(this.fun.infer(new Environment()).first);
 
 		TypeTuple argsType;
 
@@ -157,8 +141,8 @@ public class Application extends Expression {
 			Expression e = i.next();
 			Type argType = j.next();
 
-			if (!argType.equals(e.getType())) {
-				e = e.getType().convertTo(e, argType);
+			if (!argType.equals(e.infer(new Environment()).first)) {
+				e = e.infer(new Environment()).first.convertTo(e, argType);
 			}
 
 			s.append(e.toClojureCode());
@@ -207,7 +191,7 @@ public class Application extends Expression {
 
 		for (int i = 0; i < args.values.length; i++) {
 			Variable name = (Variable) args.values[i];
-			Type fromType = e.getVariableValue((Variable) args.values[i]).getType();
+			Type fromType = e.getVariableValue((Variable) args.values[i]).infer(e).first;
 			Expression arg = e.getVariableValue((Variable) args.values[i]);
 			Type toType = argTypes.values[i];
 

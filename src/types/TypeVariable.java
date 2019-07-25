@@ -63,12 +63,20 @@ public class TypeVariable extends Type {
 	}
 
 	@Override
-	public Expression convertToDefaultRepresentation(Expression expr) throws Exception {
-		throw new Exception("Cannot convert to Variable type!");
+	public boolean isAtomicType() {
+		return true;
 	}
 
 	@Override
-	public boolean isAtomicType() {
-		return true;
+	public Type apply(Substitution s) {
+		if(s.containsKey(this)) {
+			Type t = s.get(this), v;
+			do {
+				v = t.apply(s);
+			}while(!v.equals(t));
+			
+			return t;			
+		}
+		return this;
 	}
 }

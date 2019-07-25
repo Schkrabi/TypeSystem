@@ -9,7 +9,6 @@ import conversions.IntStringToIntRomanWrapper;
 import conversions.IntStringToIntWrapper;
 import conversions.IntToIntRomanWrapper;
 import conversions.IntToIntStringWrapper;
-import interpretation.Environment;
 import types.Type;
 
 /**
@@ -26,11 +25,6 @@ public abstract class Literal extends Expression {
 	 * @return Type object
 	 */
 	public abstract Type getDefaultRepresentationType();
-
-	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
-		return this;
-	}
 
 	/**
 	 * Wrapper for conversions

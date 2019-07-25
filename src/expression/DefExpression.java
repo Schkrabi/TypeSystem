@@ -1,12 +1,13 @@
 package expression;
 
-import java.util.Map;
-import java.util.TreeMap;
-
 import interpretation.Environment;
+import types.Substitution;
 import types.Type;
 import types.TypeTuple;
+import types.TypeVariable;
 import util.AppendableException;
+import util.NameGenerator;
+import util.Pair;
 
 /**
  * Expression for interpretation and handling the define special form. Purely
@@ -39,28 +40,22 @@ public class DefExpression extends Expression {
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
-			if(this.typeHypothesis == null) {
-				Map<Expression, Type> tmp = this.defined.infer(env);
-				tmp.put(this, TypeTuple.EMPTY_TUPLE);
-				this.typeHypothesis = tmp;
-			}
-			hyp.putAll(this.typeHypothesis);
-			
-			return hyp;
-		}catch (AppendableException e) {
+			Environment childEnv = new Environment(env);
+
+			// Define creates new binding in environment, need to have reference to type of
+			// this variable existing in environment from we are infering
+			TypeVariable tv = new TypeVariable(NameGenerator.next());
+			childEnv.put(this.name, new TypeHolder(tv));
+			Pair<Type, Substitution> infered = this.defined.infer(childEnv);
+
+			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, infered.second);
+
+		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
 		}
-	}
-
-	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		Environment e = new Environment(topLevel);
-		e.put(this.name, this.defined);
-		return new DefExpression(this.name, this.defined.substituteTopLevelVariables(e));
 	}
 
 	@Override
@@ -75,15 +70,15 @@ public class DefExpression extends Expression {
 
 	@Override
 	public String toString() {
-		return "(define " + this.name.toString() + " " + this.defined.toString() + ")"; 
+		return "(define " + this.name.toString() + " " + this.defined.toString() + ")";
 	}
-	
+
 	@Override
 	public int compareTo(Expression other) {
-		if(other instanceof DefExpression) {
-			DefExpression o = (DefExpression)other;
+		if (other instanceof DefExpression) {
+			DefExpression o = (DefExpression) other;
 			int c = this.name.compareTo(o.name);
-			if(c != 0)
+			if (c != 0)
 				return c;
 			return this.defined.compareTo(o.defined);
 		}

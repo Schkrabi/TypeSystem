@@ -1,15 +1,15 @@
 package conversions;
 
 import interpretation.Environment;
+import types.Substitution;
 import types.Type;
+import types.TypeArrow;
 import types.TypeConcrete;
 import types.TypeRepresentation;
 import types.TypeTuple;
 import util.AppendableException;
+import util.Pair;
 import expression.TypeConstructionLambda;
-
-import java.util.Map;
-import java.util.TreeMap;
 
 import expression.Expression;
 import expression.Literal;
@@ -37,26 +37,10 @@ public class IntToIntStringWrapper extends ConversionWrapper{
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException {
-		try {
-			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
-			if (this.typeHypothesis == null) {
-				this.typeHypothesis = ConversionWrapper.arg.infer(env);
-				this.typeHypothesis.put(this, TypeRepresentation.TypeIntString);
-			}
-			hyp.putAll(this.typeHypothesis);
-			return hyp;
-		} catch (AppendableException e) {
-			e.appendMessage("in " + this);
-			throw e;
-		}
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+		return new Pair<Type, Substitution>(new TypeArrow(TypeRepresentation.TypeInt, TypeRepresentation.TypeIntString), new Substitution());
 	}
-
-	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		return this;
-	}
-
+	
 	@Override
 	public String toClojureCode() throws Exception {
 		return "(Integer/toString " + ConversionWrapper.arg.toClojureCode() + ")";

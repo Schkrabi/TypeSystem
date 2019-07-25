@@ -3,8 +3,6 @@ package types;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import expression.Expression;
@@ -44,53 +42,64 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	/**
+	 * Applies substitution to this type
+	 * @param s applied substitution
+	 * @return new Type with applied substitution
+	 */
+	public abstract Type apply(Substitution s);
+	
+	/**
 	 * Returns unified type if the expression if two types unifies, otherwise returns Optional.Empty
 	 * @param m first unified type
 	 * @param n second unified type
 	 * @return Optional<Type>
 	 * @throws TypesDoesNotUnifyException
 	 */
-	public static Optional<Type> unify(Type m, Type n) throws TypesDoesNotUnifyException {
+	public static Optional<Substitution> unify(Type m, Type n) throws TypesDoesNotUnifyException {
 		if(m instanceof TypeConcrete && n instanceof TypeConcrete) {
 			TypeConcrete mc = (TypeConcrete)m;
 			TypeConcrete nc = (TypeConcrete)n;
 			
 			if(mc.isSameBasicType(nc)) {
-				return Optional.of(mc.baseType());
+				return Optional.of(new Substitution());
 			}
 		} else if(m instanceof TypeArrow && n instanceof TypeArrow) {
 			TypeArrow ma = (TypeArrow)m;
 			TypeArrow na = (TypeArrow)n;
 			
-			Optional<Type> left = Type.unify(ma.ltype, na.ltype);
+			Optional<Substitution> left = Type.unify(ma.ltype, na.ltype);
 			if(!left.isPresent())
 				throw new TypesDoesNotUnifyException(ma.ltype, ma.rtype);
 			
-			Optional<Type> right = Type.unify(ma.rtype, na.rtype);
+			Optional<Substitution> right = Type.unify(ma.rtype, na.rtype);
 			if(!right.isPresent())
 				throw new TypesDoesNotUnifyException(ma.rtype, na.rtype);
 			
-			return Optional.of(new TypeArrow(left.get(), right.get()));
+			return Optional.of(left.get().compose(right.get()));
 		} else if(m instanceof TypeVariable) {
-			return Optional.of(n);
+			Substitution s = new Substitution();
+			s.put((TypeVariable)m, n);
+			return Optional.of(s);
 		} else if(n instanceof TypeVariable) {
-			return Optional.of(m);
+			Substitution s = new Substitution();
+			s.put((TypeVariable)n, m);
+			return Optional.of(s);
 		} else if(m instanceof TypeTuple && n instanceof TypeTuple) {
 			TypeTuple mt = (TypeTuple)m;
 			TypeTuple nt = (TypeTuple)n;
 			
 			if(mt.values.length == nt.values.length) {
-				Type[] ts = new Type[mt.values.length];
+				Substitution s = new Substitution();
 				
 				for(int i = 0; i < mt.values.length; i++) {
-					Optional<Type> ot = Type.unify(mt.values[i], nt.values[i]);
+					Optional<Substitution> ot = Type.unify(mt.values[i], nt.values[i]);
 					
 					if(!ot.isPresent())
 						throw new TypesDoesNotUnifyException(mt.values[i], nt.values[i]);
 					
-					ts[i] = ot.get();
+					s = s.compose(ot.get());
 				}
-				return Optional.of(new TypeTuple(ts));
+				return Optional.of(s);
 			}
 		}
 		
@@ -172,42 +181,7 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	public static Map<Expression, Type> unionHypothesis(Map<Expression, Type> hyp1, Map<Expression, Type> hyp2) throws AppendableException{
-		Set<Expression> unionKeys = hyp1.keySet();
-		unionKeys.addAll(hyp2.keySet());
-		
-		Map<Expression, Type> unionedHypothesis = new TreeMap<Expression, Type>();
-		
-		while(!unionKeys.isEmpty()) {
-			Set<Expression> toRemove = new TreeSet<Expression>();
-			
-			for(Expression key : unionKeys) {
-				Type t1 = hyp1.get(key);
-				Type t2 = hyp2.get(key);
-				
-				if(t1 == null) {
-					unionedHypothesis.put(key, t2);
-					toRemove.add(key);
-				}else if(t2 == null) {
-					unionedHypothesis.put(key, t1);
-					toRemove.add(key);
-				}else if(t1.isAtomicType() && t2.isAtomicType()) {
-					Optional<Type> o = Type.unify(t1, t2);
-					if(!o.isPresent()) {
-						throw new TypesDoesNotUnifyException(t1, t2);
-					}
-					unionedHypothesis.put(key, o.get());
-					toRemove.add(key);
-				}else if(t1.isCompositeType() && t2.isCompositeType()) {
-					//TODO
-				}else {
-					
-				}
-			}
-			
-			unionKeys.removeAll(toRemove);
-		}
-		
-		return unionedHypothesis;
+		throw new AppendableException("Not implemented");
 	}
 
 	@Override
@@ -224,16 +198,6 @@ public abstract class Type implements Comparable<Type> {
 	 * @throws Exception
 	 */
 	public abstract Expression convertTo(Expression expr, Type toType) throws Exception;
-
-	/**
-	 * Creates expression that converts expr in type consisting only of Basic types
-	 * (not specialized type representations)
-	 * 
-	 * @param expr Expression to be converted
-	 * @return a new expression that will intepret/infer into a basic type
-	 * @throws Exception
-	 */
-	public abstract Expression convertToDefaultRepresentation(Expression expr) throws Exception;
 
 	protected void throwConversionError(Expression expr, Type toType) throws Exception {
 		throw new Exception("Trying to convert uncovertable types " + this.toString() + " to " + toType.toString()

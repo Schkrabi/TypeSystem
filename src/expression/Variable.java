@@ -1,13 +1,9 @@
 package expression;
 
+import types.Substitution;
 import types.Type;
-import types.TypeConcrete;
-import types.TypeVariable;
 import util.AppendableException;
-import util.NameGenerator;
-
-import java.util.Map;
-import java.util.TreeMap;
+import util.Pair;
 
 import interpretation.Environment;
 
@@ -50,32 +46,18 @@ public class Variable extends Expression implements Comparable<Expression> {
 	public String toString() {
 		return this.name;
 	}
-	
-	@Override
-	public Map<Expression, Type> getTypeHypothesis(Environment env) throws AppendableException{
-		return this.infer(env);
-	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			Expression e = env.getVariableValue(this);
+			if(e == null) {
+				//Should not happen
+				//return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), new Substitution());
+				throw new AppendableException("Undeclared variable");
+			}
 			
-			if(this.typeHypothesis == null) {
-				if(env.containsVariable(this)) {
-					Expression e = env.getVariableValue(this);
-					Map<Expression, Type> tmp = e.infer(env);
-					hyp.putAll(tmp);
-					hyp.put(this, tmp.get(e));
-				}
-				else {
-					hyp.put(this, new TypeVariable(NameGenerator.next()));
-				}
-			}
-			else {
-				hyp.putAll(this.typeHypothesis);
-			}
-			return hyp;
+			return e.infer(env);			
 		}catch(AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
@@ -83,28 +65,7 @@ public class Variable extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) {
-		Expression e = topLevel.getVariableValue(this);
-		if(e != null){
-			return e;
-		}
-		return this;
-	}
-
-	@Override
 	public String toClojureCode() throws Exception {
 		return this.name;
-	}
-
-	/**
-	 * Sets type of a variable, used in semantic parser for type annotated variables
-	 * @param typeConcrete
-	 * @throws AppendableException
-	 */
-	public void setType(TypeConcrete typeConcrete) throws AppendableException {
-		if(this.typeHypothesis == null) {
-			this.typeHypothesis = new TreeMap<Expression, Type>();	
-		}		
-		this.typeHypothesis.put(this, typeConcrete);
 	}
 }

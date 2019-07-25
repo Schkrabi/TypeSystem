@@ -1,9 +1,9 @@
 package expression;
 
+import types.Substitution;
 import types.Type;
 import types.TypeConcrete;
-import java.util.Map;
-import java.util.TreeMap;
+import util.Pair;
 
 import interpretation.Environment;
 
@@ -46,16 +46,8 @@ public class LitInteger extends Literal {
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) {
-		Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
-		
-		if(this.typeHypothesis == null) {
-			this.typeHypothesis = new TreeMap<Expression, Type>();
-			this.typeHypothesis.put(this, TypeConcrete.TypeInt);
-		}
-		
-		hyp.putAll(this.typeHypothesis);
-		return hyp;
+	public Pair<Type, Substitution> infer(Environment env) {
+		return new Pair<Type, Substitution>(TypeConcrete.TypeInt, new Substitution());
 	} 
 	
 	@Override

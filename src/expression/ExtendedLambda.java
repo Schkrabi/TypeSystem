@@ -1,23 +1,18 @@
 package expression;
 
-import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import interpretation.Environment;
+import types.Substitution;
 import types.Type;
-import types.TypeArrow;
-import types.TypeSetDoesNotUnifyException;
 import util.AppendableException;
-import util.ThrowingFunction;
+import util.Pair;
 
 /**
  * Extended lambda expression allowing for the different implementation of body
@@ -65,41 +60,10 @@ public class ExtendedLambda extends MetaLambda {
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
-			if (this.typeHypothesis == null) {
-				final Map<Expression, Map<Expression, Type>> infered = this.implementations.stream().map(
-						(ThrowingFunction<Expression, AbstractMap.SimpleEntry<Expression, Map<Expression, Type>>>) (x -> new AbstractMap.SimpleEntry<Expression, Map<Expression, Type>>(
-								x, x.infer(env))))
-						.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-				Set<Type> implTypes = infered.entrySet().stream().map(x -> x.getValue().get(x.getKey()))
-						.collect(Collectors.toSet());
-
-				Optional<Type> ltype = Type
-						.unifyMany(implTypes.stream().map(x -> ((TypeArrow) x).ltype).collect(Collectors.toSet()));
-				if (!ltype.isPresent()) {
-					throw new TypeSetDoesNotUnifyException(
-							implTypes.stream().map(x -> ((TypeArrow) x).ltype).collect(Collectors.toSet()));
-				}
-
-				Optional<Type> rtype = Type
-						.unifyMany(implTypes.stream().map(x -> ((TypeArrow) x).rtype).collect(Collectors.toSet()));
-				if (!rtype.isPresent()) {
-					throw new TypeSetDoesNotUnifyException(
-							implTypes.stream().map(x -> ((TypeArrow) x).rtype).collect(Collectors.toSet()));
-				}
-
-				this.typeHypothesis = infered.entrySet().stream().flatMap(x -> x.getValue().entrySet().stream())
-						.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-				Type t = new TypeArrow(ltype.get(), rtype.get());
-
-				this.typeHypothesis.put(this, t);
-			}
-			hyp.putAll(this.typeHypothesis);
-			return hyp;
+			//TODO implement
+			throw new AppendableException("Not implemented!");
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
@@ -177,16 +141,6 @@ public class ExtendedLambda extends MetaLambda {
 		sb.append(")");
 
 		return sb.toString();
-	}
-
-	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		Set<Lambda> tmp = new TreeSet<Lambda>();
-		for (Lambda l : this.implementations) {
-			tmp.add((Lambda) l.substituteTopLevelVariables(topLevel));
-		}
-
-		return new ExtendedLambda(tmp);
 	}
 
 	@Override

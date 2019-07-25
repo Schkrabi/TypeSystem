@@ -42,8 +42,8 @@ class TestExpression {
 		Application application = new Application(Expression.EMPTY_EXPRESSION, Tuple.EMPTY_TUPLE);
 		DefExpression defExpression = new DefExpression(new Variable("x"), Expression.EMPTY_EXPRESSION);
 		ExceptionExpr exceptionExpr = new ExceptionExpr(Expression.EMPTY_EXPRESSION);
-		IfExpression ifExpression = new IfExpression(Expression.EMPTY_EXPRESSION, Expression.EMPTY_EXPRESSION,
-				Expression.EMPTY_EXPRESSION);
+		IfExpression ifExpression = new IfExpression(new Tuple(new Expression[] { Expression.EMPTY_EXPRESSION,
+				Expression.EMPTY_EXPRESSION, Expression.EMPTY_EXPRESSION }));
 		Literal literal = new LitInteger(42);
 		MetaFunction metaFunction = new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
 				new Environment());
@@ -53,7 +53,7 @@ class TestExpression {
 
 		List<Expression> l = Arrays.asList(application, defExpression, exceptionExpr, ifExpression, literal,
 				metaFunction, metaLambda, variable, conversionWrapper);
-		
+
 		literal.compareTo(metaFunction);
 
 		for (Expression e : l) {

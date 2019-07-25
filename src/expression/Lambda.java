@@ -2,15 +2,17 @@ package expression;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
 
+import types.Substitution;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
+import types.TypeVariable;
 import types.TypesDoesNotUnifyException;
 import util.AppendableException;
+import util.NameGenerator;
+import util.Pair;
 import interpretation.Environment;
 
 /**
@@ -67,48 +69,46 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	}
 
 	@Override
-	public Map<Expression, Type> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Map<Expression, Type> hyp = new TreeMap<Expression, Type>();
+			// First infer types in body, use typeholders for argument variables
+			Environment childEnv = new Environment(env);
+			Type[] argsTypeArr = new Type[this.args.values.length];
 
-			if (this.typeHypothesis == null) {
-				Map<Expression, Type> tmp = new TreeMap<Expression, Type>();
-
-				Map<Expression, Type> inferedArgs = this.args.infer(new Environment());
-				Map<Expression, Type> inferedBody = this.body.infer(env);
-
-				tmp.putAll(inferedBody);
-
-				for (Map.Entry<Expression, Type> e : inferedArgs.entrySet()) {
-					if(inferedBody.containsKey(e.getKey())) {
-						Optional<Type> t = Type.unify(e.getValue(), inferedBody.get(e.getKey()));
-	
-						if (!t.isPresent()) {
-							throw new TypesDoesNotUnifyException(e.getValue(), inferedBody.get(e.getKey()));
-						}
-	
-						tmp.put(e.getKey(), t.get());
-					}
-					else {
-						tmp.put(e.getKey(), e.getValue());
-					}
+			for (int i = 0; i < this.args.values.length; i++) {
+				Expression e = this.args.values[i];
+				if (!(e instanceof Variable)) {
+					throw new AppendableException(e + " is not instance of " + Variable.class.getName());
 				}
-
-				if (this.argsType != null) {
-					Optional<Type> o = Type.unify(this.argsType, tmp.get(this.args));
-
-					if (!o.isPresent()) {
-						throw new TypesDoesNotUnifyException(this.argsType, inferedBody.get(this.args));
-					}
-
-					tmp.put(this.args, o.get());
-				}
-
-				tmp.put(this, new TypeArrow(tmp.get(this.args), tmp.get(this.body)));
-				this.typeHypothesis = tmp;
+				TypeVariable tv = new TypeVariable(NameGenerator.next());
+				childEnv.put((Variable) e, new TypeHolder(tv));
+				argsTypeArr[i] = tv;
 			}
-			hyp.putAll(this.typeHypothesis);
-			return hyp;
+
+			Type argsType = new TypeTuple(argsTypeArr);
+
+			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv);
+
+			// Update argument type with found bindings
+			argsType = argsType.apply(bodyInfered.second);
+
+			// Now check if body was typed correctly according to user defined types of
+			// arguments
+			Optional<Substitution> s = Type.unify(argsType, this.argsType);
+
+			if (!s.isPresent()) {
+				throw new TypesDoesNotUnifyException(argsType, this.argsType);
+			}
+
+			// Compose all substitutions in order to check if there are no collisions and
+			// provide final substitution
+			Substitution finalSubst = s.get().compose(bodyInfered.second);
+
+			argsType = argsType.apply(finalSubst);
+
+			return new Pair<Type, Substitution>(new TypeArrow(argsType, bodyInfered.first.apply(finalSubst)),
+					finalSubst);
+
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
@@ -136,17 +136,6 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 		s.append(this.body.toClojureCode());
 		s.append(')');
 		return s.toString();
-	}
-
-	@Override
-	public Expression substituteTopLevelVariables(Environment topLevel) throws Exception {
-		Environment e = new Environment(topLevel);
-		// Mask locally redefined variables
-		for (Expression expr : this.args) {
-			e.put((Variable) expr, expr);
-		}
-
-		return new Lambda(this.args, this.argsType, this.body.substituteTopLevelVariables(e));
 	}
 
 	@Override
