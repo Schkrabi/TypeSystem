@@ -57,4 +57,11 @@ public class ExceptionExpr extends Expression {
 		return super.compareTo(other);
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof ExceptionExpr) {
+			return this.message.equals(((ExceptionExpr) other).message);
+		}
+		return false;
+	}
 }

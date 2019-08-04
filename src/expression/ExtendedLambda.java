@@ -198,4 +198,12 @@ public class ExtendedLambda extends MetaLambda {
 		}
 		return super.compareTo(other);
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof ExtendedLambda) {
+			return this.implementations.equals(((ExtendedLambda) other).implementations);
+		}
+		return false;
+	}
 }

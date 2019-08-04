@@ -1,13 +1,17 @@
 package types;
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.Vector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import expression.Expression;
 import expression.Tuple;
-import interpretation.Environment;
 
 /**
  * Tuple of types
@@ -20,29 +24,57 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	/**
 	 * Values of the tuple
 	 */
-	public final Type[] values;
+	private final Vector<Type> values;
 
 	/**
 	 * Empty type tuple object
 	 */
-	public static final TypeTuple EMPTY_TUPLE = new TypeTuple(new Type[] {});
+	public static final TypeTuple EMPTY_TUPLE = new TypeTuple();
 
-	public TypeTuple(List<Type> values) {
-		Type[] ar = new Type[values.size()];
-		ar = values.toArray(ar);
-		this.values = ar;
+	public TypeTuple(Collection<? extends Type> values) {
+		this.values = new Vector<Type>(values);
 	}
 
-	public TypeTuple(Type[] values) {
-		this.values = values;
+	private TypeTuple() {
+		this.values = new Vector<Type>();
+	}
+
+	/**
+	 * Gets expression on tuple index
+	 * 
+	 * @param index searched index
+	 * @return element on given index
+	 */
+	public Type get(int index) {
+		return this.values.get(index);
+	}
+
+	/**
+	 * Gets size of this tuple
+	 * 
+	 * @return integer
+	 */
+	public int size() {
+		return this.values.size();
+	}
+
+	/**
+	 * Gets stream of this tuple
+	 * 
+	 * @return
+	 */
+	public Stream<Type> stream() {
+		return this.values.stream();
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder("[");
-		for (int i = 0; i < this.values.length; i++) {
-			s.append(this.values[i].toString());
-			if (i != this.values.length - 1) {
+		Iterator<Type> i = this.iterator();
+		while (i.hasNext()) {
+			Type t = i.next();
+			s.append(t.toString());
+			if (i.hasNext()) {
 				s.append(", ");
 			}
 		}
@@ -56,28 +88,15 @@ public class TypeTuple extends Type implements Iterable<Type> {
 			return false;
 		}
 		TypeTuple other = (TypeTuple) o;
-		if (this.values.length != other.values.length) {
-			return false;
-		}
-
-		for (int i = 0; i < this.values.length; i++) {
-			if (!this.values[i].equals(other.values[i])) {
-				return false;
-			}
-		}
-		return true;
+		return this.values.equals(other.values);
 	}
 
 	@Override
 	public Set<TypeVariable> getUnconstrainedVariables() {
 		Set<TypeVariable> s = new TreeSet<TypeVariable>();
-		/*if (this.getRep() != this) {
-			s.addAll(this.getRep().getUnconstrainedVariables());
-			return s;
-		}*/
 
-		for (int i = 0; i < this.values.length; i++) {
-			s.addAll(this.values[i].getUnconstrainedVariables());
+		for (Type t : this) {
+			s.addAll(t.getUnconstrainedVariables());
 		}
 		return s;
 	}
@@ -88,11 +107,11 @@ public class TypeTuple extends Type implements Iterable<Type> {
 			return super.compareTo(o);
 		}
 		TypeTuple other = (TypeTuple) o;
-		if (this.values.length != other.values.length) {
-			return Integer.compare(this.values.length, other.values.length);
+		if (this.values.size() != other.values.size()) {
+			return Integer.compare(this.values.size(), other.values.size());
 		}
-		for (int i = 0; i < this.values.length; i++) {
-			int cmp = this.values[i].compareTo(other.values[i]);
+		for (int i = 0; i < this.values.size(); i++) {
+			int cmp = this.get(i).compareTo(other.get(i));
 			if (cmp != 0) {
 				return cmp;
 			}
@@ -102,61 +121,35 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 	@Override
 	public Iterator<Type> iterator() {
-		return new TypeTupleIterator();
-	}
-
-	private class TypeTupleIterator implements Iterator<Type> {
-
-		private int cursor = 0;
-
-		@Override
-		public boolean hasNext() {
-			return cursor < TypeTuple.this.values.length;
-		}
-
-		@Override
-		public Type next() {
-			if (this.hasNext()) {
-				Type t = TypeTuple.this.values[this.cursor];
-				cursor++;
-				return t;
-			}
-			throw new NoSuchElementException();
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-
-		}
-
+		return this.values.iterator();
 	}
 
 	@Override
 	public Expression convertTo(Expression expr, Type toType) throws Exception {
-		if(toType instanceof TypeVariable){
+		if (toType instanceof TypeVariable) {
 			return expr;
 		}
-		if (!(toType instanceof TypeTuple) || (!(expr instanceof Tuple))
-				|| (this.values.length != ((TypeTuple) toType).values.length)
-				|| (this.values.length != ((Tuple) expr).values.length)) {
+		if (!(toType instanceof TypeTuple) || (!(expr instanceof Tuple)) || (this.size() != ((TypeTuple) toType).size())
+				|| (this.size() != ((Tuple) expr).size())) {
 			this.throwConversionError(expr, toType);
 		}
 		TypeTuple ttpl = (TypeTuple) toType;
 		Tuple tpl = (Tuple) expr;
-		Expression[] ts = new Expression[ttpl.values.length];
 
-		for (int i = 0; i < ts.length; i++) {
-			Expression e = tpl.values[i];
-			Type to = ttpl.values[i];
-			Type from = this.values[i];
-			ts[i] = from.convertTo(e, to);
+		List<Expression> ts = new LinkedList<Expression>();
+		Iterator<Expression> i = tpl.iterator();
+		Iterator<Type> j = this.iterator();
+		Iterator<Type> k = ttpl.iterator();
+
+		while (i.hasNext() && j.hasNext() && k.hasNext()) {
+			Expression e = i.next();
+			Type t = j.next();
+			Type u = k.next();
+
+			ts.add(t.convertTo(e, u));
 		}
-		
-		Tuple r = new Tuple(ts);
-		r.infer(new Environment());
 
-		return r;
+		return new Tuple(ts);
 	}
 
 	@Override
@@ -166,12 +159,6 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 	@Override
 	public Type apply(Substitution s) {
-		Type[] vls = new Type[this.values.length];
-		
-		for(int i = 0; i < this.values.length; i++) {
-			vls[i] = this.values[i].apply(s);
-		}
-		
-		return new TypeTuple(vls);
+		return new TypeTuple(this.stream().map(x -> x.apply(s)).collect(Collectors.toList()));
 	}
 }

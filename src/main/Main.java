@@ -95,7 +95,7 @@ public class Main {
 		env.put(new Variable(Operator.Concantenation.toString()), Operator.Concantenation);
 		env.put(new Variable(Operator.Car.toString()), Operator.Car);
 		env.put(new Variable(Operator.Cdr.toString()), Operator.Cdr);
-		env.put(new Variable("nil"), new Tuple(new Expression[0]));
+		env.put(new Variable("nil"), Expression.EMPTY_EXPRESSION);
 		env.put(new Variable(Operator.Equals.toString()), Operator.Equals);
 		//env.put(new Variable(Deconstruct.singleton.toString()), Deconstruct.singleton);
 		

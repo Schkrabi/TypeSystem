@@ -1,5 +1,7 @@
 package expression;
 
+import java.util.Arrays;
+
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
@@ -62,47 +64,55 @@ public class TypeConstructionLambda extends Lambda {
 		return super.compareTo(other);
 	}
 	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof TypeConstructionLambda) {
+			return this.constructedType.equals(((TypeConstructionLambda) other).constructedType) && super.equals(other);
+		}
+		return false;
+	}
+	
 	/**
 	 * Constructor for primitive Int
 	 */
 	public static TypeConstructionLambda IntPrimitiveConstructor = new TypeConstructionLambda(TypeConcrete.TypeInt,
-																		new Tuple(new Expression[] {new Variable("x")}),
-																		new TypeTuple(new Type[] { TypeConcrete.TypeInt}),
+																		new Tuple(Arrays.asList(new Variable("x"))),
+																		new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
 																		new Variable("x"));
 	/**
 	 * Constructor for primitive String
 	 */
 	public static TypeConstructionLambda StringPrimitiveConstructor = new TypeConstructionLambda(	TypeConcrete.TypeString,
-																			new Tuple(new Expression[] {new Variable("x")}),
-																			new TypeTuple(new Type[] { TypeConcrete.TypeString}),
+																			new Tuple(Arrays.asList(new Variable("x"))),
+																			new TypeTuple(Arrays.asList(TypeConcrete.TypeString)),
 																			new Variable("x"));
 	/**
 	 * Constructor for primitive Double
 	 */
 	public static TypeConstructionLambda DoublePrimitiveConstructor = new TypeConstructionLambda(	TypeConcrete.TypeDouble,
-																			new Tuple(new Expression[] {new Variable("x")}),
-																			new TypeTuple(new Type[] { TypeConcrete.TypeDouble}),
+																			new Tuple(Arrays.asList(new Variable("x"))),
+																			new TypeTuple(Arrays.asList(TypeConcrete.TypeDouble)),
 																			new Variable("x"));
 	/**
 	 * Constructor for primitive Boolean
 	 */
 	public static TypeConstructionLambda BoolPrimitiveConstructor = new TypeConstructionLambda(TypeConcrete.TypeBool,
-																		 new Tuple(new Expression[] {new Variable("x")}),
-																		 new TypeTuple(new Type[] { TypeConcrete.TypeBool}),
+																		 new Tuple(Arrays.asList(new Variable("x"))),
+																		 new TypeTuple(Arrays.asList(TypeConcrete.TypeBool)),
 																		 new Variable("x"));
 	
 	/**
 	 * Constructor for Int represented by String value
 	 */
 	public static TypeConstructionLambda IntStringConstructor = new TypeConstructionLambda(	TypeRepresentation.TypeIntString,
-																		new Tuple(new Expression[] {new Variable("x")}),
-																		new TypeTuple(new Type[] { TypeConcrete.TypeString}),
+																		new Tuple(Arrays.asList(new Variable("x"))),
+																		new TypeTuple(Arrays.asList(TypeConcrete.TypeString)),
 																		new Variable("x"));
 	/**
 	 * Constructor for Int represented by Roman String value
 	 */
 	public static TypeConstructionLambda IntRomanConstructor = new TypeConstructionLambda(	TypeRepresentation.TypeIntRoman,
-																		new Tuple(new Expression[] {new Variable("x")}),
-																		new TypeTuple(new Type[] { TypeConcrete.TypeString}),
+																		new Tuple(Arrays.asList(new Variable("x"))),
+																		new TypeTuple(Arrays.asList(TypeConcrete.TypeString)),
 																		new Variable("x"));
 }

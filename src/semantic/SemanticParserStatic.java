@@ -1,6 +1,7 @@
 package semantic;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -176,15 +177,13 @@ public final class SemanticParserStatic {
 	 * @return tuple of formal arguments
 	 * @throws AppendableException
 	 */
-	static Tuple parseArgsList(List<SemanticNode> l) throws AppendableException {
-		Expression[] args = new Expression[l.size()];
-		int i = 0;
+	static Tuple parseArgsList(List<SemanticNode> l) throws AppendableException {		
+		List<Expression> args = new LinkedList<Expression>();
 		for (SemanticNode t : l) {
 			if (t.type != SemanticNode.NodeType.SYMBOL) {
 				throw new UnexpectedExpressionException(t);
 			}
-			args[i] = new Variable(t.asSymbol());
-			i++;
+			args.add(new Variable(t.asSymbol()));
 		}
 		return new Tuple(args);
 	}

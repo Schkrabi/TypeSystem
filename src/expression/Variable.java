@@ -68,4 +68,12 @@ public class Variable extends Expression implements Comparable<Expression> {
 	public String toClojureCode() throws Exception {
 		return this.name;
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof Variable) {
+			return this.name.equals(((Variable) other).name);
+		}
+		return false;
+	}
 }

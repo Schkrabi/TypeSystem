@@ -122,7 +122,7 @@ public class TypeEnvironment {
 	/**
 	 * Gets the constructor for given type
 	 * 
-	 * @param type
+	 * @param typeName
 	 *            searched type
 	 * @return constructor for this type if it exists
 	 */
@@ -131,7 +131,7 @@ public class TypeEnvironment {
 
 			@Override
 			public boolean test(TypeConstructionLambda arg) {
-				return arg.args.values.length == argCount;
+				return arg.args.size() == argCount;
 			}
 			
 		}).findAny().get();
@@ -170,7 +170,7 @@ public class TypeEnvironment {
 		}
 		o = this.getType(baseTypeName);
 		if (!o.isPresent()) {
-			throw new AppendableException("Unknown base type: " + baseTypeName);
+			throw new UndefinedTypeException(baseTypeName);
 		}
 
 		TypeRepresentation type = new TypeRepresentation(repName, o.get());
@@ -194,7 +194,7 @@ public class TypeEnvironment {
 			if(set.stream().anyMatch(new Predicate<TypeConstructionLambda>(){
 				@Override
 				public boolean test(TypeConstructionLambda arg) {
-					return arg.args.values.length == constructor.args.values.length;
+					return arg.args.size() == constructor.args.size();
 				}})){
 				throw new AppendableException("Constructor for " + newType + " is already defined");
 			}

@@ -50,4 +50,11 @@ public final class TypeHolder extends Expression {
 		throw new AppendableException(this.getClass().getName() + " is not to be converted to Clojure!");
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof TypeHolder) {
+			return this.type.equals(((TypeHolder) other).type);
+		}
+		return false;
+	}
 }

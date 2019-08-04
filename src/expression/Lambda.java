@@ -1,8 +1,12 @@
 package expression;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import types.Substitution;
 import types.Type;
@@ -39,15 +43,19 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	public final TypeTuple argsType;
 
 	public Lambda(Variable arg, Expression body) {
-		this.args = new Tuple(new Expression[] { arg });
+		this.args = new Tuple(Arrays.asList(arg));
 		this.body = body;
-		this.argsType = null;
+		this.argsType = new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()) ));
 	}
 
 	public Lambda(Tuple args, Expression body) {
 		this.args = args;
 		this.body = body;
-		this.argsType = null;
+		
+		List<Type> types = new LinkedList<Type>();
+		for(int i = 0; i < args.size(); i++)
+			types.add(new TypeVariable(NameGenerator.next()));
+		this.argsType = new TypeTuple(types);
 	}
 
 	public Lambda(Tuple args, TypeTuple argsType, Expression body) {
@@ -73,16 +81,15 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 		try {
 			// First infer types in body, use typeholders for argument variables
 			Environment childEnv = new Environment(env);
-			Type[] argsTypeArr = new Type[this.args.values.length];
+			List<Type> argsTypeArr = new LinkedList<Type>();
 
-			for (int i = 0; i < this.args.values.length; i++) {
-				Expression e = this.args.values[i];
+			for (Expression e : this.args) {
 				if (!(e instanceof Variable)) {
 					throw new AppendableException(e + " is not instance of " + Variable.class.getName());
 				}
 				TypeVariable tv = new TypeVariable(NameGenerator.next());
 				childEnv.put((Variable) e, new TypeHolder(tv));
-				argsTypeArr[i] = tv;
+				argsTypeArr.add(tv);
 			}
 
 			Type argsType = new TypeTuple(argsTypeArr);
@@ -140,8 +147,8 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 
 	@Override
 	public int compareTo(Expression other) {
-		if(other instanceof Lambda) {
-			Lambda o = (Lambda)other;
+		if (other instanceof Lambda) {
+			Lambda o = (Lambda) other;
 			if (this.argsType == o.argsType) {
 				return 0;
 			}
@@ -151,7 +158,7 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 			if (o.argsType == null) {
 				return -1;
 			}
-	
+
 			return this.argsType.compareTo(o.argsType);
 		}
 		return super.compareTo(other);
@@ -165,5 +172,14 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	@Override
 	public Lambda getLambda() {
 		return this;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof Lambda) {
+			return this.args.equals(((Lambda) other).args) && this.body.equals(((Lambda) other).body)
+					&& this.argsType.equals(((Lambda) other).argsType);
+		}
+		return false;
 	}
 }

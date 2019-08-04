@@ -20,7 +20,8 @@ import util.AppendableException;
 import util.Pair;
 
 /**
- * Expression for meta-language operators 
+ * Expression for meta-language operators
+ * 
  * @author Mgr. Radomir Skrabal
  *
  */
@@ -30,7 +31,7 @@ public class Operator extends Function {
 	 * Symbol for the operator in language
 	 */
 	public final String symbol;
-	
+
 	public final String clojureSymbol;
 
 	public Operator(TypeTuple argsType, Tuple args, String symbol, String clojureSymbol, OperatorWrapper body) {
@@ -38,12 +39,12 @@ public class Operator extends Function {
 		this.symbol = symbol;
 		this.clojureSymbol = clojureSymbol;
 	}
-	
+
 	@Override
 	public String toString() {
 		return this.symbol;
 	}
-	
+
 	@Override
 	public String toClojureCode() {
 		return this.clojureSymbol;
@@ -53,123 +54,114 @@ public class Operator extends Function {
 	 * Addition (+) operator
 	 */
 	public static final Operator Addition = new Operator(
-			new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "+", "+",
-			OperatorWrapper.AddWrapper);
-	
+			new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "+", "+", OperatorWrapper.AddWrapper);
 
 	/**
 	 * Logical And (AND) operator
 	 */
 	public static final Operator And = new Operator(
-			new TypeTuple(new Type[] { TypeConcrete.TypeBool, TypeConcrete.TypeBool }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "and", "and",
-			OperatorWrapper.AndWrapper);
+			new TypeTuple(Arrays.asList(TypeConcrete.TypeBool, TypeConcrete.TypeBool)),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "and", "and", OperatorWrapper.AndWrapper);
 
 	/**
 	 * Bit and (&) operator
 	 */
 	public static final Operator BitAnd = new Operator(
-			new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "bit-and", "bit-and",
+			new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "bit-and", "bit-and",
 			OperatorWrapper.BitAndWrapper);
 
 	/**
 	 * Bit or (|) operator
 	 */
 	public static final Operator BitOr = new Operator(
-			new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "bit-or", "bit-or",
+			new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "bit-or", "bit-or",
 			OperatorWrapper.BitOrWrapper);
 
 	/**
 	 * car operator
 	 */
 	public static final Operator Car = new Operator(
-			new TypeTuple(new Type[] { new TypeTuple(new Type[] { new TypeVariable("_a"), new TypeVariable("_b") }) }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "car", "",
-			OperatorWrapper.CarWrapper);
+			new TypeTuple(Arrays.asList(new TypeTuple(Arrays.asList(new TypeVariable("_a"), new TypeVariable("_b"))))),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "car", "", OperatorWrapper.CarWrapper);
 
 	/**
 	 * cdr operator
 	 */
 	public static final Operator Cdr = new Operator(
-			new TypeTuple(new Type[] { new TypeTuple(new Type[] { new TypeVariable("_a"), new TypeVariable("_b") }) }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "cdr", "", 
-			OperatorWrapper.CdrWrapper);
+			new TypeTuple(Arrays.asList(new TypeTuple(Arrays.asList(new TypeVariable("_a"), new TypeVariable("_b"))))),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "cdr", "", OperatorWrapper.CdrWrapper);
 
 	/**
 	 * Concatenation operator
 	 */
 	public static final Operator Concantenation = new Operator(
-			new TypeTuple(new Type[] { TypeConcrete.TypeString, TypeConcrete.TypeString }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "concat", "concat",
+			new TypeTuple(Arrays.asList(TypeConcrete.TypeString, TypeConcrete.TypeString)),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "concat", "concat",
 			OperatorWrapper.ConcatWrapper);
 
 	/**
 	 * Division (/) operator
 	 */
 	public static final Operator Division = new Operator(
-			new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "/", "/",
-			OperatorWrapper.DivWrapper);
+			new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "/", "/", OperatorWrapper.DivWrapper);
 
 	/**
 	 * Equality operator
 	 */
 	public static final Operator Equals = new Operator(
-			new TypeTuple(new Type[] { new TypeVariable("_a"), new TypeVariable("_a") }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "equals?", "=",
+			new TypeTuple(Arrays.asList(new TypeVariable("_a"), new TypeVariable("_a"))),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "equals?", "=",
 			OperatorWrapper.EqualsWrapper);
 
 	/**
 	 * Lesser than (<) operator
 	 */
 	public static final Operator LesserThan = new Operator(
-			new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "<", "<",
+			new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "<", "<",
 			OperatorWrapper.LesserThanWrapper);
 
 	/**
 	 * Multiplication (*) operator
 	 */
 	public static final Operator Multiplication = new Operator(
-			new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "*", "*",
-			OperatorWrapper.MulWrapper);
+			new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "*", "*", OperatorWrapper.MulWrapper);
 
 	/**
 	 * Not operator
 	 */
-	public static final Operator Not = new Operator(new TypeTuple(new Type[] { TypeConcrete.TypeBool }),
-			new Tuple(new Expression[] { new Variable("_x") }), "not", "not", OperatorWrapper.NotWrapper);
+	public static final Operator Not = new Operator(new TypeTuple(Arrays.asList(TypeConcrete.TypeBool)),
+			new Tuple(Arrays.asList(new Variable("_x"))), "not", "not", OperatorWrapper.NotWrapper);
 
 	/**
 	 * Numeric equal (=) operator
 	 */
 	public static final Operator NumericEqual = new Operator(
-			new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "=", "=",
-			OperatorWrapper.NumEqWrapper);
+			new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "=", "=", OperatorWrapper.NumEqWrapper);
 
 	/**
 	 * Or operator
 	 */
 	public static final Operator Or = new Operator(
-			new TypeTuple(new Type[] { TypeConcrete.TypeBool, TypeConcrete.TypeBool }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "or", "or",
-			OperatorWrapper.OrWrapper);
+			new TypeTuple(Arrays.asList(TypeConcrete.TypeBool, TypeConcrete.TypeBool)),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "or", "or", OperatorWrapper.OrWrapper);
 
 	/**
 	 * Subtraction (-) operator
 	 */
 	public static final Operator Subtraction = new Operator(
-			new TypeTuple(new Type[] { TypeConcrete.TypeInt, TypeConcrete.TypeInt }),
-			new Tuple(new Expression[] { new Variable("_x"), new Variable("_y") }), "-", "-",
-			OperatorWrapper.SubWrapper);
+			new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "-", "-", OperatorWrapper.SubWrapper);
 
 	/**
 	 * Wrapper abstract class for meta-language operators body
+	 * 
 	 * @author Mgr. Radomir Skrabal
 	 *
 	 */
@@ -202,7 +194,7 @@ public class Operator extends Function {
 			}
 			return super.compareTo(other);
 		}
-		
+
 		/**
 		 * Body of addition operator
 		 */
@@ -219,8 +211,8 @@ public class Operator extends Function {
 
 				return new LitInteger(x.value + y.value);
 			}
-		}; 
-		
+		};
+
 		/**
 		 * Body of and operator
 		 */
@@ -239,7 +231,7 @@ public class Operator extends Function {
 			}
 
 		};
-		
+
 		/**
 		 * Body of bit-and operator
 		 */
@@ -258,7 +250,7 @@ public class Operator extends Function {
 			}
 
 		};
-		
+
 		/**
 		 * Body of bit-or operator
 		 */
@@ -276,7 +268,7 @@ public class Operator extends Function {
 				return new LitInteger(x.value | y.value);
 			}
 		};
-		
+
 		/**
 		 * Body of car operator
 		 */
@@ -290,14 +282,14 @@ public class Operator extends Function {
 					return this;
 				}
 
-				if (x.values.length != 2) {
+				if (x.size() != 2) {
 					throw new AppendableException("Argument of car is " + x + " pair expected");
 				}
 
-				return x.values[0];
+				return x.get(0);
 			}
 		};
-		
+
 		/**
 		 * Body of cdr operator
 		 */
@@ -311,14 +303,14 @@ public class Operator extends Function {
 					return this;
 				}
 
-				if (x.values.length != 2) {
+				if (x.size() != 2) {
 					throw new AppendableException("Argument of car is " + x + " pair expected");
 				}
 
-				return x.values[0];
+				return x.get(0);
 			}
 		};
-		
+
 		/**
 		 * Body of concat operator
 		 */
@@ -336,7 +328,7 @@ public class Operator extends Function {
 				return new LitString(x.value + y.value);
 			}
 		};
-		
+
 		/**
 		 * Body of division operator
 		 */
@@ -354,7 +346,7 @@ public class Operator extends Function {
 				return new LitInteger(x.value / y.value);
 			}
 		};
-		
+
 		/**
 		 * Body of equals? operator
 		 */
@@ -372,7 +364,7 @@ public class Operator extends Function {
 				return x.equals(y) ? LitBoolean.TRUE : LitBoolean.FALSE;
 			}
 		};
-		
+
 		/**
 		 * Body of lesser than operator
 		 */
@@ -395,7 +387,7 @@ public class Operator extends Function {
 				return "<";
 			}
 		};
-		
+
 		/**
 		 * Body of multiplication operator
 		 */
@@ -413,7 +405,7 @@ public class Operator extends Function {
 				return new LitInteger(x.value * y.value);
 			}
 		};
-		
+
 		/**
 		 * Body of not operator
 		 */
@@ -430,7 +422,7 @@ public class Operator extends Function {
 				return !x.value ? LitBoolean.TRUE : LitBoolean.FALSE;
 			}
 		};
-		
+
 		/**
 		 * Body of numerical equal operator
 		 */
@@ -448,7 +440,7 @@ public class Operator extends Function {
 				return x.value == y.value ? LitBoolean.TRUE : LitBoolean.FALSE;
 			}
 		};
-		
+
 		/**
 		 * Body of or operator
 		 */
@@ -466,7 +458,7 @@ public class Operator extends Function {
 				return x.value || y.value ? LitBoolean.TRUE : LitBoolean.FALSE;
 			}
 		};
-		
+
 		/**
 		 * Body of subtraction operator
 		 */
@@ -488,13 +480,10 @@ public class Operator extends Function {
 		/**
 		 * Ordering of operator types for compareTo
 		 */
-		private static List<Class<? extends Expression>> operatorsOrdering = Arrays.asList(
-				AddWrapper.getClass(), AndWrapper.getClass(), BitAndWrapper.getClass(),
-				BitOrWrapper.getClass(), CarWrapper.getClass(), CdrWrapper.getClass(),
-				ConcatWrapper.getClass(), DivWrapper.getClass(),
-				EqualsWrapper.getClass(), LesserThanWrapper.getClass(),
-				MulWrapper.getClass(), NotWrapper.getClass(),
-				NumEqWrapper.getClass(), OrWrapper.getClass(),
-				SubWrapper.getClass());
+		private static List<Class<? extends Expression>> operatorsOrdering = Arrays.asList(AddWrapper.getClass(),
+				AndWrapper.getClass(), BitAndWrapper.getClass(), BitOrWrapper.getClass(), CarWrapper.getClass(),
+				CdrWrapper.getClass(), ConcatWrapper.getClass(), DivWrapper.getClass(), EqualsWrapper.getClass(),
+				LesserThanWrapper.getClass(), MulWrapper.getClass(), NotWrapper.getClass(), NumEqWrapper.getClass(),
+				OrWrapper.getClass(), SubWrapper.getClass());
 	}
 }

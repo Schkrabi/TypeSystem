@@ -97,11 +97,6 @@ public class Validations {
 			throw new UnexpectedExpressionException(tName);
 		}
 		
-		//SemanticNode constructor = defRepList.get(3);
-		//if(constructor.type != SemanticNode.NodeType.LIST) {
-		//	throw new UnexpectedExpressionException(constructor);
-		//}
-		
 		return true;
 	}
 

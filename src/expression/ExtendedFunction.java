@@ -112,4 +112,12 @@ public class ExtendedFunction extends MetaFunction {
 		}
 		return super.compareTo(other);
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof ExtendedFunction) {
+			return this.implementations.equals(((ExtendedFunction) other).implementations) && super.equals(other);
+		}
+		return false;
+	}
 }

@@ -11,6 +11,8 @@ import util.AppendableException;
 import util.Pair;
 import expression.TypeConstructionLambda;
 
+import java.util.Arrays;
+
 import expression.Expression;
 import expression.Literal;
 import expression.Tuple;
@@ -50,7 +52,7 @@ public class IntToIntStringWrapper extends ConversionWrapper{
 	 * Conversion constructor from Int to IntString
 	 */
 	public static final TypeConstructionLambda IntToIntString = new TypeConstructionLambda(	TypeRepresentation.TypeIntString,
-																			new Tuple(new Expression[]{ConversionWrapper.arg}),
-																			new TypeTuple(new Type[]{TypeConcrete.TypeInt}),
+																			new Tuple(Arrays.asList(ConversionWrapper.arg)),
+																			new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
 																			new IntToIntStringWrapper());
 }

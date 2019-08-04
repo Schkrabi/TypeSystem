@@ -84,4 +84,12 @@ public class DefExpression extends Expression {
 		}
 		return super.compareTo(other);
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof DefExpression) {
+			return this.name.equals(((DefExpression) other).name) && this.defined.equals(((DefExpression) other).defined);
+		}
+		return false;
+	}
 }

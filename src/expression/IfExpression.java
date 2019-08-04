@@ -10,6 +10,8 @@ import util.AppendableException;
 import util.NameGenerator;
 import util.Pair;
 
+import java.util.Arrays;
+
 import interpretation.Environment;
 
 /**
@@ -26,9 +28,9 @@ public class IfExpression extends Application {
 
 	@Override
 	public Expression interpret(Environment env) throws Exception {
-		Expression condition = this.args.values[0];
-		Expression trueBranch = this.args.values[1];
-		Expression falseBranch = this.args.values[2];
+		Expression condition = this.args.get(0);
+		Expression trueBranch = this.args.get(1);
+		Expression falseBranch = this.args.get(2);
 		
 		LitBoolean b = (LitBoolean) condition.interpret(env);
 		if (b.value) {
@@ -44,6 +46,14 @@ public class IfExpression extends Application {
 			return this.args.compareTo(((IfExpression) other).args);
 		}
 		return super.compareTo(other);
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof IfExpression) {
+			return super.equals(other);
+		}
+		return false;
 	}
 	
 	/**
@@ -63,7 +73,7 @@ public class IfExpression extends Application {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable branchType = new TypeVariable(NameGenerator.next());
-			TypeTuple argsType = new TypeTuple(new Type[] {TypeConcrete.TypeBool, branchType, branchType});
+			TypeTuple argsType = new TypeTuple(Arrays.asList(TypeConcrete.TypeBool, branchType, branchType));
 			
 			return new Pair<Type, Substitution>(new TypeArrow(argsType, branchType), new Substitution());
 		}

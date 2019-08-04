@@ -16,13 +16,14 @@ public class TypeRepresentation extends TypeConcrete {
 		return this.baseType.name + ":" + this.name;
 	}
 
+	
 	@Override
 	public boolean equals(Object o) {
 		if (!(o instanceof TypeRepresentation)) {
 			return false;
 		}
 		TypeRepresentation other = (TypeRepresentation) o;
-		return this.baseType.equals(other) && this.name == other.name;
+		return this.baseType.equals(other.baseType) && this.name == other.name;
 	}
 
 	@Override

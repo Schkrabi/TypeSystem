@@ -1,6 +1,8 @@
 package expression;
 
 import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 import interpretation.Environment;
@@ -47,19 +49,19 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 		try {
 			// First infer types in body, use typeholders for argument variables
 			Environment childEnv = new Environment(this.creationEnvironment);
-			Type[] argsTypeArr = new Type[this.args.values.length];
+			
+			List<Type> l = new LinkedList<Type>();
 
-			for (int i = 0; i < this.args.values.length; i++) {
-				Expression e = this.args.values[i];
+			for(Expression e : this.args) {
 				if (!(e instanceof Variable)) {
 					throw new AppendableException(e + " is not instance of " + Variable.class.getName());
 				}
 				TypeVariable tv = new TypeVariable(NameGenerator.next());
 				childEnv.put((Variable) e, new TypeHolder(tv));
-				argsTypeArr[i] = tv;
+				l.add(tv);
 			}
 
-			Type argsType = new TypeTuple(argsTypeArr);
+			Type argsType = new TypeTuple(l);
 
 			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv);
 
@@ -121,5 +123,14 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 	@Override
 	public String toString() {
 		return "(func " + this.args.toString() + " " + this.body.toString() + ")";
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof Function) {
+			return this.args.equals(((Function) other).args) && this.body.equals(((Function) other).body)
+					&& this.argsType.equals(((Function) other).argsType) && super.equals(other);
+		}
+		return false;
 	}
 }

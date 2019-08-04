@@ -55,4 +55,12 @@ public class Constructor extends Function {
 		}
 		return super.compareTo(other);
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof Constructor) {
+			return this.constructedType.equals(((Constructor) other).constructedType) && super.equals(other);
+		}
+		return false;
+	}
 }

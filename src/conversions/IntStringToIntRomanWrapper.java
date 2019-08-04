@@ -11,6 +11,8 @@ import util.Pair;
 import util.RomanNumbers;
 import expression.TypeConstructionLambda;
 
+import java.util.Arrays;
+
 import expression.Expression;
 import expression.LitString;
 import expression.Literal;
@@ -44,7 +46,8 @@ public class IntStringToIntRomanWrapper extends ConversionWrapper {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		return new Pair<Type, Substitution>(new TypeArrow(TypeRepresentation.TypeIntString, TypeRepresentation.TypeIntRoman), new Substitution());
+		return new Pair<Type, Substitution>(
+				new TypeArrow(TypeRepresentation.TypeIntString, TypeRepresentation.TypeIntRoman), new Substitution());
 	}
 
 	@Override
@@ -56,6 +59,6 @@ public class IntStringToIntRomanWrapper extends ConversionWrapper {
 	 * Conversion constructor from IntString to IntRoman
 	 */
 	public static final TypeConstructionLambda IntStringToIntRoman = new TypeConstructionLambda(
-			TypeRepresentation.TypeIntRoman, new Tuple(new Expression[] { ConversionWrapper.arg }),
-			new TypeTuple(new Type[] { TypeRepresentation.TypeIntString }), new IntStringToIntRomanWrapper());
+			TypeRepresentation.TypeIntRoman, new Tuple(Arrays.asList(ConversionWrapper.arg)),
+			new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)), new IntStringToIntRomanWrapper());
 }

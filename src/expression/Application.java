@@ -1,6 +1,8 @@
 package expression;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 import types.Substitution;
@@ -46,15 +48,17 @@ public class Application extends Expression {
 
 		Function f = ((MetaFunction) ifun).getFunction(); // Might want to add comparator here
 
-		if (f.args.values.length != this.args.values.length) {
+		if (f.args.size() != this.args.size()) {
 			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected " //TODO add specific exception here
-					+ f.args.values.length + " got " + this.args.values.length);
+					+ f.args.size() + " got " + this.args.size());
 		}
 
 		Environment childEnv = new Environment(f.creationEnvironment); // Lexical clojure!!!
-		for (int i = 0; i < f.args.values.length; i++) {
-			Expression e = this.args.values[i].interpret(env);
-			Variable v = new Variable(((Variable) f.args.values[i]).name);
+		Iterator<Expression> i = f.args.iterator();
+		Iterator<Expression> j = this.args.iterator();
+		while(i.hasNext() && j.hasNext()) {
+			Expression e = j.next().interpret(env);
+			Variable v = (Variable)i.next();
 			childEnv.put(v, e);
 		}
 
@@ -124,13 +128,12 @@ public class Application extends Expression {
 		if (funType.ltype instanceof TypeTuple) {
 			argsType = (TypeTuple) funType.ltype;
 		} else if (funType.ltype instanceof TypeVariable) {
-			Type[] ts = new Type[this.args.values.length];
-
-			for (int i = 0; i < this.args.values.length; i++) {
-				ts[i] = new TypeVariable(NameGenerator.next());
+			List<Type> l = new LinkedList<Type>();
+			for (int i = 0; i < this.args.size(); i++) {
+				l.add(new TypeVariable(NameGenerator.next()));
 			}
 
-			argsType = new TypeTuple(ts);
+			argsType = new TypeTuple(l);
 		} else {
 			throw new AppendableException("Problem with functional type of " + this.fun);
 		}
@@ -189,15 +192,25 @@ public class Application extends Expression {
 		TypeTuple argTypes = (TypeTuple) argType;
 		Environment ret = new Environment(e.parent);
 
-		for (int i = 0; i < args.values.length; i++) {
-			Variable name = (Variable) args.values[i];
-			Type fromType = e.getVariableValue((Variable) args.values[i]).infer(e).first;
-			Expression arg = e.getVariableValue((Variable) args.values[i]);
-			Type toType = argTypes.values[i];
+		Iterator<Expression> i = args.iterator();
+		Iterator<Type> j = argTypes.iterator();
+		while(i.hasNext() && j.hasNext()){
+			Variable name = (Variable) i.next();
+			Type fromType = e.getVariableValue(name).infer(e).first;
+			Expression arg = e.getVariableValue(name);
+			Type toType = j.next();
 
 			ret.put(name, fromType.convertTo(arg, toType));
 		}
 
 		return ret;
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof Application) {
+			return this.fun.equals(((Application) other).fun) && this.args.equals(((Application) other).args);
+		}
+		return false;
 	}
 }

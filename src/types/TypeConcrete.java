@@ -1,5 +1,6 @@
 package types;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -120,7 +121,7 @@ public class TypeConcrete extends Type {
 			throw new Exception("No conversion from " + this + " to type " + type + " exists");
 		}
 
-		Application a = new Application(constructor, new Tuple(new Expression[] { arg }));
+		Application a = new Application(constructor, new Tuple(Arrays.asList( arg )));
 
 		return a;
 	}

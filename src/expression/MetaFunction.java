@@ -52,4 +52,12 @@ public abstract class MetaFunction extends Expression {
 	public static boolean isFunction(Expression e){
 		return e instanceof MetaFunction;
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof MetaFunction) {
+			return this.creationEnvironment.equals(((MetaFunction) other).creationEnvironment);
+		}
+		return false;
+	}
 }
