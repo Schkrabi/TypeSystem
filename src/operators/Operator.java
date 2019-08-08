@@ -1,7 +1,6 @@
 package operators;
 
 import java.util.Arrays;
-import java.util.List;
 
 import expression.Expression;
 import expression.Function;
@@ -186,22 +185,13 @@ public class Operator extends Function {
 			throw new AppendableException("You cannot convert " + this.getClass().getName() + " to clojure code!");
 		}
 
-		@Override
-		public int compareTo(Expression other) {
-			if (other instanceof OperatorWrapper) {
-				return (int) Math.signum(
-						operatorsOrdering.indexOf(this.getClass()) - operatorsOrdering.indexOf(other.getClass()));
-			}
-			return super.compareTo(other);
-		}
-
 		/**
 		 * Body of addition operator
 		 */
 		public static final OperatorWrapper AddWrapper = new OperatorWrapper(TypeConcrete.TypeInt) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
@@ -219,7 +209,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper AndWrapper = new OperatorWrapper(TypeConcrete.TypeBool) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitBoolean x = (LitBoolean) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitBoolean y = (LitBoolean) (env.getVariableValue(new Variable("_y")).interpret(env));
 
@@ -238,7 +228,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper BitAndWrapper = new OperatorWrapper(TypeConcrete.TypeInt) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
@@ -257,7 +247,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper BitOrWrapper = new OperatorWrapper(TypeConcrete.TypeInt) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
@@ -275,7 +265,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper CarWrapper = new OperatorWrapper(new TypeVariable("_a")) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				Tuple x = (Tuple) (env.getVariableValue(new Variable("_x")).interpret(env));
 
 				if (x == null) {
@@ -296,7 +286,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper CdrWrapper = new OperatorWrapper(new TypeVariable("_b")) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				Tuple x = (Tuple) (env.getVariableValue(new Variable("_x")).interpret(env));
 
 				if (x == null) {
@@ -317,7 +307,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper ConcatWrapper = new OperatorWrapper(TypeConcrete.TypeString) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitString x = (LitString) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitString y = (LitString) (env.getVariableValue(new Variable("_y")).interpret(env));
 
@@ -335,7 +325,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper DivWrapper = new OperatorWrapper(TypeConcrete.TypeInt) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
@@ -353,7 +343,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper EqualsWrapper = new OperatorWrapper(TypeConcrete.TypeBool) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				Expression x = (env.getVariableValue(new Variable("_x")).interpret(env));
 				Expression y = (env.getVariableValue(new Variable("_y")).interpret(env));
 
@@ -371,7 +361,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper LesserThanWrapper = new OperatorWrapper(TypeConcrete.TypeBool) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
@@ -394,7 +384,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper MulWrapper = new OperatorWrapper(TypeConcrete.TypeInt) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
@@ -412,7 +402,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper NotWrapper = new OperatorWrapper(TypeConcrete.TypeBool) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitBoolean x = (LitBoolean) (env.getVariableValue(new Variable("_x")).interpret(env));
 
 				if (x == null) {
@@ -429,7 +419,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper NumEqWrapper = new OperatorWrapper(TypeConcrete.TypeBool) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
@@ -447,7 +437,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper OrWrapper = new OperatorWrapper(TypeConcrete.TypeBool) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitBoolean x = (LitBoolean) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitBoolean y = (LitBoolean) (env.getVariableValue(new Variable("_y")).interpret(env));
 
@@ -465,7 +455,7 @@ public class Operator extends Function {
 		public static final OperatorWrapper SubWrapper = new OperatorWrapper(TypeConcrete.TypeInt) {
 
 			@Override
-			public Expression interpret(Environment env) throws Exception {
+			public Expression interpret(Environment env) throws AppendableException {
 				LitInteger x = (LitInteger) env.getVariableValue(new Variable("_x"));
 				LitInteger y = (LitInteger) env.getVariableValue(new Variable("_y"));
 
@@ -476,14 +466,5 @@ public class Operator extends Function {
 				return new LitInteger(x.value - y.value);
 			}
 		};
-
-		/**
-		 * Ordering of operator types for compareTo
-		 */
-		private static List<Class<? extends Expression>> operatorsOrdering = Arrays.asList(AddWrapper.getClass(),
-				AndWrapper.getClass(), BitAndWrapper.getClass(), BitOrWrapper.getClass(), CarWrapper.getClass(),
-				CdrWrapper.getClass(), ConcatWrapper.getClass(), DivWrapper.getClass(), EqualsWrapper.getClass(),
-				LesserThanWrapper.getClass(), MulWrapper.getClass(), NotWrapper.getClass(), NumEqWrapper.getClass(),
-				OrWrapper.getClass(), SubWrapper.getClass());
 	}
 }

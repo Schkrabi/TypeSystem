@@ -38,12 +38,7 @@ public class LitBoolean extends Literal {
 	public static final LitBoolean FALSE = new LitBoolean(false);
 
 	@Override
-	public Type getDefaultRepresentationType() {
-		return TypeConcrete.TypeBool;
-	}
-
-	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() {
 		return Boolean.toString(this.value);
 	}
 

@@ -23,7 +23,7 @@ public abstract class Expression implements Comparable<Expression> {
 	 * @return Expression
 	 * @throws Exception
 	 */
-	public abstract Expression interpret(Environment env) throws Exception;
+	public abstract Expression interpret(Environment env) throws AppendableException;
 
 	/**
 	 * Infers type of expression and returns used substitutions
@@ -38,14 +38,14 @@ public abstract class Expression implements Comparable<Expression> {
 		return this.getClass().getName().compareTo(other.getClass().getName());
 	}
 
-	public abstract String toClojureCode() throws Exception;
+	public abstract String toClojureCode() throws AppendableException;
 
 	/**
 	 * Empty expression
 	 */
 	public static final Expression EMPTY_EXPRESSION = new Expression() {
 		@Override
-		public Expression interpret(Environment env) throws Exception {
+		public Expression interpret(Environment env) {
 			return this;
 		}
 
@@ -55,7 +55,7 @@ public abstract class Expression implements Comparable<Expression> {
 		}
 
 		@Override
-		public String toClojureCode() throws Exception {
+		public String toClojureCode() {
 			return "";
 		}
 	};

@@ -182,11 +182,7 @@ public class Validations {
 	 * @return true if node is valid variable type pair, throws exception otherwise
 	 * @throws AppendableException
 	 */
-	public static boolean validateVariableTypePair(SemanticNode pair) throws AppendableException{
-		if(SemanticParserStatic.isSimpleSymbol(pair)) {
-			return true;
-		}
-		
+	public static boolean validateVariableTypePair(SemanticNode pair) throws AppendableException{		
 		if(pair.type != SemanticNode.NodeType.LIST
 				|| pair.asList().size() != 2) {
 			throw new UnexpectedExpressionException(pair);

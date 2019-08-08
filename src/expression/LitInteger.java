@@ -24,19 +24,9 @@ public class LitInteger extends Literal {
 	public Expression interpret(Environment env) {
 		return this;
 	}
-	
-	public static LitInteger initializeDefaultImplementation(int value){
-		LitInteger l = new LitInteger(value);;
-		return l;
-	}
-	
-	@Override
-	public Type getDefaultRepresentationType() {
-		return TypeConcrete.TypeInt;
-	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() {
 		return Integer.toString(this.value);
 	}
 	

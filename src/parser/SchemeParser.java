@@ -6,6 +6,9 @@ import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.*;
 import org.antlr.v4.runtime.tree.*;
+
+import util.AppendableException;
+
 import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;
@@ -124,7 +127,7 @@ public class SchemeParser extends Parser {
 		}
 	}
 
-	public final ExprsContext exprs() throws RecognitionException {
+	public final ExprsContext exprs() throws RecognitionException, AppendableException {
 		ExprsContext _localctx = new ExprsContext(_ctx, getState());
 		enterRule(_localctx, 0, RULE_exprs);
 		int _la;
@@ -189,7 +192,7 @@ public class SchemeParser extends Parser {
 		}
 	}
 
-	public final ExprContext expr() throws RecognitionException {
+	public final ExprContext expr() throws RecognitionException, AppendableException {
 		ExprContext _localctx = new ExprContext(_ctx, getState());
 		enterRule(_localctx, 2, RULE_expr);
 		try {
@@ -256,7 +259,7 @@ public class SchemeParser extends Parser {
 		}
 	}
 
-	public final SeqContext seq() throws RecognitionException {
+	public final SeqContext seq() throws RecognitionException, AppendableException {
 		SeqContext _localctx = new SeqContext(_ctx, getState());
 		enterRule(_localctx, 4, RULE_seq);
 		int _la;
@@ -283,7 +286,7 @@ public class SchemeParser extends Parser {
 			}
 			setState(42);
 			match(T__1);
-			 ((SeqContext)_localctx).val =  new SemanticNode(SemanticNode.NodeType.LIST, ll); 
+			 ((SeqContext)_localctx).val =  SemanticNode.make(SemanticNode.NodeType.LIST, ll); 
 			}
 		}
 		catch (RecognitionException re) {
@@ -323,7 +326,7 @@ public class SchemeParser extends Parser {
 		}
 	}
 
-	public final AtomContext atom() throws RecognitionException {
+	public final AtomContext atom() throws RecognitionException, NumberFormatException, AppendableException {
 		AtomContext _localctx = new AtomContext(_ctx, getState());
 		enterRule(_localctx, 6, RULE_atom);
 		try {
@@ -335,7 +338,7 @@ public class SchemeParser extends Parser {
 				{
 				setState(45);
 				((AtomContext)_localctx).INT = match(INT);
-				 ((AtomContext)_localctx).val =  new SemanticNode(SemanticNode.NodeType.INT, Integer.parseInt((((AtomContext)_localctx).INT!=null?((AtomContext)_localctx).INT.getText():null))); 
+				 ((AtomContext)_localctx).val =  SemanticNode.make(SemanticNode.NodeType.INT, Integer.parseInt((((AtomContext)_localctx).INT!=null?((AtomContext)_localctx).INT.getText():null))); 
 				}
 				break;
 			case FLOAT:
@@ -343,7 +346,7 @@ public class SchemeParser extends Parser {
 				{
 				setState(47);
 				((AtomContext)_localctx).FLOAT = match(FLOAT);
-				 ((AtomContext)_localctx).val =  new SemanticNode(SemanticNode.NodeType.DOUBLE, Double.parseDouble((((AtomContext)_localctx).FLOAT!=null?((AtomContext)_localctx).FLOAT.getText():null))); 
+				 ((AtomContext)_localctx).val =  SemanticNode.make(SemanticNode.NodeType.DOUBLE, Double.parseDouble((((AtomContext)_localctx).FLOAT!=null?((AtomContext)_localctx).FLOAT.getText():null))); 
 				}
 				break;
 			case SYMBOL:
@@ -351,7 +354,7 @@ public class SchemeParser extends Parser {
 				{
 				setState(49);
 				((AtomContext)_localctx).SYMBOL = match(SYMBOL);
-				 ((AtomContext)_localctx).val =  new SemanticNode(SemanticNode.NodeType.SYMBOL, (((AtomContext)_localctx).SYMBOL!=null?((AtomContext)_localctx).SYMBOL.getText():null)); 
+				 ((AtomContext)_localctx).val =  SemanticNode.make(SemanticNode.NodeType.SYMBOL, (((AtomContext)_localctx).SYMBOL!=null?((AtomContext)_localctx).SYMBOL.getText():null)); 
 				}
 				break;
 			case TRUE:
@@ -359,7 +362,7 @@ public class SchemeParser extends Parser {
 				{
 				setState(51);
 				match(TRUE);
-				 ((AtomContext)_localctx).val =  new SemanticNode(SemanticNode.NodeType.BOOL, true); 
+				 ((AtomContext)_localctx).val =  SemanticNode.make(SemanticNode.NodeType.BOOL, true); 
 				}
 				break;
 			case FALSE:
@@ -367,7 +370,7 @@ public class SchemeParser extends Parser {
 				{
 				setState(53);
 				match(FALSE);
-				 ((AtomContext)_localctx).val =  new SemanticNode(SemanticNode.NodeType.BOOL, false); 
+				 ((AtomContext)_localctx).val =  SemanticNode.make(SemanticNode.NodeType.BOOL, false); 
 				}
 				break;
 			case STRING:
@@ -375,7 +378,7 @@ public class SchemeParser extends Parser {
 				{
 				setState(55);
 				((AtomContext)_localctx).STRING = match(STRING);
-				 ((AtomContext)_localctx).val =  new SemanticNode(SemanticNode.NodeType.STRING, unescapeString((((AtomContext)_localctx).STRING!=null?((AtomContext)_localctx).STRING.getText():null).substring(1, (((AtomContext)_localctx).STRING!=null?((AtomContext)_localctx).STRING.getText():null).length() - 1))); 
+				 ((AtomContext)_localctx).val =  SemanticNode.make(SemanticNode.NodeType.STRING, unescapeString((((AtomContext)_localctx).STRING!=null?((AtomContext)_localctx).STRING.getText():null).substring(1, (((AtomContext)_localctx).STRING!=null?((AtomContext)_localctx).STRING.getText():null).length() - 1))); 
 				}
 				break;
 			default:
@@ -414,7 +417,7 @@ public class SchemeParser extends Parser {
 		}
 	}
 
-	public final PairContext pair() throws RecognitionException {
+	public final PairContext pair() throws RecognitionException, AppendableException {
 		PairContext _localctx = new PairContext(_ctx, getState());
 		enterRule(_localctx, 8, RULE_pair);
 		try {
@@ -428,7 +431,7 @@ public class SchemeParser extends Parser {
 			match(T__2);
 			setState(63);
 			((PairContext)_localctx).SYMBOL = match(SYMBOL);
-			 ((PairContext)_localctx).val =  new SemanticNode(SemanticNode.NodeType.PAIR, new SemanticNode.Pair(lvalue, (((PairContext)_localctx).SYMBOL!=null?((PairContext)_localctx).SYMBOL.getText():null))); 
+			 ((PairContext)_localctx).val =  SemanticNode.make(SemanticNode.NodeType.PAIR, new SemanticPair(lvalue, (((PairContext)_localctx).SYMBOL!=null?((PairContext)_localctx).SYMBOL.getText():null))); 
 			}
 		}
 		catch (RecognitionException re) {

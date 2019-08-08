@@ -15,7 +15,7 @@ import util.Pair;
  * This class is used as placeholder for variables creates in environments during type inference. It hsould be never interpreted
  *
  */
-public final class TypeHolder extends Expression {
+public final class TypeHolder extends Expression implements Comparable<Expression> {
 	
 	/**
 	 * Type held and returned by inference on this expression
@@ -30,7 +30,7 @@ public final class TypeHolder extends Expression {
 	 * @see expression.Expression#interpret(interpretation.Environment)
 	 */
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		throw new AppendableException(this.getClass().getName() + " is not to be interpreted!");
 	}
 
@@ -38,7 +38,7 @@ public final class TypeHolder extends Expression {
 	 * @see expression.Expression#infer(interpretation.Environment)
 	 */
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) {
 		return new Pair<Type, Substitution>(this.type, new Substitution());
 	}
 
@@ -46,7 +46,7 @@ public final class TypeHolder extends Expression {
 	 * @see expression.Expression#toClojureCode()
 	 */
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() throws AppendableException {
 		throw new AppendableException(this.getClass().getName() + " is not to be converted to Clojure!");
 	}
 
@@ -56,5 +56,18 @@ public final class TypeHolder extends Expression {
 			return this.type.equals(((TypeHolder) other).type);
 		}
 		return false;
+	}
+	
+	@Override
+	public int compareTo(Expression o) {
+		if(o instanceof TypeHolder) {
+			return this.type.compareTo(((TypeHolder) o).type);
+		}
+		return super.compareTo(o);
+	}
+	
+	@Override
+	public String toString() {
+		return "E:" + this.type.toString();
 	}
 }

@@ -39,17 +39,17 @@ public class Application extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		Expression ifun = fun.interpret(env);
 
 		if (!MetaFunction.isFunction(ifun)) {
-			throw new Exception(ifun.toString() + "is not a function");
+			throw new AppendableException(ifun.toString() + "is not a function");
 		}
 
 		Function f = ((MetaFunction) ifun).getFunction(); // Might want to add comparator here
 
 		if (f.args.size() != this.args.size()) {
-			throw new Exception("In aplication of " + fun + "number of arguments mismatch, expected " //TODO add specific exception here
+			throw new AppendableException("In aplication of " + fun + "number of arguments mismatch, expected " //TODO add specific exception here
 					+ f.args.size() + " got " + this.args.size());
 		}
 
@@ -114,7 +114,7 @@ public class Application extends Expression {
 	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		s.append('(');
 
@@ -182,7 +182,7 @@ public class Application extends Expression {
 	 * @return new environment where all the arguments will be converted
 	 * @throws Exception
 	 */
-	private static Environment autoConvertArgs(Environment e, Tuple args, Type argType) throws Exception {
+	private static Environment autoConvertArgs(Environment e, Tuple args, Type argType) throws AppendableException {
 		if (argType instanceof TypeVariable) {
 			return e;
 		}

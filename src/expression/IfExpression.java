@@ -27,7 +27,7 @@ public class IfExpression extends Application {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		Expression condition = this.args.get(0);
 		Expression trueBranch = this.args.get(1);
 		Expression falseBranch = this.args.get(2);
@@ -66,7 +66,7 @@ public class IfExpression extends Application {
 		public static final IfWrapper singleton = new IfWrapper();
 
 		@Override
-		public Expression interpret(Environment env) throws Exception {
+		public Expression interpret(Environment env) {
 			return this;
 		}
 
@@ -79,7 +79,7 @@ public class IfExpression extends Application {
 		}
 
 		@Override
-		public String toClojureCode() throws Exception {
+		public String toClojureCode() {
 			return "if";
 		}
 		

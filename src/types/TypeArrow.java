@@ -3,6 +3,7 @@ package types;
 import java.util.Set;
 import java.util.TreeSet;
 
+import util.AppendableException;
 import util.NameGenerator;
 
 import expression.Expression;
@@ -76,7 +77,7 @@ public class TypeArrow extends Type {
 	}
 
 	@Override
-	public Expression convertTo(Expression expr, Type toType) throws Exception {
+	public Expression convertTo(Expression expr, Type toType) throws AppendableException {
 		if(toType instanceof TypeVariable){
 			return expr;
 		}
@@ -97,7 +98,7 @@ public class TypeArrow extends Type {
 	 * @return TypeArrow type
 	 * @throws Exception if unfolded type is not an applicable type
 	 */
-	public static TypeArrow getFunctionType(Type type) throws Exception{
+	public static TypeArrow getFunctionType(Type type) throws AppendableException{
 		if(type instanceof TypeArrow){
 			return (TypeArrow)type;
 		}
@@ -105,7 +106,7 @@ public class TypeArrow extends Type {
 			return new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next())); //TODO how can this happen?
 		}
 		else{
-			throw new Exception(type.toString() + " is not an applicable type");
+			throw new AppendableException(type.toString() + " is not an applicable type");
 		}
 	}
 

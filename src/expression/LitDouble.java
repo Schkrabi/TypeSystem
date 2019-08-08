@@ -26,12 +26,7 @@ public class LitDouble extends Literal {
 	}
 
 	@Override
-	public Type getDefaultRepresentationType() {
-		return TypeConcrete.TypeDouble;
-	}
-
-	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) {
 		return this;
 	}
 
@@ -41,7 +36,7 @@ public class LitDouble extends Literal {
 	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() {
 		return Double.toString(this.value);
 	}
 

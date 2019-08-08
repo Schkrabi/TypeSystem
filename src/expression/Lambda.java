@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import types.Substitution;
 import types.Type;
@@ -65,7 +64,7 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		Function f = new Function(this.argsType, this.args, this.body, env);
 		f.infer(env);
 		return f;
@@ -123,7 +122,7 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		s.append("(fn [");
 
@@ -131,7 +130,8 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 		while (i.hasNext()) {
 			Expression e = i.next();
 			if (!(e instanceof Variable)) {
-				throw new Exception("Invalid expression in lambda variable list!");
+				//TODO change throwable
+				throw new AppendableException("Invalid expression in lambda variable list!");
 			}
 			Variable v = (Variable) e;
 			s.append(v.toClojureCode());

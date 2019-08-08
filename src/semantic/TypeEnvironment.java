@@ -3,6 +3,7 @@ package semantic;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -10,7 +11,7 @@ import java.util.function.Predicate;
 
 import expression.TypeConstructionLambda;
 import parser.SemanticNode;
-import parser.SemanticNode.Pair;
+import parser.SemanticPair;
 import types.TypeConcrete;
 import types.TypeRepresentation;
 import util.AppendableException;
@@ -98,23 +99,16 @@ public class TypeEnvironment {
 	 * @param node
 	 *            inspected node
 	 * @return true if node is a node containing type name
+	 * @throws AppendableException 
 	 */
-	public boolean isType(SemanticNode node) {
+	public boolean isType(SemanticNode node) throws AppendableException {
 		if (node.type == SemanticNode.NodeType.SYMBOL) {
-			try {
-				return this.getType(node.asSymbol()).isPresent();
-			} catch (Exception e) {
-				return false;
-			}
+			return this.getType(node.asSymbol()).isPresent();
 		}
 		if (node.type == SemanticNode.NodeType.PAIR) {
-			Pair p;
-			try {
-				p = node.asPair();
-			} catch (Exception e) {
-				return false;
-			}
-			return this.getType(p.lvalue, p.rvalue).isPresent();
+			SemanticPair p;
+			p = node.asPair();
+			return this.getType(p.first, p.second).isPresent();
 		}
 		return false;
 	}
@@ -127,7 +121,12 @@ public class TypeEnvironment {
 	 * @return constructor for this type if it exists
 	 */
 	public TypeConstructionLambda getConstructor(TypeConcrete type, final int argCount) {
-		return this.constructorMap.get(type).stream().filter(new Predicate<TypeConstructionLambda>(){
+		Set<TypeConstructionLambda> s = this.constructorMap.get(type);
+		if(s == null) {
+			throw new NoSuchElementException();
+		}
+		
+		return s.stream().filter(new Predicate<TypeConstructionLambda>(){
 
 			@Override
 			public boolean test(TypeConstructionLambda arg) {

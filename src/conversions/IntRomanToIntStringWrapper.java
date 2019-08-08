@@ -28,10 +28,10 @@ public class IntRomanToIntStringWrapper extends ConversionWrapper {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		Expression e = ConversionWrapper.arg.interpret(env);
 		if (!(e instanceof LitString)) {
-			throw new Exception("Invalid wrapped conversion from IntRoman to IntString");
+			throw new AppendableException("Invalid wrapped conversion from IntRoman to IntString");
 		}
 		LitString r = (LitString) e;
 		Literal l = new LitString(Integer.toString(RomanNumbers.roman2int(r.value)));
@@ -45,7 +45,7 @@ public class IntRomanToIntStringWrapper extends ConversionWrapper {
 	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() throws AppendableException {
 		return "(Integer/toString (RomanNumbers/roman2int " + ConversionWrapper.arg.toClojureCode() + "))";
 	}
 

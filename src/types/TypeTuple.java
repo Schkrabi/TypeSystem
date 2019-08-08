@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import expression.Expression;
 import expression.Tuple;
+import util.AppendableException;
 
 /**
  * Tuple of types
@@ -125,7 +126,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	}
 
 	@Override
-	public Expression convertTo(Expression expr, Type toType) throws Exception {
+	public Expression convertTo(Expression expr, Type toType) throws AppendableException {
 		if (toType instanceof TypeVariable) {
 			return expr;
 		}

@@ -2,7 +2,9 @@ package expression;
 
 import types.Substitution;
 import types.Type;
+import types.TypeVariable;
 import util.AppendableException;
+import util.NameGenerator;
 import util.Pair;
 
 import interpretation.Environment;
@@ -34,10 +36,9 @@ public class Variable extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		if (!env.containsVariable(this)) {
-			//throw new Exception("Unbound variable");
-			return this; //??
+			return this;
 		}
 		return env.getVariableValue(this).interpret(env);
 	}
@@ -52,9 +53,7 @@ public class Variable extends Expression implements Comparable<Expression> {
 		try {
 			Expression e = env.getVariableValue(this);
 			if(e == null) {
-				//Should not happen
-				//return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), new Substitution());
-				throw new AppendableException("Undeclared variable");
+				return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), new Substitution());
 			}
 			
 			return e.infer(env);			
@@ -65,7 +64,7 @@ public class Variable extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() {
 		return this.name;
 	}
 	

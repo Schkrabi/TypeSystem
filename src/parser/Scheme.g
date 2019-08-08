@@ -47,22 +47,22 @@ expr returns [SemanticNode val]
 seq returns [SemanticNode val]
 	: '(' 	{ List<SemanticNode> ll = new ArrayList<>(); }
 	  (expr	{ ll.add($expr.val); } )*
-	  ')' 	{ $val = new SemanticNode(SemanticNode.NodeType.LIST, ll); }
+	  ')' 	{ $val = SemanticNode.make(SemanticNode.NodeType.LIST, ll); }
 	;
 
 atom returns [SemanticNode val]
-	: INT 		{ $val = new SemanticNode(SemanticNode.NodeType.INT, Integer.parseInt($INT.text)); }
-	| FLOAT		{ $val = new SemanticNode(SemanticNode.NodeType.DOUBLE, Double.parseDouble($FLOAT.text)); }
-	| SYMBOL 	{ $val = new SemanticNode(SemanticNode.NodeType.SYMBOL, $SYMBOL.text); }
-	| TRUE 		{ $val = new SemanticNode(SemanticNode.NodeType.BOOL, true); }
-	| FALSE 	{ $val = new SemanticNode(SemanticNode.NodeType.BOOL, false); }
-	| STRING	{ $val = new SemanticNode(SemanticNode.NodeType.STRING, unescapeString($STRING.text.substring(1, $STRING.text.length() - 1))); }
+	: INT 		{ $val = SemanticNode.make(SemanticNode.NodeType.INT, Integer.parseInt($INT.text)); }
+	| FLOAT		{ $val = SemanticNode.make(SemanticNode.NodeType.DOUBLE, Double.parseDouble($FLOAT.text)); }
+	| SYMBOL 	{ $val = SemanticNode.make(SemanticNode.NodeType.SYMBOL, $SYMBOL.text); }
+	| TRUE 		{ $val = SemanticNode.make(SemanticNode.NodeType.BOOL, true); }
+	| FALSE 	{ $val = SemanticNode.make(SemanticNode.NodeType.BOOL, false); }
+	| STRING	{ $val = SemanticNode.make(SemanticNode.NodeType.STRING, unescapeString($STRING.text.substring(1, $STRING.text.length() - 1))); }
 	;
 	
 pair returns [SemanticNode val]
 	: { String lvalue; } 
 	  SYMBOL { lvalue = $SYMBOL.text; } ':' SYMBOL 
-	  { $val = new SemanticNode(SemanticNode.NodeType.PAIR, new SemanticNode.Pair(lvalue, $SYMBOL.text)); }
+	  { $val = SemanticNode.make(SemanticNode.NodeType.PAIR, new SemanticNode.Pair(lvalue, $SYMBOL.text)); }
 	;
 
 //quote returns [Token val]

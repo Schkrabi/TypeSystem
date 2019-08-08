@@ -24,7 +24,7 @@ public class ExceptionExpr extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		throw new UserException(this.message.interpret(env).toString());
 	}
 
@@ -40,7 +40,7 @@ public class ExceptionExpr extends Expression {
 	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() throws AppendableException {
 		return "(throw (Throwable. \"" + this.message + "\"))";
 	}
 	

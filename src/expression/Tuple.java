@@ -27,12 +27,6 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	 */
 	private final Vector<Expression> values;
 
-	/*
-	 * public Tuple(Expression[] values) { this.values = new
-	 * Vector<Expression>(values.length); for (Expression e : values) {
-	 * this.values.add(e); } }
-	 */
-
 	public Tuple(Collection<? extends Expression> values) {
 		this.values = new Vector<Expression>(values);
 	}
@@ -64,7 +58,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		List<Expression> vls = new LinkedList<Expression>();
 
 		for (Expression e : this) {
@@ -113,7 +107,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		s.append('[');
 
@@ -141,7 +135,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 			Iterator<Expression> i = this.iterator();
 			Iterator<Expression> j = o.iterator();
 
-			while (i.hasNext() && j.hasNext()) {
+			while (i.hasNext()) {
 				Expression e = i.next();
 				Expression f = j.next();
 

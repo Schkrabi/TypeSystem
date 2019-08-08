@@ -46,7 +46,7 @@ public class ExtendedLambda extends MetaLambda {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		Set<Function> s = new TreeSet<Function>();
 
 		for (Lambda l : this.implementations) {
@@ -144,7 +144,7 @@ public class ExtendedLambda extends MetaLambda {
 	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() throws AppendableException {
 		Lambda l = this.getSortedImplementations().peek(); // Comparator?
 		return l.toClojureCode();
 	}

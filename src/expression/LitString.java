@@ -22,12 +22,7 @@ public class LitString extends Literal {
 	}
 
 	@Override
-	public Type getDefaultRepresentationType() {
-		return TypeConcrete.TypeString;
-	}
-
-	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) {
 		return this;
 	}
 	
@@ -37,7 +32,7 @@ public class LitString extends Literal {
 	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() {
 		return '"' + this.value + '"';
 	}
 

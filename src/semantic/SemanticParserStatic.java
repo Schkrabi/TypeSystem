@@ -11,10 +11,8 @@ import expression.Tuple;
 import expression.Variable;
 
 import parser.SemanticNode;
-import types.Type;
 import types.TypeVariable;
 import util.AppendableException;
-import util.NameGenerator;
 
 /**
  * This class contains auxiliary static methods and constants for SemanticParser
@@ -32,6 +30,10 @@ public final class SemanticParserStatic {
 	public static final String DEFINE = "define";
 	public static final String CONS = "cons";
 	public static final String ERROR = "error";
+	/**
+	 * Unused special form. For testing purposes only!
+	 */
+	public static final String UNUSED = "unused";
 	
 	public static final Set<String> specialForms;
 	
@@ -47,6 +49,7 @@ public final class SemanticParserStatic {
 		specialForms.add(DEFINE);
 		specialForms.add(CONS);
 		specialForms.add(ERROR);
+		specialForms.add(UNUSED);
 	}
 	
 	/**
@@ -66,7 +69,7 @@ public final class SemanticParserStatic {
 	 * @return true if node is a symbol node containing special form, false
 	 *         otherwise
 	 */
-	static boolean isSpecialForm(SemanticNode node) {
+	public static boolean isSpecialForm(SemanticNode node) {
 		if (node.type != SemanticNode.NodeType.SYMBOL) {
 			return false;
 		}
@@ -83,9 +86,9 @@ public final class SemanticParserStatic {
 	 * @param l
 	 * @return false if some VariableTypePair has type of null, true otherwise
 	 */
-	static boolean isArgListFullyTyped(List<VariableTypePair> l) {
-		for (VariableTypePair p : l) {
-			if (p.type == null) {
+	public static boolean isArgListFullyTyped(List<TypeVariablePair> l) {
+		for (TypeVariablePair p : l) {
+			if (p.first instanceof TypeVariable) {
 				return false;
 			}
 		}
@@ -100,9 +103,9 @@ public final class SemanticParserStatic {
 	 *            checked list
 	 * @return true or false
 	 */
-	static boolean isArgListUntypped(List<VariableTypePair> l) {		
-		for (VariableTypePair p : l) {
-			if (p.type != null) {
+	public static boolean isArgListUntypped(List<TypeVariablePair> l) {		
+		for (TypeVariablePair p : l) {
+			if (!(p.first instanceof TypeVariable)) {
 				return false;
 			}
 		}
@@ -116,29 +119,10 @@ public final class SemanticParserStatic {
 	 *            VariableTypePair list
 	 * @return list of variables
 	 */
-	static List<Variable> filterVariablesFromTypedArgsList(List<VariableTypePair> l) {
+	public static List<Variable> filterVariablesFromTypedArgsList(List<TypeVariablePair> l) {
 		List<Variable> r = new ArrayList<Variable>();
-		for (VariableTypePair p : l) {
-			r.add(p.variable);
-		}
-		return r;
-	}
-
-	/**
-	 * Filters the types from the variableTypePair list
-	 * 
-	 * @param l
-	 *            VariableTypePair list
-	 * @return list of types
-	 */
-	static List<Type> filterTypesFromTypedArgsList(List<VariableTypePair> l) {
-		List<Type> r = new ArrayList<Type>();
-		for (VariableTypePair p : l) {
-			if(p.type == null){
-				r.add(new TypeVariable(NameGenerator.next()));
-				continue;
-			}
-			r.add(p.type);
+		for (TypeVariablePair p : l) {
+			r.add(p.second);
 		}
 		return r;
 	}
@@ -167,7 +151,7 @@ public final class SemanticParserStatic {
 	 * @param s
 	 * @return
 	 */
-	static boolean isSimpleSymbol(SemanticNode s) {
+	public static boolean isSimpleSymbol(SemanticNode s) {
 		return s.type == SemanticNode.NodeType.SYMBOL;
 	}
 
@@ -177,7 +161,7 @@ public final class SemanticParserStatic {
 	 * @return tuple of formal arguments
 	 * @throws AppendableException
 	 */
-	static Tuple parseArgsList(List<SemanticNode> l) throws AppendableException {		
+	public static Tuple parseArgsList(List<SemanticNode> l) throws AppendableException {		
 		List<Expression> args = new LinkedList<Expression>();
 		for (SemanticNode t : l) {
 			if (t.type != SemanticNode.NodeType.SYMBOL) {

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import expression.Application;
 import expression.TypeConstructionLambda;
@@ -25,12 +26,14 @@ import expression.Tuple;
 import expression.Variable;
 
 import parser.SemanticNode;
-import parser.SemanticNode.Pair;
+import parser.SemanticPair;
 import types.Type;
 import types.TypeConcrete;
 import types.TypeNotRecognizedException;
 import types.TypeTuple;
+import types.TypeVariable;
 import util.AppendableException;
+import util.NameGenerator;
 
 /**
  * Class for parsing the program in first inner form (list of "tokens") into
@@ -88,9 +91,9 @@ public class SemanticParser {
 			return v;
 		case PAIR:
 			v = token.asPair().asVariable();
-			Optional<TypeConcrete> o = this.typeEnvironment.getType(token.asPair().lvalue, token.asPair().rvalue);
+			Optional<TypeConcrete> o = this.typeEnvironment.getType(token.asPair().first, token.asPair().second);
 			if (!o.isPresent()) {
-				throw new TypeNotRecognizedException(token.asPair().lvalue + ":" + token.asPair().rvalue);
+				throw new TypeNotRecognizedException(token.asPair().first + ":" + token.asPair().second);
 			}
 			return v;
 		case INT:
@@ -106,6 +109,8 @@ public class SemanticParser {
 			return token.asBool() ? LitBoolean.TRUE : LitBoolean.FALSE;
 		case LIST:
 			return this.parseNodelist(token.asList());
+		default:
+			break;
 		}
 		throw new AppendableException("Unrecognized token type!");
 	}
@@ -249,11 +254,11 @@ public class SemanticParser {
 			throw e;
 		}
 
-		List<VariableTypePair> typedArgs = this.parseTypedArgList(lambdaList.get(1).asList());
+		List<TypeVariablePair> typedArgs = this.parseTypedArgList(lambdaList.get(1).asList());
 
 		TypeTuple argsTypes = null;
 
-		List<Type> tmp = SemanticParserStatic.filterTypesFromTypedArgsList(typedArgs);
+		List<Type> tmp = typedArgs.stream().map(x -> x.first).collect(Collectors.toList());
 		argsTypes = new TypeTuple(tmp);
 
 		List<Variable> vtmp = SemanticParserStatic.filterVariablesFromTypedArgsList(typedArgs);
@@ -339,14 +344,27 @@ public class SemanticParser {
 	 * @return list of variable type pairs
 	 * @throws AppendableException
 	 */
-	private List<VariableTypePair> parseTypedArgList(List<SemanticNode> l) throws AppendableException {
-		List<VariableTypePair> parsed = new ArrayList<VariableTypePair>();
+	private List<TypeVariablePair> parseTypedArgList(List<SemanticNode> l) throws AppendableException {
+		List<TypeVariablePair> parsed = new ArrayList<TypeVariablePair>();
 
 		for (SemanticNode n : l) {
-			parsed.add(this.parseVariableTypePair(n));
+			parsed.add(this.parseUntypedVariableOrVariableTypePair(n));
 		}
 
 		return parsed;
+	}
+	
+	/**
+	 * Parses token that is either variable type pair or simple untyped variable symbol
+	 * @param n parsed token
+	 * @return variable type pair
+	 * @throws AppendableException
+	 */
+	private TypeVariablePair parseUntypedVariableOrVariableTypePair(SemanticNode n) throws AppendableException {
+		if(SemanticParserStatic.isSimpleSymbol(n)) {
+			return new TypeVariablePair(new TypeVariable(NameGenerator.next()), new Variable(n.asSymbol()));
+		}
+		return this.parseVariableTypePair(n);
 	}
 
 	/**
@@ -359,8 +377,8 @@ public class SemanticParser {
 	private TypeConcrete parseType(SemanticNode typeNode) throws AppendableException {
 		Optional<TypeConcrete> o;
 		if (typeNode.type == SemanticNode.NodeType.PAIR) {
-			Pair p = typeNode.asPair();
-			o = this.typeEnvironment.getType(p.lvalue, p.rvalue);
+			SemanticPair p = typeNode.asPair();
+			o = this.typeEnvironment.getType(p.first, p.second);
 		} else if (typeNode.type == SemanticNode.NodeType.SYMBOL) {
 			o = this.typeEnvironment.getType(typeNode.asSymbol());
 		} else {
@@ -380,7 +398,7 @@ public class SemanticParser {
 	 * @return
 	 * @throws AppendableException
 	 */
-	private VariableTypePair parseVariableTypePair(SemanticNode pair) throws AppendableException {
+	private TypeVariablePair parseVariableTypePair(SemanticNode pair) throws AppendableException {
 		try {
 			Validations.validateVariableTypePair(pair);
 		} catch (AppendableException e) {
@@ -388,13 +406,9 @@ public class SemanticParser {
 			throw e;
 		}
 
-		if (SemanticParserStatic.isSimpleSymbol(pair)) {
-			return new VariableTypePair(null, new Variable(pair.asSymbol()));
-		}
-
 		TypeConcrete type = this.parseType(pair.asList().get(0));
 		Variable variable = new Variable(pair.asList().get(1).asSymbol());
-		return new VariableTypePair(type, variable);
+		return new TypeVariablePair(type, variable);
 	}
 
 	/**
@@ -537,6 +551,7 @@ public class SemanticParser {
 			Validations.validateConsList(l);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + l);
+			throw e;
 		}
 
 		return new Tuple(Arrays.asList(this.parseNode(l.get(1)), this.parseNode(l.get(2))));
@@ -554,6 +569,7 @@ public class SemanticParser {
 			Validations.validateErrorList(l);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + l);
+			throw e;
 		}
 
 		return new ExceptionExpr(this.parseNode(l.get(1)));

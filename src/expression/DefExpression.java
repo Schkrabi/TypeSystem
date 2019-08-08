@@ -33,7 +33,7 @@ public class DefExpression extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		Expression interpreted = this.defined.interpret(env);
 		env.put(this.name, interpreted);
 		return Expression.EMPTY_EXPRESSION;
@@ -59,7 +59,7 @@ public class DefExpression extends Expression {
 	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() throws AppendableException {
 		StringBuilder s = new StringBuilder("(def ");
 		s.append(this.name.toClojureCode());
 		s.append(" ");

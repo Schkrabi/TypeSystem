@@ -35,12 +35,12 @@ public abstract class MetaFunction extends Expression {
 	public abstract Function getFunction(Comparator<? super Function> c);
 	
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() throws AppendableException {
 		throw new AppendableException("Unable to compile evaluated function to clojure code");
 	}
 	
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		return this;
 	}
 	

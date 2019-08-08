@@ -28,10 +28,10 @@ public class IntToIntStringWrapper extends ConversionWrapper{
 	private IntToIntStringWrapper() {}
 
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		Expression e = ConversionWrapper.arg.interpret(env);
 		if(!(e instanceof LitInteger)) {
-			throw new Exception("Invalid wrapped conversion from IntBinary to IntString");
+			throw new AppendableException("Invalid wrapped conversion from IntBinary to IntString");
 		}
 		LitInteger i = (LitInteger)e;
 		Literal l = new LitString(Integer.toString(i.value));
@@ -44,7 +44,7 @@ public class IntToIntStringWrapper extends ConversionWrapper{
 	}
 	
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() throws AppendableException {
 		return "(Integer/toString " + ConversionWrapper.arg.toClojureCode() + ")";
 	}
 	

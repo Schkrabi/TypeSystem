@@ -219,10 +219,11 @@ public abstract class Type implements Comparable<Type> {
 	 * @return a new expression that will interpret/infer into a targeted type
 	 * @throws Exception
 	 */
-	public abstract Expression convertTo(Expression expr, Type toType) throws Exception;
+	public abstract Expression convertTo(Expression expr, Type toType) throws AppendableException;
 
-	protected void throwConversionError(Expression expr, Type toType) throws Exception {
-		throw new Exception("Trying to convert uncovertable types " + this.toString() + " to " + toType.toString()
+	//TODO create new exception
+	protected void throwConversionError(Expression expr, Type toType) throws AppendableException {
+		throw new AppendableException("Trying to convert uncovertable types " + this.toString() + " to " + toType.toString()
 				+ " on expression " + expr.toString());
 	}
 

@@ -24,9 +24,9 @@ public class RomanNumbers {
 	 * @throws Exception
 	 *             thrown is str is not a roman number
 	 */
-	public static int roman2int(String str) throws Exception {
-		if (!str.matches(romanRegExp)) {
-			throw new Exception("Invalid roman number " + str);
+	public static int roman2int(String str) throws AppendableException {
+		if(! RomanNumbers.check(str)) {
+			throw new AppendableException("Invalid roman number " + str);
 		}
 
 		int res = 0;
@@ -76,7 +76,7 @@ public class RomanNumbers {
 		int tmpVal = val;
 		StringBuilder s = new StringBuilder();
 
-		while (tmpVal > 1000) {
+		while (tmpVal >= 1000) {
 			s.append("M");
 			tmpVal -= 1000;
 		}
@@ -96,22 +96,26 @@ public class RomanNumbers {
 	 * @param r
 	 *            character to convert
 	 * @return int value
+	 * @throws AppendableException 
 	 */
-	private static int value(char r) {
-		if (r == 'I')
+	public static int value(char r) throws AppendableException {
+		switch(r) {
+		case 'I':
 			return 1;
-		if (r == 'V')
+		case 'V':
 			return 5;
-		if (r == 'X')
+		case  'X':
 			return 10;
-		if (r == 'L')
+		case 'L':
 			return 50;
-		if (r == 'C')
+		case 'C':
 			return 100;
-		if (r == 'D')
+		case 'D':
 			return 500;
-		if (r == 'M')
+		case 'M':
 			return 1000;
-		return -1;
+		default:
+			throw new AppendableException( r + " is not a roman number symbol");
+		}
 	}
 }

@@ -30,10 +30,10 @@ public class IntRomanToIntWrapper extends ConversionWrapper {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws Exception {
+	public Expression interpret(Environment env) throws AppendableException {
 		Expression e = ConversionWrapper.arg.interpret(env);
 		if (!(e instanceof LitString)) {
-			throw new Exception("Invalid wrapped conversion from IntRoman to IntBinary");
+			throw new AppendableException("Invalid wrapped conversion from IntRoman to IntBinary");
 		}
 		LitString r = (LitString) e;
 		Literal l = new LitInteger(RomanNumbers.roman2int(r.value));
@@ -47,7 +47,7 @@ public class IntRomanToIntWrapper extends ConversionWrapper {
 	}
 
 	@Override
-	public String toClojureCode() throws Exception {
+	public String toClojureCode() throws AppendableException {
 		return "(RomanNumbers/roman2int " + ConversionWrapper.arg.toClojureCode() + ")";
 	}
 

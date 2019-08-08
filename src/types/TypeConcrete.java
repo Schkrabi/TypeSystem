@@ -114,11 +114,12 @@ public class TypeConcrete extends Type {
 		this.conversionTable.put(toType, conversionConstructor);
 	}
 
-	private Expression instantiateConversionToType(TypeConcrete type, Expression arg) throws Exception {
+	private Expression instantiateConversionToType(TypeConcrete type, Expression arg) throws AppendableException {
 		TypeConstructionLambda constructor = this.conversionTable.get(type);
 
 		if (constructor == null) {
-			throw new Exception("No conversion from " + this + " to type " + type + " exists");
+			//TODO invalid conversion exception
+			throw new AppendableException("No conversion from " + this + " to type " + type + " exists");
 		}
 
 		Application a = new Application(constructor, new Tuple(Arrays.asList( arg )));
@@ -127,7 +128,7 @@ public class TypeConcrete extends Type {
 	}
 
 	@Override
-	public Expression convertTo(Expression expr, Type toType) throws Exception {
+	public Expression convertTo(Expression expr, Type toType) throws AppendableException {
 		if (toType instanceof TypeVariable) {
 			return expr;
 		}

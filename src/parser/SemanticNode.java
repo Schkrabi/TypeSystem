@@ -2,16 +2,29 @@ package parser;
 
 import java.util.List;
 
-import expression.Variable;
 import util.AppendableException;
 
 public class SemanticNode {
 	public final NodeType type;
 	private final Object value;
 	
-	public SemanticNode(NodeType type, Object value) {	
+	private SemanticNode(NodeType type, Object value) {	
 		this.type = type;
 		this.value = value;
+	}
+	
+	/**
+	 * Makes new SemanticNode
+	 * @param type
+	 * @param value
+	 * @return
+	 * @throws AppendableException
+	 */
+	public static SemanticNode make(NodeType type, Object value) throws AppendableException {
+		if(!isAdequateType(type, value)) {
+			throw new AppendableException(type.toString() + value + " is not an adequate type-value combination");
+		}
+		return new SemanticNode(type, value);
 	}
 	
 	public static boolean isAdequateType(NodeType type, Object value){
@@ -19,7 +32,7 @@ public class SemanticNode {
 		case SYMBOL:
 			return value instanceof String;
 		case PAIR:
-			return value instanceof Pair;
+			return value instanceof SemanticPair;
 		case INT:
 			return value instanceof Integer;
 		case DOUBLE:
@@ -29,7 +42,9 @@ public class SemanticNode {
 		case BOOL:
 			return value instanceof Boolean;
 		case LIST:
-			return value instanceof List;
+			return value instanceof List<?>;
+		default:
+			break;
 		}
 		return false;
 	}
@@ -41,11 +56,11 @@ public class SemanticNode {
 		return (String)this.value;
 	}
 	
-	public Pair asPair() throws AppendableException{
+	public SemanticPair asPair() throws AppendableException{
 		if(this.type != NodeType.PAIR){
 			throw new AppendableException("" + this + " is not a pair");
 		}
-		return (Pair)this.value;
+		return (SemanticPair)this.value;
 	}
 	
 	public Integer asInt() throws AppendableException{
@@ -78,8 +93,7 @@ public class SemanticNode {
 	
 	@SuppressWarnings("unchecked")
 	public List<SemanticNode> asList() throws AppendableException{
-		if(this.type != NodeType.LIST
-				|| !(this.value instanceof List<?>)){
+		if(this.type != NodeType.LIST){
 			throw new AppendableException("" + this + " is not a list");
 		}
 		return (List<SemanticNode>)this.value;
@@ -87,32 +101,10 @@ public class SemanticNode {
 	
 	@Override
 	public String toString(){
-		if(this.value == null){
-			return "null";
-		}
 		return this.value.toString();
 	}
 	
 	public enum NodeType {
-		SYMBOL, PAIR, INT, DOUBLE, STRING, BOOL, LIST
-	}
-	
-	public static class Pair{
-		public final String lvalue;
-		public final String rvalue;
-		
-		public Pair(String lvalue, String rvalue){
-			this.lvalue = lvalue;
-			this.rvalue = rvalue;
-		}
-		
-		@Override
-		public String toString() {
-			return this.lvalue + ":" + this.rvalue;
-		}
-		
-		public Variable asVariable() {
-			return new Variable(this.toString());
-		}
+		SYMBOL, PAIR, INT, DOUBLE, STRING, BOOL, LIST, /** Unused NodeType for testing purposes onyl */ UNUSED
 	}
 }

@@ -57,8 +57,7 @@ public class TypeVariable extends Type {
 	}
 
 	@Override
-	public Expression convertTo(Expression expr, Type toType) throws Exception {
-		//throw new Exception("Cannot convert to Variable type!");
+	public Expression convertTo(Expression expr, Type toType) {
 		return expr;
 	}
 
