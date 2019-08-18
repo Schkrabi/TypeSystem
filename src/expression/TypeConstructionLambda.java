@@ -48,10 +48,8 @@ public class TypeConstructionLambda extends Lambda {
 	}
 	
 	@Override
-	public Expression interpret(Environment env) throws AppendableException{
-		Constructor c = new Constructor(this.argsType, this.args, this.body, this.constructedType, env);
-		c.infer(env);
-		return c;
+	public Expression interpret(Environment env) {
+		return new Constructor(this.argsType, this.args, this.body, this.constructedType, env);
 	}
 	
 	@Override

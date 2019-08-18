@@ -34,6 +34,7 @@ import parser.SemanticNode;
 import semantic.SemanticParser;
 import types.TypeConcrete;
 import types.TypeRepresentation;
+import util.AppendableException;
 import util.ClojureCodeGenerator;
 import expression.Expression;
 import expression.Tuple;
@@ -79,7 +80,7 @@ public class Main {
 		}
 	}
 
-	public static Environment initTopLevelEnvironment() throws Exception {
+	public static Environment initTopLevelEnvironment() throws AppendableException {
 		Environment env = new Environment();
 		env.put(new Variable(Operator.Addition.toString()), Operator.Addition);
 		env.put(new Variable(Operator.Subtraction.toString()), Operator.Subtraction);

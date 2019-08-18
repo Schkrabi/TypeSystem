@@ -4,7 +4,9 @@ import interpretation.Environment;
 import semantic.UserException;
 import types.Substitution;
 import types.Type;
+import types.TypeVariable;
 import util.AppendableException;
+import util.NameGenerator;
 import util.Pair;
 
 /**
@@ -31,8 +33,8 @@ public class ExceptionExpr extends Expression {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			//TODO implement
-			throw new AppendableException("Not implemented!");
+			Pair<Type, Substitution> infered = this.message.infer(env);
+			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), infered.second);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
@@ -40,7 +42,7 @@ public class ExceptionExpr extends Expression {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
+	public String toClojureCode() {
 		return "(throw (Throwable. \"" + this.message + "\"))";
 	}
 	

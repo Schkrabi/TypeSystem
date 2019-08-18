@@ -50,7 +50,18 @@ public class DefExpression extends Expression {
 			childEnv.put(this.name, new TypeHolder(tv));
 			Pair<Type, Substitution> infered = this.defined.infer(childEnv);
 
-			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, infered.second);
+			Substitution s = infered.second;
+			Substitution tmp;
+
+			if (!s.containsKey(tv)) {
+				tmp = new Substitution();
+				tmp.put(tv, infered.first);
+			} else {
+				tmp = Type.unify(s.get(tv), infered.first).get();
+			}
+			s = s.compose(tmp);
+
+			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, s);
 
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
@@ -84,11 +95,12 @@ public class DefExpression extends Expression {
 		}
 		return super.compareTo(other);
 	}
-	
+
 	@Override
 	public boolean equals(Object other) {
-		if(other instanceof DefExpression) {
-			return this.name.equals(((DefExpression) other).name) && this.defined.equals(((DefExpression) other).defined);
+		if (other instanceof DefExpression) {
+			return this.name.equals(((DefExpression) other).name)
+					&& this.defined.equals(((DefExpression) other).defined);
 		}
 		return false;
 	}

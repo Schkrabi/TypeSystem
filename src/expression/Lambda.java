@@ -64,10 +64,8 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		Function f = new Function(this.argsType, this.args, this.body, env);
-		f.infer(env);
-		return f;
+	public Expression interpret(Environment env) {
+		return new Function(this.argsType, this.args, this.body, env);
 	}
 
 	@Override
@@ -84,6 +82,7 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 
 			for (Expression e : this.args) {
 				if (!(e instanceof Variable)) {
+					//TODO change throwable
 					throw new AppendableException(e + " is not instance of " + Variable.class.getName());
 				}
 				TypeVariable tv = new TypeVariable(NameGenerator.next());
@@ -102,6 +101,7 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 			// arguments
 			Optional<Substitution> s = Type.unify(argsType, this.argsType);
 
+			//TODO Unreachable?
 			if (!s.isPresent()) {
 				throw new TypesDoesNotUnifyException(argsType, this.argsType);
 			}
@@ -148,29 +148,23 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	@Override
 	public int compareTo(Expression other) {
 		if (other instanceof Lambda) {
-			Lambda o = (Lambda) other;
-			if (this.argsType == o.argsType) {
-				return 0;
+			int cmp = this.args.compareTo(((Lambda) other).args);
+			if(cmp != 0) {
+				return cmp;
 			}
-			if (this.argsType == null) {
-				return 1;
+			
+			cmp = this.argsType.compareTo(((Lambda) other).argsType);
+			if(cmp != 0) {
+				return cmp;
 			}
-			if (o.argsType == null) {
-				return -1;
-			}
-
-			return this.argsType.compareTo(o.argsType);
+			
+			return this.body.compareTo(((Lambda) other).body);
 		}
 		return super.compareTo(other);
 	}
 
 	@Override
 	public Lambda getLambda(Comparator<? super Lambda> c) {
-		return this;
-	}
-
-	@Override
-	public Lambda getLambda() {
 		return this;
 	}
 

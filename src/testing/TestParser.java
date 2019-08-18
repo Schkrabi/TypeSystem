@@ -3,9 +3,11 @@ package testing;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.PriorityQueue;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
@@ -179,23 +181,42 @@ class TestParser {
 				|| parsedLambda.argsType.size() != expectedLambda.argsType.size()) {
 			fail(parsed + " is not equal to " + expected);
 		}
+
+		p = new Pair<String, Expression>("(lambda ((String x) (Int y)) x)",
+				new Lambda(new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
+						new TypeTuple(Arrays.asList(TypeConcrete.TypeString, TypeConcrete.TypeInt)),
+						new Variable("x")));
+		parsedLambda = (Lambda) parseString(p.first);
+		expectedLambda = (Lambda) p.second;
+		if (!parsedLambda.args.equals(expectedLambda.args) || !parsedLambda.body.equals(expectedLambda.body)
+				|| parsedLambda.argsType.size() != expectedLambda.argsType.size()) {
+			fail(parsed + " is not equal to " + expected);
+		}
 	}
 
 	@Test
 	void testElambda() throws AppendableException {
-		// (elambda (x) x ((Int:String) y))
-		parsed = parseString("(elambda (x) x ((Int:String) y))");
+		// (elambda (x) ((Int:String) y))
+		parsed = parseString("(elambda ((Int x)) ((Int:String) y))");
 		if (!(parsed instanceof ExtendedLambda)) {
 			fail(parsed + " is not a " + ExtendedLambda.class.getName());
 		}
 		ExtendedLambda parsedElambda = (ExtendedLambda) parsed;
 		Lambda expectedLambda = new Lambda(new Tuple(Arrays.asList(new Variable("x"))), new Variable("x"));
 
-		Optional<Lambda> foundImplementation = parsedElambda.implementations.stream()
-				.filter(x -> x.body.equals(new Variable("x"))).findAny();
-		if (!foundImplementation.isPresent()) {
+		PriorityQueue<Lambda> foundImplementation = parsedElambda.getSortedImplementations(new Comparator<Lambda>() {
+			@Override
+			public int compare(Lambda arg0, Lambda arg1) {
+				return 0;
+			}});
+		
+		if (foundImplementation.isEmpty()) {
 			fail("Implementation " + expectedLambda + " was not found in " + parsedElambda);
 		}
+		if(foundImplementation.size() > 1) {
+			fail("There should be only one implementation in " + parsedLambda );
+		}
+		Lambda fl = foundImplementation.
 		if (!foundImplementation.get().body.equals(expectedLambda.body)
 				|| !foundImplementation.get().args.equals(expectedLambda.args)
 				|| foundImplementation.get().argsType.size() != expectedLambda.argsType.size()) {
@@ -354,11 +375,10 @@ class TestParser {
 		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(defconversion x y z w)"));
 
 		// Bad special form
-		Assertions
-				.assertThrows(UnexpectedExpressionException.class,
-						() -> Validations.validateDefconversionList(Arrays.asList(
-								SemanticNode.make(NodeType.SYMBOL, "fail"), SemanticNode.make(NodeType.SYMBOL, "x"),
-								SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"))));
+		Assertions.assertThrows(UnexpectedExpressionException.class,
+				() -> Validations.validateDefconversionList(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "fail"),
+						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"),
+						SemanticNode.make(NodeType.SYMBOL, "x"))));
 
 		Assertions.assertThrows(UnexpectedExpressionException.class,
 				() -> Validations.validateDefconversionList(Arrays.asList(
@@ -533,95 +553,113 @@ class TestParser {
 
 		List<TypeVariablePair> k = Arrays.asList(new TypeVariablePair(new TypeVariable("x"), new Variable("x")),
 				new TypeVariablePair(new TypeVariable("x"), new Variable("x")));
-		if (!SemanticParserStatic.listTail(l)
-				.equals(k)) {
+		if (!SemanticParserStatic.listTail(l).equals(k)) {
 			fail(k.toString() + " is a tail of " + l.toString());
 		}
-		
-		Assertions.assertThrows(UnexpectedExpressionException.class, () -> SemanticParserStatic.parseArgsList(Arrays.asList(SemanticNode.make(NodeType.BOOL, new Boolean(false)))));
+
+		Assertions.assertThrows(UnexpectedExpressionException.class, () -> SemanticParserStatic
+				.parseArgsList(Arrays.asList(SemanticNode.make(NodeType.BOOL, new Boolean(false)))));
 	}
-	
+
 	@Test
 	public void testVariableTypePair() {
 		TypeVariablePair p = new TypeVariablePair(TypeConcrete.TypeBool, new Variable("x"));
 		p.toString();
-		
+
 		Integer i = new Integer(128);
-		if(p.equals(i)){
+		if (p.equals(i)) {
 			fail(p.toString() + " is not equal to " + i.toString());
 		}
-		
+
 		TypeVariablePair q = new TypeVariablePair(TypeConcrete.TypeBool, new Variable("y"));
-		if(p.equals(q)) {
+		if (p.equals(q)) {
 			fail(p.toString() + " not equals to " + q.toString());
 		}
-		
+
 		q = new TypeVariablePair(TypeConcrete.TypeInt, new Variable("x"));
-		if(p.equals(q)) {
+		if (p.equals(q)) {
 			fail(p.toString() + " not equals to " + q.toString());
 		}
 	}
-	
+
 	@Test
 	public void testTypeEnvironment() throws AppendableException {
 		TypeEnvironment typeEnv = new TypeEnvironment();
-		
+
 		typeEnv.addType("List");
 		typeEnv.addRepresentation("List", "Functional");
 		typeEnv.addType("Test");
 		typeEnv.addRepresentation("Test", "Functional");
-		
+
 		typeEnv.getType("List", "Functional");
-		
-		if(!typeEnv.isType(SemanticNode.make(NodeType.SYMBOL, "List"))){
+
+		if (!typeEnv.isType(SemanticNode.make(NodeType.SYMBOL, "List"))) {
 			fail("Expected typeEnv.isType(SemanticNode.make(NodeType.SYMBOL, \"List\")) == true");
 		}
-		if(!typeEnv.isType(SemanticNode.make(NodeType.PAIR, new SemanticPair("List", "Functional")))) {
+		if (!typeEnv.isType(SemanticNode.make(NodeType.PAIR, new SemanticPair("List", "Functional")))) {
 			fail("Expected typeEnv.isType(SemanticNode.make(NodeType.PAIR, new SemanticPair(\"List\", \"Functional\"))) == true");
 		}
-		if(typeEnv.isType(SemanticNode.make(NodeType.SYMBOL, "kawabanga"))) {
+		if (typeEnv.isType(SemanticNode.make(NodeType.SYMBOL, "kawabanga"))) {
 			fail("Expected typeEnv.isType(SemanticNode.make(NodeType.SYMBOL, \"kawabanga\")) == false");
 		}
-		if(typeEnv.isType(SemanticNode.make(NodeType.PAIR, new SemanticPair("List", "kawabanga")))) {
+		if (typeEnv.isType(SemanticNode.make(NodeType.PAIR, new SemanticPair("List", "kawabanga")))) {
 			fail("Exprected typeEnv.isType(SemanticNode.make(NodeType.PAIR, new SemanticPair(\"List\", \"kawabanga\"))) == false");
 		}
-		if(typeEnv.isType(SemanticNode.make(NodeType.INT, new Integer(128)))) {
+		if (typeEnv.isType(SemanticNode.make(NodeType.INT, new Integer(128)))) {
 			fail("Expected typeEnv.isType(SemanticNode.make(NodeType.INT, new Integer(128))) = false");
 		}
-		
+
 		typeEnv.getConstructor(TypeRepresentation.TypeIntRoman, 1);
-		Assertions.assertThrows(NoSuchElementException.class, () -> typeEnv.getConstructor(TypeRepresentation.TypeIntRoman, 3));
-		Assertions.assertThrows(NoSuchElementException.class, () -> typeEnv.getConstructor(new TypeConcrete("fail"), 1));
-		
+		Assertions.assertThrows(NoSuchElementException.class,
+				() -> typeEnv.getConstructor(TypeRepresentation.TypeIntRoman, 3));
+		Assertions.assertThrows(NoSuchElementException.class,
+				() -> typeEnv.getConstructor(new TypeConcrete("fail"), 1));
+
 		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addType("Int"));
 		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addRepresentation("Int", "Roman"));
-		
-		Assertions.assertThrows(UndefinedTypeException.class, () -> typeEnv.addConversion(new TypeConcrete("fail"), TypeConcrete.TypeInt, new TypeConstructionLambda(null, null, null, expected)));
-		Assertions.assertThrows(UndefinedTypeException.class, () -> typeEnv.addConversion(TypeConcrete.TypeInt, new TypeConcrete("fail"), new TypeConstructionLambda(null, null, null, expected)));
-		
-		typeEnv.addConstructor(typeEnv.getType("List", "Functional").get(), new TypeConstructionLambda(typeEnv.getType("List", "Functional").get(), new Tuple(Arrays.asList(new Variable("x"))), new TypeTuple(Arrays.asList(new TypeVariable("x"))), expected));
-		typeEnv.addConstructor(typeEnv.getType("List", "Functional").get(), new TypeConstructionLambda(typeEnv.getType("List", "Functional").get(), Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, expected));
-		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addConstructor(typeEnv.getType("List", "Functional").get(), new TypeConstructionLambda(typeEnv.getType("List", "Functional").get(), Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, expected)));
+
+		Assertions.assertThrows(UndefinedTypeException.class, () -> typeEnv.addConversion(new TypeConcrete("fail"),
+				TypeConcrete.TypeInt, new TypeConstructionLambda(null, null, null, expected)));
+		Assertions.assertThrows(UndefinedTypeException.class, () -> typeEnv.addConversion(TypeConcrete.TypeInt,
+				new TypeConcrete("fail"), new TypeConstructionLambda(null, null, null, expected)));
+
+		typeEnv.addConstructor(typeEnv.getType("List", "Functional").get(),
+				new TypeConstructionLambda(typeEnv.getType("List", "Functional").get(),
+						new Tuple(Arrays.asList(new Variable("x"))),
+						new TypeTuple(Arrays.asList(new TypeVariable("x"))), Expression.EMPTY_EXPRESSION));
+		typeEnv.addConstructor(typeEnv.getType("List", "Functional").get(), new TypeConstructionLambda(
+				typeEnv.getType("List", "Functional").get(), Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, expected));
+		Assertions.assertThrows(AppendableException.class,
+				() -> typeEnv.addConstructor(typeEnv.getType("List", "Functional").get(),
+						new TypeConstructionLambda(typeEnv.getType("List", "Functional").get(), Tuple.EMPTY_TUPLE,
+								TypeTuple.EMPTY_TUPLE, expected)));
 	}
-	
+
 	@Test
 	public void testSemanticNode() {
 		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, "fail"));
-		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, new SemanticPair("fail", "fail")));
+		Assertions.assertThrows(AppendableException.class,
+				() -> SemanticNode.make(NodeType.INT, new SemanticPair("fail", "fail")));
 		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.SYMBOL, new Integer(128)));
 		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, new Double(3.14)));
 		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, "fail"));
 		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, new Boolean(true)));
 		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, Arrays.asList(128)));
-		
-		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, new Integer(128)).asSymbol());
-		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, new Integer(128)).asPair());
+
+		Assertions.assertThrows(AppendableException.class,
+				() -> SemanticNode.make(NodeType.INT, new Integer(128)).asSymbol());
+		Assertions.assertThrows(AppendableException.class,
+				() -> SemanticNode.make(NodeType.INT, new Integer(128)).asPair());
 		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.SYMBOL, "fail").asInt());
-		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, new Integer(128)).asDouble());
-		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, new Integer(128)).asString());
-		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, new Integer(128)).asBool());
-		Assertions.assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, new Integer(128)).asList());
-		
+		Assertions.assertThrows(AppendableException.class,
+				() -> SemanticNode.make(NodeType.INT, new Integer(128)).asDouble());
+		Assertions.assertThrows(AppendableException.class,
+				() -> SemanticNode.make(NodeType.INT, new Integer(128)).asString());
+		Assertions.assertThrows(AppendableException.class,
+				() -> SemanticNode.make(NodeType.INT, new Integer(128)).asBool());
+		Assertions.assertThrows(AppendableException.class,
+				() -> SemanticNode.make(NodeType.INT, new Integer(128)).asList());
+
 	}
 
 	private Expression parseString(String s) throws AppendableException {

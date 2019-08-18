@@ -3,38 +3,41 @@ package expression;
 import interpretation.Environment;
 
 import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.Predicate;
 
 import types.Substitution;
 import types.Type;
+import types.TypeTuple;
+import types.TypeVariable;
 import util.AppendableException;
+import util.NameGenerator;
 import util.Pair;
+import util.ThrowingBinaryOperator;
+import util.ThrowingFunction;
 
 /**
  * Expression for interpreted function with various implementations
+ * 
  * @author Mgr. Radomir Skrabal
  *
  */
 public class ExtendedFunction extends MetaFunction {
-	
+
 	/**
 	 * Implementations of the function
 	 */
-	public final Set<Function> implementations;
-	
-	public ExtendedFunction(Set<Function> implementations, Environment createdEnvironment){
-		super(createdEnvironment);
-		this.implementations = implementations;
-	}
+	private final Set<Function> implementations;
 
-	@Override
-	public Function getFunction() {
-		return this.defaultImplementation();
+	/**
+	 * Type of arguments
+	 */
+	public final TypeTuple argsType;
+
+	public ExtendedFunction(TypeTuple argsType, Set<Function> implementations, Environment createdEnvironment) {
+		super(createdEnvironment);
+		this.argsType = argsType;
+		this.implementations = implementations;
 	}
 
 	@Override
@@ -44,79 +47,59 @@ public class ExtendedFunction extends MetaFunction {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+		// TODO
+		final Environment crEnv = this.creationEnvironment;
+		final TypeVariable v = new TypeVariable(NameGenerator.next());
 		try {
-			//TODO implement
-			throw new AppendableException("Not implemented!");
-		} catch (AppendableException e) {
-			e.appendMessage("in " + this);
+			return this.implementations.stream().map(ThrowingFunction.wrapper(x -> x.infer(crEnv))).reduce(
+					new Pair<Type, Substitution>(v, new Substitution()), ThrowingBinaryOperator.wrapper((x, y) -> {
+						Substitution s = Type.unify(x.first, y.first).get().compose(x.second).compose(y.second);
+						return new Pair<Type, Substitution>(v.apply(s), s);
+					}));
+		} catch (RuntimeException e) {
+			if (e.getCause() instanceof AppendableException) {
+				AppendableException ae = (AppendableException) e.getCause();
+				ae.appendMessage("in " + this);
+				throw ae;
+			}
 			throw e;
 		}
 	}
-	
-	public PriorityQueue<Function> getSortedImplementations(
-			Comparator<? super Function> c) {
+
+	public PriorityQueue<Function> getSortedImplementations(Comparator<? super Function> c) {
 		PriorityQueue<Function> q = new PriorityQueue<Function>(c);
 		q.addAll(this.implementations);
 		return q;
 	}
-	
-	public Function defaultImplementation() {
-		Optional<Function> o = this.implementations.stream().filter(new Predicate<Function>() {
 
-			@Override
-			public boolean test(Function arg0) {
-				return arg0.argsType == null;
-			}}).findAny();
-		
-		return o.get();
-	}
-	
 	@Override
 	public int compareTo(Expression other) {
-		if(other instanceof ExtendedFunction) {
-			ExtendedFunction o = (ExtendedFunction)other;
-			int c = this.creationEnvironment.compareTo(o.creationEnvironment);
-			if(c != 0)
-				return c;
-			
-			c = (int)Math.signum(this.implementations.size() - o.implementations.size());
-			if(c != 0)
-				return c;
-			
-			Set<Function> tmp = new TreeSet<Function>();
-			tmp.addAll(this.implementations);
-			tmp.addAll(o.implementations);
-			
-			if(tmp.size() == this.implementations.size())
-				return 0;
-			
-			Set<Function> thisSubOther = new TreeSet<Function>();
-			thisSubOther.addAll(tmp);
-			thisSubOther.removeAll(o.implementations);
-			
-			Set<Function> otherSubThis = tmp;
-			otherSubThis.removeAll(this.implementations);
-			
-			Iterator<Function> i = thisSubOther.iterator();
-			Iterator<Function> j = otherSubThis.iterator();
-			
-			while(i.hasNext() && j.hasNext()) {
-				Function f = i.next();
-				Function g = j.next();
-				c = f.compareTo(g);
-				if(c != 0)
-					return c;
+		if (other instanceof ExtendedFunction) {
+			int cmp = this.argsType.compareTo(((ExtendedFunction) other).argsType);
+			if (cmp != 0)
+				return cmp;
+			cmp = this.creationEnvironment.compareTo(((ExtendedFunction) other).creationEnvironment);
+			if (cmp != 0)
+				return cmp;
+
+			for (Function f : this.implementations) {
+				if (((ExtendedFunction) other).implementations.contains(f))
+					return 1;
 			}
-			
+			for (Function f : ((ExtendedFunction) other).implementations) {
+				if (this.implementations.contains(f))
+					return -1;
+			}
 			return 0;
 		}
 		return super.compareTo(other);
 	}
-	
+
 	@Override
 	public boolean equals(Object other) {
-		if(other instanceof ExtendedFunction) {
-			return this.implementations.equals(((ExtendedFunction) other).implementations) && super.equals(other);
+		if (other instanceof ExtendedFunction) {
+			return this.argsType.equals(((ExtendedFunction) other).argsType)
+					&& this.implementations.equals(((ExtendedFunction) other).implementations) && super.equals(other);
 		}
 		return false;
 	}

@@ -1,18 +1,22 @@
 package expression;
 
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
+import types.TypeTuple;
+import types.TypeVariable;
 import util.AppendableException;
+import util.NameGenerator;
 import util.Pair;
+import util.ThrowingBinaryOperator;
+import util.ThrowingFunction;
 
 /**
  * Extended lambda expression allowing for the different implementation of body
@@ -23,49 +27,55 @@ import util.Pair;
  */
 public class ExtendedLambda extends MetaLambda {
 
+	/*
+	 * TODO list * strenghten syntax of elambda as follows (elambda ((type1 arg1)
+	 * (type2 arg2) ...) ((typeRep11 typeRep12 ...) impl1) ((typeRep21 typeRep22
+	 * ...) impl2)) * argument list will be mandatory fully typed with TypeConcrete
+	 * (not TypeRepresentation !) * implementation argument type will have be typed
+	 * with TypeRepresentation * default implementation will be deprecated
+	 * 
+	 * * Maybe improve syntax of type in typed lambda to be able to use "->" and
+	 * "[]" (functions and tuples) (not critical)
+	 */
+
 	/**
 	 * Various implementations of this function
 	 */
-	public final Set<Lambda> implementations;
+	private final Set<Lambda> implementations;
 
-	public ExtendedLambda(Tuple args, Expression expr) {
-		Set<Lambda> aux = new TreeSet<Lambda>();
-		aux.add(new Lambda(args, expr));
-		this.implementations = aux;
-	}
+	/**
+	 * Type of arguments
+	 */
+	public final TypeTuple argsType;
 
-	public ExtendedLambda(Tuple args, Expression defaultImplementation, Set<Lambda> specificImplementations) {
-		Set<Lambda> aux = new TreeSet<Lambda>();
-		aux.add(new Lambda(args, defaultImplementation));
-		aux.addAll(specificImplementations);
-		this.implementations = aux;
-	}
-
-	public ExtendedLambda(Set<Lambda> implementations) {
-		this.implementations = implementations;
+	public ExtendedLambda(TypeTuple argsType, Collection<Lambda> implementations) {
+		this.argsType = argsType;
+		this.implementations = new TreeSet<Lambda>(implementations);
 	}
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		Set<Function> s = new TreeSet<Function>();
-
-		for (Lambda l : this.implementations) {
-			Function f = (Function) l.interpret(env);
-			s.add(f);
-		}
-
-		ExtendedFunction ef = new ExtendedFunction(s, env);
-		ef.infer(env);
-		return ef;
+		return new ExtendedFunction(this.argsType,
+				this.implementations.stream().map(x -> (Function) x.interpret(env)).collect(Collectors.toSet()), env);
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+		final TypeVariable v = new TypeVariable(NameGenerator.next());
 		try {
-			//TODO implement
-			throw new AppendableException("Not implemented!");
-		} catch (AppendableException e) {
-			e.appendMessage("in " + this);
+			// TODO rewrite with argsType
+			return this.implementations.stream().map(ThrowingFunction.wrapper(x -> x.infer(env))).reduce(
+					new Pair<Type, Substitution>(v, new Substitution()), ThrowingBinaryOperator.wrapper((x, y) -> {
+						Substitution s = Type.unify(x.first, y.first).get();
+						s = s.compose(x.second).compose(y.second);
+						return new Pair<Type, Substitution>(v.apply(s), s);
+					}));
+		} catch (RuntimeException e) {
+			if (e.getCause() instanceof AppendableException) {
+				AppendableException ae = (AppendableException) e.getCause();
+				ae.appendMessage("in " + this);
+				throw ae;
+			}
 			throw e;
 		}
 	}
@@ -86,8 +96,7 @@ public class ExtendedLambda extends MetaLambda {
 	 * Returns the priority queue with ordering of the optimized implementations
 	 * given by comparator
 	 * 
-	 * @param c
-	 *            comparator determining the ordering of the implementations
+	 * @param c comparator determining the ordering of the implementations
 	 * @return priority queue of ImplContainers
 	 */
 	public PriorityQueue<Lambda> getSortedImplementations(Comparator<? super Lambda> c) {
@@ -96,57 +105,16 @@ public class ExtendedLambda extends MetaLambda {
 		return q;
 	}
 
-	public Lambda defaultImplementation() {
-		Optional<Lambda> o = this.implementations.stream().filter(new Predicate<Lambda>() {
-
-			@Override
-			public boolean test(Lambda arg0) {
-				return arg0.argsType == null;
-			}
-		}).findAny();
-
-		return o.get();
-	}
-
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-
-		Lambda di = this.defaultImplementation();
-
-		sb.append("ExtendedLabmbda ");
-		sb.append(di.args);
-		sb.append(" ");
-		sb.append(di.body);
-		if (this.implementations.size() > 1) {
-			sb.append(" ");
-		}
-
-		Iterator<Lambda> i = this.implementations.iterator();
-
-		while (i.hasNext()) {
-			Lambda c = i.next();
-			if (c.argsType != null) {
-				sb.append("(");
-				sb.append(c.argsType);
-				sb.append(" ");
-				sb.append(c.body);
-				sb.append(")");
-				if (i.hasNext()) {
-					sb.append(" ");
-				}
-			}
-		}
-
-		sb.append(")");
-
-		return sb.toString();
+		// TODO
+		return "";
 	}
 
 	@Override
 	public String toClojureCode() throws AppendableException {
-		Lambda l = this.getSortedImplementations().peek(); // Comparator?
-		return l.toClojureCode();
+		// TODO
+		return "";
 	}
 
 	@Override
@@ -156,53 +124,32 @@ public class ExtendedLambda extends MetaLambda {
 	}
 
 	@Override
-	public Lambda getLambda() {
-		return this.defaultImplementation();
-	}
-	
-	@Override
 	public int compareTo(Expression other) {
-		if(other instanceof ExtendedLambda) {
-			ExtendedLambda o = (ExtendedLambda)other;
-			
-			int c = (int)Math.signum(this.implementations.size() - o.implementations.size());
-			if(c != 0)
-				return c;
-			
-			Set<Lambda> tmp = new TreeSet<Lambda>();
-			tmp.addAll(this.implementations);
-			tmp.addAll(o.implementations);
-			
-			if(tmp.size() == this.implementations.size())
-				return 0;
-			
-			Set<Lambda> thisSubOther = new TreeSet<Lambda>();
-			thisSubOther.addAll(tmp);
-			thisSubOther.removeAll(o.implementations);
-			
-			Set<Lambda> otherSubThis = tmp;
-			otherSubThis.removeAll(this.implementations);
-			
-			Iterator<Lambda> i = thisSubOther.iterator();
-			Iterator<Lambda> j = otherSubThis.iterator();
-			
-			while(i.hasNext() && j.hasNext()) {
-				Lambda f = i.next();
-				Lambda g = j.next();
-				c = f.compareTo(g);
-				if(c != 0)
-					return c;
+		if (other instanceof ExtendedLambda) {
+			ExtendedLambda o = (ExtendedLambda) other;
+
+			int cmp = this.argsType.compareTo(o.argsType);
+			if (cmp != 0)
+				return cmp;
+
+			for (Lambda l : this.implementations) {
+				if (!o.implementations.contains(l))
+					return 1;
 			}
-			
+			for (Lambda l : o.implementations) {
+				if (!this.implementations.contains(l))
+					return -1;
+			}
 			return 0;
 		}
 		return super.compareTo(other);
 	}
-	
+
 	@Override
 	public boolean equals(Object other) {
-		if(other instanceof ExtendedLambda) {
-			return this.implementations.equals(((ExtendedLambda) other).implementations);
+		if (other instanceof ExtendedLambda) {
+			return this.argsType.equals(((ExtendedLambda) other).argsType)
+					&& this.implementations.equals(((ExtendedLambda) other).implementations);
 		}
 		return false;
 	}

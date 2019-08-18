@@ -66,10 +66,6 @@ public class SemanticParser {
 		if (SemanticParserStatic.isSpecialForm(head)) {
 			return this.parseSpecialForm(head.asSymbol(), l);
 		}
-		/*
-		 * if (this.typeEnvironment.isType(head)) { return
-		 * this.parseTypeConstruction(this.parseType(head), l); }
-		 */
 
 		return this.parseList(l);
 	}
@@ -130,12 +126,13 @@ public class SemanticParser {
 			throw e;
 		}
 
-		Tuple argsTuple = SemanticParserStatic.parseArgsList(l.get(1).asList());
-		Expression defaultImplementation = this.parseNode(l.get(2));
-		List<SemanticNode> impls = l.subList(3, l.size());
+		List<TypeVariablePair> args = this.parseTypedArgList(l.get(1).asList());
+		Tuple argsTuple = new Tuple(args.stream().map(x -> x.second).collect(Collectors.toList()));
+		List<SemanticNode> impls = l.subList(2, l.size());
 		Set<Lambda> implementations = this.parseImplementations(argsTuple, impls);
 
-		return new ExtendedLambda(argsTuple, defaultImplementation, implementations);
+		return new ExtendedLambda(new TypeTuple(args.stream().map(x -> x.first).collect(Collectors.toList())),
+				implementations);
 	}
 
 	/**
@@ -253,16 +250,11 @@ public class SemanticParser {
 			e.appendMessage(" in Lambda " + lambdaList);
 			throw e;
 		}
-
 		List<TypeVariablePair> typedArgs = this.parseTypedArgList(lambdaList.get(1).asList());
 
-		TypeTuple argsTypes = null;
+		TypeTuple argsTypes = new TypeTuple(typedArgs.stream().map(x -> x.first).collect(Collectors.toList()));
 
-		List<Type> tmp = typedArgs.stream().map(x -> x.first).collect(Collectors.toList());
-		argsTypes = new TypeTuple(tmp);
-
-		List<Variable> vtmp = SemanticParserStatic.filterVariablesFromTypedArgsList(typedArgs);
-		Tuple lambdaArgs = new Tuple(vtmp);
+		Tuple lambdaArgs = new Tuple(typedArgs.stream().map(x -> x.second).collect(Collectors.toList()));
 
 		Expression body = this.parseNode(lambdaList.get(2));
 
@@ -353,15 +345,17 @@ public class SemanticParser {
 
 		return parsed;
 	}
-	
+
 	/**
-	 * Parses token that is either variable type pair or simple untyped variable symbol
+	 * Parses token that is either variable type pair or simple untyped variable
+	 * symbol
+	 * 
 	 * @param n parsed token
 	 * @return variable type pair
 	 * @throws AppendableException
 	 */
 	private TypeVariablePair parseUntypedVariableOrVariableTypePair(SemanticNode n) throws AppendableException {
-		if(SemanticParserStatic.isSimpleSymbol(n)) {
+		if (SemanticParserStatic.isSimpleSymbol(n)) {
 			return new TypeVariablePair(new TypeVariable(NameGenerator.next()), new Variable(n.asSymbol()));
 		}
 		return this.parseVariableTypePair(n);

@@ -46,8 +46,7 @@ public class Environment extends TreeMap<Variable, Expression> implements Compar
 	 * Returns true if the environment hierarchy contains binding for this variable,
 	 * otherwise returns false
 	 * 
-	 * @param var
-	 *            searched variable
+	 * @param var searched variable
 	 * @return true or false
 	 */
 	public boolean containsVariable(Variable var) {
@@ -64,8 +63,7 @@ public class Environment extends TreeMap<Variable, Expression> implements Compar
 	 * Returns closest binding of the given variable in environment hierarchy. If no
 	 * binding exists returns null
 	 * 
-	 * @param var
-	 *            searched variable
+	 * @param var searched variable
 	 * @return Expression object or null
 	 */
 	public Expression getVariableValue(Variable var) {
@@ -80,38 +78,40 @@ public class Environment extends TreeMap<Variable, Expression> implements Compar
 
 	@Override
 	public int compareTo(Environment o) {
-		if(this.parent == null) {
-			return -1;
+		if (this.parent != null || o.parent != null) {
+			if (this.parent == null) {
+				return -1;
+			}
+			if (o.parent == null) {
+				return 1;
+			}
+			if (this.parent != o.parent) {
+				return this.parent.compareTo(o.parent);
+			}
 		}
-		if(o.parent == null) {
-			return 1;
-		}
-		if(this.parent != o.parent) {
-			return this.parent.compareTo(o.parent);
-		}
-		int c = (int)Math.signum(this.entrySet().size() - o.entrySet().size());
-		if(c != 0)
+		int c = (int) Math.signum(this.entrySet().size() - o.entrySet().size());
+		if (c != 0)
 			return c;
-		
-		for(Map.Entry<Variable, Expression> e : this.entrySet()) {
-			if(!o.containsKey(e.getKey())) {
-				return -1; 
+
+		for (Map.Entry<Variable, Expression> e : this.entrySet()) {
+			if (!o.containsKey(e.getKey())) {
+				return -1;
 			}
 			c = o.get(e.getKey()).compareTo(e.getValue());
-			if(c != 0) {
+			if (c != 0) {
 				return c;
 			}
 		}
-		for(Map.Entry<Variable, Expression> e : o.entrySet()) {
-			if(!this.containsKey(e.getKey())) {
+		for (Map.Entry<Variable, Expression> e : o.entrySet()) {
+			if (!this.containsKey(e.getKey())) {
 				return 1;
 			}
 			c = this.get(e.getKey()).compareTo(e.getValue());
-			if(c != 0) {
+			if (c != 0) {
 				return c;
 			}
 		}
-		
+
 		return 0;
 	}
 }

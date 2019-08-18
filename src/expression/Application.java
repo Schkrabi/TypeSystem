@@ -1,5 +1,6 @@
 package expression;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,7 +47,21 @@ public class Application extends Expression {
 			throw new AppendableException(ifun.toString() + "is not a function");
 		}
 
-		Function f = ((MetaFunction) ifun).getFunction(); // Might want to add comparator here
+		//Implementation chosen on vector distance of argument types
+		Function f = ((MetaFunction) ifun).getFunction(new Comparator<Function>() {
+
+			@Override
+			public int compare(Function arg0, Function arg1) {
+				int sum = 0;
+				Iterator<Type> i = arg0.argsType.iterator();
+				Iterator<Type> j = arg1.argsType.iterator();
+				while(i.hasNext()) {
+					if(!i.equals(j)) {
+						sum++;
+					}
+				}
+				return sum;
+			}});
 
 		if (f.args.size() != this.args.size()) {
 			throw new AppendableException("In aplication of " + fun + "number of arguments mismatch, expected " //TODO add specific exception here

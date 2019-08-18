@@ -72,6 +72,7 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 			// arguments
 			Optional<Substitution> s = Type.unify(argsType, this.argsType);
 
+			//TODO unreachable?
 			if (!s.isPresent()) {
 				throw new TypesDoesNotUnifyException(argsType, this.argsType);
 			}
@@ -92,11 +93,6 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 	}
 
 	@Override
-	public Function getFunction() {
-		return this;
-	}
-
-	@Override
 	public Function getFunction(Comparator<? super Function> c) {
 		return this;
 	}
@@ -104,18 +100,16 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 	@Override
 	public int compareTo(Expression other) {
 		if (other instanceof Function) {
-			Function o = (Function) other;
-			if (this.argsType == o.argsType) {
-				return 0;
-			}
-			if (this.argsType == null) {
-				return 1;
-			}
-			if (o.argsType == null) {
-				return -1;
-			}
-
-			return this.argsType.compareTo(o.argsType);
+			int cmp = this.argsType.compareTo(((Function) other).argsType);
+			if(cmp != 0)
+				return cmp;
+			cmp = this.args.compareTo(((Function) other).args);
+			if(cmp != 0)
+				return cmp;
+			cmp = this.body.compareTo(((Function) other).body);
+			if(cmp != 0)
+				return cmp;
+			return this.creationEnvironment.compareTo(((Function) other).creationEnvironment);
 		}
 		return super.compareTo(other);
 	}

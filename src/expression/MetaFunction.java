@@ -22,12 +22,6 @@ public abstract class MetaFunction extends Expression {
 	}
 	
 	/**
-	 * Returns default implementation of the function
-	 * @return
-	 */
-	public abstract Function getFunction();
-	
-	/**
 	 * Returns implementation according to the comparator (if there are any alternative implementations)
 	 * @param c comparator
 	 * @return function
@@ -40,7 +34,7 @@ public abstract class MetaFunction extends Expression {
 	}
 	
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
+	public Expression interpret(Environment env) {
 		return this;
 	}
 	

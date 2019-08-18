@@ -114,7 +114,7 @@ public abstract class Type implements Comparable<Type> {
 			}
 		}
 
-		return Optional.empty();
+		throw new TypesDoesNotUnifyException(m, n);
 	}
 
 	/**

@@ -17,12 +17,6 @@ public abstract class MetaLambda extends Expression {
 	public abstract Lambda getLambda(Comparator<? super Lambda> c);
 	
 	/**
-	 * Returns adequate simple lambda expression for this applicable expression
-	 * @return lambda expression
-	 */
-	public abstract Lambda getLambda();
-	
-	/**
 	 * Returns true if the expression is applicable (is a function) otherwise returns false
 	 * @param e inspected expression
 	 * @return true or false
