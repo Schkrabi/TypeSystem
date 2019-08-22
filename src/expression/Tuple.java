@@ -159,6 +159,11 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	public Stream<Expression> stream() {
 		return this.values.stream();
 	}
+	
+	@Override
+	public int hashCode() {
+		return this.values.hashCode();
+	}
 
 	/**
 	 * Empty tuple expression

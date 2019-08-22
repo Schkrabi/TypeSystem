@@ -70,7 +70,31 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 
 	@Override
 	public String toString() {
-		return "lambda " + this.args.toString() + " " + this.body.toString();
+		StringBuilder s = new StringBuilder("(func (");
+		
+		Iterator<Expression> i = this.args.iterator();
+		Iterator<Type> j = this.argsType.iterator();
+		while(i.hasNext()) {
+			Expression e = i.next();
+			Type t = j.next();
+			
+			if(t instanceof TypeVariable) {
+				s.append(e.toString());
+			}
+			else {
+				s.append('(');
+				s.append(t.toString());
+				s.append(' ');
+				s.append(e.toString());
+				s.append(')');
+			}
+		}
+		
+		s.append(") ");
+		s.append(this.body.toString());
+		s.append(')');
+		
+		return s.toString();
 	}
 
 	@Override
@@ -100,11 +124,6 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 			// Now check if body was typed correctly according to user defined types of
 			// arguments
 			Optional<Substitution> s = Type.unify(argsType, this.argsType);
-
-			//TODO Unreachable?
-			if (!s.isPresent()) {
-				throw new TypesDoesNotUnifyException(argsType, this.argsType);
-			}
 
 			// Compose all substitutions in order to check if there are no collisions and
 			// provide final substitution
@@ -175,5 +194,10 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 					&& this.argsType.equals(((Lambda) other).argsType);
 		}
 		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.args.hashCode() * this.argsType.hashCode() * this.body.hashCode();
 	}
 }

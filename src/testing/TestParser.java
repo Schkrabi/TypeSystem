@@ -202,7 +202,7 @@ class TestParser {
 			fail(parsed + " is not a " + ExtendedLambda.class.getName());
 		}
 		ExtendedLambda parsedElambda = (ExtendedLambda) parsed;
-		Lambda expectedLambda = new Lambda(new Tuple(Arrays.asList(new Variable("x"))), new Variable("x"));
+		Lambda expectedLambda = new Lambda(new Tuple(Arrays.asList(new Variable("x"))), new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)), new Variable("y"));
 
 		PriorityQueue<Lambda> foundImplementation = parsedElambda.getSortedImplementations(new Comparator<Lambda>() {
 			@Override
@@ -214,24 +214,13 @@ class TestParser {
 			fail("Implementation " + expectedLambda + " was not found in " + parsedElambda);
 		}
 		if(foundImplementation.size() > 1) {
-			fail("There should be only one implementation in " + parsedLambda );
+			fail("There should be only one implementation in " + parsedElambda );
 		}
-		Lambda fl = foundImplementation.
-		if (!foundImplementation.get().body.equals(expectedLambda.body)
-				|| !foundImplementation.get().args.equals(expectedLambda.args)
-				|| foundImplementation.get().argsType.size() != expectedLambda.argsType.size()) {
-			fail(foundImplementation.get() + " is not equal to " + expectedLambda + " in " + parsedElambda);
-		}
-
-		expectedLambda = new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-				new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)), new Variable("y"));
-		foundImplementation = parsedElambda.implementations.stream().filter(x -> x.body.equals(new Variable("y")))
-				.findAny();
-		if (!foundImplementation.isPresent()) {
-			fail("Implementation " + expectedLambda + " was not found in " + parsedElambda);
-		}
-		if (!foundImplementation.get().equals(expectedLambda)) {
-			fail(foundImplementation.get() + " is not equal to " + expectedLambda + " in " + parsedElambda);
+		Lambda fl = foundImplementation.peek();
+		if (!fl.body.equals(expectedLambda.body)
+				|| !fl.args.equals(expectedLambda.args)
+				|| fl.argsType.size() != expectedLambda.argsType.size()) {
+			fail(fl.toString() + " is not equal to " + expectedLambda + " in " + parsedElambda);
 		}
 	}
 

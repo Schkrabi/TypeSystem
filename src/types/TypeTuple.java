@@ -43,7 +43,8 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	/**
 	 * Gets expression on tuple index
 	 * 
-	 * @param index searched index
+	 * @param index
+	 *            searched index
 	 * @return element on given index
 	 */
 	public Type get(int index) {
@@ -132,7 +133,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		}
 		if (!(toType instanceof TypeTuple) || (!(expr instanceof Tuple)) || (this.size() != ((TypeTuple) toType).size())
 				|| (this.size() != ((Tuple) expr).size())) {
-			this.throwConversionError(expr, toType);
+			throw new ConversionException(this, toType, expr);
 		}
 		TypeTuple ttpl = (TypeTuple) toType;
 		Tuple tpl = (Tuple) expr;
@@ -161,5 +162,15 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	@Override
 	public Type apply(Substitution s) {
 		return new TypeTuple(this.stream().map(x -> x.apply(s)).collect(Collectors.toList()));
+	}
+
+	@Override
+	public Type removeRepresentationInfo() {
+		return new TypeTuple(this.stream().map(x -> x.removeRepresentationInfo()).collect(Collectors.toList()));
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.values.hashCode();
 	}
 }

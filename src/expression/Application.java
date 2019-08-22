@@ -13,6 +13,7 @@ import types.TypeTuple;
 import types.TypeVariable;
 import types.TypesDoesNotUnifyException;
 import util.AppendableException;
+import util.InvalidNumberOfArgumentsException;
 import util.NameGenerator;
 import util.Pair;
 import interpretation.Environment;
@@ -64,20 +65,19 @@ public class Application extends Expression {
 			}});
 
 		if (f.args.size() != this.args.size()) {
-			throw new AppendableException("In aplication of " + fun + "number of arguments mismatch, expected " //TODO add specific exception here
-					+ f.args.size() + " got " + this.args.size());
+			throw new InvalidNumberOfArgumentsException(f.args.size(), this.args, this);
 		}
 
 		Environment childEnv = new Environment(f.creationEnvironment); // Lexical clojure!!!
 		Iterator<Expression> i = f.args.iterator();
 		Iterator<Expression> j = this.args.iterator();
-		while(i.hasNext() && j.hasNext()) {
-			Expression e = j.next().interpret(env);
+		while(i.hasNext()) {
+			Expression e = j.next();
 			Variable v = (Variable)i.next();
 			childEnv.put(v, e);
 		}
 
-		TypeArrow lambdaType = TypeArrow.getFunctionType(f.infer(env).first);
+		TypeArrow lambdaType = (TypeArrow)f.infer(env).first;
 
 		childEnv = Application.autoConvertArgs(childEnv, f.args, lambdaType.ltype);
 
@@ -130,47 +130,8 @@ public class Application extends Expression {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
-		StringBuilder s = new StringBuilder();
-		s.append('(');
-
-		s.append(this.fun.toClojureCode());
-		s.append(' ');
-
-		TypeArrow funType = TypeArrow.getFunctionType(this.fun.infer(new Environment()).first);
-
-		TypeTuple argsType;
-
-		if (funType.ltype instanceof TypeTuple) {
-			argsType = (TypeTuple) funType.ltype;
-		} else if (funType.ltype instanceof TypeVariable) {
-			List<Type> l = new LinkedList<Type>();
-			for (int i = 0; i < this.args.size(); i++) {
-				l.add(new TypeVariable(NameGenerator.next()));
-			}
-
-			argsType = new TypeTuple(l);
-		} else {
-			throw new AppendableException("Problem with functional type of " + this.fun);
-		}
-
-		Iterator<Expression> i = this.args.iterator();
-		Iterator<Type> j = argsType.iterator();
-		while (i.hasNext()) {
-			Expression e = i.next();
-			Type argType = j.next();
-
-			if (!argType.equals(e.infer(new Environment()).first)) {
-				e = e.infer(new Environment()).first.convertTo(e, argType);
-			}
-
-			s.append(e.toClojureCode());
-
-			if (i.hasNext()) {
-				s.append(" ");
-			}
-		}
-		s.append(')');
-		return s.toString();
+		//TODO
+		return "";
 	}
 	
 	@Override
@@ -198,18 +159,12 @@ public class Application extends Expression {
 	 * @throws Exception
 	 */
 	private static Environment autoConvertArgs(Environment e, Tuple args, Type argType) throws AppendableException {
-		if (argType instanceof TypeVariable) {
-			return e;
-		}
-		if (!(argType instanceof TypeTuple)) {
-			throw new AppendableException("Args type of function must be single vartiable or typetuple got " + argType);
-		}
 		TypeTuple argTypes = (TypeTuple) argType;
 		Environment ret = new Environment(e.parent);
 
 		Iterator<Expression> i = args.iterator();
 		Iterator<Type> j = argTypes.iterator();
-		while(i.hasNext() && j.hasNext()){
+		while(i.hasNext()){
 			Variable name = (Variable) i.next();
 			Type fromType = e.getVariableValue(name).infer(e).first;
 			Expression arg = e.getVariableValue(name);
@@ -224,8 +179,14 @@ public class Application extends Expression {
 	@Override
 	public boolean equals(Object other) {
 		if(other instanceof Application) {
-			return this.fun.equals(((Application) other).fun) && this.args.equals(((Application) other).args);
+			return this.fun.equals(((Application) other).fun) 
+					&& this.args.equals(((Application) other).args);
 		}
 		return false;
+	}
+	
+	@Override 
+	public int hashCode() {
+		return this.fun.hashCode() * this.args.hashCode();
 	}
 }

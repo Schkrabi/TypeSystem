@@ -63,4 +63,9 @@ public class Constructor extends Function {
 		}
 		return false;
 	}
+	
+	@Override
+	public int hashCode() {
+		return super.hashCode() * this.constructedType.hashCode();
+	}
 }

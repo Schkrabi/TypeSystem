@@ -2,12 +2,16 @@ package expression;
 
 import interpretation.Environment;
 
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import types.Substitution;
 import types.Type;
+import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
@@ -34,10 +38,11 @@ public class ExtendedFunction extends MetaFunction {
 	 */
 	public final TypeTuple argsType;
 
-	public ExtendedFunction(TypeTuple argsType, Set<Function> implementations, Environment createdEnvironment) {
+	public ExtendedFunction(TypeTuple argsType, Collection<Function> implementations, Environment createdEnvironment) {
 		super(createdEnvironment);
 		this.argsType = argsType;
-		this.implementations = implementations;
+		this.implementations = implementations.stream()
+				.map(x -> new Function(x.argsType, x.args, x.body, createdEnvironment)).collect(Collectors.toSet());
 	}
 
 	@Override
@@ -47,21 +52,27 @@ public class ExtendedFunction extends MetaFunction {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		// TODO
 		final Environment crEnv = this.creationEnvironment;
 		final TypeVariable v = new TypeVariable(NameGenerator.next());
 		try {
-			return this.implementations.stream().map(ThrowingFunction.wrapper(x -> x.infer(crEnv))).reduce(
-					new Pair<Type, Substitution>(v, new Substitution()), ThrowingBinaryOperator.wrapper((x, y) -> {
-						Substitution s = Type.unify(x.first, y.first).get().compose(x.second).compose(y.second);
-						return new Pair<Type, Substitution>(v.apply(s), s);
-					}));
-		} catch (RuntimeException e) {
-			if (e.getCause() instanceof AppendableException) {
+			try {
+				Pair<Type, Substitution> p = this.implementations.stream()
+						.map(ThrowingFunction.wrapper(x -> x.infer(crEnv)))
+						.reduce(new Pair<Type, Substitution>(v, new Substitution()),
+								ThrowingBinaryOperator.wrapper((x, y) -> {
+									Substitution s = Type.unify(x.first, y.first).get();
+									s = s.compose(x.second).compose(y.second);
+									return new Pair<Type, Substitution>(v.apply(s), s);
+								}));
+
+				return new Pair<Type, Substitution>(p.first.removeRepresentationInfo(),
+						p.second.compose(Type.unify(((TypeArrow) (p.first)).ltype, this.argsType).get()));
+			} catch (RuntimeException e) {
 				AppendableException ae = (AppendableException) e.getCause();
-				ae.appendMessage("in " + this);
 				throw ae;
 			}
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
 			throw e;
 		}
 	}
@@ -82,13 +93,15 @@ public class ExtendedFunction extends MetaFunction {
 			if (cmp != 0)
 				return cmp;
 
-			for (Function f : this.implementations) {
-				if (((ExtendedFunction) other).implementations.contains(f))
+			for (Function f : this.implementations) {				
+				if (!((ExtendedFunction) other).implementations.contains(f)) {
 					return 1;
+				}
 			}
 			for (Function f : ((ExtendedFunction) other).implementations) {
-				if (this.implementations.contains(f))
+				if (!this.implementations.contains(f)) {
 					return -1;
+				}
 			}
 			return 0;
 		}
@@ -99,8 +112,50 @@ public class ExtendedFunction extends MetaFunction {
 	public boolean equals(Object other) {
 		if (other instanceof ExtendedFunction) {
 			return this.argsType.equals(((ExtendedFunction) other).argsType)
-					&& this.implementations.equals(((ExtendedFunction) other).implementations) && super.equals(other);
+					&& this.implementations.equals(((ExtendedFunction) other).implementations);
 		}
 		return false;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder s = new StringBuilder("(ExFunctionInternal (");
+		Function sample = this.implementations.stream().findAny().get();
+
+		// Arguments
+		Iterator<Expression> i = sample.args.iterator();
+		Iterator<Type> j = this.argsType.iterator();
+		while (i.hasNext()) {
+			Expression e = i.next();
+			Type t = j.next();
+			s.append('(');
+			s.append(t.toString());
+			s.append(' ');
+			s.append(e.toString());
+			s.append(')');
+		}
+		s.append(") ");
+
+		Iterator<Function> k = this.implementations.iterator();
+		while(k.hasNext()) {
+			Function f = k.next();
+			s.append('(');
+			s.append(f.argsType.toString().replace('[', '(').replace(']', ')'));
+			s.append(' ');
+			s.append(f.body.toString());
+			s.append(')');
+			if(k.hasNext()) {
+				s.append(' ');
+			}
+		}
+
+		s.append(')');
+
+		return s.toString();
+	}
+	
+	@Override
+	public int hashCode() {
+		return super.hashCode() * this.argsType.hashCode() * this.implementations.hashCode();
 	}
 }

@@ -70,4 +70,9 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	public String toString() {
 		return "E:" + this.type.toString();
 	}
+	
+	@Override
+	public int hashCode() {
+		return this.type.hashCode();
+	}
 }

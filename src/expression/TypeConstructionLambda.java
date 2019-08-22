@@ -70,6 +70,11 @@ public class TypeConstructionLambda extends Lambda {
 		return false;
 	}
 	
+	@Override
+	public int hashCode() {
+		return super.hashCode() * this.constructedType.hashCode();
+	}
+	
 	/**
 	 * Constructor for primitive Int
 	 */

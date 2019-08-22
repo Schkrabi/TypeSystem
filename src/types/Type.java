@@ -47,7 +47,8 @@ public abstract class Type implements Comparable<Type> {
 	/**
 	 * Applies substitution to this type
 	 * 
-	 * @param s applied substitution
+	 * @param s
+	 *            applied substitution
 	 * @return new Type with applied substitution
 	 */
 	public abstract Type apply(Substitution s);
@@ -56,8 +57,10 @@ public abstract class Type implements Comparable<Type> {
 	 * Returns unified type if the expression if two types unifies, otherwise
 	 * returns Optional.Empty
 	 * 
-	 * @param m first unified type
-	 * @param n second unified type
+	 * @param m
+	 *            first unified type
+	 * @param n
+	 *            second unified type
 	 * @return Optional<Type>
 	 * @throws TypesDoesNotUnifyException
 	 */
@@ -120,7 +123,8 @@ public abstract class Type implements Comparable<Type> {
 	/**
 	 * Returns true if all types in set unifies
 	 * 
-	 * @param types unified types
+	 * @param types
+	 *            unified types
 	 * @return true or false
 	 */
 	public static Optional<Type> unifyMany(Set<Type> types) throws AppendableException {
@@ -214,18 +218,14 @@ public abstract class Type implements Comparable<Type> {
 	/**
 	 * Creates expression that converts expr in different type (if possible)
 	 * 
-	 * @param expr   Expression to be converted
-	 * @param toType target type
+	 * @param expr
+	 *            Expression to be converted
+	 * @param toType
+	 *            target type
 	 * @return a new expression that will interpret/infer into a targeted type
 	 * @throws Exception
 	 */
 	public abstract Expression convertTo(Expression expr, Type toType) throws AppendableException;
-
-	//TODO create new exception
-	protected void throwConversionError(Expression expr, Type toType) throws AppendableException {
-		throw new AppendableException("Trying to convert uncovertable types " + this.toString() + " to " + toType.toString()
-				+ " on expression " + expr.toString());
-	}
 
 	/**
 	 * Returns true if this type is an atomic type (it is not composed of other
@@ -244,4 +244,11 @@ public abstract class Type implements Comparable<Type> {
 	public boolean isCompositeType() {
 		return !this.isAtomicType();
 	}
+
+	/**
+	 * Replaces all type Representations in this type with its basic types
+	 * 
+	 * @return new Type with representations removed
+	 */
+	public abstract Type removeRepresentationInfo();
 }

@@ -1,6 +1,7 @@
 package expression;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -49,10 +50,10 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 		try {
 			// First infer types in body, use typeholders for argument variables
 			Environment childEnv = new Environment(this.creationEnvironment);
-			
+
 			List<Type> l = new LinkedList<Type>();
 
-			for(Expression e : this.args) {
+			for (Expression e : this.args) {
 				if (!(e instanceof Variable)) {
 					throw new AppendableException(e + " is not instance of " + Variable.class.getName());
 				}
@@ -71,12 +72,7 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 			// Now check if body was typed correctly according to user defined types of
 			// arguments
 			Optional<Substitution> s = Type.unify(argsType, this.argsType);
-
-			//TODO unreachable?
-			if (!s.isPresent()) {
-				throw new TypesDoesNotUnifyException(argsType, this.argsType);
-			}
-
+			
 			// Compose all substitutions in order to check if there are no collisions and
 			// provide final substitution
 			Substitution finalSubst = s.get().compose(bodyInfered.second);
@@ -101,13 +97,13 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 	public int compareTo(Expression other) {
 		if (other instanceof Function) {
 			int cmp = this.argsType.compareTo(((Function) other).argsType);
-			if(cmp != 0)
+			if (cmp != 0)
 				return cmp;
 			cmp = this.args.compareTo(((Function) other).args);
-			if(cmp != 0)
+			if (cmp != 0)
 				return cmp;
 			cmp = this.body.compareTo(((Function) other).body);
-			if(cmp != 0)
+			if (cmp != 0)
 				return cmp;
 			return this.creationEnvironment.compareTo(((Function) other).creationEnvironment);
 		}
@@ -116,15 +112,46 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 
 	@Override
 	public String toString() {
-		return "(func " + this.args.toString() + " " + this.body.toString() + ")";
+		StringBuilder s = new StringBuilder("(FunctionInternal (");
+
+		Iterator<Expression> i = this.args.iterator();
+		Iterator<Type> j = this.argsType.iterator();
+		while (i.hasNext()) {
+			Expression e = i.next();
+			Type t = j.next();
+
+			if (t instanceof TypeVariable) {
+				s.append(e.toString());
+			} else {
+				s.append('(');
+				s.append(t.toString());
+				s.append(' ');
+				s.append(e.toString());
+				s.append(')');
+			}
+		}
+
+		s.append(") ");
+		s.append(this.body.toString());
+		s.append(' ');
+		s.append(this.creationEnvironment);
+		s.append(')');
+
+		return s.toString();
 	}
 
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Function) {
 			return this.args.equals(((Function) other).args) && this.body.equals(((Function) other).body)
-					&& this.argsType.equals(((Function) other).argsType) && super.equals(other);
+					&& this.argsType.equals(((Function) other).argsType)
+					&& super.equals(other);
 		}
 		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return super.hashCode() * this.argsType.hashCode() * this.args.hashCode() * this.body.hashCode();
 	}
 }

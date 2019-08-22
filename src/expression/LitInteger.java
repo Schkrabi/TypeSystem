@@ -56,4 +56,9 @@ public class LitInteger extends Literal {
 		}
 		return super.compareTo(other);
 	}
+	
+	@Override
+	public int hashCode() {
+		return ((Integer)this.value).hashCode();
+	}
 }

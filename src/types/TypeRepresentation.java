@@ -56,6 +56,16 @@ public class TypeRepresentation extends TypeConcrete {
 	public TypeConcrete baseType(){
 		return this.baseType;
 	}
+	
+	@Override
+	public Type removeRepresentationInfo() {
+		return this.baseType;
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.name.hashCode() * this.baseType.hashCode();
+	}
 
 	/**
 	 * String representation of int

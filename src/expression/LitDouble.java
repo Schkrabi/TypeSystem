@@ -61,4 +61,9 @@ public class LitDouble extends Literal {
 		}
 		return super.compareTo(other);
 	}
+	
+	@Override
+	public int hashCode() {
+		return ((Double)this.value).hashCode();
+	}
 }

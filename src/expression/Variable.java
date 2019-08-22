@@ -75,4 +75,9 @@ public class Variable extends Expression implements Comparable<Expression> {
 		}
 		return false;
 	}
+	
+	@Override
+	public int hashCode() {
+		return this.name.hashCode();
+	}
 }

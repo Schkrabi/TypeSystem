@@ -1,15 +1,16 @@
 package types;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 
 import util.AppendableException;
 import util.NameGenerator;
-
+import expression.Application;
 import expression.Expression;
 import expression.Lambda;
+import expression.Tuple;
 import expression.Variable;
-import interpretation.Environment;
 
 /**
  * Class for functions types
@@ -49,10 +50,10 @@ public class TypeArrow extends Type {
 	@Override
 	public Set<TypeVariable> getUnconstrainedVariables() {
 		Set<TypeVariable> s = new TreeSet<TypeVariable>();
-		/*if (this.getRep() != this) {
-			s.addAll(this.getRep().getUnconstrainedVariables());
-			return s;
-		}*/
+		/*
+		 * if (this.getRep() != this) {
+		 * s.addAll(this.getRep().getUnconstrainedVariables()); return s; }
+		 */
 
 		s.addAll(this.ltype.getUnconstrainedVariables());
 		s.addAll(this.rtype.getUnconstrainedVariables());
@@ -78,36 +79,18 @@ public class TypeArrow extends Type {
 
 	@Override
 	public Expression convertTo(Expression expr, Type toType) throws AppendableException {
-		if(toType instanceof TypeVariable){
+		if (toType instanceof TypeVariable) {
 			return expr;
 		}
-		if(!(toType instanceof TypeArrow)){
-			this.throwConversionError(expr, toType);
+		if (!(toType instanceof TypeArrow)) {
+			throw new ConversionException(this, toType, expr);
 		}
-		TypeArrow t = (TypeArrow)toType;
+		TypeArrow t = (TypeArrow) toType;
 		Variable v = new Variable(NameGenerator.next());
-		Lambda l = new Lambda(v, this.ltype.convertTo(expr, t.ltype));
-		l.infer(new Environment());
-		Expression e = this.rtype.convertTo(l, t.rtype);
-		return e;
-	}
-	
-	/**
-	 * Unfolds the applicable type to TypeArrow
-	 * @param t unfolded type
-	 * @return TypeArrow type
-	 * @throws Exception if unfolded type is not an applicable type
-	 */
-	public static TypeArrow getFunctionType(Type type) throws AppendableException{
-		if(type instanceof TypeArrow){
-			return (TypeArrow)type;
-		}
-		else if(type instanceof TypeVariable) {
-			return new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next())); //TODO how can this happen?
-		}
-		else{
-			throw new AppendableException(type.toString() + " is not an applicable type");
-		}
+
+		Lambda l = new Lambda(v, this.rtype
+				.convertTo(new Application(expr, new Tuple(Arrays.asList(this.ltype.convertTo(v, t.ltype)))), t.rtype));
+		return l;
 	}
 
 	@Override
@@ -118,5 +101,15 @@ public class TypeArrow extends Type {
 	@Override
 	public Type apply(Substitution s) {
 		return new TypeArrow(this.ltype.apply(s), this.rtype.apply(s));
+	}
+
+	@Override
+	public Type removeRepresentationInfo() {
+		return new TypeArrow(this.ltype.removeRepresentationInfo(), this.rtype.removeRepresentationInfo());
+	}
+
+	@Override
+	public int hashCode() {
+		return this.ltype.hashCode() * this.rtype.hashCode();
 	}
 }

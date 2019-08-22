@@ -54,4 +54,9 @@ public abstract class MetaFunction extends Expression {
 		}
 		return false;
 	}
+	
+	@Override
+	public int hashCode() {
+		return this.creationEnvironment.hashCode();
+	}
 }

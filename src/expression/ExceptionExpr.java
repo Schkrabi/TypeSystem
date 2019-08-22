@@ -66,4 +66,9 @@ public class ExceptionExpr extends Expression {
 		}
 		return false;
 	}
+	
+	@Override
+	public int hashCode() {
+		return this.message.hashCode();
+	}
 }

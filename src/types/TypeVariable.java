@@ -78,4 +78,14 @@ public class TypeVariable extends Type {
 		}
 		return this;
 	}
+
+	@Override
+	public Type removeRepresentationInfo() {
+		return this;
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.name.hashCode();
+	}
 }

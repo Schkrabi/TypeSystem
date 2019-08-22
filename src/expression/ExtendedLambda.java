@@ -2,6 +2,7 @@ package expression;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
@@ -10,8 +11,10 @@ import java.util.stream.Collectors;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
+import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
+import types.UnexpectedTypeException;
 import util.AppendableException;
 import util.NameGenerator;
 import util.Pair;
@@ -63,19 +66,24 @@ public class ExtendedLambda extends MetaLambda {
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		final TypeVariable v = new TypeVariable(NameGenerator.next());
 		try {
-			// TODO rewrite with argsType
-			return this.implementations.stream().map(ThrowingFunction.wrapper(x -> x.infer(env))).reduce(
-					new Pair<Type, Substitution>(v, new Substitution()), ThrowingBinaryOperator.wrapper((x, y) -> {
-						Substitution s = Type.unify(x.first, y.first).get();
-						s = s.compose(x.second).compose(y.second);
-						return new Pair<Type, Substitution>(v.apply(s), s);
-					}));
-		} catch (RuntimeException e) {
-			if (e.getCause() instanceof AppendableException) {
+			try {
+				Pair<Type, Substitution> p = this.implementations.stream()
+						.map(ThrowingFunction.wrapper(x -> x.infer(env)))
+						.reduce(new Pair<Type, Substitution>(v, new Substitution()),
+								ThrowingBinaryOperator.wrapper((x, y) -> {
+									Substitution s = Type.unify(x.first, y.first).get();
+									s = s.compose(x.second).compose(y.second);
+									return new Pair<Type, Substitution>(v.apply(s), s);
+								}));
+
+				return new Pair<Type, Substitution>(p.first.removeRepresentationInfo(),
+						p.second.compose(Type.unify(((TypeArrow) (p.first)).ltype, this.argsType).get()));
+			} catch (RuntimeException e) {
 				AppendableException ae = (AppendableException) e.getCause();
-				ae.appendMessage("in " + this);
 				throw ae;
 			}
+		} catch (AppendableException e) {
+			e.appendMessage("in " + this);
 			throw e;
 		}
 	}
@@ -96,7 +104,8 @@ public class ExtendedLambda extends MetaLambda {
 	 * Returns the priority queue with ordering of the optimized implementations
 	 * given by comparator
 	 * 
-	 * @param c comparator determining the ordering of the implementations
+	 * @param c
+	 *            comparator determining the ordering of the implementations
 	 * @return priority queue of ImplContainers
 	 */
 	public PriorityQueue<Lambda> getSortedImplementations(Comparator<? super Lambda> c) {
@@ -107,8 +116,39 @@ public class ExtendedLambda extends MetaLambda {
 
 	@Override
 	public String toString() {
-		// TODO
-		return "";
+		StringBuilder s = new StringBuilder("(elambda (");
+		Lambda sample = this.implementations.stream().findAny().get();
+
+		// Arguments
+		Iterator<Expression> i = sample.args.iterator();
+		Iterator<Type> j = this.argsType.iterator();
+		while (i.hasNext()) {
+			Expression e = i.next();
+			Type t = j.next();
+			s.append('(');
+			s.append(t.toString());
+			s.append(' ');
+			s.append(e.toString());
+			s.append(')');
+		}
+		s.append(") ");
+
+		Iterator<Lambda> k = this.implementations.iterator();
+		while(k.hasNext()) {
+			Lambda l = k.next();
+			s.append('(');
+			s.append(l.argsType.toString().replace('[', '(').replace(']', ')'));
+			s.append(' ');
+			s.append(l.body.toString());
+			s.append(')');
+			if(k.hasNext()) {
+				s.append(' ');
+			}
+		}
+
+		s.append(')');
+
+		return s.toString();
 	}
 
 	@Override
@@ -152,5 +192,10 @@ public class ExtendedLambda extends MetaLambda {
 					&& this.implementations.equals(((ExtendedLambda) other).implementations);
 		}
 		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.argsType.hashCode() * this.implementations.hashCode();
 	}
 }

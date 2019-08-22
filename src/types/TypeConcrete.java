@@ -118,8 +118,7 @@ public class TypeConcrete extends Type {
 		TypeConstructionLambda constructor = this.conversionTable.get(type);
 
 		if (constructor == null) {
-			//TODO invalid conversion exception
-			throw new AppendableException("No conversion from " + this + " to type " + type + " exists");
+			throw new ConversionException(this, type, arg);
 		}
 
 		Application a = new Application(constructor, new Tuple(Arrays.asList( arg )));
@@ -133,7 +132,7 @@ public class TypeConcrete extends Type {
 			return expr;
 		}
 		if (!(toType instanceof TypeConcrete)) {
-			this.throwConversionError(expr, toType);
+			throw new ConversionException(this, toType, expr);
 		}
 		// TODO check this
 		/*
@@ -199,5 +198,15 @@ public class TypeConcrete extends Type {
 	@Override
 	public Type apply(Substitution s) {
 		return this;
+	}
+
+	@Override
+	public Type removeRepresentationInfo() {
+		return this;
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.name.hashCode();
 	}
 }

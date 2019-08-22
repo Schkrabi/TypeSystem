@@ -104,4 +104,9 @@ public class DefExpression extends Expression {
 		}
 		return false;
 	}
+	
+	@Override
+	public int hashCode() {
+		return this.defined.hashCode() * this.name.hashCode();
+	}
 }
