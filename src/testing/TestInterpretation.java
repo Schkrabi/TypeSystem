@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
@@ -41,6 +40,7 @@ import expression.TypeHolder;
 import expression.Variable;
 import interpretation.Environment;
 import main.Main;
+import operators.Operator;
 import parser.SchemeLexer;
 import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
@@ -55,9 +55,11 @@ import types.TypeTuple;
 import types.TypeVariable;
 import types.TypesDoesNotUnifyException;
 import util.AppendableException;
+import util.InvalidClojureCompilationException;
 import util.InvalidNumberOfArgumentsException;
 import util.Pair;
 
+@SuppressWarnings("deprecation")
 class TestInterpretation {
 
 	SemanticParser semanticParser = new SemanticParser();
@@ -391,14 +393,6 @@ class TestInterpretation {
 		lambda.toClojureCode();
 		Assertions.assertThrows(AppendableException.class, () -> faultArgsLambda.toClojureCode());
 
-		lambda.getLambda(new Comparator<Lambda>() {
-
-			@Override
-			public int compare(Lambda arg0, Lambda arg1) {
-				return 0;
-			}
-		});
-
 		TestInterpretation.testReflexivity(lambda);
 		TestInterpretation.testDifference(lambda,
 				new Lambda(new Tuple(Arrays.asList(new Variable("z"), new Variable("y"))),
@@ -436,13 +430,7 @@ class TestInterpretation {
 
 		function.toString();
 		function.hashCode();
-		function.getFunction(new Comparator<Function>() {
-
-			@Override
-			public int compare(Function arg0, Function arg1) {
-				return 0;
-			}
-		});
+		function.getFunction(new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)));
 
 		TestInterpretation.testReflexivity(function);
 		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeConcrete.TypeDouble)),
@@ -486,7 +474,7 @@ class TestInterpretation {
 		TestInterpretation.testDifference(new MetaFunction(new Environment()) {
 
 			@Override
-			public Function getFunction(Comparator<? super Function> c) {
+			public Function getFunction(TypeTuple realArgsType) {
 				return null;
 			}
 
@@ -498,7 +486,7 @@ class TestInterpretation {
 
 		Function function = new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
 				new Environment());
-		Assertions.assertThrows(AppendableException.class, () -> function.toClojureCode());
+		Assertions.assertThrows(InvalidClojureCompilationException.class, () -> function.toClojureCode());
 
 		Expression e = function;
 		if (!MetaFunction.isFunction(e)) {
@@ -698,13 +686,6 @@ class TestInterpretation {
 												new Tuple(Arrays.asList(new Variable("x"))))))));
 		TestInterpretation.testDifference(lambda, Expression.EMPTY_EXPRESSION);
 
-		lambda.getLambda(new Comparator<Lambda>() {
-
-			@Override
-			public int compare(Lambda arg0, Lambda arg1) {
-				return 0;
-			}
-		});
 		lambda.toString();
 		lambda.hashCode();
 		lambda.toClojureCode();
@@ -770,13 +751,7 @@ class TestInterpretation {
 
 		function.toString();
 		function.hashCode();
-		function.getFunction(new Comparator<Function>() {
-
-			@Override
-			public int compare(Function arg0, Function arg1) {
-				return 0;
-			}
-		});
+		function.getFunction(new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)));
 		function.getSortedImplementations(new Comparator<Function>() {
 
 			@Override
@@ -819,7 +794,7 @@ class TestInterpretation {
 		TestInterpretation.testDifference(application,
 				new Application(
 						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-								new TypeTuple(Arrays.asList(new TypeVariable("x"))), new Variable("x")),
+								new TypeTuple(Arrays.asList(new TypeVariable("y"))), new Variable("x")),
 						new Tuple(Arrays.asList(new LitInteger(21)))));
 		TestInterpretation.testDifference(application, Expression.EMPTY_EXPRESSION);
 
@@ -862,10 +837,157 @@ class TestInterpretation {
 		TestInterpretation.testInterpretation(autoConRep, new LitString("5"), new Environment());
 		p = autoConRep.infer(new Environment());
 		TestInterpretation.testInference(p, TypeRepresentation.TypeIntString, autoConRep);
+
+		// Test elambda/efunction comparation
+		ExtendedLambda elambda = new ExtendedLambda(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
+				Arrays.asList(
+						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
+								new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)), new Variable("x")),
+						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
+								new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)), new Variable("x"))));
+		Application useString = new Application(elambda,
+				new Tuple(Arrays.asList(new Application(TypeConstructionLambda.IntStringConstructor,
+						new Tuple(Arrays.asList(new LitString("5")))))));
+		TestInterpretation.testInterpretation(useString, new LitString("5"), new Environment());
+		p = useString.infer(new Environment());
+		TestInterpretation.testInference(p, TypeConcrete.TypeInt, useString);
+
+		Application useRoman = new Application(elambda,
+				new Tuple(Arrays.asList(new Application(TypeConstructionLambda.IntStringConstructor,
+						new Tuple(Arrays.asList(new LitString("V")))))));
+		TestInterpretation.testInterpretation(useRoman, new LitString("V"), new Environment());
+		p = useRoman.infer(new Environment());
+		TestInterpretation.testInference(p, TypeConcrete.TypeInt, useRoman);
+
+		Assertions.assertThrows(AppendableException.class,
+				() -> new Application(useString, new Tuple(Arrays.asList(new LitString("fail"))))
+						.infer(new Environment()));
+
+	}
+
+	@Test
+	void testIfExpression() throws AppendableException {
+		IfExpression ifExprT = new IfExpression(LitBoolean.TRUE, new LitInteger(42), new LitInteger(21));
+		IfExpression ifExprF = new IfExpression(LitBoolean.FALSE, new LitInteger(21), new LitInteger(42));
+
+		TestInterpretation.testReflexivity(ifExprF);
+		TestInterpretation.testDifference(ifExprT, ifExprF);
+		TestInterpretation.testDifference(ifExprT, Expression.EMPTY_EXPRESSION);
+
+		ifExprT.toString();
+		ifExprT.toClojureCode();
+
+		TestInterpretation.testInterpretation(ifExprT, new LitInteger(42), new Environment());
+		TestInterpretation.testInterpretation(ifExprF, new LitInteger(42), new Environment());
+
+		Pair<Type, Substitution> p = ifExprT.infer(new Environment());
+		TestInterpretation.testInference(p, TypeConcrete.TypeInt, ifExprT);
+	}
+
+	@Test
+	void testOperators() throws AppendableException {
+		TestInterpretation.testOperator(Operator.Addition,
+				new Tuple(Arrays.asList(new LitInteger(21), new LitInteger(21))), new LitInteger(42),
+				TypeConcrete.TypeInt);
+		TestInterpretation.testOperator(Operator.And, 
+				new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)),
+				LitBoolean.FALSE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.And, 
+				new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)),
+				LitBoolean.TRUE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.And, 
+				new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)),
+				LitBoolean.FALSE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.And, 
+				new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE)),
+				LitBoolean.FALSE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.BitAnd, 
+				new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
+				new LitInteger(0), 
+				TypeConcrete.TypeInt);
+		TestInterpretation.testOperator(Operator.BitOr, 
+				new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
+				new LitInteger(3),
+				TypeConcrete.TypeInt);
+		TestInterpretation.testOperator(Operator.Car, 
+				new Tuple(Arrays.asList(new Tuple(Arrays.asList(new LitInteger(42), new LitString("foo"))))),
+				new LitInteger(42),
+				TypeConcrete.TypeInt);
+		TestInterpretation.testOperator(Operator.Cdr, 
+				new Tuple(Arrays.asList(new Tuple(Arrays.asList(new LitInteger(42), new LitString("foo"))))),
+				new LitString("foo"),
+				TypeConcrete.TypeString);
+		TestInterpretation.testOperator(Operator.Concantenation,
+				new Tuple(Arrays.asList(new LitString("foo"), new LitString("bar"))),
+				new LitString("foobar"),
+				TypeConcrete.TypeString);
+		TestInterpretation.testOperator(Operator.Division, 
+				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(2))),
+				new LitInteger(42),
+				TypeConcrete.TypeInt);
+		TestInterpretation.testOperator(Operator.Equals, 
+				new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION, LitBoolean.FALSE)),
+				LitBoolean.FALSE,
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.Equals, 
+				new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION, Expression.EMPTY_EXPRESSION)),
+				LitBoolean.TRUE,
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.LesserThan,
+				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(43))),
+				LitBoolean.TRUE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.LesserThan,
+				new Tuple(Arrays.asList(new LitInteger(43), new LitInteger(42))),
+				LitBoolean.FALSE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.Multiplication, 
+				new Tuple(Arrays.asList(new LitInteger(21), new LitInteger(2))),
+				new LitInteger(42),
+				TypeConcrete.TypeInt);
+		TestInterpretation.testOperator(Operator.Not, 
+				new Tuple(Arrays.asList(LitBoolean.TRUE)),
+				LitBoolean.FALSE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.Not, 
+				new Tuple(Arrays.asList(LitBoolean.FALSE)),
+				LitBoolean.TRUE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.NumericEqual, 
+				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(42))),
+				LitBoolean.TRUE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.NumericEqual, 
+				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(43))),
+				LitBoolean.FALSE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.Or, 
+				new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)),
+				LitBoolean.TRUE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.Or, 
+				new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)),
+				LitBoolean.TRUE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.Or, 
+				new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)),
+				LitBoolean.TRUE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.Or, 
+				new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE)),
+				LitBoolean.FALSE, 
+				TypeConcrete.TypeBool);
+		TestInterpretation.testOperator(Operator.Subtraction, 
+				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(42))),
+				new LitInteger(42),
+				TypeConcrete.TypeInt);
 	}
 
 	private Expression parseString(String s) throws AppendableException {
-		@SuppressWarnings("deprecation")
 		CharStream charStream = new ANTLRInputStream(s);
 		TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
 		SchemeParser parser = new SchemeParser(tokens);
@@ -931,5 +1053,19 @@ class TestInterpretation {
 		if (!e.equals(expected)) {
 			fail("Interpretation of " + interpreted + " in " + env + " expected " + expected + " got " + e);
 		}
+	}
+
+	private static void testOperator(final Operator operator, Tuple args, Expression expectedInterpret,
+			Type expectedInference) throws AppendableException {
+		Application application = new Application(operator, args);
+
+		TestInterpretation.testInterpretation(application, expectedInterpret, new Environment());
+		Pair<Type, Substitution> p = application.infer(new Environment());
+		TestInterpretation.testInference(p, expectedInference, application);
+
+		operator.toString();
+		operator.toClojureCode();
+
+		Assertions.assertThrows(InvalidClojureCompilationException.class, () -> operator.body.toClojureCode());
 	}
 }

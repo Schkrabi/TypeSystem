@@ -28,8 +28,8 @@ public class Variable extends Expression implements Comparable<Expression> {
 
 	@Override
 	public int compareTo(Expression o) {
-		if(o instanceof Variable) {
-			Variable other = (Variable)o;
+		if (o instanceof Variable) {
+			Variable other = (Variable) o;
 			return this.name.compareTo(other.name);
 		}
 		return super.compareTo(o);
@@ -51,13 +51,11 @@ public class Variable extends Expression implements Comparable<Expression> {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Expression e = env.getVariableValue(this);
-			if(e == null) {
-				return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), new Substitution());
+			if (env.containsVariable(this)) {
+				return env.getVariableValue(this).infer(env);
 			}
-			
-			return e.infer(env);			
-		}catch(AppendableException e) {
+			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), new Substitution());
+		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
 		}
@@ -67,15 +65,15 @@ public class Variable extends Expression implements Comparable<Expression> {
 	public String toClojureCode() {
 		return this.name;
 	}
-	
+
 	@Override
 	public boolean equals(Object other) {
-		if(other instanceof Variable) {
+		if (other instanceof Variable) {
 			return this.name.equals(((Variable) other).name);
 		}
 		return false;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.name.hashCode();

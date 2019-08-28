@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.PriorityQueue;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -85,8 +84,7 @@ class TestParser {
 						new Application(new Variable("+"),
 								new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(1))))),
 				new Pair<String, Expression>("(if #t x y)",
-						new IfExpression(
-								new Tuple(Arrays.asList(LitBoolean.TRUE, new Variable("x"), new Variable("y"))))),
+						new IfExpression(LitBoolean.TRUE, new Variable("x"), new Variable("y"))),
 				new Pair<String, Expression>("(deftype List)", Expression.EMPTY_EXPRESSION),
 				new Pair<String, Expression>("(defrep Functional List)", Expression.EMPTY_EXPRESSION),
 				new Pair<String, Expression>("(defconversion List:Functional List (lambda ((List:Functional l)) l))",
@@ -202,23 +200,24 @@ class TestParser {
 			fail(parsed + " is not a " + ExtendedLambda.class.getName());
 		}
 		ExtendedLambda parsedElambda = (ExtendedLambda) parsed;
-		Lambda expectedLambda = new Lambda(new Tuple(Arrays.asList(new Variable("x"))), new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)), new Variable("y"));
+		Lambda expectedLambda = new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
+				new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)), new Variable("y"));
 
 		PriorityQueue<Lambda> foundImplementation = parsedElambda.getSortedImplementations(new Comparator<Lambda>() {
 			@Override
 			public int compare(Lambda arg0, Lambda arg1) {
 				return 0;
-			}});
-		
+			}
+		});
+
 		if (foundImplementation.isEmpty()) {
 			fail("Implementation " + expectedLambda + " was not found in " + parsedElambda);
 		}
-		if(foundImplementation.size() > 1) {
-			fail("There should be only one implementation in " + parsedElambda );
+		if (foundImplementation.size() > 1) {
+			fail("There should be only one implementation in " + parsedElambda);
 		}
 		Lambda fl = foundImplementation.peek();
-		if (!fl.body.equals(expectedLambda.body)
-				|| !fl.args.equals(expectedLambda.args)
+		if (!fl.body.equals(expectedLambda.body) || !fl.args.equals(expectedLambda.args)
 				|| fl.argsType.size() != expectedLambda.argsType.size()) {
 			fail(fl.toString() + " is not equal to " + expectedLambda + " in " + parsedElambda);
 		}

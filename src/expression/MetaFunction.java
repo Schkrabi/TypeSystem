@@ -1,10 +1,9 @@
 package expression;
 
-import java.util.Comparator;
-
 import util.AppendableException;
-
+import util.InvalidClojureCompilationException;
 import interpretation.Environment;
+import types.TypeTuple;
 
 /**
  * Expression for representing interpreted functions and Extended functions
@@ -26,11 +25,11 @@ public abstract class MetaFunction extends Expression {
 	 * @param c comparator
 	 * @return function
 	 */
-	public abstract Function getFunction(Comparator<? super Function> c);
+	public abstract Function getFunction(TypeTuple realArgsType);
 	
 	@Override
 	public String toClojureCode() throws AppendableException {
-		throw new AppendableException("Unable to compile evaluated function to clojure code");
+		throw new InvalidClojureCompilationException(this);
 	}
 	
 	@Override

@@ -16,6 +16,7 @@ import types.TypeConcrete;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
+import util.InvalidClojureCompilationException;
 import util.Pair;
 
 /**
@@ -84,14 +85,14 @@ public class Operator extends Function {
 	 */
 	public static final Operator Car = new Operator(
 			new TypeTuple(Arrays.asList(new TypeTuple(Arrays.asList(new TypeVariable("_a"), new TypeVariable("_b"))))),
-			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "car", "", OperatorWrapper.CarWrapper);
+			new Tuple(Arrays.asList(new Variable("_x"))), "car", "", OperatorWrapper.CarWrapper);
 
 	/**
 	 * cdr operator
 	 */
 	public static final Operator Cdr = new Operator(
 			new TypeTuple(Arrays.asList(new TypeTuple(Arrays.asList(new TypeVariable("_a"), new TypeVariable("_b"))))),
-			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "cdr", "", OperatorWrapper.CdrWrapper);
+			new Tuple(Arrays.asList(new Variable("_x"))), "cdr", "", OperatorWrapper.CdrWrapper);
 
 	/**
 	 * Concatenation operator
@@ -112,7 +113,7 @@ public class Operator extends Function {
 	 * Equality operator
 	 */
 	public static final Operator Equals = new Operator(
-			new TypeTuple(Arrays.asList(new TypeVariable("_a"), new TypeVariable("_a"))),
+			new TypeTuple(Arrays.asList(new TypeVariable("_a"), new TypeVariable("_b"))),
 			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "equals?", "=",
 			OperatorWrapper.EqualsWrapper);
 
@@ -182,7 +183,7 @@ public class Operator extends Function {
 
 		@Override
 		public String toClojureCode() throws AppendableException {
-			throw new AppendableException("You cannot convert " + this.getClass().getName() + " to clojure code!");
+			throw new InvalidClojureCompilationException(this);
 		}
 
 		/**
@@ -194,10 +195,6 @@ public class Operator extends Function {
 			public Expression interpret(Environment env) throws AppendableException {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
-
-				if (x == null || y == null) {
-					return this;
-				}
 
 				return new LitInteger(x.value + y.value);
 			}
@@ -212,10 +209,6 @@ public class Operator extends Function {
 			public Expression interpret(Environment env) throws AppendableException {
 				LitBoolean x = (LitBoolean) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitBoolean y = (LitBoolean) (env.getVariableValue(new Variable("_y")).interpret(env));
-
-				if (x == null || y == null) {
-					return this;
-				}
 
 				return x.value && y.value ? LitBoolean.TRUE : LitBoolean.FALSE;
 			}
@@ -232,10 +225,6 @@ public class Operator extends Function {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
-				if (x == null || y == null) {
-					return this;
-				}
-
 				return new LitInteger(x.value & y.value);
 			}
 
@@ -251,10 +240,6 @@ public class Operator extends Function {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
-				if (x == null || y == null) {
-					return this;
-				}
-
 				return new LitInteger(x.value | y.value);
 			}
 		};
@@ -267,14 +252,6 @@ public class Operator extends Function {
 			@Override
 			public Expression interpret(Environment env) throws AppendableException {
 				Tuple x = (Tuple) (env.getVariableValue(new Variable("_x")).interpret(env));
-
-				if (x == null) {
-					return this;
-				}
-
-				if (x.size() != 2) {
-					throw new AppendableException("Argument of car is " + x + " pair expected");
-				}
 
 				return x.get(0);
 			}
@@ -289,15 +266,7 @@ public class Operator extends Function {
 			public Expression interpret(Environment env) throws AppendableException {
 				Tuple x = (Tuple) (env.getVariableValue(new Variable("_x")).interpret(env));
 
-				if (x == null) {
-					return this;
-				}
-
-				if (x.size() != 2) {
-					throw new AppendableException("Argument of car is " + x + " pair expected");
-				}
-
-				return x.get(0);
+				return x.get(1);
 			}
 		};
 
@@ -310,10 +279,6 @@ public class Operator extends Function {
 			public Expression interpret(Environment env) throws AppendableException {
 				LitString x = (LitString) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitString y = (LitString) (env.getVariableValue(new Variable("_y")).interpret(env));
-
-				if (x == null || y == null) {
-					return this;
-				}
 
 				return new LitString(x.value + y.value);
 			}
@@ -329,10 +294,6 @@ public class Operator extends Function {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
-				if (x == null || y == null) {
-					return this;
-				}
-
 				return new LitInteger(x.value / y.value);
 			}
 		};
@@ -346,10 +307,6 @@ public class Operator extends Function {
 			public Expression interpret(Environment env) throws AppendableException {
 				Expression x = (env.getVariableValue(new Variable("_x")).interpret(env));
 				Expression y = (env.getVariableValue(new Variable("_y")).interpret(env));
-
-				if (x == null || y == null) {
-					return this;
-				}
 
 				return x.equals(y) ? LitBoolean.TRUE : LitBoolean.FALSE;
 			}
@@ -365,16 +322,7 @@ public class Operator extends Function {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
-				if (x == null || y == null) {
-					return this;
-				}
-
 				return x.value < y.value ? LitBoolean.TRUE : LitBoolean.FALSE;
-			}
-
-			@Override
-			public String toClojureCode() {
-				return "<";
 			}
 		};
 
@@ -388,10 +336,6 @@ public class Operator extends Function {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
-				if (x == null || y == null) {
-					return this;
-				}
-
 				return new LitInteger(x.value * y.value);
 			}
 		};
@@ -404,10 +348,6 @@ public class Operator extends Function {
 			@Override
 			public Expression interpret(Environment env) throws AppendableException {
 				LitBoolean x = (LitBoolean) (env.getVariableValue(new Variable("_x")).interpret(env));
-
-				if (x == null) {
-					return this;
-				}
 
 				return !x.value ? LitBoolean.TRUE : LitBoolean.FALSE;
 			}
@@ -423,10 +363,6 @@ public class Operator extends Function {
 				LitInteger x = (LitInteger) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitInteger y = (LitInteger) (env.getVariableValue(new Variable("_y")).interpret(env));
 
-				if (x == null || y == null) {
-					return this;
-				}
-
 				return x.value == y.value ? LitBoolean.TRUE : LitBoolean.FALSE;
 			}
 		};
@@ -441,10 +377,6 @@ public class Operator extends Function {
 				LitBoolean x = (LitBoolean) (env.getVariableValue(new Variable("_x")).interpret(env));
 				LitBoolean y = (LitBoolean) (env.getVariableValue(new Variable("_y")).interpret(env));
 
-				if (x == null || y == null) {
-					return this;
-				}
-
 				return x.value || y.value ? LitBoolean.TRUE : LitBoolean.FALSE;
 			}
 		};
@@ -458,10 +390,6 @@ public class Operator extends Function {
 			public Expression interpret(Environment env) throws AppendableException {
 				LitInteger x = (LitInteger) env.getVariableValue(new Variable("_x"));
 				LitInteger y = (LitInteger) env.getVariableValue(new Variable("_y"));
-
-				if (x == null || y == null) {
-					return this;
-				}
 
 				return new LitInteger(x.value - y.value);
 			}

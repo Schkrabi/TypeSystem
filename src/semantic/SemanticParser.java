@@ -153,7 +153,7 @@ public class SemanticParser {
 		Expression trueBranch = this.parseNode(l.get(2));
 		Expression falseBranch = this.parseNode(l.get(3));
 
-		return new IfExpression(new Tuple(Arrays.asList(pred, trueBranch, falseBranch)));
+		return new IfExpression(pred, trueBranch, falseBranch);
 	}
 
 	/**

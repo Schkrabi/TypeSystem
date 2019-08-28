@@ -5,6 +5,7 @@ import java.util.TreeMap;
 
 import expression.Expression;
 import expression.Variable;
+import util.UnboundVariableException;
 
 /**
  * Environment for variable binding during interpretation
@@ -61,17 +62,18 @@ public class Environment extends TreeMap<Variable, Expression> implements Compar
 
 	/**
 	 * Returns closest binding of the given variable in environment hierarchy. If no
-	 * binding exists returns null
+	 * binding exists throws.
 	 * 
 	 * @param var searched variable
-	 * @return Expression object or null
+	 * @return Expression object
+	 * @throws UnboundVariableException 
 	 */
-	public Expression getVariableValue(Variable var) {
+	public Expression getVariableValue(Variable var) throws UnboundVariableException {
 		if (!this.containsKey(var)) {
 			if (!this.isTopLevel()) {
 				return this.parent.getVariableValue(var);
 			}
-			return null;
+			throw new UnboundVariableException(var);
 		}
 		return this.get(var);
 	}

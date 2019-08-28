@@ -1,7 +1,6 @@
 package expression;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,7 +11,6 @@ import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
-import types.TypesDoesNotUnifyException;
 import util.AppendableException;
 import util.NameGenerator;
 import util.Pair;
@@ -180,11 +178,6 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 			return this.body.compareTo(((Lambda) other).body);
 		}
 		return super.compareTo(other);
-	}
-
-	@Override
-	public Lambda getLambda(Comparator<? super Lambda> c) {
-		return this;
 	}
 
 	@Override

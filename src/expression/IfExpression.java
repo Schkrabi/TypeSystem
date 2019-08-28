@@ -21,9 +21,9 @@ import interpretation.Environment;
  * 
  */
 public class IfExpression extends Application {
-	
-	public IfExpression(Tuple args) {
-		super(IfWrapper.singleton, args);
+
+	public IfExpression(Expression condition, Expression trueBranch, Expression falseBranch) {
+		super(IfWrapper.singleton, new Tuple(Arrays.asList(condition, trueBranch, falseBranch)));
 	}
 
 	@Override
@@ -31,7 +31,7 @@ public class IfExpression extends Application {
 		Expression condition = this.args.get(0);
 		Expression trueBranch = this.args.get(1);
 		Expression falseBranch = this.args.get(2);
-		
+
 		LitBoolean b = (LitBoolean) condition.interpret(env);
 		if (b.value) {
 			return trueBranch.interpret(env);
@@ -39,30 +39,31 @@ public class IfExpression extends Application {
 			return falseBranch.interpret(env);
 		}
 	}
-	
+
 	@Override
 	public int compareTo(Expression other) {
-		if(other instanceof IfExpression) {			
+		if (other instanceof IfExpression) {
 			return this.args.compareTo(((IfExpression) other).args);
 		}
 		return super.compareTo(other);
 	}
-	
+
 	@Override
 	public boolean equals(Object other) {
-		if(other instanceof IfExpression) {
+		if (other instanceof IfExpression) {
 			return super.equals(other);
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Wrapper for if
+	 * 
 	 * @author Mgr. Radomir Skrabal
 	 *
 	 */
-	private static final class IfWrapper extends Expression{
-		
+	private static final class IfWrapper extends Expression {
+
 		public static final IfWrapper singleton = new IfWrapper();
 
 		@Override
@@ -74,7 +75,7 @@ public class IfExpression extends Application {
 		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable branchType = new TypeVariable(NameGenerator.next());
 			TypeTuple argsType = new TypeTuple(Arrays.asList(TypeConcrete.TypeBool, branchType, branchType));
-			
+
 			return new Pair<Type, Substitution>(new TypeArrow(argsType, branchType), new Substitution());
 		}
 
@@ -83,5 +84,10 @@ public class IfExpression extends Application {
 			return "if";
 		}
 		
+		@Override
+		public String toString() {
+			return "if";
+		}
+
 	}
 }

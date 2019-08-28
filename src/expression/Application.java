@@ -1,9 +1,6 @@
 package expression;
 
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 
 import types.Substitution;
@@ -11,7 +8,6 @@ import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
-import types.TypesDoesNotUnifyException;
 import util.AppendableException;
 import util.InvalidNumberOfArgumentsException;
 import util.NameGenerator;
@@ -48,21 +44,11 @@ public class Application extends Expression {
 			throw new AppendableException(ifun.toString() + "is not a function");
 		}
 
-		//Implementation chosen on vector distance of argument types
-		Function f = ((MetaFunction) ifun).getFunction(new Comparator<Function>() {
+		Pair<Type, Substitution> argInfered = this.args.infer(env);
+		final TypeTuple argsType = (TypeTuple) argInfered.first;
 
-			@Override
-			public int compare(Function arg0, Function arg1) {
-				int sum = 0;
-				Iterator<Type> i = arg0.argsType.iterator();
-				Iterator<Type> j = arg1.argsType.iterator();
-				while(i.hasNext()) {
-					if(!i.equals(j)) {
-						sum++;
-					}
-				}
-				return sum;
-			}});
+		// Implementation chosen on vector distance of argument types
+		Function f = ((MetaFunction) ifun).getFunction(argsType);
 
 		if (f.args.size() != this.args.size()) {
 			throw new InvalidNumberOfArgumentsException(f.args.size(), this.args, this);
@@ -71,15 +57,15 @@ public class Application extends Expression {
 		Environment childEnv = new Environment(f.creationEnvironment); // Lexical clojure!!!
 		Iterator<Expression> i = f.args.iterator();
 		Iterator<Expression> j = this.args.iterator();
-		while(i.hasNext()) {
+		while (i.hasNext()) {
 			Expression e = j.next();
-			Variable v = (Variable)i.next();
+			Variable v = (Variable) i.next();
 			childEnv.put(v, e);
 		}
 
-		TypeArrow lambdaType = (TypeArrow)f.infer(env).first;
+		TypeArrow funType = (TypeArrow) f.infer(env).first;
 
-		childEnv = Application.autoConvertArgs(childEnv, f.args, lambdaType.ltype);
+		childEnv = Application.autoConvertArgs(childEnv, f.args, argsType, (TypeTuple) funType.ltype);
 
 		Expression rslt = f.body.interpret(childEnv);
 
@@ -92,35 +78,29 @@ public class Application extends Expression {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException { 
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			//Infer function type
-			TypeArrow funType = new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()));
+			// Infer function type
+			TypeArrow funType = new TypeArrow(new TypeVariable(NameGenerator.next()),
+					new TypeVariable(NameGenerator.next()));
 			Pair<Type, Substitution> funInfered = this.fun.infer(env);
 			Optional<Substitution> substFun = Type.unify(funType, funInfered.first);
-			
-			if(!substFun.isPresent()) {
-				throw new TypesDoesNotUnifyException(funType, funInfered.first);
-			}
-			
-			funType = (TypeArrow)funType.apply(substFun.get());
-			
-			//Infer arguments type
+
+			funType = (TypeArrow) funType.apply(substFun.get());
+
+			// Infer arguments type
 			Pair<Type, Substitution> argsInfered = this.args.infer(env);
-			
-			//Unify arguments and formal argument types
+
+			// Unify arguments and formal argument types
 			Optional<Substitution> substArgs = Type.unify(argsInfered.first, funType.ltype);
-			if(!substArgs.isPresent()) {
-				throw new TypesDoesNotUnifyException(argsInfered.first, funType.ltype);
-			}
-			
-			//Compose all substitutions (and check if they are compatible)
+
+			// Compose all substitutions (and check if they are compatible)
 			Substitution s = new Substitution();
 			s = s.compose(funInfered.second);
 			s = s.compose(substFun.get());
 			s = s.compose(argsInfered.second);
 			s = s.compose(substArgs.get());
-			
+
 			return new Pair<Type, Substitution>(funType.rtype.apply(s), s);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
@@ -130,16 +110,16 @@ public class Application extends Expression {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
-		//TODO
+		// TODO
 		return "";
 	}
-	
+
 	@Override
 	public int compareTo(Expression other) {
-		if(other instanceof Application) {
-			Application o = (Application)other;
+		if (other instanceof Application) {
+			Application o = (Application) other;
 			int c = this.fun.compareTo(o.fun);
-			if(c != 0)
+			if (c != 0)
 				return c;
 			return this.args.compareTo(o.args);
 		}
@@ -149,43 +129,39 @@ public class Application extends Expression {
 	/**
 	 * Lazily converts all the arguments to given representation
 	 * 
-	 * @param e
-	 *            environment containing the arguments associated with their names
-	 * @param args
-	 *            argument names in the environment
-	 * @param argTypes
-	 *            formal inferred types of the arguments
+	 * @param e        environment containing the arguments associated with their
+	 *                 names
+	 * @param args     argument names in the environment
+	 * @param argTypes formal inferred types of the arguments
 	 * @return new environment where all the arguments will be converted
 	 * @throws Exception
 	 */
-	private static Environment autoConvertArgs(Environment e, Tuple args, Type argType) throws AppendableException {
-		TypeTuple argTypes = (TypeTuple) argType;
+	private static Environment autoConvertArgs(Environment e, Tuple args, TypeTuple fromType, TypeTuple toType)
+			throws AppendableException {
 		Environment ret = new Environment(e.parent);
 
 		Iterator<Expression> i = args.iterator();
-		Iterator<Type> j = argTypes.iterator();
-		while(i.hasNext()){
+		Iterator<Type> j = fromType.iterator();
+		Iterator<Type> k = toType.iterator();
+		while (i.hasNext()) {
 			Variable name = (Variable) i.next();
-			Type fromType = e.getVariableValue(name).infer(e).first;
 			Expression arg = e.getVariableValue(name);
-			Type toType = j.next();
 
-			ret.put(name, fromType.convertTo(arg, toType));
+			ret.put(name, j.next().convertTo(arg, k.next()));
 		}
 
 		return ret;
 	}
-	
+
 	@Override
 	public boolean equals(Object other) {
-		if(other instanceof Application) {
-			return this.fun.equals(((Application) other).fun) 
-					&& this.args.equals(((Application) other).args);
+		if (other instanceof Application) {
+			return this.fun.equals(((Application) other).fun) && this.args.equals(((Application) other).args);
 		}
 		return false;
 	}
-	
-	@Override 
+
+	@Override
 	public int hashCode() {
 		return this.fun.hashCode() * this.args.hashCode();
 	}

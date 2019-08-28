@@ -43,8 +43,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	/**
 	 * Gets expression on tuple index
 	 * 
-	 * @param index
-	 *            searched index
+	 * @param index searched index
 	 * @return element on given index
 	 */
 	public Type get(int index) {
@@ -168,9 +167,33 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	public Type removeRepresentationInfo() {
 		return new TypeTuple(this.stream().map(x -> x.removeRepresentationInfo()).collect(Collectors.toList()));
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.values.hashCode();
+	}
+
+	/**
+	 * Returns somewhat distance of two typetuples
+	 * 
+	 * @param other other type tuple
+	 * @return integer
+	 */
+	public int tupleDistance(TypeTuple other) {
+		if (this.size() != other.size())
+			return Math.abs(this.size() - other.size());
+
+		Iterator<Type> i = this.iterator();
+		Iterator<Type> j = other.iterator();
+		int sum = 0;
+		while (i.hasNext()) {
+			Type ti = i.next();
+			Type tj = j.next();
+
+			if (!ti.equals(tj))
+				sum++;
+		}
+
+		return sum;
 	}
 }

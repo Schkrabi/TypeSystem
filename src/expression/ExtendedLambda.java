@@ -14,7 +14,6 @@ import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
-import types.UnexpectedTypeException;
 import util.AppendableException;
 import util.NameGenerator;
 import util.Pair;
@@ -155,12 +154,6 @@ public class ExtendedLambda extends MetaLambda {
 	public String toClojureCode() throws AppendableException {
 		// TODO
 		return "";
-	}
-
-	@Override
-	public Lambda getLambda(Comparator<? super Lambda> c) {
-		PriorityQueue<Lambda> queue = this.getSortedImplementations(c);
-		return queue.peek();
 	}
 
 	@Override

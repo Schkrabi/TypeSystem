@@ -46,8 +46,15 @@ public class ExtendedFunction extends MetaFunction {
 	}
 
 	@Override
-	public Function getFunction(Comparator<? super Function> c) {
-		return this.getSortedImplementations(c).peek();
+	public Function getFunction(final TypeTuple realArgsType) {
+		return this.implementations.stream()
+				.map(impl -> new Pair<Integer, Function>(impl.argsType.tupleDistance(realArgsType), impl))
+				.reduce(new Pair<Integer, Function>(Integer.MAX_VALUE, null), (p1, p2) -> {
+					if (p1.first < p2.first)
+						return p1;
+					else
+						return p2;
+				}).second;
 	}
 
 	@Override
@@ -93,7 +100,7 @@ public class ExtendedFunction extends MetaFunction {
 			if (cmp != 0)
 				return cmp;
 
-			for (Function f : this.implementations) {				
+			for (Function f : this.implementations) {
 				if (!((ExtendedFunction) other).implementations.contains(f)) {
 					return 1;
 				}
@@ -116,7 +123,7 @@ public class ExtendedFunction extends MetaFunction {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder("(ExFunctionInternal (");
@@ -137,14 +144,14 @@ public class ExtendedFunction extends MetaFunction {
 		s.append(") ");
 
 		Iterator<Function> k = this.implementations.iterator();
-		while(k.hasNext()) {
+		while (k.hasNext()) {
 			Function f = k.next();
 			s.append('(');
 			s.append(f.argsType.toString().replace('[', '(').replace(']', ')'));
 			s.append(' ');
 			s.append(f.body.toString());
 			s.append(')');
-			if(k.hasNext()) {
+			if (k.hasNext()) {
 				s.append(' ');
 			}
 		}
@@ -153,7 +160,7 @@ public class ExtendedFunction extends MetaFunction {
 
 		return s.toString();
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return super.hashCode() * this.argsType.hashCode() * this.implementations.hashCode();

@@ -1,6 +1,5 @@
 package expression;
 
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,7 +11,6 @@ import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
-import types.TypesDoesNotUnifyException;
 import util.AppendableException;
 import util.NameGenerator;
 import util.Pair;
@@ -89,7 +87,7 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 	}
 
 	@Override
-	public Function getFunction(Comparator<? super Function> c) {
+	public Function getFunction(TypeTuple realArgsType) {
 		return this;
 	}
 

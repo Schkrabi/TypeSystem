@@ -71,19 +71,19 @@ class TestUtil {
 
 	@Test
 	public void testPair() {
-		Pair<Object, Object> p = new Pair<Object, Object>(new Boolean(true), new Integer(128));
+		Pair<Object, Object> p = new Pair<Object, Object>(true, 128);
 
 		p.toString();
 
-		Object o = new Pair<Object, Object>(new Boolean(true), new Integer(128));
+		Object o = new Pair<Object, Object>(true, 128);
 		if (!p.equals(o)) {
 			fail(p.toString() + " and " + o.toString() + " are equal!");
 		}
-		o = new Pair<Object, Object>(new Boolean(true), new Boolean(true));
+		o = new Pair<Object, Object>(true, true);
 		if (p.equals(o)) {
 			fail(p.toString() + " and " + o.toString() + " are not equal!");
 		}
-		o = new Pair<Object, Object>(new Integer(128), new Integer(128));
+		o = new Pair<Object, Object>(128, 128);
 		if (p.equals(o)) {
 			fail(p.toString() + " and " + o.toString() + " are not equal!");
 		}
@@ -106,16 +106,16 @@ class TestUtil {
 			fail(fail + " is not a roman number");
 		}
 
-		List<Pair<String, Integer>> ns = Arrays.asList(new Pair<String, Integer>("I", new Integer(1)),
-				new Pair<String, Integer>("II", new Integer(2)), new Pair<String, Integer>("III", new Integer(3)),
-				new Pair<String, Integer>("IV", new Integer(4)), new Pair<String, Integer>("V", new Integer(5)),
-				new Pair<String, Integer>("VI", new Integer(6)), new Pair<String, Integer>("VII", new Integer(7)),
-				new Pair<String, Integer>("VIII", new Integer(8)), new Pair<String, Integer>("IX", new Integer(9)),
-				new Pair<String, Integer>("X", new Integer(10)), new Pair<String, Integer>("L", new Integer(50)),
-				new Pair<String, Integer>("XL", new Integer(40)), new Pair<String, Integer>("C", new Integer(100)),
-				new Pair<String, Integer>("XC", new Integer(90)), new Pair<String, Integer>("D", new Integer(500)),
-				new Pair<String, Integer>("CD", new Integer(400)), new Pair<String, Integer>("M", new Integer(1000)),
-				new Pair<String, Integer>("CM", new Integer(900)));
+		List<Pair<String, Integer>> ns = Arrays.asList(new Pair<String, Integer>("I", 1),
+				new Pair<String, Integer>("II", 2), new Pair<String, Integer>("III", 3),
+				new Pair<String, Integer>("IV", 4), new Pair<String, Integer>("V", 5),
+				new Pair<String, Integer>("VI", 6), new Pair<String, Integer>("VII", 7),
+				new Pair<String, Integer>("VIII", 8), new Pair<String, Integer>("IX", 9),
+				new Pair<String, Integer>("X", 10), new Pair<String, Integer>("L", 50),
+				new Pair<String, Integer>("XL", 40), new Pair<String, Integer>("C", 100),
+				new Pair<String, Integer>("XC", 90), new Pair<String, Integer>("D", 500),
+				new Pair<String, Integer>("CD", 400), new Pair<String, Integer>("M", 1000),
+				new Pair<String, Integer>("CM", 900));
 
 		for (Pair<String, Integer> p : ns) {
 			String s = RomanNumbers.int2roman(p.second);
