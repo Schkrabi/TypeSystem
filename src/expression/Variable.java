@@ -54,7 +54,7 @@ public class Variable extends Expression implements Comparable<Expression> {
 			if (env.containsVariable(this)) {
 				return env.getVariableValue(this).infer(env);
 			}
-			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), new Substitution());
+			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), Substitution.EMPTY);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;

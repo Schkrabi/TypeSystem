@@ -9,7 +9,7 @@ public interface ThrowingFunction<T, R, E extends Exception> {
 	public static <T, R> Function<T, R>  wrapper(ThrowingFunction<T, R, AppendableException> function){
 		return x -> {
 			try {
-				return ( function.apply(x));
+				return function.apply(x);
 			} catch (AppendableException e) {
 				throw new RuntimeException(e);
 			}

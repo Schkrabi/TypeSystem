@@ -12,62 +12,66 @@ import java.util.function.Predicate;
 import expression.TypeConstructionLambda;
 import parser.SemanticNode;
 import parser.SemanticPair;
-import types.TypeConcrete;
+import types.TypeAtom;
+import types.TypeName;
 import types.TypeRepresentation;
 import util.AppendableException;
 
 public class TypeEnvironment {
 
-	private Set<TypeConcrete> types = new HashSet<TypeConcrete>();
-	private Map<TypeConcrete, Set<TypeConstructionLambda>> constructorMap = new HashMap<TypeConcrete, Set<TypeConstructionLambda>>();
+	private Set<TypeAtom> types = new HashSet<TypeAtom>();
+	private Map<TypeAtom, Set<TypeConstructionLambda>> constructorMap = new HashMap<TypeAtom, Set<TypeConstructionLambda>>();
 
 	public TypeEnvironment() {
 		// Int
-		types.add(TypeConcrete.TypeInt);
+		types.add(TypeAtom.TypeInt);
+		types.add(TypeAtom.TypeIntNative);
 		Set<TypeConstructionLambda> set = new TreeSet<TypeConstructionLambda>();
 		set.add(TypeConstructionLambda.IntPrimitiveConstructor);
-		constructorMap.put(TypeConcrete.TypeInt, set);
-		types.add(TypeRepresentation.TypeIntRoman);
+		constructorMap.put(TypeAtom.TypeIntNative, set);
+		types.add(TypeAtom.TypeIntRoman);
 		set = new TreeSet<TypeConstructionLambda>();
 		set.add(TypeConstructionLambda.IntRomanConstructor);
-		constructorMap.put(TypeRepresentation.TypeIntRoman, set);
-		types.add(TypeRepresentation.TypeIntString);
+		constructorMap.put(TypeAtom.TypeIntRoman, set);
+		types.add(TypeAtom.TypeIntString);
 		set = new TreeSet<TypeConstructionLambda>();
 		set.add(TypeConstructionLambda.IntStringConstructor);
-		constructorMap.put(TypeRepresentation.TypeIntString, set);
+		constructorMap.put(TypeAtom.TypeIntString, set);
 
 		// Bool
-		types.add(TypeConcrete.TypeBool);
+		types.add(TypeAtom.TypeBool);
+		types.add(TypeAtom.TypeBoolNative);
 		set = new TreeSet<TypeConstructionLambda>();
 		set.add(TypeConstructionLambda.BoolPrimitiveConstructor);
-		constructorMap.put(TypeConcrete.TypeBool, set);
+		constructorMap.put(TypeAtom.TypeBoolNative, set);
 
 		// String
-		types.add(TypeConcrete.TypeString);
+		types.add(TypeAtom.TypeString);
+		types.add(TypeAtom.TypeStringNative);
 		set = new TreeSet<TypeConstructionLambda>();
 		set.add(TypeConstructionLambda.StringPrimitiveConstructor);
-		constructorMap.put(TypeConcrete.TypeString, set);
+		constructorMap.put(TypeAtom.TypeStringNative, set);
 
 		// Double
-		types.add(TypeConcrete.TypeDouble);
+		types.add(TypeAtom.TypeDouble);
+		types.add(TypeAtom.TypeDoubleNative);
 		set = new TreeSet<TypeConstructionLambda>();
 		set.add(TypeConstructionLambda.DoublePrimitiveConstructor);
-		constructorMap.put(TypeConcrete.TypeDouble, set);
+		constructorMap.put(TypeAtom.TypeDoubleNative, set);
 	}
 
 	/**
 	 * Gets the type by given name
 	 * 
-	 * @param typeName
-	 *            name of the type
+	 * @param typeName name of the type
 	 * @return Optional containing the type if it exists
 	 */
-	public Optional<TypeConcrete> getType(final String typeName) {
-		Optional<TypeConcrete> o = types.stream().filter(new java.util.function.Predicate<TypeConcrete>() {
+	public Optional<TypeAtom> getType(final String typeName) {
+		Optional<TypeAtom> o = types.stream().filter(new java.util.function.Predicate<TypeAtom>() {
 
 			@Override
-			public boolean test(TypeConcrete x) {
-				return (!(x instanceof TypeRepresentation)) && x.name.equals(typeName);
+			public boolean test(TypeAtom x) {
+				return x.equals(new TypeAtom(new TypeName(typeName), TypeRepresentation.WILDCARD));
 			}
 		}).findAny();
 		return o;
@@ -76,18 +80,15 @@ public class TypeEnvironment {
 	/**
 	 * Gets te type by given base type name and representation name
 	 * 
-	 * @param typeName
-	 *            name of the base type
-	 * @param representationName
-	 *            name of the representaion
+	 * @param typeName           name of the base type
+	 * @param representationName name of the representaion
 	 * @return Optional containing the type if it exists
 	 */
-	public Optional<TypeConcrete> getType(final String typeName, final String representationName) {
-		Optional<TypeConcrete> o = types.stream().filter(new java.util.function.Predicate<TypeConcrete>() {
+	public Optional<TypeAtom> getType(final String typeName, final String representationName) {
+		Optional<TypeAtom> o = types.stream().filter(new java.util.function.Predicate<TypeAtom>() {
 			@Override
-			public boolean test(TypeConcrete x) {
-				return (x instanceof TypeRepresentation) && x.name.equals(representationName)
-						&& ((TypeRepresentation) x).baseType.name.equals(typeName);
+			public boolean test(TypeAtom x) {
+				return x.name.name.equals(typeName) && x.representation.name.equals(representationName);
 			}
 		}).findAny();
 		return o;
@@ -96,10 +97,9 @@ public class TypeEnvironment {
 	/**
 	 * Checks if given semantic node is previously defined type
 	 * 
-	 * @param node
-	 *            inspected node
+	 * @param node inspected node
 	 * @return true if node is a node containing type name
-	 * @throws AppendableException 
+	 * @throws AppendableException
 	 */
 	public boolean isType(SemanticNode node) throws AppendableException {
 		if (node.type == SemanticNode.NodeType.SYMBOL) {
@@ -116,23 +116,22 @@ public class TypeEnvironment {
 	/**
 	 * Gets the constructor for given type
 	 * 
-	 * @param typeName
-	 *            searched type
+	 * @param typeName searched type
 	 * @return constructor for this type if it exists
 	 */
-	public TypeConstructionLambda getConstructor(TypeConcrete type, final int argCount) {
+	public TypeConstructionLambda getConstructor(TypeAtom type, final int argCount) {
 		Set<TypeConstructionLambda> s = this.constructorMap.get(type);
-		if(s == null) {
+		if (s == null) {
 			throw new NoSuchElementException();
 		}
-		
-		return s.stream().filter(new Predicate<TypeConstructionLambda>(){
+
+		return s.stream().filter(new Predicate<TypeConstructionLambda>() {
 
 			@Override
 			public boolean test(TypeConstructionLambda arg) {
 				return arg.args.size() == argCount;
 			}
-			
+
 		}).findAny().get();
 	}
 
@@ -143,13 +142,13 @@ public class TypeEnvironment {
 	 * @return Newly added type
 	 * @throws AppendableException
 	 */
-	public TypeConcrete addType(String typeName) throws AppendableException {
-		Optional<TypeConcrete> o = this.getType(typeName);
+	public TypeAtom addType(String typeName) throws AppendableException {
+		Optional<TypeAtom> o = this.getType(typeName);
 		if (o.isPresent()) {
 			throw new AppendableException("Type " + typeName + " is already defined");
 		}
 
-		TypeConcrete type = new TypeConcrete(typeName);
+		TypeAtom type = new TypeAtom(new TypeName(typeName), TypeRepresentation.WILDCARD);
 		types.add(type);
 		return type;
 	}
@@ -162,8 +161,8 @@ public class TypeEnvironment {
 	 * @return newly added representation
 	 * @throws AppendableException
 	 */
-	public TypeConcrete addRepresentation(String baseTypeName, String repName) throws AppendableException {
-		Optional<TypeConcrete> o = this.getType(baseTypeName, repName);
+	public TypeAtom addRepresentation(String baseTypeName, String repName) throws AppendableException {
+		Optional<TypeAtom> o = this.getType(baseTypeName, repName);
 		if (o.isPresent()) {
 			throw new AppendableException("Type " + o.get() + " is already defined");
 		}
@@ -172,7 +171,7 @@ public class TypeEnvironment {
 			throw new UndefinedTypeException(baseTypeName);
 		}
 
-		TypeRepresentation type = new TypeRepresentation(repName, o.get());
+		TypeAtom type = new TypeAtom(new TypeName(baseTypeName), new TypeRepresentation(repName));
 		types.add(type);
 		return type;
 	}
@@ -184,17 +183,18 @@ public class TypeEnvironment {
 	 * @param constructor
 	 * @throws AppendableException
 	 */
-	public void addConstructor(TypeConcrete newType, final TypeConstructionLambda constructor) throws AppendableException {
+	public void addConstructor(TypeAtom newType, final TypeConstructionLambda constructor) throws AppendableException {
 		Set<TypeConstructionLambda> set;
-		
+
 		if (constructorMap.containsKey(newType)) {
-			set = this.constructorMap.get(newType); 
-			
-			if(set.stream().anyMatch(new Predicate<TypeConstructionLambda>(){
+			set = this.constructorMap.get(newType);
+
+			if (set.stream().anyMatch(new Predicate<TypeConstructionLambda>() {
 				@Override
 				public boolean test(TypeConstructionLambda arg) {
 					return arg.args.size() == constructor.args.size();
-				}})){
+				}
+			})) {
 				throw new AppendableException("Constructor for " + newType + " is already defined");
 			}
 			set.add(constructor);
@@ -204,21 +204,27 @@ public class TypeEnvironment {
 		set.add(constructor);
 		constructorMap.put(newType, set);
 	}
-	
+
 	/**
 	 * Adds new conversion to the environment
-	 * @param fromType Type which is converted
-	 * @param toType Type to which is converted
+	 * 
+	 * @param fromType              Type which is converted
+	 * @param toType                Type to which is converted
 	 * @param conversionConstructor Conversion lambda (constructor)
 	 */
-	public void addConversion(TypeConcrete fromType, TypeConcrete toType, TypeConstructionLambda conversionConstructor) throws AppendableException {
-		if(!this.types.contains(fromType)) {
+	public void addConversion(TypeAtom fromType, TypeAtom toType, TypeConstructionLambda conversionConstructor)
+			throws AppendableException {
+		if (!this.types.contains(fromType)) {
 			throw new UndefinedTypeException(fromType.toString());
 		}
-		if(!this.types.contains(toType)) {
+		if (!this.types.contains(toType)) {
 			throw new UndefinedTypeException(toType.toString());
 		}
-		
-		fromType.addConversion(toType, conversionConstructor);
+		if (!TypeAtom.isSameBasicType(fromType, toType)) {
+			throw new AppendableException(
+					"You can only define conversion between representations, got " + fromType + " and " + toType);
+		}
+
+		fromType.addConversion(toType.representation, conversionConstructor);
 	}
 }

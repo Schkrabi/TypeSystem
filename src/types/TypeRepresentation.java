@@ -1,79 +1,58 @@
 package types;
 
-public class TypeRepresentation extends TypeConcrete {
+/**
+ * Class for names of type representations
+ * @author Mgr. Radomir Skrabal
+ *
+ */
+public class TypeRepresentation implements Comparable<TypeRepresentation>{
+	
 	/**
-	 * Base Type of this representation
+	 * Name of the representation
 	 */
-	public final TypeConcrete baseType;
-
-	public TypeRepresentation(String name, TypeConcrete baseType) {
-		super(name);
-		this.baseType = baseType;
+	public final String name;
+	
+	public TypeRepresentation(String name) {
+		this.name = name;
 	}
-
-	@Override
-	public String toString() {
-		return this.baseType.name + ":" + this.name;
-	}
-
 	
 	@Override
-	public boolean equals(Object o) {
-		if (!(o instanceof TypeRepresentation)) {
-			return false;
-		}
-		TypeRepresentation other = (TypeRepresentation) o;
-		return this.baseType.equals(other.baseType) && this.name == other.name;
+	public String toString() {
+		return this.name;
 	}
-
+	
 	@Override
-	public int compareTo(Type o) {
-		if (!(o instanceof TypeRepresentation)) {
-			return super.compareTo(o);
-		}
-		TypeRepresentation other = (TypeRepresentation) o;
-		int cmp = this.baseType.compareTo(other.baseType);
-		if (cmp != 0) {
-			return cmp;
-		}
-		return this.name.compareTo(other.name);
-	}
-
-	@Override
-	public boolean isSameBasicType(Type o) {
-		if (o instanceof TypeRepresentation) {
-			TypeRepresentation other = (TypeRepresentation) o;
-			return this.baseType.equals(other.baseType);
-		}
-		if (o instanceof TypeConcrete) {
-			TypeConcrete other = (TypeConcrete) o;
-			return this.baseType.equals(other);
+	public boolean equals(Object other) {
+		if(other instanceof TypeRepresentation) {
+			return this.name.equals(((TypeRepresentation) other).name);
 		}
 		return false;
 	}
 	
 	@Override
-	public TypeConcrete baseType(){
-		return this.baseType;
-	}
-	
-	@Override
-	public Type removeRepresentationInfo() {
-		return this.baseType;
-	}
-	
-	@Override
 	public int hashCode() {
-		return this.name.hashCode() * this.baseType.hashCode();
+		return this.name.hashCode();
 	}
-
+	
+	@Override
+	public int compareTo(TypeRepresentation arg0) {
+		return this.name.compareTo(arg0.name);
+	}
+	
 	/**
-	 * String representation of int
+	 * Represents no concrete representation of type, for internal use only
 	 */
-	public static final TypeRepresentation TypeIntString = new TypeRepresentation("String", TypeConcrete.TypeInt);
-
+	public static final TypeRepresentation WILDCARD = new TypeRepresentation("*");
 	/**
-	 * Roman representation of int
+	 * Represents type representations wrapped from Java
 	 */
-	public static final TypeRepresentation TypeIntRoman = new TypeRepresentation("Roman", TypeConcrete.TypeInt);
+	public static final TypeRepresentation NATIVE = new TypeRepresentation("Native");
+	/**
+	 * Represents type representation in string
+	 */
+	public static final TypeRepresentation STRING = new TypeRepresentation("String");
+	/**
+	 * Represents type representations of integers as roman numbers
+	 */
+	public static final TypeRepresentation ROMAN = new TypeRepresentation("Roman");
 }

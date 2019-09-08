@@ -4,7 +4,7 @@ import interpretation.Environment;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
-import types.TypeRepresentation;
+import types.TypeAtom;
 import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
@@ -30,9 +30,6 @@ public class IntRomanToIntStringWrapper extends ConversionWrapper {
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
 		Expression e = ConversionWrapper.arg.interpret(env);
-		if (!(e instanceof LitString)) {
-			throw new AppendableException("Invalid wrapped conversion from IntRoman to IntString");
-		}
 		LitString r = (LitString) e;
 		Literal l = new LitString(Integer.toString(RomanNumbers.roman2int(r.value)));
 		return l;
@@ -41,7 +38,7 @@ public class IntRomanToIntStringWrapper extends ConversionWrapper {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		return new Pair<Type, Substitution>(
-				new TypeArrow(TypeRepresentation.TypeIntRoman, TypeRepresentation.TypeIntString), new Substitution());
+				new TypeArrow(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString), Substitution.EMPTY);
 	}
 
 	@Override
@@ -49,11 +46,16 @@ public class IntRomanToIntStringWrapper extends ConversionWrapper {
 		//TODO rewrite!
 		return "(Integer/toString (RomanNumbers/roman2int " + ConversionWrapper.arg.toClojureCode() + "))";
 	}
+	
+	@Override
+	public String toString() {
+		return "ConversionInternal:IntRomanToIntString";
+	}
 
 	/**
 	 * Conversion constructor from IntRoman to IntString
 	 */
 	public static final TypeConstructionLambda IntRomanToIntString = new TypeConstructionLambda(
-			TypeRepresentation.TypeIntString, new Tuple(Arrays.asList(ConversionWrapper.arg)),
-			new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)), new IntRomanToIntStringWrapper());
+			TypeAtom.TypeIntString, new Tuple(Arrays.asList(ConversionWrapper.arg)),
+			new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), new IntRomanToIntStringWrapper());
 }

@@ -2,7 +2,7 @@ package expression;
 
 import types.Substitution;
 import types.Type;
-import types.TypeConcrete;
+import types.TypeAtom;
 import util.Pair;
 
 import expression.Expression;
@@ -11,16 +11,17 @@ import interpretation.Environment;
 
 /**
  * Class for floating point number literal
+ * 
  * @author Mgr. Radomir Skrabal
  *
  */
 public class LitDouble extends Literal {
-	
+
 	/**
 	 * Value of the floating point literal
 	 */
 	public final double value;
-	
+
 	public LitDouble(double value) {
 		this.value = value;
 	}
@@ -42,28 +43,28 @@ public class LitDouble extends Literal {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) {
-		return new Pair<Type, Substitution>(TypeConcrete.TypeDouble, new Substitution());
+		return new Pair<Type, Substitution>(TypeAtom.TypeDoubleNative, Substitution.EMPTY);
 	}
-	
+
 	@Override
-	public boolean equals(Object o){
-		if(!(o instanceof LitDouble)){
+	public boolean equals(Object o) {
+		if (!(o instanceof LitDouble)) {
 			return false;
 		}
-		LitDouble other = (LitDouble)o;
+		LitDouble other = (LitDouble) o;
 		return this.value == other.value;
 	}
-	
+
 	@Override
 	public int compareTo(Expression other) {
-		if(other instanceof LitDouble) {
+		if (other instanceof LitDouble) {
 			return Double.compare(this.value, ((LitDouble) other).value);
 		}
 		return super.compareTo(other);
 	}
-	
+
 	@Override
 	public int hashCode() {
-		return ((Double)this.value).hashCode();
+		return ((Double) this.value).hashCode();
 	}
 }

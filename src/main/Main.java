@@ -20,11 +20,11 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
 
-import conversions.IntToIntRomanWrapper;
-import conversions.IntToIntStringWrapper;
-import conversions.IntRomanToIntWrapper;
+import conversions.IntNativeToIntRomanWrapper;
+import conversions.IntNativeToIntStringWrapper;
+import conversions.IntRomanToIntNativeWrapper;
 import conversions.IntRomanToIntStringWrapper;
-import conversions.IntStringToIntWrapper;
+import conversions.IntStringToIntNativeWrapper;
 import conversions.IntStringToIntRomanWrapper;
 
 import parser.SchemeLexer;
@@ -32,8 +32,9 @@ import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
 import parser.SemanticNode;
 import semantic.SemanticParser;
-import types.TypeConcrete;
+import types.TypeAtom;
 import types.TypeRepresentation;
+import types.TypeAtom;
 import util.AppendableException;
 import util.ClojureCodeGenerator;
 import expression.Expression;
@@ -98,7 +99,6 @@ public class Main {
 		env.put(new Variable(Operator.Cdr.toString()), Operator.Cdr);
 		env.put(new Variable("nil"), Expression.EMPTY_EXPRESSION);
 		env.put(new Variable(Operator.Equals.toString()), Operator.Equals);
-		//env.put(new Variable(Deconstruct.singleton.toString()), Deconstruct.singleton);
 		
 		env.put(new Variable("Int"), TypeConstructionLambda.IntPrimitiveConstructor);
 		env.put(new Variable("Int:String"), TypeConstructionLambda.IntStringConstructor);
@@ -111,12 +111,12 @@ public class Main {
 	}
 	
 	private static void initTypesConversions() throws Exception{
-		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntRoman, IntToIntRomanWrapper.IntToIntRoman);
-		TypeConcrete.TypeInt.addConversion(TypeRepresentation.TypeIntString, IntToIntStringWrapper.IntToIntString);
-		TypeRepresentation.TypeIntRoman.addConversion(TypeConcrete.TypeInt, IntRomanToIntWrapper.IntRomanToInt);
-		TypeRepresentation.TypeIntRoman.addConversion(TypeRepresentation.TypeIntString, IntRomanToIntStringWrapper.IntRomanToIntString);
-		TypeRepresentation.TypeIntString.addConversion(TypeConcrete.TypeInt, IntStringToIntWrapper.IntStringToInt);
-		TypeRepresentation.TypeIntString.addConversion(TypeRepresentation.TypeIntRoman, IntStringToIntRomanWrapper.IntStringToIntRoman);
+		TypeAtom.TypeIntNative.addConversion(TypeRepresentation.ROMAN, IntNativeToIntRomanWrapper.IntToIntRoman);
+		TypeAtom.TypeIntNative.addConversion(TypeRepresentation.STRING, IntNativeToIntStringWrapper.IntToIntString);
+		TypeAtom.TypeIntRoman.addConversion(TypeRepresentation.NATIVE, IntRomanToIntNativeWrapper.IntRomanToInt);
+		TypeAtom.TypeIntRoman.addConversion(TypeRepresentation.STRING, IntRomanToIntStringWrapper.IntRomanToIntString);
+		TypeAtom.TypeIntString.addConversion(TypeRepresentation.NATIVE, IntStringToIntNativeWrapper.IntStringToInt);
+		TypeAtom.TypeIntString.addConversion(TypeRepresentation.ROMAN, IntStringToIntRomanWrapper.IntStringToIntRoman);
 	}
 	
 	public static void init() throws Exception{

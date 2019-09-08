@@ -4,8 +4,7 @@ import interpretation.Environment;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
-import types.TypeConcrete;
-import types.TypeRepresentation;
+import types.TypeAtom;
 import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
@@ -21,20 +20,17 @@ import expression.Literal;
 import expression.Tuple;
 import expression.Literal.ConversionWrapper;
 
-public class IntRomanToIntWrapper extends ConversionWrapper {
+public class IntRomanToIntNativeWrapper extends ConversionWrapper {
 
 	/**
 	 * Private constructor to isolate the wrapper class
 	 */
-	private IntRomanToIntWrapper() {
+	private IntRomanToIntNativeWrapper() {
 	}
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
 		Expression e = ConversionWrapper.arg.interpret(env);
-		if (!(e instanceof LitString)) {
-			throw new AppendableException("Invalid wrapped conversion from IntRoman to IntBinary");
-		}
 		LitString r = (LitString) e;
 		Literal l = new LitInteger(RomanNumbers.roman2int(r.value));
 		return l;
@@ -42,8 +38,8 @@ public class IntRomanToIntWrapper extends ConversionWrapper {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		return new Pair<Type, Substitution>(new TypeArrow(TypeRepresentation.TypeIntRoman, TypeRepresentation.TypeInt),
-				new Substitution());
+		return new Pair<Type, Substitution>(new TypeArrow(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative),
+				Substitution.EMPTY);
 	}
 
 	@Override
@@ -51,10 +47,15 @@ public class IntRomanToIntWrapper extends ConversionWrapper {
 		return "(RomanNumbers/roman2int " + ConversionWrapper.arg.toClojureCode() + ")";
 	}
 
+	@Override
+	public String toString() {
+		return "ConversionInternal:IntRomanToIntBinary";
+	}
+
 	/**
 	 * Conversion constructor from IntRoman to Int
 	 */
-	public static final TypeConstructionLambda IntRomanToInt = new TypeConstructionLambda(TypeConcrete.TypeInt,
-			new Tuple(Arrays.asList(ConversionWrapper.arg)),
-			new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)), new IntRomanToIntWrapper());
+	public static final TypeConstructionLambda IntRomanToInt = new TypeConstructionLambda(TypeAtom.TypeIntNative,
+			new Tuple(Arrays.asList(ConversionWrapper.arg)), new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
+			new IntRomanToIntNativeWrapper());
 }

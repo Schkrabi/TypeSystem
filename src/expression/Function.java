@@ -69,11 +69,11 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 
 			// Now check if body was typed correctly according to user defined types of
 			// arguments
-			Optional<Substitution> s = Type.unify(argsType, this.argsType);
+			Substitution s = Type.unify(argsType, this.argsType);
 			
 			// Compose all substitutions in order to check if there are no collisions and
 			// provide final substitution
-			Substitution finalSubst = s.get().compose(bodyInfered.second);
+			Substitution finalSubst = s.union(bodyInfered.second);
 
 			argsType = argsType.apply(finalSubst);
 

@@ -8,20 +8,30 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import expression.Application;
 import expression.Expression;
 import expression.LitBoolean;
 import expression.LitInteger;
+import expression.Tuple;
+import expression.Variable;
 import util.AppendableException;
 import util.ClojureCodeGenerator;
+import util.InvalidClojureCompilationException;
+import util.InvalidNumberOfArgumentsException;
 import util.NameGenerator;
 import util.Pair;
 import util.RomanNumbers;
+import util.ThrowingBinaryOperator;
+import util.ThrowingConsumer;
+import util.ThrowingFunction;
+import util.UnboundVariableException;
 
 class TestUtil {
 
@@ -127,10 +137,51 @@ class TestUtil {
 				fail("Error: " + p.second.toString() + " != " + i.toString());
 			}
 		}
-		
+
 		Assertions.assertThrows(AppendableException.class, () -> RomanNumbers.roman2int("fail!"));
-		
+
 		Assertions.assertThrows(AppendableException.class, () -> RomanNumbers.value('q'));
+	}
+
+	@Test
+	void testThrowingFunction() {
+		Arrays.asList(1, 2, 3, 4, 5).stream().map(ThrowingFunction.wrapper(x -> x)).collect(Collectors.toList());
+		Assertions.assertThrows(RuntimeException.class,
+				() -> Arrays.asList(1, 2, 3, 4, 5).stream().map(ThrowingFunction.wrapper(x -> {
+					throw new AppendableException("test");
+				})).collect(Collectors.toList()));
+	}
+
+	@Test
+	void testThrowingBinaryOperator() {
+		Assertions.assertThrows(RuntimeException.class,
+				() -> Arrays.asList(1, 2, 3, 4, 5).stream().reduce(0, ThrowingBinaryOperator.wrapper((x, y) -> {
+					if (x < 5)
+						return x + y;
+					throw new AppendableException("test");
+				})));
+	}
+
+	@Test
+	void testThrowingConsumer() {
+		Arrays.asList(1, 2, 3, 4, 5).stream().forEach(ThrowingConsumer.wrapper(x -> {
+			if (x < 5)
+				x++;
+		}));
+		Assertions.assertThrows(RuntimeException.class,
+				() -> Arrays.asList(1, 2, 3, 4, 5).stream().forEach(ThrowingConsumer.wrapper(x -> {
+					if (x < 5)
+						x++;
+					throw new AppendableException("test");
+				})));
+	}
+
+	@Test
+	void testExceptions() {
+		new UnboundVariableException(new Variable("x"));
+		new InvalidClojureCompilationException(Expression.EMPTY_EXPRESSION);
+		new InvalidNumberOfArgumentsException(2, Expression.EMPTY_EXPRESSION,
+				new Application(Expression.EMPTY_EXPRESSION, Tuple.EMPTY_TUPLE));	
 	}
 
 }

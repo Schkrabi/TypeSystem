@@ -22,8 +22,19 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	 */
 	public final Type type;
 	
+	/**
+	 * Expression for which this typeholder is placed
+	 */
+	public final Expression placeholderOf;
+	
 	public TypeHolder(Type type) {
 		this.type = type;
+		this.placeholderOf = null;
+	}
+	
+	public TypeHolder(Type type, Expression placeholderOf) {
+		this.type = type;
+		this.placeholderOf = placeholderOf;
 	}
 
 	/* (non-Javadoc)
@@ -31,7 +42,10 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	 */
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		throw new AppendableException(this.getClass().getName() + " is not to be interpreted!");
+		if(this.placeholderOf == null) {
+			throw new AppendableException(this.getClass().getName() + " is not to be interpreted!");
+		}
+		return this.placeholderOf.interpret(env);
 	}
 
 	/* (non-Javadoc)
@@ -39,7 +53,7 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	 */
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) {
-		return new Pair<Type, Substitution>(this.type, new Substitution());
+		return new Pair<Type, Substitution>(this.type, Substitution.EMPTY);
 	}
 
 	/* (non-Javadoc)

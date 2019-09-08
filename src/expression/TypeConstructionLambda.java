@@ -1,14 +1,15 @@
 package expression;
 
 import java.util.Arrays;
+import java.util.Iterator;
 
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
-import types.TypeConcrete;
-import types.TypeRepresentation;
+import types.TypeAtom;
 import types.TypeTuple;
+import types.TypeVariable;
 import util.AppendableException;
 import util.Pair;
 
@@ -43,8 +44,35 @@ public class TypeConstructionLambda extends Lambda {
 	
 	@Override
 	public String toString(){
-		String s = super.toString();
-		return "<" + " " + s + this.constructedType.toString() + ">";
+		StringBuilder s = new StringBuilder("(func:");
+		s.append(this.constructedType);
+		s.append(" (");
+		
+		Iterator<Expression> i = this.args.iterator();
+		Iterator<Type> j = this.argsType.iterator();
+		
+		while(i.hasNext()) {
+			Expression e = i.next();
+			Type t = j.next();
+			
+			if(t instanceof TypeVariable) {
+				s.append(e);
+			}else {
+				s.append("(");
+				s.append(t);
+				s.append(" ");
+				s.append(e);
+				s.append(")");
+			}
+			if(i.hasNext())
+				s.append(" ");
+		}
+		s.append(") ");
+		
+		s.append(this.body.toString());
+		s.append(")");
+		
+		return s.toString();
 	}
 	
 	@Override
@@ -78,44 +106,44 @@ public class TypeConstructionLambda extends Lambda {
 	/**
 	 * Constructor for primitive Int
 	 */
-	public static TypeConstructionLambda IntPrimitiveConstructor = new TypeConstructionLambda(TypeConcrete.TypeInt,
+	public static TypeConstructionLambda IntPrimitiveConstructor = new TypeConstructionLambda(TypeAtom.TypeIntNative,
 																		new Tuple(Arrays.asList(new Variable("x"))),
-																		new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
+																		new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 																		new Variable("x"));
 	/**
 	 * Constructor for primitive String
 	 */
-	public static TypeConstructionLambda StringPrimitiveConstructor = new TypeConstructionLambda(	TypeConcrete.TypeString,
+	public static TypeConstructionLambda StringPrimitiveConstructor = new TypeConstructionLambda(	TypeAtom.TypeStringNative,
 																			new Tuple(Arrays.asList(new Variable("x"))),
-																			new TypeTuple(Arrays.asList(TypeConcrete.TypeString)),
+																			new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
 																			new Variable("x"));
 	/**
 	 * Constructor for primitive Double
 	 */
-	public static TypeConstructionLambda DoublePrimitiveConstructor = new TypeConstructionLambda(	TypeConcrete.TypeDouble,
+	public static TypeConstructionLambda DoublePrimitiveConstructor = new TypeConstructionLambda(	TypeAtom.TypeDoubleNative,
 																			new Tuple(Arrays.asList(new Variable("x"))),
-																			new TypeTuple(Arrays.asList(TypeConcrete.TypeDouble)),
+																			new TypeTuple(Arrays.asList(TypeAtom.TypeDoubleNative)),
 																			new Variable("x"));
 	/**
 	 * Constructor for primitive Boolean
 	 */
-	public static TypeConstructionLambda BoolPrimitiveConstructor = new TypeConstructionLambda(TypeConcrete.TypeBool,
+	public static TypeConstructionLambda BoolPrimitiveConstructor = new TypeConstructionLambda(TypeAtom.TypeBoolNative,
 																		 new Tuple(Arrays.asList(new Variable("x"))),
-																		 new TypeTuple(Arrays.asList(TypeConcrete.TypeBool)),
+																		 new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)),
 																		 new Variable("x"));
 	
 	/**
 	 * Constructor for Int represented by String value
 	 */
-	public static TypeConstructionLambda IntStringConstructor = new TypeConstructionLambda(	TypeRepresentation.TypeIntString,
+	public static TypeConstructionLambda IntStringConstructor = new TypeConstructionLambda(	TypeAtom.TypeIntString,
 																		new Tuple(Arrays.asList(new Variable("x"))),
-																		new TypeTuple(Arrays.asList(TypeConcrete.TypeString)),
+																		new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
 																		new Variable("x"));
 	/**
 	 * Constructor for Int represented by Roman String value
 	 */
-	public static TypeConstructionLambda IntRomanConstructor = new TypeConstructionLambda(	TypeRepresentation.TypeIntRoman,
+	public static TypeConstructionLambda IntRomanConstructor = new TypeConstructionLambda(	TypeAtom.TypeIntRoman,
 																		new Tuple(Arrays.asList(new Variable("x"))),
-																		new TypeTuple(Arrays.asList(TypeConcrete.TypeString)),
+																		new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
 																		new Variable("x"));
 }

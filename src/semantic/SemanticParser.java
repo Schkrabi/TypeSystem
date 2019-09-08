@@ -28,7 +28,7 @@ import expression.Variable;
 import parser.SemanticNode;
 import parser.SemanticPair;
 import types.Type;
-import types.TypeConcrete;
+import types.TypeAtom;
 import types.TypeNotRecognizedException;
 import types.TypeTuple;
 import types.TypeVariable;
@@ -87,7 +87,7 @@ public class SemanticParser {
 			return v;
 		case PAIR:
 			v = token.asPair().asVariable();
-			Optional<TypeConcrete> o = this.typeEnvironment.getType(token.asPair().first, token.asPair().second);
+			Optional<TypeAtom> o = this.typeEnvironment.getType(token.asPair().first, token.asPair().second);
 			if (!o.isPresent()) {
 				throw new TypeNotRecognizedException(token.asPair().first + ":" + token.asPair().second);
 			}
@@ -315,7 +315,7 @@ public class SemanticParser {
 	 * @return Constructor represented by the lamdbaList, that constructs given type
 	 * @throws AppendableException
 	 */
-	private TypeConstructionLambda parseConstructor(TypeConcrete type, List<SemanticNode> lambdaList)
+	private TypeConstructionLambda parseConstructor(TypeAtom type, List<SemanticNode> lambdaList)
 			throws AppendableException {
 		try {
 			Validations.validateLambdaList(lambdaList);
@@ -368,8 +368,8 @@ public class SemanticParser {
 	 * @return Representation of the type
 	 * @throws AppendableException
 	 */
-	private TypeConcrete parseType(SemanticNode typeNode) throws AppendableException {
-		Optional<TypeConcrete> o;
+	private TypeAtom parseType(SemanticNode typeNode) throws AppendableException {
+		Optional<TypeAtom> o;
 		if (typeNode.type == SemanticNode.NodeType.PAIR) {
 			SemanticPair p = typeNode.asPair();
 			o = this.typeEnvironment.getType(p.first, p.second);
@@ -400,7 +400,7 @@ public class SemanticParser {
 			throw e;
 		}
 
-		TypeConcrete type = this.parseType(pair.asList().get(0));
+		TypeAtom type = this.parseType(pair.asList().get(0));
 		Variable variable = new Variable(pair.asList().get(1).asSymbol());
 		return new TypeVariablePair(type, variable);
 	}
@@ -473,8 +473,8 @@ public class SemanticParser {
 			e.appendMessage("in" + l);
 			throw e;
 		}
-		TypeConcrete fromType = this.parseType(l.get(1));
-		TypeConcrete toType = this.parseType(l.get(2));
+		TypeAtom fromType = this.parseType(l.get(1));
+		TypeAtom toType = this.parseType(l.get(2));
 		TypeConstructionLambda constructor = this.parseConstructor(toType, l.get(3).asList());
 
 		if (constructor.argsType.size() != 1 || constructor.argsType.get(0) != fromType) {
@@ -505,7 +505,7 @@ public class SemanticParser {
 		}
 
 		SemanticNode type = l.get(1);
-		TypeConcrete constructedType = this.parseType(type);
+		TypeAtom constructedType = this.parseType(type);
 		TypeConstructionLambda constructor = this.parseConstructor(constructedType, l.get(2).asList());
 
 		// this.typeEnvironment.addConstructor(constructedType, constructor);

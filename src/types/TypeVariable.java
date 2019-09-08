@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import expression.Expression;
+import util.AppendableException;
 
 /**
  * Type variable
@@ -47,11 +48,6 @@ public class TypeVariable extends Type {
 	@Override
 	public Set<TypeVariable> getUnconstrainedVariables() {
 		Set<TypeVariable> s = new TreeSet<TypeVariable>();
-		/*if (this.getRep() == this) {
-			s.add(this);
-			return s;
-		}
-		s.addAll(this.getRep().getUnconstrainedVariables());*/
 		s.add(this);
 		return s;
 	}
@@ -62,19 +58,10 @@ public class TypeVariable extends Type {
 	}
 
 	@Override
-	public boolean isAtomicType() {
-		return true;
-	}
-
-	@Override
 	public Type apply(Substitution s) {
-		if(s.containsKey(this)) {
-			Type t = s.get(this), v;
-			do {
-				v = t.apply(s);
-			}while(!v.equals(t));
-			
-			return t;			
+		if(s.containsVariable(this)) {
+			Type t = s.get(this).get();			
+			return t.apply(s);			
 		}
 		return this;
 	}

@@ -85,13 +85,13 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Substitution s = new Substitution();
+			Substitution s = Substitution.EMPTY;
 			List<Type> types = new LinkedList<Type>();
 
 			for (Expression e : this) {
 				Pair<Type, Substitution> infered = e.infer(env);
 				types.add(infered.first);
-				s = s.compose(infered.second);
+				s = s.union(infered.second);
 			}
 			return new Pair<Type, Substitution>(new TypeTuple(types), s);
 

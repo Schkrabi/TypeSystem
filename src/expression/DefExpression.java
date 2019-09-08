@@ -1,5 +1,7 @@
 package expression;
 
+import java.util.Arrays;
+
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
@@ -34,7 +36,10 @@ public class DefExpression extends Expression {
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		Expression interpreted = this.defined.interpret(env);
+		//TODO!!!
+		Environment e = new Environment(env);
+		e.put(this.name, new TypeHolder(new TypeVariable(NameGenerator.next())));
+		Expression interpreted = this.defined.interpret(e);
 		env.put(this.name, interpreted);
 		return Expression.EMPTY_EXPRESSION;
 	}
@@ -53,13 +58,12 @@ public class DefExpression extends Expression {
 			Substitution s = infered.second;
 			Substitution tmp;
 
-			if (!s.containsKey(tv)) {
-				tmp = new Substitution();
-				tmp.put(tv, infered.first);
+			if (!s.containsVariable(tv)) {
+				tmp = new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(tv, infered.first)));
 			} else {
-				tmp = Type.unify(s.get(tv), infered.first).get();
+				tmp = Type.unify(s.get(tv).get(), infered.first);
 			}
-			s = s.compose(tmp);
+			s = s.union(tmp);
 
 			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, s);
 

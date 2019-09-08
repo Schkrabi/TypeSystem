@@ -16,8 +16,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import conversions.IntRomanToIntWrapper;
-import conversions.IntStringToIntWrapper;
+import conversions.IntRomanToIntStringWrapper;
+import conversions.IntRomanToIntNativeWrapper;
+import conversions.IntStringToIntRomanWrapper;
+import conversions.IntStringToIntNativeWrapper;
+import conversions.IntNativeToIntRomanWrapper;
+import conversions.IntNativeToIntStringWrapper;
 import expression.Application;
 import expression.Constructor;
 import expression.DefExpression;
@@ -49,7 +53,7 @@ import semantic.UserException;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
-import types.TypeConcrete;
+import types.TypeAtom;
 import types.TypeRepresentation;
 import types.TypeTuple;
 import types.TypeVariable;
@@ -58,6 +62,7 @@ import util.AppendableException;
 import util.InvalidClojureCompilationException;
 import util.InvalidNumberOfArgumentsException;
 import util.Pair;
+import util.UnboundVariableException;
 
 @SuppressWarnings("deprecation")
 class TestInterpretation {
@@ -93,7 +98,7 @@ class TestInterpretation {
 		litString.toClojureCode();
 
 		Pair<Type, Substitution> p = litString.infer(new Environment());
-		TestInterpretation.testInference(p, TypeConcrete.TypeString, litString, true);
+		TestInterpretation.testInference(p, TypeAtom.TypeStringNative, litString, true);
 	}
 
 	@Test
@@ -111,7 +116,7 @@ class TestInterpretation {
 		litInteger.toClojureCode();
 
 		Pair<Type, Substitution> p = litInteger.infer(new Environment());
-		TestInterpretation.testInference(p, TypeConcrete.TypeInt, litInteger, true);
+		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, litInteger, true);
 	}
 
 	@Test
@@ -128,7 +133,7 @@ class TestInterpretation {
 		litDouble.hashCode();
 		litDouble.toClojureCode();
 		Pair<Type, Substitution> p = litDouble.infer(new Environment());
-		TestInterpretation.testInference(p, TypeConcrete.TypeDouble, litDouble, true);
+		TestInterpretation.testInference(p, TypeAtom.TypeDoubleNative, litDouble, true);
 	}
 
 	@Test
@@ -144,7 +149,7 @@ class TestInterpretation {
 		LitBoolean.TRUE.toClojureCode();
 
 		Pair<Type, Substitution> p = LitBoolean.TRUE.infer(new Environment());
-		TestInterpretation.testInference(p, TypeConcrete.TypeBool, LitBoolean.TRUE, true);
+		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, LitBoolean.TRUE, true);
 	}
 
 	@Test
@@ -157,7 +162,7 @@ class TestInterpretation {
 		typeHolder.hashCode();
 
 		TestInterpretation.testReflexivity(typeHolder);
-		TestInterpretation.testDifference(typeHolder, new TypeHolder(TypeConcrete.TypeInt));
+		TestInterpretation.testDifference(typeHolder, new TypeHolder(TypeAtom.TypeIntNative));
 		TestInterpretation.testDifference(typeHolder, Expression.EMPTY_EXPRESSION);
 
 		Pair<Type, Substitution> p = typeHolder.infer(new Environment());
@@ -186,7 +191,7 @@ class TestInterpretation {
 
 		TestInterpretation.testInterpretation(variable, value, bound);
 		p = variable.infer(bound);
-		TestInterpretation.testInference(p, TypeConcrete.TypeInt, variable);
+		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, variable);
 
 		final Environment fault = new Environment();
 		fault.put(variable, new Expression() {
@@ -242,8 +247,8 @@ class TestInterpretation {
 			fail("Infered type of " + Tuple.class.getName() + " should be " + TypeTuple.class.getName());
 		}
 		Type t = ((TypeTuple) p.first).get(0);
-		if (!t.equals(TypeConcrete.TypeInt)) {
-			fail("First type of " + tuple.toString() + " should be " + TypeConcrete.TypeInt.toString() + " got " + t);
+		if (!t.equals(TypeAtom.TypeIntNative)) {
+			fail("First type of " + tuple.toString() + " should be " + TypeAtom.TypeIntNative.toString() + " got " + t);
 		}
 		t = ((TypeTuple) p.first).get(1);
 		if (!(t instanceof TypeVariable)) {
@@ -251,8 +256,8 @@ class TestInterpretation {
 					+ TypeVariable.class.getName() + " got " + t);
 		}
 		t = ((TypeTuple) p.first).get(2);
-		if (!t.equals(TypeConcrete.TypeBool)) {
-			fail("Third type of " + tuple.toString() + " should be " + TypeConcrete.TypeBool.toString() + " got " + t);
+		if (!t.equals(TypeAtom.TypeBoolNative)) {
+			fail("Third type of " + tuple.toString() + " should be " + TypeAtom.TypeBoolNative.toString() + " got " + t);
 		}
 
 		Environment bound = new Environment();
@@ -262,7 +267,7 @@ class TestInterpretation {
 				new Tuple(Arrays.asList(new LitInteger(128), new LitDouble(3.14), LitBoolean.FALSE)), bound);
 		p = tuple.infer(bound);
 		TestInterpretation.testInference(p,
-				new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeDouble, TypeConcrete.TypeBool)),
+				new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeDoubleNative, TypeAtom.TypeBoolNative)),
 				tuple);
 
 		Assertions.assertThrows(AppendableException.class, () -> (new Tuple(Arrays.asList(new Expression() {
@@ -343,11 +348,11 @@ class TestInterpretation {
 
 		Pair<Type, Substitution> p = defExpression.infer(new Environment());
 		TestInterpretation.testInference(p, TypeTuple.EMPTY_TUPLE, defExpression);
-		if (p.second.isEmpty()) {
+		if (p.second.equals(Substitution.EMPTY)) {
 			fail("Substitution for " + defExpression.toString() + " should not be empty, got " + p.second.toString());
 		}
-		if (p.second.keySet().stream().findAny().get().equals(TypeConcrete.TypeDouble)) {
-			fail("In substitution should be new variable substituted for " + TypeConcrete.TypeDouble.toString()
+		if (p.second.variableStream().findAny().get().equals(TypeAtom.TypeDoubleNative)) {
+			fail("In substitution should be new variable substituted for " + TypeAtom.TypeDoubleNative.toString()
 					+ " got " + p.second);
 		}
 
@@ -355,7 +360,7 @@ class TestInterpretation {
 				.parseString("(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))");
 		p = recursiveExpression.infer(Main.initTopLevelEnvironment());
 		TestInterpretation.testInference(p, TypeTuple.EMPTY_TUPLE, recursiveExpression);
-		if (p.second.isEmpty()) {
+		if (p.second.equals(Substitution.EMPTY)) {
 			fail("Substitution for " + defExpression.toString() + " should not be empty, got " + p.second.toString());
 		}
 
@@ -384,7 +389,7 @@ class TestInterpretation {
 		new Lambda(new Tuple(Arrays.asList(new Variable("x"))), Expression.EMPTY_EXPRESSION);
 		new Lambda(new Variable("x"), Expression.EMPTY_EXPRESSION);
 		final Lambda lambda = new Lambda(new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
-				new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)), new Variable("x"));
+				new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)), new Variable("x"));
 		final Lambda faultArgsLambda = new Lambda(new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION)),
 				Expression.EMPTY_EXPRESSION);
 
@@ -396,14 +401,14 @@ class TestInterpretation {
 		TestInterpretation.testReflexivity(lambda);
 		TestInterpretation.testDifference(lambda,
 				new Lambda(new Tuple(Arrays.asList(new Variable("z"), new Variable("y"))),
-						new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)), new Variable("x")));
+						new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)), new Variable("x")));
 		TestInterpretation.testDifference(lambda,
 				new Lambda(new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
-						new TypeTuple(Arrays.asList(TypeConcrete.TypeDouble, TypeConcrete.TypeInt)),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeDoubleNative, TypeAtom.TypeIntNative)),
 						new Variable("x")));
 		TestInterpretation.testDifference(lambda,
 				new Lambda(new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
-						new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 						Expression.EMPTY_EXPRESSION));
 		TestInterpretation.testDifference(lambda, Expression.EMPTY_EXPRESSION);
 
@@ -425,21 +430,21 @@ class TestInterpretation {
 		Environment bound = new Environment();
 		bound.put(new Variable("bound"), new LitDouble(3.141521));
 
-		final Function function = new Function(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
+		final Function function = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Variable("x"))), new Variable("bound"), bound);
 
 		function.toString();
 		function.hashCode();
-		function.getFunction(new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)));
+		function.getFunction(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)));
 
 		TestInterpretation.testReflexivity(function);
-		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeConcrete.TypeDouble)),
+		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeDoubleNative)),
 				new Tuple(Arrays.asList(new Variable("x"))), new Variable("bound"), bound));
-		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
+		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Variable("y"))), new Variable("bound"), bound));
-		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
+		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Variable("x"))), Expression.EMPTY_EXPRESSION, bound));
-		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
+		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Variable("x"))), new Variable("bound"), new Environment()));
 		TestInterpretation.testDifference(function, Expression.EMPTY_EXPRESSION);
 
@@ -500,34 +505,39 @@ class TestInterpretation {
 
 	@Test
 	void testTypeConstructionLambda() throws AppendableException {
-		TypeConstructionLambda lambda = new TypeConstructionLambda(TypeConcrete.TypeDouble,
+		TypeConstructionLambda lambda = new TypeConstructionLambda(TypeAtom.TypeDoubleNative,
 				new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
-				new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+				new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))));
 
 		lambda.toString();
 		lambda.hashCode();
+		
+		(new TypeConstructionLambda(TypeAtom.TypeDoubleNative,
+				new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
+				new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, new TypeVariable("x"))),
+				new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))))).toString();
 
 		TestInterpretation.testReflexivity(lambda);
 		TestInterpretation.testDifference(lambda,
-				new TypeConstructionLambda(TypeConcrete.TypeInt,
+				new TypeConstructionLambda(TypeAtom.TypeIntNative,
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
-						new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y")))));
 		TestInterpretation.testDifference(lambda,
-				new TypeConstructionLambda(TypeConcrete.TypeDouble,
+				new TypeConstructionLambda(TypeAtom.TypeDoubleNative,
 						new Tuple(Arrays.asList(new Variable("z"), new Variable("w"))),
-						new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y")))));
 		TestInterpretation.testDifference(lambda,
-				new TypeConstructionLambda(TypeConcrete.TypeDouble,
+				new TypeConstructionLambda(TypeAtom.TypeDoubleNative,
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
-						new TypeTuple(Arrays.asList(TypeConcrete.TypeDouble, TypeConcrete.TypeDouble)),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeDoubleNative, TypeAtom.TypeDoubleNative)),
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y")))));
 		TestInterpretation.testDifference(lambda,
-				new TypeConstructionLambda(TypeConcrete.TypeDouble,
+				new TypeConstructionLambda(TypeAtom.TypeDoubleNative,
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
-						new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 						new Tuple(Arrays.asList(new Variable("z"), new Variable("w")))));
 		TestInterpretation.testDifference(lambda, Expression.EMPTY_EXPRESSION);
 
@@ -538,8 +548,8 @@ class TestInterpretation {
 
 		Pair<Type, Substitution> p = lambda.infer(new Environment());
 		TestInterpretation.testInference(p,
-				new TypeArrow(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
-						TypeConcrete.TypeDouble),
+				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeDoubleNative),
 				lambda);
 
 		Assertions.assertThrows(AppendableException.class, () -> new TypeConstructionLambda(TypeTuple.EMPTY_TUPLE,
@@ -568,46 +578,46 @@ class TestInterpretation {
 		env.put(new Variable("z"), LitBoolean.TRUE);
 
 		Constructor constructor = new Constructor(
-				new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+				new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
 				new Tuple(Arrays.asList(new Variable("x"), new Variable("y"), new Variable("z"))),
-				TypeConcrete.TypeDouble, env);
+				TypeAtom.TypeDoubleNative, env);
 
 		constructor.toString();
 		constructor.hashCode();
 
 		TestInterpretation.testReflexivity(constructor);
 		TestInterpretation.testDifference(constructor,
-				new Constructor(new TypeTuple(Arrays.asList(TypeConcrete.TypeBool, TypeConcrete.TypeBool)),
+				new Constructor(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, TypeAtom.TypeBoolNative)),
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y"), new Variable("z"))),
-						TypeConcrete.TypeDouble, env));
+						TypeAtom.TypeDoubleNative, env));
 		TestInterpretation.testDifference(constructor,
-				new Constructor(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+				new Constructor(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 						new Tuple(Arrays.asList(new Variable("w"), new Variable("q"))),
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y"), new Variable("z"))),
-						TypeConcrete.TypeDouble, env));
+						TypeAtom.TypeDoubleNative, env));
 		TestInterpretation.testDifference(constructor,
-				new Constructor(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+				new Constructor(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
 						new Tuple(Arrays.asList(new Variable("w"), new Variable("q"), new Variable("r"))),
-						TypeConcrete.TypeDouble, env));
+						TypeAtom.TypeDoubleNative, env));
 		TestInterpretation.testDifference(constructor,
-				new Constructor(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+				new Constructor(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y"), new Variable("z"))),
-						TypeConcrete.TypeBool, env));
+						TypeAtom.TypeBoolNative, env));
 		TestInterpretation.testDifference(constructor,
-				new Constructor(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
+				new Constructor(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
 						new Tuple(Arrays.asList(new Variable("x"), new Variable("y"), new Variable("z"))),
-						TypeConcrete.TypeDouble, new Environment()));
+						TypeAtom.TypeDoubleNative, new Environment()));
 		TestInterpretation.testDifference(constructor, Expression.EMPTY_EXPRESSION);
 
 		Pair<Type, Substitution> p = constructor.infer(new Environment());
 		TestInterpretation.testInference(p,
-				new TypeArrow(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt, TypeConcrete.TypeInt)),
-						TypeConcrete.TypeDouble),
+				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeDoubleNative),
 				constructor);
 		Assertions.assertThrows(AppendableException.class,
 				() -> (new Constructor(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, new Expression() {
@@ -631,58 +641,58 @@ class TestInterpretation {
 
 	@Test
 	void testExpendedLambda() throws AppendableException {
-		ExtendedLambda lambda = new ExtendedLambda(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
+		ExtendedLambda lambda = new ExtendedLambda(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)),
 				Arrays.asList(
 						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-								new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)), new Variable("x")),
+								new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Variable("x")),
 						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-								new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)),
-								new Application(IntRomanToIntWrapper.IntRomanToInt,
+								new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
+								new Application(IntRomanToIntNativeWrapper.IntRomanToInt,
 										new Tuple(Arrays.asList(new Variable("x"))))),
 						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-								new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)),
-								new Application(IntStringToIntWrapper.IntStringToInt,
+								new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
+								new Application(IntStringToIntNativeWrapper.IntStringToInt,
 										new Tuple(Arrays.asList(new Variable("x")))))));
 
 		TestInterpretation.testReflexivity(lambda);
 		TestInterpretation.testDifference(lambda,
-				new ExtendedLambda(new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)),
+				new ExtendedLambda(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
 						Arrays.asList(
 								new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-										new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)), new Variable("x")),
+										new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Variable("x")),
 								new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-										new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)),
-										new Application(IntRomanToIntWrapper.IntRomanToInt,
+										new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
+										new Application(IntRomanToIntNativeWrapper.IntRomanToInt,
 												new Tuple(Arrays.asList(new Variable("x"))))),
 								new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-										new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)),
-										new Application(IntStringToIntWrapper.IntStringToInt,
+										new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
+										new Application(IntStringToIntNativeWrapper.IntStringToInt,
 												new Tuple(Arrays.asList(new Variable("x"))))))));
 		TestInterpretation.testDifference(lambda,
-				new ExtendedLambda(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
+				new ExtendedLambda(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)),
 						Arrays.asList(
 								new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-										new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)), new Variable("x")),
+										new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Variable("x")),
 								new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-										new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)),
-										new Application(IntRomanToIntWrapper.IntRomanToInt,
+										new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
+										new Application(IntRomanToIntNativeWrapper.IntRomanToInt,
 												new Tuple(Arrays.asList(new Variable("x"))))))));
 		TestInterpretation.testDifference(lambda,
-				new ExtendedLambda(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
+				new ExtendedLambda(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)),
 						Arrays.asList(
 								new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-										new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)), new Variable("x")),
+										new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Variable("x")),
 								new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-										new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)),
-										new Application(IntRomanToIntWrapper.IntRomanToInt,
+										new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
+										new Application(IntRomanToIntNativeWrapper.IntRomanToInt,
 												new Tuple(Arrays.asList(new Variable("x"))))),
 								new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-										new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)),
-										new Application(IntStringToIntWrapper.IntStringToInt,
+										new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
+										new Application(IntStringToIntNativeWrapper.IntStringToInt,
 												new Tuple(Arrays.asList(new Variable("x"))))),
 								new Lambda(new Tuple(Arrays.asList(new Variable("y"))),
-										new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)),
-										new Application(IntStringToIntWrapper.IntStringToInt,
+										new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
+										new Application(IntStringToIntNativeWrapper.IntStringToInt,
 												new Tuple(Arrays.asList(new Variable("x"))))))));
 		TestInterpretation.testDifference(lambda, Expression.EMPTY_EXPRESSION);
 
@@ -703,15 +713,15 @@ class TestInterpretation {
 		Pair<Type, Substitution> p = lambda.infer(new Environment());
 
 		TestInterpretation.testInference(p,
-				new TypeArrow(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)), TypeConcrete.TypeInt), lambda);
+				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)), TypeAtom.TypeInt), lambda);
 
 		Assertions
 				.assertThrows(AppendableException.class,
-						() -> (new ExtendedLambda(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)), Arrays.asList(
+						() -> (new ExtendedLambda(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)), Arrays.asList(
 								new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-										new TypeTuple(Arrays.asList(TypeConcrete.TypeString)), new Variable("x")),
+										new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), new Variable("x")),
 								new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-										new TypeTuple(Arrays.asList(TypeConcrete.TypeBool)), new Variable("x")))))
+										new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)), new Variable("x")))))
 												.infer(new Environment()));
 	}
 
@@ -720,38 +730,38 @@ class TestInterpretation {
 		Environment bound = new Environment();
 		bound.put(new Variable("x"), new LitInteger(42));
 		List<Function> implementations = Arrays.asList(
-				new Function(new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)),
+				new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
 						new Tuple(Arrays.asList(new Variable("y"))), new Variable("y"), new Environment()),
-				new Function(new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)),
+				new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
 						new Tuple(Arrays.asList(new Variable("y"))), new Variable("y"), new Environment()));
 
-		ExtendedFunction function = new ExtendedFunction(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
+		ExtendedFunction function = new ExtendedFunction(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)),
 				implementations, bound);
 
 		TestInterpretation.testReflexivity(function);
 
 		TestInterpretation.testDifference(function,
-				new ExtendedFunction(new TypeTuple(Arrays.asList(TypeConcrete.TypeString)), implementations, bound));
+				new ExtendedFunction(new TypeTuple(Arrays.asList(TypeAtom.TypeString)), implementations, bound));
 
 		List<Function> tmpImpls = new LinkedList<Function>(implementations);
 		tmpImpls.remove(0);
 		TestInterpretation.testDifference(function,
-				new ExtendedFunction(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)), tmpImpls, bound));
+				new ExtendedFunction(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)), tmpImpls, bound));
 
 		tmpImpls = new LinkedList<Function>(implementations);
-		tmpImpls.add(new Function(new TypeTuple(Arrays.asList(TypeRepresentation.TypeInt)),
+		tmpImpls.add(new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Variable("y"))), new Variable("y"), new Environment()));
 		TestInterpretation.testDifference(function,
-				new ExtendedFunction(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)), tmpImpls, bound));
+				new ExtendedFunction(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)), tmpImpls, bound));
 
 		TestInterpretation.testDifference(function, new ExtendedFunction(
-				new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)), implementations, new Environment()));
+				new TypeTuple(Arrays.asList(TypeAtom.TypeInt)), implementations, new Environment()));
 
 		TestInterpretation.testDifference(function, Expression.EMPTY_EXPRESSION);
 
 		function.toString();
 		function.hashCode();
-		function.getFunction(new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)));
+		function.getFunction(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)));
 		function.getSortedImplementations(new Comparator<Function>() {
 
 			@Override
@@ -762,18 +772,18 @@ class TestInterpretation {
 
 		Pair<Type, Substitution> p = function.infer(new Environment());
 		TestInterpretation.testInference(p,
-				new TypeArrow(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)), TypeConcrete.TypeInt), function);
+				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)), TypeAtom.TypeInt), function);
 
 		Assertions.assertThrows(AppendableException.class,
-				() -> new ExtendedFunction(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
-						Arrays.asList(new Function(new TypeTuple(Arrays.asList(TypeConcrete.TypeString)),
+				() -> new ExtendedFunction(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)),
+						Arrays.asList(new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
 								new Tuple(Arrays.asList(new Variable("x"))), new Variable("x"), new Environment())),
 						bound).infer(new Environment()));
 		Assertions.assertThrows(AppendableException.class,
-				() -> new ExtendedFunction(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)), Arrays.asList(
-						new Function(new TypeTuple(Arrays.asList(TypeConcrete.TypeString)),
+				() -> new ExtendedFunction(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)), Arrays.asList(
+						new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
 								new Tuple(Arrays.asList(new Variable("x"))), new Variable("x"), new Environment()),
-						new Function(new TypeTuple(Arrays.asList(TypeConcrete.TypeBool)),
+						new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)),
 								new Tuple(Arrays.asList(new Variable("x"))), new Variable("x"), new Environment())),
 						bound).infer(new Environment()));
 	}
@@ -812,7 +822,7 @@ class TestInterpretation {
 
 		TestInterpretation.testInterpretation(application, new LitInteger(42), new Environment());
 		Pair<Type, Substitution> p = application.infer(new Environment());
-		TestInterpretation.testInference(p, TypeConcrete.TypeInt, application);
+		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, application);
 
 		// Test Lexical clojure
 		Environment creation = new Environment();
@@ -826,38 +836,38 @@ class TestInterpretation {
 
 		TestInterpretation.testInterpretation(lexicalClojureTest, new LitInteger(128), evaluation);
 		p = lexicalClojureTest.infer(evaluation);
-		TestInterpretation.testInference(p, TypeConcrete.TypeInt, lexicalClojureTest);
+		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, lexicalClojureTest);
 
 		// Test autoconvert representations
 		Application autoConRep = new Application(
 				new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-						new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)), new Variable("x")),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Variable("x")),
 				new Tuple(Arrays.asList(new Application(TypeConstructionLambda.IntRomanConstructor,
 						new Tuple(Arrays.asList(new LitString("V")))))));
 		TestInterpretation.testInterpretation(autoConRep, new LitString("5"), new Environment());
 		p = autoConRep.infer(new Environment());
-		TestInterpretation.testInference(p, TypeRepresentation.TypeIntString, autoConRep);
+		TestInterpretation.testInference(p, TypeAtom.TypeIntString, autoConRep);
 
 		// Test elambda/efunction comparation
-		ExtendedLambda elambda = new ExtendedLambda(new TypeTuple(Arrays.asList(TypeConcrete.TypeInt)),
+		ExtendedLambda elambda = new ExtendedLambda(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)),
 				Arrays.asList(
 						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-								new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)), new Variable("x")),
+								new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Variable("x")),
 						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-								new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntRoman)), new Variable("x"))));
+								new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), new Variable("x"))));
 		Application useString = new Application(elambda,
 				new Tuple(Arrays.asList(new Application(TypeConstructionLambda.IntStringConstructor,
 						new Tuple(Arrays.asList(new LitString("5")))))));
 		TestInterpretation.testInterpretation(useString, new LitString("5"), new Environment());
 		p = useString.infer(new Environment());
-		TestInterpretation.testInference(p, TypeConcrete.TypeInt, useString);
+		TestInterpretation.testInference(p, TypeAtom.TypeInt, useString);
 
 		Application useRoman = new Application(elambda,
 				new Tuple(Arrays.asList(new Application(TypeConstructionLambda.IntStringConstructor,
 						new Tuple(Arrays.asList(new LitString("V")))))));
 		TestInterpretation.testInterpretation(useRoman, new LitString("V"), new Environment());
 		p = useRoman.infer(new Environment());
-		TestInterpretation.testInference(p, TypeConcrete.TypeInt, useRoman);
+		TestInterpretation.testInference(p, TypeAtom.TypeInt, useRoman);
 
 		Assertions.assertThrows(AppendableException.class,
 				() -> new Application(useString, new Tuple(Arrays.asList(new LitString("fail"))))
@@ -881,110 +891,166 @@ class TestInterpretation {
 		TestInterpretation.testInterpretation(ifExprF, new LitInteger(42), new Environment());
 
 		Pair<Type, Substitution> p = ifExprT.infer(new Environment());
-		TestInterpretation.testInference(p, TypeConcrete.TypeInt, ifExprT);
+		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, ifExprT);
 	}
 
 	@Test
 	void testOperators() throws AppendableException {
 		TestInterpretation.testOperator(Operator.Addition,
 				new Tuple(Arrays.asList(new LitInteger(21), new LitInteger(21))), new LitInteger(42),
-				TypeConcrete.TypeInt);
-		TestInterpretation.testOperator(Operator.And, 
-				new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)),
-				LitBoolean.FALSE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.And, 
-				new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)),
-				LitBoolean.TRUE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.And, 
-				new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)),
-				LitBoolean.FALSE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.And, 
-				new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE)),
-				LitBoolean.FALSE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.BitAnd, 
-				new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
-				new LitInteger(0), 
-				TypeConcrete.TypeInt);
-		TestInterpretation.testOperator(Operator.BitOr, 
-				new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
-				new LitInteger(3),
-				TypeConcrete.TypeInt);
-		TestInterpretation.testOperator(Operator.Car, 
+				TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operator.And, new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)),
+				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.And, new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)),
+				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.And, new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)),
+				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.And, new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE)),
+				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.BitAnd, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
+				new LitInteger(0), TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operator.BitOr, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
+				new LitInteger(3), TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operator.Car,
 				new Tuple(Arrays.asList(new Tuple(Arrays.asList(new LitInteger(42), new LitString("foo"))))),
-				new LitInteger(42),
-				TypeConcrete.TypeInt);
-		TestInterpretation.testOperator(Operator.Cdr, 
+				new LitInteger(42), TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operator.Cdr,
 				new Tuple(Arrays.asList(new Tuple(Arrays.asList(new LitInteger(42), new LitString("foo"))))),
-				new LitString("foo"),
-				TypeConcrete.TypeString);
+				new LitString("foo"), TypeAtom.TypeStringNative);
 		TestInterpretation.testOperator(Operator.Concantenation,
-				new Tuple(Arrays.asList(new LitString("foo"), new LitString("bar"))),
-				new LitString("foobar"),
-				TypeConcrete.TypeString);
-		TestInterpretation.testOperator(Operator.Division, 
-				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(2))),
-				new LitInteger(42),
-				TypeConcrete.TypeInt);
-		TestInterpretation.testOperator(Operator.Equals, 
-				new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION, LitBoolean.FALSE)),
-				LitBoolean.FALSE,
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.Equals, 
-				new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION, Expression.EMPTY_EXPRESSION)),
-				LitBoolean.TRUE,
-				TypeConcrete.TypeBool);
+				new Tuple(Arrays.asList(new LitString("foo"), new LitString("bar"))), new LitString("foobar"),
+				TypeAtom.TypeStringNative);
+		TestInterpretation.testOperator(Operator.Division,
+				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(2))), new LitInteger(42),
+				TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operator.Equals,
+				new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION, LitBoolean.FALSE)), LitBoolean.FALSE,
+				TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.Equals,
+				new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION, Expression.EMPTY_EXPRESSION)), LitBoolean.TRUE,
+				TypeAtom.TypeBoolNative);
 		TestInterpretation.testOperator(Operator.LesserThan,
-				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(43))),
-				LitBoolean.TRUE, 
-				TypeConcrete.TypeBool);
+				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(43))), LitBoolean.TRUE,
+				TypeAtom.TypeBoolNative);
 		TestInterpretation.testOperator(Operator.LesserThan,
-				new Tuple(Arrays.asList(new LitInteger(43), new LitInteger(42))),
-				LitBoolean.FALSE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.Multiplication, 
-				new Tuple(Arrays.asList(new LitInteger(21), new LitInteger(2))),
-				new LitInteger(42),
-				TypeConcrete.TypeInt);
-		TestInterpretation.testOperator(Operator.Not, 
-				new Tuple(Arrays.asList(LitBoolean.TRUE)),
-				LitBoolean.FALSE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.Not, 
-				new Tuple(Arrays.asList(LitBoolean.FALSE)),
-				LitBoolean.TRUE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.NumericEqual, 
-				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(42))),
-				LitBoolean.TRUE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.NumericEqual, 
-				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(43))),
-				LitBoolean.FALSE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.Or, 
-				new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)),
-				LitBoolean.TRUE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.Or, 
-				new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)),
-				LitBoolean.TRUE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.Or, 
-				new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)),
-				LitBoolean.TRUE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.Or, 
-				new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE)),
-				LitBoolean.FALSE, 
-				TypeConcrete.TypeBool);
-		TestInterpretation.testOperator(Operator.Subtraction, 
-				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(42))),
-				new LitInteger(42),
-				TypeConcrete.TypeInt);
+				new Tuple(Arrays.asList(new LitInteger(43), new LitInteger(42))), LitBoolean.FALSE,
+				TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.Multiplication,
+				new Tuple(Arrays.asList(new LitInteger(21), new LitInteger(2))), new LitInteger(42),
+				TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operator.Not, new Tuple(Arrays.asList(LitBoolean.TRUE)), LitBoolean.FALSE,
+				TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.Not, new Tuple(Arrays.asList(LitBoolean.FALSE)), LitBoolean.TRUE,
+				TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.NumericEqual,
+				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(42))), LitBoolean.TRUE,
+				TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.NumericEqual,
+				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(43))), LitBoolean.FALSE,
+				TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.Or, new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)),
+				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.Or, new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)),
+				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.Or, new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)),
+				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.Or, new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE)),
+				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.Subtraction,
+				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(42))), new LitInteger(42),
+				TypeAtom.TypeIntNative);
+	}
+
+	@Test
+	void testConversions() throws AppendableException {
+		TestInterpretation.testConversion(IntRomanToIntStringWrapper.IntRomanToIntString,
+				new Application(TypeConstructionLambda.IntRomanConstructor,
+						new Tuple(Arrays.asList(new LitString("V")))),
+				new LitString("5"), new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
+						TypeAtom.TypeIntString));
+		TestInterpretation.testConversion(IntRomanToIntNativeWrapper.IntRomanToInt,
+				new Application(TypeConstructionLambda.IntRomanConstructor,
+						new Tuple(Arrays.asList(new LitString("V")))),
+				new LitInteger(5), new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
+						TypeAtom.TypeIntNative));
+		TestInterpretation.testConversion(IntStringToIntRomanWrapper.IntStringToIntRoman,
+				new Application(TypeConstructionLambda.IntStringConstructor,
+						new Tuple(Arrays.asList(new LitString("5")))),
+				new LitString("V"), new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
+						TypeAtom.TypeIntRoman));
+		TestInterpretation.testConversion(IntStringToIntNativeWrapper.IntStringToInt,
+				new Application(TypeConstructionLambda.IntStringConstructor,
+						new Tuple(Arrays.asList(new LitString("5")))),
+				new LitInteger(5), new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
+						TypeAtom.TypeIntNative));
+		TestInterpretation.testConversion(IntNativeToIntStringWrapper.IntToIntString, new LitInteger(5), new LitString("5"),
+				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
+						TypeAtom.TypeIntString));
+		TestInterpretation.testConversion(IntNativeToIntRomanWrapper.IntToIntRoman, new LitInteger(5), new LitString("V"),
+				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
+						TypeAtom.TypeIntRoman));
+	}
+	
+	@Test
+	void testEnvironment() throws UnboundVariableException {
+		Environment environment = new Environment();
+		environment.put(new Variable("x"), Expression.EMPTY_EXPRESSION);
+		environment.put(new Variable("y"), new LitInteger(42));
+		
+		Environment child = new Environment(environment);
+		child.put(new Variable("z"), Tuple.EMPTY_TUPLE);
+		
+		child.isTopLevel();
+		environment.isTopLevel();
+		
+		child.containsVariable(new Variable("x"));
+		child.containsVariable(new Variable("z"));
+		child.containsVariable(new Variable("w"));
+		
+		child.getVariableValue(new Variable("x"));
+		child.getVariableValue(new Variable("z"));
+		Assertions.assertThrows(UnboundVariableException.class, () -> child.getVariableValue(new Variable("w")));
+		
+		int cmp = environment.compareTo(environment);
+		if(cmp != 0) {
+			fail("Problem: " + environment + ".compareTo(" + environment + ") != 0 got " + cmp);
+		}
+		cmp = environment.compareTo(child);
+		if(cmp == 0) {
+			fail("Problem: " + environment + ".compareTo(" + child + ") == " + cmp);
+		}
+		cmp = child.compareTo(environment);
+		if(cmp == 0) {
+			fail("Problem: " + child + ".compareTo(" + environment + ") == " + cmp);
+		}
+		
+		Environment child2 = new Environment(environment);
+		child2.put(new Variable("w"), new LitInteger(42));
+		cmp = child.compareTo(child2);
+		if(cmp == 0) {
+			fail("Problem: " + child + ".compareTo(" + child2 + ") == " + cmp);
+		}
+		
+		Environment child3 = new Environment(child);
+		cmp = child.compareTo(child3);
+		if(cmp == 0) {
+			fail("Problem: " + child3 + ".compareTo(" + child + ") == " + cmp);
+		}
+		
+		Environment child4 = new Environment(environment);
+		child4.put(new Variable("z"), new LitInteger(43));
+		cmp = child.compareTo(child4);
+		if(cmp == 0) {
+			fail("Problem: " + child + ".compareTo(" + child4 + ") == " + cmp);
+		}
+		
+		Environment child5 = new Environment(environment);
+		child5.put(new Variable("z"), Tuple.EMPTY_TUPLE);
+		child5.put(new Variable("w"), new LitInteger(42));
+		cmp = child.compareTo(child5);
+		if(cmp == 0) {
+			fail("Problem: " + child + ".compareTo(" + child5 + ") == " + cmp);
+		}
 	}
 
 	private Expression parseString(String s) throws AppendableException {
@@ -1026,7 +1092,7 @@ class TestInterpretation {
 		if (!p.first.equals(expected)) {
 			fail("Type of " + infered + " should be " + expected + " got " + p.first);
 		}
-		if (shouldeBeSUbstEmpty && !p.second.isEmpty()) {
+		if (shouldeBeSUbstEmpty && !p.second.equals(Substitution.EMPTY)) {
 			fail("Substitution for inference of " + infered + " should be empty got " + p.second);
 		}
 	}
@@ -1042,7 +1108,7 @@ class TestInterpretation {
 			fail("Type of " + infered + " should be of class " + expected.getName() + " got " + p.first + " of class "
 					+ p.first.getClass().getName());
 		}
-		if (shouldBeSubstEmpty && !p.second.isEmpty()) {
+		if (shouldBeSubstEmpty && !p.second.equals(Substitution.EMPTY)) {
 			fail("Substitution for inference of " + infered + " should be empty got " + p.second);
 		}
 	}
@@ -1067,5 +1133,16 @@ class TestInterpretation {
 		operator.toClojureCode();
 
 		Assertions.assertThrows(InvalidClojureCompilationException.class, () -> operator.body.toClojureCode());
+	}
+
+	private static void testConversion(TypeConstructionLambda conversion, Expression argument,
+			Expression expectedInterpret, Type expectedInfer) throws AppendableException {
+		conversion.toString();
+		conversion.toClojureCode();
+
+		Application appl = new Application(conversion, new Tuple(Arrays.asList(argument)));
+		TestInterpretation.testInterpretation(appl, expectedInterpret, new Environment());
+		Pair<Type, Substitution> p = conversion.infer(new Environment());
+		TestInterpretation.testInference(p, expectedInfer, conversion);
 	}
 }

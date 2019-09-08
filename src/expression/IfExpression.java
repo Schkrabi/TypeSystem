@@ -3,7 +3,7 @@ package expression;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
-import types.TypeConcrete;
+import types.TypeAtom;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
@@ -74,9 +74,9 @@ public class IfExpression extends Application {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable branchType = new TypeVariable(NameGenerator.next());
-			TypeTuple argsType = new TypeTuple(Arrays.asList(TypeConcrete.TypeBool, branchType, branchType));
+			TypeTuple argsType = new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, branchType, branchType));
 
-			return new Pair<Type, Substitution>(new TypeArrow(argsType, branchType), new Substitution());
+			return new Pair<Type, Substitution>(new TypeArrow(argsType, branchType), Substitution.EMPTY);
 		}
 
 		@Override

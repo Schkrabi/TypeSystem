@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import expression.Expression;
 import expression.Tuple;
@@ -13,9 +14,11 @@ import expression.Variable;
 import parser.SemanticNode;
 import types.TypeVariable;
 import util.AppendableException;
+import util.ThrowingFunction;
 
 /**
  * This class contains auxiliary static methods and constants for SemanticParser
+ * 
  * @author Mgr. Radomir Skrabal
  *
  */
@@ -34,10 +37,10 @@ public final class SemanticParserStatic {
 	 * Unused special form. For testing purposes only!
 	 */
 	public static final String UNUSED = "unused";
-	
+
 	public static final Set<String> specialForms;
-	
-	static{
+
+	static {
 		specialForms = new TreeSet<String>();
 		specialForms.add(DEFREP);
 		specialForms.add(DEFTYPE);
@@ -51,28 +54,25 @@ public final class SemanticParserStatic {
 		specialForms.add(ERROR);
 		specialForms.add(UNUSED);
 	}
-	
+
 	/**
 	 * Returns true if given string is reserved word of a special form
+	 * 
 	 * @param symbol
 	 * @return
 	 */
-	public static boolean isSpecialForm(String symbol){
+	public static boolean isSpecialForm(String symbol) {
 		return specialForms.contains(symbol);
 	}
 
 	/**
 	 * Checks if given semantic node is special form reserved word
 	 * 
-	 * @param node
-	 *            inspected node
+	 * @param node inspected node
 	 * @return true if node is a symbol node containing special form, false
 	 *         otherwise
 	 */
 	public static boolean isSpecialForm(SemanticNode node) {
-		if (node.type != SemanticNode.NodeType.SYMBOL) {
-			return false;
-		}
 		try {
 			return isSpecialForm(node.asSymbol());
 		} catch (Exception e) {
@@ -99,32 +99,16 @@ public final class SemanticParserStatic {
 	 * Returns true if the VariableTypePair list is completely untyped - every pair
 	 * has type of null. Returns false otherwise
 	 * 
-	 * @param l
-	 *            checked list
+	 * @param l checked list
 	 * @return true or false
 	 */
-	public static boolean isArgListUntypped(List<TypeVariablePair> l) {		
+	public static boolean isArgListUntypped(List<TypeVariablePair> l) {
 		for (TypeVariablePair p : l) {
 			if (!(p.first instanceof TypeVariable)) {
 				return false;
 			}
 		}
 		return true;
-	}
-
-	/**
-	 * Filters the variables from the variableTypePair list
-	 * 
-	 * @param l
-	 *            VariableTypePair list
-	 * @return list of variables
-	 */
-	public static List<Variable> filterVariablesFromTypedArgsList(List<TypeVariablePair> l) {
-		List<Variable> r = new ArrayList<Variable>();
-		for (TypeVariablePair p : l) {
-			r.add(p.second);
-		}
-		return r;
 	}
 
 	/**
@@ -139,6 +123,7 @@ public final class SemanticParserStatic {
 
 	/**
 	 * Gets the head of a list
+	 * 
 	 * @param l
 	 * @return
 	 */
@@ -148,6 +133,7 @@ public final class SemanticParserStatic {
 
 	/**
 	 * Returns true if the semantic node is simple symbol
+	 * 
 	 * @param s
 	 * @return
 	 */
@@ -157,18 +143,23 @@ public final class SemanticParserStatic {
 
 	/**
 	 * Parses simple list of formal arguments
+	 * 
 	 * @param l parsed argument list
 	 * @return tuple of formal arguments
 	 * @throws AppendableException
 	 */
-	public static Tuple parseArgsList(List<SemanticNode> l) throws AppendableException {		
-		List<Expression> args = new LinkedList<Expression>();
-		for (SemanticNode t : l) {
-			if (t.type != SemanticNode.NodeType.SYMBOL) {
-				throw new UnexpectedExpressionException(t);
-			}
-			args.add(new Variable(t.asSymbol()));
+	public static Tuple parseArgsList(List<SemanticNode> l) throws AppendableException {
+		try {
+			return new Tuple(l.stream().map(ThrowingFunction.wrapper(x -> {
+				try {
+					return new Variable(x.asSymbol());
+				} catch (AppendableException e) {
+					throw new UnexpectedExpressionException(x);
+				}
+			})).collect(Collectors.toList()));
+		} catch (RuntimeException e) {
+			AppendableException ae = (AppendableException) e.getCause();
+			throw ae;
 		}
-		return new Tuple(args);
 	}
 }

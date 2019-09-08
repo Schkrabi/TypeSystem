@@ -3,7 +3,7 @@ package expression;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
-import types.TypeConcrete;
+import types.TypeAtom;
 import util.Pair;
 
 /**
@@ -38,7 +38,7 @@ public class LitString extends Literal {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) {
-		return new Pair<Type, Substitution>(TypeConcrete.TypeString, new Substitution());
+		return new Pair<Type, Substitution>(TypeAtom.TypeStringNative, Substitution.EMPTY);
 	}
 	
 	@Override

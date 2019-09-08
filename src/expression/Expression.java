@@ -51,7 +51,7 @@ public abstract class Expression implements Comparable<Expression> {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env) {
-			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, new Substitution());
+			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, Substitution.EMPTY);
 		}
 
 		@Override

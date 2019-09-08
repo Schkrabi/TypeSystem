@@ -2,7 +2,7 @@ package expression;
 
 import types.Substitution;
 import types.Type;
-import types.TypeConcrete;
+import types.TypeAtom;
 import util.Pair;
 
 import interpretation.Environment;
@@ -44,7 +44,7 @@ public class LitBoolean extends Literal {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) {
-		return new Pair<Type, Substitution>(TypeConcrete.TypeBool, new Substitution());
+		return new Pair<Type, Substitution>(TypeAtom.TypeBoolNative, Substitution.EMPTY);
 	}
 	
 	@Override

@@ -68,15 +68,15 @@ public class ExtendedLambda extends MetaLambda {
 			try {
 				Pair<Type, Substitution> p = this.implementations.stream()
 						.map(ThrowingFunction.wrapper(x -> x.infer(env)))
-						.reduce(new Pair<Type, Substitution>(v, new Substitution()),
+						.reduce(new Pair<Type, Substitution>(v, Substitution.EMPTY),
 								ThrowingBinaryOperator.wrapper((x, y) -> {
-									Substitution s = Type.unify(x.first, y.first).get();
-									s = s.compose(x.second).compose(y.second);
+									Substitution s = Type.unify(x.first, y.first);
+									s = s.union(x.second).union(y.second);
 									return new Pair<Type, Substitution>(v.apply(s), s);
 								}));
 
 				return new Pair<Type, Substitution>(p.first.removeRepresentationInfo(),
-						p.second.compose(Type.unify(((TypeArrow) (p.first)).ltype, this.argsType).get()));
+						p.second.union(Type.unify(((TypeArrow) (p.first)).ltype, this.argsType)));
 			} catch (RuntimeException e) {
 				AppendableException ae = (AppendableException) e.getCause();
 				throw ae;

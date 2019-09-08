@@ -74,7 +74,7 @@ public class Application extends Expression {
 
 	@Override
 	public String toString() {
-		return this.fun.toString() + " " + this.args.toString();
+		return "(" +  this.fun.toString() + " " + this.args.toString() + ")";
 	}
 
 	@Override
@@ -84,22 +84,22 @@ public class Application extends Expression {
 			TypeArrow funType = new TypeArrow(new TypeVariable(NameGenerator.next()),
 					new TypeVariable(NameGenerator.next()));
 			Pair<Type, Substitution> funInfered = this.fun.infer(env);
-			Optional<Substitution> substFun = Type.unify(funType, funInfered.first);
+			Substitution substFun = Type.unify(funType, funInfered.first);
 
-			funType = (TypeArrow) funType.apply(substFun.get());
+			funType = (TypeArrow) funType.apply(substFun);
 
 			// Infer arguments type
 			Pair<Type, Substitution> argsInfered = this.args.infer(env);
 
 			// Unify arguments and formal argument types
-			Optional<Substitution> substArgs = Type.unify(argsInfered.first, funType.ltype);
+			Substitution substArgs = Type.unify(argsInfered.first, funType.ltype);
 
 			// Compose all substitutions (and check if they are compatible)
-			Substitution s = new Substitution();
-			s = s.compose(funInfered.second);
-			s = s.compose(substFun.get());
-			s = s.compose(argsInfered.second);
-			s = s.compose(substArgs.get());
+			Substitution s = Substitution.EMPTY;
+			s = s.union(funInfered.second);
+			s = s.union(substFun);
+			s = s.union(argsInfered.second);
+			s = s.union(substArgs);
 
 			return new Pair<Type, Substitution>(funType.rtype.apply(s), s);
 		} catch (AppendableException e) {

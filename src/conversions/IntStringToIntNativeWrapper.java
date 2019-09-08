@@ -4,8 +4,7 @@ import interpretation.Environment;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
-import types.TypeConcrete;
-import types.TypeRepresentation;
+import types.TypeAtom;
 import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
@@ -20,20 +19,17 @@ import expression.Literal;
 import expression.Tuple;
 import expression.Literal.ConversionWrapper;
 
-public class IntStringToIntWrapper extends ConversionWrapper {
+public class IntStringToIntNativeWrapper extends ConversionWrapper {
 
 	/**
 	 * Private constructor to isolate the wrapper class
 	 */
-	private IntStringToIntWrapper() {
+	private IntStringToIntNativeWrapper() {
 	}
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
 		Expression e = ConversionWrapper.arg.interpret(env);
-		if (!(e instanceof LitString)) {
-			throw new AppendableException("Invalid wrapped conversion from IntString to IntBinary");
-		}
 		LitString s = (LitString) e;
 		Literal l = new LitInteger(Integer.parseInt(s.value));
 		return l;
@@ -46,14 +42,19 @@ public class IntStringToIntWrapper extends ConversionWrapper {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		return new Pair<Type, Substitution>(new TypeArrow(TypeRepresentation.TypeIntString, TypeRepresentation.TypeInt),
-				new Substitution());
+		return new Pair<Type, Substitution>(new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeIntNative),
+				Substitution.EMPTY);
+	}
+	
+	@Override
+	public String toString() {
+		return "ConversionInternal:IntStringToIntBinary";
 	}
 
 	/**
 	 * Conversion constructor from IntString to Int
 	 */
-	public static final TypeConstructionLambda IntStringToInt = new TypeConstructionLambda(TypeConcrete.TypeInt,
+	public static final TypeConstructionLambda IntStringToInt = new TypeConstructionLambda(TypeAtom.TypeIntNative,
 			new Tuple(Arrays.asList(ConversionWrapper.arg)),
-			new TypeTuple(Arrays.asList(TypeRepresentation.TypeIntString)), new IntStringToIntWrapper());
+			new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new IntStringToIntNativeWrapper());
 }

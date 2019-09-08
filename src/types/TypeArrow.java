@@ -50,19 +50,9 @@ public class TypeArrow extends Type {
 	@Override
 	public Set<TypeVariable> getUnconstrainedVariables() {
 		Set<TypeVariable> s = new TreeSet<TypeVariable>();
-		/*
-		 * if (this.getRep() != this) {
-		 * s.addAll(this.getRep().getUnconstrainedVariables()); return s; }
-		 */
-
 		s.addAll(this.ltype.getUnconstrainedVariables());
 		s.addAll(this.rtype.getUnconstrainedVariables());
 		return s;
-	}
-
-	@Override
-	public boolean isApplicableType() {
-		return true;
 	}
 
 	@Override
@@ -71,9 +61,9 @@ public class TypeArrow extends Type {
 			return super.compareTo(o);
 		}
 		TypeArrow other = (TypeArrow) o;
-		if (this.ltype != other.ltype) {
-			return ltype.compareTo(other.ltype);
-		}
+		int cmp = this.ltype.compareTo(other.ltype);
+		if (cmp != 0)
+			return cmp;
 		return this.rtype.compareTo(other.rtype);
 	}
 
@@ -88,14 +78,9 @@ public class TypeArrow extends Type {
 		TypeArrow t = (TypeArrow) toType;
 		Variable v = new Variable(NameGenerator.next());
 
-		Lambda l = new Lambda(v, this.rtype
-				.convertTo(new Application(expr, new Tuple(Arrays.asList(this.ltype.convertTo(v, t.ltype)))), t.rtype));
+		Lambda l = new Lambda(new Tuple(Arrays.asList(v)), (TypeTuple) t.ltype, this.rtype.convertTo(
+				new Application(expr, (Tuple) t.ltype.convertTo(new Tuple(Arrays.asList(v)), this.ltype)), t.rtype));
 		return l;
-	}
-
-	@Override
-	public boolean isAtomicType() {
-		return false;
 	}
 
 	@Override

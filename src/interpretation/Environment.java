@@ -1,5 +1,6 @@
 package interpretation;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -10,27 +11,43 @@ import util.UnboundVariableException;
 /**
  * Environment for variable binding during interpretation
  * 
- * @author r.SKRABAL
+ * @author Mgr. Radomir Skrabal
  *
  */
-public class Environment extends TreeMap<Variable, Expression> implements Comparable<Environment> {
-
-	/**
-	 * Serial version id
-	 */
-	private static final long serialVersionUID = -1055970003823419530L;
+public class Environment implements Comparable<Environment> {
 
 	/**
 	 * Parent environment of this environment
 	 */
 	public final Environment parent;
+	
+	private Map<Variable, Expression> bindings = new HashMap<Variable, Expression>();
 
 	public Environment(Environment parent) {
 		this.parent = parent;
 	}
+	
+	public Environment(Environment parent, Environment initFrom) {
+		this.parent = parent;
+		this.bindings.putAll(initFrom.bindings);
+	}
 
 	public Environment() {
 		this.parent = null;
+	}
+	
+	/**
+	 * Adds binding to environment
+	 * @param v bounded variable
+	 * @param e bounded value
+	 */
+	public void put(Variable v, Expression e) {
+		this.bindings.put(v, e);
+	}
+	
+	@Override
+	public String toString() {
+		return this.bindings.keySet().toString();
 	}
 
 	/**
@@ -51,7 +68,7 @@ public class Environment extends TreeMap<Variable, Expression> implements Compar
 	 * @return true or false
 	 */
 	public boolean containsVariable(Variable var) {
-		if (!this.containsKey(var)) {
+		if (!this.bindings.containsKey(var)) {
 			if (!this.isTopLevel()) {
 				return this.parent.containsVariable(var);
 			}
@@ -69,13 +86,13 @@ public class Environment extends TreeMap<Variable, Expression> implements Compar
 	 * @throws UnboundVariableException 
 	 */
 	public Expression getVariableValue(Variable var) throws UnboundVariableException {
-		if (!this.containsKey(var)) {
+		if (!this.bindings.containsKey(var)) {
 			if (!this.isTopLevel()) {
 				return this.parent.getVariableValue(var);
 			}
 			throw new UnboundVariableException(var);
 		}
-		return this.get(var);
+		return this.bindings.get(var);
 	}
 
 	@Override
@@ -91,26 +108,20 @@ public class Environment extends TreeMap<Variable, Expression> implements Compar
 				return this.parent.compareTo(o.parent);
 			}
 		}
-		int c = (int) Math.signum(this.entrySet().size() - o.entrySet().size());
-		if (c != 0)
-			return c;
+		int c;
 
-		for (Map.Entry<Variable, Expression> e : this.entrySet()) {
-			if (!o.containsKey(e.getKey())) {
+		for (Map.Entry<Variable, Expression> e : this.bindings.entrySet()) {
+			if (!o.bindings.containsKey(e.getKey())) {
 				return -1;
 			}
-			c = o.get(e.getKey()).compareTo(e.getValue());
+			c = o.bindings.get(e.getKey()).compareTo(e.getValue());
 			if (c != 0) {
 				return c;
 			}
 		}
-		for (Map.Entry<Variable, Expression> e : o.entrySet()) {
-			if (!this.containsKey(e.getKey())) {
+		for (Map.Entry<Variable, Expression> e : o.bindings.entrySet()) {
+			if (!this.bindings.containsKey(e.getKey())) {
 				return 1;
-			}
-			c = this.get(e.getKey()).compareTo(e.getValue());
-			if (c != 0) {
-				return c;
 			}
 		}
 

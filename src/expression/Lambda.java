@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 import types.Substitution;
 import types.Type;
@@ -68,7 +67,7 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 
 	@Override
 	public String toString() {
-		StringBuilder s = new StringBuilder("(func (");
+		StringBuilder s = new StringBuilder("(lambda (");
 		
 		Iterator<Expression> i = this.args.iterator();
 		Iterator<Type> j = this.argsType.iterator();
@@ -121,11 +120,11 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 
 			// Now check if body was typed correctly according to user defined types of
 			// arguments
-			Optional<Substitution> s = Type.unify(argsType, this.argsType);
+			Substitution s = Type.unify(argsType, this.argsType);
 
 			// Compose all substitutions in order to check if there are no collisions and
 			// provide final substitution
-			Substitution finalSubst = s.get().compose(bodyInfered.second);
+			Substitution finalSubst = s.union(bodyInfered.second);
 
 			argsType = argsType.apply(finalSubst);
 

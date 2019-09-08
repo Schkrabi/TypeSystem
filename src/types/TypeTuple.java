@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import expression.Expression;
 import expression.Tuple;
 import util.AppendableException;
+import util.ThrowingFunction;
 
 /**
  * Tuple of types
@@ -108,14 +109,21 @@ public class TypeTuple extends Type implements Iterable<Type> {
 			return super.compareTo(o);
 		}
 		TypeTuple other = (TypeTuple) o;
+
 		if (this.values.size() != other.values.size()) {
 			return Integer.compare(this.values.size(), other.values.size());
 		}
-		for (int i = 0; i < this.values.size(); i++) {
-			int cmp = this.get(i).compareTo(other.get(i));
-			if (cmp != 0) {
+
+		Iterator<Type> i = this.iterator();
+		Iterator<Type> j = other.iterator();
+
+		while (i.hasNext()) {
+			Type t = i.next();
+			Type u = j.next();
+
+			int cmp = t.compareTo(u);
+			if (cmp != 0)
 				return cmp;
-			}
 		}
 		return 0;
 	}
@@ -142,7 +150,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		Iterator<Type> j = this.iterator();
 		Iterator<Type> k = ttpl.iterator();
 
-		while (i.hasNext() && j.hasNext() && k.hasNext()) {
+		while (i.hasNext()) {
 			Expression e = i.next();
 			Type t = j.next();
 			Type u = k.next();
@@ -151,11 +159,6 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		}
 
 		return new Tuple(ts);
-	}
-
-	@Override
-	public boolean isAtomicType() {
-		return false;
 	}
 
 	@Override
