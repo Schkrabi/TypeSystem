@@ -17,6 +17,7 @@ import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
 import util.InvalidClojureCompilationException;
+import util.NameGenerator;
 import util.Pair;
 
 /**
@@ -84,14 +85,16 @@ public class Operator extends Function {
 	 * car operator
 	 */
 	public static final Operator Car = new Operator(
-			new TypeTuple(Arrays.asList(new TypeTuple(Arrays.asList(new TypeVariable("_a"), new TypeVariable("_b"))))),
+			new TypeTuple(Arrays.asList(new TypeTuple(
+					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))))),
 			new Tuple(Arrays.asList(new Variable("_x"))), "car", "", OperatorWrapper.CarWrapper);
 
 	/**
 	 * cdr operator
 	 */
 	public static final Operator Cdr = new Operator(
-			new TypeTuple(Arrays.asList(new TypeTuple(Arrays.asList(new TypeVariable("_a"), new TypeVariable("_b"))))),
+			new TypeTuple(Arrays.asList(new TypeTuple(
+					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))))),
 			new Tuple(Arrays.asList(new Variable("_x"))), "cdr", "", OperatorWrapper.CdrWrapper);
 
 	/**
@@ -113,7 +116,8 @@ public class Operator extends Function {
 	 * Equality operator
 	 */
 	public static final Operator Equals = new Operator(
-			new TypeTuple(Arrays.asList(new TypeVariable("_a"), new TypeVariable("_b"))),
+			new TypeTuple(
+					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))),
 			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "equals?", "=",
 			OperatorWrapper.EqualsWrapper);
 
@@ -388,8 +392,8 @@ public class Operator extends Function {
 
 			@Override
 			public Expression interpret(Environment env) throws AppendableException {
-				LitInteger x = (LitInteger) env.getVariableValue(new Variable("_x"));
-				LitInteger y = (LitInteger) env.getVariableValue(new Variable("_y"));
+				LitInteger x = (LitInteger) env.getVariableValue(new Variable("_x")).interpret(env);
+				LitInteger y = (LitInteger) env.getVariableValue(new Variable("_y")).interpret(env);
 
 				return new LitInteger(x.value - y.value);
 			}

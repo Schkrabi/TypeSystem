@@ -79,7 +79,7 @@ public class Validations {
 	 */
 	public static boolean validateDefRepList(List<SemanticNode> defRepList) throws AppendableException{
 		if(defRepList.size() != 3) {
-			throw new InvalidNumberOfArgsException(3, defRepList.size() - 1);
+			throw new InvalidNumberOfArgsException(2, defRepList.size() - 1);
 		}
 		SemanticNode defRepSymbol = defRepList.get(0);
 		if(defRepSymbol.type != SemanticNode.NodeType.SYMBOL

@@ -38,7 +38,7 @@ public class DefExpression extends Expression {
 	public Expression interpret(Environment env) throws AppendableException {
 		//TODO!!!
 		Environment e = new Environment(env);
-		e.put(this.name, new TypeHolder(new TypeVariable(NameGenerator.next())));
+		e.put(this.name, new TypeHolder(new TypeVariable(NameGenerator.next()), this.name));
 		Expression interpreted = this.defined.interpret(e);
 		env.put(this.name, interpreted);
 		return Expression.EMPTY_EXPRESSION;

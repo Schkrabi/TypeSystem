@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import expression.Expression;
 import expression.LitInteger;
+import expression.LitString;
 import interpretation.Environment;
 import main.Main;
 import parser.SchemeLexer;
@@ -30,8 +31,7 @@ import util.Pair;
 import util.ThrowingFunction;
 
 class TestComplex {
-	SemanticParser semanticParser = new SemanticParser();
-
+	
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
 		Main.init();
@@ -54,10 +54,39 @@ class TestComplex {
 		this.testInterpretString(
 				"(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))" +
 				"(fact 5)",
-				new LitInteger(120));	
+				new LitInteger(120));
+		
+		this.testInterpretString(
+				"(deftype Name)" +
+				"(defrep Unstructured Name)" +
+				"(defconstructor Name:Unstructured (lambda ((String:Native x)) x))" +
+				"(defrep Structured Name)" +
+				"(defconstructor Name:Structured (lambda ((String:Native x) (String:Native y)) (cons x y)))" + 
+				"((elambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (Name:Unstructured \"Jan Novak\"))",
+				new LitString("unstructured"));
+		
+		this.testInterpretString(
+				"(deftype Name)" +
+				"(defrep Unstructured Name)" +
+				"(defconstructor Name:Unstructured (lambda ((String:Native x)) x))" +
+				"(defrep Structured Name)" +
+				"(defconstructor Name:Structured (lambda ((String:Native x) (String:Native y)) (cons x y)))" +
+				"((elambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (Name:Structured \"Jan\" \"Novak\"))",
+				new LitString("structured"));
+		
+		this.testInterpretString(
+				"(deftype Name)" +
+				"(defrep Unstructured Name)" +
+				"(defconstructor Name:Unstructured (lambda ((String:Native x)) x))" +
+				"(defrep Structured Name)" +
+				"(defconstructor Name:Structured (lambda ((String:Native x) (String:Native y)) (cons x y)))" +
+				"(defconversion Name:Structured Name:Unstructured (lambda ((Name:Structured x)) (concat (car x) (cdr x))))" +
+				"((lambda ((Name:Unstructured x)) x) (Name:Structured \"Jan\" \"Novak\"))", 
+				new LitString("JanNovak"));
+				
 	}
 
-	private List<Expression> parseString(String s) throws AppendableException {
+	private List<Expression> parseString(String s, SemanticParser semanticParser) throws AppendableException {
 		CharStream charStream = new ANTLRInputStream(s);
 		TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
 		SchemeParser parser = new SchemeParser(tokens);
@@ -69,9 +98,10 @@ class TestComplex {
 	}
 
 	private void testInterpretString(String code, Expression expected) throws AppendableException {
+		SemanticParser semanticParser = new SemanticParser();
 		Environment topLevel = new Environment(null, Main.initTopLevelEnvironment());
 		Expression last = null;
-		for(Expression e : this.parseString(code)) {
+		for(Expression e : this.parseString(code, semanticParser)) {
 			Pair<Type, Substitution> p = e.infer(topLevel);
 			last = e.interpret(topLevel);
 		}

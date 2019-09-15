@@ -60,7 +60,7 @@ public class Application extends Expression {
 		while (i.hasNext()) {
 			Expression e = j.next();
 			Variable v = (Variable) i.next();
-			childEnv.put(v, e);
+			childEnv.put(v, new PostponeInterpretation(e, env));
 		}
 
 		TypeArrow funType = (TypeArrow) f.infer(env).first;
@@ -74,7 +74,7 @@ public class Application extends Expression {
 
 	@Override
 	public String toString() {
-		return "(" +  this.fun.toString() + " " + this.args.toString() + ")";
+		return "(" + this.fun.toString() + " " + this.args.toString() + ")";
 	}
 
 	@Override
