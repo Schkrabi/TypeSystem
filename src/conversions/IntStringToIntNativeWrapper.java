@@ -8,11 +8,12 @@ import types.TypeAtom;
 import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
-import expression.TypeConstructionLambda;
 
 import java.util.Arrays;
 
 import expression.Expression;
+import expression.Function;
+import expression.LitComposite;
 import expression.LitInteger;
 import expression.LitString;
 import expression.Literal;
@@ -29,8 +30,8 @@ public class IntStringToIntNativeWrapper extends ConversionWrapper {
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		Expression e = ConversionWrapper.arg.interpret(env);
-		LitString s = (LitString) e;
+		LitComposite e = (LitComposite) ConversionWrapper.arg.interpret(env);
+		LitString s = (LitString) e.value.get(0);
 		Literal l = new LitInteger(Integer.parseInt(s.value));
 		return l;
 	}
@@ -45,7 +46,7 @@ public class IntStringToIntNativeWrapper extends ConversionWrapper {
 		return new Pair<Type, Substitution>(new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeIntNative),
 				Substitution.EMPTY);
 	}
-	
+
 	@Override
 	public String toString() {
 		return "ConversionInternal:IntStringToIntBinary";
@@ -54,7 +55,6 @@ public class IntStringToIntNativeWrapper extends ConversionWrapper {
 	/**
 	 * Conversion constructor from IntString to Int
 	 */
-	public static final TypeConstructionLambda IntStringToInt = new TypeConstructionLambda(TypeAtom.TypeIntNative,
-			new Tuple(Arrays.asList(ConversionWrapper.arg)),
-			new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new IntStringToIntNativeWrapper());
+	public static final Function IntStringToInt = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
+			new Tuple(Arrays.asList(ConversionWrapper.arg)), new IntStringToIntNativeWrapper(), Environment.topLevelEnvironment);
 }

@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import expression.Expression;
+import interpretation.Environment;
 import util.AppendableException;
 import util.Pair;
 

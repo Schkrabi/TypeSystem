@@ -21,7 +21,6 @@ import expression.Lambda;
 import expression.LitBoolean;
 import expression.LitString;
 import expression.Tuple;
-import expression.TypeConstructionLambda;
 import expression.Variable;
 import interpretation.Environment;
 import main.Main;
@@ -250,7 +249,7 @@ class TestTypes {
 			fail("Conversion of typearrow to typearrow should yield lambda got " + e + " of class "
 					+ e.getClass().getName());
 		}
-		Pair<Type, Substitution> p = e.infer(new Environment());
+		Pair<Type, Substitution> p = e.infer(Environment.topLevelEnvironment);
 		if (!p.first
 				.equals(new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman))) {
 			fail("Infered type of converted expression is " + p.first + " expected "
@@ -269,6 +268,7 @@ class TestTypes {
 				new TypeArrow(TypeAtom.TypeBool, TypeAtom.TypeIntRoman));
 	}
 
+	@SuppressWarnings("unlikely-arg-type")
 	@Test
 	void testTypeRepresentation() {
 		TypeRepresentation rep = new TypeRepresentation("test");
@@ -346,11 +346,6 @@ class TestTypes {
 
 		TestTypes.testGetUnconstrainedVariables(atom, Arrays.asList());
 
-		atom.addConversion(TypeRepresentation.NATIVE,
-				new TypeConstructionLambda(new TypeAtom(new TypeName("test"), TypeRepresentation.NATIVE),
-						new Tuple(Arrays.asList(new Variable("x"))), new TypeTuple(Arrays.asList(atom)),
-						new Variable("x")));
-
 		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), new TypeVariable("a"),
 				new LitString("42"));
 		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), TypeAtom.TypeIntRoman, new Application(
@@ -362,8 +357,6 @@ class TestTypes {
 				() -> atom.convertTo(Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntString));
 		Assertions.assertThrows(ConversionException.class, () -> atom.convertTo(Expression.EMPTY_EXPRESSION,
 				new TypeAtom(new TypeName("Test"), TypeRepresentation.STRING)));
-
-		Assertions.assertAll(() -> TypeAtom.TypeIntNative.isConvertableTo(TypeRepresentation.STRING));
 
 		TestTypes.testRemoveRepresentationInfo(TypeAtom.TypeIntNative, TypeAtom.TypeInt);
 		TestTypes.testApply(TypeAtom.TypeInt,

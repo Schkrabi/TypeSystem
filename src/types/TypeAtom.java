@@ -1,15 +1,11 @@
 package types;
 
-import java.util.Arrays;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
-import expression.Application;
-import expression.TypeConstructionLambda;
 import expression.Expression;
-import expression.Tuple;
+import interpretation.Environment;
+import semantic.TypeEnvironment;
 import util.AppendableException;
 
 /**
@@ -22,11 +18,6 @@ public class TypeAtom extends Type {
 
 	public final TypeName name;
 	public final TypeRepresentation representation;
-
-	/**
-	 * Map for representation converting
-	 */
-	private Map<TypeRepresentation, TypeConstructionLambda> conversionTable = new TreeMap<TypeRepresentation, TypeConstructionLambda>();
 
 	public TypeAtom(TypeName name, TypeRepresentation representation) {
 		this.name = name;
@@ -68,31 +59,6 @@ public class TypeAtom extends Type {
 		return new TreeSet<TypeVariable>();
 	}
 
-	public void addConversion(TypeRepresentation toRepresentation, TypeConstructionLambda conversionConstructor)
-			throws AppendableException {
-		this.conversionTable.put(toRepresentation, conversionConstructor);
-	}
-
-	/**
-	 * Intantiates application that carries out the conversion
-	 * 
-	 * @param type
-	 * @param arg
-	 * @return
-	 * @throws AppendableException
-	 */
-	private Expression instantiateConversionToType(TypeRepresentation type, Expression arg) throws AppendableException {
-		TypeConstructionLambda constructor = this.conversionTable.get(type);
-
-		if (constructor == null) {
-			throw new ConversionException(this, new TypeAtom(this.name, type), arg);
-		}
-
-		Application a = new Application(constructor, new Tuple(Arrays.asList(arg)));
-
-		return a;
-	}
-
 	@Override
 	public Expression convertTo(Expression expr, Type toType) throws AppendableException {
 		if (toType instanceof TypeVariable || toType.equals(this)) {
@@ -102,20 +68,9 @@ public class TypeAtom extends Type {
 			throw new ConversionException(this, toType, expr);
 		}
 
-		Expression e = this.instantiateConversionToType(((TypeAtom) toType).representation, expr);
+		Expression e = TypeEnvironment.singleton.convertTo(expr, this, (TypeAtom)toType);
 
 		return e;
-	}
-
-	/**
-	 * Returns true if there exists conversion from this type to argument type.
-	 * Otherwise returns false.
-	 * 
-	 * @param other type to convert to
-	 * @return true or false
-	 */
-	public boolean isConvertableTo(TypeRepresentation other) {
-		return this.conversionTable.containsKey(other);
 	}
 
 	@Override

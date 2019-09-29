@@ -4,7 +4,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import expression.Expression;
-import util.AppendableException;
+import interpretation.Environment;
 
 /**
  * Type variable

@@ -18,10 +18,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import expression.Application;
+import expression.DefConversionExpression;
 import expression.DefExpression;
+import expression.DefRepresentationExpression;
+import expression.DefTypeExpression;
 import expression.ExceptionExpr;
 import expression.Expression;
 import expression.ExtendedLambda;
+import expression.Function;
 import expression.IfExpression;
 import expression.Lambda;
 import expression.LitBoolean;
@@ -29,8 +33,8 @@ import expression.LitDouble;
 import expression.LitInteger;
 import expression.LitString;
 import expression.Tuple;
-import expression.TypeConstructionLambda;
 import expression.Variable;
+import interpretation.Environment;
 import main.Main;
 import parser.SchemeLexer;
 import parser.SchemeParser;
@@ -54,12 +58,10 @@ import types.TypeRepresentation;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
-import util.NameGenerator;
 import util.Pair;
 
 @SuppressWarnings("deprecation")
 class TestParser {
-	SemanticParser semanticParser = new SemanticParser();
 
 	private Expression parsed;
 	private Expression expected;
@@ -68,10 +70,10 @@ class TestParser {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		if (!initFlag) {
+		/*if (!initFlag) {
 			Main.init();
 			initFlag = true;
-		}
+		}*/
 	}
 
 	@AfterEach
@@ -87,10 +89,37 @@ class TestParser {
 								new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(1))))),
 				new Pair<String, Expression>("(if #t x y)",
 						new IfExpression(LitBoolean.TRUE, new Variable("x"), new Variable("y"))),
-				new Pair<String, Expression>("(deftype List)", Expression.EMPTY_EXPRESSION),
-				new Pair<String, Expression>("(defrep Functional List)", Expression.EMPTY_EXPRESSION),
-				new Pair<String, Expression>("(defconversion List:Functional List (lambda ((List:Functional l)) l))",
-						Expression.EMPTY_EXPRESSION),
+				new Pair<String, Expression>("(deftype Name)", new DefTypeExpression(new TypeName("List"))),
+				new Pair<String, Expression>("(defrep Unstructured Name (String:Native))",
+						new DefRepresentationExpression(new TypeName("Name"), new TypeRepresentation("Unstructured"),
+								Arrays.asList(SemanticNode.make(SemanticNode.NodeType.PAIR,
+										new SemanticPair("String", "Native"))))),
+				new Pair<String, Expression>("(defrep Structured Name (String:Native String:Native))",
+						new DefRepresentationExpression(new TypeName("Name"), new TypeRepresentation("Structured"),
+								Arrays.asList(
+										SemanticNode.make(SemanticNode.NodeType.PAIR,
+												new SemanticPair("String", "Native")),
+										SemanticNode.make(SemanticNode.NodeType.PAIR,
+												new SemanticPair("String", "Native"))))),
+				new Pair<String, Expression>(
+						"(defconversion Name:Structured Name:Unstructured (lambda ((Name:Structured name)) "
+								+ "(Name:Unstructured (concat (get 0 name) (concat \" \" (get 1 name))))))",
+						new DefConversionExpression(
+								new TypeAtom(new TypeName("Name"), new TypeRepresentation("Structured")),
+								new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured")),
+								new Lambda(new Tuple(Arrays.asList(new Variable("name"))),
+										new TypeTuple(Arrays.asList(new TypeAtom(new TypeName("Name"),
+												new TypeRepresentation("Structured")))),
+										new Application(new Variable("Name:Unstructured"), new Tuple(Arrays
+												.asList(new Application(new Variable("concat"), new Tuple(Arrays.asList(
+														new Application(new Variable("get"),
+																new Tuple(Arrays.asList(new LitInteger(0),
+																		new Variable("name")))),
+														new Application(new Variable("concat"), new Tuple(Arrays.asList(
+																new LitString(" "),
+																new Application(new Variable("get"),
+																		new Tuple(Arrays.asList(new LitInteger(1),
+																				new Variable("name")))))))))))))))),
 				new Pair<String, Expression>("(define one 1)",
 						new DefExpression(new Variable("one"), new LitInteger(1))),
 				new Pair<String, Expression>("(cons 1 2)",
@@ -103,66 +132,9 @@ class TestParser {
 
 		);
 
-		for (Pair<String, Expression> p : testcases) {
-			parsed = parseString(p.first);
-			expected = p.second;
-			if (!parsed.equals(expected)) {
-				fail(parsed + " is not equal to " + expected);
-			}
-		}
-
-		// (deftype list)
-		if (!semanticParser.typeEnvironment.getType("List").isPresent()) {
-			fail("deftype did not defined List type");
-		}
-
-		// (deftype Functional List)
-		if (!semanticParser.typeEnvironment.getType("List", "Functional").isPresent()) {
-			fail("defrep did not defined List:Functional type");
-		}
-
-		// (defconversion List:Functional List (lambda ((List:Functional l)) l))
-		if (!semanticParser.typeEnvironment.getType("List", "Functional").get()
-				.isConvertableTo(semanticParser.typeEnvironment.getType("List").get().representation)) {
-			fail("defconversion did not defined conversion List:Functional->List");
-		}
-
 		// Dummy object tests
 		new Validations();
 		new SemanticParserStatic();
-	}
-
-	@Test
-	void testDefConstructor() throws AppendableException {
-		// TODO types are actually created by side effect in parser. Is it viable?
-		parseString("(deftype List)");
-		parseString("(defrep Functional List)");
-
-		Pair<String, Expression> p = new Pair<String, Expression>("(defconstructor List:Functional (lambda (x) x))",
-				new DefExpression(new Variable("List:Functional"),
-						new TypeConstructionLambda(semanticParser.typeEnvironment.getType("List", "Functional").get(),
-								new Tuple(Arrays.asList(new Variable("x"))),
-								new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()))),
-								new Variable("x"))));
-		parsed = parseString(p.first);
-		if (!(parsed instanceof DefExpression)) {
-			fail(parsed + " is not a " + DefExpression.class.getName());
-		}
-		DefExpression parsedDefExpression = (DefExpression) parsed;
-		expected = p.second;
-		DefExpression expectedDefExpression = (DefExpression) p.second;
-		if (!(parsedDefExpression.defined instanceof TypeConstructionLambda)) {
-			fail(parsedDefExpression.defined + " is not instance of " + TypeConstructionLambda.class.getName());
-		}
-		TypeConstructionLambda parsedTypeConstructionLambda = (TypeConstructionLambda) parsedDefExpression.defined;
-		TypeConstructionLambda expectedTypeConstructionLambda = (TypeConstructionLambda) expectedDefExpression.defined;
-
-		if (!parsedTypeConstructionLambda.constructedType.equals(expectedTypeConstructionLambda.constructedType)
-				|| !parsedTypeConstructionLambda.args.equals(expectedTypeConstructionLambda.args)
-				|| !parsedTypeConstructionLambda.body.equals(expectedTypeConstructionLambda.body)
-				|| parsedTypeConstructionLambda.argsType.size() != expectedTypeConstructionLambda.argsType.size()) {
-			fail(parsed + " is not equal to " + expected);
-		}
 	}
 
 	@Test
@@ -486,12 +458,12 @@ class TestParser {
 	@Test
 	public void testParseNode() {
 		Assertions.assertThrows(AppendableException.class,
-				() -> semanticParser.parseNode(SemanticNode.make(NodeType.UNUSED, new Object())));
+				() -> SemanticParser.parseNode(SemanticNode.make(NodeType.UNUSED, new Object())));
 	}
 
 	@Test
 	public void testParseSpecialForm() {
-		Assertions.assertThrows(AppendableException.class, () -> semanticParser
+		Assertions.assertThrows(AppendableException.class, () -> SemanticParser
 				.parseNodelist(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, SemanticParserStatic.UNUSED))));
 	}
 
@@ -552,12 +524,13 @@ class TestParser {
 			fail(k.toString() + " is a tail of " + l.toString());
 		}
 
-		Tuple t = SemanticParserStatic.parseArgsList(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "y")));
+		Tuple t = SemanticParserStatic.parseArgsList(
+				Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "y")));
 		Tuple exp = new Tuple(Arrays.asList(new Variable("x"), new Variable("y")));
-		if(!t.equals(exp)) {
+		if (!t.equals(exp)) {
 			fail("SemanticParserStatic.parseArgsList not working as expected. Got " + t + " expected " + exp);
 		}
-		
+
 		Assertions.assertThrows(UnexpectedExpressionException.class, () -> SemanticParserStatic
 				.parseArgsList(Arrays.asList(SemanticNode.make(NodeType.BOOL, new Boolean(false)))));
 	}
@@ -585,12 +558,16 @@ class TestParser {
 
 	@Test
 	public void testTypeEnvironment() throws AppendableException {
-		TypeEnvironment typeEnv = new TypeEnvironment();
+		TypeEnvironment typeEnv = TypeEnvironment.singleton;
 
-		typeEnv.addType("List");
-		typeEnv.addRepresentation("List", "Functional");
-		typeEnv.addType("Test");
-		typeEnv.addRepresentation("Test", "Functional");
+		typeEnv.addType(new TypeName("List"));
+		typeEnv.addRepresentation(new TypeAtom(new TypeName("List"), new TypeRepresentation("Functional")),
+				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
+						Environment.topLevelEnvironment));
+		typeEnv.addType(new TypeName("Test"));
+		typeEnv.addRepresentation(new TypeAtom(new TypeName("Test"), new TypeRepresentation("Functional")),
+				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
+						Environment.topLevelEnvironment));
 
 		typeEnv.getType("List", "Functional");
 
@@ -610,37 +587,27 @@ class TestParser {
 			fail("Expected typeEnv.isType(SemanticNode.make(NodeType.INT, new Integer(128))) = false");
 		}
 
-		typeEnv.getConstructor(TypeAtom.TypeIntRoman, 1);
-		Assertions.assertThrows(NoSuchElementException.class, () -> typeEnv.getConstructor(TypeAtom.TypeIntRoman, 3));
+		typeEnv.getConstructor(TypeAtom.TypeIntRoman);
 		Assertions.assertThrows(NoSuchElementException.class,
-				() -> typeEnv.getConstructor(new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD), 1));
+				() -> typeEnv.getConstructor(new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD)));
 
-		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addType("Int"));
-		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addRepresentation("Int", "Roman"));
+		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addType(new TypeName("Int")));
+		Assertions.assertThrows(AppendableException.class,
+				() -> typeEnv.addRepresentation(new TypeAtom(new TypeName("Int"), new TypeRepresentation("Roman")),
+						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
+								Environment.topLevelEnvironment)));
 
 		Assertions.assertThrows(UndefinedTypeException.class,
 				() -> typeEnv.addConversion(new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD),
-						TypeAtom.TypeInt, new TypeConstructionLambda(null, null, null, expected)));
+						TypeAtom.TypeInt, new Function(null, null, expected, Environment.topLevelEnvironment)));
 		Assertions.assertThrows(UndefinedTypeException.class,
 				() -> typeEnv.addConversion(TypeAtom.TypeInt,
 						new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD),
-						new TypeConstructionLambda(null, null, null, expected)));
+						new Function(null, null, expected, Environment.topLevelEnvironment)));
 
-		typeEnv.addConstructor(typeEnv.getType("List", "Functional").get(),
-				new TypeConstructionLambda(typeEnv.getType("List", "Functional").get(),
-						new Tuple(Arrays.asList(new Variable("x"))),
-						new TypeTuple(Arrays.asList(new TypeVariable("x"))), Expression.EMPTY_EXPRESSION));
-		typeEnv.addConstructor(typeEnv.getType("List", "Functional").get(), new TypeConstructionLambda(
-				typeEnv.getType("List", "Functional").get(), Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, expected));
-		Assertions.assertThrows(AppendableException.class,
-				() -> typeEnv.addConstructor(typeEnv.getType("List", "Functional").get(),
-						new TypeConstructionLambda(typeEnv.getType("List", "Functional").get(), Tuple.EMPTY_TUPLE,
-								TypeTuple.EMPTY_TUPLE, expected)));
-
-		Assertions.assertThrows(AppendableException.class,
-				() -> typeEnv.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative,
-						new TypeConstructionLambda(TypeAtom.TypeIntNative, Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE,
-								expected)));
+		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addConversion(TypeAtom.TypeIntNative,
+				TypeAtom.TypeStringNative,
+				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, expected, Environment.topLevelEnvironment)));
 	}
 
 	@Test
@@ -674,14 +641,14 @@ class TestParser {
 	void testExceptions() {
 		new UserException("test");
 	}
-	
+
 	private Expression parseString(String s) throws AppendableException {
 		CharStream charStream = new ANTLRInputStream(s);
 		TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
 		SchemeParser parser = new SchemeParser(tokens);
 
 		ExprsContext exprsContext = parser.exprs();
-		return semanticParser.parseNode(exprsContext.val.get(0));
+		return SemanticParser.parseNode(exprsContext.val.get(0));
 	}
 
 }

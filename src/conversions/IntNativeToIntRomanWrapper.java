@@ -9,11 +9,12 @@ import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
 import util.RomanNumbers;
-import expression.TypeConstructionLambda;
 
 import java.util.Arrays;
 
 import expression.Expression;
+import expression.Function;
+import expression.LitComposite;
 import expression.LitString;
 import expression.Literal;
 import expression.Tuple;
@@ -32,7 +33,8 @@ public class IntNativeToIntRomanWrapper extends ConversionWrapper {
 	public Expression interpret(Environment env) throws AppendableException {
 		Expression e = ConversionWrapper.arg.interpret(env);
 		LitInteger i = (LitInteger) e;
-		Literal l = new LitString(RomanNumbers.int2roman(i.value));
+		Literal l = new LitComposite(new Tuple(Arrays.asList(new LitString(RomanNumbers.int2roman(i.value)))),
+				TypeAtom.TypeIntRoman);
 		return l;
 	}
 
@@ -46,7 +48,7 @@ public class IntNativeToIntRomanWrapper extends ConversionWrapper {
 	public String toClojureCode() throws AppendableException {
 		return "(RomanNumbers/int2roman " + ConversionWrapper.arg.toClojureCode() + ")";
 	}
-	
+
 	@Override
 	public String toString() {
 		return "ConversionInternal:IntBinaryToIntRoman";
@@ -55,7 +57,6 @@ public class IntNativeToIntRomanWrapper extends ConversionWrapper {
 	/**
 	 * Conversion constructor from Int to IntRoman
 	 */
-	public static final TypeConstructionLambda IntToIntRoman = new TypeConstructionLambda(
-			TypeAtom.TypeIntRoman, new Tuple(Arrays.asList(ConversionWrapper.arg)),
-			new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new IntNativeToIntRomanWrapper());
+	public static final Function IntToIntRoman = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
+			new Tuple(Arrays.asList(ConversionWrapper.arg)), new IntNativeToIntRomanWrapper(), Environment.topLevelEnvironment);
 }

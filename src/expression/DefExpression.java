@@ -37,7 +37,7 @@ public class DefExpression extends Expression {
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
 		//TODO!!!
-		Environment e = new Environment(env);
+		Environment e = Environment.create(env);
 		e.put(this.name, new TypeHolder(new TypeVariable(NameGenerator.next()), this.name));
 		Expression interpreted = this.defined.interpret(e);
 		env.put(this.name, interpreted);
@@ -47,7 +47,7 @@ public class DefExpression extends Expression {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Environment childEnv = new Environment(env);
+			Environment childEnv = Environment.create(env);
 
 			// Define creates new binding in environment, need to have reference to type of
 			// this variable existing in environment from we are infering

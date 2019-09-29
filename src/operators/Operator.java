@@ -12,6 +12,7 @@ import expression.Variable;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
+import types.TypeArrow;
 import types.TypeAtom;
 import types.TypeTuple;
 import types.TypeVariable;
@@ -36,7 +37,7 @@ public class Operator extends Function {
 	public final String clojureSymbol;
 
 	public Operator(TypeTuple argsType, Tuple args, String symbol, String clojureSymbol, OperatorWrapper body) {
-		super(argsType, args, body, new Environment());
+		super(argsType, args, body, Environment.topLevelEnvironment);
 		this.symbol = symbol;
 		this.clojureSymbol = clojureSymbol;
 	}
@@ -87,7 +88,14 @@ public class Operator extends Function {
 	public static final Operator Car = new Operator(
 			new TypeTuple(Arrays.asList(new TypeTuple(
 					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))))),
-			new Tuple(Arrays.asList(new Variable("_x"))), "car", "", OperatorWrapper.CarWrapper);
+			new Tuple(Arrays.asList(new Variable("_x"))), "car", "", OperatorWrapper.CarWrapper) {
+		
+		@Override
+		public Pair<Type, Substitution> infer(Environment env){
+			TypeTuple argType = (TypeTuple)this.argsType.get(0);
+			return new Pair<Type, Substitution>(new TypeArrow(this.argsType, argType.get(0)), Substitution.EMPTY);
+		}
+	};
 
 	/**
 	 * cdr operator
@@ -95,7 +103,14 @@ public class Operator extends Function {
 	public static final Operator Cdr = new Operator(
 			new TypeTuple(Arrays.asList(new TypeTuple(
 					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))))),
-			new Tuple(Arrays.asList(new Variable("_x"))), "cdr", "", OperatorWrapper.CdrWrapper);
+			new Tuple(Arrays.asList(new Variable("_x"))), "cdr", "", OperatorWrapper.CdrWrapper) {
+		
+		@Override
+		public Pair<Type, Substitution> infer(Environment env){
+			TypeTuple argType = (TypeTuple)this.argsType.get(0);
+			return new Pair<Type, Substitution>(new TypeArrow(this.argsType, argType.get(1)), Substitution.EMPTY);
+		}
+	};
 
 	/**
 	 * Concatenation operator
@@ -251,7 +266,7 @@ public class Operator extends Function {
 		/**
 		 * Body of car operator
 		 */
-		public static final OperatorWrapper CarWrapper = new OperatorWrapper(new TypeVariable("_a")) {
+		public static final OperatorWrapper CarWrapper = new OperatorWrapper(new TypeVariable(NameGenerator.next())) {
 
 			@Override
 			public Expression interpret(Environment env) throws AppendableException {

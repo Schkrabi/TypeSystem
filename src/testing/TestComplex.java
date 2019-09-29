@@ -99,7 +99,7 @@ class TestComplex {
 
 	private void testInterpretString(String code, Expression expected) throws AppendableException {
 		SemanticParser semanticParser = new SemanticParser();
-		Environment topLevel = new Environment(null, Main.initTopLevelEnvironment());
+		Environment topLevel = Environment.create(Environment.topLevelEnvironment, Main.initTopLevelEnvironment());
 		Expression last = null;
 		for(Expression e : this.parseString(code, semanticParser)) {
 			Pair<Type, Substitution> p = e.infer(topLevel);

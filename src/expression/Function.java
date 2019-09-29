@@ -1,5 +1,6 @@
 package expression;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,6 +10,7 @@ import interpretation.Environment;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
+import types.TypeAtom;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
@@ -47,7 +49,7 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
 			// First infer types in body, use typeholders for argument variables
-			Environment childEnv = new Environment(this.creationEnvironment);
+			Environment childEnv = Environment.create(this.creationEnvironment);
 
 			List<Type> l = new LinkedList<Type>();
 
@@ -70,7 +72,7 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 			// Now check if body was typed correctly according to user defined types of
 			// arguments
 			Substitution s = Type.unify(argsType, this.argsType);
-			
+
 			// Compose all substitutions in order to check if there are no collisions and
 			// provide final substitution
 			Substitution finalSubst = s.union(bodyInfered.second);
@@ -142,8 +144,7 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 	public boolean equals(Object other) {
 		if (other instanceof Function) {
 			return this.args.equals(((Function) other).args) && this.body.equals(((Function) other).body)
-					&& this.argsType.equals(((Function) other).argsType)
-					&& super.equals(other);
+					&& this.argsType.equals(((Function) other).argsType) && super.equals(other);
 		}
 		return false;
 	}
@@ -152,4 +153,29 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 	public int hashCode() {
 		return super.hashCode() * this.argsType.hashCode() * this.args.hashCode() * this.body.hashCode();
 	}
+
+	public static Function IntNativeConstructor = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), new Variable("_x"), Environment.topLevelEnvironment);
+	public static Function IntConstructor = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), new Variable("_x"), Environment.topLevelEnvironment);
+	public static Function IntStringConstructor = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))),
+			new LitComposite(new Tuple(Arrays.asList(new LitString("_x"))), TypeAtom.TypeIntString), Environment.topLevelEnvironment);
+	public static Function IntRomanConstructor = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))),
+			new LitComposite(new Tuple(Arrays.asList(new LitString("_x"))), TypeAtom.TypeIntRoman), Environment.topLevelEnvironment);
+	public static Function StringNativeConstructor = new Function(
+			new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), new Tuple(Arrays.asList(new Variable("_x"))),
+			new Variable("_x"), Environment.topLevelEnvironment);
+	public static Function StringConstructor = new Function(
+			new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), new Tuple(Arrays.asList(new Variable("_x"))),
+			new Variable("_x"), Environment.topLevelEnvironment);
+	public static Function DoubleNativeConstructor = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeDoubleNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), new Variable("_x"), Environment.topLevelEnvironment);
+	public static Function DoubleConstructor = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeDoubleNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), new Variable("_x"), Environment.topLevelEnvironment);
+	public static Function BoolNativeConstructor = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), new Variable("_x"), Environment.topLevelEnvironment);
+	public static Function BoolConstructor = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), new Variable("_x"), Environment.topLevelEnvironment);
 }

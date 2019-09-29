@@ -9,11 +9,12 @@ import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
 import util.RomanNumbers;
-import expression.TypeConstructionLambda;
 
 import java.util.Arrays;
 
 import expression.Expression;
+import expression.Function;
+import expression.LitComposite;
 import expression.LitString;
 import expression.Literal;
 import expression.Literal.ConversionWrapper;
@@ -35,23 +36,25 @@ public class IntStringToIntRomanWrapper extends ConversionWrapper {
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		Expression e = ConversionWrapper.arg.interpret(env);
-		LitString s = (LitString) e;
-		Literal l = new LitString(RomanNumbers.int2roman(Integer.parseInt(s.value)));
+		LitComposite e = (LitComposite) ConversionWrapper.arg.interpret(env);
+		LitString s = (LitString) e.value.get(0);
+		Literal l = new LitComposite(
+				new Tuple(Arrays.asList(new LitString(RomanNumbers.int2roman(Integer.parseInt(s.value))))),
+				TypeAtom.TypeIntRoman);
 		return l;
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		return new Pair<Type, Substitution>(
-				new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman), Substitution.EMPTY);
+		return new Pair<Type, Substitution>(new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman),
+				Substitution.EMPTY);
 	}
 
 	@Override
 	public String toClojureCode() throws AppendableException {
 		return "(RomanNumbers/roman2int (Integer/parseInt " + ConversionWrapper.arg.toClojureCode() + "))";
 	}
-	
+
 	@Override
 	public String toString() {
 		return "ConversionInternal:IntStringToIntRoman";
@@ -60,7 +63,7 @@ public class IntStringToIntRomanWrapper extends ConversionWrapper {
 	/**
 	 * Conversion constructor from IntString to IntRoman
 	 */
-	public static final TypeConstructionLambda IntStringToIntRoman = new TypeConstructionLambda(
-			TypeAtom.TypeIntRoman, new Tuple(Arrays.asList(ConversionWrapper.arg)),
-			new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new IntStringToIntRomanWrapper());
+	public static final Function IntStringToIntRoman = new Function(
+			new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Tuple(Arrays.asList(ConversionWrapper.arg)),
+			new IntStringToIntRomanWrapper(), Environment.topLevelEnvironment);
 }

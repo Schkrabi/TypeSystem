@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import expression.Expression;
 import expression.Tuple;
+import interpretation.Environment;
 import util.AppendableException;
 import util.ThrowingFunction;
 

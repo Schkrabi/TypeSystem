@@ -4,14 +4,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import expression.Application;
-import expression.TypeConstructionLambda;
+import expression.DefConversionExpression;
 import expression.DefExpression;
+import expression.DefRepresentationExpression;
+import expression.DefTypeExpression;
 import expression.ExceptionExpr;
 import expression.Expression;
 import expression.ExtendedLambda;
@@ -26,10 +27,10 @@ import expression.Tuple;
 import expression.Variable;
 
 import parser.SemanticNode;
-import parser.SemanticPair;
 import types.Type;
 import types.TypeAtom;
-import types.TypeNotRecognizedException;
+import types.TypeName;
+import types.TypeRepresentation;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
@@ -43,12 +44,6 @@ import util.NameGenerator;
  *
  */
 public class SemanticParser {
-
-	/**
-	 * Environment managing types of this parser
-	 */
-	public final TypeEnvironment typeEnvironment = new TypeEnvironment();
-
 	/**
 	 * Parses list of nodes
 	 * 
@@ -56,7 +51,7 @@ public class SemanticParser {
 	 * @return
 	 * @throws Exception
 	 */
-	public Expression parseNodelist(List<SemanticNode> l) throws AppendableException {
+	public static Expression parseNodelist(List<SemanticNode> l) throws AppendableException {
 		if (l.isEmpty()) {
 			return Expression.EMPTY_EXPRESSION;
 		}
@@ -64,10 +59,10 @@ public class SemanticParser {
 		SemanticNode head = SemanticParserStatic.listHead(l);
 
 		if (SemanticParserStatic.isSpecialForm(head)) {
-			return this.parseSpecialForm(head.asSymbol(), l);
+			return SemanticParser.parseSpecialForm(head.asSymbol(), l);
 		}
 
-		return this.parseList(l);
+		return SemanticParser.parseList(l);
 	}
 
 	/**
@@ -77,7 +72,7 @@ public class SemanticParser {
 	 * @return an Expression
 	 * @throws AppendableException
 	 */
-	public Expression parseNode(SemanticNode token) throws AppendableException {
+	public static Expression parseNode(SemanticNode token) throws AppendableException {
 		Literal l;
 		Variable v;
 
@@ -87,10 +82,6 @@ public class SemanticParser {
 			return v;
 		case PAIR:
 			v = token.asPair().asVariable();
-			Optional<TypeAtom> o = this.typeEnvironment.getType(token.asPair().first, token.asPair().second);
-			if (!o.isPresent()) {
-				throw new TypeNotRecognizedException(token.asPair().first + ":" + token.asPair().second);
-			}
 			return v;
 		case INT:
 			l = new LitInteger(token.asInt());
@@ -104,7 +95,7 @@ public class SemanticParser {
 		case BOOL:
 			return token.asBool() ? LitBoolean.TRUE : LitBoolean.FALSE;
 		case LIST:
-			return this.parseNodelist(token.asList());
+			return SemanticParser.parseNodelist(token.asList());
 		default:
 			break;
 		}
@@ -118,7 +109,7 @@ public class SemanticParser {
 	 * @return Expression represeting the parsed extended lambda
 	 * @throws AppendableException
 	 */
-	private ExtendedLambda parseElambda(List<SemanticNode> l) throws AppendableException {
+	private static ExtendedLambda parseElambda(List<SemanticNode> l) throws AppendableException {
 		try {
 			Validations.validateElambdaList(l);
 		} catch (AppendableException e) {
@@ -126,10 +117,10 @@ public class SemanticParser {
 			throw e;
 		}
 
-		List<TypeVariablePair> args = this.parseTypedArgList(l.get(1).asList());
+		List<TypeVariablePair> args = SemanticParser.parseTypedArgList(l.get(1).asList());
 		Tuple argsTuple = new Tuple(args.stream().map(x -> x.second).collect(Collectors.toList()));
 		List<SemanticNode> impls = l.subList(2, l.size());
-		Set<Lambda> implementations = this.parseImplementations(argsTuple, impls);
+		Set<Lambda> implementations = SemanticParser.parseImplementations(argsTuple, impls);
 
 		return new ExtendedLambda(new TypeTuple(args.stream().map(x -> x.first).collect(Collectors.toList())),
 				implementations);
@@ -142,16 +133,16 @@ public class SemanticParser {
 	 * @return Expression representitng the if
 	 * @throws AppendableException
 	 */
-	private Expression parseIf(List<SemanticNode> l) throws AppendableException {
+	private static Expression parseIf(List<SemanticNode> l) throws AppendableException {
 		try {
 			Validations.validateIfList(l);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + l);
 			throw e;
 		}
-		Expression pred = this.parseNode(l.get(1));
-		Expression trueBranch = this.parseNode(l.get(2));
-		Expression falseBranch = this.parseNode(l.get(3));
+		Expression pred = SemanticParser.parseNode(l.get(1));
+		Expression trueBranch = SemanticParser.parseNode(l.get(2));
+		Expression falseBranch = SemanticParser.parseNode(l.get(3));
 
 		return new IfExpression(pred, trueBranch, falseBranch);
 	}
@@ -164,39 +155,36 @@ public class SemanticParser {
 	 * @return
 	 * @throws Exception
 	 */
-	private Expression parseSpecialForm(String specialForm, List<SemanticNode> specialFormList)
+	private static Expression parseSpecialForm(String specialForm, List<SemanticNode> specialFormList)
 			throws AppendableException {
 		Expression e;
 		switch (specialForm) {
 		case SemanticParserStatic.DEFREP:
-			e = this.parseDefrep(specialFormList);
+			e = SemanticParser.parseDefrep(specialFormList);
 			break;
 		case SemanticParserStatic.DEFTYPE:
-			e = this.parseDeftype(specialFormList);
+			e = SemanticParser.parseDeftype(specialFormList);
 			break;
 		case SemanticParserStatic.ELAMBDA:
-			e = this.parseElambda(specialFormList);
+			e = SemanticParser.parseElambda(specialFormList);
 			break;
 		case SemanticParserStatic.IF:
-			e = this.parseIf(specialFormList);
+			e = SemanticParser.parseIf(specialFormList);
 			break;
 		case SemanticParserStatic.LAMBDA:
-			e = this.parseLambda(specialFormList);
+			e = SemanticParser.parseLambda(specialFormList);
 			break;
 		case SemanticParserStatic.DEFCONVERSION:
-			e = this.parseDefconversion(specialFormList);
-			break;
-		case SemanticParserStatic.DEFCONSTRUCTOR:
-			e = this.parseDefConstructor(specialFormList);
+			e = SemanticParser.parseDefconversion(specialFormList);
 			break;
 		case SemanticParserStatic.DEFINE:
-			e = this.parseDefine(specialFormList);
+			e = SemanticParser.parseDefine(specialFormList);
 			break;
 		case SemanticParserStatic.CONS:
-			e = this.parseCons(specialFormList);
+			e = SemanticParser.parseCons(specialFormList);
 			break;
 		case SemanticParserStatic.ERROR:
-			e = this.parseError(specialFormList);
+			e = SemanticParser.parseError(specialFormList);
 			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
@@ -213,7 +201,7 @@ public class SemanticParser {
 	 * @return
 	 * @throws Exception
 	 */
-	private Expression parseList(List<SemanticNode> list) throws AppendableException {
+	private static Expression parseList(List<SemanticNode> list) throws AppendableException {
 		List<Expression> l = new ArrayList<Expression>();
 		Expression fun = null;
 		Tuple args = null;
@@ -221,10 +209,10 @@ public class SemanticParser {
 		for (SemanticNode n : list) {
 			try {
 				if (fun == null) {
-					fun = this.parseNode(n);
+					fun = SemanticParser.parseNode(n);
 					continue;
 				}
-				l.add(this.parseNode(n));
+				l.add(SemanticParser.parseNode(n));
 			} catch (AppendableException e) {
 				e.appendMessage(" in " + list);
 				throw e;
@@ -243,20 +231,20 @@ public class SemanticParser {
 	 * @return expresion representing the lambda special form
 	 * @throws Exception
 	 */
-	private Lambda parseLambda(List<SemanticNode> lambdaList) throws AppendableException {
+	private static Lambda parseLambda(List<SemanticNode> lambdaList) throws AppendableException {
 		try {
 			Validations.validateLambdaList(lambdaList);
 		} catch (AppendableException e) {
 			e.appendMessage(" in Lambda " + lambdaList);
 			throw e;
 		}
-		List<TypeVariablePair> typedArgs = this.parseTypedArgList(lambdaList.get(1).asList());
+		List<TypeVariablePair> typedArgs = SemanticParser.parseTypedArgList(lambdaList.get(1).asList());
 
 		TypeTuple argsTypes = new TypeTuple(typedArgs.stream().map(x -> x.first).collect(Collectors.toList()));
 
 		Tuple lambdaArgs = new Tuple(typedArgs.stream().map(x -> x.second).collect(Collectors.toList()));
 
-		Expression body = this.parseNode(lambdaList.get(2));
+		Expression body = SemanticParser.parseNode(lambdaList.get(2));
 
 		return new Lambda(lambdaArgs, argsTypes, body);
 	}
@@ -268,7 +256,7 @@ public class SemanticParser {
 	 * @return expression representing special form
 	 * @throws AppendableException
 	 */
-	private Expression parseDeftype(List<SemanticNode> deftypeList) throws AppendableException {
+	private static Expression parseDeftype(List<SemanticNode> deftypeList) throws AppendableException {
 		try {
 			Validations.validateDefTypeList(deftypeList);
 		} catch (AppendableException e) {
@@ -276,11 +264,9 @@ public class SemanticParser {
 			throw e;
 		}
 
-		String typeName = deftypeList.get(1).asSymbol();
+		TypeName typeName = new TypeName(deftypeList.get(1).asSymbol());
 
-		this.typeEnvironment.addType(typeName);
-
-		return Expression.EMPTY_EXPRESSION;
+		return new DefTypeExpression(typeName);
 	}
 
 	/**
@@ -291,7 +277,7 @@ public class SemanticParser {
 	 * @return
 	 * @throws AppendableException
 	 */
-	private Expression parseDefrep(List<SemanticNode> defrepList) throws AppendableException {
+	private static Expression parseDefrep(List<SemanticNode> defrepList) throws AppendableException {
 		try {
 			Validations.validateDefRepList(defrepList);
 		} catch (AppendableException e) {
@@ -299,34 +285,11 @@ public class SemanticParser {
 			throw e;
 		}
 
-		String repName = defrepList.get(1).asSymbol();
-		String typeName = defrepList.get(2).asSymbol();
+		TypeName typeName = new TypeName(defrepList.get(1).asSymbol());
+		TypeRepresentation repName = new TypeRepresentation(defrepList.get(2).asSymbol());
+		List<SemanticNode> members = defrepList.get(3).asList();
 
-		this.typeEnvironment.addRepresentation(typeName, repName);
-
-		return Expression.EMPTY_EXPRESSION;
-	}
-
-	/**
-	 * Parses constructor from given lambda list
-	 * 
-	 * @param typeName   type that constructor constructs
-	 * @param lambdaList lambda list containing the definition of constructor
-	 * @return Constructor represented by the lamdbaList, that constructs given type
-	 * @throws AppendableException
-	 */
-	private TypeConstructionLambda parseConstructor(TypeAtom type, List<SemanticNode> lambdaList)
-			throws AppendableException {
-		try {
-			Validations.validateLambdaList(lambdaList);
-		} catch (AppendableException e) {
-			e.appendMessage("in " + lambdaList);
-			throw e;
-		}
-
-		Lambda lambda = this.parseLambda(lambdaList);
-
-		return new TypeConstructionLambda(type, lambda.args, lambda.argsType, lambda.body);
+		return new DefRepresentationExpression(typeName, repName, members);
 	}
 
 	/**
@@ -336,11 +299,11 @@ public class SemanticParser {
 	 * @return list of variable type pairs
 	 * @throws AppendableException
 	 */
-	private List<TypeVariablePair> parseTypedArgList(List<SemanticNode> l) throws AppendableException {
+	private static List<TypeVariablePair> parseTypedArgList(List<SemanticNode> l) throws AppendableException {
 		List<TypeVariablePair> parsed = new ArrayList<TypeVariablePair>();
 
 		for (SemanticNode n : l) {
-			parsed.add(this.parseUntypedVariableOrVariableTypePair(n));
+			parsed.add(SemanticParser.parseUntypedVariableOrVariableTypePair(n));
 		}
 
 		return parsed;
@@ -354,11 +317,11 @@ public class SemanticParser {
 	 * @return variable type pair
 	 * @throws AppendableException
 	 */
-	private TypeVariablePair parseUntypedVariableOrVariableTypePair(SemanticNode n) throws AppendableException {
+	private static TypeVariablePair parseUntypedVariableOrVariableTypePair(SemanticNode n) throws AppendableException {
 		if (SemanticParserStatic.isSimpleSymbol(n)) {
 			return new TypeVariablePair(new TypeVariable(NameGenerator.next()), new Variable(n.asSymbol()));
 		}
-		return this.parseVariableTypePair(n);
+		return SemanticParser.parseVariableTypePair(n);
 	}
 
 	/**
@@ -368,21 +331,12 @@ public class SemanticParser {
 	 * @return Representation of the type
 	 * @throws AppendableException
 	 */
-	private TypeAtom parseType(SemanticNode typeNode) throws AppendableException {
-		Optional<TypeAtom> o;
+	private static TypeAtom parseType(SemanticNode typeNode) throws AppendableException {
 		if (typeNode.type == SemanticNode.NodeType.PAIR) {
-			SemanticPair p = typeNode.asPair();
-			o = this.typeEnvironment.getType(p.first, p.second);
-		} else if (typeNode.type == SemanticNode.NodeType.SYMBOL) {
-			o = this.typeEnvironment.getType(typeNode.asSymbol());
-		} else {
-			throw new AppendableException("Invalid type token " + typeNode);
+			return new TypeAtom(new TypeName(typeNode.asPair().first), new TypeRepresentation(typeNode.asPair().second));
 		}
-
-		if (!o.isPresent()) {
-			throw new UndefinedTypeException(typeNode.toString());
-		}
-		return o.get();
+		
+		return new TypeAtom(new TypeName(typeNode.asSymbol()), TypeRepresentation.WILDCARD);
 	}
 
 	/**
@@ -392,7 +346,7 @@ public class SemanticParser {
 	 * @return
 	 * @throws AppendableException
 	 */
-	private TypeVariablePair parseVariableTypePair(SemanticNode pair) throws AppendableException {
+	private static TypeVariablePair parseVariableTypePair(SemanticNode pair) throws AppendableException {
 		try {
 			Validations.validateVariableTypePair(pair);
 		} catch (AppendableException e) {
@@ -400,7 +354,7 @@ public class SemanticParser {
 			throw e;
 		}
 
-		TypeAtom type = this.parseType(pair.asList().get(0));
+		TypeAtom type = SemanticParser.parseType(pair.asList().get(0));
 		Variable variable = new Variable(pair.asList().get(1).asSymbol());
 		return new TypeVariablePair(type, variable);
 	}
@@ -412,10 +366,10 @@ public class SemanticParser {
 	 * @return Tuple of types that list represents
 	 * @throws AppendableException
 	 */
-	private TypeTuple parseTypeList(List<SemanticNode> l) throws AppendableException {
+	private static TypeTuple parseTypeList(List<SemanticNode> l) throws AppendableException {
 		List<Type> types = new LinkedList<Type>();
 		for (SemanticNode t : l) {
-			types.add(this.parseType(t));
+			types.add(SemanticParser.parseType(t));
 		}
 		return new TypeTuple(types);
 	}
@@ -428,13 +382,13 @@ public class SemanticParser {
 	 * @return Set of Lambdas containing the implementations
 	 * @throws AppendableException
 	 */
-	private Set<Lambda> parseImplementations(Tuple lambdaArgs, List<SemanticNode> l) throws AppendableException {
+	private static Set<Lambda> parseImplementations(Tuple lambdaArgs, List<SemanticNode> l) throws AppendableException {
 		Validations.validateImplementations(l);
 
 		Set<Lambda> s = new TreeSet<Lambda>();
 
 		for (SemanticNode n : l) {
-			s.add(this.parseImplementation(lambdaArgs, n.asList()));
+			s.add(SemanticParser.parseImplementation(lambdaArgs, n.asList()));
 		}
 
 		return s;
@@ -448,15 +402,15 @@ public class SemanticParser {
 	 * @return Lambda representing parsed implementation
 	 * @throws AppendableException
 	 */
-	private Lambda parseImplementation(Tuple args, List<SemanticNode> l) throws AppendableException {
+	private static Lambda parseImplementation(Tuple args, List<SemanticNode> l) throws AppendableException {
 		try {
 			Validations.validateImplementation(l);
 		} catch (AppendableException e) {
 			e.appendMessage("in implementation " + l);
 			throw e;
 		}
-		TypeTuple argsType = this.parseTypeList(l.get(0).asList());
-		Expression body = this.parseNode(l.get(1));
+		TypeTuple argsType = SemanticParser.parseTypeList(l.get(0).asList());
+		Expression body = SemanticParser.parseNode(l.get(1));
 		return new Lambda(args, argsType, body);
 	}
 
@@ -466,16 +420,16 @@ public class SemanticParser {
 	 * @param l arguments of the defconversion special form
 	 * @throws AppendableException
 	 */
-	private Expression parseDefconversion(List<SemanticNode> l) throws AppendableException {
+	private static Expression parseDefconversion(List<SemanticNode> l) throws AppendableException {
 		try {
 			Validations.validateDefconversionList(l);
 		} catch (AppendableException e) {
 			e.appendMessage("in" + l);
 			throw e;
 		}
-		TypeAtom fromType = this.parseType(l.get(1));
-		TypeAtom toType = this.parseType(l.get(2));
-		TypeConstructionLambda constructor = this.parseConstructor(toType, l.get(3).asList());
+		TypeAtom fromType = SemanticParser.parseType(l.get(1));
+		TypeAtom toType = SemanticParser.parseType(l.get(2));
+		Lambda constructor = SemanticParser.parseLambda(l.get(3).asList());
 
 		if (constructor.argsType.size() != 1 || constructor.argsType.get(0) != fromType) {
 			AppendableException e = new AppendableException(
@@ -484,33 +438,7 @@ public class SemanticParser {
 			throw e;
 		}
 
-		this.typeEnvironment.addConversion(fromType, toType, constructor);
-
-		return Expression.EMPTY_EXPRESSION;
-	}
-
-	/**
-	 * Parses defconstructor special form list
-	 * 
-	 * @param l arguments of the defconversion special form
-	 * @return Empty Expression (side effect adds constructor to type environment)
-	 * @throws AppendableException
-	 */
-	private Expression parseDefConstructor(List<SemanticNode> l) throws AppendableException {
-		try {
-			Validations.validateDefConstructorList(l);
-		} catch (AppendableException e) {
-			e.appendMessage(" in " + l);
-			throw e;
-		}
-
-		SemanticNode type = l.get(1);
-		TypeAtom constructedType = this.parseType(type);
-		TypeConstructionLambda constructor = this.parseConstructor(constructedType, l.get(2).asList());
-
-		// this.typeEnvironment.addConstructor(constructedType, constructor);
-
-		return new DefExpression(new Variable(type.toString()), constructor);// TODO improve semantics
+		return new DefConversionExpression(fromType, toType, constructor);
 	}
 
 	/**
@@ -520,7 +448,7 @@ public class SemanticParser {
 	 * @return DefExpression expression
 	 * @throws AppendableException
 	 */
-	private Expression parseDefine(List<SemanticNode> l) throws AppendableException {
+	private static Expression parseDefine(List<SemanticNode> l) throws AppendableException {
 		try {
 			Validations.validateDefineList(l);
 		} catch (AppendableException e) {
@@ -529,7 +457,7 @@ public class SemanticParser {
 		}
 
 		Variable v = new Variable(l.get(1).asSymbol());
-		Expression e = this.parseNode(l.get(2));
+		Expression e = SemanticParser.parseNode(l.get(2));
 		return new DefExpression(v, e);
 	}
 
@@ -540,7 +468,7 @@ public class SemanticParser {
 	 * @return Tuple Expression
 	 * @throws AppendableException
 	 */
-	private Expression parseCons(List<SemanticNode> l) throws AppendableException {
+	private static Expression parseCons(List<SemanticNode> l) throws AppendableException {
 		try {
 			Validations.validateConsList(l);
 		} catch (AppendableException e) {
@@ -548,7 +476,7 @@ public class SemanticParser {
 			throw e;
 		}
 
-		return new Tuple(Arrays.asList(this.parseNode(l.get(1)), this.parseNode(l.get(2))));
+		return new Tuple(Arrays.asList(SemanticParser.parseNode(l.get(1)), SemanticParser.parseNode(l.get(2))));
 	}
 
 	/**
@@ -558,7 +486,7 @@ public class SemanticParser {
 	 * @return ExceptionExpr expression
 	 * @throws AppendableException
 	 */
-	private Expression parseError(List<SemanticNode> l) throws AppendableException {
+	private static Expression parseError(List<SemanticNode> l) throws AppendableException {
 		try {
 			Validations.validateErrorList(l);
 		} catch (AppendableException e) {
@@ -566,6 +494,6 @@ public class SemanticParser {
 			throw e;
 		}
 
-		return new ExceptionExpr(this.parseNode(l.get(1)));
+		return new ExceptionExpr(SemanticParser.parseNode(l.get(1)));
 	}
 }

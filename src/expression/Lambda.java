@@ -98,7 +98,7 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
 			// First infer types in body, use typeholders for argument variables
-			Environment childEnv = new Environment(env);
+			Environment childEnv = Environment.create(env);
 			List<Type> argsTypeArr = new LinkedList<Type>();
 
 			for (Expression e : this.args) {

@@ -32,14 +32,15 @@ import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
 import parser.SemanticNode;
 import semantic.SemanticParser;
+import semantic.TypeEnvironment;
 import types.TypeAtom;
 import types.TypeRepresentation;
 import types.TypeAtom;
 import util.AppendableException;
 import util.ClojureCodeGenerator;
 import expression.Expression;
+import expression.Function;
 import expression.Tuple;
-import expression.TypeConstructionLambda;
 import expression.Variable;
 
 /**
@@ -82,7 +83,7 @@ public class Main {
 	}
 
 	public static Environment initTopLevelEnvironment() throws AppendableException {
-		Environment env = new Environment();
+		Environment env = Environment.topLevelEnvironment;
 		env.put(new Variable(Operator.Addition.toString()), Operator.Addition);
 		env.put(new Variable(Operator.Subtraction.toString()), Operator.Subtraction);
 		env.put(new Variable(Operator.Multiplication.toString()), Operator.Multiplication);
@@ -100,23 +101,22 @@ public class Main {
 		env.put(new Variable("nil"), Expression.EMPTY_EXPRESSION);
 		env.put(new Variable(Operator.Equals.toString()), Operator.Equals);
 		
-		env.put(new Variable("Int"), TypeConstructionLambda.IntPrimitiveConstructor);
-		env.put(new Variable("Int:String"), TypeConstructionLambda.IntStringConstructor);
-		env.put(new Variable("Int:Roman"), TypeConstructionLambda.IntRomanConstructor);
-		env.put(new Variable("String"), TypeConstructionLambda.StringPrimitiveConstructor);
-		env.put(new Variable("Double"), TypeConstructionLambda.DoublePrimitiveConstructor);
-		env.put(new Variable("Bool"), TypeConstructionLambda.BoolPrimitiveConstructor);
+		env.put(new Variable("Int"), Function.IntConstructor);
+		env.put(new Variable("Int:Native"), Function.IntNativeConstructor);
+		env.put(new Variable("Int:String"), Function.IntStringConstructor);
+		env.put(new Variable("Int:Roman"), Function.IntRomanConstructor);
+		env.put(new Variable("String"), Function.StringConstructor);
+		env.put(new Variable("String:Native"), Function.StringNativeConstructor);
+		env.put(new Variable("Double"), Function.DoubleConstructor);
+		env.put(new Variable("Double:Native"), Function.DoubleNativeConstructor);
+		env.put(new Variable("Bool"), Function.BoolConstructor);
+		env.put(new Variable("Bool:Native"), Function.BoolNativeConstructor);
 		
 		return env;
 	}
 	
 	private static void initTypesConversions() throws Exception{
-		TypeAtom.TypeIntNative.addConversion(TypeRepresentation.ROMAN, IntNativeToIntRomanWrapper.IntToIntRoman);
-		TypeAtom.TypeIntNative.addConversion(TypeRepresentation.STRING, IntNativeToIntStringWrapper.IntToIntString);
-		TypeAtom.TypeIntRoman.addConversion(TypeRepresentation.NATIVE, IntRomanToIntNativeWrapper.IntRomanToInt);
-		TypeAtom.TypeIntRoman.addConversion(TypeRepresentation.STRING, IntRomanToIntStringWrapper.IntRomanToIntString);
-		TypeAtom.TypeIntString.addConversion(TypeRepresentation.NATIVE, IntStringToIntNativeWrapper.IntStringToInt);
-		TypeAtom.TypeIntString.addConversion(TypeRepresentation.ROMAN, IntStringToIntRomanWrapper.IntStringToIntRoman);
+		
 	}
 	
 	public static void init() throws Exception{

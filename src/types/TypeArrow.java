@@ -11,6 +11,7 @@ import expression.Expression;
 import expression.Lambda;
 import expression.Tuple;
 import expression.Variable;
+import interpretation.Environment;
 
 /**
  * Class for functions types
@@ -78,8 +79,10 @@ public class TypeArrow extends Type {
 		TypeArrow t = (TypeArrow) toType;
 		Variable v = new Variable(NameGenerator.next());
 
-		Lambda l = new Lambda(new Tuple(Arrays.asList(v)), (TypeTuple) t.ltype, this.rtype.convertTo(
-				new Application(expr, (Tuple) t.ltype.convertTo(new Tuple(Arrays.asList(v)), this.ltype)), t.rtype));
+		Lambda l = new Lambda(new Tuple(Arrays.asList(v)), (TypeTuple) t.ltype,
+				this.rtype.convertTo(
+						new Application(expr, (Tuple) t.ltype.convertTo(new Tuple(Arrays.asList(v)), this.ltype)),
+						t.rtype));
 		return l;
 	}
 

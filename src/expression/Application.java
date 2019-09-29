@@ -54,13 +54,14 @@ public class Application extends Expression {
 			throw new InvalidNumberOfArgumentsException(f.args.size(), this.args, this);
 		}
 
-		Environment childEnv = new Environment(f.creationEnvironment); // Lexical clojure!!!
+		Environment childEnv = Environment.create(f.creationEnvironment); // Lexical clojure!!!
 		Iterator<Expression> i = f.args.iterator();
 		Iterator<Expression> j = this.args.iterator();
 		while (i.hasNext()) {
 			Expression e = j.next();
 			Variable v = (Variable) i.next();
-			childEnv.put(v, new PostponeInterpretation(e, env));
+			//childEnv.put(v, new PostponeInterpretation(e, env));
+			childEnv.put(v, e.interpret(env));
 		}
 
 		TypeArrow funType = (TypeArrow) f.infer(env).first;
@@ -138,7 +139,7 @@ public class Application extends Expression {
 	 */
 	private static Environment autoConvertArgs(Environment e, Tuple args, TypeTuple fromType, TypeTuple toType)
 			throws AppendableException {
-		Environment ret = new Environment(e.parent);
+		Environment ret = Environment.create(e.parent);
 
 		Iterator<Expression> i = args.iterator();
 		Iterator<Type> j = fromType.iterator();

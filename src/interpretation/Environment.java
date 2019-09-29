@@ -2,10 +2,10 @@ package interpretation;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 import expression.Expression;
 import expression.Variable;
+import util.AppendableException;
 import util.UnboundVariableException;
 
 /**
@@ -23,16 +23,16 @@ public class Environment implements Comparable<Environment> {
 	
 	private Map<Variable, Expression> bindings = new HashMap<Variable, Expression>();
 
-	public Environment(Environment parent) {
+	protected Environment(Environment parent) {
 		this.parent = parent;
 	}
 	
-	public Environment(Environment parent, Environment initFrom) {
+	protected Environment(Environment parent, Environment initFrom) {
 		this.parent = parent;
 		this.bindings.putAll(initFrom.bindings);
 	}
 
-	public Environment() {
+	protected Environment() {
 		this.parent = null;
 	}
 	
@@ -127,4 +127,37 @@ public class Environment implements Comparable<Environment> {
 
 		return 0;
 	}
+	
+	/**
+	 * Top level environment, only one exists
+	 */
+	public static Environment topLevelEnvironment = new Environment();
+	
+	/**
+	 * Construction method for new environments
+	 * @param parent
+	 * @return new Environment instance
+	 * @throws AppendableException
+	 */
+	public static Environment create(Environment parent) throws AppendableException {
+		if(parent == null) {
+			throw new AppendableException("Cannot create environment with null parent!");
+		}
+		return new Environment(parent);
+	}
+	
+	/**
+	 * Construction methods for new environments initailizing from previously existing environments
+	 * @param parent
+	 * @param initFrom
+	 * @return new Environment instance
+	 * @throws AppendableException
+	 */
+	public static Environment create(Environment parent, Environment initFrom) throws AppendableException {
+		if(parent == null) {
+			throw new AppendableException("Cannot create environment with null parent!");
+		}
+		return new Environment(parent, initFrom);
+	}
+	
 }
