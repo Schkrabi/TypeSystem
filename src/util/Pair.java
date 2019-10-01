@@ -18,6 +18,11 @@ public class Pair<T1, T2> {
 	}
 	
 	@Override
+	public int hashCode() {
+		return this.first.hashCode() * this.second.hashCode();
+	}
+	
+	@Override
 	public String toString() {
 		return "(" + first.toString() + "," + second.toString() + ")";
 	}

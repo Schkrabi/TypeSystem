@@ -255,37 +255,6 @@ public class Validations {
 	}
 
 	/**
-	 * Validates if l i a valid defconstructor list, throws exception if validation
-	 * fails
-	 * 
-	 * @param l validated list
-	 * @return true if l is valid defconversion list, false otherwise
-	 * @throws AppendableException
-	 */
-	public static boolean validateDefConstructorList(List<SemanticNode> l) throws AppendableException {
-		if (l.size() != 3) {
-			throw new InvalidNumberOfArgsException(2, l.size() - 1);
-		}
-
-		SemanticNode defConstructor = l.get(0);
-		if (defConstructor.type != SemanticNode.NodeType.SYMBOL
-				|| !defConstructor.asSymbol().equals(SemanticParserStatic.DEFCONSTRUCTOR)) {
-			throw new UnexpectedExpressionException(defConstructor);
-		}
-
-		if (!Validations.isTypeIdentifierNode(l.get(1))) {
-			throw new UnexpectedExpressionException(l.get(1));
-		}
-
-		SemanticNode c = l.get(2);
-		if (c.type != SemanticNode.NodeType.LIST) {
-			throw new UnexpectedExpressionException(c);
-		}
-
-		return true;
-	}
-
-	/**
 	 * Validates if l is a valid define list, throws exception if valiation fails
 	 * 
 	 * @param l validated list

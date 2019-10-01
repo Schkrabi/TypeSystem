@@ -4,7 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import expression.Expression;
+import expression.Function;
 import expression.Variable;
+import operators.Operator;
 import util.AppendableException;
 import util.UnboundVariableException;
 
@@ -158,6 +160,37 @@ public class Environment implements Comparable<Environment> {
 			throw new AppendableException("Cannot create environment with null parent!");
 		}
 		return new Environment(parent, initFrom);
+	}
+	
+	public static void initTopLevelEnvitonment() {
+		Environment env = Environment.topLevelEnvironment;
+		env.put(new Variable(Operator.Addition.toString()), Operator.Addition);
+		env.put(new Variable(Operator.Subtraction.toString()), Operator.Subtraction);
+		env.put(new Variable(Operator.Multiplication.toString()), Operator.Multiplication);
+		env.put(new Variable(Operator.Division.toString()), Operator.Division);
+		env.put(new Variable(Operator.NumericEqual.toString()), Operator.NumericEqual);
+		env.put(new Variable(Operator.LesserThan.toString()), Operator.LesserThan);
+		env.put(new Variable(Operator.And.toString()), Operator.And);
+		env.put(new Variable(Operator.Or.toString()), Operator.Or);
+		env.put(new Variable(Operator.Not.toString()), Operator.Not);
+		env.put(new Variable(Operator.BitAnd.toString()), Operator.BitAnd);
+		env.put(new Variable(Operator.BitOr.toString()), Operator.BitOr);
+		env.put(new Variable(Operator.Concantenation.toString()), Operator.Concantenation);
+		env.put(new Variable(Operator.Car.toString()), Operator.Car);
+		env.put(new Variable(Operator.Cdr.toString()), Operator.Cdr);
+		env.put(new Variable("nil"), Expression.EMPTY_EXPRESSION);
+		env.put(new Variable(Operator.Equals.toString()), Operator.Equals);
+		
+		env.put(new Variable("Int"), Function.IntConstructor);
+		env.put(new Variable("Int:Native"), Function.IntNativeConstructor);
+		env.put(new Variable("Int:String"), Function.IntStringConstructor);
+		env.put(new Variable("Int:Roman"), Function.IntRomanConstructor);
+		env.put(new Variable("String"), Function.StringConstructor);
+		env.put(new Variable("String:Native"), Function.StringNativeConstructor);
+		env.put(new Variable("Double"), Function.DoubleConstructor);
+		env.put(new Variable("Double:Native"), Function.DoubleNativeConstructor);
+		env.put(new Variable("Bool"), Function.BoolConstructor);
+		env.put(new Variable("Bool:Native"), Function.BoolNativeConstructor);
 	}
 	
 }

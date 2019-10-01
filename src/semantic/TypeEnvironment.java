@@ -1,7 +1,9 @@
 package semantic;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -29,7 +31,7 @@ import util.Pair;
 public class TypeEnvironment {	
 	private Set<TypeAtom> atomicTypes =  new TreeSet<TypeAtom>();
 	private Map<TypeAtom, Function> constructorMap = new TreeMap<TypeAtom, Function>();
-	private Map<Pair<TypeAtom, TypeAtom>, Function> conversions = new TreeMap<Pair<TypeAtom, TypeAtom>, Function>();
+	private Map<Pair<TypeAtom, TypeAtom>, Function> conversions = new HashMap<Pair<TypeAtom, TypeAtom>, Function>();
 
 	private TypeEnvironment() {
 	}
@@ -107,7 +109,9 @@ public class TypeEnvironment {
 	 * @return constructor for this type if it exists
 	 */
 	public Function getConstructor(TypeAtom type) {
-		return this.constructorMap.get(type);
+		if(this.constructorMap.containsKey(type))
+			return this.constructorMap.get(type);
+		throw new NoSuchElementException();
 	}
 	
 	public void addType(TypeName name) {
@@ -137,6 +141,9 @@ public class TypeEnvironment {
 	 */
 	public void addConversion(TypeAtom fromType, TypeAtom toType, Function conversionConstructor)
 			throws AppendableException {
+		if(!TypeAtom.isSameBasicType(fromType, toType)) {
+			throw new AppendableException("Can define conversions between representations!");
+		}
 		Pair<TypeAtom, TypeAtom> conversion = new Pair<TypeAtom, TypeAtom>(fromType, toType);
 		if(this.conversions.containsKey(conversion)) {
 			throw new DuplicateConversionException(fromType, toType, this.conversions.get(conversion), conversionConstructor);

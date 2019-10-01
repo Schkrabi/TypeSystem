@@ -70,10 +70,11 @@ class TestParser {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		/*if (!initFlag) {
-			Main.init();
+		if (!initFlag) {
+			TypeEnvironment.initBasicTypes();
+			Environment.initTopLevelEnvitonment();
 			initFlag = true;
-		}*/
+		}
 	}
 
 	@AfterEach
@@ -89,7 +90,7 @@ class TestParser {
 								new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(1))))),
 				new Pair<String, Expression>("(if #t x y)",
 						new IfExpression(LitBoolean.TRUE, new Variable("x"), new Variable("y"))),
-				new Pair<String, Expression>("(deftype Name)", new DefTypeExpression(new TypeName("List"))),
+				new Pair<String, Expression>("(deftype Name)", new DefTypeExpression(new TypeName("Name"))),
 				new Pair<String, Expression>("(defrep Unstructured Name (String:Native))",
 						new DefRepresentationExpression(new TypeName("Name"), new TypeRepresentation("Unstructured"),
 								Arrays.asList(SemanticNode.make(SemanticNode.NodeType.PAIR,
@@ -131,6 +132,14 @@ class TestParser {
 				new Pair<String, Expression>("#f", LitBoolean.FALSE)
 
 		);
+		
+		for(Pair<String, Expression> p : testcases) {
+			Expression parsed = this.parseString(p.first);
+			Expression expected = p.second;
+			if(!parsed.equals(expected)) {
+				fail("Parse error expected " + expected.toString() + " got " + parsed.toString());
+			}
+		}
 
 		// Dummy object tests
 		new Validations();
@@ -197,11 +206,6 @@ class TestParser {
 	}
 
 	@Test
-	public void testInvalidTypeConstructor() {
-		Assertions.assertThrows(TypeNotRecognizedException.class, () -> parseString("(Int:Arabic 128)"));
-	}
-
-	@Test
 	public void testValidateElambda() {
 		// Too few arguments
 		Assertions.assertThrows(AppendableException.class, () -> parseString("(elambda (x))"));
@@ -264,42 +268,30 @@ class TestParser {
 		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(defrep)"));
 		// Too many argument
 		Assertions.assertThrows(InvalidNumberOfArgsException.class,
-				() -> parseString("(defrep list functional random)"));
+				() -> parseString("(defrep list functional random failed)"));
 		// Type is not symbol
-		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(defrep 1234 functional)"));
+		Assertions.assertThrows(UnexpectedExpressionException.class,
+				() -> parseString("(defrep 1234 functional constructor)"));
 		// Representation is not symbol
-		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(defrep list 1234)"));
+		Assertions.assertThrows(UnexpectedExpressionException.class,
+				() -> parseString("(defrep list 1234 constructor)"));
 
 		// non-symbol token instead of lambda
 		Assertions.assertThrows(UnexpectedExpressionException.class,
 				() -> Validations.validateDefRepList(Arrays.asList(SemanticNode.make(NodeType.STRING, "defrep"),
-						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"))));
+						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"),
+						SemanticNode.make(NodeType.SYMBOL, "fail"))));
 		// Bad symbol in place of lambda
 		Assertions.assertThrows(UnexpectedExpressionException.class,
 				() -> Validations.validateDefRepList(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "fail"),
-						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"))));
-	}
-
-	@Test
-	public void testParseTypeConstructionLambda() throws AppendableException {
-		parseString("(deftype List)");
-		parseString("(defrep Functional List)");
-		// Invalid lambda
-		Assertions.assertThrows(InvalidNumberOfArgsException.class,
-				() -> parseString("(defconstructor List:Functional (lambda))"));
-		Assertions.assertThrows(InvalidNumberOfArgsException.class,
-				() -> parseString("(defconstructor List:Functional (lambda x y z))"));
-		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> parseString("(defconstructor List:Functional (lambda x y))"));
+						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"),
+						SemanticNode.make(NodeType.SYMBOL, "fail"))));
 	}
 
 	@Test
 	public void testParseType() {
 		// Wrong token in place of type
 		Assertions.assertThrows(AppendableException.class, () -> parseString("(elambda (x) x ((1234) x))"));
-
-		// Not existing Type
-		Assertions.assertThrows(UndefinedTypeException.class, () -> parseString("(defrep Person Cheesy)"));
 	}
 
 	@Test
@@ -369,32 +361,6 @@ class TestParser {
 		// Conversion has bad from type
 		Assertions.assertThrows(AppendableException.class,
 				() -> parseString("(defconversion Int Double (lambda ((Bool x)) x))"));
-	}
-
-	@Test
-	public void testParseDefConstructor() {
-		// Too few args
-		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(defconstructor x)"));
-		// Too many args
-		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(defconstructor x y z)"));
-
-		// defconstructor token is not a symbol
-		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> Validations
-						.validateDefConstructorList(Arrays.asList(SemanticNode.make(NodeType.STRING, "defconstructor"),
-								SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"))));
-
-		// Bad symbol in defconversion
-		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> Validations.validateDefConstructorList(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "fail"),
-						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"))));
-
-		// Bad constructed type
-		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> parseString("(defconstructor 1234 (lambda (x) x))"));
-
-		// Constructor is not lambda
-		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(defconstructor Int x)"));
 	}
 
 	@Test
@@ -591,19 +557,10 @@ class TestParser {
 		Assertions.assertThrows(NoSuchElementException.class,
 				() -> typeEnv.getConstructor(new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD)));
 
-		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addType(new TypeName("Int")));
 		Assertions.assertThrows(AppendableException.class,
 				() -> typeEnv.addRepresentation(new TypeAtom(new TypeName("Int"), new TypeRepresentation("Roman")),
 						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
 								Environment.topLevelEnvironment)));
-
-		Assertions.assertThrows(UndefinedTypeException.class,
-				() -> typeEnv.addConversion(new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD),
-						TypeAtom.TypeInt, new Function(null, null, expected, Environment.topLevelEnvironment)));
-		Assertions.assertThrows(UndefinedTypeException.class,
-				() -> typeEnv.addConversion(TypeAtom.TypeInt,
-						new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD),
-						new Function(null, null, expected, Environment.topLevelEnvironment)));
 
 		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addConversion(TypeAtom.TypeIntNative,
 				TypeAtom.TypeStringNative,
