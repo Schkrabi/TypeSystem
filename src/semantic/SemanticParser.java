@@ -285,8 +285,8 @@ public class SemanticParser {
 			throw e;
 		}
 
-		TypeName typeName = new TypeName(defrepList.get(1).asSymbol());
-		TypeRepresentation repName = new TypeRepresentation(defrepList.get(2).asSymbol());
+		TypeRepresentation repName = new TypeRepresentation(defrepList.get(1).asSymbol());
+		TypeName typeName = new TypeName(defrepList.get(2).asSymbol());
 		List<SemanticNode> members = defrepList.get(3).asList();
 
 		return new DefRepresentationExpression(typeName, repName, members);
@@ -431,7 +431,7 @@ public class SemanticParser {
 		TypeAtom toType = SemanticParser.parseType(l.get(2));
 		Lambda constructor = SemanticParser.parseLambda(l.get(3).asList());
 
-		if (constructor.argsType.size() != 1 || constructor.argsType.get(0) != fromType) {
+		if (constructor.argsType.size() != 1) {
 			AppendableException e = new AppendableException(
 					"Conversion must convert from defined type " + fromType + " got " + constructor.argsType);
 			e.appendMessage("in" + l);

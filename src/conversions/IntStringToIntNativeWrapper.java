@@ -3,7 +3,6 @@ package conversions;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
-import types.TypeArrow;
 import types.TypeAtom;
 import types.TypeTuple;
 import util.AppendableException;
@@ -43,8 +42,7 @@ public class IntStringToIntNativeWrapper extends ConversionWrapper {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		return new Pair<Type, Substitution>(new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeIntNative),
-				Substitution.EMPTY);
+		return new Pair<Type, Substitution>(TypeAtom.TypeIntNative, Substitution.EMPTY);
 	}
 
 	@Override
@@ -56,5 +54,6 @@ public class IntStringToIntNativeWrapper extends ConversionWrapper {
 	 * Conversion constructor from IntString to Int
 	 */
 	public static final Function IntStringToInt = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
-			new Tuple(Arrays.asList(ConversionWrapper.arg)), new IntStringToIntNativeWrapper(), Environment.topLevelEnvironment);
+			new Tuple(Arrays.asList(ConversionWrapper.arg)), new IntStringToIntNativeWrapper(),
+			Environment.topLevelEnvironment);
 }

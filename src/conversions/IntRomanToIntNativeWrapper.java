@@ -3,7 +3,6 @@ package conversions;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
-import types.TypeArrow;
 import types.TypeAtom;
 import types.TypeTuple;
 import util.AppendableException;
@@ -39,8 +38,7 @@ public class IntRomanToIntNativeWrapper extends ConversionWrapper {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		return new Pair<Type, Substitution>(new TypeArrow(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative),
-				Substitution.EMPTY);
+		return new Pair<Type, Substitution>(TypeAtom.TypeIntNative, Substitution.EMPTY);
 	}
 
 	@Override
@@ -57,5 +55,6 @@ public class IntRomanToIntNativeWrapper extends ConversionWrapper {
 	 * Conversion constructor from IntRoman to Int
 	 */
 	public static final Function IntRomanToInt = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
-			new Tuple(Arrays.asList(ConversionWrapper.arg)), new IntRomanToIntNativeWrapper(), Environment.topLevelEnvironment);
+			new Tuple(Arrays.asList(ConversionWrapper.arg)), new IntRomanToIntNativeWrapper(),
+			Environment.topLevelEnvironment);
 }

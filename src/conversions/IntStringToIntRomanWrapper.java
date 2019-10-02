@@ -3,7 +3,6 @@ package conversions;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
-import types.TypeArrow;
 import types.TypeAtom;
 import types.TypeTuple;
 import util.AppendableException;
@@ -46,8 +45,7 @@ public class IntStringToIntRomanWrapper extends ConversionWrapper {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		return new Pair<Type, Substitution>(new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman),
-				Substitution.EMPTY);
+		return new Pair<Type, Substitution>(TypeAtom.TypeIntRoman, Substitution.EMPTY);
 	}
 
 	@Override

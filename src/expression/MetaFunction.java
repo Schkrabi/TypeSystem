@@ -29,7 +29,9 @@ public abstract class MetaFunction extends Expression {
 	
 	@Override
 	public String toClojureCode() throws AppendableException {
-		throw new InvalidClojureCompilationException(this);
+		//TODO 
+		return "";
+		//throw new InvalidClojureCompilationException(this);
 	}
 	
 	@Override

@@ -107,4 +107,17 @@ public class SemanticNode {
 	public enum NodeType {
 		SYMBOL, PAIR, INT, DOUBLE, STRING, BOOL, LIST, /** Unused NodeType for testing purposes onyl */ UNUSED
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof SemanticNode) {
+			return this.type == ((SemanticNode)other).type && this.value.equals(((SemanticNode)other).value);
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.type.hashCode() * this.value.hashCode();
+	}
 }

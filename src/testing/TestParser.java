@@ -29,31 +29,32 @@ import expression.Function;
 import expression.IfExpression;
 import expression.Lambda;
 import expression.LitBoolean;
+import expression.LitComposite;
 import expression.LitDouble;
 import expression.LitInteger;
 import expression.LitString;
 import expression.Tuple;
 import expression.Variable;
 import interpretation.Environment;
-import main.Main;
 import parser.SchemeLexer;
 import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
 import parser.SemanticNode;
 import parser.SemanticNode.NodeType;
 import parser.SemanticPair;
+import semantic.DuplicateConversionException;
 import semantic.InvalidNumberOfArgsException;
 import semantic.SemanticParser;
 import semantic.SemanticParserStatic;
 import semantic.TypeEnvironment;
-import semantic.UndefinedTypeException;
 import semantic.UnexpectedExpressionException;
 import semantic.UserException;
 import semantic.Validations;
 import semantic.TypeVariablePair;
+import semantic.UndefinedTypeException;
+import types.ConversionException;
 import types.TypeAtom;
 import types.TypeName;
-import types.TypeNotRecognizedException;
 import types.TypeRepresentation;
 import types.TypeTuple;
 import types.TypeVariable;
@@ -132,11 +133,11 @@ class TestParser {
 				new Pair<String, Expression>("#f", LitBoolean.FALSE)
 
 		);
-		
-		for(Pair<String, Expression> p : testcases) {
+
+		for (Pair<String, Expression> p : testcases) {
 			Expression parsed = this.parseString(p.first);
 			Expression expected = p.second;
-			if(!parsed.equals(expected)) {
+			if (!parsed.equals(expected)) {
 				fail("Parse error expected " + expected.toString() + " got " + parsed.toString());
 			}
 		}
@@ -286,6 +287,10 @@ class TestParser {
 				() -> Validations.validateDefRepList(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "fail"),
 						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"),
 						SemanticNode.make(NodeType.SYMBOL, "fail"))));
+
+		Assertions.assertThrows(AppendableException.class, () -> parseString("(defrep list functional fail)"));
+		Assertions.assertThrows(AppendableException.class,
+				() -> parseString("(defrep list functional (something (else)))"));
 	}
 
 	@Test
@@ -357,10 +362,6 @@ class TestParser {
 		// Conversion takes multiple arguments
 		Assertions.assertThrows(AppendableException.class,
 				() -> parseString("(defconversion Int Double (lambda (x y) x))"));
-
-		// Conversion has bad from type
-		Assertions.assertThrows(AppendableException.class,
-				() -> parseString("(defconversion Int Double (lambda ((Bool x)) x))"));
 	}
 
 	@Test
@@ -565,6 +566,19 @@ class TestParser {
 		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addConversion(TypeAtom.TypeIntNative,
 				TypeAtom.TypeStringNative,
 				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, expected, Environment.topLevelEnvironment)));
+
+		typeEnv.getType(SemanticNode.make(NodeType.PAIR, new SemanticPair("Int", "Roman")));
+		typeEnv.getType(SemanticNode.make(NodeType.SYMBOL, "Int"));
+
+		Assertions.assertThrows(DuplicateConversionException.class,
+				() -> TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
+						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
+								Environment.topLevelEnvironment)));
+
+		typeEnv.convertTo(new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString),
+				TypeAtom.TypeIntString, TypeAtom.TypeIntRoman);
+		Assertions.assertThrows(ConversionException.class, () -> TypeEnvironment.singleton
+				.convertTo(Expression.EMPTY_EXPRESSION, TypeAtom.TypeStringNative, TypeAtom.TypeIntNative));
 	}
 
 	@Test
@@ -597,6 +611,12 @@ class TestParser {
 	@Test
 	void testExceptions() {
 		new UserException("test");
+		new DuplicateConversionException(TypeAtom.TypeBool, TypeAtom.TypeBoolNative,
+				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
+						Environment.topLevelEnvironment),
+				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
+						Environment.topLevelEnvironment));
+		new UndefinedTypeException("fail");
 	}
 
 	private Expression parseString(String s) throws AppendableException {
