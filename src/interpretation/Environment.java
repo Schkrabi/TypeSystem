@@ -22,13 +22,13 @@ public class Environment implements Comparable<Environment> {
 	 * Parent environment of this environment
 	 */
 	public final Environment parent;
-	
+
 	private Map<Variable, Expression> bindings = new HashMap<Variable, Expression>();
 
 	protected Environment(Environment parent) {
 		this.parent = parent;
 	}
-	
+
 	protected Environment(Environment parent, Environment initFrom) {
 		this.parent = parent;
 		this.bindings.putAll(initFrom.bindings);
@@ -37,16 +37,17 @@ public class Environment implements Comparable<Environment> {
 	protected Environment() {
 		this.parent = null;
 	}
-	
+
 	/**
 	 * Adds binding to environment
+	 * 
 	 * @param v bounded variable
 	 * @param e bounded value
 	 */
 	public void put(Variable v, Expression e) {
 		this.bindings.put(v, e);
 	}
-	
+
 	@Override
 	public String toString() {
 		return this.bindings.keySet().toString();
@@ -85,7 +86,7 @@ public class Environment implements Comparable<Environment> {
 	 * 
 	 * @param var searched variable
 	 * @return Expression object
-	 * @throws UnboundVariableException 
+	 * @throws UnboundVariableException
 	 */
 	public Expression getVariableValue(Variable var) throws UnboundVariableException {
 		if (!this.bindings.containsKey(var)) {
@@ -129,39 +130,61 @@ public class Environment implements Comparable<Environment> {
 
 		return 0;
 	}
-	
+
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof Environment) {
+			if (this.parent != null) {
+				return this.parent.equals(((Environment) other).parent)
+						&& this.bindings.equals(((Environment) other).bindings);
+			}
+			return this.parent == ((Environment) other).parent && this.bindings.equals(((Environment) other).bindings);
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		if (this.parent != null)
+			return this.parent.hashCode() * ((Integer)this.bindings.size()).hashCode();
+		return ((Integer)this.bindings.size()).hashCode();
+	}
+
 	/**
 	 * Top level environment, only one exists
 	 */
 	public static Environment topLevelEnvironment = new Environment();
-	
+
 	/**
 	 * Construction method for new environments
+	 * 
 	 * @param parent
 	 * @return new Environment instance
 	 * @throws AppendableException
 	 */
 	public static Environment create(Environment parent) throws AppendableException {
-		if(parent == null) {
+		if (parent == null) {
 			throw new AppendableException("Cannot create environment with null parent!");
 		}
 		return new Environment(parent);
 	}
-	
+
 	/**
-	 * Construction methods for new environments initailizing from previously existing environments
+	 * Construction methods for new environments initailizing from previously
+	 * existing environments
+	 * 
 	 * @param parent
 	 * @param initFrom
 	 * @return new Environment instance
 	 * @throws AppendableException
 	 */
 	public static Environment create(Environment parent, Environment initFrom) throws AppendableException {
-		if(parent == null) {
+		if (parent == null) {
 			throw new AppendableException("Cannot create environment with null parent!");
 		}
 		return new Environment(parent, initFrom);
 	}
-	
+
 	public static void initTopLevelEnvitonment() {
 		Environment env = Environment.topLevelEnvironment;
 		env.put(new Variable(Operator.Addition.toString()), Operator.Addition);
@@ -180,7 +203,7 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Variable(Operator.Cdr.toString()), Operator.Cdr);
 		env.put(new Variable("nil"), Expression.EMPTY_EXPRESSION);
 		env.put(new Variable(Operator.Equals.toString()), Operator.Equals);
-		
+
 		env.put(new Variable("Int"), Function.IntConstructor);
 		env.put(new Variable("Int:Native"), Function.IntNativeConstructor);
 		env.put(new Variable("Int:String"), Function.IntStringConstructor);
@@ -192,5 +215,5 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Variable("Bool"), Function.BoolConstructor);
 		env.put(new Variable("Bool:Native"), Function.BoolNativeConstructor);
 	}
-	
+
 }

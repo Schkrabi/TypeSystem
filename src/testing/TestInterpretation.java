@@ -23,7 +23,10 @@ import conversions.IntStringToIntNativeWrapper;
 import conversions.IntNativeToIntRomanWrapper;
 import conversions.IntNativeToIntStringWrapper;
 import expression.Application;
+import expression.DefConversionExpression;
 import expression.DefExpression;
+import expression.DefRepresentationExpression;
+import expression.DefTypeExpression;
 import expression.ExceptionExpr;
 import expression.Expression;
 import expression.ExtendedFunction;
@@ -39,6 +42,7 @@ import expression.LitInteger;
 import expression.LitString;
 import expression.MetaFunction;
 import expression.MetaLambda;
+import expression.PostponeInterpretation;
 import expression.Tuple;
 import expression.TypeHolder;
 import expression.Variable;
@@ -47,8 +51,12 @@ import main.Main;
 import operators.Operator;
 import parser.SchemeLexer;
 import parser.SchemeParser;
+import parser.SemanticNode;
+import parser.SemanticNode.NodeType;
+import parser.SemanticPair;
 import parser.SchemeParser.ExprsContext;
 import semantic.SemanticParser;
+import semantic.TypeEnvironment;
 import semantic.UserException;
 import types.Substitution;
 import types.Type;
@@ -73,7 +81,7 @@ class TestInterpretation {
 	@BeforeEach
 	void setUp() throws Exception {
 		if (!initFlag) {
-			Main.init();
+			TypeEnvironment.initBasicTypes();
 			initFlag = true;
 		}
 	}
@@ -229,7 +237,7 @@ class TestInterpretation {
 	}
 
 	@Test
-	public void testTypeHolder() {
+	public void testTypeHolder() throws AppendableException {
 		TypeHolder typeHolder = new TypeHolder(TypeTuple.EMPTY_TUPLE);
 
 		Assertions.assertThrows(AppendableException.class, () -> typeHolder.interpret(Environment.topLevelEnvironment));
@@ -243,6 +251,23 @@ class TestInterpretation {
 
 		Pair<Type, Substitution> p = typeHolder.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeTuple.EMPTY_TUPLE, typeHolder, true);
+
+		TypeHolder placeholder = new TypeHolder(TypeAtom.TypeInt, new Variable("x"));
+		Environment bound = Environment.create(Environment.topLevelEnvironment);
+		bound.put(new Variable("x"), new LitInteger(42));
+
+		TestInterpretation.testInterpretation(placeholder, new LitInteger(42), bound);
+		Assertions.assertThrows(AppendableException.class,
+				() -> placeholder.interpret(Environment.topLevelEnvironment));
+
+		TypeHolder placeholder2 = new TypeHolder(TypeAtom.TypeInt, new Variable("__q"));
+		Environment.topLevelEnvironment.put(new Variable("__q"), placeholder2);
+		Assertions.assertThrows(AppendableException.class,
+				() -> placeholder2.interpret(Environment.topLevelEnvironment));
+
+		Environment bound2 = Environment.create(bound);
+		bound2.put(new Variable("x"), placeholder);
+		TestInterpretation.testInterpretation(placeholder, new LitInteger(42), bound2);
 	}
 
 	@Test
@@ -572,7 +597,8 @@ class TestInterpretation {
 
 		Function function = new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
 				Environment.topLevelEnvironment);
-		Assertions.assertThrows(InvalidClojureCompilationException.class, () -> function.toClojureCode());
+		// Assertions.assertThrows(InvalidClojureCompilationException.class, () ->
+		// function.toClojureCode());
 
 		Expression e = function;
 		if (!MetaFunction.isFunction(e)) {
@@ -812,13 +838,17 @@ class TestInterpretation {
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), new Variable("x"))));
 		Application useString = new Application(elambda, new Tuple(
 				Arrays.asList(new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString))));
-		TestInterpretation.testInterpretation(useString, new LitString("5"), Environment.topLevelEnvironment);
+		TestInterpretation.testInterpretation(useString,
+				new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString),
+				Environment.topLevelEnvironment);
 		p = useString.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeAtom.TypeInt, useString);
 
 		Application useRoman = new Application(elambda, new Tuple(
 				Arrays.asList(new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman))));
-		TestInterpretation.testInterpretation(useRoman, new LitString("V"), Environment.topLevelEnvironment);
+		TestInterpretation.testInterpretation(useRoman,
+				new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman),
+				Environment.topLevelEnvironment);
 		p = useRoman.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeAtom.TypeInt, useRoman);
 
@@ -1000,6 +1030,125 @@ class TestInterpretation {
 		if (cmp == 0) {
 			fail("Problem: " + child + ".compareTo(" + child5 + ") == " + cmp);
 		}
+	}
+
+	@Test
+	void testDefTypeExpression() throws AppendableException {
+		DefTypeExpression defTypeExpression = new DefTypeExpression(new TypeName("Test"));
+
+		defTypeExpression.toString();
+
+		TestInterpretation.testReflexivity(defTypeExpression);
+		TestInterpretation.testDifference(defTypeExpression, new DefTypeExpression(new TypeName("Test2")));
+		TestInterpretation.testDifference(defTypeExpression, Expression.EMPTY_EXPRESSION);
+
+		TestInterpretation.testInterpretation(defTypeExpression, Expression.EMPTY_EXPRESSION,
+				Environment.topLevelEnvironment);
+		if (TypeEnvironment.singleton.getType("Test").isEmpty()) {
+			fail(defTypeExpression.toString() + " did not created type!");
+		}
+
+		Pair<Type, Substitution> p = defTypeExpression.infer(Environment.topLevelEnvironment);
+		TestInterpretation.testInference(p, Expression.EMPTY_EXPRESSION.infer(Environment.topLevelEnvironment).first,
+				defTypeExpression);
+	}
+
+	@Test
+	void testPostponeInterpretation() throws AppendableException {
+		Environment env = Environment.create(Environment.topLevelEnvironment);
+		env.put(new Variable("x"), new LitInteger(42));
+
+		PostponeInterpretation postpone = new PostponeInterpretation(new Variable("x"), env);
+
+		postpone.toString();
+
+		TestInterpretation.testReflexivity(postpone);
+		TestInterpretation.testDifference(postpone, new PostponeInterpretation(new Variable("y"), env));
+		TestInterpretation.testDifference(postpone,
+				new PostponeInterpretation(new Variable("x"), Environment.topLevelEnvironment));
+		TestInterpretation.testDifference(postpone, Expression.EMPTY_EXPRESSION);
+
+		TestInterpretation.testInterpretation(postpone, new LitInteger(42), Environment.topLevelEnvironment);
+		Pair<Type, Substitution> p = postpone.infer(Environment.topLevelEnvironment);
+		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, postpone);
+	}
+
+	@Test
+	void testDefConversionExpression() throws AppendableException {
+		TypeName name = new TypeName("__defConversionTest");
+		TypeAtom typeAtomNative = new TypeAtom(name, TypeRepresentation.NATIVE);
+		TypeAtom typeAtomWildcard = new TypeAtom(name, TypeRepresentation.WILDCARD);
+		DefConversionExpression defCon = new DefConversionExpression(typeAtomNative, typeAtomWildcard,
+				new Lambda(new Tuple(Arrays.asList(new Variable("x"))), new TypeTuple(Arrays.asList(typeAtomNative)),
+						new Variable("y")));
+
+		defCon.toString();
+
+		TestInterpretation.testReflexivity(defCon);
+		TestInterpretation.testDifference(defCon,
+				new DefConversionExpression(new TypeAtom(name, TypeRepresentation.STRING), typeAtomWildcard,
+						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
+								new TypeTuple(Arrays.asList(new TypeAtom(name, TypeRepresentation.STRING))),
+								new Variable("y"))));
+		TestInterpretation.testDifference(defCon,
+				new DefConversionExpression(typeAtomNative, new TypeAtom(name, TypeRepresentation.STRING),
+						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
+								new TypeTuple(Arrays.asList(typeAtomNative)), new Variable("x"))));
+		TestInterpretation.testDifference(defCon,
+				new DefConversionExpression(typeAtomNative, typeAtomWildcard,
+						new Lambda(new Tuple(Arrays.asList(new Variable("y"))),
+								new TypeTuple(Arrays.asList(typeAtomNative)), new Variable("y"))));
+		TestInterpretation.testDifference(defCon, Expression.EMPTY_EXPRESSION);
+
+		TypeEnvironment.singleton.addType(name);
+		TypeEnvironment.singleton.addRepresentation(typeAtomNative, new Function(TypeTuple.EMPTY_TUPLE,
+				Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, Environment.topLevelEnvironment));
+		TypeEnvironment.singleton.addRepresentation(typeAtomWildcard, new Function(TypeTuple.EMPTY_TUPLE,
+				Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, Environment.topLevelEnvironment));
+
+		TestInterpretation.testInterpretation(defCon, Expression.EMPTY_EXPRESSION, Environment.topLevelEnvironment);
+		Expression e = TypeEnvironment.singleton.convertTo(Expression.EMPTY_EXPRESSION, typeAtomNative,
+				typeAtomWildcard);
+
+		Pair<Type, Substitution> p = defCon.infer(Environment.topLevelEnvironment);
+		TestInterpretation.testInference(p, Expression.EMPTY_EXPRESSION.infer(Environment.topLevelEnvironment).first,
+				defCon);
+	}
+
+	@Test
+	void testDefRepresentationExpression() throws AppendableException {
+		TypeName name = new TypeName("__defRepresentationTest");
+
+		DefRepresentationExpression defRep = new DefRepresentationExpression(name, TypeRepresentation.NATIVE,
+				Arrays.asList(SemanticNode.make(NodeType.PAIR, new SemanticPair("Int", "String"))));
+
+		defRep.toString();
+
+		TestInterpretation.testReflexivity(defRep);
+		TestInterpretation.testDifference(defRep,
+				new DefRepresentationExpression(TypeName.INT, TypeRepresentation.NATIVE,
+						Arrays.asList(SemanticNode.make(NodeType.PAIR, new SemanticPair("Int", "String")))));
+		TestInterpretation.testDifference(defRep, new DefRepresentationExpression(name, TypeRepresentation.STRING,
+				Arrays.asList(SemanticNode.make(NodeType.PAIR, new SemanticPair("Int", "String")))));
+		TestInterpretation.testDifference(defRep, new DefRepresentationExpression(name, TypeRepresentation.NATIVE,
+				Arrays.asList(SemanticNode.make(NodeType.PAIR, new SemanticPair("Int", "Roman")))));
+		TestInterpretation.testDifference(defRep,
+				new DefRepresentationExpression(name, TypeRepresentation.NATIVE,
+						Arrays.asList(SemanticNode.make(NodeType.PAIR, new SemanticPair("Int", "Roman")),
+								SemanticNode.make(NodeType.PAIR, new SemanticPair("Int", "String")))));
+		TestInterpretation.testDifference(defRep, Expression.EMPTY_EXPRESSION);
+
+		TypeEnvironment.singleton.addType(name);
+		TestInterpretation.testInterpretation(defRep, Expression.EMPTY_EXPRESSION, Environment.topLevelEnvironment);
+
+		Assertions.assertThrows(AppendableException.class,
+				() -> new DefRepresentationExpression(name, TypeRepresentation.NATIVE,
+						Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "__fail")))
+								.interpret(Environment.topLevelEnvironment));
+
+		Pair<Type, Substitution> p = defRep.infer(Environment.topLevelEnvironment);
+		TestInterpretation.testInference(p, Expression.EMPTY_EXPRESSION.infer(Environment.topLevelEnvironment).first,
+				defRep);
 	}
 
 	private Expression parseString(String s) throws AppendableException {

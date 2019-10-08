@@ -23,7 +23,7 @@ import expression.LitString;
 import expression.Tuple;
 import expression.Variable;
 import interpretation.Environment;
-import main.Main;
+import semantic.TypeEnvironment;
 import types.*;
 import util.AppendableException;
 import util.Pair;
@@ -35,7 +35,7 @@ class TestTypes {
 	@BeforeEach
 	void setUp() throws Exception {
 		if (!initFlag) {
-			Main.init();
+			TypeEnvironment.initBasicTypes();
 			initFlag = true;
 		}
 	}

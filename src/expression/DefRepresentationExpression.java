@@ -111,7 +111,8 @@ public class DefRepresentationExpression extends Expression {
 						this.members.stream()
 								.map(ThrowingFunction.wrapper(x -> TypeEnvironment.singleton.isType(x)
 										? TypeEnvironment.singleton.getType(x).get()
-										: new TypeVariable(x.asSymbol()))).collect(Collectors.toList())),
+										: new TypeVariable(x.asSymbol())))
+								.collect(Collectors.toList())),
 				args, new LitComposite(args, type), Environment.topLevelEnvironment);
 
 		TypeEnvironment.singleton.addRepresentation(type, constructor);

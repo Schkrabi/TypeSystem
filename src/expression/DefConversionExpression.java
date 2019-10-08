@@ -1,11 +1,14 @@
 package expression;
 
+import java.util.Arrays;
+
 import interpretation.Environment;
 import semantic.TypeEnvironment;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
 import types.TypeAtom;
+import types.TypeTuple;
 import types.TypesDoesNotUnifyException;
 import util.AppendableException;
 import util.Pair;
@@ -83,13 +86,8 @@ public class DefConversionExpression extends Expression {
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		Pair<Type, Substitution> p = this.conversion.infer(env);
 		TypeArrow type = (TypeArrow)p.first;
-		if(type.ltype != this.fromType) {
-			throw new TypesDoesNotUnifyException(type.ltype, this.fromType);
-		}
-		if(type.rtype != this.toType) {
-			throw new TypesDoesNotUnifyException(type.rtype, this.toType);
-		}
-		
+		Type.unify(type.ltype, new TypeTuple(Arrays.asList(this.fromType)));
+		Type.unify(type.rtype, this.toType);		
 		return Expression.EMPTY_EXPRESSION.infer(env);
 	}
 

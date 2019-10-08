@@ -58,28 +58,16 @@ class TestComplex {
 		
 		this.testInterpretString(
 				"(deftype Name)" +
-				"(defrep Unstructured Name)" +
-				"(defconstructor Name:Unstructured (lambda ((String:Native x)) x))" +
-				"(defrep Structured Name)" +
-				"(defconstructor Name:Structured (lambda ((String:Native x) (String:Native y)) (cons x y)))" + 
+				"(defrep Unstructured Name (lambda ((String:Native x)) x))" +
+				"(defrep Structured Name (lambda ((String:Native x) (String:Native y)) (cons x y)))" +
 				"((elambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (Name:Unstructured \"Jan Novak\"))",
 				new LitString("unstructured"));
 		
 		this.testInterpretString(
-				"(deftype Name)" +
-				"(defrep Unstructured Name)" +
-				"(defconstructor Name:Unstructured (lambda ((String:Native x)) x))" +
-				"(defrep Structured Name)" +
-				"(defconstructor Name:Structured (lambda ((String:Native x) (String:Native y)) (cons x y)))" +
 				"((elambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (Name:Structured \"Jan\" \"Novak\"))",
 				new LitString("structured"));
 		
 		this.testInterpretString(
-				"(deftype Name)" +
-				"(defrep Unstructured Name)" +
-				"(defconstructor Name:Unstructured (lambda ((String:Native x)) x))" +
-				"(defrep Structured Name)" +
-				"(defconstructor Name:Structured (lambda ((String:Native x) (String:Native y)) (cons x y)))" +
 				"(defconversion Name:Structured Name:Unstructured (lambda ((Name:Structured x)) (concat (car x) (cdr x))))" +
 				"((lambda ((Name:Unstructured x)) x) (Name:Structured \"Jan\" \"Novak\"))", 
 				new LitString("JanNovak"));
