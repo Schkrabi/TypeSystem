@@ -1,10 +1,13 @@
 package operators;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import expression.Expression;
 import expression.Function;
 import expression.LitBoolean;
+import expression.LitComposite;
 import expression.LitInteger;
 import expression.LitString;
 import expression.Tuple;
@@ -20,6 +23,7 @@ import util.AppendableException;
 import util.InvalidClojureCompilationException;
 import util.NameGenerator;
 import util.Pair;
+import util.UnboundVariableException;
 
 /**
  * Expression for meta-language operators
@@ -89,10 +93,10 @@ public class Operator extends Function {
 			new TypeTuple(Arrays.asList(new TypeTuple(
 					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))))),
 			new Tuple(Arrays.asList(new Variable("_x"))), "car", "", OperatorWrapper.CarWrapper) {
-		
+
 		@Override
-		public Pair<Type, Substitution> infer(Environment env){
-			TypeTuple argType = (TypeTuple)this.argsType.get(0);
+		public Pair<Type, Substitution> infer(Environment env) {
+			TypeTuple argType = (TypeTuple) this.argsType.get(0);
 			return new Pair<Type, Substitution>(new TypeArrow(this.argsType, argType.get(0)), Substitution.EMPTY);
 		}
 	};
@@ -104,10 +108,10 @@ public class Operator extends Function {
 			new TypeTuple(Arrays.asList(new TypeTuple(
 					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))))),
 			new Tuple(Arrays.asList(new Variable("_x"))), "cdr", "", OperatorWrapper.CdrWrapper) {
-		
+
 		@Override
-		public Pair<Type, Substitution> infer(Environment env){
-			TypeTuple argType = (TypeTuple)this.argsType.get(0);
+		public Pair<Type, Substitution> infer(Environment env) {
+			TypeTuple argType = (TypeTuple) this.argsType.get(0);
 			return new Pair<Type, Substitution>(new TypeArrow(this.argsType, argType.get(1)), Substitution.EMPTY);
 		}
 	};
@@ -177,6 +181,44 @@ public class Operator extends Function {
 	public static final Operator Subtraction = new Operator(
 			new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "-", "-", OperatorWrapper.SubWrapper);
+
+	/**
+	 * Creates getter operators for given types and its type members
+	 * @param type typeAtom
+	 * @param members members of given composite type
+	 * @return list of getters
+	 */
+	public static List<Operator> makeGetters(TypeAtom type, TypeTuple members){
+		List<Operator> l = new ArrayList<Operator>();
+		
+		for(int i = 0; i < members.size(); i++) {
+			l.add(Operator.makeTypeGetter(type, members, i));
+		}
+		return l;
+	}
+	
+	/**
+	 * Creates getter operator for given type its members and index
+	 * @param type inspected type
+	 * @param members member types of given type
+	 * @param index index of gotten type
+	 * @return new Operator instance
+	 */
+	private static Operator makeTypeGetter(TypeAtom type, TypeTuple members, final int index) {
+		OperatorWrapper body = new OperatorWrapper(members.get(index)) {
+
+			@Override
+			public Expression interpret(Environment env) throws AppendableException {
+				LitComposite lit = (LitComposite) env.getVariableValue(new Variable("_value")).interpret(env);
+				return lit.value.get(index).interpret(env);
+			}
+		};
+
+		String name = type.toString() + "-" + index;
+
+		return new Operator(new TypeTuple(Arrays.asList(type)), new Tuple(Arrays.asList(new Variable("_value"))), name,
+				"TODO", body);
+	}
 
 	/**
 	 * Wrapper abstract class for meta-language operators body
@@ -411,6 +453,20 @@ public class Operator extends Function {
 				LitInteger y = (LitInteger) env.getVariableValue(new Variable("_y")).interpret(env);
 
 				return new LitInteger(x.value - y.value);
+			}
+		};
+
+		/**
+		 * Body of get operator
+		 */
+		public static final OperatorWrapper GetWrapper = new OperatorWrapper(new TypeVariable(NameGenerator.next())) {
+
+			@Override
+			public Expression interpret(Environment env) throws UnboundVariableException, AppendableException {
+				LitComposite composite = (LitComposite) env.getVariableValue(new Variable("_composite")).interpret(env);
+				LitInteger index = (LitInteger) env.getVariableValue(new Variable("_index")).interpret(env);
+
+				return composite.value.get(index.value);
 			}
 		};
 	}

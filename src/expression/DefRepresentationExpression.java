@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import interpretation.Environment;
+import operators.Operator;
 import parser.SemanticNode;
 import semantic.TypeEnvironment;
 import types.Substitution;
@@ -106,17 +107,20 @@ public class DefRepresentationExpression extends Expression {
 		Tuple args = new Tuple(
 				this.members.stream().map(x -> new Variable(NameGenerator.next())).collect(Collectors.toList()));
 
-		Function constructor = new Function(
-				new TypeTuple(
-						this.members.stream()
-								.map(ThrowingFunction.wrapper(x -> TypeEnvironment.singleton.isType(x)
-										? TypeEnvironment.singleton.getType(x).get()
-										: new TypeVariable(x.asSymbol())))
-								.collect(Collectors.toList())),
-				args, new LitComposite(args, type), Environment.topLevelEnvironment);
+		TypeTuple memberTypes = new TypeTuple(this.members.stream()
+				.map(ThrowingFunction
+						.wrapper(x -> TypeEnvironment.singleton.isType(x) ? TypeEnvironment.singleton.getType(x).get()
+								: new TypeVariable(x.asSymbol())))
+				.collect(Collectors.toList()));
+
+		Function constructor = new Function(memberTypes, args, new LitComposite(args, type),
+				Environment.topLevelEnvironment);
 
 		TypeEnvironment.singleton.addRepresentation(type, constructor);
 		env.put(new Variable(type.toString()), constructor);
+
+		Operator.makeGetters(type, memberTypes).stream().forEach(x -> env.put(new Variable(x.symbol), x));
+
 		return Expression.EMPTY_EXPRESSION;
 	}
 

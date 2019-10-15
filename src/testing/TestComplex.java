@@ -24,6 +24,7 @@ import parser.SchemeLexer;
 import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
 import semantic.SemanticParser;
+import semantic.TypeEnvironment;
 import types.Substitution;
 import types.Type;
 import util.AppendableException;
@@ -34,7 +35,8 @@ class TestComplex {
 	
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
-		Main.init();
+		Environment.initTopLevelEnvitonment();
+		TypeEnvironment.initBasicTypes();
 	}
 
 	@AfterAll
@@ -58,8 +60,8 @@ class TestComplex {
 		
 		this.testInterpretString(
 				"(deftype Name)" +
-				"(defrep Unstructured Name (lambda ((String:Native x)) x))" +
-				"(defrep Structured Name (lambda ((String:Native x) (String:Native y)) (cons x y)))" +
+				"(defrep Unstructured Name (String:Native))" +
+				"(defrep Structured Name (String:Native String:Native))" +
 				"((elambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (Name:Unstructured \"Jan Novak\"))",
 				new LitString("unstructured"));
 		
@@ -68,7 +70,7 @@ class TestComplex {
 				new LitString("structured"));
 		
 		this.testInterpretString(
-				"(defconversion Name:Structured Name:Unstructured (lambda ((Name:Structured x)) (concat (car x) (cdr x))))" +
+				"(defconversion Name:Structured Name:Unstructured (lambda ((Name:Structured x)) (concat (Name:Structured-0 x) (Name:Structured x 1))))" +
 				"((lambda ((Name:Unstructured x)) x) (Name:Structured \"Jan\" \"Novak\"))", 
 				new LitString("JanNovak"));
 				
@@ -87,7 +89,7 @@ class TestComplex {
 
 	private void testInterpretString(String code, Expression expected) throws AppendableException {
 		SemanticParser semanticParser = new SemanticParser();
-		Environment topLevel = Environment.create(Environment.topLevelEnvironment, Main.initTopLevelEnvironment());
+		Environment topLevel = Environment.topLevelEnvironment;
 		Expression last = null;
 		for(Expression e : this.parseString(code, semanticParser)) {
 			Pair<Type, Substitution> p = e.infer(topLevel);
