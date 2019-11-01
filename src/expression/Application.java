@@ -1,7 +1,6 @@
 package expression;
 
 import java.util.Iterator;
-import java.util.Optional;
 
 import types.Substitution;
 import types.Type;
@@ -60,7 +59,7 @@ public class Application extends Expression {
 		while (i.hasNext()) {
 			Expression e = j.next();
 			Variable v = (Variable) i.next();
-			//childEnv.put(v, new PostponeInterpretation(e, env));
+			// childEnv.put(v, new PostponeInterpretation(e, env));
 			childEnv.put(v, e.interpret(env));
 		}
 
@@ -111,8 +110,31 @@ public class Application extends Expression {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
-		// TODO
-		return "";
+		return this.toClojureCode(new TypeVariable(NameGenerator.next()), Environment.topLevelEnvironment);
+	}
+
+	@Override
+	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+		StringBuilder s = new StringBuilder("(");
+		TypeTuple argsType = (TypeTuple) this.args.infer(env).first;
+
+		s.append(this.fun.toClojureCode(new TypeArrow(argsType, expectedType), env));
+		s.append(" ");
+
+		Iterator<Expression> i = this.args.iterator();
+		Iterator<Type> j = argsType.iterator();
+		while (i.hasNext()) {
+			Expression e = i.next();
+			Type t = j.next();
+
+			s.append(e.toClojureCode(t, env));
+			if (i.hasNext()) {
+				s.append(" ");
+			}
+		}
+		s.append(")");
+
+		return s.toString();
 	}
 
 	@Override

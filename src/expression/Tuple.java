@@ -5,12 +5,15 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import types.Substitution;
 import types.Type;
 import types.TypeTuple;
+import types.TypeVariable;
 import util.AppendableException;
+import util.NameGenerator;
 import util.Pair;
 import interpretation.Environment;
 
@@ -108,13 +111,23 @@ public class Tuple extends Expression implements Iterable<Expression> {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
+		return this.toClojureCode(
+				new TypeTuple(
+						this.stream().map(x -> new TypeVariable(NameGenerator.next())).collect(Collectors.toList())),
+				Environment.topLevelEnvironment);
+	}
+
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		s.append('[');
 
 		Iterator<Expression> i = this.iterator();
+		Iterator<Type> j = ((TypeTuple) expectedType).iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
-			s.append(e.toClojureCode());
+			Type t = j.next();
+			s.append(e.toClojureCode(t, env));
 			if (i.hasNext()) {
 				s.append(' ');
 			}
@@ -159,7 +172,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	public Stream<Expression> stream() {
 		return this.values.stream();
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.values.hashCode();

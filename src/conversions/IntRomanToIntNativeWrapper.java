@@ -43,7 +43,12 @@ public class IntRomanToIntNativeWrapper extends ConversionWrapper {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
-		return "(RomanNumbers/roman2int " + ConversionWrapper.arg.toClojureCode() + ")";
+		return this.toClojureCode(TypeAtom.TypeIntNative, Environment.topLevelEnvironment);
+	}
+	
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+		return "(" + RomanNumbers.roman2intClojure + " " + ConversionWrapper.arg.toClojureCode() + ")";
 	}
 
 	@Override

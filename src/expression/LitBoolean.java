@@ -20,7 +20,7 @@ public class LitBoolean extends Literal {
 	 */
 	public final boolean value;
 
-	private LitBoolean(boolean value) { 
+	private LitBoolean(boolean value) {
 		this.value = value;
 	}
 
@@ -39,6 +39,11 @@ public class LitBoolean extends Literal {
 
 	@Override
 	public String toClojureCode() {
+		return this.toClojureCode(null, Environment.topLevelEnvironment);
+	}
+
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) {
 		return Boolean.toString(this.value);
 	}
 
@@ -46,23 +51,23 @@ public class LitBoolean extends Literal {
 	public Pair<Type, Substitution> infer(Environment env) {
 		return new Pair<Type, Substitution>(TypeAtom.TypeBoolNative, Substitution.EMPTY);
 	}
-	
+
 	@Override
-	public boolean equals(Object o){
-		if(!(o instanceof LitBoolean)){
+	public boolean equals(Object o) {
+		if (!(o instanceof LitBoolean)) {
 			return false;
 		}
 		LitBoolean other = (LitBoolean) o;
 		return this.value == other.value;
 	}
-	
+
 	@Override
 	public int compareTo(Expression other) {
-		if(other instanceof LitBoolean) {
-			LitBoolean o = (LitBoolean)other;
-			if(this.value == o.value)
+		if (other instanceof LitBoolean) {
+			LitBoolean o = (LitBoolean) other;
+			if (this.value == o.value)
 				return 0;
-			if(this.value)
+			if (this.value)
 				return 1;
 			return -1;
 		}

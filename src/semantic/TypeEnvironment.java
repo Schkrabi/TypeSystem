@@ -203,4 +203,14 @@ public class TypeEnvironment {
 		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative, IntStringToIntNativeWrapper.IntStringToInt);
 		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, IntStringToIntRomanWrapper.IntStringToIntRoman);
 	}
+	
+	/**
+	 * Creates name for conversion
+	 * @param from 
+	 * @param to
+	 * @return string with conversion name
+	 */
+	public static String makeConversionName(TypeAtom from, TypeAtom to) {
+		return from.name.toString() + from.representation.toString() + "2" + to.name.toString() + to.representation.toString();
+	}
 }

@@ -9,14 +9,15 @@ import interpretation.Environment;
 
 /**
  * Abstract class for Integer Literals representations
+ * 
  * @author Mgr. Radomir Skrabal
  *
  */
 public class LitInteger extends Literal {
-	
+
 	public final int value;
-	
-	public LitInteger(int value){
+
+	public LitInteger(int value) {
 		this.value = value;
 	}
 
@@ -27,38 +28,43 @@ public class LitInteger extends Literal {
 
 	@Override
 	public String toClojureCode() {
+		return this.toClojureCode(null, Environment.topLevelEnvironment);
+	}
+
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) {
 		return Integer.toString(this.value);
 	}
-	
+
 	@Override
-	public String toString(){
+	public String toString() {
 		return Integer.toString(this.value);
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) {
 		return new Pair<Type, Substitution>(TypeAtom.TypeIntNative, Substitution.EMPTY);
-	} 
-	
+	}
+
 	@Override
-	public boolean equals(Object o){
-		if(!(o instanceof LitInteger)){
+	public boolean equals(Object o) {
+		if (!(o instanceof LitInteger)) {
 			return false;
 		}
 		LitInteger other = (LitInteger) o;
 		return this.value == other.value;
 	}
-	
+
 	@Override
 	public int compareTo(Expression other) {
-		if(other instanceof LitInteger) {
+		if (other instanceof LitInteger) {
 			return Integer.compare(this.value, ((LitInteger) other).value);
 		}
 		return super.compareTo(other);
 	}
-	
+
 	@Override
 	public int hashCode() {
-		return ((Integer)this.value).hashCode();
+		return ((Integer) this.value).hashCode();
 	}
 }

@@ -81,6 +81,11 @@ public class IfExpression extends Application {
 
 		@Override
 		public String toClojureCode() {
+			return this.toClojureCode(null, Environment.topLevelEnvironment);
+		}
+		
+		@Override
+		protected String toClojureCode(Type expectedType, Environment env) {
 			return "if";
 		}
 		

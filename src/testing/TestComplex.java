@@ -2,6 +2,7 @@ package testing;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,8 +17,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import expression.Expression;
+import expression.LitComposite;
 import expression.LitInteger;
 import expression.LitString;
+import expression.Tuple;
 import interpretation.Environment;
 import main.Main;
 import parser.SchemeLexer;
@@ -27,12 +30,15 @@ import semantic.SemanticParser;
 import semantic.TypeEnvironment;
 import types.Substitution;
 import types.Type;
+import types.TypeAtom;
+import types.TypeName;
+import types.TypeRepresentation;
 import util.AppendableException;
 import util.Pair;
 import util.ThrowingFunction;
 
 class TestComplex {
-	
+
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
 		Environment.initTopLevelEnvitonment();
@@ -53,27 +59,37 @@ class TestComplex {
 
 	@Test
 	void test() throws AppendableException {
-		this.testInterpretString(
-				"(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))" +
-				"(fact 5)",
+		this.testInterpretString("(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))" + "(fact 5)",
 				new LitInteger(120));
-		
-		this.testInterpretString(
-				"(deftype Name)" +
-				"(defrep Unstructured Name (String:Native))" +
-				"(defrep Structured Name (String:Native String:Native))" +
-				"((elambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (Name:Unstructured \"Jan Novak\"))",
+
+		this.testInterpretString("(deftype Name)" + "(defrep Unstructured Name (String:Native))"
+				+ "(defrep Structured Name (String:Native String:Native))"
+				+ "((elambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (Name:Unstructured \"Jan Novak\"))",
 				new LitString("unstructured"));
-		
+
 		this.testInterpretString(
 				"((elambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (Name:Structured \"Jan\" \"Novak\"))",
 				new LitString("structured"));
-		
+
 		this.testInterpretString(
-				"(defconversion Name:Structured Name:Unstructured (lambda ((Name:Structured x)) (concat (Name:Structured-0 x) (Name:Structured x 1))))" +
-				"((lambda ((Name:Unstructured x)) x) (Name:Structured \"Jan\" \"Novak\"))", 
-				new LitString("JanNovak"));
-				
+				"(defconversion Name:Structured Name:Unstructured (lambda ((Name:Structured x)) (Name:Unstructured (concat (NameStructured-0 x) (NameStructured-1 x)))))"
+						+ "((lambda ((Name:Unstructured x)) x) (Name:Structured \"Jan\" \"Novak\"))",
+				new LitComposite(new Tuple(Arrays.asList(new LitString("JanNovak"))),
+						new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured"))));
+
+		this.testInterpretString(
+				"(deftype List)" + "(defrep Native List (x List))" + "(defrep Empty List ())"
+						+ "(List:Native 1 (List:Native 2 (List:Empty)))",
+				new LitComposite(
+						new Tuple(Arrays.asList(new LitInteger(1),
+								new LitComposite(
+										new Tuple(Arrays.asList(new LitInteger(2),
+												new LitComposite(Tuple.EMPTY_TUPLE,
+														new TypeAtom(new TypeName("List"),
+																new TypeRepresentation("Empty"))))),
+										new TypeAtom(new TypeName("List"), TypeRepresentation.NATIVE)))),
+						new TypeAtom(new TypeName("List"), TypeRepresentation.NATIVE)));
+
 	}
 
 	private List<Expression> parseString(String s, SemanticParser semanticParser) throws AppendableException {
@@ -91,12 +107,12 @@ class TestComplex {
 		SemanticParser semanticParser = new SemanticParser();
 		Environment topLevel = Environment.topLevelEnvironment;
 		Expression last = null;
-		for(Expression e : this.parseString(code, semanticParser)) {
+		for (Expression e : this.parseString(code, semanticParser)) {
 			Pair<Type, Substitution> p = e.infer(topLevel);
 			last = e.interpret(topLevel);
 		}
-		
-		if(!last.equals(expected)) {
+
+		if (!last.equals(expected)) {
 			fail("Interpretation of " + code + " yields " + last + " were expecting " + expected);
 		}
 	}

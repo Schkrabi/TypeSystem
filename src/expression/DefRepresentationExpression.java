@@ -104,24 +104,39 @@ public class DefRepresentationExpression extends Expression {
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
 		TypeAtom type = new TypeAtom(this.typeName, this.representation);
-		Tuple args = new Tuple(
-				this.members.stream().map(x -> new Variable(NameGenerator.next())).collect(Collectors.toList()));
-
-		TypeTuple memberTypes = new TypeTuple(this.members.stream()
-				.map(ThrowingFunction
-						.wrapper(x -> TypeEnvironment.singleton.isType(x) ? TypeEnvironment.singleton.getType(x).get()
-								: new TypeVariable(x.asSymbol())))
-				.collect(Collectors.toList()));
-
-		Function constructor = new Function(memberTypes, args, new LitComposite(args, type),
-				Environment.topLevelEnvironment);
+		Function constructor = this.makeConstructor();
 
 		TypeEnvironment.singleton.addRepresentation(type, constructor);
 		env.put(new Variable(type.toString()), constructor);
 
-		Operator.makeGetters(type, memberTypes).stream().forEach(x -> env.put(new Variable(x.symbol), x));
+		Operator.makeGetters(type, this.memberTypes()).stream().forEach(x -> env.put(new Variable(x.symbol), x));
 
 		return Expression.EMPTY_EXPRESSION;
+	}
+	
+	/**
+	 * Makes member types TypeTuple of this defRepresentationExpression
+	 * @return TypeTUple
+	 */
+	private TypeTuple memberTypes() {
+		return new TypeTuple(this.members.stream()
+				.map(ThrowingFunction
+						.wrapper(x -> TypeEnvironment.singleton.isType(x) ? TypeEnvironment.singleton.getType(x).get()
+								: new TypeVariable(x.asSymbol())))
+				.collect(Collectors.toList()));
+	}
+	
+	/**
+	 * Creates constructor for created type
+	 * @return Function
+	 */
+	private Function makeConstructor() {
+		TypeAtom type = new TypeAtom(this.typeName, this.representation);
+		Tuple args = new Tuple(
+				this.members.stream().map(x -> new Variable(NameGenerator.next())).collect(Collectors.toList()));
+		
+		return new Function(this.memberTypes(), args, new LitComposite(args, type),
+				Environment.topLevelEnvironment);	
 	}
 
 	@Override
@@ -131,8 +146,12 @@ public class DefRepresentationExpression extends Expression {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
-		// TODO Auto-generated method stub
-		throw new AppendableException("Not Implemented");
+		return this.toClojureCode(null, Environment.topLevelEnvironment);
+	}
+
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+		return "(def " + new TypeAtom(this.typeName, this.representation).clojureName() + " " + this.makeConstructor()  + ")";
 	}
 
 }

@@ -4,7 +4,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import expression.Expression;
-import interpretation.Environment;
 import semantic.TypeEnvironment;
 import util.AppendableException;
 
@@ -67,6 +66,9 @@ public class TypeAtom extends Type {
 		if (!(toType instanceof TypeAtom) || !TypeAtom.isSameBasicType(this, (TypeAtom) toType)) {
 			throw new ConversionException(this, toType, expr);
 		}
+		if(((TypeAtom)toType).representation.equals(TypeRepresentation.WILDCARD)) {
+			return expr;
+		}
 
 		Expression e = TypeEnvironment.singleton.convertTo(expr, this, (TypeAtom)toType);
 
@@ -81,6 +83,14 @@ public class TypeAtom extends Type {
 	@Override
 	public Type apply(Substitution s) {
 		return this;
+	}
+	
+	/**
+	 * Creates clojure name of the type constructor
+	 * @return String
+	 */
+	public String clojureName() {
+		return this.name.toString() + "-" + this.representation.toString();
 	}
 
 	/**

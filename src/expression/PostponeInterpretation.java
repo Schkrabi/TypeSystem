@@ -6,6 +6,12 @@ import types.Type;
 import util.AppendableException;
 import util.Pair;
 
+/**
+ * Class for implementation of lazy evaluation. Currently not used.
+ * 
+ * @author schkabi
+ *
+ */
 public class PostponeInterpretation extends Expression {
 
 	private final Expression postponed;
@@ -28,6 +34,11 @@ public class PostponeInterpretation extends Expression {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
+		return this.toClojureCode(null, Environment.topLevelEnvironment);
+	}
+
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		throw new AppendableException(this.getClass().getName() + " is not to be converted to Clojure!");
 	}
 

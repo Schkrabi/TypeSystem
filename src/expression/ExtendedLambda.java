@@ -29,17 +29,6 @@ import util.ThrowingFunction;
  */
 public class ExtendedLambda extends MetaLambda {
 
-	/*
-	 * TODO list * strenghten syntax of elambda as follows (elambda ((type1 arg1)
-	 * (type2 arg2) ...) ((typeRep11 typeRep12 ...) impl1) ((typeRep21 typeRep22
-	 * ...) impl2)) * argument list will be mandatory fully typed with TypeConcrete
-	 * (not TypeRepresentation !) * implementation argument type will have be typed
-	 * with TypeRepresentation * default implementation will be deprecated
-	 * 
-	 * * Maybe improve syntax of type in typed lambda to be able to use "->" and
-	 * "[]" (functions and tuples) (not critical)
-	 */
-
 	/**
 	 * Various implementations of this function
 	 */
@@ -103,8 +92,7 @@ public class ExtendedLambda extends MetaLambda {
 	 * Returns the priority queue with ordering of the optimized implementations
 	 * given by comparator
 	 * 
-	 * @param c
-	 *            comparator determining the ordering of the implementations
+	 * @param c comparator determining the ordering of the implementations
 	 * @return priority queue of ImplContainers
 	 */
 	public PriorityQueue<Lambda> getSortedImplementations(Comparator<? super Lambda> c) {
@@ -133,14 +121,14 @@ public class ExtendedLambda extends MetaLambda {
 		s.append(") ");
 
 		Iterator<Lambda> k = this.implementations.iterator();
-		while(k.hasNext()) {
+		while (k.hasNext()) {
 			Lambda l = k.next();
 			s.append('(');
 			s.append(l.argsType.toString().replace('[', '(').replace(']', ')'));
 			s.append(' ');
 			s.append(l.body.toString());
 			s.append(')');
-			if(k.hasNext()) {
+			if (k.hasNext()) {
 				s.append(' ');
 			}
 		}
@@ -150,10 +138,38 @@ public class ExtendedLambda extends MetaLambda {
 		return s.toString();
 	}
 
+	/**
+	 * Returns implementation according to the comparator (if there are any
+	 * alternative implementations)
+	 * 
+	 * @param c comparator
+	 * @return function
+	 */
+	private Lambda getLambda(final TypeTuple realArgsType) {
+		return this.implementations.stream()
+				.map(impl -> new Pair<Integer, Lambda>(impl.argsType.tupleDistance(realArgsType), impl))
+				.reduce(new Pair<Integer, Lambda>(Integer.MAX_VALUE, null), (p1, p2) -> {
+					if (p1.first < p2.first)
+						return p1;
+					else
+						return p2;
+				}).second;
+	}
+
 	@Override
 	public String toClojureCode() throws AppendableException {
-		// TODO
-		return "";
+		Type type = new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next()));
+		return this.toClojureCode(type, Environment.topLevelEnvironment);
+	}
+
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+		if (!(expectedType instanceof TypeArrow) || !(((TypeArrow) expectedType).ltype instanceof TypeTuple)) {
+			throw new AppendableException(
+					"Unexpected argument " + expectedType + "in ExtendedLambda.toClojureCode(expectedType)");
+		}
+
+		return this.getLambda((TypeTuple) ((TypeArrow) expectedType).ltype).toClojureCode(expectedType, env);
 	}
 
 	@Override
@@ -186,7 +202,7 @@ public class ExtendedLambda extends MetaLambda {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.argsType.hashCode() * this.implementations.hashCode();

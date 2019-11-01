@@ -75,10 +75,16 @@ public class DefExpression extends Expression {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
+		return this.toClojureCode(TypeTuple.EMPTY_TUPLE, Environment.topLevelEnvironment);
+	}
+	
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(def ");
-		s.append(this.name.toClojureCode());
+		s.append(this.name.toClojureCode(new TypeVariable(NameGenerator.next()), env));
 		s.append(" ");
-		s.append(this.defined.toClojureCode());
+		Type t = this.defined.infer(env).first;
+		s.append(this.defined.toClojureCode(t, env));
 		s.append(")");
 		return s.toString();
 	}

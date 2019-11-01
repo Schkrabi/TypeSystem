@@ -64,8 +64,12 @@ public class DefTypeExpression extends Expression {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
-		// TODO Auto-generated method stub
-		throw new AppendableException("Not Implemented");
+		return this.toClojureCode(this.infer(Environment.topLevelEnvironment).first, Environment.topLevelEnvironment);
+	}
+
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+		return "";
 	}
 
 }

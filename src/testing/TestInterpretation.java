@@ -206,34 +206,6 @@ class TestInterpretation {
 
 		composite1.toString();
 		composite1.toClojureCode();
-
-		TypeTuple compositeTypeTuple = new TypeTuple(
-				Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative, TypeAtom.TypeStringNative));
-		Lambda constructor1 = LitComposite.makeConstructor(compositeTypeTuple, type);
-		Lambda constructor2 = LitComposite.makeConstructor(compositeTypeTuple,
-				new TypeAtom(typeName, TypeRepresentation.STRING));
-		Lambda constructor3 = LitComposite.makeConstructor(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
-				type);
-
-		TestInterpretation.testReflexivity(constructor1);
-		TestInterpretation.testDifference(constructor1, constructor2);
-		TestInterpretation.testDifference(constructor1, constructor3);
-		TestInterpretation.testDifference(constructor1,
-				new Lambda(constructor1.args, constructor1.argsType, constructor2.body));
-		TestInterpretation.testDifference(constructor1,
-				new Lambda(constructor1.args, constructor1.argsType, constructor3.body));
-		TestInterpretation.testDifference(constructor1,
-				new Lambda(constructor1.args, constructor1.argsType, Expression.EMPTY_EXPRESSION));
-
-		Application applyConstructor1 = new Application(constructor1,
-				new Tuple(Arrays.asList(new LitInteger(42), LitBoolean.TRUE, new LitString("test"))));
-		TestInterpretation.testInterpretation(applyConstructor1, composite1, Environment.topLevelEnvironment);
-
-		p = constructor1.infer(Environment.topLevelEnvironment);
-		TestInterpretation.testInference(p, new TypeArrow(compositeTypeTuple, type), constructor1);
-
-		constructor1.toString();
-		constructor1.toClojureCode();
 	}
 
 	@Test
@@ -309,6 +281,11 @@ class TestInterpretation {
 
 			@Override
 			public String toClojureCode() throws AppendableException {
+				return null;
+			}
+
+			@Override
+			protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 				return null;
 			}
 		});
@@ -389,6 +366,11 @@ class TestInterpretation {
 			public String toClojureCode() throws AppendableException {
 				return null;
 			}
+
+			@Override
+			protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+				return null;
+			}
 		}))).infer(Environment.topLevelEnvironment));
 	}
 
@@ -423,6 +405,11 @@ class TestInterpretation {
 
 			@Override
 			public String toClojureCode() throws AppendableException {
+				return null;
+			}
+
+			@Override
+			protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 				return null;
 			}
 		}).infer(Environment.topLevelEnvironment));
@@ -482,6 +469,11 @@ class TestInterpretation {
 
 					@Override
 					public String toClojureCode() throws AppendableException {
+						return null;
+					}
+
+					@Override
+					protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 						return null;
 					}
 				}).infer(Environment.topLevelEnvironment));
@@ -1107,8 +1099,6 @@ class TestInterpretation {
 				Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, Environment.topLevelEnvironment));
 
 		TestInterpretation.testInterpretation(defCon, Expression.EMPTY_EXPRESSION, Environment.topLevelEnvironment);
-		Expression e = TypeEnvironment.singleton.convertTo(Expression.EMPTY_EXPRESSION, typeAtomNative,
-				typeAtomWildcard);
 
 		Pair<Type, Substitution> p = defCon.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, Expression.EMPTY_EXPRESSION.infer(Environment.topLevelEnvironment).first,
@@ -1241,7 +1231,6 @@ class TestInterpretation {
 	private static void testConversion(Function conversion, Expression argument, Expression expectedInterpret,
 			Type expectedInfer) throws AppendableException {
 		conversion.toString();
-		conversion.toClojureCode();
 
 		Application appl = new Application(conversion, new Tuple(Arrays.asList(argument)));
 		TestInterpretation.testInterpretation(appl, expectedInterpret, Environment.topLevelEnvironment);

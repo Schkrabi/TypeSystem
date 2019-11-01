@@ -53,6 +53,11 @@ public class Operator extends Function {
 
 	@Override
 	public String toClojureCode() {
+		return this.toClojureCode(null, Environment.topLevelEnvironment);
+	}
+	
+	@Override
+	public String toClojureCode(Type expectedType, Environment env) {
 		return this.clojureSymbol;
 	}
 
@@ -184,24 +189,26 @@ public class Operator extends Function {
 
 	/**
 	 * Creates getter operators for given types and its type members
-	 * @param type typeAtom
+	 * 
+	 * @param type    typeAtom
 	 * @param members members of given composite type
 	 * @return list of getters
 	 */
-	public static List<Operator> makeGetters(TypeAtom type, TypeTuple members){
+	public static List<Operator> makeGetters(TypeAtom type, TypeTuple members) {
 		List<Operator> l = new ArrayList<Operator>();
-		
-		for(int i = 0; i < members.size(); i++) {
+
+		for (int i = 0; i < members.size(); i++) {
 			l.add(Operator.makeTypeGetter(type, members, i));
 		}
 		return l;
 	}
-	
+
 	/**
 	 * Creates getter operator for given type its members and index
-	 * @param type inspected type
+	 * 
+	 * @param type    inspected type
 	 * @param members member types of given type
-	 * @param index index of gotten type
+	 * @param index   index of gotten type
 	 * @return new Operator instance
 	 */
 	private static Operator makeTypeGetter(TypeAtom type, TypeTuple members, final int index) {
@@ -214,8 +221,9 @@ public class Operator extends Function {
 			}
 		};
 
-		String name = type.toString() + "-" + index;
+		String name = type.name.toString() + type.representation.toString() + "-" + index;
 
+		//TODO clojure symbol
 		return new Operator(new TypeTuple(Arrays.asList(type)), new Tuple(Arrays.asList(new Variable("_value"))), name,
 				"TODO", body);
 	}
@@ -244,6 +252,11 @@ public class Operator extends Function {
 
 		@Override
 		public String toClojureCode() throws AppendableException {
+			return this.toClojureCode(null, Environment.topLevelEnvironment);
+		}
+		
+		@Override
+		public String toClojureCode(Type expectedType, Environment env) throws InvalidClojureCompilationException {
 			throw new InvalidClojureCompilationException(this);
 		}
 

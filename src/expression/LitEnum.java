@@ -77,4 +77,9 @@ public class LitEnum extends Literal {
 		return this.value;
 	}
 
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+		throw new AppendableException("Not Implemented");
+	}
+
 }

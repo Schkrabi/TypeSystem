@@ -63,6 +63,11 @@ public class Variable extends Expression implements Comparable<Expression> {
 
 	@Override
 	public String toClojureCode() {
+		return this.toClojureCode(null, Environment.topLevelEnvironment);
+	}
+	
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) {
 		return this.name;
 	}
 

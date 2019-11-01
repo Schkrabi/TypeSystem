@@ -44,7 +44,12 @@ public class IntNativeToIntRomanWrapper extends ConversionWrapper {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
-		return "(RomanNumbers/int2roman " + ConversionWrapper.arg.toClojureCode() + ")";
+		return this.toClojureCode(TypeAtom.TypeIntRoman, Environment.topLevelEnvironment);
+	}
+	
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+		return "(" + RomanNumbers.int2RomanClojure + " " + ConversionWrapper.arg.toClojureCode() + ")";
 	}
 
 	@Override
@@ -58,4 +63,6 @@ public class IntNativeToIntRomanWrapper extends ConversionWrapper {
 	public static final Function IntToIntRoman = new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 			new Tuple(Arrays.asList(ConversionWrapper.arg)), new IntNativeToIntRomanWrapper(),
 			Environment.topLevelEnvironment);
+
+	
 }

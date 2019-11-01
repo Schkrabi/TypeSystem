@@ -38,7 +38,20 @@ public abstract class Expression implements Comparable<Expression> {
 		return this.getClass().getName().compareTo(other.getClass().getName());
 	}
 
+	/**
+	 * Transforms expression into equivalent clojure expression
+	 * @return string containing clojure expression
+	 * @throws AppendableException
+	 */
 	public abstract String toClojureCode() throws AppendableException;
+	
+	/**
+	 * Transforms expression into equivalent clojure expression
+	 * @param expectedType Expected type of expression
+	 * @return string containing clojure expression
+	 * @throws AppendableException
+	 */
+	protected abstract String toClojureCode(Type expectedType, Environment env) throws AppendableException;
 
 	/**
 	 * Empty expression
@@ -56,7 +69,12 @@ public abstract class Expression implements Comparable<Expression> {
 
 		@Override
 		public String toClojureCode() {
-			return "";
+			return this.toClojureCode(null, Environment.topLevelEnvironment);
+		}
+
+		@Override
+		public String toClojureCode(Type expectedType, Environment env) {
+			return "nil";
 		}
 	};
 }

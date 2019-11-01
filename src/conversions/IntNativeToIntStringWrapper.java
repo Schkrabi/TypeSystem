@@ -43,6 +43,11 @@ public class IntNativeToIntStringWrapper extends ConversionWrapper {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
+		return this.toClojureCode(null, Environment.topLevelEnvironment);
+	}
+	
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		return "(Integer/toString " + ConversionWrapper.arg.toClojureCode() + ")";
 	}
 

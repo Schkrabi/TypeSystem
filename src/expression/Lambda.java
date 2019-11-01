@@ -41,15 +41,15 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	public Lambda(Variable arg, Expression body) {
 		this.args = new Tuple(Arrays.asList(arg));
 		this.body = body;
-		this.argsType = new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()) ));
+		this.argsType = new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next())));
 	}
 
 	public Lambda(Tuple args, Expression body) {
 		this.args = args;
 		this.body = body;
-		
+
 		List<Type> types = new LinkedList<Type>();
-		for(int i = 0; i < args.size(); i++)
+		for (int i = 0; i < args.size(); i++)
 			types.add(new TypeVariable(NameGenerator.next()));
 		this.argsType = new TypeTuple(types);
 	}
@@ -68,17 +68,16 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder("(lambda (");
-		
+
 		Iterator<Expression> i = this.args.iterator();
 		Iterator<Type> j = this.argsType.iterator();
-		while(i.hasNext()) {
+		while (i.hasNext()) {
 			Expression e = i.next();
 			Type t = j.next();
-			
-			if(t instanceof TypeVariable) {
+
+			if (t instanceof TypeVariable) {
 				s.append(e.toString());
-			}
-			else {
+			} else {
 				s.append('(');
 				s.append(t.toString());
 				s.append(' ');
@@ -86,11 +85,11 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 				s.append(')');
 			}
 		}
-		
+
 		s.append(") ");
 		s.append(this.body.toString());
 		s.append(')');
-		
+
 		return s.toString();
 	}
 
@@ -103,7 +102,7 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 
 			for (Expression e : this.args) {
 				if (!(e instanceof Variable)) {
-					//TODO change throwable
+					// TODO change throwable
 					throw new AppendableException(e + " is not instance of " + Variable.class.getName());
 				}
 				TypeVariable tv = new TypeVariable(NameGenerator.next());
@@ -139,24 +138,40 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
+		return this.toClojureCode(null, Environment.topLevelEnvironment);
+	}
+
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		s.append("(fn [");
 
 		Iterator<Expression> i = this.args.iterator();
+		Iterator<Type> j = this.argsType.iterator();
+		Environment child = Environment.create(env);
 		while (i.hasNext()) {
 			Expression e = i.next();
+			Type t = j.next();
 			if (!(e instanceof Variable)) {
-				//TODO change throwable
+				// TODO change throwable
 				throw new AppendableException("Invalid expression in lambda variable list!");
 			}
 			Variable v = (Variable) e;
+			child.put(v, new TypeHolder(t));
 			s.append(v.toClojureCode());
 			if (i.hasNext()) {
 				s.append(' ');
 			}
 		}
 		s.append("] ");
-		s.append(this.body.toClojureCode());
+
+		if (!(expectedType instanceof TypeArrow)) {
+			//TODO Change throwable
+			throw new AppendableException(
+					"Unexpected argument " + expectedType + "in Lambda.toClojureCode(expectedType)");
+		}
+		TypeArrow ta = (TypeArrow) expectedType;
+		s.append(this.body.toClojureCode(ta.rtype, child));
 		s.append(')');
 		return s.toString();
 	}
@@ -165,15 +180,15 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	public int compareTo(Expression other) {
 		if (other instanceof Lambda) {
 			int cmp = this.args.compareTo(((Lambda) other).args);
-			if(cmp != 0) {
+			if (cmp != 0) {
 				return cmp;
 			}
-			
+
 			cmp = this.argsType.compareTo(((Lambda) other).argsType);
-			if(cmp != 0) {
+			if (cmp != 0) {
 				return cmp;
 			}
-			
+
 			return this.body.compareTo(((Lambda) other).body);
 		}
 		return super.compareTo(other);
@@ -187,7 +202,7 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.args.hashCode() * this.argsType.hashCode() * this.body.hashCode();

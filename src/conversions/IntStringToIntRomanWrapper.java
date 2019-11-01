@@ -50,7 +50,12 @@ public class IntStringToIntRomanWrapper extends ConversionWrapper {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
-		return "(RomanNumbers/roman2int (Integer/parseInt " + ConversionWrapper.arg.toClojureCode() + "))";
+		return this.toClojureCode(TypeAtom.TypeIntString, Environment.topLevelEnvironment);
+	}
+	
+	@Override
+	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+		return "(" + RomanNumbers.int2RomanClojure + " (Integer/parseInt " + ConversionWrapper.arg.toClojureCode() + "))";
 	}
 
 	@Override
