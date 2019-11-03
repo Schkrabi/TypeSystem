@@ -74,6 +74,21 @@ public class TypeAtom extends Type {
 
 		return e;
 	}
+	
+	@Override
+	public String convertToClojure(String argument, Type toType) throws AppendableException {
+		if (toType instanceof TypeVariable || toType.equals(this)) {
+			return argument;
+		}
+		if (!(toType instanceof TypeAtom) || !TypeAtom.isSameBasicType(this, (TypeAtom) toType)) {
+			throw new ClojureConversionException(this, toType, argument);
+		}
+		if(((TypeAtom)toType).representation.equals(TypeRepresentation.WILDCARD)) {
+			return argument;
+		}
+		
+		return "(" + TypeEnvironment.makeConversionName(this, (TypeAtom)toType) + " " + argument + ")";
+	}
 
 	@Override
 	public Type removeRepresentationInfo() {

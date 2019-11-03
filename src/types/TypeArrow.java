@@ -11,7 +11,6 @@ import expression.Expression;
 import expression.Lambda;
 import expression.Tuple;
 import expression.Variable;
-import interpretation.Environment;
 
 /**
  * Class for functions types
@@ -84,6 +83,22 @@ public class TypeArrow extends Type {
 						new Application(expr, (Tuple) t.ltype.convertTo(new Tuple(Arrays.asList(v)), this.ltype)),
 						t.rtype));
 		return l;
+	}
+	
+	@Override
+	public String convertToClojure(String argument, Type toType) throws AppendableException {
+		if(toType instanceof TypeVariable) {
+			return argument;
+		}
+		if(!(toType instanceof TypeArrow)) {
+			throw new ClojureConversionException(this, toType, argument);
+		}
+		TypeArrow t = (TypeArrow) toType;
+		String v = NameGenerator.next();
+		
+		return "(fn [" + v + "] " + this.rtype.convertToClojure(
+													"(" + argument + " " + t.ltype.convertToClojure(v, this.ltype) + ")", 
+													t.rtype) + ")";
 	}
 
 	@Override

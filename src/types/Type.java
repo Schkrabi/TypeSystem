@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import expression.Expression;
-import interpretation.Environment;
 import util.AppendableException;
 import util.Pair;
 
@@ -47,6 +46,15 @@ public abstract class Type implements Comparable<Type> {
 	 * @throws Exception
 	 */
 	public abstract Expression convertTo(Expression expr, Type toType) throws AppendableException;
+	
+	/**
+	 * Creates clojure code converting argument to different type (if possible)
+	 * @param argument Expresion compiled to clojure to be converted
+	 * @param toType target type
+	 * @return Clojure code
+	 * @throws when converting unconvertable types
+	 */
+	public abstract String convertToClojure(String argument, Type toType) throws AppendableException;
 
 	/**
 	 * Replaces all type Representations in this type with its basic types

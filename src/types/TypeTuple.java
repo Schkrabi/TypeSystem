@@ -12,9 +12,8 @@ import java.util.stream.Stream;
 
 import expression.Expression;
 import expression.Tuple;
-import interpretation.Environment;
 import util.AppendableException;
-import util.ThrowingFunction;
+import util.NameGenerator;
 
 /**
  * Tuple of types
@@ -160,6 +159,43 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		}
 
 		return new Tuple(ts);
+	}
+
+	@Override
+	public String convertToClojure(String argument, Type toType) throws AppendableException {
+		if (toType instanceof TypeVariable) {
+			return argument;
+		}
+		if (!(toType instanceof TypeTuple) || (this.size() != ((TypeTuple) toType).size())) {
+			throw new ClojureConversionException(this, toType, argument);
+		}
+		TypeTuple ttpl = (TypeTuple) toType;
+		String v = NameGenerator.next();
+
+		StringBuilder s = new StringBuilder("((fn [");
+		s.append(v);
+		s.append("] [");
+
+		Iterator<Type> i = this.iterator();
+		Iterator<Type> j = ttpl.iterator();
+		int n = 0;
+
+		while (i.hasNext()) {
+			Type from = i.next();
+			Type to = j.next();
+			String arg = "(get " + v + Integer.toString(n) + ")";
+
+			s.append(from.convertToClojure(arg, to));
+			if (i.hasNext()) {
+				s.append(" ");
+			}
+
+			n++;
+		}
+		s.append("]) ");
+		s.append(argument);
+		s.append(")");
+		return s.toString();
 	}
 
 	@Override

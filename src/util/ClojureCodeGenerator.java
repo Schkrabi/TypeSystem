@@ -23,6 +23,5 @@ public class ClojureCodeGenerator {
 	}
 
 	private static void writeHeaders(Writer target) throws IOException {
-		target.write("(import Expression.IntRoman)\n");
 	}
 }

@@ -4,7 +4,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import expression.Expression;
-import interpretation.Environment;
 
 /**
  * Type variable
@@ -55,6 +54,11 @@ public class TypeVariable extends Type {
 	@Override
 	public Expression convertTo(Expression expr, Type toType) {
 		return expr;
+	}
+	
+	@Override
+	public String convertToClojure(String argument, Type toType) {
+		return argument;
 	}
 
 	@Override

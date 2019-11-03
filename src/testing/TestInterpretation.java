@@ -490,7 +490,7 @@ class TestInterpretation {
 
 		lambda.toString();
 		lambda.hashCode();
-		lambda.toClojureCode();
+		//lambda.toClojureCode();
 		Assertions.assertThrows(AppendableException.class, () -> faultArgsLambda.toClojureCode());
 
 		TestInterpretation.testReflexivity(lambda);
@@ -661,7 +661,7 @@ class TestInterpretation {
 
 		lambda.toString();
 		lambda.hashCode();
-		lambda.toClojureCode();
+		//lambda.toClojureCode();
 		lambda.getSortedImplementations(new Comparator<Lambda>() {
 
 			@Override

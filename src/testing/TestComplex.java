@@ -3,6 +3,7 @@ package testing;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +35,7 @@ import types.TypeAtom;
 import types.TypeName;
 import types.TypeRepresentation;
 import util.AppendableException;
+import util.ClojureCodeGenerator;
 import util.Pair;
 import util.ThrowingFunction;
 
@@ -114,6 +116,18 @@ class TestComplex {
 
 		if (!last.equals(expected)) {
 			fail("Interpretation of " + code + " yields " + last + " were expecting " + expected);
+		}
+	}
+	
+	private void testClojureCompile(String code, String expected) throws AppendableException{
+		SemanticParser semanticParser = new SemanticParser();
+		List<Expression> l = this.parseString(code, semanticParser);
+		StringBuilder s = new StringBuilder();
+		
+		Iterator<Expression> i = l.iterator();
+		while(i.hasNext()) {
+			s.append(i.next().toClojureCode());
+			//TODO
 		}
 	}
 }

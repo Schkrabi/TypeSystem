@@ -117,17 +117,27 @@ public class Application extends Expression {
 	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(");
 		TypeTuple argsType = (TypeTuple) this.args.infer(env).first;
+		TypeArrow funType = (TypeArrow)this.fun.infer(env).first;
 
 		s.append(this.fun.toClojureCode(new TypeArrow(argsType, expectedType), env));
 		s.append(" ");
 
 		Iterator<Expression> i = this.args.iterator();
 		Iterator<Type> j = argsType.iterator();
+		Iterator<Type> k = ((TypeTuple)funType.ltype).iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
 			Type t = j.next();
-
-			s.append(e.toClojureCode(t, env));
+			Type actual = k.next();
+			
+			String str = e.toClojureCode(t, env);
+			if(t.equals(actual)) {
+				s.append(str);
+			}
+			else {
+				s.append(actual.convertToClojure(str, t));
+			}
+			
 			if (i.hasNext()) {
 				s.append(" ");
 			}
