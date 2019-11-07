@@ -97,7 +97,7 @@ public class Operator extends Function {
 	public static final Operator Car = new Operator(
 			new TypeTuple(Arrays.asList(new TypeTuple(
 					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))))),
-			new Tuple(Arrays.asList(new Variable("_x"))), "car", "", OperatorWrapper.CarWrapper) {
+			new Tuple(Arrays.asList(new Variable("_x"))), "car", "(fn [_x] (get _x 0))", OperatorWrapper.CarWrapper) {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env) {
@@ -112,7 +112,7 @@ public class Operator extends Function {
 	public static final Operator Cdr = new Operator(
 			new TypeTuple(Arrays.asList(new TypeTuple(
 					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))))),
-			new Tuple(Arrays.asList(new Variable("_x"))), "cdr", "", OperatorWrapper.CdrWrapper) {
+			new Tuple(Arrays.asList(new Variable("_x"))), "cdr", "(fn [_x] (get _x 1))", OperatorWrapper.CdrWrapper) {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env) {

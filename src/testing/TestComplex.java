@@ -60,7 +60,7 @@ class TestComplex {
 	}
 
 	@Test
-	void test() throws AppendableException {
+	void testComplex() throws AppendableException {
 		this.testInterpretString("(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))" + "(fact 5)",
 				new LitInteger(120));
 
@@ -92,6 +92,46 @@ class TestComplex {
 										new TypeAtom(new TypeName("List"), TypeRepresentation.NATIVE)))),
 						new TypeAtom(new TypeName("List"), TypeRepresentation.NATIVE)));
 
+	}
+	
+	@Test
+	void testClojure() throws AppendableException {
+		//Literals
+		this.testClojureCompile("0", "0");
+		this.testClojureCompile("3.141521", "3.141521");
+		this.testClojureCompile("#t", "true");
+		this.testClojureCompile("#f", "false");
+		this.testClojureCompile("\"Hello World\"", "\"Hello World\"");
+		//Unbound Variable
+		this.testClojureCompile("variable", "variable");
+		//Lambda
+		this.testClojureCompile("(lambda (x y) x)", "(fn [x y] x)");
+		//Application
+		this.testClojureCompile("((lambda (x y) x) 42 21)", "((fn [x y] x) 42 21)");
+		//If
+		this.testClojureCompile("(if #t 42 21)", "(if true 42 21)");
+		//Cons
+		this.testClojureCompile("(cons 21 21)", "[21 21]");
+		//Operators
+		this.testClojureCompile("(+ 41 1)", "(+ 41 1)");
+		this.testClojureCompile("(and #t #f)", "(and true false)");
+		this.testClojureCompile("(bit-and 42 1)", "(bit-and 42 1)");
+		this.testClojureCompile("(bit-or 42 1)", "(bit-or 42 1)");
+		this.testClojureCompile("(car pair)", "((fn [_x] (get _x 0)) pair)");
+		this.testClojureCompile("(cdr pair)", "((fn [_x] (get _x 1)) pair)");
+		this.testClojureCompile("(concat \"Hello\" \"World\")", "(concat \"Hello\" \"World\")");
+		this.testClojureCompile("(/ 84 2)", "(/ 84 2)");
+		this.testClojureCompile("(equals? 42 \"42\")", "(= 42 \"42\")");
+		this.testClojureCompile("(< 42 42)", "(< 42 42)");
+		this.testClojureCompile("(* 42 1)", "(* 42 1)");
+		this.testClojureCompile("(not #t)", "(not true)");
+		this.testClojureCompile("(= 42 42)", "(= 42 42)");
+		this.testClojureCompile("(or #t #f)", "(or true false)");
+		this.testClojureCompile("(- 43 1)", "(- 43 1)");
+		//Defines
+		this.testClojureCompile("(define answer 42)", "(def answer 42)");
+		this.testClojureCompile("(defconversion Name:Structured Name:Unstructured (lambda (x) x))", "(def NameStructured2NameUnstructured (fn [x] x))");
+		this.testClojureCompile("(deftype Name)", "");
 	}
 
 	private List<Expression> parseString(String s, SemanticParser semanticParser) throws AppendableException {
@@ -127,7 +167,13 @@ class TestComplex {
 		Iterator<Expression> i = l.iterator();
 		while(i.hasNext()) {
 			s.append(i.next().toClojureCode());
-			//TODO
+			if(i.hasNext()) {
+				s.append('\n');
+			}
+		}
+		
+		if(s.toString().compareTo(expected) != 0) {
+			fail("Clojure compilation test failed, compiling " + code + " expected " + expected + " got " + s.toString());
 		}
 	}
 }

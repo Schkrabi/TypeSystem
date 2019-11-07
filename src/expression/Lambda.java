@@ -138,7 +138,7 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(null, Environment.topLevelEnvironment);
+		return this.toClojureCode(new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next())), Environment.topLevelEnvironment);
 	}
 
 	@Override

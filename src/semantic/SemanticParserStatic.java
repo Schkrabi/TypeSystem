@@ -1,13 +1,10 @@
 package semantic;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import expression.Expression;
 import expression.Tuple;
 import expression.Variable;
 
@@ -29,7 +26,6 @@ public final class SemanticParserStatic {
 	public static final String ELAMBDA = "elambda";
 	public static final String IF = "if";
 	public static final String DEFCONVERSION = "defconversion";
-	public static final String DEFCONSTRUCTOR = "defconstructor";
 	public static final String DEFINE = "define";
 	public static final String CONS = "cons";
 	public static final String ERROR = "error";
@@ -48,7 +44,7 @@ public final class SemanticParserStatic {
 		specialForms.add(IF);
 		specialForms.add(LAMBDA);
 		specialForms.add(DEFCONVERSION);
-		specialForms.add(DEFCONSTRUCTOR);
+		//specialForms.add(DEFCONSTRUCTOR);
 		specialForms.add(DEFINE);
 		specialForms.add(CONS);
 		specialForms.add(ERROR);

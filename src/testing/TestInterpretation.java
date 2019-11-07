@@ -1036,7 +1036,7 @@ class TestInterpretation {
 
 		TestInterpretation.testInterpretation(defTypeExpression, Expression.EMPTY_EXPRESSION,
 				Environment.topLevelEnvironment);
-		if (TypeEnvironment.singleton.getType("Test").isEmpty()) {
+		if (!TypeEnvironment.singleton.getType("Test").isPresent()) {
 			fail(defTypeExpression.toString() + " did not created type!");
 		}
 

@@ -107,7 +107,7 @@ public class DefConversionExpression extends Expression {
 	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		Type expected = new TypeArrow(new TypeTuple(Arrays.asList(this.fromType)), this.toType);
 		return "(def " + TypeEnvironment.makeConversionName(this.fromType, this.toType) + " "
-				+ this.conversion.toClojureCode(expected, env);
+				+ this.conversion.toClojureCode(expected, env) + ")";
 	}
 
 }
