@@ -198,4 +198,11 @@ public class Application extends Expression {
 	public int hashCode() {
 		return this.fun.hashCode() * this.args.hashCode();
 	}
+	
+	public static final String clojureEapply = 
+			"(fn [elambda type args]\r\n" + 
+			"    (letfn [(vectorDist [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))\r\n" + 
+			"            (rankImpls [v impls] (map (fn [u] [(vectorDist (get u 0) v) (get u 1)]) impls))\r\n" + 
+			"            (getImpl [type elambda] (get (reduce (fn [x y] (if (< (get x 0) (get y 0)) x y)) (rankImpls type elambda)) 1))]\r\n" + 
+			"        (apply (getImpl type elambda) args)))";
 }

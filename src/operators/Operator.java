@@ -10,9 +10,11 @@ import expression.LitBoolean;
 import expression.LitComposite;
 import expression.LitInteger;
 import expression.LitString;
+import expression.Literal;
 import expression.Tuple;
 import expression.Variable;
 import interpretation.Environment;
+import semantic.TypeEnvironment;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
@@ -23,6 +25,7 @@ import util.AppendableException;
 import util.InvalidClojureCompilationException;
 import util.NameGenerator;
 import util.Pair;
+import util.RomanNumbers;
 import util.UnboundVariableException;
 
 /**
@@ -40,7 +43,7 @@ public class Operator extends Function {
 
 	public final String clojureSymbol;
 
-	public Operator(TypeTuple argsType, Tuple args, String symbol, String clojureSymbol, OperatorWrapper body) {
+	public Operator(TypeTuple argsType, Tuple args, String symbol, String clojureSymbol, Expression body) {
 		super(argsType, args, body, Environment.topLevelEnvironment);
 		this.symbol = symbol;
 		this.clojureSymbol = clojureSymbol;
@@ -55,7 +58,7 @@ public class Operator extends Function {
 	public String toClojureCode() {
 		return this.toClojureCode(null, Environment.topLevelEnvironment);
 	}
-	
+
 	@Override
 	public String toClojureCode(Type expectedType, Environment env) {
 		return this.clojureSymbol;
@@ -188,6 +191,17 @@ public class Operator extends Function {
 			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "-", "-", OperatorWrapper.SubWrapper);
 
 	/**
+	 * Makes name of getter for certain type
+	 * 
+	 * @param type  type for which getter is constructed
+	 * @param index index of member in type
+	 * @return string containing getter name
+	 */
+	public static String getterName(TypeAtom type, int index) {
+		return type.name.toString() + type.representation.toString() + "-" + index;
+	}
+
+	/**
 	 * Creates getter operators for given types and its type members
 	 * 
 	 * @param type    typeAtom
@@ -221,11 +235,41 @@ public class Operator extends Function {
 			}
 		};
 
-		String name = type.name.toString() + type.representation.toString() + "-" + index;
+		String name = Operator.getterName(type, index);
 
-		//TODO clojure symbol
 		return new Operator(new TypeTuple(Arrays.asList(type)), new Tuple(Arrays.asList(new Variable("_value"))), name,
-				"TODO", body);
+				name, body);
+	}
+
+	/**
+	 * Creates getters for given type and its members
+	 * 
+	 * @param type    Constructed type
+	 * @param members number of members
+	 * @return String containing getter definitions
+	 */
+	public static String makeClojureGetterDefinitions(TypeAtom type, int members) {
+		StringBuilder s = new StringBuilder();
+
+		for (int i = 0; i < members; i++) {
+			s.append(Operator.makeClojureGetterDefinition(type, i));
+			if (i != members - 1) {
+				s.append("\n");
+			}
+		}
+
+		return s.toString();
+	}
+
+	/**
+	 * Creates clojure definition of specific getter
+	 * 
+	 * @param type  type for which getter is made
+	 * @param index index of gotten member
+	 * @return string containing clojure definition of the getter
+	 */
+	private static String makeClojureGetterDefinition(TypeAtom type, int index) {
+		return "(def " + Operator.getterName(type, index) + " (fn [_x] (get _x " + index + ")))";
 	}
 
 	/**
@@ -254,9 +298,9 @@ public class Operator extends Function {
 		public String toClojureCode() throws AppendableException {
 			return this.toClojureCode(null, Environment.topLevelEnvironment);
 		}
-		
+
 		@Override
-		public String toClojureCode(Type expectedType, Environment env) throws InvalidClojureCompilationException {
+		protected String toClojureCode(Type expectedType, Environment env) throws InvalidClojureCompilationException {
 			throw new InvalidClojureCompilationException(this);
 		}
 
@@ -482,5 +526,225 @@ public class Operator extends Function {
 				return composite.value.get(index.value);
 			}
 		};
+	}
+
+	/**
+	 * Int:Native constructor
+	 */
+	public static Operator IntNativeConstructor = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), "Int:Native", "identity", new Variable("_x"));
+	/**
+	 * Int constructor (really constructs Int:Native)
+	 */
+	public static Operator IntConstructor = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), "Int", "identity", new Variable("_x"));
+	/**
+	 * Int:String constructor
+	 */
+	public static Operator IntStringConstructor = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), "Int:String", "(fn [_x] [_x])",
+			new LitComposite(new Tuple(Arrays.asList(new LitString("_x"))), TypeAtom.TypeIntString));
+	/**
+	 * Int:Roman constructor
+	 */
+	public static Operator IntRomanConstructor = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), "Int:Roman", "(fn [_x] [_x])",
+			new LitComposite(new Tuple(Arrays.asList(new LitString("_x"))), TypeAtom.TypeIntRoman));
+	/**
+	 * String:Native constructor
+	 */
+	public static Operator StringNativeConstructor = new Operator(
+			new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), new Tuple(Arrays.asList(new Variable("_x"))),
+			"String:Native", "identity", new Variable("_x"));
+	/**
+	 * String constructor (really constructs String:Native)
+	 */
+	public static Operator StringConstructor = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), "String", "identity", new Variable("_x"));
+	/**
+	 * Double:Native constructor
+	 */
+	public static Operator DoubleNativeConstructor = new Operator(
+			new TypeTuple(Arrays.asList(TypeAtom.TypeDoubleNative)), new Tuple(Arrays.asList(new Variable("_x"))),
+			"Double:Native", "identity", new Variable("_x"));
+	/**
+	 * Double constructor (really constructs Double:Native)
+	 */
+	public static Operator DoubleConstructor = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeDoubleNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), "Double", "identity", new Variable("_x"));
+	/**
+	 * Bool:Native constructor
+	 */
+	public static Operator BoolNativeConstructor = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), "Bool:Native", "identity", new Variable("_x"));
+	/**
+	 * Bool constructor (really constructs Bool:Native)
+	 */
+	public static Operator BoolConstructor = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)),
+			new Tuple(Arrays.asList(new Variable("_x"))), "Bool", "identity", new Variable("_x"));
+
+	/**
+	 * Conversion from Int:Native to Int:Roman
+	 */
+	public static final Operator IntNativeToIntRoman = new Operator(
+			new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Tuple(Arrays.asList(ConversionWrapper.arg)),
+			TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman),
+			"(fn [_x] [(" + RomanNumbers.int2RomanClojure + " _x)])", ConversionWrapper.IntNativeToIntRomanWrapper);
+
+	/**
+	 * Conversion from Int:Native to Int:String
+	 */
+	public static final Operator IntNativeToIntString = new Operator(
+			new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Tuple(Arrays.asList(ConversionWrapper.arg)),
+			TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntString),
+			"(fn [_x] [(Integer/toString _x)])", ConversionWrapper.IntNativeToIntStringWrapper);
+
+	/**
+	 * Conversion from Int:Roman to Int:Native
+	 */
+	public static final Operator IntRomanToIntNative = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
+			new Tuple(Arrays.asList(ConversionWrapper.arg)),
+			TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative),
+			"(fn [_x] (" + RomanNumbers.roman2intClojure + " (get _x 0)))",
+			ConversionWrapper.IntRomanToIntNativeWrapper);
+
+	/**
+	 * Conversion from Int:Roman to Int:String
+	 */
+	public static final Operator IntRomanToIntString = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
+			new Tuple(Arrays.asList(ConversionWrapper.arg)),
+			TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString),
+			"(fn [_x] (str (" + RomanNumbers.roman2intClojure + " (get _x 0))))",
+			ConversionWrapper.IntRomanToIntStringWrapper);
+
+	/**
+	 * Conversion from Int:String to Int:Native
+	 */
+	public static final Operator IntStringToIntNative = new Operator(
+			new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Tuple(Arrays.asList(ConversionWrapper.arg)),
+			TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntNative),
+			"(fn [_x] (Integer/parseInt (get _x 0)))", ConversionWrapper.IntStringToIntNativeWrapper);
+
+	/**
+	 * Conversion from Int:String to Int:Roman
+	 */
+	public static final Operator IntStringToIntRoman = new Operator(
+			new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Tuple(Arrays.asList(ConversionWrapper.arg)),
+			TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman),
+			"(fn [_x] [(" + RomanNumbers.int2RomanClojure + " (Integer/parseInt (get _x 0)))])",
+			ConversionWrapper.IntStringToIntRomanWrapper);
+
+	/**
+	 * Wrapper for conversions
+	 * 
+	 * @author Mgr. Radomir Skrabal
+	 *
+	 */
+	public abstract static class ConversionWrapper extends OperatorWrapper {
+		protected ConversionWrapper(Type type) {
+			super(type);
+		}
+
+		/**
+		 * Unified conversion argument
+		 */
+		public static final Expression arg = new Variable("_x");
+
+		/**
+		 * Body of IntNativeToIntRoman
+		 */
+		public static final ConversionWrapper IntNativeToIntRomanWrapper = new ConversionWrapper(
+				TypeAtom.TypeIntRoman) {
+
+			@Override
+			public Expression interpret(Environment env) throws AppendableException {
+				Expression e = Operator.ConversionWrapper.arg.interpret(env);
+				LitInteger i = (LitInteger) e;
+				Literal l = new LitComposite(new Tuple(Arrays.asList(new LitString(RomanNumbers.int2roman(i.value)))),
+						TypeAtom.TypeIntRoman);
+				return l;
+			}
+		};
+
+		/**
+		 * Body of IntNativeToIntString
+		 */
+		public static final ConversionWrapper IntNativeToIntStringWrapper = new ConversionWrapper(
+				TypeAtom.TypeIntString) {
+
+			@Override
+			public Expression interpret(Environment env) throws AppendableException {
+				Expression e = Operator.ConversionWrapper.arg.interpret(env);
+				LitInteger i = (LitInteger) e;
+				Literal l = new LitComposite(new Tuple(Arrays.asList(new LitString(Integer.toString(i.value)))),
+						TypeAtom.TypeIntString);
+				return l;
+			}
+		};
+
+		/**
+		 * Body of IntRomanToIntNative
+		 */
+		public static final ConversionWrapper IntRomanToIntNativeWrapper = new ConversionWrapper(
+				TypeAtom.TypeIntNative) {
+
+			@Override
+			public Expression interpret(Environment env) throws AppendableException {
+				LitComposite e = (LitComposite) Operator.ConversionWrapper.arg.interpret(env);
+				LitString r = (LitString) e.value.get(0);
+				Literal l = new LitInteger(RomanNumbers.roman2int(r.value));
+				return l;
+			}
+		};
+
+		/**
+		 * Body of IntRomanToIntString
+		 */
+		public static final ConversionWrapper IntRomanToIntStringWrapper = new ConversionWrapper(
+				TypeAtom.TypeIntString) {
+
+			@Override
+			public Expression interpret(Environment env) throws AppendableException {
+				LitComposite e = (LitComposite) Operator.ConversionWrapper.arg.interpret(env);
+				LitString r = (LitString) e.value.get(0);
+				Literal l = new LitComposite(
+						new Tuple(Arrays.asList(new LitString(Integer.toString(RomanNumbers.roman2int(r.value))))),
+						TypeAtom.TypeIntString);
+				return l;
+			}
+		};
+
+		/**
+		 * Body of IntStringToIntRoman
+		 */
+		public static final ConversionWrapper IntStringToIntNativeWrapper = new ConversionWrapper(
+				TypeAtom.TypeIntNative) {
+
+			@Override
+			public Expression interpret(Environment env) throws AppendableException {
+				LitComposite e = (LitComposite) Operator.ConversionWrapper.arg.interpret(env);
+				LitString s = (LitString) e.value.get(0);
+				Literal l = new LitInteger(Integer.parseInt(s.value));
+				return l;
+			}
+		};
+
+		/**
+		 * Body of IntStringToIntRoman
+		 */
+		public static final ConversionWrapper IntStringToIntRomanWrapper = new ConversionWrapper(
+				TypeAtom.TypeIntRoman) {
+
+			@Override
+			public Expression interpret(Environment env) throws AppendableException {
+				LitComposite e = (LitComposite) Operator.ConversionWrapper.arg.interpret(env);
+				LitString s = (LitString) e.value.get(0);
+				Literal l = new LitComposite(
+						new Tuple(Arrays.asList(new LitString(RomanNumbers.int2roman(Integer.parseInt(s.value))))),
+						TypeAtom.TypeIntRoman);
+				return l;
+			}
+		};
+
 	}
 }

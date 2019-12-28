@@ -1,9 +1,11 @@
 package types;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 
 import expression.Expression;
+import util.Pair;
 
 /**
  * Type variable
@@ -78,5 +80,10 @@ public class TypeVariable extends Type {
 	@Override
 	public int hashCode() {
 		return this.name.hashCode();
+	}
+
+	@Override
+	public Substitution unifyWith(Type other) {
+		return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>((TypeVariable)this, other)));
 	}
 }

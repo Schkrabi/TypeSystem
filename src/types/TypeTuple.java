@@ -1,5 +1,6 @@
 package types;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -14,6 +15,7 @@ import expression.Expression;
 import expression.Tuple;
 import util.AppendableException;
 import util.NameGenerator;
+import util.Pair;
 
 /**
  * Tuple of types
@@ -235,5 +237,31 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		}
 
 		return sum;
+	}
+
+	@Override
+	public Substitution unifyWith(Type other) throws AppendableException {
+		if(other instanceof TypeVariable) {
+			return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>((TypeVariable)other, this)));
+		}
+		if(other instanceof TypeTuple) {
+			TypeTuple o = (TypeTuple)other;
+			if(this.size() == o.size()) {
+				Substitution s = Substitution.EMPTY;
+
+				Iterator<Type> i = this.iterator();
+				Iterator<Type> j = o.iterator();
+				while (i.hasNext()) {
+					Type t = i.next();
+					Type u = j.next();
+
+					Substitution ot = Type.unify(t, u);
+
+					s = s.union(ot);
+				}
+				return s;
+			}
+		}
+		throw new TypesDoesNotUnifyException(this, other);
 	}
 }

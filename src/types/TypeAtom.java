@@ -1,11 +1,13 @@
 package types;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 
 import expression.Expression;
 import semantic.TypeEnvironment;
 import util.AppendableException;
+import util.Pair;
 
 /**
  * Class for type atoms
@@ -105,7 +107,7 @@ public class TypeAtom extends Type {
 	 * @return String
 	 */
 	public String clojureName() {
-		return this.name.toString() + "-" + this.representation.toString();
+		return this.name.toString() + ":" + this.representation.toString();
 	}
 
 	/**
@@ -144,4 +146,17 @@ public class TypeAtom extends Type {
 	 */
 	public static final TypeAtom TypeDouble = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.WILDCARD);
 	public static final TypeAtom TypeDoubleNative = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.NATIVE);
+
+	@Override
+	public Substitution unifyWith(Type other) throws AppendableException {
+		if(other instanceof TypeVariable) {
+			return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>((TypeVariable)other, this)));
+		}
+		if(other instanceof TypeAtom) {
+			if(TypeAtom.isSameBasicType(this, (TypeAtom) other)) {
+				return Substitution.EMPTY;
+			}
+		}
+		throw new TypesDoesNotUnifyException(this, other);
+	}
 }

@@ -55,6 +55,14 @@ public abstract class Type implements Comparable<Type> {
 	 * @throws when converting unconvertable types
 	 */
 	public abstract String convertToClojure(String argument, Type toType) throws AppendableException;
+	
+	/**
+	 * Returns substitution that unifies this type with other type
+	 * @param other other type to unify with
+	 * @return substitution unifying the types
+	 * @throws TypesDoesNotUnifyException is thrown if types cannot be unified
+	 */
+	public abstract Substitution unifyWith(Type other) throws AppendableException;
 
 	/**
 	 * Replaces all type Representations in this type with its basic types
@@ -80,46 +88,6 @@ public abstract class Type implements Comparable<Type> {
 	 * @throws AppendableException if types are not unifiable
 	 */
 	public static Substitution unify(Type m, Type n) throws AppendableException {
-		if (m instanceof TypeAtom && n instanceof TypeAtom) {
-			TypeAtom mc = (TypeAtom) m;
-			TypeAtom nc = (TypeAtom) n;
-
-			if (TypeAtom.isSameBasicType(mc, nc)) {
-				return Substitution.EMPTY;
-			}
-		} else if (m instanceof TypeArrow && n instanceof TypeArrow) {
-			TypeArrow ma = (TypeArrow) m;
-			TypeArrow na = (TypeArrow) n;
-
-			Substitution left = Type.unify(ma.ltype, na.ltype);
-			Substitution right = Type.unify(ma.rtype, na.rtype);
-			
-			return left.union(right);
-		} else if (m instanceof TypeVariable) {
-			return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>((TypeVariable)m, n)));
-		} else if (n instanceof TypeVariable) {
-			return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>((TypeVariable)n, m)));
-		} else if (m instanceof TypeTuple && n instanceof TypeTuple) {
-			TypeTuple mt = (TypeTuple) m;
-			TypeTuple nt = (TypeTuple) n;
-
-			if (mt.size() == nt.size()) {
-				Substitution s = Substitution.EMPTY;
-
-				Iterator<Type> i = mt.iterator();
-				Iterator<Type> j = nt.iterator();
-				while (i.hasNext()) {
-					Type t = i.next();
-					Type u = j.next();
-
-					Substitution ot = Type.unify(t, u);
-
-					s = s.union(ot);
-				}
-				return s;
-			}
-		}
-
-		throw new TypesDoesNotUnifyException(m, n);
+		return m.unifyWith(n);
 	}
 }

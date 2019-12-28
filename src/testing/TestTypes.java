@@ -13,8 +13,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import conversions.IntRomanToIntStringWrapper;
-import conversions.IntStringToIntRomanWrapper;
 import expression.Application;
 import expression.Expression;
 import expression.Lambda;
@@ -23,6 +21,7 @@ import expression.LitString;
 import expression.Tuple;
 import expression.Variable;
 import interpretation.Environment;
+import operators.Operator;
 import semantic.TypeEnvironment;
 import types.*;
 import util.AppendableException;
@@ -178,7 +177,7 @@ class TestTypes {
 						new Tuple(Arrays.asList(new LitString("XIII"), new Variable("x"), LitBoolean.TRUE)),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString, TypeAtom.TypeBool)),
 						new Tuple(Arrays.asList(
-								new Application(IntRomanToIntStringWrapper.IntRomanToIntString,
+								new Application(Operator.IntRomanToIntString,
 										new Tuple(Arrays.asList(new LitString("XIII")))),
 								new Variable("x"), LitBoolean.TRUE)));
 		TestTypes.testConvertTo(tuple,
@@ -349,7 +348,7 @@ class TestTypes {
 		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), new TypeVariable("a"),
 				new LitString("42"));
 		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), TypeAtom.TypeIntRoman, new Application(
-				IntStringToIntRomanWrapper.IntStringToIntRoman, new Tuple(Arrays.asList(new LitString("42")))));
+				Operator.IntStringToIntRoman, new Tuple(Arrays.asList(new LitString("42")))));
 
 		Assertions.assertThrows(ConversionException.class,
 				() -> atom.convertTo(Expression.EMPTY_EXPRESSION, new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt)));

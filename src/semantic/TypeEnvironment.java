@@ -9,16 +9,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import conversions.IntNativeToIntRomanWrapper;
-import conversions.IntNativeToIntStringWrapper;
-import conversions.IntRomanToIntNativeWrapper;
-import conversions.IntRomanToIntStringWrapper;
-import conversions.IntStringToIntNativeWrapper;
-import conversions.IntStringToIntRomanWrapper;
 import expression.Application;
 import expression.Expression;
 import expression.Function;
 import expression.Tuple;
+import operators.Operator;
 import parser.SemanticNode;
 import parser.SemanticPair;
 import types.ConversionException;
@@ -179,29 +174,29 @@ public class TypeEnvironment {
 	public static void initBasicTypes() throws AppendableException {
 		// Int
 		TypeEnvironment.singleton.atomicTypes.add(TypeAtom.TypeInt);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntNative, Function.IntNativeConstructor);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntRoman, Function.IntRomanConstructor);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntString, Function.IntStringConstructor);
+		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntNative, Operator.IntNativeConstructor);
+		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntRoman, Operator.IntRomanConstructor);
+		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntString, Operator.IntStringConstructor);
 		
 		// Bool
 		TypeEnvironment.singleton.atomicTypes.add(TypeAtom.TypeBool);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeBoolNative, Function.BoolNativeConstructor);
+		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeBoolNative, Operator.BoolNativeConstructor);
 		
 		// String
 		TypeEnvironment.singleton.atomicTypes.add(TypeAtom.TypeString);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeStringNative, Function.StringNativeConstructor);
+		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeStringNative, Operator.StringNativeConstructor);
 
 		// Double
 		TypeEnvironment.singleton.atomicTypes.add(TypeAtom.TypeDouble);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeDoubleNative, Function.DoubleNativeConstructor);
+		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeDoubleNative, Operator.DoubleNativeConstructor);
 		
 		//Conversions
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, IntNativeToIntRomanWrapper.IntToIntRoman);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, IntNativeToIntStringWrapper.IntToIntString);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative, IntRomanToIntNativeWrapper.IntRomanToInt);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, IntRomanToIntStringWrapper.IntRomanToIntString);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative, IntStringToIntNativeWrapper.IntStringToInt);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, IntStringToIntRomanWrapper.IntStringToIntRoman);
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, Operator.IntNativeToIntRoman);
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, Operator.IntNativeToIntString);
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative, Operator.IntRomanToIntNative);
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, Operator.IntRomanToIntString);
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative, Operator.IntStringToIntNative);
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, Operator.IntStringToIntRoman);
 	}
 	
 	/**

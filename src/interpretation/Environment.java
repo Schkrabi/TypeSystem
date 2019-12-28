@@ -4,9 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import expression.Expression;
-import expression.Function;
 import expression.Variable;
 import operators.Operator;
+import semantic.TypeEnvironment;
+import types.TypeAtom;
 import util.AppendableException;
 import util.UnboundVariableException;
 
@@ -204,16 +205,23 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Variable("nil"), Expression.EMPTY_EXPRESSION);
 		env.put(new Variable(Operator.Equals.toString()), Operator.Equals);
 
-		env.put(new Variable("Int"), Function.IntConstructor);
-		env.put(new Variable("Int:Native"), Function.IntNativeConstructor);
-		env.put(new Variable("Int:String"), Function.IntStringConstructor);
-		env.put(new Variable("Int:Roman"), Function.IntRomanConstructor);
-		env.put(new Variable("String"), Function.StringConstructor);
-		env.put(new Variable("String:Native"), Function.StringNativeConstructor);
-		env.put(new Variable("Double"), Function.DoubleConstructor);
-		env.put(new Variable("Double:Native"), Function.DoubleNativeConstructor);
-		env.put(new Variable("Bool"), Function.BoolConstructor);
-		env.put(new Variable("Bool:Native"), Function.BoolNativeConstructor);
+		env.put(new Variable("Int"), Operator.IntConstructor);
+		env.put(new Variable("Int:Native"), Operator.IntNativeConstructor);
+		env.put(new Variable("Int:String"), Operator.IntStringConstructor);
+		env.put(new Variable("Int:Roman"), Operator.IntRomanConstructor);
+		env.put(new Variable("String"), Operator.StringConstructor);
+		env.put(new Variable("String:Native"), Operator.StringNativeConstructor);
+		env.put(new Variable("Double"), Operator.DoubleConstructor);
+		env.put(new Variable("Double:Native"), Operator.DoubleNativeConstructor);
+		env.put(new Variable("Bool"), Operator.BoolConstructor);
+		env.put(new Variable("Bool:Native"), Operator.BoolNativeConstructor);
+		
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)), Operator.IntNativeToIntRoman);
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)), Operator.IntNativeToIntString);
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative)), Operator.IntRomanToIntNative);
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString)), Operator.IntRomanToIntString);
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntNative)), Operator.IntStringToIntNative);
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)), Operator.IntStringToIntRoman);
 	}
 
 }

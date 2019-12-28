@@ -52,7 +52,7 @@ public class DefRepresentationExpression extends Expression {
 
 	@Override
 	public String toString() {
-		return "(defrepresentaion " + this.typeName.toString() + " " + this.representation.toString() + " ("
+		return "(defrep " + this.typeName.toString() + " " + this.representation.toString() + " ("
 				+ this.members.stream().map(x -> x.toString()).reduce("", (x, y) -> x + " " + y) + ")";
 	}
 
@@ -138,6 +138,22 @@ public class DefRepresentationExpression extends Expression {
 		return new Function(this.memberTypes(), args, new LitComposite(args, type),
 				Environment.topLevelEnvironment);	
 	}
+	
+	private String makeClojureConstructor() {
+		List<String> args = this.members.stream().map(x -> NameGenerator.next()).collect(Collectors.toList());
+		
+		StringBuilder s = new StringBuilder("[");
+		Iterator<String> i = args.iterator();
+		while(i.hasNext()) {
+			s.append(i.next());
+			if(i.hasNext()) {
+				s.append(" ");
+			}
+		}
+		s.append("]");
+		
+		return "(fn " + s.toString() + " " + s.toString() + ")";	
+	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
@@ -151,7 +167,9 @@ public class DefRepresentationExpression extends Expression {
 
 	@Override
 	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
-		return "(def " + new TypeAtom(this.typeName, this.representation).clojureName() + " " + this.makeConstructor()  + ")";
+		TypeAtom ta = new TypeAtom(this.typeName, this.representation);
+		return "(def " + ta.clojureName() + " " + this.makeClojureConstructor()  + ")\n" + 
+					Operator.makeClojureGetterDefinitions(ta, this.members.size());
 	}
 
 }

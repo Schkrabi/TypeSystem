@@ -16,12 +16,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import conversions.IntRomanToIntStringWrapper;
-import conversions.IntRomanToIntNativeWrapper;
-import conversions.IntStringToIntRomanWrapper;
-import conversions.IntStringToIntNativeWrapper;
-import conversions.IntNativeToIntRomanWrapper;
-import conversions.IntNativeToIntStringWrapper;
 import expression.Application;
 import expression.DefConversionExpression;
 import expression.DefExpression;
@@ -610,11 +604,11 @@ class TestInterpretation {
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Variable("x")),
 						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
-								new Application(IntRomanToIntNativeWrapper.IntRomanToInt,
+								new Application(Operator.IntRomanToIntNative,
 										new Tuple(Arrays.asList(new Variable("x"))))),
 						new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
-								new Application(IntStringToIntNativeWrapper.IntStringToInt,
+								new Application(Operator.IntStringToIntNative,
 										new Tuple(Arrays.asList(new Variable("x")))))));
 
 		TestInterpretation.testReflexivity(lambda);
@@ -625,11 +619,11 @@ class TestInterpretation {
 										new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Variable("x")),
 										new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
 												new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
-												new Application(IntRomanToIntNativeWrapper.IntRomanToInt,
+												new Application(Operator.IntRomanToIntNative,
 														new Tuple(Arrays.asList(new Variable("x"))))),
 										new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
 												new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
-												new Application(IntStringToIntNativeWrapper.IntStringToInt,
+												new Application(Operator.IntStringToIntNative,
 														new Tuple(Arrays.asList(new Variable("x"))))))));
 		TestInterpretation
 				.testDifference(lambda,
@@ -638,7 +632,7 @@ class TestInterpretation {
 										new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Variable("x")),
 										new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
 												new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
-												new Application(IntRomanToIntNativeWrapper.IntRomanToInt,
+												new Application(Operator.IntRomanToIntNative,
 														new Tuple(Arrays.asList(new Variable("x"))))))));
 		TestInterpretation
 				.testDifference(lambda,
@@ -647,21 +641,20 @@ class TestInterpretation {
 										new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Variable("x")),
 										new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
 												new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
-												new Application(IntRomanToIntNativeWrapper.IntRomanToInt,
+												new Application(Operator.IntRomanToIntNative,
 														new Tuple(Arrays.asList(new Variable("x"))))),
 										new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
 												new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
-												new Application(IntStringToIntNativeWrapper.IntStringToInt,
+												new Application(Operator.IntStringToIntNative,
 														new Tuple(Arrays.asList(new Variable("x"))))),
 										new Lambda(new Tuple(Arrays.asList(new Variable("y"))),
 												new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
-												new Application(IntStringToIntNativeWrapper.IntStringToInt,
+												new Application(Operator.IntStringToIntNative,
 														new Tuple(Arrays.asList(new Variable("x"))))))));
 		TestInterpretation.testDifference(lambda, Expression.EMPTY_EXPRESSION);
 
 		lambda.toString();
 		lambda.hashCode();
-		//lambda.toClojureCode();
 		lambda.getSortedImplementations(new Comparator<Lambda>() {
 
 			@Override
@@ -938,26 +931,26 @@ class TestInterpretation {
 
 	@Test
 	void testConversions() throws AppendableException {
-		TestInterpretation.testConversion(IntRomanToIntStringWrapper.IntRomanToIntString,
+		TestInterpretation.testConversion(Operator.IntRomanToIntString,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman),
 				new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntString));
-		TestInterpretation.testConversion(IntRomanToIntNativeWrapper.IntRomanToInt,
+		TestInterpretation.testConversion(Operator.IntRomanToIntNative,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman),
 				new LitInteger(5),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntNative));
-		TestInterpretation.testConversion(IntStringToIntRomanWrapper.IntStringToIntRoman,
+		TestInterpretation.testConversion(Operator.IntStringToIntRoman,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString),
 				new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntRoman));
-		TestInterpretation.testConversion(IntStringToIntNativeWrapper.IntStringToInt,
+		TestInterpretation.testConversion(Operator.IntStringToIntNative,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString),
 				new LitInteger(5),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntNative));
-		TestInterpretation.testConversion(IntNativeToIntStringWrapper.IntToIntString, new LitInteger(5),
+		TestInterpretation.testConversion(Operator.IntNativeToIntString, new LitInteger(5),
 				new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntString));
-		TestInterpretation.testConversion(IntNativeToIntRomanWrapper.IntToIntRoman, new LitInteger(5),
+		TestInterpretation.testConversion(Operator.IntNativeToIntRoman, new LitInteger(5),
 				new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntRoman));
 	}

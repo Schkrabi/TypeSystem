@@ -27,7 +27,8 @@ import util.ThrowingFunction;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class ExtendedLambda extends MetaLambda {
+public class ExtendedLambda extends MetaLambda
+ {
 
 	/**
 	 * Various implementations of this function

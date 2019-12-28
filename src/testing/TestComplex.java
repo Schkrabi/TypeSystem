@@ -37,6 +37,7 @@ import types.TypeRepresentation;
 import util.AppendableException;
 import util.ClojureCodeGenerator;
 import util.Pair;
+import util.RomanNumbers;
 import util.ThrowingFunction;
 
 class TestComplex {
@@ -93,26 +94,29 @@ class TestComplex {
 						new TypeAtom(new TypeName("List"), TypeRepresentation.NATIVE)));
 
 	}
-	
+
 	@Test
 	void testClojure() throws AppendableException {
-		//Literals
+		// Literals
 		this.testClojureCompile("0", "0");
 		this.testClojureCompile("3.141521", "3.141521");
 		this.testClojureCompile("#t", "true");
 		this.testClojureCompile("#f", "false");
 		this.testClojureCompile("\"Hello World\"", "\"Hello World\"");
-		//Unbound Variable
+		this.testClojureCompile("(Int:Roman \"XLII\")", "((fn [_x] [_x]) \"XLII\")");
+		// Unbound Variable
 		this.testClojureCompile("variable", "variable");
-		//Lambda
+		// Lambda
 		this.testClojureCompile("(lambda (x y) x)", "(fn [x y] x)");
-		//Application
+		// Application
 		this.testClojureCompile("((lambda (x y) x) 42 21)", "((fn [x y] x) 42 21)");
-		//If
+		// If
 		this.testClojureCompile("(if #t 42 21)", "(if true 42 21)");
-		//Cons
+		// Cons
 		this.testClojureCompile("(cons 21 21)", "[21 21]");
-		//Operators
+		// Exception
+		this.testClojureCompile("(error \"error msg\")", "(throw (Throwable. \"error msg\"))");
+		// Operators
 		this.testClojureCompile("(+ 41 1)", "(+ 41 1)");
 		this.testClojureCompile("(and #t #f)", "(and true false)");
 		this.testClojureCompile("(bit-and 42 1)", "(bit-and 42 1)");
@@ -128,10 +132,31 @@ class TestComplex {
 		this.testClojureCompile("(= 42 42)", "(= 42 42)");
 		this.testClojureCompile("(or #t #f)", "(or true false)");
 		this.testClojureCompile("(- 43 1)", "(- 43 1)");
-		//Defines
+		// Conversions
+		this.testClojureCompile("(IntNative2IntRoman 42)",
+				"((fn [_x] [(" + RomanNumbers.int2RomanClojure + " _x)]) 42)");
+		this.testClojureCompile("(IntNative2IntString 42)", "((fn [_x] [(Integer/toString _x)]) 42)");
+		this.testClojureCompile("(IntRoman2IntNative (Int:Roman \"XLII\"))",
+				"((fn [_x] (" + RomanNumbers.roman2intClojure + " (get _x 0))) ((fn [_x] [_x]) \"XLII\"))");
+		this.testClojureCompile("(IntRoman2IntString (Int:Roman \"XLII\"))",
+				"((fn [_x] (str (" + RomanNumbers.roman2intClojure + " (get _x 0)))) ((fn [_x] [_x]) \"XLII\"))");
+		this.testClojureCompile("(IntString2IntNative (Int:String \"42\"))",
+				"((fn [_x] (Integer/parseInt (get _x 0))) ((fn [_x] [_x]) \"42\"))");
+		this.testClojureCompile("(IntString2IntRoman (Int:String \"42\"))", "((fn [_x] [("
+				+ RomanNumbers.int2RomanClojure + " (Integer/parseInt (get _x 0)))]) ((fn [_x] [_x]) \"42\"))");
+		// Define
 		this.testClojureCompile("(define answer 42)", "(def answer 42)");
-		this.testClojureCompile("(defconversion Name:Structured Name:Unstructured (lambda (x) x))", "(def NameStructured2NameUnstructured (fn [x] x))");
+		this.testClojureCompile("(defconversion Name:Structured Name:Unstructured (lambda (x) x))",
+				"(def NameStructured2NameUnstructured (fn [x] x))");
 		this.testClojureCompile("(deftype Name)", "");
+		this.testClojureCompileRegex("(defrep Structured Name (String String))",
+				"\\(def Name:Structured \\(fn \\[\\w* \\w*\\] \\[\\w* \\w*\\]\\)\\)\n"
+						+ "\\(def NameStructured-0 \\(fn \\[\\w*\\] \\(get \\w* 0\\)\\)\\)\n"
+						+ "\\(def NameStructured-1 \\(fn \\[\\w*\\] \\(get \\w* 1\\)\\)\\)");
+		//Extended Lambda
+		this.testClojureCompile("(elambda ((Int x)) ((Int:Native) \"Native\"))", "(fn [x] \"Native\")");
+		this.testClojureCompile("((elambda ((Int x)) ((Int:Native) \"Native\") ((Int:String) \"String\")) (Int:String \"42\"))", 
+				"((fn [x] \"String\") ((fn [_x] [_x]) \"42\"))");
 	}
 
 	private List<Expression> parseString(String s, SemanticParser semanticParser) throws AppendableException {
@@ -158,22 +183,36 @@ class TestComplex {
 			fail("Interpretation of " + code + " yields " + last + " were expecting " + expected);
 		}
 	}
-	
-	private void testClojureCompile(String code, String expected) throws AppendableException{
+
+	private String compileToClojure(String code) throws AppendableException {
 		SemanticParser semanticParser = new SemanticParser();
 		List<Expression> l = this.parseString(code, semanticParser);
 		StringBuilder s = new StringBuilder();
-		
+
 		Iterator<Expression> i = l.iterator();
-		while(i.hasNext()) {
+		while (i.hasNext()) {
 			s.append(i.next().toClojureCode());
-			if(i.hasNext()) {
+			if (i.hasNext()) {
 				s.append('\n');
 			}
 		}
-		
-		if(s.toString().compareTo(expected) != 0) {
-			fail("Clojure compilation test failed, compiling " + code + " expected " + expected + " got " + s.toString());
+		return s.toString();
+	}
+
+	private void testClojureCompile(String code, String expected) throws AppendableException {
+		String s = this.compileToClojure(code);
+
+		if (s.compareTo(expected) != 0) {
+			fail("Clojure compilation test failed, compiling " + code + " expected " + expected + " got "
+					+ s.toString());
+		}
+	}
+
+	private void testClojureCompileRegex(String code, String regex) throws AppendableException {
+		String s = this.compileToClojure(code);
+		if (!s.matches(regex)) {
+			fail("Clojure compilation test failed, compiling " + code + " do not match " + regex + " got "
+					+ s.toString());
 		}
 	}
 }

@@ -48,12 +48,12 @@ public class ExceptionExpr extends Expression {
 	
 	@Override
 	protected String toClojureCode(Type expectedType, Environment env) {
-		return "(throw (Throwable. \"" + this.message + "\"))";
+		return "(throw (Throwable. " + this.message + "))";
 	}
 	
 	@Override
 	public String toString() {
-		return "error " + this.message.toString();
+		return "(error " + this.message.toString() + ")";
 	}
 	
 	@Override

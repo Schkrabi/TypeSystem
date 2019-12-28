@@ -207,4 +207,9 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	public int hashCode() {
 		return this.args.hashCode() * this.argsType.hashCode() * this.body.hashCode();
 	}
+	
+	@Override
+	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env) throws AppendableException {
+		return (TypeArrow)this.infer(env).first;
+	}
 }

@@ -165,4 +165,9 @@ public class ExtendedFunction extends MetaFunction {
 	public int hashCode() {
 		return super.hashCode() * this.argsType.hashCode() * this.implementations.hashCode();
 	}
+	
+	@Override
+	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env) throws AppendableException {
+		return this.getFunction(argTypes).getFunctionTypeWithRepresentations(argTypes, env);
+	}
 }
