@@ -6,7 +6,6 @@ import java.util.TreeSet;
 
 import util.AppendableException;
 import util.NameGenerator;
-import util.Pair;
 import expression.Application;
 import expression.Expression;
 import expression.Lambda;
@@ -119,8 +118,9 @@ public class TypeArrow extends Type {
 
 	@Override
 	public Substitution unifyWith(Type other) throws AppendableException {
-		if(other instanceof TypeVariable) {
-			return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>((TypeVariable)other, this)));
+		if(other instanceof TypeVariable
+				|| other instanceof RepresentationOr) {
+			return other.unifyWith(this);
 		}
 		if(other instanceof TypeArrow) {
 			TypeArrow o = (TypeArrow)other;

@@ -1,12 +1,9 @@
 package types;
 
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Set;
 
 import expression.Expression;
 import util.AppendableException;
-import util.Pair;
 
 /**
  * Abstract class for types

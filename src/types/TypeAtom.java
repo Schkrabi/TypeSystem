@@ -1,13 +1,11 @@
 package types;
 
-import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 
 import expression.Expression;
 import semantic.TypeEnvironment;
 import util.AppendableException;
-import util.Pair;
 
 /**
  * Class for type atoms
@@ -149,8 +147,9 @@ public class TypeAtom extends Type {
 
 	@Override
 	public Substitution unifyWith(Type other) throws AppendableException {
-		if(other instanceof TypeVariable) {
-			return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>((TypeVariable)other, this)));
+		if(other instanceof TypeVariable
+				|| other instanceof RepresentationOr) {
+			return other.unifyWith(this);
 		}
 		if(other instanceof TypeAtom) {
 			if(TypeAtom.isSameBasicType(this, (TypeAtom) other)) {

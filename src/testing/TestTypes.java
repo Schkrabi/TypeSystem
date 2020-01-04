@@ -172,14 +172,12 @@ class TestTypes {
 
 		TestTypes.testGetUnconstrainedVariables(tuple, Arrays.asList(new TypeVariable("a")));
 
-		TestTypes
-				.testConvertTo(tuple,
-						new Tuple(Arrays.asList(new LitString("XIII"), new Variable("x"), LitBoolean.TRUE)),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString, TypeAtom.TypeBool)),
-						new Tuple(Arrays.asList(
-								new Application(Operator.IntRomanToIntString,
-										new Tuple(Arrays.asList(new LitString("XIII")))),
-								new Variable("x"), LitBoolean.TRUE)));
+		TestTypes.testConvertTo(tuple,
+				new Tuple(Arrays.asList(new LitString("XIII"), new Variable("x"), LitBoolean.TRUE)),
+				new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString, TypeAtom.TypeBool)),
+				new Tuple(Arrays.asList(
+						new Application(Operator.IntRomanToIntString, new Tuple(Arrays.asList(new LitString("XIII")))),
+						new Variable("x"), LitBoolean.TRUE)));
 		TestTypes.testConvertTo(tuple,
 				new Tuple(Arrays.asList(new LitString("XIII"), new Variable("x"), LitBoolean.TRUE)),
 				new TypeVariable("b"),
@@ -347,8 +345,8 @@ class TestTypes {
 
 		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), new TypeVariable("a"),
 				new LitString("42"));
-		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), TypeAtom.TypeIntRoman, new Application(
-				Operator.IntStringToIntRoman, new Tuple(Arrays.asList(new LitString("42")))));
+		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), TypeAtom.TypeIntRoman,
+				new Application(Operator.IntStringToIntRoman, new Tuple(Arrays.asList(new LitString("42")))));
 
 		Assertions.assertThrows(ConversionException.class,
 				() -> atom.convertTo(Expression.EMPTY_EXPRESSION, new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt)));
@@ -369,6 +367,58 @@ class TestTypes {
 		if (TypeAtom.isSameBasicType(TypeAtom.TypeDouble, TypeAtom.TypeIntRoman)) {
 			fail("TypeAtom.isSameBasicType(" + TypeAtom.TypeDouble + ", " + TypeAtom.TypeIntRoman + " == true");
 		}
+	}
+
+	@Test
+	void testRepresentationOr() throws AppendableException {
+		RepresentationOr ror;
+
+		// Test construction
+		Type rslt = RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt));
+		if (!(rslt instanceof TypeAtom) || !rslt.equals(TypeAtom.TypeInt)) {
+			fail("makeRepresentationOr error, expected " + TypeAtom.TypeInt + " got " + rslt);
+		}
+		rslt = RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString));
+		if (!(rslt instanceof RepresentationOr)) {
+			fail("makeRepresentationOr error, expected RepresentationOr got " + rslt);
+		}
+		ror = (RepresentationOr) rslt;
+
+		Assertions.assertThrows(AppendableException.class,
+				() -> RepresentationOr.makeRepresentationOr(Arrays.asList()));
+		Assertions.assertThrows(TypesDoesNotUnifyException.class,
+				() -> RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeBool)));
+
+		// ToString
+		ror.toString();
+		ror.getRepresentations();
+		Assertions.assertThrows(AppendableException.class, () -> ror.convertToClojure("", TypeTuple.EMPTY_TUPLE));
+
+		// Equals & CompareTo
+		TestTypes.testReflexivity(ror);
+		TestTypes.testDifference(ror, RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt)));
+		TestTypes.testDifference(ror, RepresentationOr.makeRepresentationOr(
+				Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)));
+		TestTypes.testDifference(ror,
+				RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeIntRoman)));
+		TestTypes.testDifference(ror, TypeTuple.EMPTY_TUPLE);
+
+		TestTypes.testGetUnconstrainedVariables(ror, Arrays.asList());
+
+		Assertions.assertThrows(AppendableException.class,
+				() -> ror.convertTo(Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntRoman));
+
+		TestTypes.testRemoveRepresentationInfo(ror, ror);
+
+		TestTypes.testApply(
+				RepresentationOr.makeRepresentationOr(
+						Arrays.asList(new TypeArrow(TypeAtom.TypeIntNative, new TypeVariable("x")),
+								new TypeArrow(TypeAtom.TypeIntString, new TypeVariable("x")))),
+				new Substitution(
+						Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), TypeAtom.TypeIntString))),
+				RepresentationOr.makeRepresentationOr(
+						Arrays.asList(new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeIntString),
+								new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeIntString))));
 	}
 
 	@Test
@@ -401,6 +451,41 @@ class TestTypes {
 		Assertions.assertThrows(TypesDoesNotUnifyException.class,
 				() -> Type.unify(new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt)),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt, TypeAtom.TypeInt))));
+
+		TestTypes.testUnify(new TypeVariable("x"),
+				RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
+				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), RepresentationOr
+						.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman))))));
+		TestTypes.testUnify(
+				RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
+				new TypeVariable("x"),
+				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), RepresentationOr
+						.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman))))));
+		TestTypes.testUnify(
+				RepresentationOr.makeRepresentationOr(
+						Arrays.asList(new TypeArrow(TypeAtom.TypeIntNative, new TypeVariable("x")),
+								new TypeArrow(TypeAtom.TypeIntString, new TypeVariable("x")))),
+				new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative), new Substitution(
+						Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), TypeAtom.TypeStringNative))));
+		TestTypes.testUnify(new TypeArrow(new TypeVariable("x"), TypeAtom.TypeStringNative),
+				RepresentationOr.makeRepresentationOr(
+						Arrays.asList(new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative),
+								new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeStringNative))),
+				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), RepresentationOr
+						.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString))))));
+		TestTypes.testUnify(
+				RepresentationOr.makeRepresentationOr(
+						Arrays.asList(new TypeArrow(TypeAtom.TypeIntNative, new TypeVariable("x")),
+								new TypeArrow(TypeAtom.TypeIntString, new TypeVariable("x")))),
+				RepresentationOr
+						.makeRepresentationOr(Arrays.asList(new TypeArrow(new TypeVariable("y"), TypeAtom.TypeIntRoman),
+								new TypeArrow(new TypeVariable("y"), TypeAtom.TypeIntNative))),
+				new Substitution(Arrays.asList(
+						new Pair<TypeVariable, Type>(new TypeVariable("x"),
+								RepresentationOr.makeRepresentationOr(
+										Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman))),
+						new Pair<TypeVariable, Type>(new TypeVariable("y"), RepresentationOr
+								.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeIntNative))))));
 	}
 
 	static void testReflexivity(Type type) {
