@@ -55,13 +55,13 @@ public class Operator extends Function {
 	}
 
 	@Override
-	public String toClojureCode() {
+	public String toClojureCode() throws AppendableException {
 		return this.toClojureCode(null, Environment.topLevelEnvironment);
 	}
 
 	@Override
-	public String toClojureCode(Type expectedType, Environment env) {
-		return this.clojureSymbol;
+	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+		return "`([" + this.argsType.toClojure() + " ~" + this.clojureSymbol + "])";
 	}
 
 	/**
@@ -269,7 +269,7 @@ public class Operator extends Function {
 	 * @return string containing clojure definition of the getter
 	 */
 	private static String makeClojureGetterDefinition(TypeAtom type, int index) {
-		return "(def " + Operator.getterName(type, index) + " (fn [_x] (get _x " + index + ")))";
+		return "(def " + Operator.getterName(type, index) + " `([[" + type.toClojure() + "] ~(fn [x] (get x " + index + "))]))";
 	}
 
 	/**

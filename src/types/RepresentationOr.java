@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import expression.Expression;
 import util.AppendableException;
-import util.NameGenerator;
 import util.Pair;
 import util.ThrowingFunction;
 
@@ -42,15 +41,8 @@ public class RepresentationOr extends Type {
 		if (representations.size() == 1) {
 			return representations.stream().findAny().get();
 		}
-		Type base = new TypeVariable(NameGenerator.next());
-		Substitution agg = Substitution.EMPTY;
-		for (Type t : representations) {
-			Substitution s = Type.unify(base, t);
-			agg = agg.union(s);
-			base = base.apply(agg);
-		}
 
-		final Substitution fagg = agg;
+		final Substitution fagg = Type.unifyMany(representations);
 		
 		Set<Type> unifiedTypes = representations.stream().map(x -> x.apply(fagg)).collect(Collectors.toSet());
 		if(unifiedTypes.size() == 1) {
@@ -179,5 +171,10 @@ public class RepresentationOr extends Type {
 	@Override
 	public int hashCode() {
 		return this.representations.hashCode();
+	}
+
+	@Override
+	public String toClojure() throws AppendableException{
+		throw new AppendableException("toClojure of " + this.getClass().getName() + " : " + this + " is not allowed");
 	}
 }

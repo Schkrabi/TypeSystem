@@ -502,6 +502,7 @@ class TestParser {
 				.parseArgsList(Arrays.asList(SemanticNode.make(NodeType.BOOL, new Boolean(false)))));
 	}
 
+	@SuppressWarnings("unlikely-arg-type")
 	@Test
 	public void testVariableTypePair() {
 		TypeVariablePair p = new TypeVariablePair(TypeAtom.TypeBool, new Variable("x"));

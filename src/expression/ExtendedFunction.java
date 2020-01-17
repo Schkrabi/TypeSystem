@@ -9,13 +9,12 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import types.RepresentationOr;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
-import types.TypeVariable;
 import util.AppendableException;
-import util.NameGenerator;
 import util.Pair;
 import util.ThrowingBinaryOperator;
 import util.ThrowingFunction;
@@ -33,14 +32,8 @@ public class ExtendedFunction extends MetaFunction {
 	 */
 	private final Set<Function> implementations;
 
-	/**
-	 * Type of arguments
-	 */
-	public final TypeTuple argsType;
-
-	public ExtendedFunction(TypeTuple argsType, Collection<Function> implementations, Environment createdEnvironment) {
+	private ExtendedFunction(Collection<Function> implementations, Environment createdEnvironment) {
 		super(createdEnvironment);
-		this.argsType = argsType;
 		this.implementations = implementations.stream()
 				.map(x -> new Function(x.argsType, x.args, x.body, createdEnvironment)).collect(Collectors.toSet());
 	}
@@ -59,25 +52,15 @@ public class ExtendedFunction extends MetaFunction {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		final Environment crEnv = this.creationEnvironment;
-		final TypeVariable v = new TypeVariable(NameGenerator.next());
 		try {
-			try {
-				Pair<Type, Substitution> p = this.implementations.stream()
-						.map(ThrowingFunction.wrapper(x -> x.infer(crEnv)))
-						.reduce(new Pair<Type, Substitution>(v, Substitution.EMPTY),
-								ThrowingBinaryOperator.wrapper((x, y) -> {
-									Substitution s = Type.unify(x.first, y.first);
-									s = s.union(x.second).union(y.second);
-									return new Pair<Type, Substitution>(v.apply(s), s);
-								}));
+			Set<Pair<Type, Substitution>> s = this.implementations.stream()
+					.map(ThrowingFunction.wrapper(x -> x.infer(env))).collect(Collectors.toSet());
 
-				return new Pair<Type, Substitution>(p.first.removeRepresentationInfo(),
-						p.second.union(Type.unify(((TypeArrow) (p.first)).ltype, this.argsType)));
-			} catch (RuntimeException e) {
-				AppendableException ae = (AppendableException) e.getCause();
-				throw ae;
-			}
+			return new Pair<Type, Substitution>(
+					RepresentationOr.makeRepresentationOr(s.stream().map(x -> x.first).collect(Collectors.toSet())),
+					s.stream().map(x -> x.second).reduce(Substitution.EMPTY,
+							ThrowingBinaryOperator.wrapper((x, y) -> x.union(y))));
+
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
@@ -93,10 +76,7 @@ public class ExtendedFunction extends MetaFunction {
 	@Override
 	public int compareTo(Expression other) {
 		if (other instanceof ExtendedFunction) {
-			int cmp = this.argsType.compareTo(((ExtendedFunction) other).argsType);
-			if (cmp != 0)
-				return cmp;
-			cmp = this.creationEnvironment.compareTo(((ExtendedFunction) other).creationEnvironment);
+			int cmp = this.creationEnvironment.compareTo(((ExtendedFunction) other).creationEnvironment);
 			if (cmp != 0)
 				return cmp;
 
@@ -118,8 +98,7 @@ public class ExtendedFunction extends MetaFunction {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof ExtendedFunction) {
-			return this.argsType.equals(((ExtendedFunction) other).argsType)
-					&& this.implementations.equals(((ExtendedFunction) other).implementations);
+			return this.implementations.equals(((ExtendedFunction) other).implementations);
 		}
 		return false;
 	}
@@ -127,22 +106,8 @@ public class ExtendedFunction extends MetaFunction {
 	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder("(ExFunctionInternal (");
-		Function sample = this.implementations.stream().findAny().get();
 
 		// Arguments
-		Iterator<Expression> i = sample.args.iterator();
-		Iterator<Type> j = this.argsType.iterator();
-		while (i.hasNext()) {
-			Expression e = i.next();
-			Type t = j.next();
-			s.append('(');
-			s.append(t.toString());
-			s.append(' ');
-			s.append(e.toString());
-			s.append(')');
-		}
-		s.append(") ");
-
 		Iterator<Function> k = this.implementations.iterator();
 		while (k.hasNext()) {
 			Function f = k.next();
@@ -163,11 +128,25 @@ public class ExtendedFunction extends MetaFunction {
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() * this.argsType.hashCode() * this.implementations.hashCode();
+		return super.hashCode() * this.implementations.hashCode();
 	}
-	
+
 	@Override
-	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env) throws AppendableException {
+	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env)
+			throws AppendableException {
 		return this.getFunction(argTypes).getFunctionTypeWithRepresentations(argTypes, env);
+	}
+
+	/**
+	 * Creates new extended function
+	 * @param implementations function implementations
+	 * @param createdEnvironment environment where function was created
+	 * @return new ExtendedFunction object
+	 * @throws AppendableException thrown if argument types of function does not unify
+	 */
+	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
+			Environment createdEnvironment) throws AppendableException {
+		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
+		return new ExtendedFunction(implementations, createdEnvironment);
 	}
 }

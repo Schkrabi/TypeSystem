@@ -11,6 +11,7 @@ import parser.SemanticNode;
 import semantic.TypeEnvironment;
 import types.Substitution;
 import types.Type;
+import types.TypeArrow;
 import types.TypeAtom;
 import types.TypeName;
 import types.TypeRepresentation;
@@ -127,32 +128,23 @@ public class DefRepresentationExpression extends Expression {
 	}
 	
 	/**
-	 * Creates constructor for created type
-	 * @return Function
+	 * Creates lammbda expression that is constructor for created type
+	 * @return
 	 */
-	private Function makeConstructor() {
+	private Lambda makeConstructorLambda() {
 		TypeAtom type = new TypeAtom(this.typeName, this.representation);
 		Tuple args = new Tuple(
 				this.members.stream().map(x -> new Variable(NameGenerator.next())).collect(Collectors.toList()));
 		
-		return new Function(this.memberTypes(), args, new LitComposite(args, type),
-				Environment.topLevelEnvironment);	
+		return new Lambda(args, this.memberTypes(), new LitComposite(args, type));
 	}
 	
-	private String makeClojureConstructor() {
-		List<String> args = this.members.stream().map(x -> NameGenerator.next()).collect(Collectors.toList());
-		
-		StringBuilder s = new StringBuilder("[");
-		Iterator<String> i = args.iterator();
-		while(i.hasNext()) {
-			s.append(i.next());
-			if(i.hasNext()) {
-				s.append(" ");
-			}
-		}
-		s.append("]");
-		
-		return "(fn " + s.toString() + " " + s.toString() + ")";	
+	/**
+	 * Creates constructor for created type
+	 * @return Function
+	 */
+	private Function makeConstructor() {
+		return (Function)this.makeConstructorLambda().interpret(Environment.topLevelEnvironment);
 	}
 
 	@Override
@@ -168,8 +160,16 @@ public class DefRepresentationExpression extends Expression {
 	@Override
 	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		TypeAtom ta = new TypeAtom(this.typeName, this.representation);
-		return "(def " + ta.clojureName() + " " + this.makeClojureConstructor()  + ")\n" + 
-					Operator.makeClojureGetterDefinitions(ta, this.members.size());
+		StringBuilder s = new StringBuilder("(def ");
+		s.append(ta.clojureName());
+		s.append(" ");
+		Lambda constructorLambda = this.makeConstructorLambda(); 
+		s.append(constructorLambda.toClojureCode(new TypeArrow(constructorLambda.argsType, ta), env));
+		s.append(")\n");
+		s.append(Operator.makeClojureGetterDefinitions(ta, this.members.size()));
+		
+		
+		return s.toString();
 	}
 
 }

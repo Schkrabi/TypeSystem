@@ -9,6 +9,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import interpretation.Environment;
+import types.RepresentationOr;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
@@ -27,50 +28,34 @@ import util.ThrowingFunction;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class ExtendedLambda extends MetaLambda
- {
+public class ExtendedLambda extends MetaLambda {
 
 	/**
 	 * Various implementations of this function
 	 */
 	private final Set<Lambda> implementations;
 
-	/**
-	 * Type of arguments
-	 */
-	public final TypeTuple argsType;
-
-	public ExtendedLambda(TypeTuple argsType, Collection<Lambda> implementations) {
-		this.argsType = argsType;
+	private ExtendedLambda(Collection<Lambda> implementations) {
 		this.implementations = new TreeSet<Lambda>(implementations);
 	}
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		return new ExtendedFunction(this.argsType,
+		return ExtendedFunction.makeExtendedFunction(
 				this.implementations.stream().map(x -> (Function) x.interpret(env)).collect(Collectors.toSet()), env);
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		final TypeVariable v = new TypeVariable(NameGenerator.next());
 		try {
-			try {
-				Pair<Type, Substitution> p = this.implementations.stream()
-						.map(ThrowingFunction.wrapper(x -> x.infer(env)))
-						.reduce(new Pair<Type, Substitution>(v, Substitution.EMPTY),
-								ThrowingBinaryOperator.wrapper((x, y) -> {
-									Substitution s = Type.unify(x.first, y.first);
-									s = s.union(x.second).union(y.second);
-									return new Pair<Type, Substitution>(v.apply(s), s);
-								}));
+			Set<Pair<Type, Substitution>> s = this.implementations.stream()
+					.map(ThrowingFunction.wrapper(x -> x.infer(env))).collect(Collectors.toSet());
 
-				return new Pair<Type, Substitution>(p.first.removeRepresentationInfo(),
-						p.second.union(Type.unify(((TypeArrow) (p.first)).ltype, this.argsType)));
-			} catch (RuntimeException e) {
-				AppendableException ae = (AppendableException) e.getCause();
-				throw ae;
-			}
+			return new Pair<Type, Substitution>(
+					RepresentationOr.makeRepresentationOr(s.stream().map(x -> x.first).collect(Collectors.toSet())),
+					s.stream().map(x -> x.second).reduce(Substitution.EMPTY,
+							ThrowingBinaryOperator.wrapper((x, y) -> x.union(y))));
+
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
@@ -105,21 +90,6 @@ public class ExtendedLambda extends MetaLambda
 	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder("(elambda (");
-		Lambda sample = this.implementations.stream().findAny().get();
-
-		// Arguments
-		Iterator<Expression> i = sample.args.iterator();
-		Iterator<Type> j = this.argsType.iterator();
-		while (i.hasNext()) {
-			Expression e = i.next();
-			Type t = j.next();
-			s.append('(');
-			s.append(t.toString());
-			s.append(' ');
-			s.append(e.toString());
-			s.append(')');
-		}
-		s.append(") ");
 
 		Iterator<Lambda> k = this.implementations.iterator();
 		while (k.hasNext()) {
@@ -139,48 +109,49 @@ public class ExtendedLambda extends MetaLambda
 		return s.toString();
 	}
 
-	/**
-	 * Returns implementation according to the comparator (if there are any
-	 * alternative implementations)
-	 * 
-	 * @param c comparator
-	 * @return function
-	 */
-	private Lambda getLambda(final TypeTuple realArgsType) {
-		return this.implementations.stream()
-				.map(impl -> new Pair<Integer, Lambda>(impl.argsType.tupleDistance(realArgsType), impl))
-				.reduce(new Pair<Integer, Lambda>(Integer.MAX_VALUE, null), (p1, p2) -> {
-					if (p1.first < p2.first)
-						return p1;
-					else
-						return p2;
-				}).second;
-	}
-
 	@Override
 	public String toClojureCode() throws AppendableException {
-		Type type = new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next()));
-		return this.toClojureCode(type, Environment.topLevelEnvironment);
+		return this.toClojureCode(
+				new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next())),
+				Environment.topLevelEnvironment);
 	}
 
 	@Override
 	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
-		if (!(expectedType instanceof TypeArrow) || !(((TypeArrow) expectedType).ltype instanceof TypeTuple)) {
+		if (!(expectedType instanceof TypeArrow) || !((((TypeArrow) expectedType).ltype instanceof TypeTuple)
+				|| ((TypeArrow) expectedType).ltype instanceof TypeVariable)) {
 			throw new AppendableException(
 					"Unexpected argument " + expectedType + "in ExtendedLambda.toClojureCode(expectedType)");
 		}
 
-		return this.getLambda((TypeTuple) ((TypeArrow) expectedType).ltype).toClojureCode(expectedType, env);
+		try {
+			final TypeArrow type = (TypeArrow) expectedType;
+			StringBuilder s = new StringBuilder("`(");
+
+			Iterator<String> i = this.implementations.stream()
+					.map(ThrowingFunction
+							.wrapper(x -> "[" + x.argsType.toClojure() + " ~" + x.toClojureFn(type, env) + "]"))
+					.collect(Collectors.toList()).iterator();
+
+			while (i.hasNext()) {
+				String str = i.next();
+				s.append(str);
+				if (i.hasNext()) {
+					s.append(" ");
+				}
+			}
+			s.append(")");
+			return s.toString();
+		} catch (RuntimeException re) {
+			AppendableException e = (AppendableException) re.getCause();
+			throw e;
+		}
 	}
 
 	@Override
 	public int compareTo(Expression other) {
 		if (other instanceof ExtendedLambda) {
 			ExtendedLambda o = (ExtendedLambda) other;
-
-			int cmp = this.argsType.compareTo(o.argsType);
-			if (cmp != 0)
-				return cmp;
 
 			for (Lambda l : this.implementations) {
 				if (!o.implementations.contains(l))
@@ -198,14 +169,26 @@ public class ExtendedLambda extends MetaLambda
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof ExtendedLambda) {
-			return this.argsType.equals(((ExtendedLambda) other).argsType)
-					&& this.implementations.equals(((ExtendedLambda) other).implementations);
+			return this.implementations.equals(((ExtendedLambda) other).implementations);
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return this.argsType.hashCode() * this.implementations.hashCode();
+		return this.implementations.hashCode();
+	}
+
+	/**
+	 * Creates new Extended lambda exppression
+	 * 
+	 * @param implementations implementations of extended lambdas
+	 * @return new ExtendedLambda object
+	 * @throws AppendableException thrown if any of the argument types does not
+	 *                             unify
+	 */
+	public static ExtendedLambda makeExtendedLambda(Collection<Lambda> implementations) throws AppendableException {
+		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
+		return new ExtendedLambda(implementations);
 	}
 }

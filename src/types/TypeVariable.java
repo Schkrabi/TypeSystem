@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import expression.Expression;
+import util.AppendableException;
 import util.Pair;
 
 /**
@@ -88,5 +89,10 @@ public class TypeVariable extends Type {
 			return Substitution.EMPTY; 
 		}		
 		return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>((TypeVariable)this, other)));
+	}
+
+	@Override
+	public String toClojure() throws AppendableException {
+		return ":" + this.name;
 	}
 }

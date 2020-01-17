@@ -132,4 +132,9 @@ public class TypeArrow extends Type {
 		}
 		throw new TypesDoesNotUnifyException(this, other);
 	}
+
+	@Override
+	public String toClojure() throws AppendableException {
+		throw new AppendableException("toClojure of " + this.getClass().getName() + " : " + this + " is not allowed");
+	}
 }

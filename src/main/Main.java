@@ -13,8 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-import operators.Operator;
-
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -25,16 +23,9 @@ import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
 import parser.SemanticNode;
 import semantic.SemanticParser;
-import semantic.TypeEnvironment;
-import types.TypeAtom;
-import types.TypeRepresentation;
-import types.TypeAtom;
 import util.AppendableException;
 import util.ClojureCodeGenerator;
 import expression.Expression;
-import expression.Function;
-import expression.Tuple;
-import expression.Variable;
 
 /**
  * Main entry point for testing
@@ -42,6 +33,7 @@ import expression.Variable;
  * @author Mgr. Radomir Skrabal
  * 
  */
+@SuppressWarnings("deprecation")
 public class Main {
 
 	/**
@@ -93,7 +85,6 @@ public class Main {
 		Environment topLevel = Main.initTopLevelEnvironment();
 		
 		try {			
-			SemanticParser semanticParser = new SemanticParser();
 			while (true) {
 				System.out.print(">");
 				CharStream charStream = new ANTLRInputStream(input.nextLine());
@@ -104,7 +95,7 @@ public class Main {
 				List<Expression> exprs = new ArrayList<Expression>();
 				
 				for(SemanticNode s : exprsContext.val){
-					exprs.add(semanticParser.parseNode(s));
+					exprs.add(SemanticParser.parseNode(s));
 				}
 
 				for (Expression e : exprs) {
@@ -134,10 +125,9 @@ public class Main {
 			
 			List<Expression> l = new LinkedList<Expression>();
 			List<Expression> exprs = new ArrayList<Expression>();
-			SemanticParser semanticParser = new SemanticParser();
 			
 			for(SemanticNode s : exprsContext.val){
-				exprs.add(semanticParser.parseNode(s));
+				exprs.add(SemanticParser.parseNode(s));
 			}
 			
 			for(Expression e : exprs){
@@ -173,10 +163,9 @@ public class Main {
 			ExprsContext exprsContext = parser.exprs();
 			
 			List<Expression> exprs = new ArrayList<Expression>();
-			SemanticParser semanticParser = new SemanticParser();
 			
 			for(SemanticNode s : exprsContext.val){
-				exprs.add(semanticParser.parseNode(s));
+				exprs.add(SemanticParser.parseNode(s));
 			}
 			
 			for(Expression e : exprs){
@@ -195,7 +184,7 @@ public class Main {
 				exprs = new ArrayList<Expression>();
 				
 				for(SemanticNode s : exprsContext.val){
-					exprs.add(semanticParser.parseNode(s));
+					exprs.add(SemanticParser.parseNode(s));
 				}
 
 				for (Expression e : exprs) {

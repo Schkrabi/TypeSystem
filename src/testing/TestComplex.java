@@ -17,13 +17,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import expression.Application;
 import expression.Expression;
 import expression.LitComposite;
 import expression.LitInteger;
 import expression.LitString;
 import expression.Tuple;
 import interpretation.Environment;
-import main.Main;
 import parser.SchemeLexer;
 import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
@@ -35,11 +35,11 @@ import types.TypeAtom;
 import types.TypeName;
 import types.TypeRepresentation;
 import util.AppendableException;
-import util.ClojureCodeGenerator;
 import util.Pair;
 import util.RomanNumbers;
 import util.ThrowingFunction;
 
+@SuppressWarnings("deprecation")
 class TestComplex {
 
 	@BeforeAll
@@ -96,20 +96,23 @@ class TestComplex {
 	}
 
 	@Test
-	void testClojure() throws AppendableException {
+	void testClojure() throws AppendableException {		
 		// Literals
 		this.testClojureCompile("0", "0");
 		this.testClojureCompile("3.141521", "3.141521");
 		this.testClojureCompile("#t", "true");
 		this.testClojureCompile("#f", "false");
 		this.testClojureCompile("\"Hello World\"", "\"Hello World\"");
-		this.testClojureCompile("(Int:Roman \"XLII\")", "((fn [_x] [_x]) \"XLII\")");
+		this.testClojureCompile("(Int:Roman \"XLII\")",
+				"(" + Application.clojureEapply + " `([[:StringNative] ~(fn [_x] [_x])]) [\"XLII\"])");
 		// Unbound Variable
 		this.testClojureCompile("variable", "variable");
 		// Lambda
-		this.testClojureCompile("(lambda (x y) x)", "(fn [x y] x)");
+		this.testClojureCompileRegex("(lambda (x y) x)",
+				TestComplex.escapeBrackets("`([[:\\w* :\\w*] ~(fn [x y] x)])"));
 		// Application
-		this.testClojureCompile("((lambda (x y) x) 42 21)", "((fn [x y] x) 42 21)");
+		this.testClojureCompile("((lambda ((Int:Native x) (Int:Native y)) x) 42 21)",
+				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~(fn [x y] x)]) [42 21])");
 		// If
 		this.testClojureCompile("(if #t 42 21)", "(if true 42 21)");
 		// Cons
@@ -117,46 +120,72 @@ class TestComplex {
 		// Exception
 		this.testClojureCompile("(error \"error msg\")", "(throw (Throwable. \"error msg\"))");
 		// Operators
-		this.testClojureCompile("(+ 41 1)", "(+ 41 1)");
-		this.testClojureCompile("(and #t #f)", "(and true false)");
-		this.testClojureCompile("(bit-and 42 1)", "(bit-and 42 1)");
-		this.testClojureCompile("(bit-or 42 1)", "(bit-or 42 1)");
-		this.testClojureCompile("(car pair)", "((fn [_x] (get _x 0)) pair)");
-		this.testClojureCompile("(cdr pair)", "((fn [_x] (get _x 1)) pair)");
-		this.testClojureCompile("(concat \"Hello\" \"World\")", "(concat \"Hello\" \"World\")");
-		this.testClojureCompile("(/ 84 2)", "(/ 84 2)");
-		this.testClojureCompile("(equals? 42 \"42\")", "(= 42 \"42\")");
-		this.testClojureCompile("(< 42 42)", "(< 42 42)");
-		this.testClojureCompile("(* 42 1)", "(* 42 1)");
-		this.testClojureCompile("(not #t)", "(not true)");
-		this.testClojureCompile("(= 42 42)", "(= 42 42)");
-		this.testClojureCompile("(or #t #f)", "(or true false)");
-		this.testClojureCompile("(- 43 1)", "(- 43 1)");
+		this.testClojureCompile("(+ 41 1)",
+				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~+]) [41 1])");
+		this.testClojureCompile("(and #t #f)",
+				"(" + Application.clojureEapply + " `([[:BoolNative :BoolNative] ~and]) [true false])");
+		this.testClojureCompile("(bit-and 42 1)",
+				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~bit-and]) [42 1])");
+		this.testClojureCompile("(bit-or 42 1)",
+				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~bit-or]) [42 1])");
+		this.testClojureCompileRegex("(car pair)", TestComplex
+				.escapeBrackets("(" + Application.clojureEapply + " `([[[:\\w :\\w]] ~(fn [_x] (get _x 0))]) [pair])"));
+		this.testClojureCompileRegex("(cdr pair)", TestComplex
+				.escapeBrackets("(" + Application.clojureEapply + " `([[[:\\w :\\w]] ~(fn [_x] (get _x 1))]) [pair])"));
+		this.testClojureCompile("(concat \"Hello\" \"World\")",
+				"(" + Application.clojureEapply + " `([[:StringNative :StringNative] ~concat]) [\"Hello\" \"World\"])");
+		this.testClojureCompile("(/ 84 2)",
+				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~/]) [84 2])");
+		this.testClojureCompileRegex("(equals? 42 \"42\")",
+				TestComplex.escapeBrackets("(" + Application.clojureEapply + " `([[:\\w :\\w] ~=]) [42 \"42\"])"));
+		this.testClojureCompile("(< 42 42)",
+				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~<]) [42 42])");
+		this.testClojureCompile("(* 42 1)",
+				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~*]) [42 1])");
+		this.testClojureCompile("(not #t)", "(" + Application.clojureEapply + " `([[:BoolNative] ~not]) [true])");
+		this.testClojureCompile("(= 42 42)",
+				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~=]) [42 42])");
+		this.testClojureCompile("(or #t #f)",
+				"(" + Application.clojureEapply + " `([[:BoolNative :BoolNative] ~or]) [true false])");
+		this.testClojureCompile("(- 43 1)",
+				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~-]) [43 1])");
 		// Conversions
-		this.testClojureCompile("(IntNative2IntRoman 42)",
-				"((fn [_x] [(" + RomanNumbers.int2RomanClojure + " _x)]) 42)");
-		this.testClojureCompile("(IntNative2IntString 42)", "((fn [_x] [(Integer/toString _x)]) 42)");
+		this.testClojureCompile("(IntNative2IntRoman 42)", "(" + Application.clojureEapply
+				+ " `([[:IntNative] ~(fn [_x] [(" + RomanNumbers.int2RomanClojure + " _x)])]) [42])");
+		this.testClojureCompile("(IntNative2IntString 42)",
+				"(" + Application.clojureEapply + " `([[:IntNative] ~(fn [_x] [(Integer/toString _x)])]) [42])");
 		this.testClojureCompile("(IntRoman2IntNative (Int:Roman \"XLII\"))",
-				"((fn [_x] (" + RomanNumbers.roman2intClojure + " (get _x 0))) ((fn [_x] [_x]) \"XLII\"))");
+				"(" + Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] (" + RomanNumbers.roman2intClojure
+						+ " (get _x 0)))]) [(" + Application.clojureEapply
+						+ " `([[:StringNative] ~(fn [_x] [_x])]) [\"XLII\"])])");
 		this.testClojureCompile("(IntRoman2IntString (Int:Roman \"XLII\"))",
-				"((fn [_x] (str (" + RomanNumbers.roman2intClojure + " (get _x 0)))) ((fn [_x] [_x]) \"XLII\"))");
+				"(" + Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] (str (" + RomanNumbers.roman2intClojure
+						+ " (get _x 0))))]) [(" + Application.clojureEapply
+						+ " `([[:StringNative] ~(fn [_x] [_x])]) [\"XLII\"])])");
 		this.testClojureCompile("(IntString2IntNative (Int:String \"42\"))",
-				"((fn [_x] (Integer/parseInt (get _x 0))) ((fn [_x] [_x]) \"42\"))");
-		this.testClojureCompile("(IntString2IntRoman (Int:String \"42\"))", "((fn [_x] [("
-				+ RomanNumbers.int2RomanClojure + " (Integer/parseInt (get _x 0)))]) ((fn [_x] [_x]) \"42\"))");
+				"(" + Application.clojureEapply + " `([[:IntString] ~(fn [_x] (Integer/parseInt (get _x 0)))]) [("
+						+ Application.clojureEapply + " `([[:StringNative] ~(fn [_x] [_x])]) [\"42\"])])");
+		this.testClojureCompile("(IntString2IntRoman (Int:String \"42\"))",
+				"(" + Application.clojureEapply + " `([[:IntString] ~(fn [_x] [(" + RomanNumbers.int2RomanClojure
+						+ " (Integer/parseInt (get _x 0)))])]) [(" + Application.clojureEapply
+						+ " `([[:StringNative] ~(fn [_x] [_x])]) [\"42\"])])");
 		// Define
 		this.testClojureCompile("(define answer 42)", "(def answer 42)");
 		this.testClojureCompile("(defconversion Name:Structured Name:Unstructured (lambda (x) x))",
-				"(def NameStructured2NameUnstructured (fn [x] x))");
+				"(def NameStructured2NameUnstructured `([[:NameStructured] ~(fn [x] x)]))");
 		this.testClojureCompile("(deftype Name)", "");
-		this.testClojureCompileRegex("(defrep Structured Name (String String))",
-				"\\(def Name:Structured \\(fn \\[\\w* \\w*\\] \\[\\w* \\w*\\]\\)\\)\n"
-						+ "\\(def NameStructured-0 \\(fn \\[\\w*\\] \\(get \\w* 0\\)\\)\\)\n"
-						+ "\\(def NameStructured-1 \\(fn \\[\\w*\\] \\(get \\w* 1\\)\\)\\)");
-		//Extended Lambda
-		this.testClojureCompile("(elambda ((Int x)) ((Int:Native) \"Native\"))", "(fn [x] \"Native\")");
-		this.testClojureCompile("((elambda ((Int x)) ((Int:Native) \"Native\") ((Int:String) \"String\")) (Int:String \"42\"))", 
-				"((fn [x] \"String\") ((fn [_x] [_x]) \"42\"))");
+		this.testClojureCompileRegex("(defrep Structured Name (String:Native String:Native))",
+				TestComplex.escapeBrackets("(def Name:Structured `([[:StringNative :StringNative] ~(fn [\\w* \\w*] [\\w* \\w*])]))\n"
+						+ "(def NameStructured-0 `([[:NameStructured] ~(fn [\\w*] (get \\w* 0))]))\n"
+						+ "(def NameStructured-1 `([[:NameStructured] ~(fn [\\w*] (get \\w* 1))]))"));
+		// Extended Lambda
+		this.testClojureCompile("(elambda ((Int x)) ((Int:Native) \"Native\"))",
+				"`([[:IntNative] ~(fn [x] \"Native\")])");
+		this.testClojureCompile(
+				"((elambda ((Int x)) ((Int:Native) \"Native\") ((Int:String) \"String\")) (Int:String \"42\"))",
+				"(" + Application.clojureEapply
+						+ " `([[:IntNative] ~(fn [x] \"Native\")] [[:IntString] ~(fn [x] \"String\")])" + " [("
+						+ Application.clojureEapply + " `([[:StringNative] ~(fn [_x] [_x])]) [\"42\"])])");
 	}
 
 	private List<Expression> parseString(String s, SemanticParser semanticParser) throws AppendableException {
@@ -166,7 +195,7 @@ class TestComplex {
 
 		ExprsContext exprsContext = parser.exprs();
 
-		return exprsContext.val.stream().map(ThrowingFunction.wrapper(x -> semanticParser.parseNode(x)))
+		return exprsContext.val.stream().map(ThrowingFunction.wrapper(x -> SemanticParser.parseNode(x)))
 				.collect(Collectors.toList());
 	}
 
@@ -175,6 +204,7 @@ class TestComplex {
 		Environment topLevel = Environment.topLevelEnvironment;
 		Expression last = null;
 		for (Expression e : this.parseString(code, semanticParser)) {
+			@SuppressWarnings("unused")
 			Pair<Type, Substitution> p = e.infer(topLevel);
 			last = e.interpret(topLevel);
 		}
@@ -214,5 +244,11 @@ class TestComplex {
 			fail("Clojure compilation test failed, compiling " + code + " do not match " + regex + " got "
 					+ s.toString());
 		}
+	}
+
+	private static String escapeBrackets(String s) {
+		return s.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)").replaceAll("\\[", "\\\\[")
+				.replaceAll("\\]", "\\\\]").replaceAll("\\{", "\\\\{").replaceAll("\\}", "\\\\}")
+				.replaceAll("\\+",  "\\\\+");
 	}
 }

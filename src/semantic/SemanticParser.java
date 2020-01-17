@@ -122,8 +122,7 @@ public class SemanticParser {
 		List<SemanticNode> impls = l.subList(2, l.size());
 		Set<Lambda> implementations = SemanticParser.parseImplementations(argsTuple, impls);
 
-		return new ExtendedLambda(new TypeTuple(args.stream().map(x -> x.first).collect(Collectors.toList())),
-				implementations);
+		return ExtendedLambda.makeExtendedLambda(implementations);
 	}
 
 	/**
@@ -437,6 +436,8 @@ public class SemanticParser {
 			e.appendMessage("in" + l);
 			throw e;
 		}
+		
+		constructor = new Lambda(constructor.args, new TypeTuple(Arrays.asList(fromType)), constructor.body);
 
 		return new DefConversionExpression(fromType, toType, constructor);
 	}

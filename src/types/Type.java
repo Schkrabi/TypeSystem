@@ -1,9 +1,11 @@
 package types;
 
+import java.util.Collection;
 import java.util.Set;
 
 import expression.Expression;
 import util.AppendableException;
+import util.NameGenerator;
 
 /**
  * Abstract class for types
@@ -68,6 +70,8 @@ public abstract class Type implements Comparable<Type> {
 	 */
 	public abstract Type removeRepresentationInfo();
 	
+	public abstract String toClojure() throws AppendableException;
+	
 	@Override
 	public int compareTo(Type other) {
 		return this.getClass().getName().compareTo(other.getClass().getName());
@@ -86,5 +90,22 @@ public abstract class Type implements Comparable<Type> {
 	 */
 	public static Substitution unify(Type m, Type n) throws AppendableException {
 		return m.unifyWith(n);
+	}
+	
+	/**
+	 * Unifies set of types
+	 * @param types set to be unified
+	 * @return subtitution unifiing the set
+	 * @throws AppendableException thrown if any types does not unify
+	 */
+	public static Substitution unifyMany(Collection<? extends Type> types) throws AppendableException{
+			Type base = new TypeVariable(NameGenerator.next());
+			Substitution agg = Substitution.EMPTY;
+			for(Type t : types) {
+				Substitution s = Type.unify(base, t);
+				agg = agg.union(s);
+				base = base.apply(agg);
+			}
+			return agg;
 	}
 }

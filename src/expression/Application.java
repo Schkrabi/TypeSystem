@@ -2,6 +2,7 @@ package expression;
 
 import java.util.Iterator;
 
+import types.RepresentationOr;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
@@ -84,15 +85,20 @@ public class Application extends Expression {
 			TypeArrow funType = new TypeArrow(new TypeVariable(NameGenerator.next()),
 					new TypeVariable(NameGenerator.next()));
 			Pair<Type, Substitution> funInfered = this.fun.infer(env);
-			Substitution substFun = Type.unify(funType, funInfered.first);
-
-			funType = (TypeArrow) funType.apply(substFun);
-
 			// Infer arguments type
-			Pair<Type, Substitution> argsInfered = this.args.infer(env);
+			final Pair<Type, Substitution> argsInfered = this.args.infer(env);
 
 			// Unify arguments and formal argument types
 			Substitution substArgs = Type.unify(argsInfered.first, funType.ltype);
+
+			if (funInfered.first instanceof RepresentationOr) {
+				Type best = Application.getBestImplementationType((TypeTuple) argsInfered.first,
+						(RepresentationOr) funInfered.first);
+				funInfered = new Pair<Type, Substitution>(best, funInfered.second);
+			}
+			Substitution substFun = Type.unify(funType, funInfered.first);
+
+			funType = (TypeArrow) funType.apply(substFun);
 
 			// Compose all substitutions (and check if they are compatible)
 			Substitution s = Substitution.EMPTY;
@@ -116,33 +122,44 @@ public class Application extends Expression {
 	@Override
 	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(");
+		s.append(Application.clojureEapply);
+		s.append(" ");
+		
 		TypeTuple argsType = (TypeTuple) this.args.infer(env).first;
-		TypeArrow funType = (TypeArrow)this.fun.infer(env).first;
+		Type funInfered = this.fun.infer(env).first;
+		TypeArrow funType;
+		if(funInfered instanceof RepresentationOr) {
+			funType = Application.getBestImplementationType(argsType, (RepresentationOr)funInfered);
+		}
+		else if(funInfered instanceof TypeArrow) {
+			funType = (TypeArrow)funInfered;
+		}else {
+			throw new AppendableException("Expecting expression yielding function at first place in application, got " + funInfered.toString());
+		}
 
 		s.append(this.fun.toClojureCode(new TypeArrow(argsType, expectedType), env));
-		s.append(" ");
+		s.append(" [");
 
 		Iterator<Expression> i = this.args.iterator();
 		Iterator<Type> j = argsType.iterator();
-		Iterator<Type> k = ((TypeTuple)funType.ltype).iterator();
+		Iterator<Type> k = ((TypeTuple) funType.ltype).iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
 			Type t = j.next();
 			Type actual = k.next();
-			
+
 			String str = e.toClojureCode(t, env);
-			if(t.equals(actual)) {
+			if (t.equals(actual)) {
 				s.append(str);
-			}
-			else {
+			} else {
 				s.append(actual.convertToClojure(str, t));
 			}
-			
+
 			if (i.hasNext()) {
 				s.append(" ");
 			}
 		}
-		s.append(")");
+		s.append("])");
 
 		return s.toString();
 	}
@@ -198,11 +215,33 @@ public class Application extends Expression {
 	public int hashCode() {
 		return this.fun.hashCode() * this.args.hashCode();
 	}
-	
+
+	/**
+	 * Finds type closest to argsType in RepresentationOr of elambda
+	 * 
+	 * @param argsType type of function argument
+	 * @param funType  infered representationOr type
+	 * @return a single TypeArrow which left is closest to argsType
+	 */
+	private static TypeArrow getBestImplementationType(TypeTuple argsType, RepresentationOr funType) {
+		return funType.getRepresentations().stream()
+				.map(t -> new Pair<Integer, TypeArrow>(((TypeTuple) ((TypeArrow) t).ltype).tupleDistance(argsType),
+						(TypeArrow) t))
+				.reduce(new Pair<Integer, TypeArrow>(Integer.MAX_VALUE, null), (p1, p2) -> {
+					if (p1.first < p2.first)
+						return p1;
+					else
+						return p2;
+				}).second;
+	}
+
+	/**
+	 * code of eapply functionn for clojure
+	 */
 	public static final String clojureEapply = 
-			"(fn [elambda type args]\r\n" + 
-			"    (letfn [(vectorDist [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))\r\n" + 
-			"            (rankImpls [v impls] (map (fn [u] [(vectorDist (get u 0) v) (get u 1)]) impls))\r\n" + 
-			"            (getImpl [type elambda] (get (reduce (fn [x y] (if (< (get x 0) (get y 0)) x y)) (rankImpls type elambda)) 1))]\r\n" + 
-			"        (apply (getImpl type elambda) args)))";
+			"(fn [elambda type args]\n"
+			+ "    (letfn [(vectorDist [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))\n"
+			+ "            (rankImpls [v impls] (map (fn [u] [(vectorDist (get u 0) v) (get u 1)]) impls))\n"
+			+ "            (getImpl [type elambda] (get (reduce (fn [x y] (if (< (get x 0) (get y 0)) x y)) (rankImpls type elambda)) 1))]\n"
+			+ "        (apply (getImpl type elambda) args)))";
 }

@@ -140,9 +140,26 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	public String toClojureCode() throws AppendableException {
 		return this.toClojureCode(new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next())), Environment.topLevelEnvironment);
 	}
-
+	
 	@Override
-	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	public String toClojureCode(Type expectedType, Environment env) throws AppendableException{
+		StringBuilder s = new StringBuilder("`(");
+		s.append("[");
+		s.append(this.argsType.toClojure());
+		s.append(" ~");
+		s.append(this.toClojureFn(expectedType, env));
+		s.append("])");
+		return s.toString();
+	}
+	
+	/**
+	 * Creates code of this lambda as simple lambda in Clojure (e.g. (fn [x] x))
+	 * @param expectedType expected type of this lambda
+	 * @param env environment where lambda is evaluated
+	 * @return string containing lcojure code
+	 * @throws AppendableException Thrown on unification error or when any argument is not a variable
+	 */
+	protected String toClojureFn(Type expectedType, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		s.append("(fn [");
 

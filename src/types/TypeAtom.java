@@ -158,4 +158,9 @@ public class TypeAtom extends Type {
 		}
 		throw new TypesDoesNotUnifyException(this, other);
 	}
+
+	@Override
+	public String toClojure() {
+		return ":" + this.name.toString() + this.representation.toString();
+	}
 }

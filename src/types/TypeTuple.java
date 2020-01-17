@@ -263,4 +263,19 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		}
 		throw new TypesDoesNotUnifyException(this, other);
 	}
+
+	@Override
+	public String toClojure() throws AppendableException {
+		StringBuilder s = new StringBuilder("[");
+		Iterator<Type> i = this.values.iterator();
+		while(i.hasNext()) {
+			Type t = i.next();
+			s.append(t.toClojure());
+			if(i.hasNext()) {
+				s.append(" ");
+			}
+		}
+		s.append("]");
+		return s.toString();
+	}
 }
