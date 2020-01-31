@@ -7,10 +7,10 @@ INTPDIR=../Tests/INTP/
 CMPLDIR=../Tests/CMPL/
 DIFFDIR=../Tests/DIFF/
 
-rm ${CLJDIR}*
-rm ${INPTDIR}*
-rm ${CMPLDIR}*
-rm ${DIFFDIR}*
+rm -f ${CLJDIR}*
+rm -f ${INTPDIR}*
+rm -f ${CMPLDIR}*
+rm -f ${DIFFDIR}*
 
 for TESTFILE in ${TESTDIR}*
 do
