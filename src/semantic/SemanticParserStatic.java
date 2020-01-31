@@ -29,6 +29,8 @@ public final class SemanticParserStatic {
 	public static final String DEFINE = "define";
 	public static final String CONS = "cons";
 	public static final String ERROR = "error";
+	public static final String AND = "and";
+	public static final String OR = "or";
 	/**
 	 * Unused special form. For testing purposes only!
 	 */
@@ -49,6 +51,8 @@ public final class SemanticParserStatic {
 		specialForms.add(CONS);
 		specialForms.add(ERROR);
 		specialForms.add(UNUSED);
+		specialForms.add(AND);
+		specialForms.add(OR);
 	}
 
 	/**

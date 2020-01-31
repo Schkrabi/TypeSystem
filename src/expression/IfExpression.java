@@ -1,6 +1,5 @@
 package expression;
 
-import types.RepresentationOr;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
@@ -26,25 +25,28 @@ public class IfExpression extends Application {
 	public IfExpression(Expression condition, Expression trueBranch, Expression falseBranch) {
 		super(IfWrapper.singleton, new Tuple(Arrays.asList(condition, trueBranch, falseBranch)));
 	}
-	
+
 	/**
 	 * Gets condition of this ifExpression
+	 * 
 	 * @return expression
 	 */
 	protected Expression getCondition() {
 		return this.args.get(0);
 	}
-	
+
 	/**
 	 * Gets true branch of this ifExpression
+	 * 
 	 * @return expression
 	 */
 	protected Expression getTrueBranch() {
 		return this.args.get(1);
 	}
-	
+
 	/**
 	 * Gets false branch of this ifExpression
+	 * 
 	 * @return
 	 */
 	protected Expression getFalseBranch() {
@@ -76,36 +78,32 @@ public class IfExpression extends Application {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(if ");
-		
-		TypeVariable tv = new TypeVariable(NameGenerator.next());
+
 		s.append(this.getCondition().toClojureCode(TypeAtom.TypeBoolNative, env));
 		s.append(" ");
-		s.append(this.getTrueBranch().toClojureCode(tv, env));
+
+		Expression trueBranch = this.getTrueBranch();
+		Pair<Type, Substitution> trueType = trueBranch.infer(env);
+
+		s.append(this.getTrueBranch().toClojureCode(trueType.first, env));
 		s.append(" ");
-		s.append(this.getFalseBranch().toClojureCode(tv, env));
+
+		Expression falseBranch = this.getFalseBranch();
+		Pair<Type, Substitution> falseType = falseBranch.infer(env);
+
+		if (!falseType.first.apply(trueType.second).equals(trueType.first.apply(falseType.second))) {
+			s.append(falseType.first.convertToClojure(falseBranch.toClojureCode(falseType.first, env), trueType.first));
+		} else {
+			s.append(this.getFalseBranch().toClojureCode(falseType.first, env));
+		}
+
 		s.append(")");
-		
+
 		return s.toString();
-	}
-	
-	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException{		
-		Pair<Type, Substitution> condInfered = this.getCondition().infer(env);
-		Pair<Type, Substitution> trueInfered = this.getTrueBranch().infer(env);
-		Pair<Type, Substitution> falseInfered = this.getFalseBranch().infer(env);
-		
-		Substitution condSubst = condInfered.second.union(Type.unify(condInfered.first, TypeAtom.TypeBoolNative));
-		Substitution branchSubst = trueInfered.second.union(falseInfered.second).union(Type.unify(trueInfered.first, falseInfered.first));
-		
-		Type trueFinal = trueInfered.first.apply(branchSubst);
-		Type falseFinal = falseInfered.first.apply(branchSubst);
-		
-		return new Pair<Type, Substitution>(RepresentationOr.makeRepresentationOr(Arrays.asList(trueFinal, falseFinal)),
-					condSubst.union(branchSubst));
 	}
 
 	/**
@@ -135,12 +133,12 @@ public class IfExpression extends Application {
 		public String toClojureCode() {
 			return this.toClojureCode(null, Environment.topLevelEnvironment);
 		}
-		
+
 		@Override
 		protected String toClojureCode(Type expectedType, Environment env) {
 			return "if";
 		}
-		
+
 		@Override
 		public String toString() {
 			return "if";

@@ -124,20 +124,33 @@ public class Application extends Expression {
 		StringBuilder s = new StringBuilder("(");
 		s.append(Application.clojureEapply);
 		s.append(" ");
-		
+
 		TypeTuple argsType = (TypeTuple) this.args.infer(env).first;
 		Type funInfered = this.fun.infer(env).first;
 		TypeArrow funType;
-		if(funInfered instanceof RepresentationOr) {
-			funType = Application.getBestImplementationType(argsType, (RepresentationOr)funInfered);
-		}
-		else if(funInfered instanceof TypeArrow) {
-			funType = (TypeArrow)funInfered;
-		}else {
-			throw new AppendableException("Expecting expression yielding function at first place in application, got " + funInfered.toString());
+		if (funInfered instanceof RepresentationOr) {
+			funType = Application.getBestImplementationType(argsType, (RepresentationOr) funInfered);
+		} else if (funInfered instanceof TypeArrow) {
+			funType = (TypeArrow) funInfered;
+		} else {
+			throw new AppendableException("Expecting expression yielding function at first place in application, got "
+					+ funInfered.toString());
 		}
 
 		s.append(this.fun.toClojureCode(new TypeArrow(argsType, expectedType), env));
+
+		// Args
+		s.append(" [");
+		Iterator<Type> argsTypeIterator = argsType.iterator();
+		while (argsTypeIterator.hasNext()) {
+			Type t = argsTypeIterator.next();
+			s.append(t.toClojure());
+			if (argsTypeIterator.hasNext()) {
+				s.append(" ");
+			}
+		}
+		s.append("]");
+
 		s.append(" [");
 
 		Iterator<Expression> i = this.args.iterator();
@@ -238,8 +251,7 @@ public class Application extends Expression {
 	/**
 	 * code of eapply functionn for clojure
 	 */
-	public static final String clojureEapply = 
-			"(fn [elambda type args]\n"
+	public static final String clojureEapply = "(fn [elambda type args]\n"
 			+ "    (letfn [(vectorDist [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))\n"
 			+ "            (rankImpls [v impls] (map (fn [u] [(vectorDist (get u 0) v) (get u 1)]) impls))\n"
 			+ "            (getImpl [type elambda] (get (reduce (fn [x y] (if (< (get x 0) (get y 0)) x y)) (rankImpls type elambda)) 1))]\n"

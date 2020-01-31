@@ -194,8 +194,6 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Variable(Operator.Division.toString()), Operator.Division);
 		env.put(new Variable(Operator.NumericEqual.toString()), Operator.NumericEqual);
 		env.put(new Variable(Operator.LesserThan.toString()), Operator.LesserThan);
-		env.put(new Variable(Operator.And.toString()), Operator.And);
-		env.put(new Variable(Operator.Or.toString()), Operator.Or);
 		env.put(new Variable(Operator.Not.toString()), Operator.Not);
 		env.put(new Variable(Operator.BitAnd.toString()), Operator.BitAnd);
 		env.put(new Variable(Operator.BitOr.toString()), Operator.BitOr);
@@ -204,6 +202,7 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Variable(Operator.Cdr.toString()), Operator.Cdr);
 		env.put(new Variable("nil"), Expression.EMPTY_EXPRESSION);
 		env.put(new Variable(Operator.Equals.toString()), Operator.Equals);
+		env.put(new Variable(Operator.PrintlnOperator.toString()), Operator.PrintlnOperator);
 
 		env.put(new Variable("Int"), Operator.IntConstructor);
 		env.put(new Variable("Int:Native"), Operator.IntNativeConstructor);

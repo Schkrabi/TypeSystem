@@ -122,7 +122,8 @@ public class RomanNumbers {
 	/**
 	 * Clojure code of roman to int function
 	 */
-	public static final String roman2intClojure = "(fn [arg]\n" + 
+	public static final String roman2intClojure = 
+			"(fn [arg]\n" + 
 			"                    (letfn [(romanCheck [arg] (re-matches #\"(^(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$)\" arg))]\n" + 
 			"                        (when-not (romanCheck arg) (throw (Exception. (str \"Invalid roman number \" arg))))\n" + 
 			"                        (let [  values {\\I 1\n" + 
@@ -143,7 +144,8 @@ public class RomanNumbers {
 	/**
 	 * Clojure code if int to roman function
 	 */
-	public static final String int2RomanClojure = "(fn [n]\n" + 
+	public static final String int2RomanClojure =  
+			"(fn [n]\n" + 
 			"                (let [  hundreds    [\"\" \"C\" \"CC\" \"CCC\" \"CD\" \"D\" \"DC\" \"DCC\" \"DCCC\" \"CM\"]\n" + 
 			"                        tens        [\"\" \"X\" \"XX\" \"XXX\" \"XL\" \"L\" \"LX\" \"LXX\" \"LXXX\" \"XC\"]\n" + 
 			"                        ones        [\"\" \"I\" \"II\" \"III\" \"IV\" \"V\" \"VU\" \"VII\" \"VIII\" \"IX\"]]\n" + 

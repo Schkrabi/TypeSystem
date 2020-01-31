@@ -1,5 +1,7 @@
 package expression;
 
+import java.util.Iterator;
+
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
@@ -77,7 +79,18 @@ public class LitComposite extends Literal {
 
 	@Override
 	public String toString() {
-		return "<" + this.composedType.toString() + " "
-				+ this.value.stream().map(x -> x.toString() + ",").reduce("", (x, y) -> x + y) + ">";
+		StringBuilder s = new StringBuilder("[");
+		Iterator<Expression> i = this.value.iterator();;
+		while(i.hasNext()) {
+			s.append(i.next());
+			if(i.hasNext()) {
+				s.append(' ');
+			}
+		}
+		s.append(']');
+		return s.toString();
+		
+		//return "<" + this.composedType.toString() + " "
+		//		+ this.value.stream().map(x -> x.toString() + ",").reduce("", (x, y) -> x + y) + ">";
 	}
 }

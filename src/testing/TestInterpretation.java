@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import expression.AndExpression;
 import expression.Application;
 import expression.DefConversionExpression;
 import expression.DefExpression;
@@ -36,6 +37,7 @@ import expression.LitInteger;
 import expression.LitString;
 import expression.MetaFunction;
 import expression.MetaLambda;
+import expression.OrExpression;
 import expression.PostponeInterpretation;
 import expression.Tuple;
 import expression.TypeHolder;
@@ -832,20 +834,50 @@ class TestInterpretation {
 		Pair<Type, Substitution> p = ifExprT.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, ifExprT);
 	}
+	
+	@Test
+	void testAndExpression() throws AppendableException {
+		AndExpression andExpressionT = new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)));
+		AndExpression andExpressionF = new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE, LitBoolean.TRUE)));
+		
+		TestInterpretation.testReflexivity(andExpressionT);
+		TestInterpretation.testDifference(andExpressionT, andExpressionF);
+		TestInterpretation.testDifference(andExpressionT, Expression.EMPTY_EXPRESSION);
+		
+		andExpressionT.toString();
+		andExpressionT.toClojureCode();
+		
+		TestInterpretation.testInterpretation(andExpressionT, LitBoolean.TRUE, Environment.topLevelEnvironment);
+		TestInterpretation.testInterpretation(andExpressionF, LitBoolean.FALSE, Environment.topLevelEnvironment);
+		
+		Pair<Type, Substitution> p = andExpressionT.infer(Environment.topLevelEnvironment);
+		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, andExpressionT);
+	}
+	
+	@Test
+	void testOrExpression() throws AppendableException {
+		OrExpression orExpressionT = new OrExpression(new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)));
+		OrExpression orExpressionF = new OrExpression(new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE, LitBoolean.FALSE)));
+		
+		TestInterpretation.testReflexivity(orExpressionT);
+		TestInterpretation.testDifference(orExpressionT, orExpressionF);
+		TestInterpretation.testDifference(orExpressionT, Expression.EMPTY_EXPRESSION);
+		
+		orExpressionT.toString();
+		orExpressionF.toClojureCode();
+		
+		TestInterpretation.testInterpretation(orExpressionT, LitBoolean.TRUE, Environment.topLevelEnvironment);
+		TestInterpretation.testInterpretation(orExpressionF, LitBoolean.FALSE, Environment.topLevelEnvironment);
+		
+		Pair<Type, Substitution> p = orExpressionT.infer(Environment.topLevelEnvironment);
+		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, orExpressionT);
+	}
 
 	@Test
 	void testOperators() throws AppendableException {
 		TestInterpretation.testOperator(Operator.Addition,
 				new Tuple(Arrays.asList(new LitInteger(21), new LitInteger(21))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operator.And, new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)),
-				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.And, new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)),
-				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.And, new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)),
-				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.And, new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE)),
-				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
 		TestInterpretation.testOperator(Operator.BitAnd, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
 				new LitInteger(0), TypeAtom.TypeIntNative);
 		TestInterpretation.testOperator(Operator.BitOr, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
@@ -887,14 +919,6 @@ class TestInterpretation {
 		TestInterpretation.testOperator(Operator.NumericEqual,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(43))), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.Or, new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)),
-				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.Or, new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)),
-				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.Or, new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)),
-				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.Or, new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE)),
-				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
 		TestInterpretation.testOperator(Operator.Subtraction,
 				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(42))), new LitInteger(42),
 				TypeAtom.TypeIntNative);

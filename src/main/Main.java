@@ -23,6 +23,7 @@ import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
 import parser.SemanticNode;
 import semantic.SemanticParser;
+import semantic.TypeEnvironment;
 import util.AppendableException;
 import util.ClojureCodeGenerator;
 import expression.Expression;
@@ -51,7 +52,7 @@ public class Main {
 		}
 		else if(args.length == 1) {
 			//Load code and interpret further
-			Main.load(Paths.get(args[0]));
+			Main.interpretFile(Paths.get(args[0]));
 		}
 		else if(args.length == 2){
 			//Compiler mode
@@ -73,7 +74,7 @@ public class Main {
 	}
 	
 	private static void initTypesConversions() throws Exception{
-		
+		TypeEnvironment.initBasicTypes();		
 	}
 	
 	public static void init() throws Exception{
@@ -149,6 +150,43 @@ public class Main {
 		}
 	}
 	
+	private static void interpretFile(Path inputPath) throws Exception {
+		Reader input = null;
+		Scanner inputI = null;
+		Environment topLevel = Main.initTopLevelEnvironment();
+
+		try{
+			input = Files.newBufferedReader(inputPath);
+			
+			CharStream charStream = new ANTLRInputStream(input);
+			TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
+			SchemeParser parser = new SchemeParser(tokens);
+			ExprsContext exprsContext = parser.exprs();
+			
+			List<Expression> exprs = new ArrayList<Expression>();
+			
+			for(SemanticNode s : exprsContext.val){
+				exprs.add(SemanticParser.parseNode(s));
+			}
+			
+			for(Expression e : exprs){
+				e.infer(topLevel);
+				e.interpret(topLevel);
+			}
+
+		}catch(Exception e){
+			e.printStackTrace();
+		}finally{
+			if(input != null){
+				input.close();
+			}
+			if(inputI != null){
+				inputI.close();
+			}
+		}
+	}
+	
+	@SuppressWarnings("unused")
 	private static void load(Path inputPath) throws Exception {
 		Reader input = null;
 		Scanner inputI = null;

@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import expression.AndExpression;
 import expression.Application;
 import expression.DefConversionExpression;
 import expression.DefExpression;
@@ -23,6 +24,7 @@ import expression.LitDouble;
 import expression.LitInteger;
 import expression.LitString;
 import expression.Literal;
+import expression.OrExpression;
 import expression.Tuple;
 import expression.Variable;
 
@@ -35,6 +37,7 @@ import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
 import util.NameGenerator;
+import util.ThrowingFunction;
 
 /**
  * Class for parsing the program in first inner form (list of "tokens") into
@@ -185,6 +188,12 @@ public class SemanticParser {
 		case SemanticParserStatic.ERROR:
 			e = SemanticParser.parseError(specialFormList);
 			break;
+		case SemanticParserStatic.AND:
+			e = SemanticParser.parseAnd(specialFormList);
+			break;
+		case SemanticParserStatic.OR:
+			e = SemanticParser.parseOr(specialFormList);
+			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
 		}
@@ -221,6 +230,57 @@ public class SemanticParser {
 		args = new Tuple(l);
 
 		return new Application(fun, args);
+	}
+
+	/**
+	 * Parses And special form
+	 * 
+	 * @param specialFormList list of arguments of special form
+	 * @return new AndExpression instance
+	 * @throws AppendableException if list does not validate
+	 */
+	private static Expression parseAnd(List<SemanticNode> specialFormList) throws AppendableException {
+		try {
+			Validations.validateAndList(specialFormList);
+		} catch (AppendableException e) {
+			e.appendMessage("in AndExpression " + specialFormList);
+			throw e;
+		}
+
+		try {
+			Tuple args = new Tuple(specialFormList.subList(1, specialFormList.size()).stream()
+					.map(ThrowingFunction.wrapper(x -> SemanticParser.parseNode(x))).collect(Collectors.toList()));
+			return new AndExpression(args);
+		} catch (RuntimeException re) {
+			AppendableException e = (AppendableException) re.getCause();
+			throw e;
+		}
+	}
+
+	/**
+	 * Parses Or special form
+	 * 
+	 * @param specialFormList list of the special form
+	 * @return OrExpression object
+	 * @throws AppendableException if specialFormList does not validate as
+	 *                             OrExpression
+	 */
+	private static Expression parseOr(List<SemanticNode> specialFormList) throws AppendableException {
+		try {
+			Validations.validateOrList(specialFormList);
+		} catch (AppendableException e) {
+			e.appendMessage("in OrExpression " + specialFormList);
+			throw e;
+		}
+
+		try {
+			Tuple args = new Tuple(specialFormList.subList(1, specialFormList.size()).stream()
+					.map(ThrowingFunction.wrapper(x -> SemanticParser.parseNode(x))).collect(Collectors.toList()));
+			return new OrExpression(args);
+		} catch (RuntimeException re) {
+			AppendableException e = (AppendableException) re.getCause();
+			throw e;
+		}
 	}
 
 	/**
@@ -332,9 +392,10 @@ public class SemanticParser {
 	 */
 	private static TypeAtom parseType(SemanticNode typeNode) throws AppendableException {
 		if (typeNode.type == SemanticNode.NodeType.PAIR) {
-			return new TypeAtom(new TypeName(typeNode.asPair().first), new TypeRepresentation(typeNode.asPair().second));
+			return new TypeAtom(new TypeName(typeNode.asPair().first),
+					new TypeRepresentation(typeNode.asPair().second));
 		}
-		
+
 		return new TypeAtom(new TypeName(typeNode.asSymbol()), TypeRepresentation.WILDCARD);
 	}
 
@@ -436,7 +497,7 @@ public class SemanticParser {
 			e.appendMessage("in" + l);
 			throw e;
 		}
-		
+
 		constructor = new Lambda(constructor.args, new TypeTuple(Arrays.asList(fromType)), constructor.body);
 
 		return new DefConversionExpression(fromType, toType, constructor);

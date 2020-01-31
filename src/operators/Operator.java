@@ -72,13 +72,6 @@ public class Operator extends Function {
 			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "+", "+", OperatorWrapper.AddWrapper);
 
 	/**
-	 * Logical And (AND) operator
-	 */
-	public static final Operator And = new Operator(
-			new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, TypeAtom.TypeBoolNative)),
-			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "and", "and", OperatorWrapper.AndWrapper);
-
-	/**
 	 * Bit and (&) operator
 	 */
 	public static final Operator BitAnd = new Operator(
@@ -129,7 +122,7 @@ public class Operator extends Function {
 	 */
 	public static final Operator Concantenation = new Operator(
 			new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeStringNative)),
-			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "concat", "concat",
+			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "concat", "str",
 			OperatorWrapper.ConcatWrapper);
 
 	/**
@@ -177,18 +170,18 @@ public class Operator extends Function {
 			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "=", "=", OperatorWrapper.NumEqWrapper);
 
 	/**
-	 * Or operator
-	 */
-	public static final Operator Or = new Operator(
-			new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, TypeAtom.TypeBoolNative)),
-			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "or", "or", OperatorWrapper.OrWrapper);
-
-	/**
 	 * Subtraction (-) operator
 	 */
 	public static final Operator Subtraction = new Operator(
 			new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "-", "-", OperatorWrapper.SubWrapper);
+	
+	/**
+	 * Println operator
+	 */
+	public static final Operator PrintlnOperator = new Operator(
+			new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()))),
+			new Tuple(Arrays.asList(new Variable("_arg"))), "println", "println", OperatorWrapper.PrintlnWrapper);
 
 	/**
 	 * Makes name of getter for certain type
@@ -316,21 +309,6 @@ public class Operator extends Function {
 
 				return new LitInteger(x.value + y.value);
 			}
-		};
-
-		/**
-		 * Body of and operator
-		 */
-		public static final OperatorWrapper AndWrapper = new OperatorWrapper(TypeAtom.TypeBoolNative) {
-
-			@Override
-			public Expression interpret(Environment env) throws AppendableException {
-				LitBoolean x = (LitBoolean) (env.getVariableValue(new Variable("_x")).interpret(env));
-				LitBoolean y = (LitBoolean) (env.getVariableValue(new Variable("_y")).interpret(env));
-
-				return x.value && y.value ? LitBoolean.TRUE : LitBoolean.FALSE;
-			}
-
 		};
 
 		/**
@@ -486,20 +464,6 @@ public class Operator extends Function {
 		};
 
 		/**
-		 * Body of or operator
-		 */
-		public static final OperatorWrapper OrWrapper = new OperatorWrapper(TypeAtom.TypeBoolNative) {
-
-			@Override
-			public Expression interpret(Environment env) throws AppendableException {
-				LitBoolean x = (LitBoolean) (env.getVariableValue(new Variable("_x")).interpret(env));
-				LitBoolean y = (LitBoolean) (env.getVariableValue(new Variable("_y")).interpret(env));
-
-				return x.value || y.value ? LitBoolean.TRUE : LitBoolean.FALSE;
-			}
-		};
-
-		/**
 		 * Body of subtraction operator
 		 */
 		public static final OperatorWrapper SubWrapper = new OperatorWrapper(TypeAtom.TypeIntNative) {
@@ -526,6 +490,21 @@ public class Operator extends Function {
 				return composite.value.get(index.value);
 			}
 		};
+		
+		/**
+		 * Body of println operator
+		 */
+		public static final OperatorWrapper PrintlnWrapper = new OperatorWrapper(TypeAtom.TypeIntNative) {
+			
+			@Override
+			public Expression interpret(Environment env) throws AppendableException {
+				Expression e = env.getVariableValue(new Variable("_arg")).interpret(env);
+				
+				String s = e.toString();
+				System.out.println(s);
+				return new LitInteger(s.length());			
+			}
+		};
 	}
 
 	/**
@@ -543,13 +522,13 @@ public class Operator extends Function {
 	 */
 	public static Operator IntStringConstructor = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
 			new Tuple(Arrays.asList(new Variable("_x"))), "Int:String", "(fn [_x] [_x])",
-			new LitComposite(new Tuple(Arrays.asList(new LitString("_x"))), TypeAtom.TypeIntString));
+			new LitComposite(new Tuple(Arrays.asList(new Variable("_x"))), TypeAtom.TypeIntString));
 	/**
 	 * Int:Roman constructor
 	 */
 	public static Operator IntRomanConstructor = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
 			new Tuple(Arrays.asList(new Variable("_x"))), "Int:Roman", "(fn [_x] [_x])",
-			new LitComposite(new Tuple(Arrays.asList(new LitString("_x"))), TypeAtom.TypeIntRoman));
+			new LitComposite(new Tuple(Arrays.asList(new Variable("_x"))), TypeAtom.TypeIntRoman));
 	/**
 	 * String:Native constructor
 	 */

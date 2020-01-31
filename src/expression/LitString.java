@@ -28,7 +28,7 @@ public class LitString extends Literal {
 	
 	@Override
 	public String toString() {
-		return "\"" + this.value + "\"";
+		return this.value;
 	}
 
 	@Override

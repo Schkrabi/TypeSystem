@@ -183,7 +183,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		while (i.hasNext()) {
 			Type from = i.next();
 			Type to = j.next();
-			String arg = "(get " + v + Integer.toString(n) + ")";
+			String arg = "(get " + v  + " " + Integer.toString(n) + ")";
 
 			s.append(from.convertToClojure(arg, to));
 			if (i.hasNext()) {

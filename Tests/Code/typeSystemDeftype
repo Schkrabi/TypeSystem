@@ -1,0 +1,8 @@
+(deftype Name)
+(defrep Unstructured Name (String:Native))
+(defrep Structured Name (String:Native String:Native))
+(println ((elambda (x) ((Name:Unstructured) "unstructured") ((Name:Structured) "structured")) (Name:Unstructured "Jan Novak")))
+(println ((elambda (x) ((Name:Structured) "structured")) (Name:Structured "Jan" "Novak")))
+(defconversion Name:Structured Name:Unstructured (lambda ((Name:Structured x)) (Name:Unstructured (concat (NameStructured-0 x) (NameStructured-1 x)))))
+(println ((lambda ((Name:Unstructured x)) x) (Name:Structured "Jan" "Novak")))
+

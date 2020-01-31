@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import expression.AndExpression;
 import expression.Application;
 import expression.DefConversionExpression;
 import expression.DefExpression;
@@ -33,6 +34,7 @@ import expression.LitComposite;
 import expression.LitDouble;
 import expression.LitInteger;
 import expression.LitString;
+import expression.OrExpression;
 import expression.Tuple;
 import expression.Variable;
 import interpretation.Environment;
@@ -130,7 +132,11 @@ class TestParser {
 				new Pair<String, Expression>("(Int:String \"256\")",
 						new Application(new Variable("Int:String"), new Tuple(Arrays.asList(new LitString("256"))))),
 				new Pair<String, Expression>("3.141528", new LitDouble(3.141528)),
-				new Pair<String, Expression>("#f", LitBoolean.FALSE)
+				new Pair<String, Expression>("#f", LitBoolean.FALSE),
+				new Pair<String, Expression>("(and #t #f)", new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)))),
+				new Pair<String, Expression>("(and)", new AndExpression(Tuple.EMPTY_TUPLE)),
+				new Pair<String, Expression>("(or #t #f)", new OrExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)))),
+				new Pair<String, Expression>("(or)", new OrExpression(Tuple.EMPTY_TUPLE))
 
 		);
 

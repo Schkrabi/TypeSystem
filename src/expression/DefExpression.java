@@ -84,6 +84,7 @@ public class DefExpression extends Expression {
 		s.append(this.name.toClojureCode(new TypeVariable(NameGenerator.next()), env));
 		s.append(" ");
 		Type t = this.defined.infer(env).first;
+		env.put(this.name, new TypeHolder(t));
 		s.append(this.defined.toClojureCode(t, env));
 		s.append(")");
 		return s.toString();

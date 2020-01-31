@@ -321,4 +321,40 @@ public class Validations {
 
 		return true;
 	}
+
+	/**
+	 * Validates list of AndExpression
+	 * 
+	 * @param specialFormList validated list
+	 * @throws AppendableException if list does not validate
+	 */
+	public static void validateAndList(List<SemanticNode> specialFormList) throws AppendableException {
+		if (specialFormList.size() < 1) {
+			throw new InvalidNumberOfArgsException(0, specialFormList.size() - 1);
+		}
+
+		SemanticNode and = specialFormList.get(0);
+		if (and.type != SemanticNode.NodeType.SYMBOL || !and.asSymbol().equals(SemanticParserStatic.AND)) {
+			throw new UnexpectedExpressionException(and);
+		}
+
+	}
+
+	/**
+	 * Validates list of OrExpression
+	 * 
+	 * @param specialFormList validated list
+	 * @throws AppendableException if list does not validate
+	 */
+	public static void validateOrList(List<SemanticNode> specialFormList) throws AppendableException {
+		if (specialFormList.size() < 1) {
+			throw new InvalidNumberOfArgsException(0, specialFormList.size() - 1);
+		}
+
+		SemanticNode or = specialFormList.get(0);
+		if (or.type != SemanticNode.NodeType.SYMBOL || !or.asSymbol().equals(SemanticParserStatic.OR)) {
+			throw new UnexpectedExpressionException(or);
+		}
+
+	}
 }

@@ -78,7 +78,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 			Expression e = i.next();
 			s.append(e.toString());
 			if (i.hasNext()) {
-				s.append(", ");
+				s.append(" ");
 			}
 		}
 		s.append("]");
