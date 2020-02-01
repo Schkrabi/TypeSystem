@@ -161,12 +161,13 @@ public class Application extends Expression {
 			Type t = j.next();
 			Type actual = k.next();
 
-			String str = e.toClojureCode(t, env);
+			String str;
 			if (t.equals(actual)) {
-				s.append(str);
+				str = e.toClojureCode(t, env);
 			} else {
-				s.append(actual.convertToClojure(str, t));
+				str = t.convertTo(e, actual).toClojureCode(t, env);
 			}
+			s.append(str);
 
 			if (i.hasNext()) {
 				s.append(" ");

@@ -144,7 +144,7 @@ public class RomanNumbers {
 	/**
 	 * Clojure code if int to roman function
 	 */
-	public static final String int2RomanClojure =  
+	public static final String int2RomanClojure = 
 			"(fn [n]\n" + 
 			"                (let [  hundreds    [\"\" \"C\" \"CC\" \"CCC\" \"CD\" \"D\" \"DC\" \"DCC\" \"DCCC\" \"CM\"]\n" + 
 			"                        tens        [\"\" \"X\" \"XX\" \"XXX\" \"XL\" \"L\" \"LX\" \"LXX\" \"LXXX\" \"XC\"]\n" + 

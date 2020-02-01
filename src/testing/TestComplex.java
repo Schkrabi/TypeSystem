@@ -163,8 +163,8 @@ class TestComplex {
 						+ " (get _x 0)))]) [:IntRoman] [(" + Application.clojureEapply
 						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"])])");
 		this.testClojureCompile("(IntRoman2IntString (Int:Roman \"XLII\"))",
-				"(" + Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] (str (" + RomanNumbers.roman2intClojure
-						+ " (get _x 0))))]) [:IntRoman] [(" + Application.clojureEapply
+				"(" + Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] [(str (" + RomanNumbers.roman2intClojure
+						+ " (get _x 0)))])]) [:IntRoman] [(" + Application.clojureEapply
 						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"])])");
 		this.testClojureCompile("(IntString2IntNative (Int:String \"42\"))", "(" + Application.clojureEapply
 				+ " `([[:IntString] ~(fn [_x] (Integer/parseInt (get _x 0)))]) [:IntString] [("
@@ -200,6 +200,17 @@ class TestComplex {
 						+ " `([[:IntNative :IntNative] ~*]) [:df :IntNative] [x (" + Application.clojureEapply
 						+ " fact [:IntNative] [(" + Application.clojureEapply
 						+ " `([[:IntNative :IntNative] ~-]) [:df :IntNative] [x 1])])])))]))");
+
+		// Conversions
+		this.testClojureCompile(
+				"((elambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (Int:Roman \"XLII\") 66)",
+				"(" + Application.clojureEapply
+						+ " `([[:BoolNative :IntString :IntString] ~(fn [x y z] (if x z y))]) [:BoolNative :IntRoman :IntNative] [false ("
+						+ Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] [(str (" + RomanNumbers.roman2intClojure
+						+ " (get _x 0)))])]) [:IntRoman] [(" + Application.clojureEapply
+						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"])]) ("
+						+ Application.clojureEapply
+						+ " `([[:IntNative] ~(fn [_x] [(Integer/toString _x)])]) [:IntNative] [66])])");
 	}
 
 	private List<Expression> parseString(String s, SemanticParser semanticParser) throws AppendableException {

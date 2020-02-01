@@ -1,0 +1,6 @@
+(println (IntNative2IntString 42))
+(println (IntNative2IntRoman 42))
+(println (IntString2IntNative (Int:String "42")))
+(println (IntString2IntRoman (Int:String "42")))
+(println (IntRoman2IntNative (Int:Roman "XLII")))
+(println (IntRoman2IntString (Int:Roman "XLII")))

@@ -593,7 +593,7 @@ public class Operator extends Function {
 	public static final Operator IntRomanToIntString = new Operator(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
 			new Tuple(Arrays.asList(ConversionWrapper.arg)),
 			TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString),
-			"(fn [_x] (str (" + RomanNumbers.roman2intClojure + " (get _x 0))))",
+			"(fn [_x] [(str (" + RomanNumbers.roman2intClojure + " (get _x 0)))])",
 			ConversionWrapper.IntRomanToIntStringWrapper);
 
 	/**
