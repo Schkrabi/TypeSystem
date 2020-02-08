@@ -3,6 +3,7 @@ package expression;
 import java.util.Arrays;
 
 import interpretation.Environment;
+import operators.Operator;
 import semantic.TypeEnvironment;
 import types.Substitution;
 import types.Type;
@@ -12,13 +13,6 @@ import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
 
-/* TODO remove TypeEnvironment
- * 	1. Remove DefConversionExpression, DefRepresentationExpression and DefTypeExpression
- *  2. Remove all non-static members from TypeEnvironment
- *  3. In Parser replace all Def* expressions with std define with appropriate symbol
- *  4. In AutoConversions (Application class) replace actual function with variable representing the conversion
- */
-
 /**
  * Expression for defconversion special form
  * 
@@ -26,8 +20,7 @@ import util.Pair;
  *
  */
 public class DefConversionExpression extends Expression {
-		
-	
+
 	/**
 	 * Type from which we are converting
 	 */
@@ -82,10 +75,30 @@ public class DefConversionExpression extends Expression {
 		return super.compareTo(other);
 	}
 
+	/**
+	 * Creates converison operator
+	 * @param env environment where constructor is evaluated
+	 * 
+	 * @return conversion operator for this defconversion
+	 */
+	private Operator makeConverisionOperator(Environment env) throws AppendableException{
+		Pair<Type, Substitution> p = this.conversion.infer(env);
+		TypeArrow expected = new TypeArrow(new TypeTuple(Arrays.asList(this.fromType)), this.toType);
+		if(!p.first.equals(expected)) {
+			throw new AppendableException("Invalid conversion expected " + expected + " got " + p.first);
+		}
+		
+		return new Operator(new TypeTuple(Arrays.asList(this.fromType)), this.conversion.args,
+				TypeEnvironment.makeConversionName(this.fromType, this.toType),
+				TypeEnvironment.makeConversionName(this.fromType, this.toType), this.conversion.body);
+	}
+
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		Function interpretedConersion = (Function) this.conversion.interpret(env);
-		TypeEnvironment.singleton.addConversion(this.fromType, this.toType, interpretedConersion);
+		//Function interpretedConersion = (Function) this.conversion.interpret(env);
+		Operator convOp = this.makeConverisionOperator(env);
+		
+		TypeEnvironment.singleton.addConversion(this.fromType, this.toType, convOp);
 		return Expression.EMPTY_EXPRESSION;
 	}
 
@@ -106,6 +119,7 @@ public class DefConversionExpression extends Expression {
 	@Override
 	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		Type expected = new TypeArrow(new TypeTuple(Arrays.asList(this.fromType)), this.toType);
+		TypeEnvironment.singleton.addConversion(this.fromType, this.toType, this.makeConverisionOperator(env));
 		return "(def " + TypeEnvironment.makeConversionName(this.fromType, this.toType) + " "
 				+ this.conversion.toClojureCode(expected, env) + ")";
 	}

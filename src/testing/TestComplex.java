@@ -141,7 +141,7 @@ class TestComplex {
 		this.testClojureCompile("(/ 84 2)",
 				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~/]) [:IntNative :IntNative] [84 2])");
 		this.testClojureCompileRegex("(equals? 42 \"42\")", TestComplex.escapeBrackets(
-				"(" + Application.clojureEapply + " `([[:\\w :\\w] ~=]) [:IntNative :StringNative] [42 \"42\"])"));
+				"(" + Application.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:IntNative :StringNative] [42 \"42\"])"));
 		this.testClojureCompile("(< 42 42)",
 				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~<]) [:IntNative :IntNative] [42 42])");
 		this.testClojureCompile("(* 42 1)",
@@ -175,14 +175,24 @@ class TestComplex {
 						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"])])");
 		// Define
 		this.testClojureCompile("(define answer 42)", "(def answer 42)");
-		this.testClojureCompile("(defconversion Name:Structured Name:Unstructured (lambda (x) x))",
-				"(def NameStructured2NameUnstructured `([[:NameStructured] ~(fn [x] x)]))");
-		this.testClojureCompile("(deftype Name)", "");
-		this.testClojureCompileRegex("(defrep Structured Name (String:Native String:Native))",
+		this.testClojureCompile("(deftype Name2)", "");
+		this.testClojureCompileRegex("(defrep Structured Name2 (String:Native String:Native))",
 				TestComplex.escapeBrackets(
-						"(def Name:Structured `([[:StringNative :StringNative] ~(fn [\\w* \\w*] [\\w* \\w*])]))\n"
-								+ "(def NameStructured-0 `([[:NameStructured] ~(fn [\\w*] (get \\w* 0))]))\n"
-								+ "(def NameStructured-1 `([[:NameStructured] ~(fn [\\w*] (get \\w* 1))]))"));
+						"(def Name2:Structured `([[:StringNative :StringNative] ~(fn [\\w* \\w*] [\\w* \\w*])]))\n"
+								+ "(def Name2Structured-0 `([[:Name2Structured] ~(fn [\\w*] (get \\w* 0))]))\n"
+								+ "(def Name2Structured-1 `([[:Name2Structured] ~(fn [\\w*] (get \\w* 1))]))"));
+		this.testClojureCompileRegex("(defrep Unstructured Name2 (String:Native))",
+				TestComplex.escapeBrackets("(def Name2:Unstructured `([[:StringNative] ~(fn [\\w*] [\\w*])]))\n"
+						+ "(def Name2Unstructured-0 `([[:Name2Unstructured] ~(fn [\\w*] (get \\w* 0))]))"));
+		this.testClojureCompileRegex(
+				"(defconversion Name2:Structured Name2:Unstructured"
+						+ "(lambda (x) (Name2:Unstructured (concat (Name2Structured-0 x) (Name2Structured-1 x)))))",
+				TestComplex.escapeBrackets("(def Name2Structured2Name2Unstructured `([[:Name2Structured] ~(fn [x] ("
+						+ Application.clojureEapply + " Name2:Unstructured [:StringNative] [("
+						+ Application.clojureEapply
+						+ " `([[:StringNative :StringNative] ~str]) [:StringNative :StringNative] [("
+						+ Application.clojureEapply + " Name2Structured-0 [:Name2Structured] [x]) ("
+						+ Application.clojureEapply + " Name2Structured-1 [:Name2Structured] [x])])]))]))"));
 		// Extended Lambda
 		this.testClojureCompile("(elambda ((Int x)) ((Int:Native) \"Native\"))",
 				"`([[:IntNative] ~(fn [x] \"Native\")])");
@@ -194,20 +204,20 @@ class TestComplex {
 						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"])])");
 
 		// Recursion
-		this.testClojureCompile("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))",
-				"(def fact `([[:df] ~(fn [x] (if (" + Application.clojureEapply
-						+ " `([[:IntNative :IntNative] ~=]) [:df :IntNative] [x 1]) x (" + Application.clojureEapply
-						+ " `([[:IntNative :IntNative] ~*]) [:df :IntNative] [x (" + Application.clojureEapply
+		this.testClojureCompileRegex("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))",
+				TestComplex.escapeBrackets("(def fact `([[:\\w*] ~(fn [x] (if (" + Application.clojureEapply
+						+ " `([[:IntNative :IntNative] ~=]) [:\\w* :IntNative] [x 1]) x (" + Application.clojureEapply
+						+ " `([[:IntNative :IntNative] ~\\*]) [:\\w* :IntNative] [x (" + Application.clojureEapply
 						+ " fact [:IntNative] [(" + Application.clojureEapply
-						+ " `([[:IntNative :IntNative] ~-]) [:df :IntNative] [x 1])])])))]))");
+						+ " `([[:IntNative :IntNative] ~-]) [:\\w* :IntNative] [x 1])])])))]))"));
 
 		// Conversions
 		this.testClojureCompile(
 				"((elambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (Int:Roman \"XLII\") 66)",
 				"(" + Application.clojureEapply
 						+ " `([[:BoolNative :IntString :IntString] ~(fn [x y z] (if x z y))]) [:BoolNative :IntRoman :IntNative] [false ("
-						+ Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] [(str (" + RomanNumbers.roman2intClojure
-						+ " (get _x 0)))])]) [:IntRoman] [(" + Application.clojureEapply
+						+ Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] [(str ("
+						+ RomanNumbers.roman2intClojure + " (get _x 0)))])]) [:IntRoman] [(" + Application.clojureEapply
 						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"])]) ("
 						+ Application.clojureEapply
 						+ " `([[:IntNative] ~(fn [_x] [(Integer/toString _x)])]) [:IntNative] [66])])");

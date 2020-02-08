@@ -1060,7 +1060,7 @@ class TestInterpretation {
 		TypeAtom typeAtomWildcard = new TypeAtom(name, TypeRepresentation.WILDCARD);
 		DefConversionExpression defCon = new DefConversionExpression(typeAtomNative, typeAtomWildcard,
 				new Lambda(new Tuple(Arrays.asList(new Variable("x"))), new TypeTuple(Arrays.asList(typeAtomNative)),
-						new Variable("y")));
+						new LitComposite(new Tuple(Arrays.asList(new Variable("x"))), typeAtomWildcard)));
 
 		defCon.toString();
 

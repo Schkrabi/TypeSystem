@@ -1,6 +1,7 @@
 package expression;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -114,9 +115,10 @@ public class DefRepresentationExpression extends Expression {
 
 		return Expression.EMPTY_EXPRESSION;
 	}
-	
+
 	/**
 	 * Makes member types TypeTuple of this defRepresentationExpression
+	 * 
 	 * @return TypeTUple
 	 */
 	private TypeTuple memberTypes() {
@@ -126,25 +128,27 @@ public class DefRepresentationExpression extends Expression {
 								: new TypeVariable(x.asSymbol())))
 				.collect(Collectors.toList()));
 	}
-	
+
 	/**
 	 * Creates lammbda expression that is constructor for created type
+	 * 
 	 * @return
 	 */
 	private Lambda makeConstructorLambda() {
 		TypeAtom type = new TypeAtom(this.typeName, this.representation);
 		Tuple args = new Tuple(
 				this.members.stream().map(x -> new Variable(NameGenerator.next())).collect(Collectors.toList()));
-		
+
 		return new Lambda(args, this.memberTypes(), new LitComposite(args, type));
 	}
-	
+
 	/**
 	 * Creates constructor for created type
+	 * 
 	 * @return Function
 	 */
 	private Function makeConstructor() {
-		return (Function)this.makeConstructorLambda().interpret(Environment.topLevelEnvironment);
+		return (Function) this.makeConstructorLambda().interpret(Environment.topLevelEnvironment);
 	}
 
 	@Override
@@ -163,12 +167,22 @@ public class DefRepresentationExpression extends Expression {
 		StringBuilder s = new StringBuilder("(def ");
 		s.append(ta.clojureName());
 		s.append(" ");
-		Lambda constructorLambda = this.makeConstructorLambda(); 
+		Lambda constructorLambda = this.makeConstructorLambda();
+		TypeEnvironment.singleton.addRepresentation(ta, (Function) constructorLambda.interpret(env));
 		s.append(constructorLambda.toClojureCode(new TypeArrow(constructorLambda.argsType, ta), env));
 		s.append(")\n");
 		s.append(Operator.makeClojureGetterDefinitions(ta, this.members.size()));
-		
-		
+
+		List<TypeArrow> l = this.memberTypes().stream().map(x -> new TypeArrow(new TypeTuple(Arrays.asList(ta)), x))
+				.collect(Collectors.toList());
+		int i = 0;
+		for (TypeArrow t : l) {
+			Environment.topLevelEnvironment.put(new Variable(Operator.getterName(ta, i)), new TypeHolder(t));
+			i++;
+		}
+		Environment.topLevelEnvironment.put(new Variable(ta.clojureName()),
+				new TypeHolder(new TypeArrow(this.memberTypes(), ta)));
+
 		return s.toString();
 	}
 

@@ -10,7 +10,7 @@ public class NameGenerator {
 	/**
 	 * Seed of the generator
 	 */
-	private static String seed = "a";
+	private static String seed = "SYSGENNAME" + "a";
 
 	/**
 	 * Returns next unique string
