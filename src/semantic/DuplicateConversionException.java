@@ -1,11 +1,11 @@
 package semantic;
 
-import expression.Function;
+import expression.Expression;
 import types.TypeAtom;
 import util.AppendableException;
 
 /**
- * Exception thrown when duplicate conversion 
+ * Exception thrown when duplicate conversion
  * 
  * @author Mgr. Radomir Skrabal
  *
@@ -16,9 +16,9 @@ public class DuplicateConversionException extends AppendableException {
 	 * 
 	 */
 	private static final long serialVersionUID = 1271294611059515340L;
-	
+
 	/**
-	 * Type from which is conversion defined 
+	 * Type from which is conversion defined
 	 */
 	public final TypeAtom fromType;
 	/**
@@ -28,14 +28,16 @@ public class DuplicateConversionException extends AppendableException {
 	/**
 	 * Previously defined conversion function
 	 */
-	public final Function originalConstructor;
+	public final Expression originalConstructor;
 	/**
 	 * Newly defined conversion function
 	 */
-	public final Function newConstructor;
-	
-	public DuplicateConversionException(TypeAtom fromType, TypeAtom toType, Function originalConstructor, Function newConstructor) {
-		super("Trying to define duplicate conversion from type " + fromType + " to type " + toType + ", original conversion " + originalConstructor + " new conversion " + newConstructor);
+	public final Expression newConstructor;
+
+	public DuplicateConversionException(TypeAtom fromType, TypeAtom toType, Expression originalConstructor,
+			Expression newConstructor) {
+		super("Trying to define duplicate conversion from type " + fromType + " to type " + toType
+				+ ", original conversion " + originalConstructor + " new conversion " + newConstructor);
 		this.fromType = fromType;
 		this.toType = toType;
 		this.originalConstructor = originalConstructor;

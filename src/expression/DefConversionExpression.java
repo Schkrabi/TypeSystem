@@ -77,17 +77,18 @@ public class DefConversionExpression extends Expression {
 
 	/**
 	 * Creates converison operator
+	 * 
 	 * @param env environment where constructor is evaluated
 	 * 
 	 * @return conversion operator for this defconversion
 	 */
-	private Operator makeConverisionOperator(Environment env) throws AppendableException{
+	private Operator makeConverisionOperator(Environment env) throws AppendableException {
 		Pair<Type, Substitution> p = this.conversion.infer(env);
 		TypeArrow expected = new TypeArrow(new TypeTuple(Arrays.asList(this.fromType)), this.toType);
-		if(!p.first.equals(expected)) {
+		if (!p.first.equals(expected)) {
 			throw new AppendableException("Invalid conversion expected " + expected + " got " + p.first);
 		}
-		
+
 		return new Operator(new TypeTuple(Arrays.asList(this.fromType)), this.conversion.args,
 				TypeEnvironment.makeConversionName(this.fromType, this.toType),
 				TypeEnvironment.makeConversionName(this.fromType, this.toType), this.conversion.body);
@@ -95,9 +96,9 @@ public class DefConversionExpression extends Expression {
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		//Function interpretedConersion = (Function) this.conversion.interpret(env);
+		// Function interpretedConersion = (Function) this.conversion.interpret(env);
 		Operator convOp = this.makeConverisionOperator(env);
-		
+
 		TypeEnvironment.singleton.addConversion(this.fromType, this.toType, convOp);
 		return Expression.EMPTY_EXPRESSION;
 	}
@@ -119,7 +120,10 @@ public class DefConversionExpression extends Expression {
 	@Override
 	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		Type expected = new TypeArrow(new TypeTuple(Arrays.asList(this.fromType)), this.toType);
-		TypeEnvironment.singleton.addConversion(this.fromType, this.toType, this.makeConverisionOperator(env));
+		Variable convName = new Variable(TypeEnvironment.makeConversionName(this.fromType, this.toType));
+		TypeEnvironment.singleton.addConversion(this.fromType, this.toType, convName);
+		Environment.topLevelEnvironment.put(convName,
+				new TypeHolder(new TypeArrow(new TypeTuple(Arrays.asList(this.fromType)), this.toType)));
 		return "(def " + TypeEnvironment.makeConversionName(this.fromType, this.toType) + " "
 				+ this.conversion.toClojureCode(expected, env) + ")";
 	}

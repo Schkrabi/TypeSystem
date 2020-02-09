@@ -193,6 +193,12 @@ class TestComplex {
 						+ " `([[:StringNative :StringNative] ~str]) [:StringNative :StringNative] [("
 						+ Application.clojureEapply + " Name2Structured-0 [:Name2Structured] [x]) ("
 						+ Application.clojureEapply + " Name2Structured-1 [:Name2Structured] [x])])]))]))"));
+
+		this.testClojureCompile("((lambda ((Name2:Unstructured x)) x) (Name2:Structured \"Jan\" \"Novak\"))",
+				"(" + Application.clojureEapply + " `([[:Name2Unstructured] ~(fn [x] x)]) [:Name2Structured] [("
+						+ Application.clojureEapply + " Name2Structured2Name2Unstructured [:Name2Structured] [("
+						+ Application.clojureEapply
+						+ " Name2:Structured [:StringNative :StringNative] [\"Jan\" \"Novak\"])])])");
 		// Extended Lambda
 		this.testClojureCompile("(elambda ((Int x)) ((Int:Native) \"Native\"))",
 				"`([[:IntNative] ~(fn [x] \"Native\")])");

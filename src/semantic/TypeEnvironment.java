@@ -26,7 +26,7 @@ import util.Pair;
 public class TypeEnvironment {	
 	private Set<TypeAtom> atomicTypes =  new TreeSet<TypeAtom>();
 	private Map<TypeAtom, Function> constructorMap = new TreeMap<TypeAtom, Function>();
-	private Map<Pair<TypeAtom, TypeAtom>, Function> conversions = new HashMap<Pair<TypeAtom, TypeAtom>, Function>();
+	private Map<Pair<TypeAtom, TypeAtom>, Expression> conversions = new HashMap<Pair<TypeAtom, TypeAtom>, Expression>();
 
 	private TypeEnvironment() {
 	}
@@ -134,7 +134,7 @@ public class TypeEnvironment {
 	 * @param toType                Type to which is converted
 	 * @param conversionConstructor Conversion lambda (constructor)
 	 */
-	public void addConversion(TypeAtom fromType, TypeAtom toType, Function conversionConstructor)
+	public void addConversion(TypeAtom fromType, TypeAtom toType, Expression conversionConstructor)
 			throws AppendableException {
 		if(!TypeAtom.isSameBasicType(fromType, toType)) {
 			throw new AppendableException("Can define conversions between representations!");
