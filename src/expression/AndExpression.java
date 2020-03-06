@@ -27,10 +27,10 @@ public class AndExpression extends Application {
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
 		try {
-			if(this.args.equals(Tuple.EMPTY_TUPLE)) {
+			if (this.args.equals(Tuple.EMPTY_TUPLE)) {
 				return LitBoolean.TRUE;
 			}
-			
+
 			List<LitBoolean> l = this.args.stream().map(ThrowingFunction.wrapper(x -> (LitBoolean) x.interpret(env)))
 					.collect(Collectors.toList());
 
@@ -57,26 +57,26 @@ public class AndExpression extends Application {
 			Substitution s = Type.unify(p.first, TypeAtom.TypeBoolNative);
 			agg = agg.union(p.second).union(s);
 		}
-		
+
 		return new Pair<Type, Substitution>(TypeAtom.TypeBoolNative, agg);
 	}
-	
+
 	@Override
 	public String toClojureCode() throws AppendableException {
 		return this.toClojureCode(TypeAtom.TypeBool, Environment.topLevelEnvironment);
 	}
-	
+
 	@Override
 	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(");
 		s.append(AndWrapper.singleton.toClojureCode());
 		s.append(' ');
-		
+
 		Iterator<Expression> i = this.args.iterator();
-		while(i.hasNext()) {
+		while (i.hasNext()) {
 			Expression e = i.next();
 			s.append(e.toClojureCode(TypeAtom.TypeBoolNative, env));
-			if(i.hasNext()) {
+			if (i.hasNext()) {
 				s.append(' ');
 			}
 		}

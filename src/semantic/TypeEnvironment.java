@@ -23,8 +23,8 @@ import types.TypeRepresentation;
 import util.AppendableException;
 import util.Pair;
 
-public class TypeEnvironment {	
-	private Set<TypeAtom> atomicTypes =  new TreeSet<TypeAtom>();
+public class TypeEnvironment {
+	private Set<TypeAtom> atomicTypes = new TreeSet<TypeAtom>();
 	private Map<TypeAtom, Function> constructorMap = new TreeMap<TypeAtom, Function>();
 	private Map<Pair<TypeAtom, TypeAtom>, Expression> conversions = new HashMap<Pair<TypeAtom, TypeAtom>, Expression>();
 
@@ -64,15 +64,16 @@ public class TypeEnvironment {
 		}).findAny();
 		return o;
 	}
-	
+
 	/**
 	 * Tries to get type from semantic node, if node is not pair or symbol throws
+	 * 
 	 * @param node parsed node
 	 * @return optional of type or empty optional if type is not recognized
 	 * @throws AppendableException
 	 */
 	public Optional<TypeAtom> getType(SemanticNode node) throws AppendableException {
-		if(node.type == SemanticNode.NodeType.PAIR) {
+		if (node.type == SemanticNode.NodeType.PAIR) {
 			return this.getType(node.asPair().first, node.asPair().second);
 		}
 		return this.getType(node.asSymbol());
@@ -104,11 +105,11 @@ public class TypeEnvironment {
 	 * @return constructor for this type if it exists
 	 */
 	public Function getConstructor(TypeAtom type) {
-		if(this.constructorMap.containsKey(type))
+		if (this.constructorMap.containsKey(type))
 			return this.constructorMap.get(type);
 		throw new NoSuchElementException();
 	}
-	
+
 	public void addType(TypeName name) {
 		this.atomicTypes.add(new TypeAtom(name, TypeRepresentation.WILDCARD));
 	}
@@ -121,7 +122,7 @@ public class TypeEnvironment {
 	 * @throws AppendableException
 	 */
 	public void addRepresentation(TypeAtom newType, final Function constructor) throws AppendableException {
-		if(this.constructorMap.containsKey(newType)) {
+		if (this.constructorMap.containsKey(newType)) {
 			throw new DuplicateTypeConstructorException(newType, this.constructorMap.get(newType), constructor);
 		}
 		this.constructorMap.put(newType, constructor);
@@ -136,40 +137,43 @@ public class TypeEnvironment {
 	 */
 	public void addConversion(TypeAtom fromType, TypeAtom toType, Expression conversionConstructor)
 			throws AppendableException {
-		if(!TypeAtom.isSameBasicType(fromType, toType)) {
+		if (!TypeAtom.isSameBasicType(fromType, toType)) {
 			throw new AppendableException("Can define conversions between representations!");
 		}
 		Pair<TypeAtom, TypeAtom> conversion = new Pair<TypeAtom, TypeAtom>(fromType, toType);
-		if(this.conversions.containsKey(conversion)) {
-			throw new DuplicateConversionException(fromType, toType, this.conversions.get(conversion), conversionConstructor);
+		if (this.conversions.containsKey(conversion)) {
+			throw new DuplicateConversionException(fromType, toType, this.conversions.get(conversion),
+					conversionConstructor);
 		}
 		this.conversions.put(conversion, conversionConstructor);
 	}
-	
+
 	/**
 	 * Instantiates conversion of two type atoms
+	 * 
 	 * @param converted converted expression
-	 * @param fromType type atom from which conversion is carried
-	 * @param toType type to which is converted
+	 * @param fromType  type atom from which conversion is carried
+	 * @param toType    type to which is converted
 	 * @return expression converting converted to toType
-	 * @throws ConversionException 
+	 * @throws ConversionException
 	 */
 	public Expression convertTo(Expression converted, TypeAtom fromType, TypeAtom toType) throws ConversionException {
 		Pair<TypeAtom, TypeAtom> conversion = new Pair<TypeAtom, TypeAtom>(fromType, toType);
-		if(!this.conversions.containsKey(conversion)) {
+		if (!this.conversions.containsKey(conversion)) {
 			throw new ConversionException(fromType, toType, converted);
 		}
 		return new Application(this.conversions.get(conversion), new Tuple(Arrays.asList(converted)));
 	}
-	
+
 	/**
 	 * Type environment only one exists
 	 */
 	public static TypeEnvironment singleton = new TypeEnvironment();
-	
+
 	/**
 	 * Initializes basic types
-	 * @throws AppendableException 
+	 * 
+	 * @throws AppendableException
 	 */
 	public static void initBasicTypes() throws AppendableException {
 		// Int
@@ -177,11 +181,11 @@ public class TypeEnvironment {
 		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntNative, Operator.IntNativeConstructor);
 		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntRoman, Operator.IntRomanConstructor);
 		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntString, Operator.IntStringConstructor);
-		
+
 		// Bool
 		TypeEnvironment.singleton.atomicTypes.add(TypeAtom.TypeBool);
 		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeBoolNative, Operator.BoolNativeConstructor);
-		
+
 		// String
 		TypeEnvironment.singleton.atomicTypes.add(TypeAtom.TypeString);
 		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeStringNative, Operator.StringNativeConstructor);
@@ -189,23 +193,31 @@ public class TypeEnvironment {
 		// Double
 		TypeEnvironment.singleton.atomicTypes.add(TypeAtom.TypeDouble);
 		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeDoubleNative, Operator.DoubleNativeConstructor);
-		
-		//Conversions
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, Operator.IntNativeToIntRoman);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, Operator.IntNativeToIntString);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative, Operator.IntRomanToIntNative);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, Operator.IntRomanToIntString);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative, Operator.IntStringToIntNative);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, Operator.IntStringToIntRoman);
+
+		// Conversions
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman,
+				Operator.IntNativeToIntRoman);
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString,
+				Operator.IntNativeToIntString);
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative,
+				Operator.IntRomanToIntNative);
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
+				Operator.IntRomanToIntString);
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative,
+				Operator.IntStringToIntNative);
+		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman,
+				Operator.IntStringToIntRoman);
 	}
-	
+
 	/**
 	 * Creates name for conversion
-	 * @param from 
+	 * 
+	 * @param from
 	 * @param to
 	 * @return string with conversion name
 	 */
 	public static String makeConversionName(TypeAtom from, TypeAtom to) {
-		return from.name.toString() + from.representation.toString() + "2" + to.name.toString() + to.representation.toString();
+		return from.name.toString() + from.representation.toString() + "2" + to.name.toString()
+				+ to.representation.toString();
 	}
 }

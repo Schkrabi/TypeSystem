@@ -175,7 +175,7 @@ public class Operator extends Function {
 	public static final Operator Subtraction = new Operator(
 			new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 			new Tuple(Arrays.asList(new Variable("_x"), new Variable("_y"))), "-", "-", OperatorWrapper.SubWrapper);
-	
+
 	/**
 	 * Println operator
 	 */
@@ -262,7 +262,8 @@ public class Operator extends Function {
 	 * @return string containing clojure definition of the getter
 	 */
 	private static String makeClojureGetterDefinition(TypeAtom type, int index) {
-		return "(def " + Operator.getterName(type, index) + " `([[" + type.toClojure() + "] ~(fn [x] (get x " + index + "))]))";
+		return "(def " + Operator.getterName(type, index) + " `([[" + type.toClojure() + "] ~(fn [x] (get x " + index
+				+ "))]))";
 	}
 
 	/**
@@ -490,19 +491,19 @@ public class Operator extends Function {
 				return composite.value.get(index.value);
 			}
 		};
-		
+
 		/**
 		 * Body of println operator
 		 */
 		public static final OperatorWrapper PrintlnWrapper = new OperatorWrapper(TypeAtom.TypeIntNative) {
-			
+
 			@Override
 			public Expression interpret(Environment env) throws AppendableException {
 				Expression e = env.getVariableValue(new Variable("_arg")).interpret(env);
-				
+
 				String s = e.toString();
 				System.out.println(s);
-				return new LitInteger(s.length());			
+				return new LitInteger(s.length());
 			}
 		};
 	}

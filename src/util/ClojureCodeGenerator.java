@@ -8,8 +8,7 @@ import java.util.List;
 import expression.Expression;
 
 public class ClojureCodeGenerator {
-	public static void toClojureCode(List<Expression> exprs, Writer target)
-			throws IOException, Exception {
+	public static void toClojureCode(List<Expression> exprs, Writer target) throws IOException, Exception {
 		ClojureCodeGenerator.writeHeaders(target);
 
 		Iterator<Expression> i = exprs.iterator();

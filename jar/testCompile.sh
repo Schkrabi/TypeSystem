@@ -7,6 +7,11 @@ INTPDIR=../Tests/INTP/
 CMPLDIR=../Tests/CMPL/
 DIFFDIR=../Tests/DIFF/
 
+mkdir -p ${CLJDIR}
+mkdir -p ${INTPDIR}
+mkdir -p ${CMPLDIR}
+mkdir -p ${DIFFDIR}
+
 rm -f ${CLJDIR}*
 rm -f ${INTPDIR}*
 rm -f ${CMPLDIR}*

@@ -22,7 +22,7 @@ public class UnexpectedTypeException extends AppendableException {
 	 * Expected type class
 	 */
 	public final Class<? extends Type> expected;
-	
+
 	public UnexpectedTypeException(Type received, Class<? extends Type> expected) {
 		super("Got unexpected type " + received.toString() + " expected " + expected.getName());
 		this.received = received;

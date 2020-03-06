@@ -133,9 +133,11 @@ class TestParser {
 						new Application(new Variable("Int:String"), new Tuple(Arrays.asList(new LitString("256"))))),
 				new Pair<String, Expression>("3.141528", new LitDouble(3.141528)),
 				new Pair<String, Expression>("#f", LitBoolean.FALSE),
-				new Pair<String, Expression>("(and #t #f)", new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)))),
+				new Pair<String, Expression>("(and #t #f)",
+						new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)))),
 				new Pair<String, Expression>("(and)", new AndExpression(Tuple.EMPTY_TUPLE)),
-				new Pair<String, Expression>("(or #t #f)", new OrExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)))),
+				new Pair<String, Expression>("(or #t #f)",
+						new OrExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)))),
 				new Pair<String, Expression>("(or)", new OrExpression(Tuple.EMPTY_TUPLE))
 
 		);

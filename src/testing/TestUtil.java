@@ -181,7 +181,7 @@ class TestUtil {
 		new UnboundVariableException(new Variable("x"));
 		new InvalidClojureCompilationException(Expression.EMPTY_EXPRESSION);
 		new InvalidNumberOfArgumentsException(2, Expression.EMPTY_EXPRESSION,
-				new Application(Expression.EMPTY_EXPRESSION, Tuple.EMPTY_TUPLE));	
+				new Application(Expression.EMPTY_EXPRESSION, Tuple.EMPTY_TUPLE));
 	}
 
 }

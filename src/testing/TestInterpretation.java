@@ -709,7 +709,7 @@ class TestInterpretation {
 						new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman),
 						new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntString))),
 				function);
-		
+
 		Assertions.assertThrows(AppendableException.class, () -> ExtendedFunction
 				.makeExtendedFunction(Arrays.asList(
 						new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
@@ -834,41 +834,43 @@ class TestInterpretation {
 		Pair<Type, Substitution> p = ifExprT.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, ifExprT);
 	}
-	
+
 	@Test
 	void testAndExpression() throws AppendableException {
 		AndExpression andExpressionT = new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)));
-		AndExpression andExpressionF = new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE, LitBoolean.TRUE)));
-		
+		AndExpression andExpressionF = new AndExpression(
+				new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE, LitBoolean.TRUE)));
+
 		TestInterpretation.testReflexivity(andExpressionT);
 		TestInterpretation.testDifference(andExpressionT, andExpressionF);
 		TestInterpretation.testDifference(andExpressionT, Expression.EMPTY_EXPRESSION);
-		
+
 		andExpressionT.toString();
 		andExpressionT.toClojureCode();
-		
+
 		TestInterpretation.testInterpretation(andExpressionT, LitBoolean.TRUE, Environment.topLevelEnvironment);
 		TestInterpretation.testInterpretation(andExpressionF, LitBoolean.FALSE, Environment.topLevelEnvironment);
-		
+
 		Pair<Type, Substitution> p = andExpressionT.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, andExpressionT);
 	}
-	
+
 	@Test
 	void testOrExpression() throws AppendableException {
 		OrExpression orExpressionT = new OrExpression(new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)));
-		OrExpression orExpressionF = new OrExpression(new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE, LitBoolean.FALSE)));
-		
+		OrExpression orExpressionF = new OrExpression(
+				new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE, LitBoolean.FALSE)));
+
 		TestInterpretation.testReflexivity(orExpressionT);
 		TestInterpretation.testDifference(orExpressionT, orExpressionF);
 		TestInterpretation.testDifference(orExpressionT, Expression.EMPTY_EXPRESSION);
-		
+
 		orExpressionT.toString();
 		orExpressionF.toClojureCode();
-		
+
 		TestInterpretation.testInterpretation(orExpressionT, LitBoolean.TRUE, Environment.topLevelEnvironment);
 		TestInterpretation.testInterpretation(orExpressionF, LitBoolean.FALSE, Environment.topLevelEnvironment);
-		
+
 		Pair<Type, Substitution> p = orExpressionT.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, orExpressionT);
 	}

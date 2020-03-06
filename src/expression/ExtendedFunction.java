@@ -139,10 +139,12 @@ public class ExtendedFunction extends MetaFunction {
 
 	/**
 	 * Creates new extended function
-	 * @param implementations function implementations
+	 * 
+	 * @param implementations    function implementations
 	 * @param createdEnvironment environment where function was created
 	 * @return new ExtendedFunction object
-	 * @throws AppendableException thrown if argument types of function does not unify
+	 * @throws AppendableException thrown if argument types of function does not
+	 *                             unify
 	 */
 	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
 			Environment createdEnvironment) throws AppendableException {

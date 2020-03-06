@@ -46,10 +46,10 @@ public class LitComposite extends Literal {
 	public String toClojureCode() throws AppendableException {
 		return this.toClojureCode(this.composedType, Environment.topLevelEnvironment);
 	}
-	
+
 	@Override
 	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
-		return this.value.toClojureCode(this.value.infer(env).first, env); 
+		return this.value.toClojureCode(this.value.infer(env).first, env);
 	}
 
 	@Override
@@ -80,17 +80,19 @@ public class LitComposite extends Literal {
 	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder("[");
-		Iterator<Expression> i = this.value.iterator();;
-		while(i.hasNext()) {
+		Iterator<Expression> i = this.value.iterator();
+		;
+		while (i.hasNext()) {
 			s.append(i.next());
-			if(i.hasNext()) {
+			if (i.hasNext()) {
 				s.append(' ');
 			}
 		}
 		s.append(']');
 		return s.toString();
-		
-		//return "<" + this.composedType.toString() + " "
-		//		+ this.value.stream().map(x -> x.toString() + ",").reduce("", (x, y) -> x + y) + ">";
+
+		// return "<" + this.composedType.toString() + " "
+		// + this.value.stream().map(x -> x.toString() + ",").reduce("", (x, y) -> x +
+		// y) + ">";
 	}
 }

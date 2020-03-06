@@ -66,15 +66,16 @@ public class TypeAtom extends Type {
 		if (!(toType instanceof TypeAtom) || !TypeAtom.isSameBasicType(this, (TypeAtom) toType)) {
 			throw new ConversionException(this, toType, expr);
 		}
-		if(((TypeAtom)toType).representation.equals(TypeRepresentation.WILDCARD)) {
+		if (((TypeAtom) toType).representation.equals(TypeRepresentation.WILDCARD)
+				|| this.representation.equals(TypeRepresentation.WILDCARD)) {
 			return expr;
 		}
 
-		Expression e = TypeEnvironment.singleton.convertTo(expr, this, (TypeAtom)toType);
+		Expression e = TypeEnvironment.singleton.convertTo(expr, this, (TypeAtom) toType);
 
 		return e;
 	}
-	
+
 	@Override
 	public String convertToClojure(String argument, Type toType) throws AppendableException {
 		if (toType instanceof TypeVariable || toType.equals(this)) {
@@ -83,25 +84,26 @@ public class TypeAtom extends Type {
 		if (!(toType instanceof TypeAtom) || !TypeAtom.isSameBasicType(this, (TypeAtom) toType)) {
 			throw new ClojureConversionException(this, toType, argument);
 		}
-		if(((TypeAtom)toType).representation.equals(TypeRepresentation.WILDCARD)) {
+		if (((TypeAtom) toType).representation.equals(TypeRepresentation.WILDCARD)) {
 			return argument;
 		}
-		
-		return "(" + TypeEnvironment.makeConversionName(this, (TypeAtom)toType) + " " + argument + ")";
+
+		return "(" + TypeEnvironment.makeConversionName(this, (TypeAtom) toType) + " " + argument + ")";
 	}
 
 	@Override
 	public Type removeRepresentationInfo() {
 		return new TypeAtom(this.name, TypeRepresentation.WILDCARD);
 	}
-	
+
 	@Override
 	public Type apply(Substitution s) {
 		return this;
 	}
-	
+
 	/**
 	 * Creates clojure name of the type constructor
+	 * 
 	 * @return String
 	 */
 	public String clojureName() {
@@ -124,7 +126,7 @@ public class TypeAtom extends Type {
 	 */
 	public static final TypeAtom TypeBool = new TypeAtom(TypeName.BOOL, TypeRepresentation.WILDCARD);
 	public static final TypeAtom TypeBoolNative = new TypeAtom(TypeName.BOOL, TypeRepresentation.NATIVE);
-	
+
 	/**
 	 * Type of Integer
 	 */
@@ -138,7 +140,7 @@ public class TypeAtom extends Type {
 	 */
 	public static final TypeAtom TypeString = new TypeAtom(TypeName.STRING, TypeRepresentation.WILDCARD);
 	public static final TypeAtom TypeStringNative = new TypeAtom(TypeName.STRING, TypeRepresentation.NATIVE);
-	
+
 	/**
 	 * Type of Double
 	 */
@@ -147,12 +149,11 @@ public class TypeAtom extends Type {
 
 	@Override
 	public Substitution unifyWith(Type other) throws AppendableException {
-		if(other instanceof TypeVariable
-				|| other instanceof RepresentationOr) {
+		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
 			return other.unifyWith(this);
 		}
-		if(other instanceof TypeAtom) {
-			if(TypeAtom.isSameBasicType(this, (TypeAtom) other)) {
+		if (other instanceof TypeAtom) {
+			if (TypeAtom.isSameBasicType(this, (TypeAtom) other)) {
 				return Substitution.EMPTY;
 			}
 		}

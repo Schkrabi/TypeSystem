@@ -7,28 +7,29 @@ import util.AppendableException;
 public class SemanticNode {
 	public final NodeType type;
 	private final Object value;
-	
-	private SemanticNode(NodeType type, Object value) {	
+
+	private SemanticNode(NodeType type, Object value) {
 		this.type = type;
 		this.value = value;
 	}
-	
+
 	/**
 	 * Makes new SemanticNode
+	 * 
 	 * @param type
 	 * @param value
 	 * @return
 	 * @throws AppendableException
 	 */
 	public static SemanticNode make(NodeType type, Object value) throws AppendableException {
-		if(!isAdequateType(type, value)) {
+		if (!isAdequateType(type, value)) {
 			throw new AppendableException(type.toString() + value + " is not an adequate type-value combination");
 		}
 		return new SemanticNode(type, value);
 	}
-	
-	public static boolean isAdequateType(NodeType type, Object value){
-		switch(type){
+
+	public static boolean isAdequateType(NodeType type, Object value) {
+		switch (type) {
 		case SYMBOL:
 			return value instanceof String;
 		case PAIR:
@@ -48,74 +49,76 @@ public class SemanticNode {
 		}
 		return false;
 	}
-	
-	public String asSymbol() throws AppendableException{
-		if(this.type != NodeType.SYMBOL){
-			throw new AppendableException("" + this +  " is not a symbol");
+
+	public String asSymbol() throws AppendableException {
+		if (this.type != NodeType.SYMBOL) {
+			throw new AppendableException("" + this + " is not a symbol");
 		}
-		return (String)this.value;
+		return (String) this.value;
 	}
-	
-	public SemanticPair asPair() throws AppendableException{
-		if(this.type != NodeType.PAIR){
+
+	public SemanticPair asPair() throws AppendableException {
+		if (this.type != NodeType.PAIR) {
 			throw new AppendableException("" + this + " is not a pair");
 		}
-		return (SemanticPair)this.value;
+		return (SemanticPair) this.value;
 	}
-	
-	public Integer asInt() throws AppendableException{
-		if(this.type != NodeType.INT){
+
+	public Integer asInt() throws AppendableException {
+		if (this.type != NodeType.INT) {
 			throw new AppendableException("" + this + " is not an integer");
 		}
-		return (Integer)this.value;
+		return (Integer) this.value;
 	}
-	
-	public Double asDouble() throws AppendableException{
-		if(this.type != NodeType.DOUBLE){
+
+	public Double asDouble() throws AppendableException {
+		if (this.type != NodeType.DOUBLE) {
 			throw new AppendableException("" + this + " is not a double");
 		}
-		return (Double)this.value;
+		return (Double) this.value;
 	}
-	
-	public String asString() throws AppendableException{
-		if(this.type != NodeType.STRING){
+
+	public String asString() throws AppendableException {
+		if (this.type != NodeType.STRING) {
 			throw new AppendableException("" + this + " is not a string");
 		}
-		return (String)this.value;
+		return (String) this.value;
 	}
-	
-	public Boolean asBool() throws AppendableException{
-		if(this.type != NodeType.BOOL){
+
+	public Boolean asBool() throws AppendableException {
+		if (this.type != NodeType.BOOL) {
 			throw new AppendableException("" + this + " is not a bool");
 		}
-		return (Boolean)this.value;
+		return (Boolean) this.value;
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	public List<SemanticNode> asList() throws AppendableException{
-		if(this.type != NodeType.LIST){
+	public List<SemanticNode> asList() throws AppendableException {
+		if (this.type != NodeType.LIST) {
 			throw new AppendableException("" + this + " is not a list");
 		}
-		return (List<SemanticNode>)this.value;
+		return (List<SemanticNode>) this.value;
 	}
-	
+
 	@Override
-	public String toString(){
+	public String toString() {
 		return this.value.toString();
 	}
-	
+
 	public enum NodeType {
-		SYMBOL, PAIR, INT, DOUBLE, STRING, BOOL, LIST, /** Unused NodeType for testing purposes onyl */ UNUSED
+		SYMBOL, PAIR, INT, DOUBLE, STRING, BOOL, LIST,
+		/** Unused NodeType for testing purposes onyl */
+		UNUSED
 	}
-	
+
 	@Override
 	public boolean equals(Object other) {
-		if(other instanceof SemanticNode) {
-			return this.type == ((SemanticNode)other).type && this.value.equals(((SemanticNode)other).value);
+		if (other instanceof SemanticNode) {
+			return this.type == ((SemanticNode) other).type && this.value.equals(((SemanticNode) other).value);
 		}
 		return false;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.type.hashCode() * this.value.hashCode();

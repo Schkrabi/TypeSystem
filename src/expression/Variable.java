@@ -67,16 +67,16 @@ public class Variable extends Expression implements Comparable<Expression> {
 	public String toClojureCode() throws AppendableException {
 		return this.toClojureCode(null, Environment.topLevelEnvironment);
 	}
-	
+
 	@Override
 	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
-		if(env.containsVariable(this)) {
+		if (env.containsVariable(this)) {
 			Expression e = env.getVariableValue(this);
-			if(e instanceof Operator) {
+			if (e instanceof Operator) {
 				return e.toClojureCode(expectedType, env);
 			}
 		}
-		
+
 		return this.name;
 	}
 
@@ -92,10 +92,11 @@ public class Variable extends Expression implements Comparable<Expression> {
 	public int hashCode() {
 		return this.name.hashCode();
 	}
-	
+
 	@Override
-	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env) throws AppendableException {
-		if(env.containsVariable(this)) {
+	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env)
+			throws AppendableException {
+		if (env.containsVariable(this)) {
 			return env.getVariableValue(this).getFunctionTypeWithRepresentations(argTypes, env);
 		}
 		return super.getFunctionTypeWithRepresentations(argTypes, env);

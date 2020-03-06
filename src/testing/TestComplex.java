@@ -80,19 +80,94 @@ class TestComplex {
 				new LitComposite(new Tuple(Arrays.asList(new LitString("JanNovak"))),
 						new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured"))));
 
+		final TypeAtom linkedList = new TypeAtom(new TypeName("List"), new TypeRepresentation("Linked"));
+		final LitComposite emptyList = new LitComposite(Tuple.EMPTY_TUPLE,
+				new TypeAtom(new TypeName("List"), new TypeRepresentation("Empty")));
+
 		this.testInterpretString(
-				"(deftype List)" + "(defrep Native List (x List))" + "(defrep Empty List ())"
-						+ "(List:Native 1 (List:Native 2 (List:Empty)))",
+				"(deftype List)" + "(defrep Linked List (A List))" + "(defrep Empty List ())"
+						+ "(List:Linked 1 (List:Linked 2 (List:Empty)))",
 				new LitComposite(
 						new Tuple(Arrays.asList(new LitInteger(1),
-								new LitComposite(
-										new Tuple(Arrays.asList(new LitInteger(2),
-												new LitComposite(Tuple.EMPTY_TUPLE,
-														new TypeAtom(new TypeName("List"),
-																new TypeRepresentation("Empty"))))),
-										new TypeAtom(new TypeName("List"), TypeRepresentation.NATIVE)))),
-						new TypeAtom(new TypeName("List"), TypeRepresentation.NATIVE)));
+								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
+						linkedList));
 
+		final LitComposite xlii = new LitComposite(new Tuple(Arrays.asList(new LitString("XLII"))),
+				TypeAtom.TypeIntRoman);
+		final LitComposite fortyTwoStr = new LitComposite(new Tuple(Arrays.asList(new LitString("42"))),
+				TypeAtom.TypeIntString);
+		final LitInteger fortyTwo = new LitInteger(42);
+
+		this.testInterpretString(
+				"(define x (List:Linked (Int:Roman \"XLII\") (List:Linked (Int:String \"42\") (List:Linked 42 (List:Empty)))))"
+						+ "(define head-list (elambda ((List l))\n"
+						+ "          					((List:Linked) (ListLinked-0 l))\n"
+						+ "          					((List:Empty) (error \"Cannot make head of empty list!\"))))"
+						+ "(head-list x)",
+				xlii);
+
+		this.testInterpretString(
+				"(define tail-list (elambda ((List l)) \n"
+						+ "          					((List:Linked) (ListLinked-1 l))\n"
+						+ "          					((List:Empty) (error \"Cannot make tail of empty list!\"))))\n"
+						+ "(tail-list x)",
+				new LitComposite(
+						new Tuple(Arrays.asList(fortyTwoStr,
+								new LitComposite(new Tuple(Arrays.asList(fortyTwo, emptyList)), linkedList))),
+						linkedList));
+
+		this.testInterpretString(
+				"(define build-list-aux (lambda (i n f)\n" + "            						(if (= i n)\n"
+						+ "            							(List:Empty)\n"
+						+ "            							(List:Linked (f i) (build-list-aux (+ i 1) n f)))))\n"
+						+ "(build-list-aux 0 2 (lambda (x) (+ x 1)))",
+				new LitComposite(
+						new Tuple(Arrays.asList(new LitInteger(1),
+								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
+						linkedList));
+
+		this.testInterpretString(
+				"(define build-list (lambda (n f) (build-list-aux 0 n f)))\n" + "(build-list 2 (lambda (x) (+ x 1)))",
+				new LitComposite(
+						new Tuple(Arrays.asList(new LitInteger(1),
+								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
+						linkedList));
+
+		this.testInterpretString(
+				"(define append-list (lambda ((List l) x) \n" + "						(if (equals? l (List:Empty)) \n"
+						+ "							(List:Linked x (List:Empty)) \n"
+						+ "							(List:Linked (head-list l) (append-list (tail-list l) x)))))\n"
+						+ "(append-list x 21)",
+				new LitComposite(
+						new Tuple(
+								Arrays.asList(xlii,
+										new LitComposite(
+												new Tuple(
+														Arrays.asList(fortyTwoStr,
+																new LitComposite(
+																		new Tuple(
+																				Arrays.asList(fortyTwo,
+																						new LitComposite(
+																								new Tuple(Arrays.asList(
+																										new LitInteger(
+																												21),
+																										emptyList)),
+																								linkedList))),
+																		linkedList))),
+												linkedList))),
+						linkedList));
+
+		this.testInterpretString(
+				"(define reverse-list (lambda ((List l)) \n" + "						(if (equals? l (List:Empty)) \n"
+						+ "							(List:Empty) \n"
+						+ "							(append-list (reverse-list (tail-list l)) (head-list l)))))\n"
+						+ "(reverse-list x)",
+				new LitComposite(
+						new Tuple(Arrays.asList(fortyTwo,
+								new LitComposite(new Tuple(Arrays.asList(fortyTwoStr,
+										new LitComposite(new Tuple(Arrays.asList(xlii, emptyList)), linkedList))),
+										linkedList))),
+						linkedList));
 	}
 
 	@Test
@@ -210,12 +285,12 @@ class TestComplex {
 						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"])])");
 
 		// Recursion
-		this.testClojureCompileRegex("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))",
+		/*this.testClojureCompileRegex("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))",
 				TestComplex.escapeBrackets("(def fact `([[:\\w*] ~(fn [x] (if (" + Application.clojureEapply
 						+ " `([[:IntNative :IntNative] ~=]) [:\\w* :IntNative] [x 1]) x (" + Application.clojureEapply
 						+ " `([[:IntNative :IntNative] ~\\*]) [:\\w* :IntNative] [x (" + Application.clojureEapply
 						+ " fact [:IntNative] [(" + Application.clojureEapply
-						+ " `([[:IntNative :IntNative] ~-]) [:\\w* :IntNative] [x 1])])])))]))"));
+						+ " `([[:IntNative :IntNative] ~-]) [:\\w* :IntNative] [x 1])])])))]))"));*/
 
 		// Conversions
 		this.testClojureCompile(
@@ -227,6 +302,76 @@ class TestComplex {
 						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"])]) ("
 						+ Application.clojureEapply
 						+ " `([[:IntNative] ~(fn [_x] [(Integer/toString _x)])]) [:IntNative] [66])])");
+
+		// List
+		this.testClojureCompile("(deftype List2)", "");
+		this.testClojureCompileRegex("(defrep Linked List2 (A List2))",
+				TestComplex.escapeBrackets("(def List2:Linked `([[:A :List2\\*] ~(fn [\\w* \\w*] [\\w* \\w*])]))\n"
+						+ "(def List2Linked-0 `([[:List2Linked] ~(fn [x] (get x 0))]))\n"
+						+ "(def List2Linked-1 `([[:List2Linked] ~(fn [x] (get x 1))]))"));
+		this.testClojureCompile("(defrep Empty List2 ())", "(def List2:Empty `([[] ~(fn [] [])]))");
+
+		this.testClojureCompile(
+				"(define x (List2:Linked (Int:Roman \"XLII\") (List2:Linked (Int:String \"42\") (List2:Linked 42 (List2:Empty)))))",
+				"(def x (" + Application.clojureEapply + " List2:Linked [:IntRoman :List2Linked] [("
+						+ Application.clojureEapply
+						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"]) ("
+						+ Application.clojureEapply + " List2:Linked [:IntString :List2Linked] [("
+						+ Application.clojureEapply
+						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"]) ("
+						+ Application.clojureEapply + " List2:Linked [:IntNative :List2Empty] [42 ("
+						+ Application.clojureEapply + " List2:Empty [] [])])])]))");
+
+		this.testClojureCompile(
+				"(define head-list2 (elambda ((List2 l))\n"
+						+ "          					((List2:Linked) (List2Linked-0 l))\n"
+						+ "          					((List2:Empty) (error \"Cannot make head of empty list!\"))))",
+				"(def head-list2 `([[:List2Empty] ~(fn [l] (throw (Throwable. \"Cannot make head of empty list!\")))] [[:List2Linked] ~(fn [l] ("
+						+ Application.clojureEapply + " List2Linked-0 [:List2Linked] [l]))]))");
+
+		this.testClojureCompile(
+				"(define tail-list2 (elambda ((List2 l)) \n"
+						+ "          					((List2:Linked) (List2Linked-1 l))\n"
+						+ "          					((List2:Empty) (error \"Cannot make tail of empty list!\"))))",
+				"(def tail-list2 `([[:List2Empty] ~(fn [l] (throw (Throwable. \"Cannot make tail of empty list!\")))] [[:List2Linked] ~(fn [l] ("
+						+ Application.clojureEapply + " List2Linked-1 [:List2Linked] [l]))]))");
+
+		this.testClojureCompileRegex(
+				"(define build-list2-aux (lambda (i n f)\n" + "            						(if (= i n)\n"
+						+ "            							(List2:Empty)\n"
+						+ "            							(List2:Linked (f i) (build-list2-aux (+ i 1) n f)))))",
+				TestComplex.escapeBrackets("(def build-list2-aux `([[:\\w* :\\w* :\\w*] ~(fn [i n f] (if ("
+						+ Application.clojureEapply + " `([[:IntNative :IntNative] ~=]) [:\\w* :\\w*] [i n]) ("
+						+ Application.clojureEapply + " List2:Empty [] []) (List2Linked2List2Empty ("
+						+ Application.clojureEapply + " List2:Linked [:\\w* :List2Empty] [(" + Application.clojureEapply
+						+ " f [:\\w*] [i]) (" + Application.clojureEapply
+						+ " build-list2-aux [:IntNative :\\w* :\\w*] [(" + Application.clojureEapply
+						+ " `([[:IntNative :IntNative] ~+]) [:\\w* :IntNative] [i 1]) n f])]))))]))"));
+
+		this.testClojureCompileRegex("(define build-list2 (lambda (n f) (build-list2-aux 0 n f)))",
+				TestComplex.escapeBrackets("(def build-list2 `([[:\\w* :\\w*] ~(fn [n f] (" + Application.clojureEapply
+						+ " build-list2-aux [:IntNative :\\w* :\\w*] [0 n f]))]))"));
+
+		this.testClojureCompileRegex(
+				"(define append-list2 (lambda ((List2 l) x) \n" + "(if (equals? l (List2:Empty)) \n"
+						+ "							(List2:Linked x (List2:Empty)) \n"
+						+ "							(List2:Linked (head-list2 l) (append-list2 (tail-list2 l) x)))))",
+				TestComplex.escapeBrackets(
+						"(def append-list2 `([[:List2\\* :\\w*] ~(fn [l x] (if (eapply `([[:\\w* :\\w*] ~=]) [:List2\\* :List2Empty] [l ("
+								+ Application.clojureEapply + " List2:Empty [] [])]) (" + Application.clojureEapply
+								+ " List2:Linked [:\\w* :List2Empty] [x (" + Application.clojureEapply
+								+ " List2:Empty [] [])]) (" + Application.clojureEapply
+								+ " List2:Linked [:A :List2Linked] [(" + Application.clojureEapply
+								+ " head-list2 [:List2\\*] [l]) (" + Application.clojureEapply
+								+ " append-list2 [:List2\\* :\\w*] [(" + Application.clojureEapply
+								+ " tail-list2 [:List2\\*] [l]) x])])))]))"));
+
+		this.testClojureCompile(
+				"(define reverse-list2 (lambda ((List2 l)) \n"
+						+ "						(if (equals? l (List2:Empty)) \n"
+						+ "							(List2:Empty) \n"
+						+ "							(append-list2 (reverse-list2 (tail-list2 l)) (head-list2 l)))))",
+				"");
 	}
 
 	private List<Expression> parseString(String s, SemanticParser semanticParser) throws AppendableException {

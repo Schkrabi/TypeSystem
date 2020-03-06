@@ -5,6 +5,7 @@ import expression.Expression;
 
 /**
  * Exception for number of arguments mismatch
+ * 
  * @author Mgr. Radomir Skrabal
  *
  */
@@ -25,10 +26,9 @@ public class InvalidNumberOfArgumentsException extends AppendableException {
 	 * Application in which mismatch occured
 	 */
 	public final Application application;
-	
+
 	public InvalidNumberOfArgumentsException(int expected, Expression got, Application application) {
-		super("In " + application + "number of arguments mismatch, expected " 
-					+ expected + " got " + got.toString());
+		super("In " + application + "number of arguments mismatch, expected " + expected + " got " + got.toString());
 		this.expected = expected;
 		this.got = got;
 		this.application = application;

@@ -150,9 +150,10 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 	public int hashCode() {
 		return super.hashCode() * this.argsType.hashCode() * this.args.hashCode() * this.body.hashCode();
 	}
-	
+
 	@Override
-	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env) throws AppendableException {
-		return (TypeArrow)this.infer(env).first;
+	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env)
+			throws AppendableException {
+		return (TypeArrow) this.infer(env).first;
 	}
 }

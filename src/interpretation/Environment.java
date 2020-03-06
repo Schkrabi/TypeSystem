@@ -147,8 +147,8 @@ public class Environment implements Comparable<Environment> {
 	@Override
 	public int hashCode() {
 		if (this.parent != null)
-			return this.parent.hashCode() * ((Integer)this.bindings.size()).hashCode();
-		return ((Integer)this.bindings.size()).hashCode();
+			return this.parent.hashCode() * ((Integer) this.bindings.size()).hashCode();
+		return ((Integer) this.bindings.size()).hashCode();
 	}
 
 	/**
@@ -214,13 +214,19 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Variable("Double:Native"), Operator.DoubleNativeConstructor);
 		env.put(new Variable("Bool"), Operator.BoolConstructor);
 		env.put(new Variable("Bool:Native"), Operator.BoolNativeConstructor);
-		
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)), Operator.IntNativeToIntRoman);
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)), Operator.IntNativeToIntString);
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative)), Operator.IntRomanToIntNative);
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString)), Operator.IntRomanToIntString);
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntNative)), Operator.IntStringToIntNative);
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)), Operator.IntStringToIntRoman);
+
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
+				Operator.IntNativeToIntRoman);
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)),
+				Operator.IntNativeToIntString);
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative)),
+				Operator.IntRomanToIntNative);
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString)),
+				Operator.IntRomanToIntString);
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntNative)),
+				Operator.IntStringToIntNative);
+		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)),
+				Operator.IntStringToIntRoman);
 	}
 
 }

@@ -484,8 +484,8 @@ class TestTypes {
 						new Pair<TypeVariable, Type>(new TypeVariable("x"),
 								RepresentationOr.makeRepresentationOr(
 										Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman))),
-						new Pair<TypeVariable, Type>(new TypeVariable("y"), RepresentationOr
-								.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeIntNative))))));
+						new Pair<TypeVariable, Type>(new TypeVariable("y"), RepresentationOr.makeRepresentationOr(
+								Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeIntNative))))));
 	}
 
 	static void testReflexivity(Type type) {

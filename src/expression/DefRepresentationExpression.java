@@ -170,15 +170,19 @@ public class DefRepresentationExpression extends Expression {
 		Lambda constructorLambda = this.makeConstructorLambda();
 		TypeEnvironment.singleton.addRepresentation(ta, (Function) constructorLambda.interpret(env));
 		s.append(constructorLambda.toClojureCode(new TypeArrow(constructorLambda.argsType, ta), env));
-		s.append(")\n");
-		s.append(Operator.makeClojureGetterDefinitions(ta, this.members.size()));
-
-		List<TypeArrow> l = this.memberTypes().stream().map(x -> new TypeArrow(new TypeTuple(Arrays.asList(ta)), x))
-				.collect(Collectors.toList());
-		int i = 0;
-		for (TypeArrow t : l) {
-			Environment.topLevelEnvironment.put(new Variable(Operator.getterName(ta, i)), new TypeHolder(t));
-			i++;
+		s.append(")");
+		
+		if(this.memberTypes().size() > 0) {
+			s.append("\n");
+			s.append(Operator.makeClojureGetterDefinitions(ta, this.members.size()));
+	
+			List<TypeArrow> l = this.memberTypes().stream().map(x -> new TypeArrow(new TypeTuple(Arrays.asList(ta)), x))
+					.collect(Collectors.toList());
+			int i = 0;
+			for (TypeArrow t : l) {
+				Environment.topLevelEnvironment.put(new Variable(Operator.getterName(ta, i)), new TypeHolder(t));
+				i++;
+			}
 		}
 		Environment.topLevelEnvironment.put(new Variable(ta.clojureName()),
 				new TypeHolder(new TypeArrow(this.memberTypes(), ta)));

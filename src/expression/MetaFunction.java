@@ -37,7 +37,8 @@ public abstract class MetaFunction extends Expression {
 	}
 
 	@Override
-	public String toClojureCode(Type expectedType, Environment env) throws InvalidClojureCompilationException, AppendableException {
+	public String toClojureCode(Type expectedType, Environment env)
+			throws InvalidClojureCompilationException, AppendableException {
 		throw new InvalidClojureCompilationException(this);
 	}
 

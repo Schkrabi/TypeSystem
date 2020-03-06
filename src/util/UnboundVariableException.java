@@ -18,7 +18,7 @@ public class UnboundVariableException extends AppendableException {
 	 * Variable that caused the exception
 	 */
 	public final Variable unboundVariable;
-	
+
 	public UnboundVariableException(Variable unboundVariable) {
 		super("Variable " + unboundVariable.toString() + " has no binding.");
 		this.unboundVariable = unboundVariable;

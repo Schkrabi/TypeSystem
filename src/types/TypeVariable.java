@@ -58,7 +58,7 @@ public class TypeVariable extends Type {
 	public Expression convertTo(Expression expr, Type toType) {
 		return expr;
 	}
-	
+
 	@Override
 	public String convertToClojure(String argument, Type toType) {
 		return argument;
@@ -66,9 +66,9 @@ public class TypeVariable extends Type {
 
 	@Override
 	public Type apply(Substitution s) {
-		if(s.containsVariable(this)) {
-			Type t = s.get(this).get();			
-			return t.apply(s);			
+		if (s.containsVariable(this)) {
+			Type t = s.get(this).get();
+			return t.apply(s);
 		}
 		return this;
 	}
@@ -77,7 +77,7 @@ public class TypeVariable extends Type {
 	public Type removeRepresentationInfo() {
 		return this;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.name.hashCode();
@@ -85,10 +85,10 @@ public class TypeVariable extends Type {
 
 	@Override
 	public Substitution unifyWith(Type other) {
-		if(this.equals(other)) {
-			return Substitution.EMPTY; 
-		}		
-		return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>((TypeVariable)this, other)));
+		if (this.equals(other)) {
+			return Substitution.EMPTY;
+		}
+		return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(this, other)));
 	}
 
 	@Override

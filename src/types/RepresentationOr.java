@@ -43,9 +43,9 @@ public class RepresentationOr extends Type {
 		}
 
 		final Substitution fagg = Type.unifyMany(representations);
-		
+
 		Set<Type> unifiedTypes = representations.stream().map(x -> x.apply(fagg)).collect(Collectors.toSet());
-		if(unifiedTypes.size() == 1) {
+		if (unifiedTypes.size() == 1) {
 			return unifiedTypes.stream().findAny().get();
 		}
 
@@ -91,30 +91,33 @@ public class RepresentationOr extends Type {
 
 	@Override
 	public Substitution unifyWith(Type other) throws AppendableException {
-		if(other instanceof TypeVariable) {
+		if (other instanceof TypeVariable) {
 			return other.unifyWith(this);
 		}
-		
+
 		try {
 			final List<Substitution> unifiers = this.representations.stream()
 					.map(ThrowingFunction.wrapper(x -> Type.unify(x, other))).collect(Collectors.toList());
 
-			//This step might be redundant, because all substituted variables in RepresentationOr should be the same for each representation
-			final Set<TypeVariable> boundVariables = unifiers.stream().map(x -> x.variableStream().collect(Collectors.toSet()))
+			// This step might be redundant, because all substituted variables in
+			// RepresentationOr should be the same for each representation
+			final Set<TypeVariable> boundVariables = unifiers.stream()
+					.map(x -> x.variableStream().collect(Collectors.toSet()))
 					.reduce(unifiers.stream().findAny().get().variableStream().collect(Collectors.toSet()), (x, y) -> {
 						Set<TypeVariable> s = new TreeSet<TypeVariable>(x);
 						s.retainAll(y);
 						return s;
 					});
-			
+
 			Set<Pair<TypeVariable, Type>> s = new HashSet<Pair<TypeVariable, Type>>();
-			for(TypeVariable v : boundVariables) {
-				Type t = RepresentationOr.makeRepresentationOr(unifiers.stream().map(x -> x.get(v).get()).collect(Collectors.toSet()));
+			for (TypeVariable v : boundVariables) {
+				Type t = RepresentationOr
+						.makeRepresentationOr(unifiers.stream().map(x -> x.get(v).get()).collect(Collectors.toSet()));
 				Pair<TypeVariable, Type> p = new Pair<TypeVariable, Type>(v, t);
 				s.add(p);
 			}
 			return new Substitution(s);
-			
+
 		} catch (RuntimeException e) {
 			AppendableException ae = (AppendableException) e.getCause();
 			throw ae;
@@ -167,14 +170,24 @@ public class RepresentationOr extends Type {
 	public String toString() {
 		return this.representations.toString();
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.representations.hashCode();
 	}
 
 	@Override
-	public String toClojure() throws AppendableException{
+	public String toClojure() throws AppendableException {
 		throw new AppendableException("toClojure of " + this.getClass().getName() + " : " + this + " is not allowed");
+	}
+	
+	/**
+	 * Returns true if this type is representing expression that can be applicated
+	 * (function, lambda, extended function or lambda). Otherwise returns false.
+	 * 
+	 * @return true or false.
+	 */
+	public boolean isApplicableType() {
+		return this.representations.stream().map(x -> x.isApplicableType()).reduce(true, Boolean::logicalAnd);
 	}
 }

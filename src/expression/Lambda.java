@@ -138,11 +138,12 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 
 	@Override
 	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next())), Environment.topLevelEnvironment);
+		return this.toClojureCode(new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next())),
+				Environment.topLevelEnvironment);
 	}
-	
+
 	@Override
-	public String toClojureCode(Type expectedType, Environment env) throws AppendableException{
+	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("`(");
 		s.append("[");
 		s.append(this.argsType.toClojure());
@@ -151,13 +152,15 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 		s.append("])");
 		return s.toString();
 	}
-	
+
 	/**
 	 * Creates code of this lambda as simple lambda in Clojure (e.g. (fn [x] x))
+	 * 
 	 * @param expectedType expected type of this lambda
-	 * @param env environment where lambda is evaluated
+	 * @param env          environment where lambda is evaluated
 	 * @return string containing lcojure code
-	 * @throws AppendableException Thrown on unification error or when any argument is not a variable
+	 * @throws AppendableException Thrown on unification error or when any argument
+	 *                             is not a variable
 	 */
 	protected String toClojureFn(Type expectedType, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder();
@@ -182,12 +185,16 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 		}
 		s.append("] ");
 
-		if (!(expectedType instanceof TypeArrow)) {
-			//TODO Change throwable
+		TypeArrow ta;
+		if ((expectedType instanceof TypeArrow)) {
+			ta = (TypeArrow) expectedType;
+		} else if(expectedType instanceof TypeVariable) {
+			ta = new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next()));
+		} else {
 			throw new AppendableException(
 					"Unexpected argument " + expectedType + "in Lambda.toClojureCode(expectedType)");
 		}
-		TypeArrow ta = (TypeArrow) expectedType;
+		
 		s.append(this.body.toClojureCode(ta.rtype, child));
 		s.append(')');
 		return s.toString();
@@ -224,9 +231,10 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	public int hashCode() {
 		return this.args.hashCode() * this.argsType.hashCode() * this.body.hashCode();
 	}
-	
+
 	@Override
-	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env) throws AppendableException {
-		return (TypeArrow)this.infer(env).first;
+	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env)
+			throws AppendableException {
+		return (TypeArrow) this.infer(env).first;
 	}
 }

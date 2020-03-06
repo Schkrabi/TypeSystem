@@ -26,37 +26,36 @@ public abstract class Type implements Comparable<Type> {
 	/**
 	 * Applies substitution to this type
 	 * 
-	 * @param s
-	 *            applied substitution
+	 * @param s applied substitution
 	 * @return new Type with applied substitution
-	 * @throws TypeVariableNotSubstitutedException 
-	 * @throws AppendableException 
+	 * @throws TypeVariableNotSubstitutedException
+	 * @throws AppendableException
 	 */
 	public abstract Type apply(Substitution s);
-	
+
 	/**
 	 * Creates expression that converts expr in different type (if possible)
 	 * 
-	 * @param expr
-	 *            Expression to be converted
-	 * @param toType
-	 *            target type
+	 * @param expr   Expression to be converted
+	 * @param toType target type
 	 * @return a new expression that will interpret/infer into a targeted type
 	 * @throws Exception
 	 */
 	public abstract Expression convertTo(Expression expr, Type toType) throws AppendableException;
-	
+
 	/**
 	 * Creates clojure code converting argument to different type (if possible)
+	 * 
 	 * @param argument Expresion compiled to clojure to be converted
-	 * @param toType target type
+	 * @param toType   target type
 	 * @return Clojure code
 	 * @throws when converting unconvertable types
 	 */
 	public abstract String convertToClojure(String argument, Type toType) throws AppendableException;
-	
+
 	/**
 	 * Returns substitution that unifies this type with other type
+	 * 
 	 * @param other other type to unify with
 	 * @return substitution unifying the types
 	 * @throws TypesDoesNotUnifyException is thrown if types cannot be unified
@@ -69,43 +68,51 @@ public abstract class Type implements Comparable<Type> {
 	 * @return new Type with representations removed
 	 */
 	public abstract Type removeRepresentationInfo();
-	
+
 	public abstract String toClojure() throws AppendableException;
-	
+
 	@Override
 	public int compareTo(Type other) {
 		return this.getClass().getName().compareTo(other.getClass().getName());
 	}
 
 	/**
-	 * Returns unified type if the expression if two types unifies, otherwise
-	 * throws
+	 * Returns unified type if the expression if two types unifies, otherwise throws
 	 * 
-	 * @param m
-	 *            first unified type
-	 * @param n
-	 *            second unified type
+	 * @param m first unified type
+	 * @param n second unified type
 	 * @return MGU of given types
 	 * @throws AppendableException if types are not unifiable
 	 */
 	public static Substitution unify(Type m, Type n) throws AppendableException {
 		return m.unifyWith(n);
 	}
-	
+
 	/**
 	 * Unifies set of types
+	 * 
 	 * @param types set to be unified
 	 * @return subtitution unifiing the set
 	 * @throws AppendableException thrown if any types does not unify
 	 */
-	public static Substitution unifyMany(Collection<? extends Type> types) throws AppendableException{
-			Type base = new TypeVariable(NameGenerator.next());
-			Substitution agg = Substitution.EMPTY;
-			for(Type t : types) {
-				Substitution s = Type.unify(base, t);
-				agg = agg.union(s);
-				base = base.apply(agg);
-			}
-			return agg;
+	public static Substitution unifyMany(Collection<? extends Type> types) throws AppendableException {
+		Type base = new TypeVariable(NameGenerator.next());
+		Substitution agg = Substitution.EMPTY;
+		for (Type t : types) {
+			Substitution s = Type.unify(base, t);
+			agg = agg.union(s);
+			base = base.apply(agg);
+		}
+		return agg;
+	}
+
+	/**
+	 * Returns true if this type is representing expression that can be applicated
+	 * (function, lambda, extended function or lambda). Otherwise returns false.
+	 * 
+	 * @return true or false.
+	 */
+	public boolean isApplicableType() {
+		return false;
 	}
 }

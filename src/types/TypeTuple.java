@@ -183,7 +183,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		while (i.hasNext()) {
 			Type from = i.next();
 			Type to = j.next();
-			String arg = "(get " + v  + " " + Integer.toString(n) + ")";
+			String arg = "(get " + v + " " + Integer.toString(n) + ")";
 
 			s.append(from.convertToClojure(arg, to));
 			if (i.hasNext()) {
@@ -239,13 +239,12 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 	@Override
 	public Substitution unifyWith(Type other) throws AppendableException {
-		if(other instanceof TypeVariable
-				|| other instanceof RepresentationOr) {
+		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
 			return other.unifyWith(this);
 		}
-		if(other instanceof TypeTuple) {
-			TypeTuple o = (TypeTuple)other;
-			if(this.size() == o.size()) {
+		if (other instanceof TypeTuple) {
+			TypeTuple o = (TypeTuple) other;
+			if (this.size() == o.size()) {
 				Substitution s = Substitution.EMPTY;
 
 				Iterator<Type> i = this.iterator();
@@ -268,10 +267,10 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	public String toClojure() throws AppendableException {
 		StringBuilder s = new StringBuilder("[");
 		Iterator<Type> i = this.values.iterator();
-		while(i.hasNext()) {
+		while (i.hasNext()) {
 			Type t = i.next();
 			s.append(t.toClojure());
-			if(i.hasNext()) {
+			if (i.hasNext()) {
 				s.append(" ");
 			}
 		}

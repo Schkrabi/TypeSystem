@@ -16,17 +16,17 @@ public class DuplicateTypeConstructorException extends AppendableException {
 	 * 
 	 */
 	private static final long serialVersionUID = 7329443659464172312L;
-	
+
 	/**
 	 * Type over which conflict occured
 	 */
 	public final Type conflictedType;
-	
+
 	/**
 	 * Previously defined constructor of type
 	 */
 	public final Function originalConstructor;
-	
+
 	/**
 	 * Newly defined constructor
 	 */

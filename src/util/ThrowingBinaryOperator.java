@@ -1,8 +1,6 @@
 package util;
 
-
 import java.util.function.BinaryOperator;
-
 
 @FunctionalInterface
 public interface ThrowingBinaryOperator<T, E extends Exception> {
@@ -11,7 +9,7 @@ public interface ThrowingBinaryOperator<T, E extends Exception> {
 	public static <T> BinaryOperator<T> wrapper(ThrowingBinaryOperator<T, AppendableException> function) {
 		return (x, y) -> {
 			try {
-				return ( function.apply(x, y));
+				return (function.apply(x, y));
 			} catch (AppendableException e) {
 				throw new RuntimeException(e);
 			}

@@ -78,27 +78,24 @@ public class TypeArrow extends Type {
 		TypeArrow t = (TypeArrow) toType;
 		Variable v = new Variable(NameGenerator.next());
 
-		Lambda l = new Lambda(new Tuple(Arrays.asList(v)), (TypeTuple) t.ltype,
-				this.rtype.convertTo(
-						new Application(expr, (Tuple) t.ltype.convertTo(new Tuple(Arrays.asList(v)), this.ltype)),
-						t.rtype));
+		Lambda l = new Lambda(new Tuple(Arrays.asList(v)), (TypeTuple) t.ltype, this.rtype.convertTo(
+				new Application(expr, (Tuple) t.ltype.convertTo(new Tuple(Arrays.asList(v)), this.ltype)), t.rtype));
 		return l;
 	}
-	
+
 	@Override
 	public String convertToClojure(String argument, Type toType) throws AppendableException {
-		if(toType instanceof TypeVariable) {
+		if (toType instanceof TypeVariable) {
 			return argument;
 		}
-		if(!(toType instanceof TypeArrow)) {
+		if (!(toType instanceof TypeArrow)) {
 			throw new ClojureConversionException(this, toType, argument);
 		}
 		TypeArrow t = (TypeArrow) toType;
 		String v = NameGenerator.next();
-		
-		return "(fn [" + v + "] " + this.rtype.convertToClojure(
-													"(" + argument + " " + t.ltype.convertToClojure(v, this.ltype) + ")", 
-													t.rtype) + ")";
+
+		return "(fn [" + v + "] " + this.rtype
+				.convertToClojure("(" + argument + " " + t.ltype.convertToClojure(v, this.ltype) + ")", t.rtype) + ")";
 	}
 
 	@Override
@@ -118,16 +115,15 @@ public class TypeArrow extends Type {
 
 	@Override
 	public Substitution unifyWith(Type other) throws AppendableException {
-		if(other instanceof TypeVariable
-				|| other instanceof RepresentationOr) {
+		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
 			return other.unifyWith(this);
 		}
-		if(other instanceof TypeArrow) {
-			TypeArrow o = (TypeArrow)other;
-			
+		if (other instanceof TypeArrow) {
+			TypeArrow o = (TypeArrow) other;
+
 			Substitution left = this.ltype.unifyWith(o.ltype);
 			Substitution right = this.rtype.unifyWith(o.rtype);
-			
+
 			return left.union(right);
 		}
 		throw new TypesDoesNotUnifyException(this, other);
@@ -136,5 +132,15 @@ public class TypeArrow extends Type {
 	@Override
 	public String toClojure() throws AppendableException {
 		throw new AppendableException("toClojure of " + this.getClass().getName() + " : " + this + " is not allowed");
+	}
+	
+	/**
+	 * Returns true if this type is representing expression that can be applicated
+	 * (function, lambda, extended function or lambda). Otherwise returns false.
+	 * 
+	 * @return true or false.
+	 */
+	public boolean isApplicableType() {
+		return true;
 	}
 }

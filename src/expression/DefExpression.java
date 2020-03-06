@@ -36,7 +36,7 @@ public class DefExpression extends Expression {
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		//TODO!!!
+		// TODO!!!
 		Environment e = Environment.create(env);
 		e.put(this.name, new TypeHolder(new TypeVariable(NameGenerator.next()), this.name));
 		Expression interpreted = this.defined.interpret(e);
@@ -77,7 +77,7 @@ public class DefExpression extends Expression {
 	public String toClojureCode() throws AppendableException {
 		return this.toClojureCode(TypeTuple.EMPTY_TUPLE, Environment.topLevelEnvironment);
 	}
-	
+
 	@Override
 	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(def ");
@@ -115,7 +115,7 @@ public class DefExpression extends Expression {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.defined.hashCode() * this.name.hashCode();

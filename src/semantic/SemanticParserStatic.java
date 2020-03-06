@@ -46,7 +46,7 @@ public final class SemanticParserStatic {
 		specialForms.add(IF);
 		specialForms.add(LAMBDA);
 		specialForms.add(DEFCONVERSION);
-		//specialForms.add(DEFCONSTRUCTOR);
+		// specialForms.add(DEFCONSTRUCTOR);
 		specialForms.add(DEFINE);
 		specialForms.add(CONS);
 		specialForms.add(ERROR);
