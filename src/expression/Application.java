@@ -115,12 +115,7 @@ public class Application extends Expression {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(new TypeVariable(NameGenerator.next()), Environment.topLevelEnvironment);
-	}
-
-	@Override
-	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(");
 		s.append(Application.clojureEapply);
 		s.append(" ");
@@ -139,7 +134,7 @@ public class Application extends Expression {
 					+ funInfered.toString());
 		}
 
-		s.append(this.fun.toClojureCode(new TypeArrow(argsType, expectedType), env));
+		s.append(this.fun.toClojureCode(env));
 
 		// Args
 		s.append(" [");
@@ -165,9 +160,9 @@ public class Application extends Expression {
 
 			String str;
 			if (t.equals(actual)) {
-				str = e.toClojureCode(t, env);
+				str = e.toClojureCode(env);
 			} else {
-				str = t.convertTo(e, actual).toClojureCode(t, env);
+				str = t.convertTo(e, actual).toClojureCode(env);
 			}
 			s.append(str);
 

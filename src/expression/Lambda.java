@@ -137,18 +137,12 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next())),
-				Environment.topLevelEnvironment);
-	}
-
-	@Override
-	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("`(");
 		s.append("[");
 		s.append(this.argsType.toClojure());
 		s.append(" ~");
-		s.append(this.toClojureFn(expectedType, env));
+		s.append(this.toClojureFn(env));
 		s.append("])");
 		return s.toString();
 	}
@@ -162,7 +156,7 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	 * @throws AppendableException Thrown on unification error or when any argument
 	 *                             is not a variable
 	 */
-	protected String toClojureFn(Type expectedType, Environment env) throws AppendableException {
+	protected String toClojureFn(Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		s.append("(fn [");
 
@@ -184,18 +178,8 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 			}
 		}
 		s.append("] ");
-
-		TypeArrow ta;
-		if ((expectedType instanceof TypeArrow)) {
-			ta = (TypeArrow) expectedType;
-		} else if(expectedType instanceof TypeVariable) {
-			ta = new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next()));
-		} else {
-			throw new AppendableException(
-					"Unexpected argument " + expectedType + "in Lambda.toClojureCode(expectedType)");
-		}
 		
-		s.append(this.body.toClojureCode(ta.rtype, child));
+		s.append(this.body.toClojureCode(child));
 		s.append(')');
 		return s.toString();
 	}

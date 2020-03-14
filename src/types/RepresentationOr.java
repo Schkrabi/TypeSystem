@@ -190,4 +190,21 @@ public class RepresentationOr extends Type {
 	public boolean isApplicableType() {
 		return this.representations.stream().map(x -> x.isApplicableType()).reduce(true, Boolean::logicalAnd);
 	}
+
+	@Override
+	public Type uniteRepresentationsWith(Type other) throws AppendableException {
+		if(other instanceof TypeVariable) {
+			return other.uniteRepresentationsWith(this);
+		}
+		if(other instanceof RepresentationOr) {
+			Set<Type> reps = this.getRepresentations();
+			reps.addAll(((RepresentationOr) other).getRepresentations());
+			return RepresentationOr.makeRepresentationOr(reps);
+		}
+		
+		if(this.representations.contains(other)) {
+			return other;
+		}
+		throw new AppendableException("Cannot unite types " + this + " " + other);
+	}
 }

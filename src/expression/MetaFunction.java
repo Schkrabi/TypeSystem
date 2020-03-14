@@ -3,7 +3,6 @@ package expression;
 import util.AppendableException;
 import util.InvalidClojureCompilationException;
 import interpretation.Environment;
-import types.Type;
 import types.TypeTuple;
 
 /**
@@ -32,12 +31,7 @@ public abstract class MetaFunction extends Expression {
 	public abstract Function getFunction(TypeTuple realArgsType);
 
 	@Override
-	public String toClojureCode() throws InvalidClojureCompilationException, AppendableException {
-		return this.toClojureCode(null, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	public String toClojureCode(Type expectedType, Environment env)
+	public String toClojureCode(Environment env)
 			throws InvalidClojureCompilationException, AppendableException {
 		throw new InvalidClojureCompilationException(this);
 	}

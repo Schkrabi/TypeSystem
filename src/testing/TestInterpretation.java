@@ -277,12 +277,7 @@ class TestInterpretation {
 			}
 
 			@Override
-			public String toClojureCode() throws AppendableException {
-				return null;
-			}
-
-			@Override
-			protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+			protected String toClojureCode(Environment env) throws AppendableException {
 				return null;
 			}
 		});
@@ -360,12 +355,7 @@ class TestInterpretation {
 			}
 
 			@Override
-			public String toClojureCode() throws AppendableException {
-				return null;
-			}
-
-			@Override
-			protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+			protected String toClojureCode(Environment env) throws AppendableException {
 				return null;
 			}
 		}))).infer(Environment.topLevelEnvironment));
@@ -401,12 +391,7 @@ class TestInterpretation {
 			}
 
 			@Override
-			public String toClojureCode() throws AppendableException {
-				return null;
-			}
-
-			@Override
-			protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+			protected String toClojureCode(Environment env) throws AppendableException {
 				return null;
 			}
 		}).infer(Environment.topLevelEnvironment));
@@ -466,12 +451,7 @@ class TestInterpretation {
 					}
 
 					@Override
-					public String toClojureCode() throws AppendableException {
-						return null;
-					}
-
-					@Override
-					protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+					protected String toClojureCode(Environment env) throws AppendableException {
 						return null;
 					}
 				}).infer(Environment.topLevelEnvironment));

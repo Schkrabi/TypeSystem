@@ -31,14 +31,9 @@ public class PostponeInterpretation extends Expression {
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		return this.postponed.infer(this.environment);
 	}
-
+	
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(null, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	protected String toClojureCode(Environment env) throws AppendableException {
 		throw new AppendableException(this.getClass().getName() + " is not to be converted to Clojure!");
 	}
 

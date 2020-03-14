@@ -55,12 +55,7 @@ public class Operator extends Function {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(null, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		return "`([" + this.argsType.toClojure() + " ~" + this.clojureSymbol + "])";
 	}
 
@@ -289,12 +284,7 @@ public class Operator extends Function {
 		}
 
 		@Override
-		public String toClojureCode() throws AppendableException {
-			return this.toClojureCode(null, Environment.topLevelEnvironment);
-		}
-
-		@Override
-		protected String toClojureCode(Type expectedType, Environment env) throws InvalidClojureCompilationException {
+		protected String toClojureCode(Environment env) throws InvalidClojureCompilationException {
 			throw new InvalidClojureCompilationException(this);
 		}
 

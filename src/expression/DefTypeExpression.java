@@ -64,12 +64,7 @@ public class DefTypeExpression extends Expression {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(this.infer(Environment.topLevelEnvironment).first, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	protected String toClojureCode(Environment env) throws AppendableException {
 		TypeEnvironment.singleton.addType(this.typeName);
 		return "";
 	}

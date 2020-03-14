@@ -113,19 +113,13 @@ public class DefConversionExpression extends Expression {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(null, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
-		Type expected = new TypeArrow(new TypeTuple(Arrays.asList(this.fromType)), this.toType);
+	protected String toClojureCode(Environment env) throws AppendableException {
 		Variable convName = new Variable(TypeEnvironment.makeConversionName(this.fromType, this.toType));
 		TypeEnvironment.singleton.addConversion(this.fromType, this.toType, convName);
 		Environment.topLevelEnvironment.put(convName,
 				new TypeHolder(new TypeArrow(new TypeTuple(Arrays.asList(this.fromType)), this.toType)));
 		return "(def " + TypeEnvironment.makeConversionName(this.fromType, this.toType) + " "
-				+ this.conversion.toClojureCode(expected, env) + ")";
+				+ this.conversion.toClojureCode(env) + ")";
 	}
 
 }

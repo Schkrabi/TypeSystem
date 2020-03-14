@@ -164,4 +164,15 @@ public class TypeAtom extends Type {
 	public String toClojure() {
 		return ":" + this.name.toString() + this.representation.toString();
 	}
+
+	@Override
+	public Type uniteRepresentationsWith(Type other) throws AppendableException {
+		if (other instanceof RepresentationOr || other instanceof TypeVariable) {
+			return other.uniteRepresentationsWith(this);
+		}
+		if (!(other instanceof TypeAtom) || !(TypeAtom.isSameBasicType(this, (TypeAtom) other))) {
+			throw new AppendableException("Cannot unite types " + this + " " + other);
+		}
+		return new TypeAtom(this.name, TypeRepresentation.WILDCARD);
+	}
 }

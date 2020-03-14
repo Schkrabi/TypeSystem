@@ -44,12 +44,6 @@ public class LitEnum extends Literal {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
-		// TODO Auto-generated method stub
-		return this.value;
-	}
-
-	@Override
 	public boolean equals(Object other) {
 		if (other instanceof LitEnum) {
 			return this.enumType.equals(((LitEnum) other).enumType) && this.value.equals(((LitEnum) other).value);
@@ -79,7 +73,7 @@ public class LitEnum extends Literal {
 	}
 
 	@Override
-	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	protected String toClojureCode(Environment env) throws AppendableException {
 		throw new AppendableException("Not Implemented");
 	}
 

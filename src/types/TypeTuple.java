@@ -277,4 +277,25 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		s.append("]");
 		return s.toString();
 	}
+
+	@Override
+	public Type uniteRepresentationsWith(Type other) throws AppendableException {
+		if (other instanceof RepresentationOr || other instanceof TypeVariable) {
+			return other.uniteRepresentationsWith(this);
+		}
+		if (!(other instanceof TypeTuple) || ((TypeTuple) other).size() != this.size()) {
+			throw new AppendableException("Cannot unite types " + this + " " + other);
+		}
+
+		Iterator<Type> i = this.iterator();
+		Iterator<Type> j = ((TypeTuple) other).iterator();
+		List<Type> l = new LinkedList<Type>();
+		while (i.hasNext()) {
+			Type t = i.next();
+			Type o = j.next();
+			l.add(t.uniteRepresentationsWith(o));
+		}
+
+		return new TypeTuple(l);
+	}
 }

@@ -115,4 +115,6 @@ public abstract class Type implements Comparable<Type> {
 	public boolean isApplicableType() {
 		return false;
 	}
+	
+	public abstract Type uniteRepresentationsWith(Type other) throws AppendableException;
 }

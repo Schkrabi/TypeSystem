@@ -43,13 +43,8 @@ public class LitComposite extends Literal {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(this.composedType, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
-		return this.value.toClojureCode(this.value.infer(env).first, env);
+	protected String toClojureCode(Environment env) throws AppendableException {
+		return this.value.toClojureCode(env);
 	}
 
 	@Override

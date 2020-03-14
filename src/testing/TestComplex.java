@@ -192,9 +192,10 @@ class TestComplex {
 		this.testClojureCompile("(if #t 42 21)", "(if true 42 21)");
 		this.testClojureCompile("(if #t (Int:Roman \"XLII\") (Int:String \"42\"))",
 				"(if true (" + Application.clojureEapply
-						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"]) (IntString2IntRoman ("
-						+ Application.clojureEapply
-						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"])))");
+						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"]) ("
+						+ Application.clojureEapply + " `([[:IntString] ~(fn [_x] [(" + RomanNumbers.int2RomanClojure
+						+ " (Integer/parseInt (get _x 0)))])]) [:IntString] [(" + Application.clojureEapply
+						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"])]))");
 		// Cons
 		this.testClojureCompile("(cons 21 21)", "[21 21]");
 		// Exception
@@ -285,12 +286,12 @@ class TestComplex {
 						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"])])");
 
 		// Recursion
-		/*this.testClojureCompileRegex("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))",
+		this.testClojureCompileRegex("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))",
 				TestComplex.escapeBrackets("(def fact `([[:\\w*] ~(fn [x] (if (" + Application.clojureEapply
 						+ " `([[:IntNative :IntNative] ~=]) [:\\w* :IntNative] [x 1]) x (" + Application.clojureEapply
 						+ " `([[:IntNative :IntNative] ~\\*]) [:\\w* :IntNative] [x (" + Application.clojureEapply
 						+ " fact [:IntNative] [(" + Application.clojureEapply
-						+ " `([[:IntNative :IntNative] ~-]) [:\\w* :IntNative] [x 1])])])))]))"));*/
+						+ " `([[:IntNative :IntNative] ~-]) [:\\w* :IntNative] [x 1])])])))]))"));
 
 		// Conversions
 		this.testClojureCompile(
@@ -336,7 +337,7 @@ class TestComplex {
 				"(def tail-list2 `([[:List2Empty] ~(fn [l] (throw (Throwable. \"Cannot make tail of empty list!\")))] [[:List2Linked] ~(fn [l] ("
 						+ Application.clojureEapply + " List2Linked-1 [:List2Linked] [l]))]))");
 
-		this.testClojureCompileRegex(
+		/*this.testClojureCompileRegex(
 				"(define build-list2-aux (lambda (i n f)\n" + "            						(if (= i n)\n"
 						+ "            							(List2:Empty)\n"
 						+ "            							(List2:Linked (f i) (build-list2-aux (+ i 1) n f)))))",
@@ -346,7 +347,7 @@ class TestComplex {
 						+ Application.clojureEapply + " List2:Linked [:\\w* :List2Empty] [(" + Application.clojureEapply
 						+ " f [:\\w*] [i]) (" + Application.clojureEapply
 						+ " build-list2-aux [:IntNative :\\w* :\\w*] [(" + Application.clojureEapply
-						+ " `([[:IntNative :IntNative] ~+]) [:\\w* :IntNative] [i 1]) n f])]))))]))"));
+						+ " `([[:IntNative :IntNative] ~+]) [:\\w* :IntNative] [i 1]) n f])]))))]))"));*/
 
 		this.testClojureCompileRegex("(define build-list2 (lambda (n f) (build-list2-aux 0 n f)))",
 				TestComplex.escapeBrackets("(def build-list2 `([[:\\w* :\\w*] ~(fn [n f] (" + Application.clojureEapply
@@ -366,12 +367,12 @@ class TestComplex {
 								+ " append-list2 [:List2\\* :\\w*] [(" + Application.clojureEapply
 								+ " tail-list2 [:List2\\*] [l]) x])])))]))"));
 
-		this.testClojureCompile(
+		/*this.testClojureCompile(
 				"(define reverse-list2 (lambda ((List2 l)) \n"
 						+ "						(if (equals? l (List2:Empty)) \n"
 						+ "							(List2:Empty) \n"
 						+ "							(append-list2 (reverse-list2 (tail-list2 l)) (head-list2 l)))))",
-				"");
+				"");*/
 	}
 
 	private List<Expression> parseString(String s, SemanticParser semanticParser) throws AppendableException {

@@ -157,19 +157,14 @@ public class DefRepresentationExpression extends Expression {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(null, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	protected String toClojureCode(Environment env) throws AppendableException {
 		TypeAtom ta = new TypeAtom(this.typeName, this.representation);
 		StringBuilder s = new StringBuilder("(def ");
 		s.append(ta.clojureName());
 		s.append(" ");
 		Lambda constructorLambda = this.makeConstructorLambda();
 		TypeEnvironment.singleton.addRepresentation(ta, (Function) constructorLambda.interpret(env));
-		s.append(constructorLambda.toClojureCode(new TypeArrow(constructorLambda.argsType, ta), env));
+		s.append(constructorLambda.toClojureCode(env));
 		s.append(")");
 		
 		if(this.memberTypes().size() > 0) {

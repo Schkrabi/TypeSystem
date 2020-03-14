@@ -64,16 +64,11 @@ public class Variable extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(null, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	protected String toClojureCode(Environment env) throws AppendableException {
 		if (env.containsVariable(this)) {
 			Expression e = env.getVariableValue(this);
 			if (e instanceof Operator) {
-				return e.toClojureCode(expectedType, env);
+				return e.toClojureCode(env);
 			}
 		}
 

@@ -95,4 +95,9 @@ public class TypeVariable extends Type {
 	public String toClojure() throws AppendableException {
 		return ":" + this.name;
 	}
+
+	@Override
+	public Type uniteRepresentationsWith(Type other){
+		return other;
+	}
 }

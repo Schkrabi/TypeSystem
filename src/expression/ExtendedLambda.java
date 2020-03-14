@@ -12,10 +12,7 @@ import interpretation.Environment;
 import types.RepresentationOr;
 import types.Substitution;
 import types.Type;
-import types.TypeArrow;
-import types.TypeVariable;
 import util.AppendableException;
-import util.NameGenerator;
 import util.Pair;
 import util.ThrowingBinaryOperator;
 import util.ThrowingFunction;
@@ -109,61 +106,24 @@ public class ExtendedLambda extends MetaLambda {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(
-				new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next())),
-				Environment.topLevelEnvironment);
-	}
-
-	@Override
-	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
-		if (!expectedType.isApplicableType() && !(expectedType instanceof TypeVariable)) {
-			throw new AppendableException(
-					"Unexpected argument " + expectedType + "in ExtendedLambda.toClojureCode(expectedType)");
-		}
-
+	protected String toClojureCode(Environment env) throws AppendableException {
 		try {			
-			if(expectedType instanceof TypeArrow){
-				final TypeArrow type = (TypeArrow) expectedType;
-				StringBuilder s = new StringBuilder("`(");
-	
-				Iterator<String> i = this.implementations.stream()
-						.map(ThrowingFunction
-								.wrapper(x -> "[" + x.argsType.toClojure() + " ~" + x.toClojureFn(type, env) + "]"))
-						.collect(Collectors.toList()).iterator();
-	
-				while (i.hasNext()) {
-					String str = i.next();
-					s.append(str);
-					if (i.hasNext()) {
-						s.append(" ");
-					}
+			StringBuilder s = new StringBuilder("`(");
+			
+			Iterator<String> i = this.implementations.stream()
+					.map(ThrowingFunction
+							.wrapper(x -> "[" + x.argsType.toClojure() + " ~" + x.toClojureFn(env) + "]"))
+					.collect(Collectors.toList()).iterator();
+
+			while (i.hasNext()) {
+				String str = i.next();
+				s.append(str);
+				if (i.hasNext()) {
+					s.append(" ");
 				}
-				s.append(")");
-				return s.toString();
 			}
-			else if (expectedType instanceof RepresentationOr) {
-				RepresentationOr type = (RepresentationOr) expectedType;
-				StringBuilder s = new StringBuilder("`(");
-				
-				Iterator<Lambda> i = this.implementations.iterator();
-				
-				while(i.hasNext()) {
-					Lambda l = i.next();
-					Type t = type.getRepresentations().stream().filter(x -> ((TypeArrow)x).ltype.equals(l.argsType)).findAny().get();
-					s.append("[" + l.argsType.toClojure() + " ~" + l.toClojureFn(t, env) + "]");
-					if (i.hasNext()) {
-						s.append(" ");
-					}
-				}
-				s.append(")");
-				
-				return s.toString();
-				
-			}
-			else {
-				throw new AppendableException("Unexcpected expected type: " + expectedType);
-			}
+			s.append(")");
+			return s.toString();
 		} catch (RuntimeException re) {
 			AppendableException e = (AppendableException) re.getCause();
 			throw e;

@@ -68,18 +68,8 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 		return new Pair<Type, Substitution>(this.type, Substitution.EMPTY);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see expression.Expression#toClojureCode()
-	 */
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(null, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	protected String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	protected String toClojureCode(Environment env) throws AppendableException {
 		throw new AppendableException(this.getClass().getName() + " is not to be converted to Clojure!");
 	}
 

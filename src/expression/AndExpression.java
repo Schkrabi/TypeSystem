@@ -62,12 +62,7 @@ public class AndExpression extends Application {
 	}
 
 	@Override
-	public String toClojureCode() throws AppendableException {
-		return this.toClojureCode(TypeAtom.TypeBool, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(");
 		s.append(AndWrapper.singleton.toClojureCode());
 		s.append(' ');
@@ -75,7 +70,7 @@ public class AndExpression extends Application {
 		Iterator<Expression> i = this.args.iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
-			s.append(e.toClojureCode(TypeAtom.TypeBoolNative, env));
+			s.append(e.toClojureCode(env));
 			if (i.hasNext()) {
 				s.append(' ');
 			}
@@ -109,12 +104,7 @@ public class AndExpression extends Application {
 		}
 
 		@Override
-		public String toClojureCode() {
-			return "and";
-		}
-
-		@Override
-		protected String toClojureCode(Type expectedType, Environment env) {
+		protected String toClojureCode(Environment env) {
 			return "and";
 		}
 

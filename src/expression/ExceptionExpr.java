@@ -43,12 +43,7 @@ public class ExceptionExpr extends Expression {
 	}
 
 	@Override
-	public String toClojureCode() {
-		return this.toClojureCode(null, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	protected String toClojureCode(Type expectedType, Environment env) {
+	protected String toClojureCode(Environment env) {
 		return "(throw (Throwable. \"" + this.message + "\"))";
 	}
 

@@ -133,7 +133,7 @@ public class TypeArrow extends Type {
 	public String toClojure() throws AppendableException {
 		throw new AppendableException("toClojure of " + this.getClass().getName() + " : " + this + " is not allowed");
 	}
-	
+
 	/**
 	 * Returns true if this type is representing expression that can be applicated
 	 * (function, lambda, extended function or lambda). Otherwise returns false.
@@ -142,5 +142,19 @@ public class TypeArrow extends Type {
 	 */
 	public boolean isApplicableType() {
 		return true;
+	}
+
+	@Override
+	public Type uniteRepresentationsWith(Type other) throws AppendableException {
+		if (other instanceof RepresentationOr || other instanceof TypeVariable) {
+			return other.uniteRepresentationsWith(this);
+		}
+		if (!(other instanceof TypeArrow)) {
+			throw new AppendableException("Cannot unite types " + this + " " + other);
+		}
+		TypeArrow o = (TypeArrow) other;
+
+		return new TypeArrow(this.ltype.uniteRepresentationsWith(o.ltype),
+				this.rtype.uniteRepresentationsWith(o.rtype));
 	}
 }

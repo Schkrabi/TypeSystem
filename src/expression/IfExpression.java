@@ -80,25 +80,25 @@ public class IfExpression extends Application {
 	}
 
 	@Override
-	public String toClojureCode(Type expectedType, Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(if ");
 
-		s.append(this.getCondition().toClojureCode(TypeAtom.TypeBoolNative, env));
+		s.append(this.getCondition().toClojureCode(env));
 		s.append(" ");
 
 		Expression trueBranch = this.getTrueBranch();
 		Pair<Type, Substitution> trueType = trueBranch.infer(env);
 
-		s.append(this.getTrueBranch().toClojureCode(trueType.first, env));
+		s.append(this.getTrueBranch().toClojureCode(env));
 		s.append(" ");
 
 		Expression falseBranch = this.getFalseBranch();
 		Pair<Type, Substitution> falseType = falseBranch.infer(env);
 
 		if (!falseType.first.apply(trueType.second).equals(trueType.first.apply(falseType.second))) {
-			s.append(falseType.first.convertToClojure(falseBranch.toClojureCode(falseType.first, env), trueType.first));
+			s.append(falseType.first.convertTo(falseBranch, trueType.first).toClojureCode(env));
 		} else {
-			s.append(this.getFalseBranch().toClojureCode(falseType.first, env));
+			s.append(this.getFalseBranch().toClojureCode(env));
 		}
 
 		s.append(")");
@@ -130,12 +130,7 @@ public class IfExpression extends Application {
 		}
 
 		@Override
-		public String toClojureCode() {
-			return this.toClojureCode(null, Environment.topLevelEnvironment);
-		}
-
-		@Override
-		protected String toClojureCode(Type expectedType, Environment env) {
+		protected String toClojureCode(Environment env) {
 			return "if";
 		}
 

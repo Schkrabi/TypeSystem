@@ -38,12 +38,7 @@ public class LitBoolean extends Literal {
 	public static final LitBoolean FALSE = new LitBoolean(false);
 
 	@Override
-	public String toClojureCode() {
-		return this.toClojureCode(null, Environment.topLevelEnvironment);
-	}
-
-	@Override
-	protected String toClojureCode(Type expectedType, Environment env) {
+	protected String toClojureCode(Environment env) {
 		return Boolean.toString(this.value);
 	}
 

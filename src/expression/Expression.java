@@ -44,16 +44,18 @@ public abstract class Expression implements Comparable<Expression> {
 	 * @return string containing clojure expression
 	 * @throws AppendableException
 	 */
-	public abstract String toClojureCode() throws AppendableException;
+	public String toClojureCode() throws AppendableException
+	{
+		return this.toClojureCode(Environment.topLevelEnvironment);
+	}
 
 	/**
 	 * Transforms expression into equivalent clojure expression
 	 * 
-	 * @param expectedType Expected type of expression
 	 * @return string containing clojure expression
 	 * @throws AppendableException
 	 */
-	protected abstract String toClojureCode(Type expectedType, Environment env) throws AppendableException;
+	protected abstract String toClojureCode(Environment env) throws AppendableException;
 
 	/**
 	 * Gets function type with specific representations in place
@@ -83,12 +85,7 @@ public abstract class Expression implements Comparable<Expression> {
 		}
 
 		@Override
-		public String toClojureCode() {
-			return this.toClojureCode(null, Environment.topLevelEnvironment);
-		}
-
-		@Override
-		public String toClojureCode(Type expectedType, Environment env) {
+		public String toClojureCode(Environment env) {
 			return "nil";
 		}
 	};
