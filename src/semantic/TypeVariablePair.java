@@ -2,7 +2,7 @@ package semantic;
 
 import types.Type;
 import util.Pair;
-import expression.Variable;
+import expression.Symbol;
 
 /**
  * Class for variable type pairs
@@ -10,9 +10,9 @@ import expression.Variable;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class TypeVariablePair extends Pair<Type, Variable> {
+public class TypeVariablePair extends Pair<Type, Symbol> {
 
-	public TypeVariablePair(Type type, Variable variable) {
+	public TypeVariablePair(Type type, Symbol variable) {
 		super(type, variable);
 	}
 

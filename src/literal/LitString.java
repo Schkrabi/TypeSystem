@@ -1,5 +1,6 @@
-package expression;
+package literal;
 
+import expression.Expression;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
@@ -33,7 +34,7 @@ public class LitString extends Literal {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) {
+	public String toClojureCode(Environment env) {
 		return '"' + this.value + '"';
 	}
 

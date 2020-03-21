@@ -1,4 +1,6 @@
-package expression;
+package literal;
+
+import expression.Expression;
 
 /**
  * Abstract expression class for literals implementations

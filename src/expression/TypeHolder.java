@@ -26,14 +26,14 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	/**
 	 * Expression for which this typeholder is placed
 	 */
-	public final Variable placeholderOf;
+	public final Symbol placeholderOf;
 
 	public TypeHolder(Type type) {
 		this.type = type;
 		this.placeholderOf = null;
 	}
 
-	public TypeHolder(Type type, Variable placeholderOf) {
+	public TypeHolder(Type type, Symbol placeholderOf) {
 		this.type = type;
 		this.placeholderOf = placeholderOf;
 	}
@@ -69,7 +69,7 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		throw new AppendableException(this.getClass().getName() + " is not to be converted to Clojure!");
 	}
 

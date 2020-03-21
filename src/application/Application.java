@@ -1,7 +1,10 @@
-package expression;
+package application;
 
 import java.util.Iterator;
 
+import abstraction.Abstraction;
+import expression.Expression;
+import expression.Tuple;
 import types.RepresentationOr;
 import types.Substitution;
 import types.Type;
@@ -9,7 +12,6 @@ import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
-import util.InvalidNumberOfArgumentsException;
 import util.NameGenerator;
 import util.Pair;
 import interpretation.Environment;
@@ -40,37 +42,14 @@ public class Application extends Expression {
 	public Expression interpret(Environment env) throws AppendableException {
 		Expression ifun = fun.interpret(env);
 
-		if (!MetaFunction.isFunction(ifun)) {
-			throw new AppendableException(ifun.toString() + "is not a function");
+		if (!(ifun instanceof Abstraction)) {
+			throw new AppendableException(ifun.toString() + "is not an abstration");
 		}
-
-		Pair<Type, Substitution> argInfered = this.args.infer(env);
-		final TypeTuple argsType = (TypeTuple) argInfered.first;
-
-		// Implementation chosen on vector distance of argument types
-		Function f = ((MetaFunction) ifun).getFunction(argsType);
-
-		if (f.args.size() != this.args.size()) {
-			throw new InvalidNumberOfArgumentsException(f.args.size(), this.args, this);
-		}
-
-		Environment childEnv = Environment.create(f.creationEnvironment); // Lexical clojure!!!
-		Iterator<Expression> i = f.args.iterator();
-		Iterator<Expression> j = this.args.iterator();
-		while (i.hasNext()) {
-			Expression e = j.next();
-			Variable v = (Variable) i.next();
-			// childEnv.put(v, new PostponeInterpretation(e, env));
-			childEnv.put(v, e.interpret(env));
-		}
-
-		TypeArrow funType = (TypeArrow) f.infer(env).first;
-
-		childEnv = Application.autoConvertArgs(childEnv, f.args, argsType, (TypeTuple) funType.ltype);
-
-		Expression rslt = f.body.interpret(childEnv);
-
-		return rslt;
+		Abstraction abst = (Abstraction)ifun;
+		
+		Tuple interpretedArgs = (Tuple)this.args.interpret(env);
+		
+		return abst.substituteAndEvaluate(interpretedArgs, env);
 	}
 
 	@Override
@@ -185,33 +164,6 @@ public class Application extends Expression {
 			return this.args.compareTo(o.args);
 		}
 		return super.compareTo(other);
-	}
-
-	/**
-	 * Lazily converts all the arguments to given representation
-	 * 
-	 * @param e        environment containing the arguments associated with their
-	 *                 names
-	 * @param args     argument names in the environment
-	 * @param argTypes formal inferred types of the arguments
-	 * @return new environment where all the arguments will be converted
-	 * @throws Exception
-	 */
-	private static Environment autoConvertArgs(Environment e, Tuple args, TypeTuple fromType, TypeTuple toType)
-			throws AppendableException {
-		Environment ret = Environment.create(e.parent);
-
-		Iterator<Expression> i = args.iterator();
-		Iterator<Type> j = fromType.iterator();
-		Iterator<Type> k = toType.iterator();
-		while (i.hasNext()) {
-			Variable name = (Variable) i.next();
-			Expression arg = e.getVariableValue(name);
-
-			ret.put(name, j.next().convertTo(arg, k.next()));
-		}
-
-		return ret;
 	}
 
 	@Override

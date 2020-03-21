@@ -1,4 +1,4 @@
-package expression;
+package abstraction;
 
 import interpretation.Environment;
 
@@ -9,10 +9,11 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import expression.Expression;
+import expression.Tuple;
 import types.RepresentationOr;
 import types.Substitution;
 import types.Type;
-import types.TypeArrow;
 import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
@@ -25,29 +26,13 @@ import util.ThrowingFunction;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class ExtendedFunction extends MetaFunction {
+public class ExtendedFunction extends ExtendedLambda {
 
-	/**
-	 * Implementations of the function
-	 */
-	private final Set<Function> implementations;
+	public final Environment creationEnvironment;
 
-	private ExtendedFunction(Collection<Function> implementations, Environment createdEnvironment) {
-		super(createdEnvironment);
-		this.implementations = implementations.stream()
-				.map(x -> new Function(x.argsType, x.args, x.body, createdEnvironment)).collect(Collectors.toSet());
-	}
-
-	@Override
-	public Function getFunction(final TypeTuple realArgsType) {
-		return this.implementations.stream()
-				.map(impl -> new Pair<Integer, Function>(impl.argsType.tupleDistance(realArgsType), impl))
-				.reduce(new Pair<Integer, Function>(Integer.MAX_VALUE, null), (p1, p2) -> {
-					if (p1.first < p2.first)
-						return p1;
-					else
-						return p2;
-				}).second;
+	private ExtendedFunction(Collection<Lambda> implementations, Environment createdEnvironment) {
+		super(implementations);
+		creationEnvironment = createdEnvironment;
 	}
 
 	@Override
@@ -67,8 +52,8 @@ public class ExtendedFunction extends MetaFunction {
 		}
 	}
 
-	public PriorityQueue<Function> getSortedImplementations(Comparator<? super Function> c) {
-		PriorityQueue<Function> q = new PriorityQueue<Function>(c);
+	public PriorityQueue<Lambda> getSortedImplementations(Comparator<? super Lambda> c) {
+		PriorityQueue<Lambda> q = new PriorityQueue<Lambda>(c);
 		q.addAll(this.implementations);
 		return q;
 	}
@@ -79,18 +64,6 @@ public class ExtendedFunction extends MetaFunction {
 			int cmp = this.creationEnvironment.compareTo(((ExtendedFunction) other).creationEnvironment);
 			if (cmp != 0)
 				return cmp;
-
-			for (Function f : this.implementations) {
-				if (!((ExtendedFunction) other).implementations.contains(f)) {
-					return 1;
-				}
-			}
-			for (Function f : ((ExtendedFunction) other).implementations) {
-				if (!this.implementations.contains(f)) {
-					return -1;
-				}
-			}
-			return 0;
 		}
 		return super.compareTo(other);
 	}
@@ -98,7 +71,8 @@ public class ExtendedFunction extends MetaFunction {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof ExtendedFunction) {
-			return this.implementations.equals(((ExtendedFunction) other).implementations);
+			return this.creationEnvironment.equals(((ExtendedFunction) other).creationEnvironment)
+					&& this.implementations.equals(((ExtendedFunction) other).implementations);
 		}
 		return false;
 	}
@@ -108,9 +82,9 @@ public class ExtendedFunction extends MetaFunction {
 		StringBuilder s = new StringBuilder("(ExFunctionInternal (");
 
 		// Arguments
-		Iterator<Function> k = this.implementations.iterator();
+		Iterator<Lambda> k = this.implementations.iterator();
 		while (k.hasNext()) {
-			Function f = k.next();
+			Lambda f = k.next();
 			s.append('(');
 			s.append(f.argsType.toString().replace('[', '(').replace(']', ')'));
 			s.append(' ');
@@ -131,12 +105,6 @@ public class ExtendedFunction extends MetaFunction {
 		return super.hashCode() * this.implementations.hashCode();
 	}
 
-	@Override
-	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env)
-			throws AppendableException {
-		return this.getFunction(argTypes).getFunctionTypeWithRepresentations(argTypes, env);
-	}
-
 	/**
 	 * Creates new extended function
 	 * 
@@ -146,9 +114,21 @@ public class ExtendedFunction extends MetaFunction {
 	 * @throws AppendableException thrown if argument types of function does not
 	 *                             unify
 	 */
-	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
+	public static ExtendedFunction makeExtendedFunction(Collection<Lambda> implementations,
 			Environment createdEnvironment) throws AppendableException {
 		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
 		return new ExtendedFunction(implementations, createdEnvironment);
+	}
+	
+	@Override
+	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException {	
+		TypeTuple argsType = (TypeTuple)args.infer(env).first;
+		Lambda l = this.getMostFitLambda(argsType);
+		return l.substituteAndEvaluate(args, env);
+	}
+	
+	@Override
+	public Expression interpret(Environment env) {
+		return this;
 	}
 }

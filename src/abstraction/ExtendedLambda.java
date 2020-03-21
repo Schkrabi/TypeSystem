@@ -1,17 +1,18 @@
-package expression;
+package abstraction;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import expression.Expression;
+import expression.Tuple;
 import interpretation.Environment;
 import types.RepresentationOr;
 import types.Substitution;
 import types.Type;
+import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
 import util.ThrowingBinaryOperator;
@@ -24,21 +25,31 @@ import util.ThrowingFunction;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class ExtendedLambda extends MetaLambda {
+public class ExtendedLambda extends Abstraction {
 
 	/**
 	 * Various implementations of this function
 	 */
-	private final Set<Lambda> implementations;
+	protected final Set<Lambda> implementations;
 
-	private ExtendedLambda(Collection<Lambda> implementations) {
+	protected ExtendedLambda(Collection<Lambda> implementations) {
 		this.implementations = new TreeSet<Lambda>(implementations);
+	}
+	
+	protected Lambda getMostFitLambda(final TypeTuple argsType) {
+		return this.implementations.stream()
+				.map(impl -> new Pair<Integer, Lambda>(impl.argsType.tupleDistance(argsType), impl))
+				.reduce(new Pair<Integer, Lambda>(Integer.MAX_VALUE, null), (p1, p2) -> {
+					if (p1.first < p2.first)
+						return p1;
+					else
+						return p2;
+				}).second;						
 	}
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		return ExtendedFunction.makeExtendedFunction(
-				this.implementations.stream().map(x -> (Function) x.interpret(env)).collect(Collectors.toSet()), env);
+		return ExtendedFunction.makeExtendedFunction(this.implementations, env);
 	}
 
 	@Override
@@ -56,31 +67,6 @@ public class ExtendedLambda extends MetaLambda {
 			e.appendMessage("in " + this);
 			throw e;
 		}
-	}
-
-	/**
-	 * Returns the priority queue with natural ordering of the optimized
-	 * implementations
-	 * 
-	 * @return priority queue of ImplContainers
-	 */
-	public PriorityQueue<Lambda> getSortedImplementations() {
-		PriorityQueue<Lambda> q = new PriorityQueue<Lambda>();
-		q.addAll(this.implementations);
-		return q;
-	}
-
-	/**
-	 * Returns the priority queue with ordering of the optimized implementations
-	 * given by comparator
-	 * 
-	 * @param c comparator determining the ordering of the implementations
-	 * @return priority queue of ImplContainers
-	 */
-	public PriorityQueue<Lambda> getSortedImplementations(Comparator<? super Lambda> c) {
-		PriorityQueue<Lambda> q = new PriorityQueue<Lambda>(c);
-		q.addAll(this.implementations);
-		return q;
 	}
 
 	@Override
@@ -106,7 +92,7 @@ public class ExtendedLambda extends MetaLambda {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		try {			
 			StringBuilder s = new StringBuilder("`(");
 			
@@ -161,6 +147,12 @@ public class ExtendedLambda extends MetaLambda {
 		return this.implementations.hashCode();
 	}
 
+	@Override
+	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+		ExtendedFunction f = (ExtendedFunction)this.interpret(env);
+		return f.substituteAndEvaluate(args, env);
+	}
+	
 	/**
 	 * Creates new Extended lambda exppression
 	 * 

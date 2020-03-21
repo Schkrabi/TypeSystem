@@ -4,13 +4,13 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 
+import abstraction.Lambda;
+import application.Application;
 import util.AppendableException;
 import util.NameGenerator;
-import expression.Application;
 import expression.Expression;
-import expression.Lambda;
 import expression.Tuple;
-import expression.Variable;
+import expression.Symbol;
 
 /**
  * Class for functions types
@@ -76,7 +76,7 @@ public class TypeArrow extends Type {
 			throw new ConversionException(this, toType, expr);
 		}
 		TypeArrow t = (TypeArrow) toType;
-		Variable v = new Variable(NameGenerator.next());
+		Symbol v = new Symbol(NameGenerator.next());
 
 		Lambda l = new Lambda(new Tuple(Arrays.asList(v)), (TypeTuple) t.ltype, this.rtype.convertTo(
 				new Application(expr, (Tuple) t.ltype.convertTo(new Tuple(Arrays.asList(v)), this.ltype)), t.rtype));

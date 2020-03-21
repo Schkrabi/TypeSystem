@@ -1,9 +1,13 @@
-package expression;
+package abstraction;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import expression.Expression;
+import expression.Tuple;
+import expression.TypeHolder;
+import expression.Symbol;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
@@ -11,6 +15,7 @@ import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
+import util.InvalidNumberOfArgumentsException;
 import util.NameGenerator;
 import util.Pair;
 
@@ -20,26 +25,13 @@ import util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Function extends MetaFunction implements Comparable<Expression> {
+public class Function extends Lambda implements Comparable<Expression> {
 
-	/**
-	 * Type of the function arguments
-	 */
-	public final TypeTuple argsType;
-	/**
-	 * Function arguments
-	 */
-	public final Tuple args;
-	/**
-	 * Body of the fucntion
-	 */
-	public final Expression body;
+	public final Environment creationEnvironment;
 
 	public Function(TypeTuple argsType, Tuple args, Expression body, Environment createdEnvironment) {
-		super(createdEnvironment);
-		this.argsType = argsType;
-		this.args = args;
-		this.body = body;
+		super(args, argsType, body);
+		this.creationEnvironment = createdEnvironment;
 	}
 
 	@Override
@@ -51,11 +43,11 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 			List<Type> l = new LinkedList<Type>();
 
 			for (Expression e : this.args) {
-				if (!(e instanceof Variable)) {
-					throw new AppendableException(e + " is not instance of " + Variable.class.getName());
+				if (!(e instanceof Symbol)) {
+					throw new AppendableException(e + " is not instance of " + Symbol.class.getName());
 				}
 				TypeVariable tv = new TypeVariable(NameGenerator.next());
-				childEnv.put((Variable) e, new TypeHolder(tv));
+				childEnv.put((Symbol) e, new TypeHolder(tv));
 				l.add(tv);
 			}
 
@@ -83,11 +75,6 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 			e.appendMessage("in " + this);
 			throw e;
 		}
-	}
-
-	@Override
-	public Function getFunction(TypeTuple realArgsType) {
-		return this;
 	}
 
 	@Override
@@ -140,8 +127,7 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Function) {
-			return this.args.equals(((Function) other).args) && this.body.equals(((Function) other).body)
-					&& this.argsType.equals(((Function) other).argsType) && super.equals(other);
+			return this.creationEnvironment.equals(((Function) other).creationEnvironment) && super.equals(other);
 		}
 		return false;
 	}
@@ -155,5 +141,23 @@ public class Function extends MetaFunction implements Comparable<Expression> {
 	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env)
 			throws AppendableException {
 		return (TypeArrow) this.infer(env).first;
+	}
+
+	@Override
+	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+		if (this.args.size() != args.size()) {
+			throw new InvalidNumberOfArgumentsException(this.args.size(), args, this);
+		}
+
+		TypeTuple argsType = (TypeTuple) args.infer(env).first;
+		Environment childEnvironment = Abstraction.lexicalClojure(this.args, args, this.creationEnvironment);
+		childEnvironment = Abstraction.autoConvertArgs(childEnvironment, this.args, argsType, this.argsType);
+
+		return this.body.interpret(childEnvironment);
+	}
+
+	@Override
+	public Expression interpret(Environment env) {
+		return this;
 	}
 }

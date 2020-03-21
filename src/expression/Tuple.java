@@ -107,7 +107,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		s.append('[');
 

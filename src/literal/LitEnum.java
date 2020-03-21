@@ -1,8 +1,9 @@
 /**
  * 
  */
-package expression;
+package literal;
 
+import expression.Expression;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
@@ -73,7 +74,7 @@ public class LitEnum extends Literal {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		throw new AppendableException("Not Implemented");
 	}
 

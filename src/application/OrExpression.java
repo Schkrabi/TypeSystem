@@ -1,10 +1,13 @@
-package expression;
+package application;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import expression.Expression;
+import expression.Tuple;
 import interpretation.Environment;
+import literal.LitBoolean;
 import types.Substitution;
 import types.Type;
 import types.TypeAtom;
@@ -13,34 +16,34 @@ import util.Pair;
 import util.ThrowingFunction;
 
 /**
- * Expression for And special form
+ * Expression for or special form
  * 
  * @author Mgr. Radomir Skrabal
  *
  */
-public class AndExpression extends Application {
+public class OrExpression extends Application {
 
-	public AndExpression(Tuple args) {
-		super(AndWrapper.singleton, args);
+	public OrExpression(Tuple args) {
+		super(OrWrapper.singleton, args);
 	}
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
 		try {
 			if (this.args.equals(Tuple.EMPTY_TUPLE)) {
-				return LitBoolean.TRUE;
+				return LitBoolean.FALSE;
 			}
 
 			List<LitBoolean> l = this.args.stream().map(ThrowingFunction.wrapper(x -> (LitBoolean) x.interpret(env)))
 					.collect(Collectors.toList());
 
 			for (LitBoolean b : l) {
-				if (!b.value) {
-					return LitBoolean.FALSE;
+				if (b.value) {
+					return LitBoolean.TRUE;
 				}
 			}
 
-			return LitBoolean.TRUE;
+			return LitBoolean.FALSE;
 
 		} catch (RuntimeException re) {
 			AppendableException e = (AppendableException) re.getCause();
@@ -64,7 +67,7 @@ public class AndExpression extends Application {
 	@Override
 	public String toClojureCode(Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(");
-		s.append(AndWrapper.singleton.toClojureCode());
+		s.append(OrWrapper.singleton.toClojureCode());
 		s.append(' ');
 
 		Iterator<Expression> i = this.args.iterator();
@@ -80,17 +83,23 @@ public class AndExpression extends Application {
 	}
 
 	/**
-	 * Wrapper class for And expression
+	 * Wrapper for or special form
 	 * 
 	 * @author Mgr. Radomir Skrabal
 	 *
 	 */
-	private static class AndWrapper extends Expression {
+	private static class OrWrapper extends Expression {
 
-		public static AndWrapper singleton = new AndWrapper();
+		/**
+		 * Singleton
+		 */
+		public static OrWrapper singleton = new OrWrapper();
 
-		private AndWrapper() {
-		};
+		/**
+		 * Private constructor for singleton
+		 */
+		private OrWrapper() {
+		}
 
 		@Override
 		public Expression interpret(Environment env) throws AppendableException {
@@ -103,14 +112,15 @@ public class AndExpression extends Application {
 					+ AndExpression.class.getName() + " should be used for inference");
 		}
 
+
 		@Override
-		protected String toClojureCode(Environment env) {
-			return "and";
+		public String toClojureCode(Environment env) {
+			return "or";
 		}
 
 		@Override
 		public String toString() {
-			return "and";
+			return "or";
 		}
 	}
 }

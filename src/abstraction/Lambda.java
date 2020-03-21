@@ -1,10 +1,13 @@
-package expression;
+package abstraction;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import expression.Expression;
+import expression.Tuple;
+import expression.TypeHolder;
+import expression.Symbol;
 import types.Substitution;
 import types.Type;
 import types.TypeArrow;
@@ -21,7 +24,7 @@ import interpretation.Environment;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Lambda extends MetaLambda implements Comparable<Expression> {
+public class Lambda extends Abstraction implements Comparable<Expression> {
 
 	/**
 	 * Formal arguments (names) of the lambda expression
@@ -37,22 +40,6 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	 * Non mandatory type of the lambda arguments
 	 */
 	public final TypeTuple argsType;
-
-	public Lambda(Variable arg, Expression body) {
-		this.args = new Tuple(Arrays.asList(arg));
-		this.body = body;
-		this.argsType = new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next())));
-	}
-
-	public Lambda(Tuple args, Expression body) {
-		this.args = args;
-		this.body = body;
-
-		List<Type> types = new LinkedList<Type>();
-		for (int i = 0; i < args.size(); i++)
-			types.add(new TypeVariable(NameGenerator.next()));
-		this.argsType = new TypeTuple(types);
-	}
 
 	public Lambda(Tuple args, TypeTuple argsType, Expression body) {
 		this.args = args;
@@ -101,12 +88,12 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 			List<Type> argsTypeArr = new LinkedList<Type>();
 
 			for (Expression e : this.args) {
-				if (!(e instanceof Variable)) {
+				if (!(e instanceof Symbol)) {
 					// TODO change throwable
-					throw new AppendableException(e + " is not instance of " + Variable.class.getName());
+					throw new AppendableException(e + " is not instance of " + Symbol.class.getName());
 				}
 				TypeVariable tv = new TypeVariable(NameGenerator.next());
-				childEnv.put((Variable) e, new TypeHolder(tv));
+				childEnv.put((Symbol) e, new TypeHolder(tv));
 				argsTypeArr.add(tv);
 			}
 
@@ -166,11 +153,11 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 		while (i.hasNext()) {
 			Expression e = i.next();
 			Type t = j.next();
-			if (!(e instanceof Variable)) {
+			if (!(e instanceof Symbol)) {
 				// TODO change throwable
 				throw new AppendableException("Invalid expression in lambda variable list!");
 			}
-			Variable v = (Variable) e;
+			Symbol v = (Symbol) e;
 			child.put(v, new TypeHolder(t));
 			s.append(v.toClojureCode());
 			if (i.hasNext()) {
@@ -220,5 +207,11 @@ public class Lambda extends MetaLambda implements Comparable<Expression> {
 	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env)
 			throws AppendableException {
 		return (TypeArrow) this.infer(env).first;
+	}
+
+	@Override
+	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException{
+		Function f = (Function)this.interpret(env);
+		return f.substituteAndEvaluate(args, env);
 	}
 }

@@ -1,4 +1,4 @@
-package expression;
+package literal;
 
 import types.Substitution;
 import types.Type;
@@ -6,8 +6,8 @@ import types.TypeAtom;
 import util.Pair;
 
 import expression.Expression;
-import expression.Literal;
 import interpretation.Environment;
+import literal.Literal;
 
 /**
  * Class for floating point number literal
@@ -37,7 +37,7 @@ public class LitDouble extends Literal {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) {
+	public String toClojureCode(Environment env) {
 		return Double.toString(this.value);
 	}
 

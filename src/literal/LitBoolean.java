@@ -1,10 +1,10 @@
-package expression;
+package literal;
 
 import types.Substitution;
 import types.Type;
 import types.TypeAtom;
 import util.Pair;
-
+import expression.Expression;
 import interpretation.Environment;
 
 /**
@@ -38,7 +38,7 @@ public class LitBoolean extends Literal {
 	public static final LitBoolean FALSE = new LitBoolean(false);
 
 	@Override
-	protected String toClojureCode(Environment env) {
+	public String toClojureCode(Environment env) {
 		return Boolean.toString(this.value);
 	}
 

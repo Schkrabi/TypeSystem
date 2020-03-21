@@ -1,7 +1,6 @@
-package expression;
+package literal;
 
-import java.util.Iterator;
-
+import expression.Expression;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
@@ -20,13 +19,13 @@ public class LitComposite extends Literal {
 	/**
 	 * Composed values of this literal
 	 */
-	public final Tuple value;
+	public final Expression value;
 	/**
 	 * Type of this literal
 	 */
 	public final TypeAtom composedType;
 
-	public LitComposite(Tuple value, TypeAtom composedType) {
+	public LitComposite(Expression value, TypeAtom composedType) {
 		super();
 		this.value = value;
 		this.composedType = composedType;
@@ -34,7 +33,7 @@ public class LitComposite extends Literal {
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		return new LitComposite((Tuple) this.value.interpret(env), this.composedType);
+		return new LitComposite(this.value.interpret(env), this.composedType);
 	}
 
 	@Override
@@ -43,7 +42,7 @@ public class LitComposite extends Literal {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		return this.value.toClojureCode(env);
 	}
 
@@ -74,17 +73,7 @@ public class LitComposite extends Literal {
 
 	@Override
 	public String toString() {
-		StringBuilder s = new StringBuilder("[");
-		Iterator<Expression> i = this.value.iterator();
-		;
-		while (i.hasNext()) {
-			s.append(i.next());
-			if (i.hasNext()) {
-				s.append(' ');
-			}
-		}
-		s.append(']');
-		return s.toString();
+		return this.value.toString();
 
 		// return "<" + this.composedType.toString() + " "
 		// + this.value.stream().map(x -> x.toString() + ",").reduce("", (x, y) -> x +

@@ -15,12 +15,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import expression.Application;
+import abstraction.Lambda;
 import expression.Expression;
-import expression.LitBoolean;
-import expression.LitInteger;
 import expression.Tuple;
-import expression.Variable;
+import expression.Symbol;
+import literal.LitBoolean;
+import literal.LitInteger;
+import types.TypeTuple;
 import util.AppendableException;
 import util.ClojureCodeGenerator;
 import util.InvalidClojureCompilationException;
@@ -178,10 +179,10 @@ class TestUtil {
 
 	@Test
 	void testExceptions() {
-		new UnboundVariableException(new Variable("x"));
+		new UnboundVariableException(new Symbol("x"));
 		new InvalidClojureCompilationException(Expression.EMPTY_EXPRESSION);
 		new InvalidNumberOfArgumentsException(2, Expression.EMPTY_EXPRESSION,
-				new Application(Expression.EMPTY_EXPRESSION, Tuple.EMPTY_TUPLE));
+				new Lambda(Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION));
 	}
 
 }

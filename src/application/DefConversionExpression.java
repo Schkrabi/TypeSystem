@@ -1,9 +1,13 @@
-package expression;
+package application;
 
 import java.util.Arrays;
 
+import expression.Expression;
+import expression.TypeHolder;
+import expression.Symbol;
 import interpretation.Environment;
-import operators.Operator;
+import abstraction.Abstraction;
+import abstraction.Lambda;
 import semantic.TypeEnvironment;
 import types.Substitution;
 import types.Type;
@@ -82,24 +86,21 @@ public class DefConversionExpression extends Expression {
 	 * 
 	 * @return conversion operator for this defconversion
 	 */
-	private Operator makeConverisionOperator(Environment env) throws AppendableException {
+	private Abstraction makeConverisionOperator(Environment env) throws AppendableException {
 		Pair<Type, Substitution> p = this.conversion.infer(env);
 		TypeArrow expected = new TypeArrow(new TypeTuple(Arrays.asList(this.fromType)), this.toType);
 		if (!p.first.equals(expected)) {
 			throw new AppendableException("Invalid conversion expected " + expected + " got " + p.first);
 		}
 
-		return new Operator(new TypeTuple(Arrays.asList(this.fromType)), this.conversion.args,
-				TypeEnvironment.makeConversionName(this.fromType, this.toType),
-				TypeEnvironment.makeConversionName(this.fromType, this.toType), this.conversion.body);
+		return (Abstraction)this.conversion.interpret(env);
 	}
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		// Function interpretedConersion = (Function) this.conversion.interpret(env);
-		Operator convOp = this.makeConverisionOperator(env);
+		Abstraction conversion = (Abstraction)this.makeConverisionOperator(env);
 
-		TypeEnvironment.singleton.addConversion(this.fromType, this.toType, convOp);
+		TypeEnvironment.singleton.addConversion(this.fromType, this.toType, conversion);
 		return Expression.EMPTY_EXPRESSION;
 	}
 
@@ -113,8 +114,8 @@ public class DefConversionExpression extends Expression {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) throws AppendableException {
-		Variable convName = new Variable(TypeEnvironment.makeConversionName(this.fromType, this.toType));
+	public String toClojureCode(Environment env) throws AppendableException {
+		Symbol convName = new Symbol(TypeEnvironment.makeConversionName(this.fromType, this.toType));
 		TypeEnvironment.singleton.addConversion(this.fromType, this.toType, convName);
 		Environment.topLevelEnvironment.put(convName,
 				new TypeHolder(new TypeArrow(new TypeTuple(Arrays.asList(this.fromType)), this.toType)));

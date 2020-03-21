@@ -3,10 +3,8 @@ package testing;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.PriorityQueue;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
@@ -17,27 +15,27 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import expression.AndExpression;
-import expression.Application;
-import expression.DefConversionExpression;
-import expression.DefExpression;
-import expression.DefRepresentationExpression;
-import expression.DefTypeExpression;
-import expression.ExceptionExpr;
+import abstraction.ExtendedLambda;
+import abstraction.Function;
+import abstraction.Lambda;
+import application.AndExpression;
+import application.Application;
+import application.DefConversionExpression;
+import application.DefExpression;
+import application.DefRepresentationExpression;
+import application.DefTypeExpression;
+import application.ExceptionExpr;
+import application.IfExpression;
+import application.OrExpression;
 import expression.Expression;
-import expression.ExtendedLambda;
-import expression.Function;
-import expression.IfExpression;
-import expression.Lambda;
-import expression.LitBoolean;
-import expression.LitComposite;
-import expression.LitDouble;
-import expression.LitInteger;
-import expression.LitString;
-import expression.OrExpression;
 import expression.Tuple;
-import expression.Variable;
+import expression.Symbol;
 import interpretation.Environment;
+import literal.LitBoolean;
+import literal.LitComposite;
+import literal.LitDouble;
+import literal.LitInteger;
+import literal.LitString;
 import parser.SchemeLexer;
 import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
@@ -89,10 +87,10 @@ class TestParser {
 		List<Pair<String, Expression>> testcases = Arrays.asList(
 				new Pair<String, Expression>("()", Expression.EMPTY_EXPRESSION),
 				new Pair<String, Expression>("(+ 1 1)",
-						new Application(new Variable("+"),
+						new Application(new Symbol("+"),
 								new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(1))))),
 				new Pair<String, Expression>("(if #t x y)",
-						new IfExpression(LitBoolean.TRUE, new Variable("x"), new Variable("y"))),
+						new IfExpression(LitBoolean.TRUE, new Symbol("x"), new Symbol("y"))),
 				new Pair<String, Expression>("(deftype Name)", new DefTypeExpression(new TypeName("Name"))),
 				new Pair<String, Expression>("(defrep Unstructured Name (String:Native))",
 						new DefRepresentationExpression(new TypeName("Name"), new TypeRepresentation("Unstructured"),
@@ -111,26 +109,26 @@ class TestParser {
 						new DefConversionExpression(
 								new TypeAtom(new TypeName("Name"), new TypeRepresentation("Structured")),
 								new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured")),
-								new Lambda(new Tuple(Arrays.asList(new Variable("name"))),
+								new Lambda(new Tuple(Arrays.asList(new Symbol("name"))),
 										new TypeTuple(Arrays.asList(new TypeAtom(new TypeName("Name"),
 												new TypeRepresentation("Structured")))),
-										new Application(new Variable("Name:Unstructured"), new Tuple(Arrays
-												.asList(new Application(new Variable("concat"), new Tuple(Arrays.asList(
-														new Application(new Variable("get"),
+										new Application(new Symbol("Name:Unstructured"), new Tuple(Arrays
+												.asList(new Application(new Symbol("concat"), new Tuple(Arrays.asList(
+														new Application(new Symbol("get"),
 																new Tuple(Arrays.asList(new LitInteger(0),
-																		new Variable("name")))),
-														new Application(new Variable("concat"), new Tuple(Arrays.asList(
+																		new Symbol("name")))),
+														new Application(new Symbol("concat"), new Tuple(Arrays.asList(
 																new LitString(" "),
-																new Application(new Variable("get"),
+																new Application(new Symbol("get"),
 																		new Tuple(Arrays.asList(new LitInteger(1),
-																				new Variable("name")))))))))))))))),
+																				new Symbol("name")))))))))))))))),
 				new Pair<String, Expression>("(define one 1)",
-						new DefExpression(new Variable("one"), new LitInteger(1))),
+						new DefExpression(new Symbol("one"), new LitInteger(1))),
 				new Pair<String, Expression>("(cons 1 2)",
 						new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2)))),
 				new Pair<String, Expression>("(error \"test\")", new ExceptionExpr(new LitString("test"))),
 				new Pair<String, Expression>("(Int:String \"256\")",
-						new Application(new Variable("Int:String"), new Tuple(Arrays.asList(new LitString("256"))))),
+						new Application(new Symbol("Int:String"), new Tuple(Arrays.asList(new LitString("256"))))),
 				new Pair<String, Expression>("3.141528", new LitDouble(3.141528)),
 				new Pair<String, Expression>("#f", LitBoolean.FALSE),
 				new Pair<String, Expression>("(and #t #f)",
@@ -158,7 +156,7 @@ class TestParser {
 	@Test
 	void testLambda() throws AppendableException {
 		Pair<String, Expression> p = new Pair<String, Expression>("(lambda (x) y)",
-				new Lambda(new Tuple(Arrays.asList(new Variable("x"))), new Variable("y")));
+				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))), new TypeTuple(Arrays.asList(new TypeVariable("_x"))), new Symbol("y")));
 
 		parsed = parseString(p.first);
 		if (!(parsed instanceof Lambda)) {
@@ -173,8 +171,8 @@ class TestParser {
 		}
 
 		p = new Pair<String, Expression>("(lambda ((String x) (Int y)) x)",
-				new Lambda(new Tuple(Arrays.asList(new Variable("x"), new Variable("y"))),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeString, TypeAtom.TypeInt)), new Variable("x")));
+				new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeString, TypeAtom.TypeInt)), new Symbol("x")));
 		parsedLambda = (Lambda) parseString(p.first);
 		expectedLambda = (Lambda) p.second;
 		if (!parsedLambda.args.equals(expectedLambda.args) || !parsedLambda.body.equals(expectedLambda.body)
@@ -189,28 +187,6 @@ class TestParser {
 		parsed = parseString("(elambda ((Int x)) ((Int:String) y))");
 		if (!(parsed instanceof ExtendedLambda)) {
 			fail(parsed + " is not a " + ExtendedLambda.class.getName());
-		}
-		ExtendedLambda parsedElambda = (ExtendedLambda) parsed;
-		Lambda expectedLambda = new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-				new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Variable("y"));
-
-		PriorityQueue<Lambda> foundImplementation = parsedElambda.getSortedImplementations(new Comparator<Lambda>() {
-			@Override
-			public int compare(Lambda arg0, Lambda arg1) {
-				return 0;
-			}
-		});
-
-		if (foundImplementation.isEmpty()) {
-			fail("Implementation " + expectedLambda + " was not found in " + parsedElambda);
-		}
-		if (foundImplementation.size() > 1) {
-			fail("There should be only one implementation in " + parsedElambda);
-		}
-		Lambda fl = foundImplementation.peek();
-		if (!fl.body.equals(expectedLambda.body) || !fl.args.equals(expectedLambda.args)
-				|| fl.argsType.size() != expectedLambda.argsType.size()) {
-			fail(fl.toString() + " is not equal to " + expectedLambda + " in " + parsedElambda);
 		}
 	}
 
@@ -449,21 +425,21 @@ class TestParser {
 			fail(n.toString() + " is not a special form " + n.getClass().getName());
 		}
 
-		List<TypeVariablePair> l = Arrays.asList(new TypeVariablePair(TypeAtom.TypeBool, new Variable("x")),
-				new TypeVariablePair(TypeAtom.TypeBool, new Variable("x")),
-				new TypeVariablePair(TypeAtom.TypeBool, new Variable("x")));
+		List<TypeVariablePair> l = Arrays.asList(new TypeVariablePair(TypeAtom.TypeBool, new Symbol("x")),
+				new TypeVariablePair(TypeAtom.TypeBool, new Symbol("x")),
+				new TypeVariablePair(TypeAtom.TypeBool, new Symbol("x")));
 		if (!SemanticParserStatic.isArgListFullyTyped(l)) {
 			fail(l.toString() + " is fully typed!");
 		}
 
-		l = Arrays.asList(new TypeVariablePair(new TypeVariable("x"), new Variable("x")),
-				new TypeVariablePair(TypeAtom.TypeBool, new Variable("x")),
-				new TypeVariablePair(TypeAtom.TypeBool, new Variable("x")));
+		l = Arrays.asList(new TypeVariablePair(new TypeVariable("x"), new Symbol("x")),
+				new TypeVariablePair(TypeAtom.TypeBool, new Symbol("x")),
+				new TypeVariablePair(TypeAtom.TypeBool, new Symbol("x")));
 		if (SemanticParserStatic.isArgListFullyTyped(l)) {
 			fail(l.toString() + " is not fully typed!");
 		}
 
-		l = Arrays.asList(new TypeVariablePair(TypeAtom.TypeInt, new Variable("x")));
+		l = Arrays.asList(new TypeVariablePair(TypeAtom.TypeInt, new Symbol("x")));
 		if (!SemanticParserStatic.isArgListFullyTyped(l)) {
 			fail(l.toString() + " is fully typed!");
 		}
@@ -471,7 +447,7 @@ class TestParser {
 			fail(l.toString() + " is typed!");
 		}
 
-		l = Arrays.asList(new TypeVariablePair(new TypeVariable("x"), new Variable("x")));
+		l = Arrays.asList(new TypeVariablePair(new TypeVariable("x"), new Symbol("x")));
 		if (SemanticParserStatic.isArgListFullyTyped(l)) {
 			fail(l.toString() + " is not fully typed!");
 		}
@@ -479,29 +455,29 @@ class TestParser {
 			fail(l.toString() + " is untyped!");
 		}
 
-		l = Arrays.asList(new TypeVariablePair(new TypeVariable("x"), new Variable("x")),
-				new TypeVariablePair(new TypeVariable("x"), new Variable("x")),
-				new TypeVariablePair(TypeAtom.TypeBool, new Variable("x")));
+		l = Arrays.asList(new TypeVariablePair(new TypeVariable("x"), new Symbol("x")),
+				new TypeVariablePair(new TypeVariable("x"), new Symbol("x")),
+				new TypeVariablePair(TypeAtom.TypeBool, new Symbol("x")));
 		if (SemanticParserStatic.isArgListUntypped(l)) {
 			fail(l.toString() + " is not untyped!");
 		}
 
-		l = Arrays.asList(new TypeVariablePair(new TypeVariable("x"), new Variable("x")),
-				new TypeVariablePair(new TypeVariable("x"), new Variable("x")),
-				new TypeVariablePair(new TypeVariable("x"), new Variable("x")));
+		l = Arrays.asList(new TypeVariablePair(new TypeVariable("x"), new Symbol("x")),
+				new TypeVariablePair(new TypeVariable("x"), new Symbol("x")),
+				new TypeVariablePair(new TypeVariable("x"), new Symbol("x")));
 		if (!SemanticParserStatic.isArgListUntypped(l)) {
 			fail(l.toString() + " is untyped!");
 		}
 
-		List<TypeVariablePair> k = Arrays.asList(new TypeVariablePair(new TypeVariable("x"), new Variable("x")),
-				new TypeVariablePair(new TypeVariable("x"), new Variable("x")));
+		List<TypeVariablePair> k = Arrays.asList(new TypeVariablePair(new TypeVariable("x"), new Symbol("x")),
+				new TypeVariablePair(new TypeVariable("x"), new Symbol("x")));
 		if (!SemanticParserStatic.listTail(l).equals(k)) {
 			fail(k.toString() + " is a tail of " + l.toString());
 		}
 
 		Tuple t = SemanticParserStatic.parseArgsList(
 				Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "y")));
-		Tuple exp = new Tuple(Arrays.asList(new Variable("x"), new Variable("y")));
+		Tuple exp = new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y")));
 		if (!t.equals(exp)) {
 			fail("SemanticParserStatic.parseArgsList not working as expected. Got " + t + " expected " + exp);
 		}
@@ -513,7 +489,7 @@ class TestParser {
 	@SuppressWarnings("unlikely-arg-type")
 	@Test
 	public void testVariableTypePair() {
-		TypeVariablePair p = new TypeVariablePair(TypeAtom.TypeBool, new Variable("x"));
+		TypeVariablePair p = new TypeVariablePair(TypeAtom.TypeBool, new Symbol("x"));
 		p.toString();
 
 		Integer i = new Integer(128);
@@ -521,12 +497,12 @@ class TestParser {
 			fail(p.toString() + " is not equal to " + i.toString());
 		}
 
-		TypeVariablePair q = new TypeVariablePair(TypeAtom.TypeBool, new Variable("y"));
+		TypeVariablePair q = new TypeVariablePair(TypeAtom.TypeBool, new Symbol("y"));
 		if (p.equals(q)) {
 			fail(p.toString() + " not equals to " + q.toString());
 		}
 
-		q = new TypeVariablePair(TypeAtom.TypeInt, new Variable("x"));
+		q = new TypeVariablePair(TypeAtom.TypeInt, new Symbol("x"));
 		if (p.equals(q)) {
 			fail(p.toString() + " not equals to " + q.toString());
 		}

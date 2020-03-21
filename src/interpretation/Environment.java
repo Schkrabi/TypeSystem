@@ -3,9 +3,9 @@ package interpretation;
 import java.util.HashMap;
 import java.util.Map;
 
+import abstraction.Operator;
 import expression.Expression;
-import expression.Variable;
-import operators.Operator;
+import expression.Symbol;
 import semantic.TypeEnvironment;
 import types.TypeAtom;
 import util.AppendableException;
@@ -24,7 +24,7 @@ public class Environment implements Comparable<Environment> {
 	 */
 	public final Environment parent;
 
-	private Map<Variable, Expression> bindings = new HashMap<Variable, Expression>();
+	private Map<Symbol, Expression> bindings = new HashMap<Symbol, Expression>();
 
 	protected Environment(Environment parent) {
 		this.parent = parent;
@@ -45,7 +45,7 @@ public class Environment implements Comparable<Environment> {
 	 * @param v bounded variable
 	 * @param e bounded value
 	 */
-	public void put(Variable v, Expression e) {
+	public void put(Symbol v, Expression e) {
 		this.bindings.put(v, e);
 	}
 
@@ -71,7 +71,7 @@ public class Environment implements Comparable<Environment> {
 	 * @param var searched variable
 	 * @return true or false
 	 */
-	public boolean containsVariable(Variable var) {
+	public boolean containsVariable(Symbol var) {
 		if (!this.bindings.containsKey(var)) {
 			if (!this.isTopLevel()) {
 				return this.parent.containsVariable(var);
@@ -89,7 +89,7 @@ public class Environment implements Comparable<Environment> {
 	 * @return Expression object
 	 * @throws UnboundVariableException
 	 */
-	public Expression getVariableValue(Variable var) throws UnboundVariableException {
+	public Expression getVariableValue(Symbol var) throws UnboundVariableException {
 		if (!this.bindings.containsKey(var)) {
 			if (!this.isTopLevel()) {
 				return this.parent.getVariableValue(var);
@@ -114,7 +114,7 @@ public class Environment implements Comparable<Environment> {
 		}
 		int c;
 
-		for (Map.Entry<Variable, Expression> e : this.bindings.entrySet()) {
+		for (Map.Entry<Symbol, Expression> e : this.bindings.entrySet()) {
 			if (!o.bindings.containsKey(e.getKey())) {
 				return -1;
 			}
@@ -123,7 +123,7 @@ public class Environment implements Comparable<Environment> {
 				return c;
 			}
 		}
-		for (Map.Entry<Variable, Expression> e : o.bindings.entrySet()) {
+		for (Map.Entry<Symbol, Expression> e : o.bindings.entrySet()) {
 			if (!this.bindings.containsKey(e.getKey())) {
 				return 1;
 			}
@@ -188,44 +188,44 @@ public class Environment implements Comparable<Environment> {
 
 	public static void initTopLevelEnvitonment() {
 		Environment env = Environment.topLevelEnvironment;
-		env.put(new Variable(Operator.Addition.toString()), Operator.Addition);
-		env.put(new Variable(Operator.Subtraction.toString()), Operator.Subtraction);
-		env.put(new Variable(Operator.Multiplication.toString()), Operator.Multiplication);
-		env.put(new Variable(Operator.Division.toString()), Operator.Division);
-		env.put(new Variable(Operator.NumericEqual.toString()), Operator.NumericEqual);
-		env.put(new Variable(Operator.LesserThan.toString()), Operator.LesserThan);
-		env.put(new Variable(Operator.Not.toString()), Operator.Not);
-		env.put(new Variable(Operator.BitAnd.toString()), Operator.BitAnd);
-		env.put(new Variable(Operator.BitOr.toString()), Operator.BitOr);
-		env.put(new Variable(Operator.Concantenation.toString()), Operator.Concantenation);
-		env.put(new Variable(Operator.Car.toString()), Operator.Car);
-		env.put(new Variable(Operator.Cdr.toString()), Operator.Cdr);
-		env.put(new Variable("nil"), Expression.EMPTY_EXPRESSION);
-		env.put(new Variable(Operator.Equals.toString()), Operator.Equals);
-		env.put(new Variable(Operator.PrintlnOperator.toString()), Operator.PrintlnOperator);
+		env.put(new Symbol(Operator.Addition.toString()), Operator.Addition);
+		env.put(new Symbol(Operator.Subtraction.toString()), Operator.Subtraction);
+		env.put(new Symbol(Operator.Multiplication.toString()), Operator.Multiplication);
+		env.put(new Symbol(Operator.Division.toString()), Operator.Division);
+		env.put(new Symbol(Operator.NumericEqual.toString()), Operator.NumericEqual);
+		env.put(new Symbol(Operator.LesserThan.toString()), Operator.LesserThan);
+		env.put(new Symbol(Operator.Not.toString()), Operator.Not);
+		env.put(new Symbol(Operator.BitAnd.toString()), Operator.BitAnd);
+		env.put(new Symbol(Operator.BitOr.toString()), Operator.BitOr);
+		env.put(new Symbol(Operator.Concantenation.toString()), Operator.Concantenation);
+		env.put(new Symbol(Operator.Car.toString()), Operator.Car);
+		env.put(new Symbol(Operator.Cdr.toString()), Operator.Cdr);
+		env.put(new Symbol("nil"), Expression.EMPTY_EXPRESSION);
+		env.put(new Symbol(Operator.Equals.toString()), Operator.Equals);
+		env.put(new Symbol(Operator.PrintlnOperator.toString()), Operator.PrintlnOperator);
 
-		env.put(new Variable("Int"), Operator.IntConstructor);
-		env.put(new Variable("Int:Native"), Operator.IntNativeConstructor);
-		env.put(new Variable("Int:String"), Operator.IntStringConstructor);
-		env.put(new Variable("Int:Roman"), Operator.IntRomanConstructor);
-		env.put(new Variable("String"), Operator.StringConstructor);
-		env.put(new Variable("String:Native"), Operator.StringNativeConstructor);
-		env.put(new Variable("Double"), Operator.DoubleConstructor);
-		env.put(new Variable("Double:Native"), Operator.DoubleNativeConstructor);
-		env.put(new Variable("Bool"), Operator.BoolConstructor);
-		env.put(new Variable("Bool:Native"), Operator.BoolNativeConstructor);
+		env.put(new Symbol("Int"), Operator.IntConstructor);
+		env.put(new Symbol("Int:Native"), Operator.IntNativeConstructor);
+		env.put(new Symbol("Int:String"), Operator.IntStringConstructor);
+		env.put(new Symbol("Int:Roman"), Operator.IntRomanConstructor);
+		env.put(new Symbol("String"), Operator.StringConstructor);
+		env.put(new Symbol("String:Native"), Operator.StringNativeConstructor);
+		env.put(new Symbol("Double"), Operator.DoubleConstructor);
+		env.put(new Symbol("Double:Native"), Operator.DoubleNativeConstructor);
+		env.put(new Symbol("Bool"), Operator.BoolConstructor);
+		env.put(new Symbol("Bool:Native"), Operator.BoolNativeConstructor);
 
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
+		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
 				Operator.IntNativeToIntRoman);
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)),
+		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)),
 				Operator.IntNativeToIntString);
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative)),
+		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative)),
 				Operator.IntRomanToIntNative);
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString)),
+		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString)),
 				Operator.IntRomanToIntString);
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntNative)),
+		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntNative)),
 				Operator.IntStringToIntNative);
-		env.put(new Variable(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)),
+		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)),
 				Operator.IntStringToIntRoman);
 	}
 

@@ -1,10 +1,10 @@
-package expression;
+package literal;
 
 import types.Substitution;
 import types.Type;
 import types.TypeAtom;
 import util.Pair;
-
+import expression.Expression;
 import interpretation.Environment;
 
 /**
@@ -27,7 +27,7 @@ public class LitInteger extends Literal {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) {
+	public String toClojureCode(Environment env) {
 		return Integer.toString(this.value);
 	}
 

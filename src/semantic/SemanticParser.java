@@ -8,26 +8,24 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import expression.AndExpression;
-import expression.Application;
-import expression.DefConversionExpression;
-import expression.DefExpression;
-import expression.DefRepresentationExpression;
-import expression.DefTypeExpression;
-import expression.ExceptionExpr;
+import abstraction.ExtendedLambda;
+import abstraction.Lambda;
+import application.AndExpression;
+import application.Application;
+import application.DefConversionExpression;
+import application.DefExpression;
+import application.DefRepresentationExpression;
+import application.DefTypeExpression;
+import application.ExceptionExpr;
+import application.IfExpression;
 import expression.Expression;
-import expression.ExtendedLambda;
-import expression.IfExpression;
-import expression.Lambda;
-import expression.LitBoolean;
-import expression.LitDouble;
-import expression.LitInteger;
-import expression.LitString;
-import expression.Literal;
-import expression.OrExpression;
 import expression.Tuple;
-import expression.Variable;
-
+import expression.Symbol;
+import literal.LitBoolean;
+import literal.LitDouble;
+import literal.LitInteger;
+import literal.LitString;
+import literal.Literal;
 import parser.SemanticNode;
 import types.Type;
 import types.TypeAtom;
@@ -77,11 +75,11 @@ public class SemanticParser {
 	 */
 	public static Expression parseNode(SemanticNode token) throws AppendableException {
 		Literal l;
-		Variable v;
+		Symbol v;
 
 		switch (token.type) {
 		case SYMBOL:
-			v = new Variable(token.asSymbol());
+			v = new Symbol(token.asSymbol());
 			return v;
 		case PAIR:
 			v = token.asPair().asVariable();
@@ -276,7 +274,7 @@ public class SemanticParser {
 		try {
 			Tuple args = new Tuple(specialFormList.subList(1, specialFormList.size()).stream()
 					.map(ThrowingFunction.wrapper(x -> SemanticParser.parseNode(x))).collect(Collectors.toList()));
-			return new OrExpression(args);
+			return new application.OrExpression(args);
 		} catch (RuntimeException re) {
 			AppendableException e = (AppendableException) re.getCause();
 			throw e;
@@ -378,7 +376,7 @@ public class SemanticParser {
 	 */
 	private static TypeVariablePair parseUntypedVariableOrVariableTypePair(SemanticNode n) throws AppendableException {
 		if (SemanticParserStatic.isSimpleSymbol(n)) {
-			return new TypeVariablePair(new TypeVariable(NameGenerator.next()), new Variable(n.asSymbol()));
+			return new TypeVariablePair(new TypeVariable(NameGenerator.next()), new Symbol(n.asSymbol()));
 		}
 		return SemanticParser.parseVariableTypePair(n);
 	}
@@ -415,7 +413,7 @@ public class SemanticParser {
 		}
 
 		TypeAtom type = SemanticParser.parseType(pair.asList().get(0));
-		Variable variable = new Variable(pair.asList().get(1).asSymbol());
+		Symbol variable = new Symbol(pair.asList().get(1).asSymbol());
 		return new TypeVariablePair(type, variable);
 	}
 
@@ -518,7 +516,7 @@ public class SemanticParser {
 			throw e;
 		}
 
-		Variable v = new Variable(l.get(1).asSymbol());
+		Symbol v = new Symbol(l.get(1).asSymbol());
 		Expression e = SemanticParser.parseNode(l.get(2));
 		return new DefExpression(v, e);
 	}

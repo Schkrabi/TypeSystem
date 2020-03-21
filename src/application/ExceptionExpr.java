@@ -1,5 +1,6 @@
-package expression;
+package application;
 
+import expression.Expression;
 import interpretation.Environment;
 import semantic.UserException;
 import types.Substitution;
@@ -43,7 +44,7 @@ public class ExceptionExpr extends Expression {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) {
+	public String toClojureCode(Environment env) {
 		return "(throw (Throwable. \"" + this.message + "\"))";
 	}
 

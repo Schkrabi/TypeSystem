@@ -8,8 +8,8 @@ import types.TypeVariable;
 import util.AppendableException;
 import util.NameGenerator;
 import util.Pair;
+import abstraction.Operator;
 import interpretation.Environment;
-import operators.Operator;
 
 /**
  * Variable expression
@@ -17,21 +17,21 @@ import operators.Operator;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Variable extends Expression implements Comparable<Expression> {
+public class Symbol extends Expression implements Comparable<Expression> {
 
 	/**
 	 * Name of the variable
 	 */
 	public final String name;
 
-	public Variable(String name) {
+	public Symbol(String name) {
 		this.name = name;
 	}
 
 	@Override
 	public int compareTo(Expression o) {
-		if (o instanceof Variable) {
-			Variable other = (Variable) o;
+		if (o instanceof Symbol) {
+			Symbol other = (Symbol) o;
 			return this.name.compareTo(other.name);
 		}
 		return super.compareTo(o);
@@ -64,7 +64,7 @@ public class Variable extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		if (env.containsVariable(this)) {
 			Expression e = env.getVariableValue(this);
 			if (e instanceof Operator) {
@@ -77,8 +77,8 @@ public class Variable extends Expression implements Comparable<Expression> {
 
 	@Override
 	public boolean equals(Object other) {
-		if (other instanceof Variable) {
-			return this.name.equals(((Variable) other).name);
+		if (other instanceof Symbol) {
+			return this.name.equals(((Symbol) other).name);
 		}
 		return false;
 	}

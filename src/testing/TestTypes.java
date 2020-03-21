@@ -13,15 +13,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import expression.Application;
+import abstraction.Lambda;
+import abstraction.Operator;
+import application.Application;
 import expression.Expression;
-import expression.Lambda;
-import expression.LitBoolean;
-import expression.LitString;
 import expression.Tuple;
-import expression.Variable;
+import expression.Symbol;
 import interpretation.Environment;
-import operators.Operator;
+import literal.LitBoolean;
+import literal.LitString;
 import semantic.TypeEnvironment;
 import types.*;
 import util.AppendableException;
@@ -173,28 +173,28 @@ class TestTypes {
 		TestTypes.testGetUnconstrainedVariables(tuple, Arrays.asList(new TypeVariable("a")));
 
 		TestTypes.testConvertTo(tuple,
-				new Tuple(Arrays.asList(new LitString("XIII"), new Variable("x"), LitBoolean.TRUE)),
+				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
 				new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString, TypeAtom.TypeBool)),
 				new Tuple(Arrays.asList(
 						new Application(Operator.IntRomanToIntString, new Tuple(Arrays.asList(new LitString("XIII")))),
-						new Variable("x"), LitBoolean.TRUE)));
+						new Symbol("x"), LitBoolean.TRUE)));
 		TestTypes.testConvertTo(tuple,
-				new Tuple(Arrays.asList(new LitString("XIII"), new Variable("x"), LitBoolean.TRUE)),
+				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
 				new TypeVariable("b"),
-				new Tuple(Arrays.asList(new LitString("XIII"), new Variable("x"), LitBoolean.TRUE)));
+				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)));
 
 		Assertions.assertThrows(ConversionException.class,
 				() -> tuple.convertTo(
-						new Tuple(Arrays.asList(new LitString("XIII"), new Variable("x"), LitBoolean.TRUE)),
+						new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
 						TypeAtom.TypeInt));
 		Assertions.assertThrows(ConversionException.class, () -> tuple.convertTo(Expression.EMPTY_EXPRESSION,
 				new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString, TypeAtom.TypeBool))));
 		Assertions.assertThrows(ConversionException.class,
 				() -> tuple.convertTo(
-						new Tuple(Arrays.asList(new LitString("XIII"), new Variable("x"), LitBoolean.TRUE)),
+						new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString))));
 		Assertions.assertThrows(ConversionException.class,
-				() -> tuple.convertTo(new Tuple(Arrays.asList(new LitString("XIII"), new Variable("x"))),
+				() -> tuple.convertTo(new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString, TypeAtom.TypeBool))));
 
 		TestTypes.testApply(tuple,
@@ -239,8 +239,8 @@ class TestTypes {
 				Expression.EMPTY_EXPRESSION);
 
 		Expression e = typeArrow.convertTo(
-				new Lambda(new Tuple(Arrays.asList(new Variable("x"))),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Variable("x")),
+				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Symbol("x")),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman));
 		if (!(e instanceof Lambda)) {
 			fail("Conversion of typearrow to typearrow should yield lambda got " + e + " of class "
@@ -352,8 +352,11 @@ class TestTypes {
 				() -> atom.convertTo(Expression.EMPTY_EXPRESSION, new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt)));
 		Assertions.assertThrows(ConversionException.class,
 				() -> atom.convertTo(Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntString));
-		Assertions.assertThrows(ConversionException.class, () -> atom.convertTo(Expression.EMPTY_EXPRESSION,
-				new TypeAtom(new TypeName("Test"), TypeRepresentation.STRING)));
+		Assertions
+				.assertThrows(ConversionException.class,
+						() -> (new TypeAtom(new TypeName("Test"), TypeRepresentation.NATIVE)).convertTo(
+								Expression.EMPTY_EXPRESSION,
+								new TypeAtom(new TypeName("Test"), TypeRepresentation.STRING)));
 
 		TestTypes.testRemoveRepresentationInfo(TypeAtom.TypeIntNative, TypeAtom.TypeInt);
 		TestTypes.testApply(TypeAtom.TypeInt,

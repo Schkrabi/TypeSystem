@@ -6,7 +6,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import expression.Tuple;
-import expression.Variable;
+import expression.Symbol;
 
 import parser.SemanticNode;
 import types.TypeVariable;
@@ -152,7 +152,7 @@ public final class SemanticParserStatic {
 		try {
 			return new Tuple(l.stream().map(ThrowingFunction.wrapper(x -> {
 				try {
-					return new Variable(x.asSymbol());
+					return new Symbol(x.asSymbol());
 				} catch (AppendableException e) {
 					throw new UnexpectedExpressionException(x);
 				}

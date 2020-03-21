@@ -17,13 +17,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import expression.Application;
+import application.Application;
 import expression.Expression;
-import expression.LitComposite;
-import expression.LitInteger;
-import expression.LitString;
 import expression.Tuple;
 import interpretation.Environment;
+import literal.LitComposite;
+import literal.LitInteger;
+import literal.LitString;
 import parser.SchemeLexer;
 import parser.SchemeParser;
 import parser.SchemeParser.ExprsContext;
@@ -254,19 +254,16 @@ class TestComplex {
 		this.testClojureCompile("(deftype Name2)", "");
 		this.testClojureCompileRegex("(defrep Structured Name2 (String:Native String:Native))",
 				TestComplex.escapeBrackets(
-						"(def Name2:Structured `([[:StringNative :StringNative] ~(fn [\\w* \\w*] [\\w* \\w*])]))\n"
-								+ "(def Name2Structured-0 `([[:Name2Structured] ~(fn [\\w*] (get \\w* 0))]))\n"
-								+ "(def Name2Structured-1 `([[:Name2Structured] ~(fn [\\w*] (get \\w* 1))]))"));
+						"(def Name2:Structured `([[:StringNative :StringNative] ~(fn [\\w* \\w*] [\\w* \\w*])]))"));
 		this.testClojureCompileRegex("(defrep Unstructured Name2 (String:Native))",
-				TestComplex.escapeBrackets("(def Name2:Unstructured `([[:StringNative] ~(fn [\\w*] [\\w*])]))\n"
-						+ "(def Name2Unstructured-0 `([[:Name2Unstructured] ~(fn [\\w*] (get \\w* 0))]))"));
+				TestComplex.escapeBrackets("(def Name2:Unstructured `([[:StringNative] ~(fn [\\w*] [\\w*])]))"));
 		this.testClojureCompileRegex(
 				"(defconversion Name2:Structured Name2:Unstructured"
 						+ "(lambda (x) (Name2:Unstructured (concat (Name2Structured-0 x) (Name2Structured-1 x)))))",
 				TestComplex.escapeBrackets("(def Name2Structured2Name2Unstructured `([[:Name2Structured] ~(fn [x] ("
 						+ Application.clojureEapply + " Name2:Unstructured [:StringNative] [("
 						+ Application.clojureEapply
-						+ " `([[:StringNative :StringNative] ~str]) [:StringNative :StringNative] [("
+						+ " `([[:StringNative :StringNative] ~str]) [:\\w* :\\w*] [("
 						+ Application.clojureEapply + " Name2Structured-0 [:Name2Structured] [x]) ("
 						+ Application.clojureEapply + " Name2Structured-1 [:Name2Structured] [x])])]))]))"));
 
@@ -307,9 +304,7 @@ class TestComplex {
 		// List
 		this.testClojureCompile("(deftype List2)", "");
 		this.testClojureCompileRegex("(defrep Linked List2 (A List2))",
-				TestComplex.escapeBrackets("(def List2:Linked `([[:A :List2\\*] ~(fn [\\w* \\w*] [\\w* \\w*])]))\n"
-						+ "(def List2Linked-0 `([[:List2Linked] ~(fn [x] (get x 0))]))\n"
-						+ "(def List2Linked-1 `([[:List2Linked] ~(fn [x] (get x 1))]))"));
+				TestComplex.escapeBrackets("(def List2:Linked `([[:A :List2\\*] ~(fn [\\w* \\w*] [\\w* \\w*])]))"));
 		this.testClojureCompile("(defrep Empty List2 ())", "(def List2:Empty `([[] ~(fn [] [])]))");
 
 		this.testClojureCompile(
@@ -362,9 +357,9 @@ class TestComplex {
 								+ Application.clojureEapply + " List2:Empty [] [])]) (" + Application.clojureEapply
 								+ " List2:Linked [:\\w* :List2Empty] [x (" + Application.clojureEapply
 								+ " List2:Empty [] [])]) (" + Application.clojureEapply
-								+ " List2:Linked [:A :List2Linked] [(" + Application.clojureEapply
+								+ " List2:Linked [:\\w* :List2Linked] [(" + Application.clojureEapply
 								+ " head-list2 [:List2\\*] [l]) (" + Application.clojureEapply
-								+ " append-list2 [:List2\\* :\\w*] [(" + Application.clojureEapply
+								+ " append-list2 [:\\w* :\\w*] [(" + Application.clojureEapply
 								+ " tail-list2 [:List2\\*] [l]) x])])))]))"));
 
 		/*this.testClojureCompile(

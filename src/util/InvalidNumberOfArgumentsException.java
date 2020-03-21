@@ -1,6 +1,6 @@
 package util;
 
-import expression.Application;
+import abstraction.Abstraction;
 import expression.Expression;
 
 /**
@@ -25,12 +25,12 @@ public class InvalidNumberOfArgumentsException extends AppendableException {
 	/**
 	 * Application in which mismatch occured
 	 */
-	public final Application application;
+	public final Abstraction application;
 
-	public InvalidNumberOfArgumentsException(int expected, Expression got, Application application) {
-		super("In " + application + "number of arguments mismatch, expected " + expected + " got " + got.toString());
+	public InvalidNumberOfArgumentsException(int expected, Expression got, Abstraction abstraction) {
+		super("In " + abstraction + "number of arguments mismatch, expected " + expected + " got " + got.toString());
 		this.expected = expected;
 		this.got = got;
-		this.application = application;
+		this.application = abstraction;
 	}
 }

@@ -1,13 +1,18 @@
-package expression;
+package application;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import abstraction.Function;
+import abstraction.Lambda;
+import expression.Expression;
+import expression.Tuple;
+import expression.TypeHolder;
+import expression.Symbol;
 import interpretation.Environment;
-import operators.Operator;
+import literal.LitComposite;
 import parser.SemanticNode;
 import semantic.TypeEnvironment;
 import types.Substitution;
@@ -109,9 +114,7 @@ public class DefRepresentationExpression extends Expression {
 		Function constructor = this.makeConstructor();
 
 		TypeEnvironment.singleton.addRepresentation(type, constructor);
-		env.put(new Variable(type.toString()), constructor);
-
-		Operator.makeGetters(type, this.memberTypes()).stream().forEach(x -> env.put(new Variable(x.symbol), x));
+		env.put(new Symbol(type.toString()), constructor);
 
 		return Expression.EMPTY_EXPRESSION;
 	}
@@ -137,7 +140,7 @@ public class DefRepresentationExpression extends Expression {
 	private Lambda makeConstructorLambda() {
 		TypeAtom type = new TypeAtom(this.typeName, this.representation);
 		Tuple args = new Tuple(
-				this.members.stream().map(x -> new Variable(NameGenerator.next())).collect(Collectors.toList()));
+				this.members.stream().map(x -> new Symbol(NameGenerator.next())).collect(Collectors.toList()));
 
 		return new Lambda(args, this.memberTypes(), new LitComposite(args, type));
 	}
@@ -157,7 +160,7 @@ public class DefRepresentationExpression extends Expression {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		TypeAtom ta = new TypeAtom(this.typeName, this.representation);
 		StringBuilder s = new StringBuilder("(def ");
 		s.append(ta.clojureName());
@@ -167,19 +170,7 @@ public class DefRepresentationExpression extends Expression {
 		s.append(constructorLambda.toClojureCode(env));
 		s.append(")");
 		
-		if(this.memberTypes().size() > 0) {
-			s.append("\n");
-			s.append(Operator.makeClojureGetterDefinitions(ta, this.members.size()));
-	
-			List<TypeArrow> l = this.memberTypes().stream().map(x -> new TypeArrow(new TypeTuple(Arrays.asList(ta)), x))
-					.collect(Collectors.toList());
-			int i = 0;
-			for (TypeArrow t : l) {
-				Environment.topLevelEnvironment.put(new Variable(Operator.getterName(ta, i)), new TypeHolder(t));
-				i++;
-			}
-		}
-		Environment.topLevelEnvironment.put(new Variable(ta.clojureName()),
+		Environment.topLevelEnvironment.put(new Symbol(ta.clojureName()),
 				new TypeHolder(new TypeArrow(this.memberTypes(), ta)));
 
 		return s.toString();

@@ -1,5 +1,6 @@
-package expression;
+package application;
 
+import expression.Expression;
 import interpretation.Environment;
 import semantic.TypeEnvironment;
 import types.Substitution;
@@ -64,7 +65,7 @@ public class DefTypeExpression extends Expression {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		TypeEnvironment.singleton.addType(this.typeName);
 		return "";
 	}

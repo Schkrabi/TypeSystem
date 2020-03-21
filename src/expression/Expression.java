@@ -55,7 +55,7 @@ public abstract class Expression implements Comparable<Expression> {
 	 * @return string containing clojure expression
 	 * @throws AppendableException
 	 */
-	protected abstract String toClojureCode(Environment env) throws AppendableException;
+	public abstract String toClojureCode(Environment env) throws AppendableException;
 
 	/**
 	 * Gets function type with specific representations in place

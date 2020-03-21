@@ -9,11 +9,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import expression.Application;
+import abstraction.Abstraction;
+import abstraction.Operator;
+import application.Application;
 import expression.Expression;
-import expression.Function;
 import expression.Tuple;
-import operators.Operator;
 import parser.SemanticNode;
 import parser.SemanticPair;
 import types.ConversionException;
@@ -25,7 +25,7 @@ import util.Pair;
 
 public class TypeEnvironment {
 	private Set<TypeAtom> atomicTypes = new TreeSet<TypeAtom>();
-	private Map<TypeAtom, Function> constructorMap = new TreeMap<TypeAtom, Function>();
+	private Map<TypeAtom, Abstraction> constructorMap = new TreeMap<TypeAtom, Abstraction>();
 	private Map<Pair<TypeAtom, TypeAtom>, Expression> conversions = new HashMap<Pair<TypeAtom, TypeAtom>, Expression>();
 
 	private TypeEnvironment() {
@@ -104,7 +104,7 @@ public class TypeEnvironment {
 	 * @param typeName searched type
 	 * @return constructor for this type if it exists
 	 */
-	public Function getConstructor(TypeAtom type) {
+	public Abstraction getConstructor(TypeAtom type) {
 		if (this.constructorMap.containsKey(type))
 			return this.constructorMap.get(type);
 		throw new NoSuchElementException();
@@ -121,7 +121,7 @@ public class TypeEnvironment {
 	 * @param constructor
 	 * @throws AppendableException
 	 */
-	public void addRepresentation(TypeAtom newType, final Function constructor) throws AppendableException {
+	public void addRepresentation(TypeAtom newType, final Abstraction constructor) throws AppendableException {
 		if (this.constructorMap.containsKey(newType)) {
 			throw new DuplicateTypeConstructorException(newType, this.constructorMap.get(newType), constructor);
 		}

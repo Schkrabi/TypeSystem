@@ -1,7 +1,10 @@
-package expression;
+package application;
 
 import java.util.Arrays;
 
+import expression.Expression;
+import expression.TypeHolder;
+import expression.Symbol;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
@@ -23,13 +26,13 @@ public class DefExpression extends Expression {
 	/**
 	 * Name of defined expression
 	 */
-	public final Variable name;
+	public final Symbol name;
 	/**
 	 * Defined expression
 	 */
 	public final Expression defined;
 
-	public DefExpression(Variable name, Expression defined) {
+	public DefExpression(Symbol name, Expression defined) {
 		this.name = name;
 		this.defined = defined;
 	}
@@ -74,7 +77,7 @@ public class DefExpression extends Expression {
 	}
 
 	@Override
-	protected String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(def ");
 		s.append(this.name.toClojureCode(env));
 		s.append(" ");

@@ -1,4 +1,4 @@
-package expression;
+package application;
 
 import types.Substitution;
 import types.Type;
@@ -12,7 +12,10 @@ import util.Pair;
 
 import java.util.Arrays;
 
+import expression.Expression;
+import expression.Tuple;
 import interpretation.Environment;
+import literal.LitBoolean;
 
 /**
  * Expression for special form if
@@ -130,7 +133,7 @@ public class IfExpression extends Application {
 		}
 
 		@Override
-		protected String toClojureCode(Environment env) {
+		public String toClojureCode(Environment env) {
 			return "if";
 		}
 

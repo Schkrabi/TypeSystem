@@ -1,6 +1,6 @@
 package util;
 
-import expression.Variable;
+import expression.Symbol;
 
 /**
  * Exception for evaluating unbound variables
@@ -17,9 +17,9 @@ public class UnboundVariableException extends AppendableException {
 	/**
 	 * Variable that caused the exception
 	 */
-	public final Variable unboundVariable;
+	public final Symbol unboundVariable;
 
-	public UnboundVariableException(Variable unboundVariable) {
+	public UnboundVariableException(Symbol unboundVariable) {
 		super("Variable " + unboundVariable.toString() + " has no binding.");
 		this.unboundVariable = unboundVariable;
 	}

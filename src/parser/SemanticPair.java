@@ -1,6 +1,6 @@
 package parser;
 
-import expression.Variable;
+import expression.Symbol;
 import util.Pair;
 
 public class SemanticPair extends Pair<String, String> {
@@ -14,7 +14,7 @@ public class SemanticPair extends Pair<String, String> {
 		return this.first + ":" + this.second;
 	}
 
-	public Variable asVariable() {
-		return new Variable(this.toString());
+	public Symbol asVariable() {
+		return new Symbol(this.toString());
 	}
 }

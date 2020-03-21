@@ -1,6 +1,6 @@
 package semantic;
 
-import expression.Function;
+import abstraction.Abstraction;
 import types.Type;
 import util.AppendableException;
 
@@ -25,15 +25,15 @@ public class DuplicateTypeConstructorException extends AppendableException {
 	/**
 	 * Previously defined constructor of type
 	 */
-	public final Function originalConstructor;
+	public final Abstraction originalConstructor;
 
 	/**
 	 * Newly defined constructor
 	 */
-	public final Function newConstructor;
+	public final Abstraction newConstructor;
 
-	public DuplicateTypeConstructorException(Type conflictedType, Function originalConstructor,
-			Function newConstructor) {
+	public DuplicateTypeConstructorException(Type conflictedType, Abstraction originalConstructor,
+			Abstraction newConstructor) {
 		super("Trying to define duplicate constructor for type " + conflictedType + " original constructor "
 				+ originalConstructor + " new constructor " + newConstructor);
 		this.originalConstructor = originalConstructor;
