@@ -179,7 +179,7 @@ class TestComplex {
 		this.testClojureCompile("#f", "false");
 		this.testClojureCompile("\"Hello World\"", "\"Hello World\"");
 		this.testClojureCompile("(Int:Roman \"XLII\")",
-				"(" + Application.clojureEapply + " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"])");
+				"(" + Application.clojureEapply + " `([[:StringNative] ~identity]) [:StringNative] [\"XLII\"])");
 		// Unbound Variable
 		this.testClojureCompile("variable", "variable");
 		// Lambda
@@ -192,10 +192,10 @@ class TestComplex {
 		this.testClojureCompile("(if #t 42 21)", "(if true 42 21)");
 		this.testClojureCompile("(if #t (Int:Roman \"XLII\") (Int:String \"42\"))",
 				"(if true (" + Application.clojureEapply
-						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"]) ("
-						+ Application.clojureEapply + " `([[:IntString] ~(fn [_x] [(" + RomanNumbers.int2RomanClojure
-						+ " (Integer/parseInt (get _x 0)))])]) [:IntString] [(" + Application.clojureEapply
-						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"])]))");
+						+ " `([[:StringNative] ~identity]) [:StringNative] [\"XLII\"]) ("
+						+ Application.clojureEapply + " `([[:IntString] ~(fn [_x] (" + RomanNumbers.int2RomanClojure
+						+ " (Integer/parseInt (get _x 0))))]) [:IntString] [(" + Application.clojureEapply
+						+ " `([[:StringNative] ~identity]) [:StringNative] [\"42\"])]))");
 		// Cons
 		this.testClojureCompile("(cons 21 21)", "[21 21]");
 		// Exception
@@ -231,24 +231,24 @@ class TestComplex {
 				"(" + Application.clojureEapply + " `([[:IntNative :IntNative] ~-]) [:IntNative :IntNative] [43 1])");
 		// Conversions
 		this.testClojureCompile("(IntNative2IntRoman 42)", "(" + Application.clojureEapply
-				+ " `([[:IntNative] ~(fn [_x] [(" + RomanNumbers.int2RomanClojure + " _x)])]) [:IntNative] [42])");
+				+ " `([[:IntNative] ~(fn [_x] (" + RomanNumbers.int2RomanClojure + " _x))]) [:IntNative] [42])");
 		this.testClojureCompile("(IntNative2IntString 42)", "(" + Application.clojureEapply
 				+ " `([[:IntNative] ~(fn [_x] [(Integer/toString _x)])]) [:IntNative] [42])");
 		this.testClojureCompile("(IntRoman2IntNative (Int:Roman \"XLII\"))",
 				"(" + Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] (" + RomanNumbers.roman2intClojure
 						+ " (get _x 0)))]) [:IntRoman] [(" + Application.clojureEapply
-						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"])])");
+						+ " `([[:StringNative] ~identity]) [:StringNative] [\"XLII\"])])");
 		this.testClojureCompile("(IntRoman2IntString (Int:Roman \"XLII\"))",
-				"(" + Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] [(str (" + RomanNumbers.roman2intClojure
-						+ " (get _x 0)))])]) [:IntRoman] [(" + Application.clojureEapply
-						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"])])");
+				"(" + Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] (str (" + RomanNumbers.roman2intClojure
+						+ " (get _x 0))))]) [:IntRoman] [(" + Application.clojureEapply
+						+ " `([[:StringNative] ~identity]) [:StringNative] [\"XLII\"])])");
 		this.testClojureCompile("(IntString2IntNative (Int:String \"42\"))", "(" + Application.clojureEapply
 				+ " `([[:IntString] ~(fn [_x] (Integer/parseInt (get _x 0)))]) [:IntString] [("
-				+ Application.clojureEapply + " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"])])");
+				+ Application.clojureEapply + " `([[:StringNative] ~identity]) [:StringNative] [\"42\"])])");
 		this.testClojureCompile("(IntString2IntRoman (Int:String \"42\"))",
-				"(" + Application.clojureEapply + " `([[:IntString] ~(fn [_x] [(" + RomanNumbers.int2RomanClojure
-						+ " (Integer/parseInt (get _x 0)))])]) [:IntString] [(" + Application.clojureEapply
-						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"])])");
+				"(" + Application.clojureEapply + " `([[:IntString] ~(fn [_x] (" + RomanNumbers.int2RomanClojure
+						+ " (Integer/parseInt (get _x 0))))]) [:IntString] [(" + Application.clojureEapply
+						+ " `([[:StringNative] ~identity]) [:StringNative] [\"42\"])])");
 		// Define
 		this.testClojureCompile("(define answer 42)", "(def answer 42)");
 		this.testClojureCompile("(deftype Name2)", "");
@@ -280,7 +280,7 @@ class TestComplex {
 				"(" + Application.clojureEapply
 						+ " `([[:IntNative] ~(fn [x] \"Native\")] [[:IntString] ~(fn [x] \"String\")]) [:IntString] [("
 						+ Application.clojureEapply
-						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"])])");
+						+ " `([[:StringNative] ~identity]) [:StringNative] [\"42\"])])");
 
 		// Recursion
 		this.testClojureCompileRegex("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))",
@@ -295,9 +295,9 @@ class TestComplex {
 				"((elambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (Int:Roman \"XLII\") 66)",
 				"(" + Application.clojureEapply
 						+ " `([[:BoolNative :IntString :IntString] ~(fn [x y z] (if x z y))]) [:BoolNative :IntRoman :IntNative] [false ("
-						+ Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] [(str ("
-						+ RomanNumbers.roman2intClojure + " (get _x 0)))])]) [:IntRoman] [(" + Application.clojureEapply
-						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"])]) ("
+						+ Application.clojureEapply + " `([[:IntRoman] ~(fn [_x] (str ("
+						+ RomanNumbers.roman2intClojure + " (get _x 0))))]) [:IntRoman] [(" + Application.clojureEapply
+						+ " `([[:StringNative] ~identity]) [:StringNative] [\"XLII\"])]) ("
 						+ Application.clojureEapply
 						+ " `([[:IntNative] ~(fn [_x] [(Integer/toString _x)])]) [:IntNative] [66])])");
 
@@ -311,10 +311,10 @@ class TestComplex {
 				"(define x (List2:Linked (Int:Roman \"XLII\") (List2:Linked (Int:String \"42\") (List2:Linked 42 (List2:Empty)))))",
 				"(def x (" + Application.clojureEapply + " List2:Linked [:IntRoman :List2Linked] [("
 						+ Application.clojureEapply
-						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"XLII\"]) ("
+						+ " `([[:StringNative] ~identity]) [:StringNative] [\"XLII\"]) ("
 						+ Application.clojureEapply + " List2:Linked [:IntString :List2Linked] [("
 						+ Application.clojureEapply
-						+ " `([[:StringNative] ~(fn [_x] [_x])]) [:StringNative] [\"42\"]) ("
+						+ " `([[:StringNative] ~identity]) [:StringNative] [\"42\"]) ("
 						+ Application.clojureEapply + " List2:Linked [:IntNative :List2Empty] [42 ("
 						+ Application.clojureEapply + " List2:Empty [] [])])])]))");
 

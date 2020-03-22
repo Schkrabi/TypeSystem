@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import abstraction.Lambda;
+import application.Application;
 import expression.Expression;
 import expression.Tuple;
 import expression.Symbol;
@@ -181,8 +182,8 @@ class TestUtil {
 	void testExceptions() {
 		new UnboundVariableException(new Symbol("x"));
 		new InvalidClojureCompilationException(Expression.EMPTY_EXPRESSION);
-		new InvalidNumberOfArgumentsException(2, Expression.EMPTY_EXPRESSION,
-				new Lambda(Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION));
+		new InvalidNumberOfArgumentsException(2, Expression.EMPTY_EXPRESSION, new Application(
+				new Lambda(Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION), Tuple.EMPTY_TUPLE));
 	}
 
 }

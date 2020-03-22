@@ -148,9 +148,9 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 		ExtendedFunction f = (ExtendedFunction)this.interpret(env);
-		return f.substituteAndEvaluate(args, env);
+		return f.doSubstituteAndEvaluate(args, env);
 	}
 	
 	/**

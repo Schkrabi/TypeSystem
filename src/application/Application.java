@@ -1,6 +1,9 @@
 package application;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import abstraction.Abstraction;
 import expression.Expression;
@@ -12,6 +15,7 @@ import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
+import util.InvalidNumberOfArgumentsException;
 import util.NameGenerator;
 import util.Pair;
 import interpretation.Environment;
@@ -37,6 +41,60 @@ public class Application extends Expression {
 		this.fun = fun;
 		this.args = args;
 	}
+	
+	/**
+	 * Gets type of arguments of abstraction in this application
+	 * @param argsType
+	 * @param env
+	 * @return
+	 * @throws AppendableException
+	 */
+	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env) throws AppendableException {
+		Type funInfered = this.fun.infer(env).first;
+		if (funInfered instanceof RepresentationOr) {
+			return (TypeTuple)Application.getBestImplementationType(argsType, (RepresentationOr) funInfered).ltype;
+		} else if (funInfered instanceof TypeArrow) {
+			return ((TypeTuple)((TypeArrow) funInfered).ltype);
+		} else if (funInfered instanceof TypeVariable) {
+			return new TypeTuple(argsType.stream().map(x -> new TypeVariable(NameGenerator.next())).collect(Collectors.toList()));
+		}
+		throw new AppendableException("Expecting expression yielding function at first place in application, got "
+					+ funInfered.toString());
+	}
+	
+	/**
+	 * Converts representations of real arguments into types of function arguments
+	 * @param args real arguments
+	 * @param env environment
+	 * @return tuple with converted arguments
+	 * @throws AppendableException 
+	 */
+	protected Tuple convertArgs(Tuple args, Environment env) throws AppendableException {		
+		TypeTuple argsType = (TypeTuple)args.infer(env).first;
+		TypeTuple expectedType = this.getFunArgsType(argsType, env);
+		
+		if(args.size() != expectedType.size()) {
+			throw new InvalidNumberOfArgumentsException(expectedType.size(), args, this);
+		}
+		
+		Iterator<Expression> i = args.iterator();
+		Iterator<Type> j = argsType.iterator();
+		Iterator<Type> k = expectedType.iterator();
+		
+		List<Expression> l = new LinkedList<Expression>();
+		
+		while(i.hasNext()) {
+			Expression arg = i.next();
+			Type fromType = j.next();
+			Type toType = k.next();
+			
+			l.add(fromType.convertTo(arg, toType));
+		}
+		
+		Tuple ret = new Tuple(l);
+		
+		return ret;
+	}
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
@@ -47,9 +105,9 @@ public class Application extends Expression {
 		}
 		Abstraction abst = (Abstraction)ifun;
 		
-		Tuple interpretedArgs = (Tuple)this.args.interpret(env);
+		Tuple interpretedAndConvertedArgs = (Tuple)this.convertArgs(this.args, env).interpret(env);
 		
-		return abst.substituteAndEvaluate(interpretedArgs, env);
+		return abst.substituteAndEvaluate(interpretedAndConvertedArgs, env);
 	}
 
 	@Override
@@ -100,22 +158,9 @@ public class Application extends Expression {
 		s.append(" ");
 
 		TypeTuple argsType = (TypeTuple) this.args.infer(env).first;
-		Type funInfered = this.fun.infer(env).first;
-		TypeArrow funType;
-		if (funInfered instanceof RepresentationOr) {
-			funType = Application.getBestImplementationType(argsType, (RepresentationOr) funInfered);
-		} else if (funInfered instanceof TypeArrow) {
-			funType = (TypeArrow) funInfered;
-		} else if (funInfered instanceof TypeVariable) {
-			funType = new TypeArrow(argsType, new TypeVariable(NameGenerator.next()));
-		} else {
-			throw new AppendableException("Expecting expression yielding function at first place in application, got "
-					+ funInfered.toString());
-		}
 
 		s.append(this.fun.toClojureCode(env));
 
-		// Args
 		s.append(" [");
 		Iterator<Type> argsTypeIterator = argsType.iterator();
 		while (argsTypeIterator.hasNext()) {
@@ -125,31 +170,10 @@ public class Application extends Expression {
 				s.append(" ");
 			}
 		}
-		s.append("]");
-
-		s.append(" [");
-
-		Iterator<Expression> i = this.args.iterator();
-		Iterator<Type> j = argsType.iterator();
-		Iterator<Type> k = ((TypeTuple) funType.ltype).iterator();
-		while (i.hasNext()) {
-			Expression e = i.next();
-			Type t = j.next();
-			Type actual = k.next();
-
-			String str;
-			if (t.equals(actual)) {
-				str = e.toClojureCode(env);
-			} else {
-				str = t.convertTo(e, actual).toClojureCode(env);
-			}
-			s.append(str);
-
-			if (i.hasNext()) {
-				s.append(" ");
-			}
-		}
-		s.append("])");
+		s.append("] ");
+		
+		s.append(this.convertArgs(this.args, env).toClojureCode(env));
+		s.append(")");
 
 		return s.toString();
 	}

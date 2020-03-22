@@ -121,10 +121,10 @@ public class ExtendedFunction extends ExtendedLambda {
 	}
 	
 	@Override
-	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException {	
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {	
 		TypeTuple argsType = (TypeTuple)args.infer(env).first;
 		Lambda l = this.getMostFitLambda(argsType);
-		return l.substituteAndEvaluate(args, env);
+		return l.doSubstituteAndEvaluate(args, env);
 	}
 	
 	@Override

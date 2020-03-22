@@ -19,7 +19,11 @@ import util.AppendableException;
  */
 public abstract class Abstraction extends Expression {
 
-	public abstract Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException;
+	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException;
+	
+	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException{
+		return this.doSubstituteAndEvaluate(args, env);
+	}
 
 	/**
 	 * Lazily converts all the arguments to given representation
@@ -62,4 +66,6 @@ public abstract class Abstraction extends Expression {
 
 		return ret;
 	}
+	
+	
 }

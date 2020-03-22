@@ -457,8 +457,9 @@ class TestInterpretation {
 	void testLambda() throws AppendableException {
 		final Lambda lambda = new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
 				new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)), new Symbol("x"));
-		//final Lambda faultArgsLambda = new Lambda(new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION)),
-		//		TypeTuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION);
+		// final Lambda faultArgsLambda = new Lambda(new
+		// Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION)),
+		// TypeTuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION);
 
 		lambda.toString();
 		lambda.hashCode();
@@ -856,6 +857,15 @@ class TestInterpretation {
 		TestInterpretation.testConversion(Operator.IntNativeToIntRoman, new LitInteger(5),
 				new LitComposite(new LitString("V"), TypeAtom.TypeIntRoman),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntRoman));
+	}
+
+	@Test
+	void testAutoConversion() throws AppendableException {
+		Expression e = new Application(Operator.Addition,
+				new Tuple(Arrays.asList(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
+						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))));
+		
+		TestInterpretation.testInterpretation(e, new LitInteger(84), Environment.topLevelEnvironment);
 	}
 
 	@Test

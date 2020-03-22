@@ -15,7 +15,6 @@ import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
-import util.InvalidNumberOfArgumentsException;
 import util.NameGenerator;
 import util.Pair;
 
@@ -144,15 +143,8 @@ public class Function extends Lambda implements Comparable<Expression> {
 	}
 
 	@Override
-	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-		if (this.args.size() != args.size()) {
-			throw new InvalidNumberOfArgumentsException(this.args.size(), args, this);
-		}
-
-		TypeTuple argsType = (TypeTuple) args.infer(env).first;
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 		Environment childEnvironment = Abstraction.lexicalClojure(this.args, args, this.creationEnvironment);
-		childEnvironment = Abstraction.autoConvertArgs(childEnvironment, this.args, argsType, this.argsType);
-
 		return this.body.interpret(childEnvironment);
 	}
 
