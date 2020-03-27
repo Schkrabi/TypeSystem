@@ -11,7 +11,7 @@ import java.util.TreeSet;
 
 import abstraction.Abstraction;
 import abstraction.Operator;
-import application.Application;
+import application.AbstractionApplication;
 import expression.Expression;
 import expression.Tuple;
 import parser.SemanticNode;
@@ -162,7 +162,7 @@ public class TypeEnvironment {
 		if (!this.conversions.containsKey(conversion)) {
 			throw new ConversionException(fromType, toType, converted);
 		}
-		return new Application(this.conversions.get(conversion), new Tuple(Arrays.asList(converted)));
+		return new AbstractionApplication(this.conversions.get(conversion), new Tuple(Arrays.asList(converted)));
 	}
 
 	/**

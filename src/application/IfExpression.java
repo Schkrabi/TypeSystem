@@ -2,7 +2,6 @@ package application;
 
 import types.Substitution;
 import types.Type;
-import types.TypeArrow;
 import types.TypeAtom;
 import types.TypeTuple;
 import types.TypeVariable;
@@ -23,10 +22,10 @@ import literal.LitBoolean;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class IfExpression extends Application {
-
+public class IfExpression extends SpecialFormApplication {
+	
 	public IfExpression(Expression condition, Expression trueBranch, Expression falseBranch) {
-		super(IfWrapper.singleton, new Tuple(Arrays.asList(condition, trueBranch, falseBranch)));
+		super(new Tuple(Arrays.asList(condition, trueBranch, falseBranch)));
 	}
 
 	/**
@@ -57,24 +56,6 @@ public class IfExpression extends Application {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		LitBoolean b = (LitBoolean) this.getCondition().interpret(env);
-		if (b.value) {
-			return this.getTrueBranch().interpret(env);
-		} else {
-			return this.getFalseBranch().interpret(env);
-		}
-	}
-
-	@Override
-	public int compareTo(Expression other) {
-		if (other instanceof IfExpression) {
-			return this.args.compareTo(((IfExpression) other).args);
-		}
-		return super.compareTo(other);
-	}
-
-	@Override
 	public boolean equals(Object other) {
 		if (other instanceof IfExpression) {
 			return super.equals(other);
@@ -83,25 +64,46 @@ public class IfExpression extends Application {
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+		Pair<Type, Substitution> condInfered = this.getCondition().infer(env);
+		Pair<Type, Substitution> trueInfered = this.getTrueBranch().infer(env);
+		Pair<Type, Substitution> falseInfered = this.getFalseBranch().infer(env);
+		
+		Substitution condSubstitution = Type.unify(condInfered.first, TypeAtom.TypeBool);
+		Substitution branchSubstitution = Type.unify(trueInfered.first, falseInfered.first);
+		
+		Substitution s = Substitution.EMPTY;
+		s = s.union(condInfered.second);
+		s = s.union(trueInfered.second);
+		s = s.union(falseInfered.second);
+		s = s.union(condSubstitution);
+		s = s.union(branchSubstitution);
+		
+		return new Pair<Type, Substitution>(trueInfered.first.apply(s), s);
+	}
+
+	@Override
+	protected String applicationToClojure(Tuple convertedArgs, Environment env) throws AppendableException {
+		Expression cond = convertedArgs.get(0);
+		Expression trueBranch = convertedArgs.get(1);
+		Expression falseBranch = convertedArgs.get(2);
+		
 		StringBuilder s = new StringBuilder("(if ");
 
-		s.append(this.getCondition().toClojureCode(env));
+		s.append(cond.toClojureCode(env));
 		s.append(" ");
 
-		Expression trueBranch = this.getTrueBranch();
 		Pair<Type, Substitution> trueType = trueBranch.infer(env);
 
-		s.append(this.getTrueBranch().toClojureCode(env));
+		s.append(trueBranch.toClojureCode(env));
 		s.append(" ");
 
-		Expression falseBranch = this.getFalseBranch();
 		Pair<Type, Substitution> falseType = falseBranch.infer(env);
 
 		if (!falseType.first.apply(trueType.second).equals(trueType.first.apply(falseType.second))) {
 			s.append(falseType.first.convertTo(falseBranch, trueType.first).toClojureCode(env));
 		} else {
-			s.append(this.getFalseBranch().toClojureCode(env));
+			s.append(falseBranch.toClojureCode(env));
 		}
 
 		s.append(")");
@@ -109,38 +111,33 @@ public class IfExpression extends Application {
 		return s.toString();
 	}
 
-	/**
-	 * Wrapper for if
-	 * 
-	 * @author Mgr. Radomir Skrabal
-	 *
-	 */
-	private static final class IfWrapper extends Expression {
+	@Override
+	protected String applicatedToString() {
+		return "if";
+	}
 
-		public static final IfWrapper singleton = new IfWrapper();
-
-		@Override
-		public Expression interpret(Environment env) {
-			return this;
+	@Override
+	protected Expression apply(Tuple convertedArgs, Environment evaluationEnvironment) throws AppendableException {
+		LitBoolean cond = (LitBoolean)convertedArgs.get(0).interpret(evaluationEnvironment);
+		Expression trueBranch = convertedArgs.get(1);
+		Expression falseBranch = convertedArgs.get(2);
+		
+		if (cond.value) {
+			return trueBranch.interpret(evaluationEnvironment);
+		} 
+		
+		Pair<Type, Substitution> retInfered = this.infer(evaluationEnvironment);
+		Pair<Type, Substitution> falseInfered = falseBranch.infer(evaluationEnvironment);
+		
+		if(retInfered.first.equals(falseInfered.first)) {
+			return falseBranch.interpret(evaluationEnvironment);
 		}
+		return falseInfered.first.convertTo(falseBranch, retInfered.first).interpret(evaluationEnvironment);	
+	}
 
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable branchType = new TypeVariable(NameGenerator.next());
-			TypeTuple argsType = new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, branchType, branchType));
-
-			return new Pair<Type, Substitution>(new TypeArrow(argsType, branchType), Substitution.EMPTY);
-		}
-
-		@Override
-		public String toClojureCode(Environment env) {
-			return "if";
-		}
-
-		@Override
-		public String toString() {
-			return "if";
-		}
-
+	@Override
+	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env) throws AppendableException {
+		TypeVariable v = new TypeVariable(NameGenerator.next());
+		return new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, v, v));
 	}
 }

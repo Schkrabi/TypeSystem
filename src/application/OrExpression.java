@@ -1,9 +1,7 @@
 package application;
 
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import expression.Expression;
 import expression.Tuple;
 import interpretation.Environment;
@@ -11,9 +9,9 @@ import literal.LitBoolean;
 import types.Substitution;
 import types.Type;
 import types.TypeAtom;
+import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
-import util.ThrowingFunction;
 
 /**
  * Expression for or special form
@@ -21,35 +19,10 @@ import util.ThrowingFunction;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class OrExpression extends Application {
+public class OrExpression extends SpecialFormApplication {
 
 	public OrExpression(Tuple args) {
-		super(OrWrapper.singleton, args);
-	}
-
-	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		try {
-			if (this.args.equals(Tuple.EMPTY_TUPLE)) {
-				return LitBoolean.FALSE;
-			}
-
-			List<LitBoolean> l = this.args.stream().map(ThrowingFunction.wrapper(x -> (LitBoolean) x.interpret(env)))
-					.collect(Collectors.toList());
-
-			for (LitBoolean b : l) {
-				if (b.value) {
-					return LitBoolean.TRUE;
-				}
-			}
-
-			return LitBoolean.FALSE;
-
-		} catch (RuntimeException re) {
-			AppendableException e = (AppendableException) re.getCause();
-			e.appendMessage(" in " + this);
-			throw e;
-		}
+		super(args);
 	}
 
 	@Override
@@ -65,12 +38,12 @@ public class OrExpression extends Application {
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
+	protected String applicationToClojure(Tuple convertedArgs, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(");
-		s.append(OrWrapper.singleton.toClojureCode());
+		s.append("or");
 		s.append(' ');
 
-		Iterator<Expression> i = this.args.iterator();
+		Iterator<Expression> i = convertedArgs.iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
 			s.append(e.toClojureCode(env));
@@ -82,45 +55,28 @@ public class OrExpression extends Application {
 		return s.toString();
 	}
 
-	/**
-	 * Wrapper for or special form
-	 * 
-	 * @author Mgr. Radomir Skrabal
-	 *
-	 */
-	private static class OrWrapper extends Expression {
+	@Override
+	protected String applicatedToString() {
+		return "or";
+	}
 
-		/**
-		 * Singleton
-		 */
-		public static OrWrapper singleton = new OrWrapper();
-
-		/**
-		 * Private constructor for singleton
-		 */
-		private OrWrapper() {
+	@Override
+	protected Expression apply(Tuple convertedArgs, Environment evaluationEnvironment) throws AppendableException {
+		Expression arg0 = convertedArgs.get(0);
+		LitBoolean b0 = (LitBoolean)arg0.interpret(evaluationEnvironment);
+		if(b0.value) {
+			return LitBoolean.TRUE;
 		}
-
-		@Override
-		public Expression interpret(Environment env) throws AppendableException {
-			return this;
+		Expression arg1 = convertedArgs.get(1);
+		LitBoolean b1 = (LitBoolean)arg1.interpret(evaluationEnvironment);
+		if(b1.value) {
+			return LitBoolean.TRUE;
 		}
+		return LitBoolean.FALSE;
+	}
 
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			throw new AppendableException(this.getClass().getName() + " should not be infered directly "
-					+ AndExpression.class.getName() + " should be used for inference");
-		}
-
-
-		@Override
-		public String toClojureCode(Environment env) {
-			return "or";
-		}
-
-		@Override
-		public String toString() {
-			return "or";
-		}
+	@Override
+	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env) throws AppendableException {
+		return new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, TypeAtom.TypeBoolNative));
 	}
 }

@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import abstraction.ExtendedLambda;
 import abstraction.Lambda;
 import application.AndExpression;
-import application.Application;
+import application.AbstractionApplication;
 import application.DefConversionExpression;
 import application.DefExpression;
 import application.DefRepresentationExpression;
@@ -227,7 +227,7 @@ public class SemanticParser {
 
 		args = new Tuple(l);
 
-		return new Application(fun, args);
+		return new AbstractionApplication(fun, args);
 	}
 
 	/**

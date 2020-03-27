@@ -22,7 +22,7 @@ import abstraction.Lambda;
 import abstraction.Abstraction;
 import abstraction.Operator;
 import application.AndExpression;
-import application.Application;
+import application.AbstractionApplication;
 import application.DefConversionExpression;
 import application.DefExpression;
 import application.DefTypeExpression;
@@ -536,10 +536,10 @@ class TestInterpretation {
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Symbol("x")),
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
-						new Application(Operator.IntRomanToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))),
+						new AbstractionApplication(Operator.IntRomanToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))),
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
-						new Application(Operator.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x")))))));
+						new AbstractionApplication(Operator.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x")))))));
 
 		TestInterpretation.testReflexivity(lambda);
 		TestInterpretation.testDifference(lambda, ExtendedLambda.makeExtendedLambda(Arrays.asList(
@@ -547,19 +547,19 @@ class TestInterpretation {
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Symbol("x")),
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
-						new Application(Operator.IntRomanToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))))));
+						new AbstractionApplication(Operator.IntRomanToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))))));
 		TestInterpretation.testDifference(lambda, ExtendedLambda.makeExtendedLambda(Arrays.asList(
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Symbol("x")),
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
-						new Application(Operator.IntRomanToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))),
+						new AbstractionApplication(Operator.IntRomanToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))),
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
-						new Application(Operator.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))),
+						new AbstractionApplication(Operator.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))),
 				new Lambda(new Tuple(Arrays.asList(new Symbol("y"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
-						new Application(Operator.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))))));
+						new AbstractionApplication(Operator.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))))));
 		TestInterpretation.testDifference(lambda, Expression.EMPTY_EXPRESSION);
 
 		lambda.toString();
@@ -633,19 +633,19 @@ class TestInterpretation {
 
 	@Test
 	void testApplication() throws AppendableException {
-		Application application = new Application(
+		AbstractionApplication application = new AbstractionApplication(
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(new TypeVariable("y"))), new Symbol("x")),
 				new Tuple(Arrays.asList(new LitInteger(42))));
 
 		TestInterpretation.testReflexivity(application);
 		TestInterpretation.testDifference(application,
-				new Application(
+				new AbstractionApplication(
 						new Lambda(new Tuple(Arrays.asList(new Symbol("y"))),
 								new TypeTuple(Arrays.asList(new TypeVariable("x"))), new Symbol("x")),
 						new Tuple(Arrays.asList(new LitInteger(42)))));
 		TestInterpretation.testDifference(application,
-				new Application(
+				new AbstractionApplication(
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 								new TypeTuple(Arrays.asList(new TypeVariable("y"))), new Symbol("x")),
 						new Tuple(Arrays.asList(new LitInteger(21)))));
@@ -656,11 +656,11 @@ class TestInterpretation {
 		application.hashCode();
 
 		Assertions.assertThrows(InvalidNumberOfArgumentsException.class,
-				() -> new Application(new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
+				() -> new AbstractionApplication(new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
 						new TypeTuple(Arrays.asList(new TypeVariable("_x"), new TypeVariable("y"))), new Symbol("x")),
 						new Tuple(Arrays.asList(new LitInteger(42)))).interpret(Environment.topLevelEnvironment));
 		Assertions.assertThrows(AppendableException.class,
-				() -> new Application(Expression.EMPTY_EXPRESSION, Tuple.EMPTY_TUPLE)
+				() -> new AbstractionApplication(Expression.EMPTY_EXPRESSION, Tuple.EMPTY_TUPLE)
 						.interpret(Environment.topLevelEnvironment));
 
 		TestInterpretation.testInterpretation(application, new LitInteger(42), Environment.topLevelEnvironment);
@@ -672,7 +672,7 @@ class TestInterpretation {
 		creation.put(new Symbol("x"), new LitInteger(128));
 		Environment evaluation = Environment.create(Environment.topLevelEnvironment);
 		evaluation.put(new Symbol("x"), new LitString("foo"));
-		Application lexicalClojureTest = new Application(
+		AbstractionApplication lexicalClojureTest = new AbstractionApplication(
 				new Function(new TypeTuple(Arrays.asList(new TypeVariable("a"))),
 						new Tuple(Arrays.asList(new Symbol("y"))), new Symbol("x"), creation),
 				new Tuple(Arrays.asList(LitBoolean.TRUE)));
@@ -682,7 +682,7 @@ class TestInterpretation {
 		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, lexicalClojureTest);
 
 		// Test autoconvert representations
-		Application autoConRep = new Application(
+		AbstractionApplication autoConRep = new AbstractionApplication(
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Symbol("x")),
 				// new Tuple(Arrays.asList(new
@@ -700,7 +700,7 @@ class TestInterpretation {
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Symbol("x")),
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), new Symbol("x"))));
-		Application useString = new Application(elambda, new Tuple(
+		AbstractionApplication useString = new AbstractionApplication(elambda, new Tuple(
 				Arrays.asList(new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString))));
 		TestInterpretation.testInterpretation(useString,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString),
@@ -708,7 +708,7 @@ class TestInterpretation {
 		p = useString.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeAtom.TypeIntString, useString);
 
-		Application useRoman = new Application(elambda, new Tuple(
+		AbstractionApplication useRoman = new AbstractionApplication(elambda, new Tuple(
 				Arrays.asList(new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman))));
 		TestInterpretation.testInterpretation(useRoman,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman),
@@ -717,7 +717,7 @@ class TestInterpretation {
 		TestInterpretation.testInference(p, TypeAtom.TypeIntRoman, useRoman);
 
 		Assertions.assertThrows(AppendableException.class,
-				() -> new Application(useString, new Tuple(Arrays.asList(new LitString("fail"))))
+				() -> new AbstractionApplication(useString, new Tuple(Arrays.asList(new LitString("fail"))))
 						.infer(Environment.topLevelEnvironment));
 
 	}
@@ -745,7 +745,7 @@ class TestInterpretation {
 	void testAndExpression() throws AppendableException {
 		AndExpression andExpressionT = new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)));
 		AndExpression andExpressionF = new AndExpression(
-				new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE, LitBoolean.TRUE)));
+				new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)));
 
 		TestInterpretation.testReflexivity(andExpressionT);
 		TestInterpretation.testDifference(andExpressionT, andExpressionF);
@@ -765,7 +765,7 @@ class TestInterpretation {
 	void testOrExpression() throws AppendableException {
 		OrExpression orExpressionT = new OrExpression(new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)));
 		OrExpression orExpressionF = new OrExpression(
-				new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE, LitBoolean.FALSE)));
+				new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE)));
 
 		TestInterpretation.testReflexivity(orExpressionT);
 		TestInterpretation.testDifference(orExpressionT, orExpressionF);
@@ -861,7 +861,7 @@ class TestInterpretation {
 
 	@Test
 	void testAutoConversion() throws AppendableException {
-		Expression e = new Application(Operator.Addition,
+		Expression e = new AbstractionApplication(Operator.Addition,
 				new Tuple(Arrays.asList(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
 						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))));
 		
@@ -1102,7 +1102,7 @@ class TestInterpretation {
 
 	private static void testOperator(final Operator operator, Tuple args, Expression expectedInterpret,
 			Type expectedInference) throws AppendableException {
-		Application application = new Application(operator, args);
+		AbstractionApplication application = new AbstractionApplication(operator, args);
 
 		TestInterpretation.testInterpretation(application, expectedInterpret, Environment.topLevelEnvironment);
 		Pair<Type, Substitution> p = application.infer(Environment.topLevelEnvironment);
@@ -1118,7 +1118,7 @@ class TestInterpretation {
 			Type expectedInfer) throws AppendableException {
 		conversion.toString();
 
-		Application appl = new Application(conversion, new Tuple(Arrays.asList(argument)));
+		AbstractionApplication appl = new AbstractionApplication(conversion, new Tuple(Arrays.asList(argument)));
 		TestInterpretation.testInterpretation(appl, expectedInterpret, Environment.topLevelEnvironment);
 		Pair<Type, Substitution> p = conversion.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, expectedInfer, conversion);

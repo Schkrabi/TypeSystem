@@ -1,10 +1,15 @@
 package application;
 
+import java.util.Arrays;
+
 import expression.Expression;
+import expression.Tuple;
 import interpretation.Environment;
 import semantic.UserException;
 import types.Substitution;
 import types.Type;
+import types.TypeAtom;
+import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
 import util.NameGenerator;
@@ -16,27 +21,23 @@ import util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class ExceptionExpr extends Expression {
-
-	/**
-	 * Message of the exception
-	 */
-	public final Expression message;
+public class ExceptionExpr extends SpecialFormApplication {
 
 	public ExceptionExpr(Expression message) {
-		this.message = message;
+		super(new Tuple(Arrays.asList(message)));
 	}
-
-	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		throw new UserException(this.message.interpret(env).toString());
+	
+	public Expression getMessage() {
+		return this.args.get(0);
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Pair<Type, Substitution> infered = this.message.infer(env);
-			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), infered.second);
+			Pair<Type, Substitution> infered = this.getMessage().infer(env);
+			Substitution s = Type.unify(infered.first, TypeAtom.TypeStringNative);
+			s = s.union(infered.second);
+			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), s);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
@@ -44,33 +45,30 @@ public class ExceptionExpr extends Expression {
 	}
 
 	@Override
-	public String toClojureCode(Environment env) {
-		return "(throw (Throwable. \"" + this.message + "\"))";
-	}
-
-	@Override
-	public String toString() {
-		return "(error " + this.message.toString() + ")";
-	}
-
-	@Override
-	public int compareTo(Expression other) {
-		if (other instanceof ExceptionExpr) {
-			return this.message.compareTo(((ExceptionExpr) other).message);
-		}
-		return super.compareTo(other);
-	}
-
-	@Override
 	public boolean equals(Object other) {
 		if (other instanceof ExceptionExpr) {
-			return this.message.equals(((ExceptionExpr) other).message);
+			return this.args.equals(((ExceptionExpr) other).args);
 		}
 		return false;
 	}
 
 	@Override
-	public int hashCode() {
-		return this.message.hashCode();
+	protected String applicationToClojure(Tuple convertedArgs, Environment env) throws AppendableException {
+		return "(throw (Throwable. " + convertedArgs.get(0).toClojureCode(env) + "))";
+	}
+
+	@Override
+	protected String applicatedToString() {
+		return "error";
+	}
+
+	@Override
+	protected Expression apply(Tuple convertedArgs, Environment evaluationEnvironment) throws AppendableException {
+		throw new UserException(convertedArgs.get(0).interpret(evaluationEnvironment).toString());
+	}
+
+	@Override
+	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env) throws AppendableException {
+		return new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative));
 	}
 }

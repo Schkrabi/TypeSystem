@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import abstraction.Lambda;
 import abstraction.Operator;
-import application.Application;
+import application.AbstractionApplication;
 import expression.Expression;
 import expression.Tuple;
 import expression.Symbol;
@@ -176,7 +176,7 @@ class TestTypes {
 				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
 				new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString, TypeAtom.TypeBool)),
 				new Tuple(Arrays.asList(
-						new Application(Operator.IntRomanToIntString, new Tuple(Arrays.asList(new LitString("XIII")))),
+						new AbstractionApplication(Operator.IntRomanToIntString, new Tuple(Arrays.asList(new LitString("XIII")))),
 						new Symbol("x"), LitBoolean.TRUE)));
 		TestTypes.testConvertTo(tuple,
 				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
@@ -346,7 +346,7 @@ class TestTypes {
 		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), new TypeVariable("a"),
 				new LitString("42"));
 		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), TypeAtom.TypeIntRoman,
-				new Application(Operator.IntStringToIntRoman, new Tuple(Arrays.asList(new LitString("42")))));
+				new AbstractionApplication(Operator.IntStringToIntRoman, new Tuple(Arrays.asList(new LitString("42")))));
 
 		Assertions.assertThrows(ConversionException.class,
 				() -> atom.convertTo(Expression.EMPTY_EXPRESSION, new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt)));

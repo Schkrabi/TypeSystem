@@ -27,10 +27,10 @@ public class InvalidNumberOfArgumentsException extends AppendableException {
 	 */
 	public final Application application;
 
-	public InvalidNumberOfArgumentsException(int expected, Expression got, Application abstraction) {
-		super("In " + abstraction + "number of arguments mismatch, expected " + expected + " got " + got.toString());
+	public InvalidNumberOfArgumentsException(int expected, Expression got, Application application2) {
+		super("In " + application2 + "number of arguments mismatch, expected " + expected + " got " + got.toString());
 		this.expected = expected;
 		this.got = got;
-		this.application = abstraction;
+		this.application = application2;
 	}
 }

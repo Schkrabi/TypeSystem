@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import abstraction.Lambda;
-import application.Application;
+import application.AbstractionApplication;
 import util.AppendableException;
 import util.NameGenerator;
 import expression.Expression;
@@ -79,7 +79,7 @@ public class TypeArrow extends Type {
 		Symbol v = new Symbol(NameGenerator.next());
 
 		Lambda l = new Lambda(new Tuple(Arrays.asList(v)), (TypeTuple) t.ltype, this.rtype.convertTo(
-				new Application(expr, (Tuple) t.ltype.convertTo(new Tuple(Arrays.asList(v)), this.ltype)), t.rtype));
+				new AbstractionApplication(expr, (Tuple) t.ltype.convertTo(new Tuple(Arrays.asList(v)), this.ltype)), t.rtype));
 		return l;
 	}
 

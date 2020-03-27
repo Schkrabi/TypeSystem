@@ -19,7 +19,7 @@ import abstraction.ExtendedLambda;
 import abstraction.Function;
 import abstraction.Lambda;
 import application.AndExpression;
-import application.Application;
+import application.AbstractionApplication;
 import application.DefConversionExpression;
 import application.DefExpression;
 import application.DefRepresentationExpression;
@@ -87,7 +87,7 @@ class TestParser {
 		List<Pair<String, Expression>> testcases = Arrays.asList(
 				new Pair<String, Expression>("()", Expression.EMPTY_EXPRESSION),
 				new Pair<String, Expression>("(+ 1 1)",
-						new Application(new Symbol("+"),
+						new AbstractionApplication(new Symbol("+"),
 								new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(1))))),
 				new Pair<String, Expression>("(if #t x y)",
 						new IfExpression(LitBoolean.TRUE, new Symbol("x"), new Symbol("y"))),
@@ -112,14 +112,14 @@ class TestParser {
 								new Lambda(new Tuple(Arrays.asList(new Symbol("name"))),
 										new TypeTuple(Arrays.asList(new TypeAtom(new TypeName("Name"),
 												new TypeRepresentation("Structured")))),
-										new Application(new Symbol("Name:Unstructured"), new Tuple(Arrays
-												.asList(new Application(new Symbol("concat"), new Tuple(Arrays.asList(
-														new Application(new Symbol("get"),
+										new AbstractionApplication(new Symbol("Name:Unstructured"), new Tuple(Arrays
+												.asList(new AbstractionApplication(new Symbol("concat"), new Tuple(Arrays.asList(
+														new AbstractionApplication(new Symbol("get"),
 																new Tuple(Arrays.asList(new LitInteger(0),
 																		new Symbol("name")))),
-														new Application(new Symbol("concat"), new Tuple(Arrays.asList(
+														new AbstractionApplication(new Symbol("concat"), new Tuple(Arrays.asList(
 																new LitString(" "),
-																new Application(new Symbol("get"),
+																new AbstractionApplication(new Symbol("get"),
 																		new Tuple(Arrays.asList(new LitInteger(1),
 																				new Symbol("name")))))))))))))))),
 				new Pair<String, Expression>("(define one 1)",
@@ -128,7 +128,7 @@ class TestParser {
 						new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2)))),
 				new Pair<String, Expression>("(error \"test\")", new ExceptionExpr(new LitString("test"))),
 				new Pair<String, Expression>("(Int:String \"256\")",
-						new Application(new Symbol("Int:String"), new Tuple(Arrays.asList(new LitString("256"))))),
+						new AbstractionApplication(new Symbol("Int:String"), new Tuple(Arrays.asList(new LitString("256"))))),
 				new Pair<String, Expression>("3.141528", new LitDouble(3.141528)),
 				new Pair<String, Expression>("#f", LitBoolean.FALSE),
 				new Pair<String, Expression>("(and #t #f)",
