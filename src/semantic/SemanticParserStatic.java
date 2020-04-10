@@ -20,13 +20,16 @@ import util.ThrowingFunction;
  *
  */
 public final class SemanticParserStatic {
-	public static final String DEFTYPE = "deftype";
-	public static final String DEFREP = "defrep";
-	public static final String LAMBDA = "lambda";
-	public static final String ELAMBDA = "elambda";
-	public static final String IF = "if";
-	public static final String DEFCONVERSION = "defconversion";
 	public static final String DEFINE = "define";
+	public static final String DEFINE_TYPE = "type";
+	public static final String DEFINE_REPRESENTATION = "representation";
+	public static final String DEFINE_CONVERSION = "conversion";
+	public static final String DEFINE_CONSTRUCTOR = "constructor";
+	public static final String CONSTRUCT = "construct";
+	public static final String CONVERT = "convert";
+	public static final String LAMBDA = "lambda";
+	public static final String EXTENDED_LAMBDA = "extended-lambda";
+	public static final String IF = "if";
 	public static final String CONS = "cons";
 	public static final String ERROR = "error";
 	public static final String AND = "and";
@@ -40,19 +43,21 @@ public final class SemanticParserStatic {
 
 	static {
 		specialForms = new TreeSet<String>();
-		specialForms.add(DEFREP);
-		specialForms.add(DEFTYPE);
-		specialForms.add(ELAMBDA);
+		specialForms.add(DEFINE_REPRESENTATION);
+		specialForms.add(DEFINE_TYPE);
+		specialForms.add(EXTENDED_LAMBDA);
 		specialForms.add(IF);
 		specialForms.add(LAMBDA);
-		specialForms.add(DEFCONVERSION);
-		// specialForms.add(DEFCONSTRUCTOR);
+		specialForms.add(DEFINE_CONVERSION);
 		specialForms.add(DEFINE);
 		specialForms.add(CONS);
 		specialForms.add(ERROR);
 		specialForms.add(UNUSED);
 		specialForms.add(AND);
 		specialForms.add(OR);
+		specialForms.add(DEFINE_CONSTRUCTOR);
+		specialForms.add(CONSTRUCT);
+		specialForms.add(CONVERT);
 	}
 
 	/**

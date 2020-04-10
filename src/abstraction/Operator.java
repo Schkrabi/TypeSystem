@@ -51,7 +51,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeIntNative.toClojure() + " " + TypeAtom.TypeIntNative.toClojure() + "] ~+])";
+			return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + " " + TypeAtom.TypeIntNative.toClojureKey() + "] ~+])";
 		}
 
 		@Override
@@ -83,7 +83,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeIntNative.toClojure() + " " + TypeAtom.TypeIntNative.toClojure() + "] ~bit-and])";
+			return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + " " + TypeAtom.TypeIntNative.toClojureKey() + "] ~bit-and])";
 		}
 
 		@Override
@@ -114,7 +114,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeIntNative.toClojure() + " " + TypeAtom.TypeIntNative.toClojure() + "] ~bit-or])";
+			return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + " " + TypeAtom.TypeIntNative.toClojureKey() + "] ~bit-or])";
 		}
 
 		@Override
@@ -148,7 +148,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) throws AppendableException {
-			return "`([" + this.type.ltype.toClojure() + " ~(fn [_x] (get _x 0))])";
+			return "`([" + this.type.ltype.toClojureKey() + " ~(fn [_x] (get _x 0))])";
 		}
 
 		@Override
@@ -182,7 +182,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) throws AppendableException {
-			return "`([" + type.ltype.toClojure() + " ~(fn [_x] (get _x 1))])";
+			return "`([" + type.ltype.toClojureKey() + " ~(fn [_x] (get _x 1))])";
 		}
 
 		@Override
@@ -214,7 +214,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeStringNative.toClojure() + " " + TypeAtom.TypeStringNative.toClojure() + "] ~str])";
+			return "`([[" + TypeAtom.TypeStringNative.toClojureKey() + " " + TypeAtom.TypeStringNative.toClojureKey() + "] ~str])";
 		}
 
 		@Override
@@ -246,7 +246,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeIntNative.toClojure() + " " + TypeAtom.TypeIntNative.toClojure() + "] ~/])";
+			return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + " " + TypeAtom.TypeIntNative.toClojureKey() + "] ~/])";
 		}
 
 		@Override
@@ -281,7 +281,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) throws AppendableException {
-			return "`([" + type.ltype.toClojure() + " ~=])";
+			return "`([" + type.ltype.toClojureKey() + " ~=])";
 		}
 
 		@Override
@@ -312,7 +312,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeIntNative.toClojure() + " " + TypeAtom.TypeIntNative.toClojure() + "] ~<])";
+			return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + " " + TypeAtom.TypeIntNative.toClojureKey() + "] ~<])";
 		}
 		
 		@Override
@@ -342,7 +342,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeIntNative.toClojure() + " " + TypeAtom.TypeIntNative.toClojure() + "] ~*])";
+			return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + " " + TypeAtom.TypeIntNative.toClojureKey() + "] ~*])";
 		}
 		
 		@Override
@@ -371,7 +371,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeBoolNative.toClojure() + "] ~not])";
+			return "`([[" + TypeAtom.TypeBoolNative.toClojureKey() + "] ~not])";
 		}
 		
 		public String toString() {
@@ -400,7 +400,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeIntNative.toClojure() + " " + TypeAtom.TypeIntNative.toClojure() + "] ~=])";
+			return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + " " + TypeAtom.TypeIntNative.toClojureKey() + "] ~=])";
 		}
 		
 		@Override
@@ -431,7 +431,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeIntNative.toClojure() + " " + TypeAtom.TypeIntNative.toClojure() + "] ~-])";
+			return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + " " + TypeAtom.TypeIntNative.toClojureKey() + "] ~-])";
 		}
 		
 		@Override
@@ -465,7 +465,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) throws AppendableException {
-			return "`([" + type.ltype.toClojure() + " ~println])";
+			return "`([" + type.ltype.toClojureKey() + " ~println])";
 		}
 		
 		@Override
@@ -478,8 +478,6 @@ public abstract class Operator extends Abstraction {
 	 * Deconstruct operator
 	 */
 	public static final Operator Deconstruct = new Operator() {
-		
-		private final TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()))), new TypeVariable(NameGenerator.next()));
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
@@ -490,12 +488,12 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env) {
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+			return new Pair<Type, Substitution>(new TypeArrow(new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()))), new TypeVariable(NameGenerator.next())), Substitution.EMPTY);
 		}
 
 		@Override
 		public String toClojureCode(Environment env) throws AppendableException {
-			return "`([" + type.ltype.toClojure() + " ~identity]";
+			return "`([" + new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()))).toClojureKey() + " ~identity])";
 		}
 		
 		@Override
@@ -524,7 +522,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) {
-					return "`([[" + TypeAtom.TypeIntNative.toClojure() + "] ~identity])";
+					return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + "] ~identity])";
 				}
 				
 				@Override
@@ -554,7 +552,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) {
-					return "`([[" + TypeAtom.TypeIntNative.toClojure() + "] ~identity])";
+					return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + "] ~identity])";
 				}
 				
 				@Override
@@ -582,7 +580,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) throws AppendableException {
-					return "`([[" + TypeAtom.TypeStringNative.toClojure() + "] ~identity])";
+					return "`([[" + TypeAtom.TypeStringNative.toClojureKey() + "] ~identity])";
 				}
 				
 				@Override
@@ -610,7 +608,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) throws AppendableException {
-					return "`([[" + TypeAtom.TypeStringNative.toClojure() + "] ~identity])";
+					return "`([[" + TypeAtom.TypeStringNative.toClojureKey() + "] ~identity])";
 				}
 				
 				@Override
@@ -639,7 +637,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) throws AppendableException {
-					return "`([[" + TypeAtom.TypeStringNative.toClojure() + "] ~identity])";
+					return "`([[" + TypeAtom.TypeStringNative.toClojureKey() + "] ~identity])";
 				}
 				
 				@Override
@@ -667,7 +665,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) throws AppendableException {
-					return "`([[" + TypeAtom.TypeStringNative.toClojure() + "] ~identity])";
+					return "`([[" + TypeAtom.TypeStringNative.toClojureKey() + "] ~identity])";
 				}
 				
 				@Override
@@ -695,7 +693,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) throws AppendableException {
-					return "`([[" + TypeAtom.TypeDoubleNative.toClojure() + "] ~identity])";
+					return "`([[" + TypeAtom.TypeDoubleNative.toClojureKey() + "] ~identity])";
 				}
 				
 				@Override
@@ -724,7 +722,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) throws AppendableException {
-			return "`([[" + TypeAtom.TypeDoubleNative.toClojure() + "] ~identity])";
+			return "`([[" + TypeAtom.TypeDoubleNative.toClojureKey() + "] ~identity])";
 		}
 				
 		@Override
@@ -753,7 +751,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) throws AppendableException {
-					return "`([[" + TypeAtom.TypeBoolNative.toClojure() + "] ~identity])";
+					return "`([[" + TypeAtom.TypeBoolNative.toClojureKey() + "] ~identity])";
 				}
 				
 				@Override
@@ -782,7 +780,7 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		public String toClojureCode(Environment env) throws AppendableException {
-			return "`([[" + TypeAtom.TypeBoolNative.toClojure() + "] ~identity])";
+			return "`([[" + TypeAtom.TypeBoolNative.toClojureKey() + "] ~identity])";
 		}
 		
 		@Override
@@ -812,7 +810,7 @@ public abstract class Operator extends Abstraction {
 		
 		@Override
 		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeIntNative.toClojure() + "] ~(fn [_x] (" + RomanNumbers.int2RomanClojure + " _x))])";
+			return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + "] ~(fn [_x] (" + RomanNumbers.int2RomanClojure + " _x))])";
 		}
 		
 		@Override
@@ -841,7 +839,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) throws AppendableException {
-					return "`([[" + TypeAtom.TypeIntNative.toClojure() + "] ~(fn [_x] [(Integer/toString _x)])])";
+					return "`([[" + TypeAtom.TypeIntNative.toClojureKey() + "] ~(fn [_x] (Integer/toString _x))])";
 				}
 				
 				@Override
@@ -871,7 +869,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) throws AppendableException {
-					return "`([[" + TypeAtom.TypeIntRoman.toClojure() + "] ~(fn [_x] (" + RomanNumbers.roman2intClojure + " (get _x 0)))])";
+					return "`([[" + TypeAtom.TypeIntRoman.toClojureKey() + "] ~(fn [_x] (" + RomanNumbers.roman2intClojure + " _x))])";
 				}
 				
 				@Override
@@ -902,7 +900,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) throws AppendableException {
-					return "`([[" + TypeAtom.TypeIntRoman.toClojure() + "] ~(fn [_x] (str (" + RomanNumbers.roman2intClojure + " (get _x 0))))])";
+					return "`([[" + TypeAtom.TypeIntRoman.toClojureKey() + "] ~(fn [_x] (str (" + RomanNumbers.roman2intClojure + " _x)))])";
 				}
 				
 				@Override
@@ -933,7 +931,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) throws AppendableException {
-					return "`([[" + TypeAtom.TypeIntString.toClojure() + "] ~(fn [_x] (Integer/parseInt (get _x 0)))])";
+					return "`([[" + TypeAtom.TypeIntString.toClojureKey() + "] ~(fn [_x] (Integer/parseInt _x))])";
 				}
 		
 				@Override
@@ -963,7 +961,7 @@ public abstract class Operator extends Abstraction {
 
 				@Override
 				public String toClojureCode(Environment env) throws AppendableException {
-					return "`([[" + TypeAtom.TypeIntString.toClojure() + "] ~(fn [_x] (" + RomanNumbers.int2RomanClojure + " (Integer/parseInt (get _x 0))))])";
+					return "`([[" + TypeAtom.TypeIntString.toClojureKey() + "] ~(fn [_x] (" + RomanNumbers.int2RomanClojure + " (Integer/parseInt _x)))])";
 				}
 				
 				@Override

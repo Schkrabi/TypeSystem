@@ -2,6 +2,7 @@ package application;
 
 import expression.Expression;
 import interpretation.Environment;
+import semantic.SemanticParserStatic;
 import semantic.TypeEnvironment;
 import types.Substitution;
 import types.Type;
@@ -15,27 +16,27 @@ import util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class DefTypeExpression extends Expression {
+public class DefineType extends Expression {
 
 	/**
 	 * Name of type which expression is defining
 	 */
 	public final TypeName typeName;
 
-	public DefTypeExpression(TypeName typeName) {
+	public DefineType(TypeName typeName) {
 		super();
 		this.typeName = typeName;
 	}
 
 	@Override
 	public String toString() {
-		return "(deftype " + this.typeName.toString() + ")";
+		return "(" + SemanticParserStatic.DEFINE_TYPE + " " + this.typeName.toString() + ")";
 	}
 
 	@Override
 	public boolean equals(Object other) {
-		if (other instanceof DefTypeExpression) {
-			return this.typeName.equals(((DefTypeExpression) other).typeName);
+		if (other instanceof DefineType) {
+			return this.typeName.equals(((DefineType) other).typeName);
 		}
 		return false;
 	}
@@ -47,8 +48,8 @@ public class DefTypeExpression extends Expression {
 
 	@Override
 	public int compareTo(Expression other) {
-		if (other instanceof DefTypeExpression) {
-			return this.typeName.compareTo(((DefTypeExpression) other).typeName);
+		if (other instanceof DefineType) {
+			return this.typeName.compareTo(((DefineType) other).typeName);
 		}
 		return super.compareTo(other);
 	}

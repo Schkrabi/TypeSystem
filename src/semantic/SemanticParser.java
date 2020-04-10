@@ -11,11 +11,14 @@ import java.util.stream.Collectors;
 import abstraction.ExtendedLambda;
 import abstraction.Lambda;
 import application.AndExpression;
+import application.Construct;
+import application.Convert;
+import application.DefineConstructor;
 import application.AbstractionApplication;
-import application.DefConversionExpression;
-import application.DefExpression;
-import application.DefRepresentationExpression;
-import application.DefTypeExpression;
+import application.DefineConversion;
+import application.DefineSymbol;
+import application.DefineRepresentation;
+import application.DefineType;
 import application.ExceptionExpr;
 import application.IfExpression;
 import expression.Expression;
@@ -159,13 +162,13 @@ public class SemanticParser {
 			throws AppendableException {
 		Expression e;
 		switch (specialForm) {
-		case SemanticParserStatic.DEFREP:
+		case SemanticParserStatic.DEFINE_REPRESENTATION:
 			e = SemanticParser.parseDefrep(specialFormList);
 			break;
-		case SemanticParserStatic.DEFTYPE:
+		case SemanticParserStatic.DEFINE_TYPE:
 			e = SemanticParser.parseDeftype(specialFormList);
 			break;
-		case SemanticParserStatic.ELAMBDA:
+		case SemanticParserStatic.EXTENDED_LAMBDA:
 			e = SemanticParser.parseElambda(specialFormList);
 			break;
 		case SemanticParserStatic.IF:
@@ -174,7 +177,7 @@ public class SemanticParser {
 		case SemanticParserStatic.LAMBDA:
 			e = SemanticParser.parseLambda(specialFormList);
 			break;
-		case SemanticParserStatic.DEFCONVERSION:
+		case SemanticParserStatic.DEFINE_CONVERSION:
 			e = SemanticParser.parseDefconversion(specialFormList);
 			break;
 		case SemanticParserStatic.DEFINE:
@@ -191,6 +194,15 @@ public class SemanticParser {
 			break;
 		case SemanticParserStatic.OR:
 			e = SemanticParser.parseOr(specialFormList);
+			break;
+		case SemanticParserStatic.DEFINE_CONSTRUCTOR:
+			e = SemanticParser.parseDefineConstructor(specialFormList);
+			break;
+		case SemanticParserStatic.CONSTRUCT:
+			e = SemanticParser.parseConstruct(specialFormList);
+			break;
+		case SemanticParserStatic.CONVERT:
+			e = SemanticParser.parseConvert(specialFormList);
 			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
@@ -323,7 +335,7 @@ public class SemanticParser {
 
 		TypeName typeName = new TypeName(deftypeList.get(1).asSymbol());
 
-		return new DefTypeExpression(typeName);
+		return new DefineType(typeName);
 	}
 
 	/**
@@ -344,9 +356,8 @@ public class SemanticParser {
 
 		TypeRepresentation repName = new TypeRepresentation(defrepList.get(1).asSymbol());
 		TypeName typeName = new TypeName(defrepList.get(2).asSymbol());
-		List<SemanticNode> members = defrepList.get(3).asList();
 
-		return new DefRepresentationExpression(typeName, repName, members);
+		return new DefineRepresentation(typeName, repName);
 	}
 
 	/**
@@ -487,18 +498,22 @@ public class SemanticParser {
 		}
 		TypeAtom fromType = SemanticParser.parseType(l.get(1));
 		TypeAtom toType = SemanticParser.parseType(l.get(2));
-		Lambda constructor = SemanticParser.parseLambda(l.get(3).asList());
 
-		if (constructor.argsType.size() != 1) {
+		List<TypeVariablePair> typedArgs = SemanticParser.parseTypedArgList(l.get(3).asList());
+		TypeTuple argsTypes = new TypeTuple(typedArgs.stream().map(x -> x.first).collect(Collectors.toList()));
+		Tuple lambdaArgs = new Tuple(typedArgs.stream().map(x -> x.second).collect(Collectors.toList()));
+		Expression body = SemanticParser.parseNode(l.get(4));
+
+		if (argsTypes.size() != 1) {
 			AppendableException e = new AppendableException(
-					"Conversion must convert from defined type " + fromType + " got " + constructor.argsType);
+					"Conversion must convert from defined type " + fromType + " got " + argsTypes);
 			e.appendMessage("in" + l);
 			throw e;
 		}
 
-		constructor = new Lambda(constructor.args, new TypeTuple(Arrays.asList(fromType)), constructor.body);
+		Lambda lambda = new Lambda(lambdaArgs, new TypeTuple(Arrays.asList(fromType)), body);
 
-		return new DefConversionExpression(fromType, toType, constructor);
+		return DefineConversion.makeDefineConversion(fromType, toType, lambda);
 	}
 
 	/**
@@ -518,7 +533,7 @@ public class SemanticParser {
 
 		Symbol v = new Symbol(l.get(1).asSymbol());
 		Expression e = SemanticParser.parseNode(l.get(2));
-		return new DefExpression(v, e);
+		return new DefineSymbol(v, e);
 	}
 
 	/**
@@ -555,5 +570,92 @@ public class SemanticParser {
 		}
 
 		return new ExceptionExpr(SemanticParser.parseNode(l.get(1)));
+	}
+
+	/**
+	 * Parses define constructor special form list
+	 * 
+	 * @param l special form list
+	 * @return DefineConstructor expression
+	 * @throws AppendableException
+	 */
+	private static Expression parseDefineConstructor(List<SemanticNode> l) throws AppendableException {
+		try {
+			Validations.validateDefineConstructorList(l);
+		} catch (AppendableException e) {
+			e.appendMessage("in " + l);
+			throw e;
+		}
+		TypeName typeName = new TypeName(l.get(1).asSymbol());
+		TypeRepresentation typeRepresentation = new TypeRepresentation(l.get(2).asSymbol());
+
+		List<TypeVariablePair> typedArgs = SemanticParser.parseTypedArgList(l.get(3).asList());
+		TypeTuple argsTypes = new TypeTuple(typedArgs.stream().map(x -> x.first).collect(Collectors.toList()));
+		Tuple lambdaArgs = new Tuple(typedArgs.stream().map(x -> x.second).collect(Collectors.toList()));
+		Expression body = SemanticParser.parseNode(l.get(4));
+
+		Lambda lambda = new Lambda(lambdaArgs, argsTypes, body);
+
+		return new DefineConstructor(new TypeAtom(typeName, typeRepresentation), lambda);
+	}
+
+	/**
+	 * Parses convert special form list
+	 * 
+	 * @param specialFormList list of the special form
+	 * @return application.Convert instance
+	 * @throws AppendableException if there is a validation error
+	 */
+	private static Expression parseConvert(List<SemanticNode> specialFormList) throws AppendableException {
+		try {
+			Validations.validateConvertList(specialFormList);
+		} catch (AppendableException e) {
+			e.appendMessage("in " + specialFormList);
+			throw e;
+		}
+
+		SemanticNode fromNode = specialFormList.get(1);
+		TypeAtom from = SemanticParser.parseType(fromNode);
+
+		SemanticNode toNode = specialFormList.get(2);
+		TypeAtom to = SemanticParser.parseType(toNode);
+
+		SemanticNode exprNode = specialFormList.get(3);
+		Expression expression = SemanticParser.parseNode(exprNode);
+
+		return new Convert(from, to, expression);
+	}
+
+	/**
+	 * Parses construct special from list
+	 * 
+	 * @param specialFormList parsed list
+	 * @return application.Construct instance
+	 * @throws AppendableException if there is validation error
+	 */
+	private static Expression parseConstruct(List<SemanticNode> specialFormList) throws AppendableException {
+		try {
+			Validations.validateConstructList(specialFormList);
+		} catch (AppendableException e) {
+			e.appendMessage("in " + specialFormList);
+			throw e;
+		}
+
+		TypeName name = new TypeName(specialFormList.get(1).asSymbol());
+		TypeRepresentation representation = new TypeRepresentation(specialFormList.get(2).asSymbol());
+		TypeAtom type = new TypeAtom(name, representation);
+
+		Tuple arguments = Tuple.EMPTY_TUPLE;
+
+		List<SemanticNode> l = specialFormList.subList(3, specialFormList.size());
+		try {
+			arguments = new Tuple(l.stream().map(ThrowingFunction.wrapper(x -> SemanticParser.parseNode(x)))
+					.collect(Collectors.toList()));
+		} catch (RuntimeException e) {
+			AppendableException ae = (AppendableException) e.getCause();
+			throw ae;
+		}
+
+		return new Construct(type, arguments);
 	}
 }

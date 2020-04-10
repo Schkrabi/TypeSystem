@@ -3,29 +3,35 @@ package semantic;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 import abstraction.Abstraction;
+import abstraction.Lambda;
 import abstraction.Operator;
 import application.AbstractionApplication;
 import expression.Expression;
 import expression.Tuple;
+import interpretation.Environment;
+import literal.LitComposite;
 import parser.SemanticNode;
 import parser.SemanticPair;
 import types.ConversionException;
+import types.Type;
 import types.TypeAtom;
 import types.TypeName;
 import types.TypeRepresentation;
+import types.TypeTuple;
+import types.TypesDoesNotUnifyException;
+import types.TypeArrow;
 import util.AppendableException;
 import util.Pair;
 
 public class TypeEnvironment {
 	private Set<TypeAtom> atomicTypes = new TreeSet<TypeAtom>();
-	private Map<TypeAtom, Abstraction> constructorMap = new TreeMap<TypeAtom, Abstraction>();
+	private Map<TypeAtom, ConstructorHolder> constructorMap = new TreeMap<TypeAtom, ConstructorHolder>();
 	private Map<Pair<TypeAtom, TypeAtom>, Expression> conversions = new HashMap<Pair<TypeAtom, TypeAtom>, Expression>();
 
 	private TypeEnvironment() {
@@ -102,12 +108,15 @@ public class TypeEnvironment {
 	 * Gets the constructor for given type
 	 * 
 	 * @param typeName searched type
+	 * @param argsType args type of the constructor
 	 * @return constructor for this type if it exists
+	 * @throws AppendableException
 	 */
-	public Abstraction getConstructor(TypeAtom type) {
-		if (this.constructorMap.containsKey(type))
-			return this.constructorMap.get(type);
-		throw new NoSuchElementException();
+	public Abstraction getConstructor(TypeAtom type, TypeTuple argsType) throws AppendableException {
+		if (this.constructorMap.containsKey(type)) {
+			return this.constructorMap.get(type).findConstructor(argsType);
+		}
+		throw new AppendableException("No constructor for " + type + " found!");
 	}
 
 	public void addType(TypeName name) {
@@ -121,11 +130,67 @@ public class TypeEnvironment {
 	 * @param constructor
 	 * @throws AppendableException
 	 */
-	public void addRepresentation(TypeAtom newType, final Abstraction constructor) throws AppendableException {
+	public void addRepresentation(TypeAtom newType) throws AppendableException {
 		if (this.constructorMap.containsKey(newType)) {
-			throw new DuplicateTypeConstructorException(newType, this.constructorMap.get(newType), constructor);
+			throw new AppendableException("Representation " + newType + " already exists!");
 		}
-		this.constructorMap.put(newType, constructor);
+		this.constructorMap.put(newType, new ConstructorHolder(newType));
+	}
+
+	/**
+	 * 
+	 * @param typeAtom
+	 * @param constructorLambda
+	 * @throws AppendableException
+	 */
+	public void addConstructor(TypeAtom typeAtom, Lambda constructorLambda) throws AppendableException {
+		if (!this.constructorMap.containsKey(typeAtom)) {
+			throw new UndefinedTypeException(typeAtom.toString());
+		}
+		ConstructorHolder ch = this.constructorMap.get(typeAtom);
+
+		TypeTuple argsType = (TypeTuple) ((TypeArrow) (constructorLambda
+				.infer(Environment.topLevelEnvironment).first)).ltype;
+
+		if (ch.containsKey(argsType)) {
+			throw new DuplicateTypeConstructorException(typeAtom, ch.get(argsType), constructorLambda);
+		}
+
+		Lambda constructor = TypeEnvironment.createConstructorFromLambda(typeAtom, constructorLambda);
+
+		ch.put(argsType, constructor);
+	}
+
+	/**
+	 * Adds constructor for primitive types. For internal use only
+	 * 
+	 * @param typeAtom primitive type
+	 * @throws AppendableException
+	 */
+	private void addPrimitiveConstructor(TypeAtom typeAtom) throws AppendableException {
+		if (!this.constructorMap.containsKey(typeAtom)) {
+			throw new UndefinedTypeException(typeAtom.toString());
+		}
+		ConstructorHolder ch = this.constructorMap.get(typeAtom);
+
+		TypeTuple argsType = new TypeTuple(Arrays.asList(typeAtom));
+
+		if (ch.containsKey(argsType)) {
+			throw new DuplicateTypeConstructorException(typeAtom, ch.get(argsType), Lambda.identity);
+		}
+
+		ch.put(argsType, Lambda.identity);
+	}
+
+	/**
+	 * Creates constructor of LitComposite from lambda and given TypeAtom
+	 * 
+	 * @param typeAtom
+	 * @param lambda
+	 * @return
+	 */
+	private static Lambda createConstructorFromLambda(TypeAtom typeAtom, Lambda lambda) {
+		return new Lambda(lambda.args, lambda.argsType, new LitComposite(lambda.body, typeAtom));
 	}
 
 	/**
@@ -159,10 +224,22 @@ public class TypeEnvironment {
 	 */
 	public Expression convertTo(Expression converted, TypeAtom fromType, TypeAtom toType) throws ConversionException {
 		Pair<TypeAtom, TypeAtom> conversion = new Pair<TypeAtom, TypeAtom>(fromType, toType);
-		if (!this.conversions.containsKey(conversion)) {
+		if (!this.canConvert(fromType, toType)) {
 			throw new ConversionException(fromType, toType, converted);
 		}
 		return new AbstractionApplication(this.conversions.get(conversion), new Tuple(Arrays.asList(converted)));
+	}
+
+	/**
+	 * Returns true if from type is convertable to to type. Otherwise returns false
+	 * 
+	 * @param from type
+	 * @param to   type
+	 * @return true or false.
+	 */
+	public boolean canConvert(TypeAtom from, TypeAtom to) {
+		Pair<TypeAtom, TypeAtom> conversion = new Pair<TypeAtom, TypeAtom>(from, to);
+		return this.conversions.containsKey(conversion);
 	}
 
 	/**
@@ -177,22 +254,29 @@ public class TypeEnvironment {
 	 */
 	public static void initBasicTypes() throws AppendableException {
 		// Int
-		TypeEnvironment.singleton.atomicTypes.add(TypeAtom.TypeInt);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntNative, Operator.IntNativeConstructor);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntRoman, Operator.IntRomanConstructor);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeIntString, Operator.IntStringConstructor);
+		TypeEnvironment.singleton.addType(TypeAtom.TypeInt.name);
+		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeIntNative);
+		TypeEnvironment.singleton.addPrimitiveConstructor(TypeAtom.TypeIntNative);
+		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeIntRoman);
+		TypeEnvironment.singleton.addConstructor(TypeAtom.TypeIntRoman, Lambda.makeIdentity(TypeAtom.TypeStringNative));
+		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeIntString);
+		TypeEnvironment.singleton.addConstructor(TypeAtom.TypeIntString,
+				Lambda.makeIdentity(TypeAtom.TypeStringNative));
 
 		// Bool
-		TypeEnvironment.singleton.atomicTypes.add(TypeAtom.TypeBool);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeBoolNative, Operator.BoolNativeConstructor);
+		TypeEnvironment.singleton.addType(TypeAtom.TypeBool.name);
+		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeBoolNative);
+		TypeEnvironment.singleton.addPrimitiveConstructor(TypeAtom.TypeBoolNative);
 
 		// String
-		TypeEnvironment.singleton.atomicTypes.add(TypeAtom.TypeString);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeStringNative, Operator.StringNativeConstructor);
+		TypeEnvironment.singleton.addType(TypeAtom.TypeString.name);
+		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeStringNative);
+		TypeEnvironment.singleton.addPrimitiveConstructor(TypeAtom.TypeStringNative);
 
 		// Double
-		TypeEnvironment.singleton.atomicTypes.add(TypeAtom.TypeDouble);
-		TypeEnvironment.singleton.constructorMap.put(TypeAtom.TypeDoubleNative, Operator.DoubleNativeConstructor);
+		TypeEnvironment.singleton.addType(TypeAtom.TypeDouble.name);
+		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeDoubleNative);
+		TypeEnvironment.singleton.addPrimitiveConstructor(TypeAtom.TypeDoubleNative);
 
 		// Conversions
 		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman,
@@ -219,5 +303,55 @@ public class TypeEnvironment {
 	public static String makeConversionName(TypeAtom from, TypeAtom to) {
 		return from.name.toString() + from.representation.toString() + "2" + to.name.toString()
 				+ to.representation.toString();
+	}
+
+	/**
+	 * Class for holding multiple constructors associated with their argument types
+	 * 
+	 * @author Mgr. Radomir Skrabal
+	 *
+	 */
+	private static class ConstructorHolder extends TreeMap<TypeTuple, Lambda> implements Comparable<ConstructorHolder> {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1608923962922744264L;
+		/**
+		 * Constructed type
+		 */
+		public final TypeAtom constructedType;
+
+		public ConstructorHolder(TypeAtom constructedType) {
+			this.constructedType = constructedType;
+		}
+
+		/**
+		 * Finds constructor
+		 * 
+		 * @param argTypes type of arguments for constructor
+		 * @return construcotr
+		 * @throws AppendableException if constructor is not 
+		 */
+		public Lambda findConstructor(TypeTuple argsType) throws AppendableException {
+			for (java.util.Map.Entry<TypeTuple, Lambda> entry : this.entrySet()) {
+				TypeTuple type = entry.getKey();
+				try {
+					//Possible bottleneck?
+					Type.unify(type, argsType); 
+				}catch(TypesDoesNotUnifyException e) {
+					continue;
+				}				
+
+				//If unification exists, return the constructor
+				return entry.getValue();
+			}
+			throw new AppendableException(
+					"No suitable constructor for " + this.constructedType + " with arguments " + argsType + " found");
+		}
+
+		@Override
+		public int compareTo(ConstructorHolder other) {
+			return this.constructedType.compareTo(other.constructedType);
+		}
 	}
 }

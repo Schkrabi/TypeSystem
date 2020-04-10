@@ -19,11 +19,14 @@ import abstraction.ExtendedLambda;
 import abstraction.Function;
 import abstraction.Lambda;
 import application.AndExpression;
+import application.Construct;
+import application.Convert;
+import application.DefineConstructor;
 import application.AbstractionApplication;
-import application.DefConversionExpression;
-import application.DefExpression;
-import application.DefRepresentationExpression;
-import application.DefTypeExpression;
+import application.DefineConversion;
+import application.DefineSymbol;
+import application.DefineRepresentation;
+import application.DefineType;
 import application.ExceptionExpr;
 import application.IfExpression;
 import application.OrExpression;
@@ -84,69 +87,50 @@ class TestParser {
 
 	@Test
 	void testSemanticSimple() throws AppendableException {
-		List<Pair<String, Expression>> testcases = Arrays.asList(
-				new Pair<String, Expression>("()", Expression.EMPTY_EXPRESSION),
-				new Pair<String, Expression>("(+ 1 1)",
-						new AbstractionApplication(new Symbol("+"),
-								new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(1))))),
-				new Pair<String, Expression>("(if #t x y)",
-						new IfExpression(LitBoolean.TRUE, new Symbol("x"), new Symbol("y"))),
-				new Pair<String, Expression>("(deftype Name)", new DefTypeExpression(new TypeName("Name"))),
-				new Pair<String, Expression>("(defrep Unstructured Name (String:Native))",
-						new DefRepresentationExpression(new TypeName("Name"), new TypeRepresentation("Unstructured"),
-								Arrays.asList(SemanticNode.make(SemanticNode.NodeType.PAIR,
-										new SemanticPair("String", "Native"))))),
-				new Pair<String, Expression>("(defrep Structured Name (String:Native String:Native))",
-						new DefRepresentationExpression(new TypeName("Name"), new TypeRepresentation("Structured"),
-								Arrays.asList(
-										SemanticNode.make(SemanticNode.NodeType.PAIR,
-												new SemanticPair("String", "Native")),
-										SemanticNode.make(SemanticNode.NodeType.PAIR,
-												new SemanticPair("String", "Native"))))),
-				new Pair<String, Expression>(
-						"(defconversion Name:Structured Name:Unstructured (lambda ((Name:Structured name)) "
-								+ "(Name:Unstructured (concat (get 0 name) (concat \" \" (get 1 name))))))",
-						new DefConversionExpression(
-								new TypeAtom(new TypeName("Name"), new TypeRepresentation("Structured")),
-								new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured")),
-								new Lambda(new Tuple(Arrays.asList(new Symbol("name"))),
-										new TypeTuple(Arrays.asList(new TypeAtom(new TypeName("Name"),
-												new TypeRepresentation("Structured")))),
-										new AbstractionApplication(new Symbol("Name:Unstructured"), new Tuple(Arrays
-												.asList(new AbstractionApplication(new Symbol("concat"), new Tuple(Arrays.asList(
-														new AbstractionApplication(new Symbol("get"),
-																new Tuple(Arrays.asList(new LitInteger(0),
-																		new Symbol("name")))),
-														new AbstractionApplication(new Symbol("concat"), new Tuple(Arrays.asList(
-																new LitString(" "),
-																new AbstractionApplication(new Symbol("get"),
-																		new Tuple(Arrays.asList(new LitInteger(1),
-																				new Symbol("name")))))))))))))))),
-				new Pair<String, Expression>("(define one 1)",
-						new DefExpression(new Symbol("one"), new LitInteger(1))),
-				new Pair<String, Expression>("(cons 1 2)",
-						new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2)))),
-				new Pair<String, Expression>("(error \"test\")", new ExceptionExpr(new LitString("test"))),
-				new Pair<String, Expression>("(Int:String \"256\")",
-						new AbstractionApplication(new Symbol("Int:String"), new Tuple(Arrays.asList(new LitString("256"))))),
-				new Pair<String, Expression>("3.141528", new LitDouble(3.141528)),
-				new Pair<String, Expression>("#f", LitBoolean.FALSE),
-				new Pair<String, Expression>("(and #t #f)",
-						new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)))),
-				new Pair<String, Expression>("(and)", new AndExpression(Tuple.EMPTY_TUPLE)),
-				new Pair<String, Expression>("(or #t #f)",
-						new OrExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)))),
-				new Pair<String, Expression>("(or)", new OrExpression(Tuple.EMPTY_TUPLE))
+		this.testParse("()", Expression.EMPTY_EXPRESSION);
+		this.testParse("(+ 1 1)", new AbstractionApplication(new Symbol("+"),
+				new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(1)))));
+		this.testParse("(if #t x y)", new IfExpression(LitBoolean.TRUE, new Symbol("x"), new Symbol("y")));
+		this.testParse("(type Name)", new DefineType(new TypeName("Name")));
+		this.testParse("(representation Unstructured Name)",
+				new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Unstructured")));
+		this.testParse("(constructor Name Unstructured ((String:Native x)) x)",
+				new DefineConstructor(new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured")),
+						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
+								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), new Symbol("x"))));
+		this.testParse("(representation Structured Name)",
+				new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Structured")));
+		this.testParse("(constructor Name Structured ((String:Native x) (String:Native y)) (cons x y))",
+				new DefineConstructor(new TypeAtom(new TypeName("Name"), new TypeRepresentation("Structured")),
+						new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
+								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeStringNative)),
+								new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))))));
+		this.testParse(
+				"(conversion Name:Structured Name:Unstructured ((Name:Structured name)) "
+						+ "(construct Name Unstructured \"Test\"))",
+				DefineConversion.makeDefineConversion(
+						new TypeAtom(new TypeName("Name"), new TypeRepresentation("Structured")),
+						new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured")),
+						new Lambda(new Tuple(Arrays.asList(new Symbol("name"))),
+								new TypeTuple(Arrays.asList(
+										new TypeAtom(new TypeName("Name"), new TypeRepresentation("Structured")))),
+								new Construct(
+										new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured")),
+										new Tuple(Arrays.asList(new LitString("Test")))))));
 
-		);
-
-		for (Pair<String, Expression> p : testcases) {
-			Expression parsed = this.parseString(p.first);
-			Expression expected = p.second;
-			if (!parsed.equals(expected)) {
-				fail("Parse error expected " + expected.toString() + " got " + parsed.toString());
-			}
-		}
+		this.testParse("(define one 1)", new DefineSymbol(new Symbol("one"), new LitInteger(1)));
+		this.testParse("(cons 1 2)", new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))));
+		this.testParse("(error \"test\")", new ExceptionExpr(new LitString("test")));
+		this.testParse("(Int:String \"256\")",
+				new AbstractionApplication(new Symbol("Int:String"), new Tuple(Arrays.asList(new LitString("256")))));
+		this.testParse("3.141528", new LitDouble(3.141528));
+		this.testParse("#f", LitBoolean.FALSE);
+		this.testParse("(and #t #f)", new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE))));
+		this.testParse("(or #t #f)", new OrExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE))));
+		this.testParse("(construct Int String \"42\")",
+				new Construct(TypeAtom.TypeIntString, new Tuple(Arrays.asList(new LitString("42")))));
+		this.testParse("(convert Int:Roman Int:String x)",
+				new Convert(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, new Symbol("x")));
 
 		// Dummy object tests
 		new Validations();
@@ -156,7 +140,8 @@ class TestParser {
 	@Test
 	void testLambda() throws AppendableException {
 		Pair<String, Expression> p = new Pair<String, Expression>("(lambda (x) y)",
-				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))), new TypeTuple(Arrays.asList(new TypeVariable("_x"))), new Symbol("y")));
+				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
+						new TypeTuple(Arrays.asList(new TypeVariable("_x"))), new Symbol("y")));
 
 		parsed = parseString(p.first);
 		if (!(parsed instanceof Lambda)) {
@@ -183,8 +168,7 @@ class TestParser {
 
 	@Test
 	void testElambda() throws AppendableException {
-		// (elambda (x) ((Int:String) y))
-		parsed = parseString("(elambda ((Int x)) ((Int:String) y))");
+		parsed = parseString("(extended-lambda ((Int x)) ((Int:String) y))");
 		if (!(parsed instanceof ExtendedLambda)) {
 			fail(parsed + " is not a " + ExtendedLambda.class.getName());
 		}
@@ -193,13 +177,13 @@ class TestParser {
 	@Test
 	public void testValidateElambda() {
 		// Too few arguments
-		Assertions.assertThrows(AppendableException.class, () -> parseString("(elambda (x))"));
+		Assertions.assertThrows(AppendableException.class, () -> parseString("(extended-lambda (x))"));
 
 		// Second argument is not a list
-		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(elambda x x)"));
+		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(extended-lambda x x)"));
 
 		// Badly formed implementation
-		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(elambda (x) x x)"));
+		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(extended-lambda (x) x x)"));
 	}
 
 	@Test
@@ -233,15 +217,15 @@ class TestParser {
 	@Test
 	public void testParseDefType() {
 		// Too few arguments
-		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(deftype)"));
+		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(type)"));
 		// Too many arguments
-		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(deftype animal dog)"));
+		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(type animal dog)"));
 		// Defining non-symbol type
-		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(deftype 1234)"));
+		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(type 1234)"));
 
 		// non-symbol token instead of deftype
 		Assertions.assertThrows(UnexpectedExpressionException.class, () -> Validations.validateDefTypeList(
-				Arrays.asList(SemanticNode.make(NodeType.STRING, "deftype"), SemanticNode.make(NodeType.SYMBOL, "x"))));
+				Arrays.asList(SemanticNode.make(NodeType.STRING, "type"), SemanticNode.make(NodeType.SYMBOL, "x"))));
 		// Bad symbol in place of deftype
 		Assertions.assertThrows(UnexpectedExpressionException.class, () -> Validations.validateDefTypeList(
 				Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "fail"), SemanticNode.make(NodeType.SYMBOL, "x"))));
@@ -250,37 +234,21 @@ class TestParser {
 	@Test
 	public void testParseDefRep() {
 		// Too few arguments
-		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(defrep)"));
+		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(representation)"));
 		// Too many argument
 		Assertions.assertThrows(InvalidNumberOfArgsException.class,
-				() -> parseString("(defrep list functional random failed)"));
+				() -> parseString("(representation list functional random failed)"));
 		// Type is not symbol
 		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> parseString("(defrep 1234 functional constructor)"));
+				() -> parseString("(representation 1234 functional)"));
 		// Representation is not symbol
-		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> parseString("(defrep list 1234 constructor)"));
-
-		// non-symbol token instead of lambda
-		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> Validations.validateDefRepList(Arrays.asList(SemanticNode.make(NodeType.STRING, "defrep"),
-						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"),
-						SemanticNode.make(NodeType.SYMBOL, "fail"))));
-		// Bad symbol in place of lambda
-		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> Validations.validateDefRepList(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "fail"),
-						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"),
-						SemanticNode.make(NodeType.SYMBOL, "fail"))));
-
-		Assertions.assertThrows(AppendableException.class, () -> parseString("(defrep list functional fail)"));
-		Assertions.assertThrows(AppendableException.class,
-				() -> parseString("(defrep list functional (something (else)))"));
+		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(representation list 1234)"));
 	}
 
 	@Test
 	public void testParseType() {
 		// Wrong token in place of type
-		Assertions.assertThrows(AppendableException.class, () -> parseString("(elambda (x) x ((1234) x))"));
+		Assertions.assertThrows(AppendableException.class, () -> parseString("(extended-lambda (x) x ((1234) x))"));
 	}
 
 	@Test
@@ -303,10 +271,12 @@ class TestParser {
 	@Test
 	public void testParseImplementation() {
 		// Too many arugments in implementation
-		Assertions.assertThrows(AppendableException.class, () -> parseString("(elambda (x) x ((Integer) x y))"));
+		Assertions.assertThrows(AppendableException.class,
+				() -> parseString("(extended-lambda (x) x ((Integer) x y))"));
 
 		// Badly formed type list
-		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(elambda (x) x (1234 x))"));
+		Assertions.assertThrows(UnexpectedExpressionException.class,
+				() -> parseString("(extended-lambda (x) x (1234 x))"));
 
 		Assertions.assertThrows(AppendableException.class,
 				() -> Validations.validateImplementation(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "x"),
@@ -318,34 +288,32 @@ class TestParser {
 	@Test
 	public void testParseDefConversion() {
 		// Too few args
-		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(defconversion x)"));
+		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(conversion x)"));
 		// Too many args
-		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(defconversion x y z w)"));
+		Assertions.assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(conversion x y z w q)"));
 
 		// Bad special form
 		Assertions.assertThrows(UnexpectedExpressionException.class,
 				() -> Validations.validateDefconversionList(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "fail"),
 						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"),
-						SemanticNode.make(NodeType.SYMBOL, "x"))));
-
-		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> Validations.validateDefconversionList(Arrays.asList(
-						SemanticNode.make(NodeType.INT, new Integer(1234)), SemanticNode.make(NodeType.SYMBOL, "x"),
 						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"))));
 
+		Assertions.assertThrows(UnexpectedExpressionException.class,
+				() -> Validations
+						.validateDefconversionList(Arrays.asList(SemanticNode.make(NodeType.INT, new Integer(1234)),
+								SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"),
+								SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"))));
+
 		// Bad From Type
-		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> parseString("(defconversion 1234 Int (lambda (x) x))"));
+		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(conversion 1234 Int (x) x)"));
 		// Bad To Type
-		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> parseString("(defconversion Int 1234 (lambda (x) x))"));
+		Assertions.assertThrows(UnexpectedExpressionException.class, () -> parseString("(conversion Int 1234 (x) x)"));
 		// Conversion is not lambda
 		Assertions.assertThrows(UnexpectedExpressionException.class,
-				() -> parseString("(defconversion Int Double 1234)"));
+				() -> parseString("(conversion Int Double 1234 x)"));
 
 		// Conversion takes multiple arguments
-		Assertions.assertThrows(AppendableException.class,
-				() -> parseString("(defconversion Int Double (lambda (x y) x))"));
+		Assertions.assertThrows(AppendableException.class, () -> parseString("(conversion Int Double (x y) x)"));
 	}
 
 	@Test
@@ -513,13 +481,9 @@ class TestParser {
 		TypeEnvironment typeEnv = TypeEnvironment.singleton;
 
 		typeEnv.addType(new TypeName("List"));
-		typeEnv.addRepresentation(new TypeAtom(new TypeName("List"), new TypeRepresentation("Functional")),
-				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
-						Environment.topLevelEnvironment));
+		typeEnv.addRepresentation(new TypeAtom(new TypeName("List"), new TypeRepresentation("Functional")));
 		typeEnv.addType(new TypeName("Test"));
-		typeEnv.addRepresentation(new TypeAtom(new TypeName("Test"), new TypeRepresentation("Functional")),
-				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
-						Environment.topLevelEnvironment));
+		typeEnv.addRepresentation(new TypeAtom(new TypeName("Test"), new TypeRepresentation("Functional")));
 
 		typeEnv.getType("List", "Functional");
 
@@ -539,14 +503,13 @@ class TestParser {
 			fail("Expected typeEnv.isType(SemanticNode.make(NodeType.INT, new Integer(128))) = false");
 		}
 
-		typeEnv.getConstructor(TypeAtom.TypeIntRoman);
-		Assertions.assertThrows(NoSuchElementException.class,
-				() -> typeEnv.getConstructor(new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD)));
+		typeEnv.getConstructor(TypeAtom.TypeIntRoman, new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)));
+		Assertions.assertThrows(AppendableException.class,
+				() -> typeEnv.getConstructor(new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD),
+						TypeTuple.EMPTY_TUPLE));
 
 		Assertions.assertThrows(AppendableException.class,
-				() -> typeEnv.addRepresentation(new TypeAtom(new TypeName("Int"), new TypeRepresentation("Roman")),
-						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
-								Environment.topLevelEnvironment)));
+				() -> typeEnv.addRepresentation(new TypeAtom(new TypeName("Int"), new TypeRepresentation("Roman"))));
 
 		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addConversion(TypeAtom.TypeIntNative,
 				TypeAtom.TypeStringNative,
@@ -611,6 +574,13 @@ class TestParser {
 
 		ExprsContext exprsContext = parser.exprs();
 		return SemanticParser.parseNode(exprsContext.val.get(0));
+	}
+
+	private void testParse(String parsedString, Expression expected) throws AppendableException {
+		Expression parsed = this.parseString(parsedString);
+		if (!parsed.equals(expected)) {
+			fail("Parse error expected " + expected.toString() + " got " + parsed.toString());
+		}
 	}
 
 }

@@ -3,6 +3,7 @@ package types;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import abstraction.Lambda;
 import application.AbstractionApplication;
@@ -75,11 +76,15 @@ public class TypeArrow extends Type {
 		if (!(toType instanceof TypeArrow)) {
 			throw new ConversionException(this, toType, expr);
 		}
-		TypeArrow t = (TypeArrow) toType;
-		Symbol v = new Symbol(NameGenerator.next());
+		TypeArrow t = (TypeArrow) toType;		
+		
+		Tuple formalArgs = new Tuple(((TypeTuple)t.ltype).stream().map(x -> new Symbol(NameGenerator.next())).collect(Collectors.toList()));
+		TypeTuple argsType = (TypeTuple) t.ltype;
+		Tuple realArgs = (Tuple) t.ltype.convertTo(formalArgs, this.ltype);
+		Expression body = this.rtype.convertTo(
+				new AbstractionApplication(expr, realArgs), t.rtype);
 
-		Lambda l = new Lambda(new Tuple(Arrays.asList(v)), (TypeTuple) t.ltype, this.rtype.convertTo(
-				new AbstractionApplication(expr, (Tuple) t.ltype.convertTo(new Tuple(Arrays.asList(v)), this.ltype)), t.rtype));
+		Lambda l = new Lambda(formalArgs, argsType, body);
 		return l;
 	}
 
@@ -130,8 +135,8 @@ public class TypeArrow extends Type {
 	}
 
 	@Override
-	public String toClojure() throws AppendableException {
-		throw new AppendableException("toClojure of " + this.getClass().getName() + " : " + this + " is not allowed");
+	public String toClojureKey() throws AppendableException {
+		return "[" + this.ltype.toClojureKey() + " :-> " + this.rtype.toClojureKey() + "]";
 	}
 
 	/**

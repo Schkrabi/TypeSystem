@@ -1,0 +1,49 @@
+(type List)
+
+(representation Linked List)
+(constructor List Linked (x (List l)) (cons x l))
+(constructor List Linked () ())
+
+(define fcons (lambda (x y) (lambda (p) (p x y))))
+(define fcar (lambda (p) (p (lambda (x y) x))))
+(define fcdr (lambda (p) (p (lambda (x y) y))))
+
+(representation Functional List)
+(constructor List Functional (x (List l)) (fcons x l))
+(constructor List Functional () ())
+
+(define x (construct List Linked (construct Int Roman "XLII") (construct List Linked (construct Int String "42") (construct List Linked 42 (construct List Linked)))))
+(define y (construct List Functional (construct Int Roman "XLII") (construct List Functional (construct Int String "42") (construct List Functional 42 (construct List Functional)))))
+(println x)
+
+(define head-list (extended-lambda ((List l))
+          					((List:Linked) (if (equals? (deconstruct l) ()) (error "Cannot make head of empty list!") (car (deconstruct l))))
+          					((List:Functional) (if (equals? (deconstruct l) ()) (error "Cannot make head of empty list!") (fcar (deconstruct l))))))
+(println (head-list x))
+(println (head-list y))
+
+(define tail-list (extended-lambda ((List l)) 
+          					((List:Linked) (if (equals? (deconstruct l) ()) (error "Cannot make tail of empty list!") (cdr (deconstruct l))))
+          					((List:Functional) (if (equals? (deconstruct l) ()) (error "Cannot make tail of empty list!") (fcdr (deconstruct l))))))
+(println (tail-list x))
+
+(define build-list-aux (lambda (i n f)
+            						(if (= i n)
+            							(construct List Linked)
+            							(construct List Linked (f i) (build-list-aux (+ i 1) n f)))))
+(println (build-list-aux 0 5 (lambda (x) (+ x 1))))
+
+(define build-list (lambda (n f) (build-list-aux 0 n f)))
+(println (build-list 5 (lambda (x) (+ x 1))))
+
+(define append-list (lambda ((List:Linked l) x) 
+						(if (equals? (deconstruct l) ()) 
+							(construct List Linked x (construct List Linked)) 
+							(construct List Linked (head-list l) (append-list (tail-list l) x)))))
+(println (append-list x 21))
+
+(define reverse-list (lambda ((List:Linked l)) 
+						(if (equals? (deconstruct l) ()) 
+							(construct List Linked) 
+							(append-list (reverse-list (tail-list l)) (head-list l)))))
+(println (reverse-list x))

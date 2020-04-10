@@ -88,5 +88,10 @@ public abstract class Expression implements Comparable<Expression> {
 		public String toClojureCode(Environment env) {
 			return "nil";
 		}
+		
+		@Override
+		public String toString() {
+			return "nil";
+		}
 	};
 }

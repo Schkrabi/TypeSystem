@@ -1,2 +1,2 @@
-(println ((lambda ((String:Native x) (Int:String y)) x) "test" (Int:String "1984")))
-(println ((elambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (Int:Roman "XLII") 66))
+(println ((lambda ((String:Native x) (Int:String y)) x) "test" (construct Int String "1984")))
+(println ((extended-lambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (construct Int Roman "XLII") 66))

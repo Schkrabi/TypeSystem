@@ -161,7 +161,7 @@ public class TypeAtom extends Type {
 	}
 
 	@Override
-	public String toClojure() {
+	public String toClojureKey() {
 		return ":" + this.name.toString() + this.representation.toString();
 	}
 

@@ -177,7 +177,7 @@ public class RepresentationOr extends Type {
 	}
 
 	@Override
-	public String toClojure() throws AppendableException {
+	public String toClojureKey() throws AppendableException {
 		throw new AppendableException("toClojure of " + this.getClass().getName() + " : " + this + " is not allowed");
 	}
 	

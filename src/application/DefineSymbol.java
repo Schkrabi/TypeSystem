@@ -6,6 +6,7 @@ import expression.Expression;
 import expression.TypeHolder;
 import expression.Symbol;
 import interpretation.Environment;
+import semantic.SemanticParserStatic;
 import types.Substitution;
 import types.Type;
 import types.TypeTuple;
@@ -21,7 +22,7 @@ import util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class DefExpression extends Expression {
+public class DefineSymbol extends Expression {
 
 	/**
 	 * Name of defined expression
@@ -32,14 +33,13 @@ public class DefExpression extends Expression {
 	 */
 	public final Expression defined;
 
-	public DefExpression(Symbol name, Expression defined) {
+	public DefineSymbol(Symbol name, Expression defined) {
 		this.name = name;
 		this.defined = defined;
 	}
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		// TODO!!!
 		Environment e = Environment.create(env);
 		e.put(this.name, new TypeHolder(new TypeVariable(NameGenerator.next()), this.name));
 		Expression interpreted = this.defined.interpret(e);
@@ -90,13 +90,13 @@ public class DefExpression extends Expression {
 
 	@Override
 	public String toString() {
-		return "(define " + this.name.toString() + " " + this.defined.toString() + ")";
+		return "(" + SemanticParserStatic.DEFINE + " " + this.name.toString() + " " + this.defined.toString() + ")";
 	}
 
 	@Override
 	public int compareTo(Expression other) {
-		if (other instanceof DefExpression) {
-			DefExpression o = (DefExpression) other;
+		if (other instanceof DefineSymbol) {
+			DefineSymbol o = (DefineSymbol) other;
 			int c = this.name.compareTo(o.name);
 			if (c != 0)
 				return c;
@@ -107,9 +107,8 @@ public class DefExpression extends Expression {
 
 	@Override
 	public boolean equals(Object other) {
-		if (other instanceof DefExpression) {
-			return this.name.equals(((DefExpression) other).name)
-					&& this.defined.equals(((DefExpression) other).defined);
+		if (other instanceof DefineSymbol) {
+			return this.name.equals(((DefineSymbol) other).name) && this.defined.equals(((DefineSymbol) other).defined);
 		}
 		return false;
 	}

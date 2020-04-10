@@ -98,7 +98,7 @@ public class ExtendedLambda extends Abstraction {
 			
 			Iterator<String> i = this.implementations.stream()
 					.map(ThrowingFunction
-							.wrapper(x -> "[" + x.argsType.toClojure() + " ~" + x.toClojureFn(env) + "]"))
+							.wrapper(x -> "[" + x.argsType.toClojureKey() + " ~" + x.toClojureFn(env) + "]"))
 					.collect(Collectors.toList()).iterator();
 
 			while (i.hasNext()) {

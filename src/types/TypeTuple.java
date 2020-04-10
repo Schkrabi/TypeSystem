@@ -264,12 +264,12 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	}
 
 	@Override
-	public String toClojure() throws AppendableException {
+	public String toClojureKey() throws AppendableException {
 		StringBuilder s = new StringBuilder("[");
 		Iterator<Type> i = this.values.iterator();
 		while (i.hasNext()) {
 			Type t = i.next();
-			s.append(t.toClojure());
+			s.append(t.toClojureKey());
 			if (i.hasNext()) {
 				s.append(" ");
 			}

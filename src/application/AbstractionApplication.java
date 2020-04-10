@@ -1,6 +1,5 @@
 package application;
 
-import java.util.Iterator;
 import java.util.stream.Collectors;
 
 import abstraction.Abstraction;
@@ -126,16 +125,9 @@ public class AbstractionApplication extends Application {
 
 		s.append(this.fun.toClojureCode(env));
 
-		s.append(" [");
-		Iterator<Type> argsTypeIterator = argsType.iterator();
-		while (argsTypeIterator.hasNext()) {
-			Type t = argsTypeIterator.next();
-			s.append(t.toClojure());
-			if (argsTypeIterator.hasNext()) {
-				s.append(" ");
-			}
-		}
-		s.append("] ");
+		s.append(" ");
+		s.append(argsType.toClojureKey());
+		s.append(" ");
 		
 		s.append(convertedArgs.toClojureCode(env));
 		s.append(")");
@@ -165,13 +157,13 @@ public class AbstractionApplication extends Application {
 	/**
 	 * code of eapply functionn for clojure
 	 */
-	public static final String clojureEapply = "eapply";/*
-														 * "(fn [elambda type args]\n" +
-														 * "    (letfn [(vectorDist [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))\n"
-														 * +
-														 * "            (rankImpls [v impls] (map (fn [u] [(vectorDist (get u 0) v) (get u 1)]) impls))\n"
-														 * +
-														 * "            (getImpl [type elambda] (get (reduce (fn [x y] (if (< (get x 0) (get y 0)) x y)) (rankImpls type elambda)) 1))]\n"
-														 * + "        (apply (getImpl type elambda) args)))";
-														 */	
+	public static final String clojureEapply = /*"eapply";*/
+														  "(fn [elambda type args]\n" +
+														  "    (letfn [(vectorDist [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))\n"
+														  +
+														  "            (rankImpls [v impls] (map (fn [u] [(vectorDist (get u 0) v) (get u 1)]) impls))\n"
+														  +
+														  "            (getImpl [type elambda] (get (reduce (fn [x y] (if (< (get x 0) (get y 0)) x y)) (rankImpls type elambda)) 1))]\n"
+														  + "        (apply (getImpl type elambda) args)))";
+														 	
 }

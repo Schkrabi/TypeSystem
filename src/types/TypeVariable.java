@@ -92,7 +92,7 @@ public class TypeVariable extends Type {
 	}
 
 	@Override
-	public String toClojure() throws AppendableException {
+	public String toClojureKey() throws AppendableException {
 		return ":" + this.name;
 	}
 

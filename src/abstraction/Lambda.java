@@ -1,5 +1,6 @@
 package abstraction;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,6 +41,11 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	 * Non mandatory type of the lambda arguments
 	 */
 	public final TypeTuple argsType;
+	
+	/**
+	 * General identity lambda
+	 */
+	public static final Lambda identity = Lambda.makeIdentity(new TypeVariable(NameGenerator.next()));
 
 	public Lambda(Tuple args, TypeTuple argsType, Expression body) {
 		this.args = args;
@@ -127,7 +133,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	public String toClojureCode(Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("`(");
 		s.append("[");
-		s.append(this.argsType.toClojure());
+		s.append(this.argsType.toClojureKey());
 		s.append(" ~");
 		s.append(this.toClojureFn(env));
 		s.append("])");
@@ -213,5 +219,15 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException{
 		Function f = (Function)this.interpret(env);
 		return f.doSubstituteAndEvaluate(args, env);
+	}
+	
+	/**
+	 * Makes identity lambda with given type
+	 * @param argType type of the identity arg
+	 * @return identity lambda
+	 */
+	public static Lambda makeIdentity(Type argType) {
+		Symbol symbol = new Symbol(NameGenerator.next());
+		return new Lambda(new Tuple(Arrays.asList(symbol)), new TypeTuple(Arrays.asList(argType)), symbol);
 	}
 }

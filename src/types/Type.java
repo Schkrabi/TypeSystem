@@ -69,7 +69,12 @@ public abstract class Type implements Comparable<Type> {
 	 */
 	public abstract Type removeRepresentationInfo();
 
-	public abstract String toClojure() throws AppendableException;
+	/**
+	 * Creates representing type as Clojure key
+	 * @return
+	 * @throws AppendableException
+	 */
+	public abstract String toClojureKey() throws AppendableException;
 
 	@Override
 	public int compareTo(Type other) {

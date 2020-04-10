@@ -10,7 +10,9 @@ public class NameGenerator {
 	/**
 	 * Seed of the generator
 	 */
-	private static String seed = "SYSGENNAME" + "a";
+	private static String seed = "a";
+	
+	private static final String prefix = "SYSGENNAME"; 
 
 	/**
 	 * Returns next unique string
@@ -42,6 +44,6 @@ public class NameGenerator {
 			seed = seed + 'a';
 		}
 
-		return s;
+		return prefix + s;
 	}
 }
