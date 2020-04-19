@@ -1,11 +1,11 @@
 #!/bin/bash
 
-COMPILER=./Compiler.jar
-TESTDIR=../Tests/Code/
-CLJDIR=../Tests/CLJ/
-INTPDIR=../Tests/INTP/
-CMPLDIR=../Tests/CMPL/
-DIFFDIR=../Tests/DIFF/
+COMPILER=./compiler.jar
+TESTDIR=../../tests/Code/
+CLJDIR=../../tests/CLJ/
+INTPDIR=../../tests/INTP/
+CMPLDIR=../../tests/CMPL/
+DIFFDIR=../../tests/DIFF/
 
 mkdir -p ${CLJDIR}
 mkdir -p ${INTPDIR}
