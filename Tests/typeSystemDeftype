@@ -1,8 +1,0 @@
-(deftype Name)
-(defrep Unstructured Name (lambda ((String x)) x))
-(defrep Structured Name (lambda ((String x) (String y)) (x y)))
-((elambda (x) ((Name:Unstructured) "unstructured") ((Name:Structured) "structured")) (Name:Unstructured "Jan Novak"))
-((elambda (x) ((Name:Structured) "structured")) (Name:Structured "Jan" "Novak"))
-(defconversion Name:Structured Name (lambda ((Name:Structured x)) (concat (car x) (cdr x))))
-((lambda ((Name x)) x) (Name:Structured "Jan" "Novak"))
-

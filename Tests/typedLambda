@@ -1,1 +1,0 @@
-((lambda ((String x) (Int:String y)) x) "test" (Int:String "1984"))
