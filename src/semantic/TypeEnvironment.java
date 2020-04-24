@@ -3,7 +3,6 @@ package semantic;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -16,8 +15,6 @@ import expression.Expression;
 import expression.Tuple;
 import interpretation.Environment;
 import literal.LitComposite;
-import parser.SemanticNode;
-import parser.SemanticPair;
 import types.ConversionException;
 import types.Type;
 import types.TypeAtom;
@@ -35,73 +32,6 @@ public class TypeEnvironment {
 	private Map<Pair<TypeAtom, TypeAtom>, Expression> conversions = new HashMap<Pair<TypeAtom, TypeAtom>, Expression>();
 
 	private TypeEnvironment() {
-	}
-
-	/**
-	 * Gets the type by given name
-	 * 
-	 * @param typeName name of the type
-	 * @return Optional containing the type if it exists
-	 */
-	public Optional<TypeAtom> getType(final String typeName) {
-		Optional<TypeAtom> o = this.atomicTypes.stream().filter(new java.util.function.Predicate<TypeAtom>() {
-
-			@Override
-			public boolean test(TypeAtom x) {
-				return x.equals(new TypeAtom(new TypeName(typeName), TypeRepresentation.WILDCARD));
-			}
-		}).findAny();
-		return o;
-	}
-
-	/**
-	 * Gets te type by given base type name and representation name
-	 * 
-	 * @param typeName           name of the base type
-	 * @param representationName name of the representaion
-	 * @return Optional containing the type if it exists
-	 */
-	public Optional<TypeAtom> getType(final String typeName, final String representationName) {
-		Optional<TypeAtom> o = constructorMap.keySet().stream().filter(new java.util.function.Predicate<TypeAtom>() {
-			@Override
-			public boolean test(TypeAtom x) {
-				return x.name.name.equals(typeName) && x.representation.name.equals(representationName);
-			}
-		}).findAny();
-		return o;
-	}
-
-	/**
-	 * Tries to get type from semantic node, if node is not pair or symbol throws
-	 * 
-	 * @param node parsed node
-	 * @return optional of type or empty optional if type is not recognized
-	 * @throws AppendableException
-	 */
-	public Optional<TypeAtom> getType(SemanticNode node) throws AppendableException {
-		if (node.type == SemanticNode.NodeType.PAIR) {
-			return this.getType(node.asPair().first, node.asPair().second);
-		}
-		return this.getType(node.asSymbol());
-	}
-
-	/**
-	 * Checks if given semantic node is previously defined type
-	 * 
-	 * @param node inspected node
-	 * @return true if node is a node containing type name
-	 * @throws AppendableException
-	 */
-	public boolean isType(SemanticNode node) throws AppendableException {
-		if (node.type == SemanticNode.NodeType.SYMBOL) {
-			return this.getType(node.asSymbol()).isPresent();
-		}
-		if (node.type == SemanticNode.NodeType.PAIR) {
-			SemanticPair p;
-			p = node.asPair();
-			return this.getType(p.first, p.second).isPresent();
-		}
-		return false;
 	}
 
 	/**
@@ -131,9 +61,10 @@ public class TypeEnvironment {
 	 * @throws AppendableException
 	 */
 	public void addRepresentation(TypeAtom newType) throws AppendableException {
-		if (this.constructorMap.containsKey(newType)) {
+		if (this.atomicTypes.contains(newType)) {
 			throw new AppendableException("Representation " + newType + " already exists!");
 		}
+		this.atomicTypes.add(newType);
 		this.constructorMap.put(newType, new ConstructorHolder(newType));
 	}
 
@@ -240,6 +171,15 @@ public class TypeEnvironment {
 	public boolean canConvert(TypeAtom from, TypeAtom to) {
 		Pair<TypeAtom, TypeAtom> conversion = new Pair<TypeAtom, TypeAtom>(from, to);
 		return this.conversions.containsKey(conversion);
+	}
+	
+	/**
+	 * Returns true if type was defined in TypeEnvironment. Otherwise returns false.
+	 * @param type TypeAtom
+	 * @return true or false
+	 */
+	public boolean existsTypeAtom(TypeAtom type) {
+		return this.atomicTypes.contains(type);
 	}
 
 	/**

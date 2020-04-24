@@ -3,6 +3,7 @@ package parser;
 import java.util.List;
 
 import util.AppendableException;
+import util.Pair;
 
 public class SemanticNode {
 	public final NodeType type;
@@ -44,6 +45,8 @@ public class SemanticNode {
 			return value instanceof Boolean;
 		case LIST:
 			return value instanceof List<?>;
+		case ARROW:
+			return value instanceof SemanticPair;
 		default:
 			break;
 		}
@@ -91,6 +94,14 @@ public class SemanticNode {
 		}
 		return (Boolean) this.value;
 	}
+	
+	@SuppressWarnings("unchecked")
+	public Pair<SemanticNode, SemanticNode> asArrow() throws AppendableException {
+		if(this.type != NodeType.ARROW) {
+			throw new AppendableException(this.toString() + " is not an arrow");
+		}
+		return (Pair<SemanticNode, SemanticNode>) this.value;
+	}
 
 	@SuppressWarnings("unchecked")
 	public List<SemanticNode> asList() throws AppendableException {
@@ -106,7 +117,7 @@ public class SemanticNode {
 	}
 
 	public enum NodeType {
-		SYMBOL, PAIR, INT, DOUBLE, STRING, BOOL, LIST,
+		SYMBOL, PAIR, INT, DOUBLE, STRING, BOOL, LIST, ARROW,
 		/** Unused NodeType for testing purposes onyl */
 		UNUSED
 	}

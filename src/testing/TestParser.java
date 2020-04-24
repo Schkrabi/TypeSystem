@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
-
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -25,8 +23,6 @@ import application.DefineConstructor;
 import application.AbstractionApplication;
 import application.DefineConversion;
 import application.DefineSymbol;
-import application.DefineRepresentation;
-import application.DefineType;
 import application.ExceptionExpr;
 import application.IfExpression;
 import application.OrExpression;
@@ -91,15 +87,20 @@ class TestParser {
 		this.testParse("(+ 1 1)", new AbstractionApplication(new Symbol("+"),
 				new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(1)))));
 		this.testParse("(if #t x y)", new IfExpression(LitBoolean.TRUE, new Symbol("x"), new Symbol("y")));
-		this.testParse("(type Name)", new DefineType(new TypeName("Name")));
+		//this.testParse("(type Name)", new DefineType(new TypeName("Name")));
+		this.testParse("(type Name)", Expression.EMPTY_EXPRESSION);
+		//this.testParse("(representation Unstructured Name)",
+		//		new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Unstructured")));
 		this.testParse("(representation Unstructured Name)",
-				new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Unstructured")));
+				Expression.EMPTY_EXPRESSION);
 		this.testParse("(constructor Name Unstructured ((String:Native x)) x)",
 				new DefineConstructor(new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured")),
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), new Symbol("x"))));
+		//this.testParse("(representation Structured Name)",
+		//		new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Structured")));
 		this.testParse("(representation Structured Name)",
-				new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Structured")));
+				Expression.EMPTY_EXPRESSION);
 		this.testParse("(constructor Name Structured ((String:Native x) (String:Native y)) (cons x y))",
 				new DefineConstructor(new TypeAtom(new TypeName("Name"), new TypeRepresentation("Structured")),
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
@@ -485,24 +486,19 @@ class TestParser {
 		typeEnv.addType(new TypeName("Test"));
 		typeEnv.addRepresentation(new TypeAtom(new TypeName("Test"), new TypeRepresentation("Functional")));
 
-		typeEnv.getType("List", "Functional");
-
-		if (!typeEnv.isType(SemanticNode.make(NodeType.SYMBOL, "List"))) {
-			fail("Expected typeEnv.isType(SemanticNode.make(NodeType.SYMBOL, \"List\")) == true");
+		if(!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), TypeRepresentation.WILDCARD))) {
+			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"List\"), TypeRepresentation.WILDCARD)) == true");
 		}
-		if (!typeEnv.isType(SemanticNode.make(NodeType.PAIR, new SemanticPair("List", "Functional")))) {
-			fail("Expected typeEnv.isType(SemanticNode.make(NodeType.PAIR, new SemanticPair(\"List\", \"Functional\"))) == true");
+		if(!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), new TypeRepresentation("Functional")))) {
+			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"List\"), new TypeRepresentation(\"Functional\"))) == true");
 		}
-		if (typeEnv.isType(SemanticNode.make(NodeType.SYMBOL, "kawabanga"))) {
-			fail("Expected typeEnv.isType(SemanticNode.make(NodeType.SYMBOL, \"kawabanga\")) == false");
+		if(typeEnv.existsTypeAtom(new TypeAtom(new TypeName("kawabanga"), TypeRepresentation.WILDCARD))) {
+			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"kawabanga\"), TypeRepresentation.WILDCARD)) == false");
 		}
-		if (typeEnv.isType(SemanticNode.make(NodeType.PAIR, new SemanticPair("List", "kawabanga")))) {
-			fail("Exprected typeEnv.isType(SemanticNode.make(NodeType.PAIR, new SemanticPair(\"List\", \"kawabanga\"))) == false");
+		if(typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), new TypeRepresentation("kawabanga")))) {
+			fail("Exprected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"List\"), new TypeRepresentation(\"kawabanga\"))) == false");
 		}
-		if (typeEnv.isType(SemanticNode.make(NodeType.INT, new Integer(128)))) {
-			fail("Expected typeEnv.isType(SemanticNode.make(NodeType.INT, new Integer(128))) = false");
-		}
-
+		
 		typeEnv.getConstructor(TypeAtom.TypeIntRoman, new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)));
 		Assertions.assertThrows(AppendableException.class,
 				() -> typeEnv.getConstructor(new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD),
@@ -514,9 +510,6 @@ class TestParser {
 		Assertions.assertThrows(AppendableException.class, () -> typeEnv.addConversion(TypeAtom.TypeIntNative,
 				TypeAtom.TypeStringNative,
 				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, expected, Environment.topLevelEnvironment)));
-
-		typeEnv.getType(SemanticNode.make(NodeType.PAIR, new SemanticPair("Int", "Roman")));
-		typeEnv.getType(SemanticNode.make(NodeType.SYMBOL, "Int"));
 
 		Assertions.assertThrows(DuplicateConversionException.class,
 				() -> TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,

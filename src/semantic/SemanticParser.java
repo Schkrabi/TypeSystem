@@ -17,8 +17,6 @@ import application.DefineConstructor;
 import application.AbstractionApplication;
 import application.DefineConversion;
 import application.DefineSymbol;
-import application.DefineRepresentation;
-import application.DefineType;
 import application.ExceptionExpr;
 import application.IfExpression;
 import expression.Expression;
@@ -30,7 +28,9 @@ import literal.LitInteger;
 import literal.LitString;
 import literal.Literal;
 import parser.SemanticNode;
+import parser.SemanticPair;
 import types.Type;
+import types.TypeArrow;
 import types.TypeAtom;
 import types.TypeName;
 import types.TypeRepresentation;
@@ -38,6 +38,7 @@ import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
 import util.NameGenerator;
+import util.Pair;
 import util.ThrowingFunction;
 
 /**
@@ -332,10 +333,9 @@ public class SemanticParser {
 			e.appendMessage(" in deftype " + deftypeList);
 			throw e;
 		}
-
-		TypeName typeName = new TypeName(deftypeList.get(1).asSymbol());
-
-		return new DefineType(typeName);
+		
+		TypeEnvironment.singleton.addType(new TypeName(deftypeList.get(1).asSymbol()));
+		return Expression.EMPTY_EXPRESSION;
 	}
 
 	/**
@@ -357,7 +357,8 @@ public class SemanticParser {
 		TypeRepresentation repName = new TypeRepresentation(defrepList.get(1).asSymbol());
 		TypeName typeName = new TypeName(defrepList.get(2).asSymbol());
 
-		return new DefineRepresentation(typeName, repName);
+		TypeEnvironment.singleton.addRepresentation(new TypeAtom(typeName, repName));
+		return Expression.EMPTY_EXPRESSION;
 	}
 
 	/**
@@ -391,6 +392,60 @@ public class SemanticParser {
 		}
 		return SemanticParser.parseVariableTypePair(n);
 	}
+	
+	/**
+	 * Parses  Wildcard type
+	 * @param typeName name of the type
+	 * @return TypeAtom
+	 * @throws UndefinedTypeException if Type was not defined
+	 */
+	private static TypeAtom parseTypeAtom(String typeName) throws UndefinedTypeException {
+		return SemanticParser.parseTypeAtom(typeName, TypeRepresentation.WILDCARD.toString());
+	}
+	
+	/**
+	 * Parses type atom by its typeName and reprsentation name
+	 * @param typeName name of type
+	 * @param typeRepresentation name of representation
+	 * @return parsed TypeAtom
+	 * @throws UndefinedTypeException if Type or representation was not defined
+	 */
+	private static TypeAtom parseTypeAtom(String typeName, String typeRepresentation) throws UndefinedTypeException {
+		TypeAtom typeAtom = new TypeAtom(new TypeName(typeName), new TypeRepresentation(typeRepresentation));
+		if(!TypeEnvironment.singleton.existsTypeAtom(typeAtom)) {
+			throw new UndefinedTypeException(typeAtom.toString());
+		}
+		return typeAtom;
+	}
+	
+	/**
+	 * Parses type arrow
+	 * @param ltypeNode SemanticNode with left type 
+	 * @param rtypeNode SemanticNode with right type
+	 * @return typeArrow
+	 * @throws AppendableException 
+	 */
+	private static TypeArrow parseTypeArrow(SemanticNode ltypeNode, SemanticNode rtypeNode) throws AppendableException{
+		Type ltype = SemanticParser.parseType(ltypeNode);
+		Type rtype = SemanticParser.parseType(rtypeNode);
+		return new TypeArrow(ltype, rtype);
+	}
+	
+	/**
+	 * Parses TypeTuple
+	 * @param l list of semanticNodes representing subtypes
+	 * @return TypeTuple
+	 * @throws AppendableException if atomic type is not recognized or fault semanticNode is detected
+	 */
+	private static TypeTuple parseTypeTuple(List<SemanticNode> l) throws AppendableException{
+		try {
+			List<Type> parsed = l.stream().map(ThrowingFunction.wrapper(x -> SemanticParser.parseType(x))).collect(Collectors.toList());
+			return new TypeTuple(parsed);
+		}catch(RuntimeException re) {
+			AppendableException e = (AppendableException)re.getCause();
+			throw e;
+		}
+	}
 
 	/**
 	 * Parses types
@@ -399,13 +454,24 @@ public class SemanticParser {
 	 * @return Representation of the type
 	 * @throws AppendableException
 	 */
-	private static TypeAtom parseType(SemanticNode typeNode) throws AppendableException {
-		if (typeNode.type == SemanticNode.NodeType.PAIR) {
-			return new TypeAtom(new TypeName(typeNode.asPair().first),
-					new TypeRepresentation(typeNode.asPair().second));
+	private static Type parseType(SemanticNode typeNode) throws AppendableException {
+		switch(typeNode.type) {
+		case PAIR:
+			SemanticPair semanticPair = typeNode.asPair();
+			return SemanticParser.parseTypeAtom(semanticPair.first, semanticPair.second);
+		case ARROW:
+			Pair<SemanticNode, SemanticNode> arrowPair = typeNode.asArrow();
+			return SemanticParser.parseTypeArrow(arrowPair.first, arrowPair.second);
+		case LIST:
+			List<SemanticNode> l = typeNode.asList();
+			return SemanticParser.parseTypeTuple(l);
+		case SYMBOL:
+			return SemanticParser.parseTypeAtom(typeNode.asSymbol());
+		default:
+			break;
 		}
-
-		return new TypeAtom(new TypeName(typeNode.asSymbol()), TypeRepresentation.WILDCARD);
+		
+		throw new UndefinedTypeException(typeNode.toString());
 	}
 
 	/**
@@ -423,7 +489,7 @@ public class SemanticParser {
 			throw e;
 		}
 
-		TypeAtom type = SemanticParser.parseType(pair.asList().get(0));
+		Type type = SemanticParser.parseType(pair.asList().get(0));
 		Symbol variable = new Symbol(pair.asList().get(1).asSymbol());
 		return new TypeVariablePair(type, variable);
 	}
@@ -482,6 +548,14 @@ public class SemanticParser {
 		Expression body = SemanticParser.parseNode(l.get(1));
 		return new Lambda(args, argsType, body);
 	}
+	
+	private static TypeAtom parseConversionType(SemanticNode typeNode) throws AppendableException {
+		Type parsed = SemanticParser.parseType(typeNode);
+		if(!(parsed instanceof TypeAtom)) {
+			throw new AppendableException("Only atomic types are allowed, got " + parsed);
+		}
+		return (TypeAtom)parsed;
+	}
 
 	/**
 	 * Parses defconversion special form list
@@ -496,8 +570,8 @@ public class SemanticParser {
 			e.appendMessage("in" + l);
 			throw e;
 		}
-		TypeAtom fromType = SemanticParser.parseType(l.get(1));
-		TypeAtom toType = SemanticParser.parseType(l.get(2));
+		TypeAtom fromType = SemanticParser.parseConversionType(l.get(1));
+		TypeAtom toType = SemanticParser.parseConversionType(l.get(2));
 
 		List<TypeVariablePair> typedArgs = SemanticParser.parseTypedArgList(l.get(3).asList());
 		TypeTuple argsTypes = new TypeTuple(typedArgs.stream().map(x -> x.first).collect(Collectors.toList()));
@@ -615,10 +689,10 @@ public class SemanticParser {
 		}
 
 		SemanticNode fromNode = specialFormList.get(1);
-		TypeAtom from = SemanticParser.parseType(fromNode);
+		TypeAtom from = SemanticParser.parseConversionType(fromNode);
 
 		SemanticNode toNode = specialFormList.get(2);
-		TypeAtom to = SemanticParser.parseType(toNode);
+		TypeAtom to = SemanticParser.parseConversionType(toNode);
 
 		SemanticNode exprNode = specialFormList.get(3);
 		Expression expression = SemanticParser.parseNode(exprNode);

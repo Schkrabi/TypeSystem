@@ -944,7 +944,7 @@ class TestInterpretation {
 
 		TestInterpretation.testInterpretation(defTypeExpression, Expression.EMPTY_EXPRESSION,
 				Environment.topLevelEnvironment);
-		if (!TypeEnvironment.singleton.getType("Test").isPresent()) {
+		if (!TypeEnvironment.singleton.existsTypeAtom(new TypeAtom(new TypeName("Test"), TypeRepresentation.WILDCARD))) {
 			fail(defTypeExpression.toString() + " did not created type!");
 		}
 

@@ -40,8 +40,8 @@ exprs returns [List<SemanticNode> val]
 expr returns [SemanticNode val] 
 	: atom 	{ $val = $atom.val; }
 	| seq 	{ $val = $seq.val; }
-	| pair  { $val = $pair.val; }
-//	| quote { $val = $quote.val; }
+	| pair	{ $val = $pair.val; }
+	| arrow { $val = $arrow.val; }
 	;
 
 seq returns [SemanticNode val]
@@ -62,13 +62,14 @@ atom returns [SemanticNode val]
 pair returns [SemanticNode val]
 	: { String lvalue; } 
 	  SYMBOL { lvalue = $SYMBOL.text; } ':' SYMBOL 
-	  { $val = SemanticNode.make(SemanticNode.NodeType.PAIR, new SemanticNode.Pair(lvalue, $SYMBOL.text)); }
+	  { $val = SemanticNode.make(SemanticNode.NodeType.PAIR, new SemanticPair(lvalue, $SYMBOL.text)); }
 	;
-
-//quote returns [Token val]
-//	: '\'' expr	{ $val = new Sequence(new Symbol("quote"), $expr.val); }
-//	;
-
+	
+arrow returns [SemanticNode val]
+	: '(' 	{ SemanticNode lvalue; }
+	  expr 	{ lvalue = $expr.val; } '-' '>' expr
+	  ')' 	{ $val = SemanticNode.make(SemanticNode.NodeType.ARROW, new util.Pair<SemanticNode, SemanticNode>(lvalue, $expr.val)); }
+	;
 
 TRUE	: '#' 't';
 FALSE	: '#' 'f';
