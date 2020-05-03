@@ -52,6 +52,7 @@ import semantic.Validations;
 import semantic.TypeVariablePair;
 import semantic.UndefinedTypeException;
 import types.ConversionException;
+import types.TypeArrow;
 import types.TypeAtom;
 import types.TypeName;
 import types.TypeRepresentation;
@@ -87,20 +88,20 @@ class TestParser {
 		this.testParse("(+ 1 1)", new AbstractionApplication(new Symbol("+"),
 				new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(1)))));
 		this.testParse("(if #t x y)", new IfExpression(LitBoolean.TRUE, new Symbol("x"), new Symbol("y")));
-		//this.testParse("(type Name)", new DefineType(new TypeName("Name")));
+		// this.testParse("(type Name)", new DefineType(new TypeName("Name")));
 		this.testParse("(type Name)", Expression.EMPTY_EXPRESSION);
-		//this.testParse("(representation Unstructured Name)",
-		//		new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Unstructured")));
-		this.testParse("(representation Unstructured Name)",
-				Expression.EMPTY_EXPRESSION);
+		// this.testParse("(representation Unstructured Name)",
+		// new DefineRepresentation(new TypeName("Name"), new
+		// TypeRepresentation("Unstructured")));
+		this.testParse("(representation Unstructured Name)", Expression.EMPTY_EXPRESSION);
 		this.testParse("(constructor Name Unstructured ((String:Native x)) x)",
 				new DefineConstructor(new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured")),
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), new Symbol("x"))));
-		//this.testParse("(representation Structured Name)",
-		//		new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Structured")));
-		this.testParse("(representation Structured Name)",
-				Expression.EMPTY_EXPRESSION);
+		// this.testParse("(representation Structured Name)",
+		// new DefineRepresentation(new TypeName("Name"), new
+		// TypeRepresentation("Structured")));
+		this.testParse("(representation Structured Name)", Expression.EMPTY_EXPRESSION);
 		this.testParse("(constructor Name Structured ((String:Native x) (String:Native y)) (cons x y))",
 				new DefineConstructor(new TypeAtom(new TypeName("Name"), new TypeRepresentation("Structured")),
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
@@ -132,6 +133,24 @@ class TestParser {
 				new Construct(TypeAtom.TypeIntString, new Tuple(Arrays.asList(new LitString("42")))));
 		this.testParse("(convert Int:Roman Int:String x)",
 				new Convert(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, new Symbol("x")));
+
+		this.testParse("(lambda (((Int:Native String:Native Bool:Native) t)) t)", new Lambda(
+				new Tuple(Arrays.asList(new Symbol("t"))),
+				new TypeTuple(Arrays.asList(new TypeTuple(
+						Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative, TypeAtom.TypeBoolNative)))),
+				new Symbol("t")));
+
+		this.testParse("(lambda (((Int:Native #> Int:Native) f)) f)",
+				new Lambda(new Tuple(Arrays.asList(new Symbol("f"))),
+						new TypeTuple(Arrays.asList(new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative))),
+						new Symbol("f")));
+
+		this.testParse("(lambda ((((Int:Native String:Native) #> (String:Native Int:Native)) f)) f)",
+				new Lambda(new Tuple(Arrays.asList(new Symbol("f"))),
+						new TypeTuple(Arrays.asList(new TypeArrow(
+								new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative)),
+								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeIntNative))))),
+						new Symbol("f")));
 
 		// Dummy object tests
 		new Validations();
@@ -486,19 +505,19 @@ class TestParser {
 		typeEnv.addType(new TypeName("Test"));
 		typeEnv.addRepresentation(new TypeAtom(new TypeName("Test"), new TypeRepresentation("Functional")));
 
-		if(!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), TypeRepresentation.WILDCARD))) {
+		if (!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), TypeRepresentation.WILDCARD))) {
 			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"List\"), TypeRepresentation.WILDCARD)) == true");
 		}
-		if(!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), new TypeRepresentation("Functional")))) {
+		if (!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), new TypeRepresentation("Functional")))) {
 			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"List\"), new TypeRepresentation(\"Functional\"))) == true");
 		}
-		if(typeEnv.existsTypeAtom(new TypeAtom(new TypeName("kawabanga"), TypeRepresentation.WILDCARD))) {
+		if (typeEnv.existsTypeAtom(new TypeAtom(new TypeName("kawabanga"), TypeRepresentation.WILDCARD))) {
 			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"kawabanga\"), TypeRepresentation.WILDCARD)) == false");
 		}
-		if(typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), new TypeRepresentation("kawabanga")))) {
+		if (typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), new TypeRepresentation("kawabanga")))) {
 			fail("Exprected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"List\"), new TypeRepresentation(\"kawabanga\"))) == false");
 		}
-		
+
 		typeEnv.getConstructor(TypeAtom.TypeIntRoman, new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)));
 		Assertions.assertThrows(AppendableException.class,
 				() -> typeEnv.getConstructor(new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD),

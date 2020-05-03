@@ -4,6 +4,8 @@ import java.util.List;
 
 import parser.SemanticNode;
 import util.AppendableException;
+import util.Pair;
+import util.ThrowingFunction;
 
 /**
  * This class contains static validation methods used by SemanticParser
@@ -207,7 +209,22 @@ public class Validations {
 	 * @return true or false
 	 * @throws AppendableException if n cannot be type identifier
 	 */
-	private static boolean isTypeIdentifierNode(SemanticNode n) {
+	private static boolean isTypeIdentifierNode(SemanticNode n) throws AppendableException {
+		if (n.type == SemanticNode.NodeType.LIST) {
+			List<SemanticNode> l = n.asList();
+			try {
+				return l.stream().map(ThrowingFunction.wrapper(x -> Validations.isTypeIdentifierNode(x))).reduce(true,
+						Boolean::logicalAnd);
+			} catch (RuntimeException re) {
+				AppendableException e = (AppendableException) re.getCause();
+				throw e;
+			}
+		}
+		if (n.type == SemanticNode.NodeType.ARROW) {
+			Pair<SemanticNode, SemanticNode> p = n.asArrow();
+			return Validations.isTypeIdentifierNode(p.first) && Validations.isTypeIdentifierNode(p.second);
+		}
+
 		return n.type == SemanticNode.NodeType.SYMBOL || n.type == SemanticNode.NodeType.PAIR;
 	}
 
@@ -411,26 +428,28 @@ public class Validations {
 
 	/**
 	 * Validates Construt special form list
+	 * 
 	 * @param specialFormList validated list
 	 * @throws AppendableException if validation fails
 	 */
 	public static void validateConstructList(List<SemanticNode> specialFormList) throws AppendableException {
-		if(specialFormList.size() < 3) {
+		if (specialFormList.size() < 3) {
 			throw new InvalidNumberOfArgsException(2, specialFormList.size() - 1);
 		}
-		
+
 		SemanticNode construct = specialFormList.get(0);
-		if(construct.type != SemanticNode.NodeType.SYMBOL || !construct.asSymbol().equals(SemanticParserStatic.CONSTRUCT)) {
+		if (construct.type != SemanticNode.NodeType.SYMBOL
+				|| !construct.asSymbol().equals(SemanticParserStatic.CONSTRUCT)) {
 			throw new UnexpectedExpressionException(construct);
 		}
-		
+
 		SemanticNode type = specialFormList.get(1);
-		if(type.type != SemanticNode.NodeType.SYMBOL) {
+		if (type.type != SemanticNode.NodeType.SYMBOL) {
 			throw new UnexpectedExpressionException(type);
 		}
-		
+
 		SemanticNode representation = specialFormList.get(2);
-		if(representation.type != SemanticNode.NodeType.SYMBOL) {
+		if (representation.type != SemanticNode.NodeType.SYMBOL) {
 			throw new UnexpectedExpressionException(representation);
 		}
 	}

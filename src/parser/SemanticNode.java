@@ -46,7 +46,12 @@ public class SemanticNode {
 		case LIST:
 			return value instanceof List<?>;
 		case ARROW:
-			return value instanceof SemanticPair;
+			if (!(value instanceof Pair)) {
+				return false;
+			}
+			@SuppressWarnings("unchecked")
+			Pair<Object, Object> v = (Pair<Object, Object>) value;
+			return (v.first instanceof SemanticNode) && (v.second instanceof SemanticNode);
 		default:
 			break;
 		}
@@ -94,10 +99,10 @@ public class SemanticNode {
 		}
 		return (Boolean) this.value;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public Pair<SemanticNode, SemanticNode> asArrow() throws AppendableException {
-		if(this.type != NodeType.ARROW) {
+		if (this.type != NodeType.ARROW) {
 			throw new AppendableException(this.toString() + " is not an arrow");
 		}
 		return (Pair<SemanticNode, SemanticNode>) this.value;

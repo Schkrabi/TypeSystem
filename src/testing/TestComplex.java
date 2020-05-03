@@ -175,6 +175,17 @@ class TestComplex {
 										new LitComposite(new Tuple(Arrays.asList(xlii, emptyList)), linkedList))),
 										linkedList))),
 						linkedList));
+
+		// Complex types
+		this.testInterpretString("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)",
+				new LitInteger(42));
+		this.testInterpretString("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
+				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\")))) +)",
+				new LitInteger(42));
+		this.testInterpretString("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
+				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\"))))"
+				+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x) (deconstruct y)))))",
+				new LitComposite(new LitString("2121"), TypeAtom.TypeIntString));
 	}
 
 	@Test
@@ -262,10 +273,10 @@ class TestComplex {
 						+ " `([[:StringNative] ~identity]) [:StringNative] [\"42\"])])");
 		// Define
 		this.testClojureCompile("(define answer 42)", "(def answer 42)");
-		this.testClojureCompile("(type Name2)", "");
-		this.testClojureCompile("(representation Structured Name2)", "");
+		this.testClojureCompile("(type Name2)", "nil");
+		this.testClojureCompile("(representation Structured Name2)", "nil");
 		this.testClojureCompile("(constructor Name2 Structured ((String:Native x) (String:Native y)) (cons x y))", "");
-		this.testClojureCompile("(representation Unstructured Name2)", "");
+		this.testClojureCompile("(representation Unstructured Name2)", "nil");
 		this.testClojureCompile("(constructor Name2 Unstructured ((String:Native x)) x)", "");
 		this.testClojureCompile("(conversion Name2:Structured Name2:Unstructured"
 				+ "((Name2:Structured x)) (construct Name2 Unstructured (concat (car (deconstruct x)) (cdr (deconstruct x)))))",
@@ -321,11 +332,11 @@ class TestComplex {
 						+ " `([[:IntNative] ~(fn [_x] (Integer/toString _x))]) [:IntNative] [66])])");
 
 		// List
-		this.testClojureCompile("(type List2)", "");
-		this.testClojureCompile("(representation Linked List2)", "");
+		this.testClojureCompile("(type List2)", "nil");
+		this.testClojureCompile("(representation Linked List2)", "nil");
 		this.testClojureCompile("(constructor List2 Linked (x (List2 l)) (cons x l))", "");
 		this.testClojureCompile("(constructor List2 Linked () ())", "");
-		this.testClojureCompile("(representation Functional List2)", "");
+		this.testClojureCompile("(representation Functional List2)", "nil");
 		this.testClojureCompileRegex("(define fcons (lambda (x y) (lambda (f) (f x y))))",
 				TestComplex.escapeBrackets("(def fcons `([[:\\w* :\\w*] ~(fn [x y] `([[:\\w*] ~(fn [f] ("
 						+ AbstractionApplication.clojureEapply + " f [:\\w* :\\w*] [x y]))]))]))"));
@@ -448,6 +459,47 @@ class TestComplex {
 						+ AbstractionApplication.clojureEapply + " reverse-list2 [:\\w*] [("
 						+ AbstractionApplication.clojureEapply + " tail-list2 [:List2\\*] [l])]) ("
 						+ AbstractionApplication.clojureEapply + " head-list2 [:List2\\*] [l])])))]))"));
+
+		this.testClojureCompileRegex("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)",
+				TestComplex.escapeBrackets("(" + AbstractionApplication.clojureEapply
+						+ " `([[[[:IntNative :IntNative] :-> :IntNative]] ~(fn [f] ("
+						+ AbstractionApplication.clojureEapply
+						+ " f [:IntNative :IntNative] [21 21]))]) [[[:IntNative :IntNative] :-> :IntNative]] [`([[:IntNative :IntNative] ~(fn [\\w* \\w*] ("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:IntNative :IntNative] ~+]) [:IntNative :IntNative] [\\w* \\w*]))])])"));
+		this.testClojureCompileRegex("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
+				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\")))) +)",
+				TestComplex.escapeBrackets("(" + AbstractionApplication.clojureEapply
+						+ " `([[[[:IntNative :IntNative] :-> :IntNative]] ~(fn [f] ("
+						+ AbstractionApplication.clojureEapply
+						+ " f [:IntNative :IntNative] [21 21]))] [[[[:IntString :IntString] :-> :IntString]] ~(fn [f] ("
+						+ AbstractionApplication.clojureEapply + " f [:IntString :IntString] [("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"21\"]) ("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"21\"])]))]) [[[:IntNative :IntNative] :-> :IntNative]] [`([[:IntNative :IntNative] ~(fn [\\w* \\w*] ("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:IntNative :IntNative] ~+]) [:IntNative :IntNative] [\\w* \\w*]))])])"));
+		this.testClojureCompileRegex("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
+				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\"))))"
+				+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x) (deconstruct y)))))",
+				TestComplex.escapeBrackets("(" + AbstractionApplication.clojureEapply
+						+ " `([[[[:IntNative :IntNative] :-> :IntNative]] ~(fn [f] ("
+						+ AbstractionApplication.clojureEapply
+						+ " f [:IntNative :IntNative] [21 21]))] [[[[:IntString :IntString] :-> :IntString]] ~(fn [f] ("
+						+ AbstractionApplication.clojureEapply + " f [:IntString :IntString] [("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"21\"]) ("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"21\"])]))]) [[[:IntString :IntString] :-> :IntString]] [`([[:IntString :IntString] ~(fn [\\w* \\w*] ("
+						+ AbstractionApplication.clojureEapply + " `([[:IntString :IntString] ~(fn [x y] ("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:StringNative :StringNative] ~str]) [:\\w* :\\w*] [("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:IntString] [x]) ("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:\\w*] ~identity]) [:IntString] [y])])]))]) [:IntString :IntString] [\\w* \\w*]))])])"));
 	}
 
 	private List<Expression> parseString(String s, SemanticParser semanticParser) throws AppendableException {

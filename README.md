@@ -108,12 +108,50 @@ Weight of the language lies in its type system, separated type and representatio
     IntRoman2IntString
     
 #### Type signatures
-Types in language are (in current version) described in two ways:
+There are two kind of type signatures present in language: atomic types and composite types
+
+##### Atomic Types
+Atomic types in language are described in two ways:
 
     <TypeName>
     <TypeName>:<RepresentationName>
     
 Where former style describes value of <TypeName> type in any representation and is equal to <TypeName>:* in latter signature style.
+
+For example signature of integer represented by string of roman number would be:
+
+    Int:Roman
+    
+For example signature of general double type (without specific representation) would be:
+
+    Int
+
+or
+
+    Int:*
+
+##### Composite types
+There are two kind of composite types in language: type tuples and arrow types (functiona types).
+
+For type tuples we use list syntax:
+
+    (<subtype>*)
+    
+For example 2-tuple containing native integer and native string would be:
+
+    (Int:Native String:Native)
+    
+Arrow types are types of functions, they use following syntax:
+
+    <formal argument type> #> <return type>
+    
+Also note that type of formal argument is ALWAYS a type tuple, even for functions only accepting one argument.
+    
+For example function that accept tvo native integers and returns native string has following signature:
+
+    (Int:Native Int:Native) #> String:Native
+    
+Composite types can be arbitrarily nested.
 
 #### Lambda expression with type signatures
 Lambda expression in language supports type signatures on formal arguments of lambda expression. For example lambda that accepts only String arguments:

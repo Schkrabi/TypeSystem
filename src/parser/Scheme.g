@@ -67,7 +67,7 @@ pair returns [SemanticNode val]
 	
 arrow returns [SemanticNode val]
 	: '(' 	{ SemanticNode lvalue; }
-	  expr 	{ lvalue = $expr.val; } '-' '>' expr
+	  expr 	{ lvalue = $expr.val; } ARROW expr
 	  ')' 	{ $val = SemanticNode.make(SemanticNode.NodeType.ARROW, new util.Pair<SemanticNode, SemanticNode>(lvalue, $expr.val)); }
 	;
 
@@ -77,11 +77,12 @@ INT 	: '-'?[0-9]+ ;
 FLOAT   : '-'?[0-9]* '.' [0-9]+ ;
 SYMBOL 	: SYMBOL_HEAD SYMBOL_REST*;
 COMMENT : ';' ~('\r' | '\n')* -> skip;
-WS 	: [ \r\t\n]+ -> skip ;
-STRING: '"' ~('\n'|'"')* '"' ;
+WS 		: [ \r\t\n]+ -> skip ;
+STRING	: '"' ~('\n'|'"')* '"' ;
+ARROW	: '#' '>' ;
 
 fragment SYMBOL_HEAD
-	:   'a'..'z' | 'A'..'Z' | '*' | '+' | '!' | '-' | '_' | '?' | '>' | '<' | '=' | '$' | '@' | '&' | '#' | '/'
+	:   'a'..'z' | 'A'..'Z' | '*' | '+' | '!' | '-' | '_' | '?' | '>' | '<' | '=' | '$' | '@' | '/'
 	;
     
 fragment SYMBOL_REST

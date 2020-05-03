@@ -15,7 +15,7 @@ public class ClojureCodeGenerator {
 		while (i.hasNext()) {
 			Expression e = i.next();
 			target.write(e.toClojureCode());
-			if (i.hasNext() && e != Expression.EMPTY_EXPRESSION) {
+			if (i.hasNext()) {
 				target.write('\n');
 			}
 		}

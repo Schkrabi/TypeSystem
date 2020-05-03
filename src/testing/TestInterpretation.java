@@ -983,7 +983,7 @@ class TestInterpretation {
 
 		TypeEnvironment.singleton.addType(name);
 		TypeEnvironment.singleton.addRepresentation(typeAtomNative);
-		TypeEnvironment.singleton.addRepresentation(typeAtomWildcard);
+		//TypeEnvironment.singleton.addRepresentation(typeAtomWildcard);
 
 		TestInterpretation.testInterpretation(defCon, Expression.EMPTY_EXPRESSION, Environment.topLevelEnvironment);
 

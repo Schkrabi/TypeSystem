@@ -21,8 +21,8 @@ public class SchemeParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, TRUE=6, FALSE=7, INT=8, FLOAT=9, 
-		SYMBOL=10, COMMENT=11, WS=12, STRING=13;
+		T__0=1, T__1=2, T__2=3, TRUE=4, FALSE=5, INT=6, FLOAT=7, SYMBOL=8, COMMENT=9, 
+		WS=10, STRING=11, ARROW=12;
 	public static final int
 		RULE_exprs = 0, RULE_expr = 1, RULE_seq = 2, RULE_atom = 3, RULE_pair = 4, 
 		RULE_arrow = 5;
@@ -35,14 +35,14 @@ public class SchemeParser extends Parser {
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'('", "')'", "':'", "'-'", "'>'"
+			null, "'('", "')'", "':'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, null, null, null, null, null, "TRUE", "FALSE", "INT", "FLOAT", 
-			"SYMBOL", "COMMENT", "WS", "STRING"
+			null, null, null, null, "TRUE", "FALSE", "INT", "FLOAT", "SYMBOL", "COMMENT", 
+			"WS", "STRING", "ARROW"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -348,7 +348,7 @@ public class SchemeParser extends Parser {
 		}
 	}
 
-	public final AtomContext atom() throws RecognitionException, NumberFormatException, AppendableException {
+	public final AtomContext atom() throws RecognitionException, AppendableException {
 		AtomContext _localctx = new AtomContext(_ctx, getState());
 		enterRule(_localctx, 6, RULE_atom);
 		try {
@@ -476,6 +476,7 @@ public class SchemeParser extends Parser {
 		public ExprContext expr(int i) {
 			return getRuleContext(ExprContext.class,i);
 		}
+		public TerminalNode ARROW() { return getToken(SchemeParser.ARROW, 0); }
 		public ArrowContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -503,12 +504,10 @@ public class SchemeParser extends Parser {
 			((ArrowContext)_localctx).expr = expr();
 			 lvalue = ((ArrowContext)_localctx).expr.val; 
 			setState(75);
-			match(T__3);
+			match(ARROW);
 			setState(76);
-			match(T__4);
-			setState(77);
 			((ArrowContext)_localctx).expr = expr();
-			setState(78);
+			setState(77);
 			match(T__1);
 			 ((ArrowContext)_localctx).val =  SemanticNode.make(SemanticNode.NodeType.ARROW, new util.Pair<SemanticNode, SemanticNode>(lvalue, ((ArrowContext)_localctx).expr.val)); 
 			}
@@ -525,27 +524,27 @@ public class SchemeParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\17T\4\2\t\2\4\3\t"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\16S\4\2\t\2\4\3\t"+
 		"\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\3\2\3\2\3\2\3\2\7\2\23\n\2\f\2\16\2"+
 		"\26\13\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\5\3&"+
 		"\n\3\3\4\3\4\3\4\3\4\3\4\7\4-\n\4\f\4\16\4\60\13\4\3\4\3\4\3\4\3\5\3\5"+
 		"\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\5\5A\n\5\3\6\3\6\3\6\3\6\3\6"+
-		"\3\6\3\6\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\2\2\b\2\4\6\b\n\f"+
-		"\2\2\2W\2\16\3\2\2\2\4%\3\2\2\2\6\'\3\2\2\2\b@\3\2\2\2\nB\3\2\2\2\fI\3"+
-		"\2\2\2\16\24\b\2\1\2\17\20\5\4\3\2\20\21\b\2\1\2\21\23\3\2\2\2\22\17\3"+
-		"\2\2\2\23\26\3\2\2\2\24\22\3\2\2\2\24\25\3\2\2\2\25\27\3\2\2\2\26\24\3"+
-		"\2\2\2\27\30\b\2\1\2\30\3\3\2\2\2\31\32\5\b\5\2\32\33\b\3\1\2\33&\3\2"+
-		"\2\2\34\35\5\6\4\2\35\36\b\3\1\2\36&\3\2\2\2\37 \5\n\6\2 !\b\3\1\2!&\3"+
-		"\2\2\2\"#\5\f\7\2#$\b\3\1\2$&\3\2\2\2%\31\3\2\2\2%\34\3\2\2\2%\37\3\2"+
-		"\2\2%\"\3\2\2\2&\5\3\2\2\2\'(\7\3\2\2(.\b\4\1\2)*\5\4\3\2*+\b\4\1\2+-"+
-		"\3\2\2\2,)\3\2\2\2-\60\3\2\2\2.,\3\2\2\2./\3\2\2\2/\61\3\2\2\2\60.\3\2"+
-		"\2\2\61\62\7\4\2\2\62\63\b\4\1\2\63\7\3\2\2\2\64\65\7\n\2\2\65A\b\5\1"+
-		"\2\66\67\7\13\2\2\67A\b\5\1\289\7\f\2\29A\b\5\1\2:;\7\b\2\2;A\b\5\1\2"+
-		"<=\7\t\2\2=A\b\5\1\2>?\7\17\2\2?A\b\5\1\2@\64\3\2\2\2@\66\3\2\2\2@8\3"+
-		"\2\2\2@:\3\2\2\2@<\3\2\2\2@>\3\2\2\2A\t\3\2\2\2BC\b\6\1\2CD\7\f\2\2DE"+
-		"\b\6\1\2EF\7\5\2\2FG\7\f\2\2GH\b\6\1\2H\13\3\2\2\2IJ\7\3\2\2JK\b\7\1\2"+
-		"KL\5\4\3\2LM\b\7\1\2MN\7\6\2\2NO\7\7\2\2OP\5\4\3\2PQ\7\4\2\2QR\b\7\1\2"+
-		"R\r\3\2\2\2\6\24%.@";
+		"\3\6\3\6\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\2\2\b\2\4\6\b\n\f\2\2"+
+		"\2V\2\16\3\2\2\2\4%\3\2\2\2\6\'\3\2\2\2\b@\3\2\2\2\nB\3\2\2\2\fI\3\2\2"+
+		"\2\16\24\b\2\1\2\17\20\5\4\3\2\20\21\b\2\1\2\21\23\3\2\2\2\22\17\3\2\2"+
+		"\2\23\26\3\2\2\2\24\22\3\2\2\2\24\25\3\2\2\2\25\27\3\2\2\2\26\24\3\2\2"+
+		"\2\27\30\b\2\1\2\30\3\3\2\2\2\31\32\5\b\5\2\32\33\b\3\1\2\33&\3\2\2\2"+
+		"\34\35\5\6\4\2\35\36\b\3\1\2\36&\3\2\2\2\37 \5\n\6\2 !\b\3\1\2!&\3\2\2"+
+		"\2\"#\5\f\7\2#$\b\3\1\2$&\3\2\2\2%\31\3\2\2\2%\34\3\2\2\2%\37\3\2\2\2"+
+		"%\"\3\2\2\2&\5\3\2\2\2\'(\7\3\2\2(.\b\4\1\2)*\5\4\3\2*+\b\4\1\2+-\3\2"+
+		"\2\2,)\3\2\2\2-\60\3\2\2\2.,\3\2\2\2./\3\2\2\2/\61\3\2\2\2\60.\3\2\2\2"+
+		"\61\62\7\4\2\2\62\63\b\4\1\2\63\7\3\2\2\2\64\65\7\b\2\2\65A\b\5\1\2\66"+
+		"\67\7\t\2\2\67A\b\5\1\289\7\n\2\29A\b\5\1\2:;\7\6\2\2;A\b\5\1\2<=\7\7"+
+		"\2\2=A\b\5\1\2>?\7\r\2\2?A\b\5\1\2@\64\3\2\2\2@\66\3\2\2\2@8\3\2\2\2@"+
+		":\3\2\2\2@<\3\2\2\2@>\3\2\2\2A\t\3\2\2\2BC\b\6\1\2CD\7\n\2\2DE\b\6\1\2"+
+		"EF\7\5\2\2FG\7\n\2\2GH\b\6\1\2H\13\3\2\2\2IJ\7\3\2\2JK\b\7\1\2KL\5\4\3"+
+		"\2LM\b\7\1\2MN\7\16\2\2NO\5\4\3\2OP\7\4\2\2PQ\b\7\1\2Q\r\3\2\2\2\6\24"+
+		"%.@";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
