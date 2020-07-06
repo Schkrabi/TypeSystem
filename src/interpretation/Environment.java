@@ -203,7 +203,7 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Symbol("nil"), Expression.EMPTY_EXPRESSION);
 		env.put(new Symbol(Operator.Equals.toString()), Operator.Equals);
 		env.put(new Symbol(Operator.PrintlnOperator.toString()), Operator.PrintlnOperator);
-		env.put(new Symbol(Operator.Deconstruct.toString()), Operator.Deconstruct);
+		//env.put(new Symbol(Operator.Deconstruct.toString()), Operator.Deconstruct);
 
 		env.put(new Symbol("Int"), Operator.IntConstructor);
 		env.put(new Symbol("Int:Native"), Operator.IntNativeConstructor);

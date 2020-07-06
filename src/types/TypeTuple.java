@@ -13,7 +13,6 @@ import java.util.stream.Stream;
 import expression.Expression;
 import expression.Tuple;
 import util.AppendableException;
-import util.NameGenerator;
 
 /**
  * Tuple of types
@@ -162,50 +161,8 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	}
 
 	@Override
-	public String convertToClojure(String argument, Type toType) throws AppendableException {
-		if (toType instanceof TypeVariable) {
-			return argument;
-		}
-		if (!(toType instanceof TypeTuple) || (this.size() != ((TypeTuple) toType).size())) {
-			throw new ClojureConversionException(this, toType, argument);
-		}
-		TypeTuple ttpl = (TypeTuple) toType;
-		String v = NameGenerator.next();
-
-		StringBuilder s = new StringBuilder("((fn [");
-		s.append(v);
-		s.append("] [");
-
-		Iterator<Type> i = this.iterator();
-		Iterator<Type> j = ttpl.iterator();
-		int n = 0;
-
-		while (i.hasNext()) {
-			Type from = i.next();
-			Type to = j.next();
-			String arg = "(get " + v + " " + Integer.toString(n) + ")";
-
-			s.append(from.convertToClojure(arg, to));
-			if (i.hasNext()) {
-				s.append(" ");
-			}
-
-			n++;
-		}
-		s.append("]) ");
-		s.append(argument);
-		s.append(")");
-		return s.toString();
-	}
-
-	@Override
 	public Type apply(Substitution s) {
 		return new TypeTuple(this.stream().map(x -> x.apply(s)).collect(Collectors.toList()));
-	}
-
-	@Override
-	public Type removeRepresentationInfo() {
-		return new TypeTuple(this.stream().map(x -> x.removeRepresentationInfo()).collect(Collectors.toList()));
 	}
 
 	@Override
@@ -229,6 +186,11 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		while (i.hasNext()) {
 			Type ti = i.next();
 			Type tj = j.next();
+
+			// Do not increase distance if any of types is variable
+			/*if ((ti instanceof TypeVariable) || (tj instanceof TypeVariable)) {
+				continue;
+			}*/
 
 			if (!ti.equals(tj))
 				sum++;
@@ -264,12 +226,12 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	}
 
 	@Override
-	public String toClojureKey() throws AppendableException {
+	public String clojureTypeRepresentation() throws AppendableException {
 		StringBuilder s = new StringBuilder("[");
 		Iterator<Type> i = this.values.iterator();
 		while (i.hasNext()) {
 			Type t = i.next();
-			s.append(t.toClojureKey());
+			s.append(t.clojureTypeRepresentation());
 			if (i.hasNext()) {
 				s.append(" ");
 			}

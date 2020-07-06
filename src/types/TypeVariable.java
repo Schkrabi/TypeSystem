@@ -60,21 +60,11 @@ public class TypeVariable extends Type {
 	}
 
 	@Override
-	public String convertToClojure(String argument, Type toType) {
-		return argument;
-	}
-
-	@Override
 	public Type apply(Substitution s) {
 		if (s.containsVariable(this)) {
 			Type t = s.get(this).get();
 			return t.apply(s);
 		}
-		return this;
-	}
-
-	@Override
-	public Type removeRepresentationInfo() {
 		return this;
 	}
 
@@ -92,8 +82,8 @@ public class TypeVariable extends Type {
 	}
 
 	@Override
-	public String toClojureKey() throws AppendableException {
-		return ":" + this.name;
+	public String clojureTypeRepresentation() throws AppendableException {
+		return "\"" + this.name + "\"";
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public class LitInteger extends Literal {
 	}
 
 	@Override
-	public String toClojureCode(Environment env) {
+	public String valueToClojure(Environment env) {
 		return Integer.toString(this.value);
 	}
 

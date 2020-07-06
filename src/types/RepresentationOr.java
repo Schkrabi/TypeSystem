@@ -2,6 +2,7 @@ package types;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -84,12 +85,6 @@ public class RepresentationOr extends Type {
 	}
 
 	@Override
-	public String convertToClojure(String argument, Type toType) throws AppendableException {
-		throw new AppendableException(
-				"Cannot directly convert RepresentationOr type. Select specific representation in order to create conversion.");
-	}
-
-	@Override
 	public Substitution unifyWith(Type other) throws AppendableException {
 		if (other instanceof TypeVariable) {
 			return other.unifyWith(this);
@@ -122,11 +117,6 @@ public class RepresentationOr extends Type {
 			AppendableException ae = (AppendableException) e.getCause();
 			throw ae;
 		}
-	}
-
-	@Override
-	public Type removeRepresentationInfo() {
-		return this;
 	}
 
 	@Override
@@ -177,8 +167,18 @@ public class RepresentationOr extends Type {
 	}
 
 	@Override
-	public String toClojureKey() throws AppendableException {
-		throw new AppendableException("toClojure of " + this.getClass().getName() + " : " + this + " is not allowed");
+	public String clojureTypeRepresentation() throws AppendableException {
+		StringBuilder sb = new StringBuilder("#{");
+		Iterator<Type> i = this.representations.iterator();
+		while(i.hasNext()) {
+			Type t = i.next();
+			sb.append(t.clojureTypeRepresentation());
+			if(i.hasNext()) {
+				sb.append(" ");
+			}
+		}
+		sb.append("}");
+		return sb.toString();
 	}
 	
 	/**

@@ -77,26 +77,6 @@ public class TypeAtom extends Type {
 	}
 
 	@Override
-	public String convertToClojure(String argument, Type toType) throws AppendableException {
-		if (toType instanceof TypeVariable || toType.equals(this)) {
-			return argument;
-		}
-		if (!(toType instanceof TypeAtom) || !TypeAtom.isSameBasicType(this, (TypeAtom) toType)) {
-			throw new ClojureConversionException(this, toType, argument);
-		}
-		if (((TypeAtom) toType).representation.equals(TypeRepresentation.WILDCARD)) {
-			return argument;
-		}
-
-		return "(" + TypeEnvironment.makeConversionName(this, (TypeAtom) toType) + " " + argument + ")";
-	}
-
-	@Override
-	public Type removeRepresentationInfo() {
-		return new TypeAtom(this.name, TypeRepresentation.WILDCARD);
-	}
-
-	@Override
 	public Type apply(Substitution s) {
 		return this;
 	}
@@ -119,6 +99,35 @@ public class TypeAtom extends Type {
 	 */
 	public static boolean isSameBasicType(TypeAtom t1, TypeAtom t2) {
 		return t1.name.equals(t2.name);
+	}
+
+	@Override
+	public Substitution unifyWith(Type other) throws AppendableException {
+		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
+			return other.unifyWith(this);
+		}
+		if (other instanceof TypeAtom) {
+			if (TypeAtom.isSameBasicType(this, (TypeAtom) other)) {
+				return Substitution.EMPTY;
+			}
+		}
+		throw new TypesDoesNotUnifyException(this, other);
+	}
+
+	@Override
+	public String clojureTypeRepresentation() {
+		return "(lang-type-atom. \"" + this.name.toString() + "\" \"" + this.representation.toString() + "\")";
+	}
+
+	@Override
+	public Type uniteRepresentationsWith(Type other) throws AppendableException {
+		if (other instanceof RepresentationOr || other instanceof TypeVariable) {
+			return other.uniteRepresentationsWith(this);
+		}
+		if (!(other instanceof TypeAtom) || !(TypeAtom.isSameBasicType(this, (TypeAtom) other))) {
+			throw new AppendableException("Cannot unite types " + this + " " + other);
+		}
+		return new TypeAtom(this.name, TypeRepresentation.WILDCARD);
 	}
 
 	/**
@@ -146,33 +155,4 @@ public class TypeAtom extends Type {
 	 */
 	public static final TypeAtom TypeDouble = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.WILDCARD);
 	public static final TypeAtom TypeDoubleNative = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.NATIVE);
-
-	@Override
-	public Substitution unifyWith(Type other) throws AppendableException {
-		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
-			return other.unifyWith(this);
-		}
-		if (other instanceof TypeAtom) {
-			if (TypeAtom.isSameBasicType(this, (TypeAtom) other)) {
-				return Substitution.EMPTY;
-			}
-		}
-		throw new TypesDoesNotUnifyException(this, other);
-	}
-
-	@Override
-	public String toClojureKey() {
-		return ":" + this.name.toString() + this.representation.toString();
-	}
-
-	@Override
-	public Type uniteRepresentationsWith(Type other) throws AppendableException {
-		if (other instanceof RepresentationOr || other instanceof TypeVariable) {
-			return other.uniteRepresentationsWith(this);
-		}
-		if (!(other instanceof TypeAtom) || !(TypeAtom.isSameBasicType(this, (TypeAtom) other))) {
-			throw new AppendableException("Cannot unite types " + this + " " + other);
-		}
-		return new TypeAtom(this.name, TypeRepresentation.WILDCARD);
-	}
 }

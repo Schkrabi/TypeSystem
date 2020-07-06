@@ -24,6 +24,7 @@ import abstraction.Operator;
 import application.AndExpression;
 import application.Construct;
 import application.Convert;
+import application.Deconstruct;
 import application.DefineConstructor;
 import application.AbstractionApplication;
 import application.DefineConversion;
@@ -593,21 +594,21 @@ class TestInterpretation {
 	public void testExtendedFunction() throws AppendableException {
 		Environment bound = Environment.create(Environment.topLevelEnvironment);
 		bound.put(new Symbol("x"), new LitInteger(42));
-		List<Lambda> implementations = Arrays.asList(
-				new Lambda(new Tuple(Arrays.asList(new Symbol("y"))),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), new Symbol("y")),
-				new Lambda(new Tuple(Arrays.asList(new Symbol("y"))),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Symbol("y")));
+		List<Function> implementations = Arrays.asList(
+				new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
+						new Tuple(Arrays.asList(new Symbol("y"))), new Symbol("y"), bound),
+				new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
+						new Tuple(Arrays.asList(new Symbol("y"))), new Symbol("y"), bound));
 
 		ExtendedFunction function = ExtendedFunction.makeExtendedFunction(implementations, bound);
 
 		TestInterpretation.testReflexivity(function);
 
-		List<Lambda> tmpImpls = new LinkedList<Lambda>(implementations);
+		List<Function> tmpImpls = new LinkedList<Function>(implementations);
 		tmpImpls.remove(0);
 		TestInterpretation.testDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound));
 
-		tmpImpls = new LinkedList<Lambda>(implementations);
+		tmpImpls = new LinkedList<Function>(implementations);
 		tmpImpls.add(new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Symbol("y"))), new Symbol("y"), Environment.topLevelEnvironment));
 		TestInterpretation.testDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound));
@@ -832,9 +833,10 @@ class TestInterpretation {
 		TestInterpretation.testOperator(Operator.Subtraction,
 				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(42))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operator.Deconstruct,
+		/*TestInterpretation.testOperator(Operator.Deconstruct,
 				new Tuple(Arrays.asList(new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
 				new LitString("42"), null);
+				*/
 	}
 
 	@Test
@@ -944,7 +946,8 @@ class TestInterpretation {
 
 		TestInterpretation.testInterpretation(defTypeExpression, Expression.EMPTY_EXPRESSION,
 				Environment.topLevelEnvironment);
-		if (!TypeEnvironment.singleton.existsTypeAtom(new TypeAtom(new TypeName("Test"), TypeRepresentation.WILDCARD))) {
+		if (!TypeEnvironment.singleton
+				.existsTypeAtom(new TypeAtom(new TypeName("Test"), TypeRepresentation.WILDCARD))) {
 			fail(defTypeExpression.toString() + " did not created type!");
 		}
 
@@ -978,12 +981,13 @@ class TestInterpretation {
 		TestInterpretation.testDifference(defCon,
 				DefineConversion.makeDefineConversion(typeAtomNative, typeAtomWildcard,
 						new Lambda(new Tuple(Arrays.asList(new Symbol("y"))),
-								new TypeTuple(Arrays.asList(typeAtomNative)), new LitComposite(new Symbol("y"), typeAtomWildcard))));
+								new TypeTuple(Arrays.asList(typeAtomNative)),
+								new LitComposite(new Symbol("y"), typeAtomWildcard))));
 		TestInterpretation.testDifference(defCon, Expression.EMPTY_EXPRESSION);
 
 		TypeEnvironment.singleton.addType(name);
 		TypeEnvironment.singleton.addRepresentation(typeAtomNative);
-		//TypeEnvironment.singleton.addRepresentation(typeAtomWildcard);
+		// TypeEnvironment.singleton.addRepresentation(typeAtomWildcard);
 
 		TestInterpretation.testInterpretation(defCon, Expression.EMPTY_EXPRESSION, Environment.topLevelEnvironment);
 
@@ -1040,38 +1044,61 @@ class TestInterpretation {
 		TestInterpretation.testInference(p, Expression.EMPTY_EXPRESSION.infer(Environment.topLevelEnvironment).first,
 				defCon);
 	}
-	
+
 	@Test
 	void testConstruct() throws AppendableException {
 		Construct construct = new Construct(TypeAtom.TypeIntRoman, new Tuple(Arrays.asList(new LitString("XLII"))));
-		
+
 		construct.toString();
-		
+
 		TestInterpretation.testReflexivity(construct);
-		TestInterpretation.testDifference(construct, new Construct(TypeAtom.TypeIntString, new Tuple(Arrays.asList(new LitString("XLII")))));
-		TestInterpretation.testDifference(construct, new Construct(TypeAtom.TypeIntRoman, new Tuple(Arrays.asList(new LitString("XXI")))));
+		TestInterpretation.testDifference(construct,
+				new Construct(TypeAtom.TypeIntString, new Tuple(Arrays.asList(new LitString("XLII")))));
+		TestInterpretation.testDifference(construct,
+				new Construct(TypeAtom.TypeIntRoman, new Tuple(Arrays.asList(new LitString("XXI")))));
 		TestInterpretation.testDifference(construct, Expression.EMPTY_EXPRESSION);
-		
-		TestInterpretation.testInterpretation(construct, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman), Environment.topLevelEnvironment);
-		
+
+		TestInterpretation.testInterpretation(construct, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
+				Environment.topLevelEnvironment);
+
 		Pair<Type, Substitution> p = construct.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeAtom.TypeIntRoman, construct);
 	}
 	
 	@Test
+	void testDeconstruct() throws AppendableException {
+		Deconstruct deconstruct = new Deconstruct(new LitComposite(new LitString("42"), TypeAtom.TypeIntString));
+		
+		deconstruct.toString();
+		
+		TestInterpretation.testReflexivity(deconstruct);
+		TestInterpretation.testDifference(deconstruct, new Deconstruct(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman)));
+		TestInterpretation.testDifference(deconstruct, Expression.EMPTY_EXPRESSION);
+		
+		TestInterpretation.testInterpretation(deconstruct, new LitString("42"), Environment.topLevelEnvironment);
+		
+		Pair<Type, Substitution> p = deconstruct.infer(Environment.topLevelEnvironment);
+		TestInterpretation.testInference(p, TypeAtom.TypeStringNative, deconstruct);
+	}
+
+	@Test
 	void testConvert() throws AppendableException {
 		Convert convert = new Convert(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, new LitInteger(42));
-		
+
 		convert.toString();
-		
+
 		TestInterpretation.testReflexivity(convert);
-		TestInterpretation.testDifference(convert, new Convert(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, new LitInteger(42)));
-		TestInterpretation.testDifference(convert, new Convert(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, new LitInteger(42)));
-		TestInterpretation.testDifference(convert, new Convert(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, new LitInteger(21)));
+		TestInterpretation.testDifference(convert,
+				new Convert(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, new LitInteger(42)));
+		TestInterpretation.testDifference(convert,
+				new Convert(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, new LitInteger(42)));
+		TestInterpretation.testDifference(convert,
+				new Convert(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, new LitInteger(21)));
 		TestInterpretation.testDifference(convert, Expression.EMPTY_EXPRESSION);
-		
-		TestInterpretation.testInterpretation(convert, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman), Environment.topLevelEnvironment);
-		
+
+		TestInterpretation.testInterpretation(convert, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
+				Environment.topLevelEnvironment);
+
 		Pair<Type, Substitution> p = convert.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeAtom.TypeIntRoman, convert);
 	}

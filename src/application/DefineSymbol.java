@@ -38,10 +38,40 @@ public class DefineSymbol extends Expression {
 		this.defined = defined;
 	}
 
+	/**
+	 * Infers type and substitution of defined expression
+	 * 
+	 * @param env Environment where Define is evaluated
+	 * @return Pair of Type and used Substitution
+	 * @throws AppendableException
+	 */
+	public Pair<Type, Substitution> inferDefined(Environment env) throws AppendableException {
+		Environment childEnv = Environment.create(env);
+
+		// Define creates new binding in environment, need to have reference to type of
+		// this variable existing in environment from we are infering
+		TypeVariable tv = new TypeVariable(NameGenerator.next());
+		childEnv.put(this.name, new TypeHolder(tv));
+		Pair<Type, Substitution> infered = this.defined.infer(childEnv);
+
+		Substitution s = infered.second;
+		Substitution tmp;
+
+		if (!s.containsVariable(tv)) {
+			tmp = new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(tv, infered.first)));
+		} else {
+			tmp = Type.unify(s.get(tv).get(), infered.first);
+		}
+		s = s.union(tmp);
+
+		return new Pair<Type, Substitution>(infered.first, s);
+	}
+
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
 		Environment e = Environment.create(env);
-		e.put(this.name, new TypeHolder(new TypeVariable(NameGenerator.next()), this.name));
+		Pair<Type, Substitution> innerInfered = this.inferDefined(env);
+		e.put(this.name, new TypeHolder(innerInfered.first, this.name));
 		Expression interpreted = this.defined.interpret(e);
 		env.put(this.name, interpreted);
 		return Expression.EMPTY_EXPRESSION;
@@ -50,25 +80,9 @@ public class DefineSymbol extends Expression {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Environment childEnv = Environment.create(env);
+			Pair<Type, Substitution> definedInfered = this.inferDefined(env);
 
-			// Define creates new binding in environment, need to have reference to type of
-			// this variable existing in environment from we are infering
-			TypeVariable tv = new TypeVariable(NameGenerator.next());
-			childEnv.put(this.name, new TypeHolder(tv));
-			Pair<Type, Substitution> infered = this.defined.infer(childEnv);
-
-			Substitution s = infered.second;
-			Substitution tmp;
-
-			if (!s.containsVariable(tv)) {
-				tmp = new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(tv, infered.first)));
-			} else {
-				tmp = Type.unify(s.get(tv).get(), infered.first);
-			}
-			s = s.union(tmp);
-
-			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, s);
+			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, definedInfered.second);
 
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);

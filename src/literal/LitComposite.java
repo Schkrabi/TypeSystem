@@ -42,7 +42,7 @@ public class LitComposite extends Literal {
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
+	public String valueToClojure(Environment env) throws AppendableException {
 		return this.value.toClojureCode(env);
 	}
 

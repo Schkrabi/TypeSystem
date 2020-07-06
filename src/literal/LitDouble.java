@@ -37,7 +37,7 @@ public class LitDouble extends Literal {
 	}
 
 	@Override
-	public String toClojureCode(Environment env) {
+	public String valueToClojure(Environment env) {
 		return Double.toString(this.value);
 	}
 

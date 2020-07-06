@@ -15,7 +15,6 @@ import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
-import util.NameGenerator;
 import util.Pair;
 
 /**
@@ -41,13 +40,14 @@ public class Function extends Lambda implements Comparable<Expression> {
 
 			List<Type> l = new LinkedList<Type>();
 
+			Iterator<Type> i = this.argsType.iterator();
 			for (Expression e : this.args) {
 				if (!(e instanceof Symbol)) {
 					throw new AppendableException(e + " is not instance of " + Symbol.class.getName());
 				}
-				TypeVariable tv = new TypeVariable(NameGenerator.next());
-				childEnv.put((Symbol) e, new TypeHolder(tv));
-				l.add(tv);
+				Type t = i.next();
+				childEnv.put((Symbol) e, new TypeHolder(t));
+				l.add(t);
 			}
 
 			Type argsType = new TypeTuple(l);
@@ -57,18 +57,8 @@ public class Function extends Lambda implements Comparable<Expression> {
 			// Update argument type with found bindings
 			argsType = argsType.apply(bodyInfered.second);
 
-			// Now check if body was typed correctly according to user defined types of
-			// arguments
-			Substitution s = Type.unify(argsType, this.argsType);
-
-			// Compose all substitutions in order to check if there are no collisions and
-			// provide final substitution
-			Substitution finalSubst = s.union(bodyInfered.second);
-
-			argsType = argsType.apply(finalSubst);
-
-			return new Pair<Type, Substitution>(new TypeArrow(argsType, bodyInfered.first.apply(finalSubst)),
-					finalSubst);
+			return new Pair<Type, Substitution>(new TypeArrow(argsType, bodyInfered.first.apply(bodyInfered.second)),
+					bodyInfered.second);
 
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
@@ -134,12 +124,6 @@ public class Function extends Lambda implements Comparable<Expression> {
 	@Override
 	public int hashCode() {
 		return super.hashCode() * this.argsType.hashCode() * this.args.hashCode() * this.body.hashCode();
-	}
-
-	@Override
-	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env)
-			throws AppendableException {
-		return (TypeArrow) this.infer(env).first;
 	}
 
 	@Override

@@ -2,8 +2,6 @@ package expression;
 
 import types.Substitution;
 import types.Type;
-import types.TypeArrow;
-import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
 import util.NameGenerator;
@@ -86,14 +84,5 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	@Override
 	public int hashCode() {
 		return this.name.hashCode();
-	}
-
-	@Override
-	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env)
-			throws AppendableException {
-		if (env.containsVariable(this)) {
-			return env.getVariableValue(this).getFunctionTypeWithRepresentations(argTypes, env);
-		}
-		return super.getFunctionTypeWithRepresentations(argTypes, env);
 	}
 }

@@ -41,7 +41,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	 * Non mandatory type of the lambda arguments
 	 */
 	public final TypeTuple argsType;
-	
+
 	/**
 	 * General identity lambda
 	 */
@@ -93,14 +93,15 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			Environment childEnv = Environment.create(env);
 			List<Type> argsTypeArr = new LinkedList<Type>();
 
+			Iterator<Type> i = this.argsType.iterator();
 			for (Expression e : this.args) {
 				if (!(e instanceof Symbol)) {
 					// TODO change throwable
 					throw new AppendableException(e + " is not instance of " + Symbol.class.getName());
 				}
-				TypeVariable tv = new TypeVariable(NameGenerator.next());
-				childEnv.put((Symbol) e, new TypeHolder(tv));
-				argsTypeArr.add(tv);
+				Type t = i.next();
+				childEnv.put((Symbol) e, new TypeHolder(t));
+				argsTypeArr.add(t);
 			}
 
 			Type argsType = new TypeTuple(argsTypeArr);
@@ -110,34 +111,13 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			// Update argument type with found bindings
 			argsType = argsType.apply(bodyInfered.second);
 
-			// Now check if body was typed correctly according to user defined types of
-			// arguments
-			Substitution s = Type.unify(argsType, this.argsType);
-
-			// Compose all substitutions in order to check if there are no collisions and
-			// provide final substitution
-			Substitution finalSubst = s.union(bodyInfered.second);
-
-			argsType = argsType.apply(finalSubst);
-
-			return new Pair<Type, Substitution>(new TypeArrow(argsType, bodyInfered.first.apply(finalSubst)),
-					finalSubst);
+			return new Pair<Type, Substitution>(new TypeArrow(argsType, bodyInfered.first.apply(bodyInfered.second)),
+					bodyInfered.second);
 
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
 		}
-	}
-
-	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
-		StringBuilder s = new StringBuilder("`(");
-		s.append("[");
-		s.append(this.argsType.toClojureKey());
-		s.append(" ~");
-		s.append(this.toClojureFn(env));
-		s.append("])");
-		return s.toString();
 	}
 
 	/**
@@ -151,6 +131,9 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	 */
 	protected String toClojureFn(Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder();
+		
+		s.append("(with-meta ");
+		
 		s.append("(fn [");
 
 		Iterator<Expression> i = this.args.iterator();
@@ -171,9 +154,15 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			}
 		}
 		s.append("] ");
-		
+
 		s.append(this.body.toClojureCode(child));
-		s.append(')');
+		s.append(")");
+		
+		s.append(" {:lang-type ");
+		Pair<Type, Substitution> p = this.infer(env);
+		s.append(p.first.clojureTypeRepresentation());
+		s.append("})");
+		
 		return s.toString();
 	}
 
@@ -210,24 +199,24 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env)
-			throws AppendableException {
-		return (TypeArrow) this.infer(env).first;
-	}
-
-	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException{
-		Function f = (Function)this.interpret(env);
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+		Function f = (Function) this.interpret(env);
 		return f.doSubstituteAndEvaluate(args, env);
 	}
-	
+
 	/**
 	 * Makes identity lambda with given type
+	 * 
 	 * @param argType type of the identity arg
 	 * @return identity lambda
 	 */
 	public static Lambda makeIdentity(Type argType) {
 		Symbol symbol = new Symbol(NameGenerator.next());
 		return new Lambda(new Tuple(Arrays.asList(symbol)), new TypeTuple(Arrays.asList(argType)), symbol);
+	}
+
+	@Override
+	protected String implementationsToClojure(Environment env) throws AppendableException {
+		return this.toClojureFn(env);
 	}
 }

@@ -152,6 +152,11 @@ class TestParser {
 								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeIntNative))))),
 						new Symbol("f")));
 
+		this.testParse("(lambda ((String:Native x) (A y)) y)",
+				new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, new TypeVariable("A"))),
+						new Symbol("y")));
+
 		// Dummy object tests
 		new Validations();
 		new SemanticParserStatic();

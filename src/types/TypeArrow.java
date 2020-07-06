@@ -75,41 +75,21 @@ public class TypeArrow extends Type {
 		if (!(toType instanceof TypeArrow)) {
 			throw new ConversionException(this, toType, expr);
 		}
-		TypeArrow t = (TypeArrow) toType;		
-		
-		Tuple formalArgs = new Tuple(((TypeTuple)t.ltype).stream().map(x -> new Symbol(NameGenerator.next())).collect(Collectors.toList()));
+		TypeArrow t = (TypeArrow) toType;
+
+		Tuple formalArgs = new Tuple(
+				((TypeTuple) t.ltype).stream().map(x -> new Symbol(NameGenerator.next())).collect(Collectors.toList()));
 		TypeTuple argsType = (TypeTuple) t.ltype;
 		Tuple realArgs = (Tuple) t.ltype.convertTo(formalArgs, this.ltype);
-		Expression body = this.rtype.convertTo(
-				new AbstractionApplication(expr, realArgs), t.rtype);
+		Expression body = this.rtype.convertTo(new AbstractionApplication(expr, realArgs), t.rtype);
 
 		Lambda l = new Lambda(formalArgs, argsType, body);
 		return l;
 	}
 
 	@Override
-	public String convertToClojure(String argument, Type toType) throws AppendableException {
-		if (toType instanceof TypeVariable) {
-			return argument;
-		}
-		if (!(toType instanceof TypeArrow)) {
-			throw new ClojureConversionException(this, toType, argument);
-		}
-		TypeArrow t = (TypeArrow) toType;
-		String v = NameGenerator.next();
-
-		return "(fn [" + v + "] " + this.rtype
-				.convertToClojure("(" + argument + " " + t.ltype.convertToClojure(v, this.ltype) + ")", t.rtype) + ")";
-	}
-
-	@Override
 	public Type apply(Substitution s) {
 		return new TypeArrow(this.ltype.apply(s), this.rtype.apply(s));
-	}
-
-	@Override
-	public Type removeRepresentationInfo() {
-		return new TypeArrow(this.ltype.removeRepresentationInfo(), this.rtype.removeRepresentationInfo());
 	}
 
 	@Override
@@ -134,8 +114,9 @@ public class TypeArrow extends Type {
 	}
 
 	@Override
-	public String toClojureKey() throws AppendableException {
-		return "[" + this.ltype.toClojureKey() + " :-> " + this.rtype.toClojureKey() + "]";
+	public String clojureTypeRepresentation() throws AppendableException {
+		return "(lang-type-arrow. " + this.ltype.clojureTypeRepresentation() + " "
+				+ this.rtype.clojureTypeRepresentation() + ")";
 	}
 
 	/**

@@ -3,9 +3,8 @@ package semantic;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import abstraction.Abstraction;
 import abstraction.Lambda;
@@ -24,14 +23,34 @@ import types.TypeTuple;
 import types.TypesDoesNotUnifyException;
 import types.TypeArrow;
 import util.AppendableException;
-import util.Pair;
+import util.NameGenerator;
 
+/**
+ * This class instance stores all information related to types not directly
+ * included in instances of class Type: Contructors, conversions and
+ * deconstructions.
+ * 
+ * @author Mgr. Radomir Skrabal
+ *
+ */
 public class TypeEnvironment {
-	private Set<TypeAtom> atomicTypes = new TreeSet<TypeAtom>();
-	private Map<TypeAtom, ConstructorHolder> constructorMap = new TreeMap<TypeAtom, ConstructorHolder>();
-	private Map<Pair<TypeAtom, TypeAtom>, Expression> conversions = new HashMap<Pair<TypeAtom, TypeAtom>, Expression>();
+	private Map<TypeAtom, TypeInformation> typeInfo = new HashMap<TypeAtom, TypeInformation>();
 
 	private TypeEnvironment() {
+	}
+
+	/**
+	 * Gets TypeInformation for given TypeAtom
+	 * 
+	 * @param typeAtom searched type
+	 * @return TypeInformation instace
+	 * @throws UndefinedTypeException if this type has no type information
+	 */
+	private TypeInformation getTypeInfo(TypeAtom typeAtom) throws UndefinedTypeException {
+		if (!this.typeInfo.containsKey(typeAtom)) {
+			throw new UndefinedTypeException(typeAtom.toString());
+		}
+		return this.typeInfo.get(typeAtom);
 	}
 
 	/**
@@ -43,82 +62,67 @@ public class TypeEnvironment {
 	 * @throws AppendableException
 	 */
 	public Abstraction getConstructor(TypeAtom type, TypeTuple argsType) throws AppendableException {
-		if (this.constructorMap.containsKey(type)) {
-			return this.constructorMap.get(type).findConstructor(argsType);
-		}
-		throw new AppendableException("No constructor for " + type + " found!");
-	}
-
-	public void addType(TypeName name) {
-		this.atomicTypes.add(new TypeAtom(name, TypeRepresentation.WILDCARD));
+		TypeInformation info = this.getTypeInfo(type);
+		return info.getConstructor(argsType);
 	}
 
 	/**
-	 * Maps the construcotr to given type
+	 * Adds type without representation
 	 * 
-	 * @param newType
-	 * @param constructor
-	 * @throws AppendableException
+	 * @param name name of type
+	 * @throws DuplicateTypeDefinitionException if such type already exists
 	 */
-	public void addRepresentation(TypeAtom newType) throws AppendableException {
-		if (this.atomicTypes.contains(newType)) {
-			throw new AppendableException("Representation " + newType + " already exists!");
+	public void addType(TypeName name) throws DuplicateTypeDefinitionException {
+		TypeAtom typeAtom = new TypeAtom(name, TypeRepresentation.WILDCARD);
+		if (this.existType(name)) {
+			throw new DuplicateTypeDefinitionException(typeAtom);
 		}
-		this.atomicTypes.add(newType);
-		this.constructorMap.put(newType, new ConstructorHolder(newType));
+		this.typeInfo.put(typeAtom, new TypeInformation(typeAtom, NameGenerator.next()));
 	}
 
 	/**
+	 * Adds type with representation
 	 * 
-	 * @param typeAtom
-	 * @param constructorLambda
-	 * @throws AppendableException
+	 * @param newType defined type
+	 * @throws DuplicateTypeDefinitionException if such type already exists
+	 */
+	public void addRepresentation(TypeAtom newType) throws DuplicateTypeDefinitionException {
+		if (this.existsTypeAtom(newType)) {
+			throw new DuplicateTypeDefinitionException(newType);
+		}
+		this.typeInfo.put(newType, new TypeInformation(newType, NameGenerator.next()));
+	}
+
+	/**
+	 * Adds constructor to a type
+	 * 
+	 * @param typeAtom          type to which constructor is added
+	 * @param constructorLambda constructing lambda
+	 * @throws AppendableException if type does not exists or constructor with same
+	 *                             argument types already exists
 	 */
 	public void addConstructor(TypeAtom typeAtom, Lambda constructorLambda) throws AppendableException {
-		if (!this.constructorMap.containsKey(typeAtom)) {
-			throw new UndefinedTypeException(typeAtom.toString());
-		}
-		ConstructorHolder ch = this.constructorMap.get(typeAtom);
-
-		TypeTuple argsType = (TypeTuple) ((TypeArrow) (constructorLambda
-				.infer(Environment.topLevelEnvironment).first)).ltype;
-
-		if (ch.containsKey(argsType)) {
-			throw new DuplicateTypeConstructorException(typeAtom, ch.get(argsType), constructorLambda);
-		}
-
-		Lambda constructor = TypeEnvironment.createConstructorFromLambda(typeAtom, constructorLambda);
-
-		ch.put(argsType, constructor);
+		TypeInformation info = this.getTypeInfo(typeAtom);
+		info.addConstructor(constructorLambda);
 	}
 
 	/**
 	 * Adds constructor for primitive types. For internal use only
 	 * 
 	 * @param typeAtom primitive type
-	 * @throws AppendableException
+	 * @throws AppendableException if type does not exists or constructor with same
+	 *                             argument types already exists
 	 */
 	private void addPrimitiveConstructor(TypeAtom typeAtom) throws AppendableException {
-		if (!this.constructorMap.containsKey(typeAtom)) {
-			throw new UndefinedTypeException(typeAtom.toString());
-		}
-		ConstructorHolder ch = this.constructorMap.get(typeAtom);
-
-		TypeTuple argsType = new TypeTuple(Arrays.asList(typeAtom));
-
-		if (ch.containsKey(argsType)) {
-			throw new DuplicateTypeConstructorException(typeAtom, ch.get(argsType), Lambda.identity);
-		}
-
-		ch.put(argsType, Lambda.identity);
+		this.addConstructor(typeAtom, Lambda.identity);
 	}
 
 	/**
 	 * Creates constructor of LitComposite from lambda and given TypeAtom
 	 * 
-	 * @param typeAtom
-	 * @param lambda
-	 * @return
+	 * @param typeAtom Constructed type
+	 * @param lambda   lambda used for construction of wrapped expression
+	 * @return construtor
 	 */
 	private static Lambda createConstructorFromLambda(TypeAtom typeAtom, Lambda lambda) {
 		return new Lambda(lambda.args, lambda.argsType, new LitComposite(lambda.body, typeAtom));
@@ -130,35 +134,20 @@ public class TypeEnvironment {
 	 * @param fromType              Type which is converted
 	 * @param toType                Type to which is converted
 	 * @param conversionConstructor Conversion lambda (constructor)
+	 * @throws AppendableException if any TypeAtom is not recognized or if such
+	 *                             conversion already exists
 	 */
 	public void addConversion(TypeAtom fromType, TypeAtom toType, Expression conversionConstructor)
 			throws AppendableException {
 		if (!TypeAtom.isSameBasicType(fromType, toType)) {
-			throw new AppendableException("Can define conversions between representations!");
+			throw new AppendableException("Can only define conversions between representations!");
 		}
-		Pair<TypeAtom, TypeAtom> conversion = new Pair<TypeAtom, TypeAtom>(fromType, toType);
-		if (this.conversions.containsKey(conversion)) {
-			throw new DuplicateConversionException(fromType, toType, this.conversions.get(conversion),
-					conversionConstructor);
+		if (!this.existsTypeAtom(toType)) {
+			throw new UndefinedTypeException(toType.toString());
 		}
-		this.conversions.put(conversion, conversionConstructor);
-	}
 
-	/**
-	 * Instantiates conversion of two type atoms
-	 * 
-	 * @param converted converted expression
-	 * @param fromType  type atom from which conversion is carried
-	 * @param toType    type to which is converted
-	 * @return expression converting converted to toType
-	 * @throws ConversionException
-	 */
-	public Expression convertTo(Expression converted, TypeAtom fromType, TypeAtom toType) throws ConversionException {
-		Pair<TypeAtom, TypeAtom> conversion = new Pair<TypeAtom, TypeAtom>(fromType, toType);
-		if (!this.canConvert(fromType, toType)) {
-			throw new ConversionException(fromType, toType, converted);
-		}
-		return new AbstractionApplication(this.conversions.get(conversion), new Tuple(Arrays.asList(converted)));
+		TypeInformation info = this.getTypeInfo(fromType);
+		info.addConversion(toType, conversionConstructor);
 	}
 
 	/**
@@ -169,17 +158,82 @@ public class TypeEnvironment {
 	 * @return true or false.
 	 */
 	public boolean canConvert(TypeAtom from, TypeAtom to) {
-		Pair<TypeAtom, TypeAtom> conversion = new Pair<TypeAtom, TypeAtom>(from, to);
-		return this.conversions.containsKey(conversion);
+		TypeInformation info = null;
+		try {
+			info = this.getTypeInfo(from);
+		} catch (UndefinedTypeException e) {
+			return false;
+		}
+		if (!this.existsTypeAtom(to)) {
+			return false;
+		}
+
+		return info.canConvertTo(to);
 	}
-	
+
+	/**
+	 * Gets converision constructor for given fromType and toType
+	 * 
+	 * @param fromType type converted from
+	 * @param toType   type converted to
+	 * @return conversion constructor expression
+	 * @throws AppendableException if any of fromType and toType does not exists or
+	 *                             if the conversion is invalid
+	 */
+	private Expression getConversionConstructor(TypeAtom fromType, TypeAtom toType) throws AppendableException {
+		if (!this.canConvert(fromType, toType)) {
+			throw new ConversionException(fromType, toType, null);
+		}
+		TypeInformation info = this.getTypeInfo(fromType);
+		return info.getConversionConstructorTo(toType).get();
+	}
+
+	/**
+	 * Instantiates conversion of two type atoms
+	 * 
+	 * @param converted converted expression
+	 * @param fromType  type atom from which conversion is carried
+	 * @param toType    type to which is converted
+	 * @return expression converting converted to toType
+	 * @throws AppendableException if any of fromType and toType does not exists or
+	 *                             if the conversion is invalid
+	 */
+	public Expression convertTo(Expression converted, TypeAtom fromType, TypeAtom toType) throws AppendableException {
+		Expression conversionConstructor = this.getConversionConstructor(fromType, toType);
+
+		return new AbstractionApplication(conversionConstructor, new Tuple(Arrays.asList(converted)));
+	}
+
 	/**
 	 * Returns true if type was defined in TypeEnvironment. Otherwise returns false.
+	 * 
 	 * @param type TypeAtom
 	 * @return true or false
 	 */
 	public boolean existsTypeAtom(TypeAtom type) {
-		return this.atomicTypes.contains(type);
+		return this.typeInfo.containsKey(type);
+	}
+
+	/**
+	 * Returns true if type was defined in TypeEnvironment. Otherwise returns false.
+	 * 
+	 * @param type TypeAtom
+	 * @return true or false
+	 */
+	public boolean existType(TypeName typeName) {
+		return this.typeInfo.containsKey(new TypeAtom(typeName, TypeRepresentation.WILDCARD));
+	}
+	
+	/**
+	 * Gets name of deconstruction function for given type
+	 * 
+	 * @param typeAtom searched type
+	 * @return String containing name of clojure function for deconstruct check
+	 * @throws UndefinedTypeException if type is not known by TypeEnvitonment
+	 */
+	public String getDeconstructionCheckFunctionName(TypeAtom typeAtom) throws UndefinedTypeException {
+		TypeInformation info = this.getTypeInfo(typeAtom);
+		return info.deconstructionCheckFunctionName;
 	}
 
 	/**
@@ -233,10 +287,11 @@ public class TypeEnvironment {
 				Operator.IntStringToIntRoman);
 	}
 
+	//TODO Remove?
 	/**
 	 * Creates name for conversion
 	 * 
-	 * @param from
+	 * @param from 
 	 * @param to
 	 * @return string with conversion name
 	 */
@@ -246,52 +301,174 @@ public class TypeEnvironment {
 	}
 
 	/**
-	 * Class for holding multiple constructors associated with their argument types
+	 * Class for storing informations about types
 	 * 
 	 * @author Mgr. Radomir Skrabal
 	 *
 	 */
-	private static class ConstructorHolder extends TreeMap<TypeTuple, Lambda> implements Comparable<ConstructorHolder> {
+	private static class TypeInformation {
 		/**
-		 * 
+		 * Type to which information is related
 		 */
-		private static final long serialVersionUID = -1608923962922744264L;
+		public final TypeAtom type;
 		/**
-		 * Constructed type
+		 * Constructors of the type
 		 */
-		public final TypeAtom constructedType;
+		private Map<TypeTuple, Lambda> constructors;
+		/**
+		 * Conversions of the type
+		 */
+		private Map<TypeAtom, Expression> conversions;
+		/**
+		 * Name of deconstruction function
+		 */
+		public final String deconstructionCheckFunctionName;
 
-		public ConstructorHolder(TypeAtom constructedType) {
-			this.constructedType = constructedType;
+		public TypeInformation(TypeAtom type, String checkDeconstructionFunctionName) {
+			this.type = type;
+			this.deconstructionCheckFunctionName = checkDeconstructionFunctionName;
+			this.constructors = new TreeMap<TypeTuple, Lambda>();
+			this.conversions = new TreeMap<TypeAtom, Expression>();
 		}
 
 		/**
-		 * Finds constructor
+		 * Tries to find constructor with specific argument types
 		 * 
-		 * @param argTypes type of arguments for constructor
-		 * @return construcotr
-		 * @throws AppendableException if constructor is not 
+		 * @param argsType argument types
+		 * @return Optional of Lambda
+		 * @throws AppendableException if anything goes awry during unification
 		 */
-		public Lambda findConstructor(TypeTuple argsType) throws AppendableException {
-			for (java.util.Map.Entry<TypeTuple, Lambda> entry : this.entrySet()) {
+		private Optional<Lambda> findConstrutor(TypeTuple argsType) throws AppendableException {
+			for (java.util.Map.Entry<TypeTuple, Lambda> entry : this.constructors.entrySet()) {
 				TypeTuple type = entry.getKey();
 				try {
-					//Possible bottleneck?
-					Type.unify(type, argsType); 
-				}catch(TypesDoesNotUnifyException e) {
+					// Possible bottleneck?
+					Type.unify(type, argsType);
+				} catch (TypesDoesNotUnifyException e) {
 					continue;
-				}				
+				} catch (RuntimeException re) {
+					if (re.getCause() instanceof AppendableException) {
+						continue;
+					}
+				}
 
-				//If unification exists, return the constructor
-				return entry.getValue();
+				// If unification exists, return the constructor
+				return Optional.of(entry.getValue());
 			}
-			throw new AppendableException(
-					"No suitable constructor for " + this.constructedType + " with arguments " + argsType + " found");
+			return Optional.empty();
+		}
+
+		/**
+		 * Gets constructor lambda as it was defined by user
+		 * 
+		 * @param argsType types of constructor arguments
+		 * @return lambda expression
+		 * @remark This constructor does not create instance of type, it only creates
+		 *         underlying data
+		 * @throws AppendableException if no such constructor exists
+		 */
+		public Lambda getRawConstructor(TypeTuple argsType) throws AppendableException {
+			Optional<Lambda> o = this.findConstrutor(argsType);
+			if (o.isEmpty()) {
+				throw new UnrecognizedConstructorException(this.type, argsType);
+			}
+			return o.get();
+		}
+
+		/**
+		 * Gets constructor of this.type for given argument types
+		 * 
+		 * @param argsType types of constructor arguments
+		 * @return constructor
+		 * @throws AppendableException if no such constructor exists
+		 */
+		public Lambda getConstructor(TypeTuple argsType) throws AppendableException {
+			Lambda rawConstructor = this.getRawConstructor(argsType);
+			return TypeEnvironment.createConstructorFromLambda(this.type, rawConstructor);
+		}
+
+		/**
+		 * Adds constructor to constructor map
+		 * 
+		 * @param constructorLambda constructor lambda expression
+		 * @throws AppendableException
+		 */
+		public void addConstructor(Lambda constructorLambda) throws AppendableException {
+			TypeTuple argsType = (TypeTuple) ((TypeArrow) (constructorLambda
+					.infer(Environment.topLevelEnvironment).first)).ltype;
+
+			if (this.findConstrutor(argsType).isPresent()) {
+				throw new DuplicateTypeConstructorException(this.type, this.constructors.get(argsType),
+						constructorLambda);
+			}
+
+			this.constructors.put(argsType, constructorLambda);
+		}
+
+		/**
+		 * Add conversion to specified type atom
+		 * 
+		 * @param toType                specified type atom
+		 * @param conversionConstructor constructor for the conversion
+		 * @throws DuplicateConversionException if such conversion already exists
+		 */
+		public void addConversion(TypeAtom toType, Expression conversionConstructor)
+				throws DuplicateConversionException {
+			if (this.conversions.containsKey(toType)) {
+				throw new DuplicateConversionException(this.type, toType, this.conversions.get(toType),
+						conversionConstructor);
+			}
+			this.conversions.put(toType, conversionConstructor);
+		}
+
+		/**
+		 * Tries to find conversion constructor for specified TypeAtom
+		 * 
+		 * @param toType type to convert to
+		 * @return Optional with conversion, or empty Optional if no such conversion
+		 *         exists
+		 */
+		public Optional<Expression> getConversionConstructorTo(TypeAtom toType) {
+			if (!this.conversions.containsKey(toType)) {
+				return Optional.empty();
+			}
+			return Optional.of(this.conversions.get(toType));
+		}
+
+		/**
+		 * Predicate if TypeAtom can be converted to another
+		 * 
+		 * @param toType type to convert to
+		 * @return true if conversion exists, false otherwise
+		 */
+		public boolean canConvertTo(TypeAtom toType) {
+			return this.getConversionConstructorTo(toType).isPresent();
 		}
 
 		@Override
-		public int compareTo(ConstructorHolder other) {
-			return this.constructedType.compareTo(other.constructedType);
+		public String toString() {
+			return "Type information :" + this.type.toString() + " checkDeconstructionFunctionName: "
+					+ this.deconstructionCheckFunctionName + " constructors: " + this.constructors.hashCode()
+					+ " conversion :" + this.conversions.hashCode();
 		}
+
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof TypeInformation) {
+				return this.type.equals(((TypeInformation) other).type)
+						&& this.deconstructionCheckFunctionName
+								.equals(((TypeInformation) other).deconstructionCheckFunctionName)
+						&& this.constructors.equals(((TypeInformation) other).constructors)
+						&& this.conversions.equals(((TypeInformation) other).conversions);
+			}
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			return this.type.hashCode() * this.deconstructionCheckFunctionName.hashCode() * this.constructors.hashCode()
+					* this.conversions.hashCode();
+		}
+
 	}
 }

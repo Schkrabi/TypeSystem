@@ -22,5 +22,7 @@ public class ClojureCodeGenerator {
 	}
 
 	private static void writeHeaders(Writer target) throws IOException {
+		target.write("(defrecord lang-type-atom [name representation])\n");
+		target.write("(defrecord lang-type-arrow [arg-type return-type])\n");
 	}
 }

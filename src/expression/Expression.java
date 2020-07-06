@@ -2,7 +2,6 @@ package expression;
 
 import types.Substitution;
 import types.Type;
-import types.TypeArrow;
 import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
@@ -56,19 +55,6 @@ public abstract class Expression implements Comparable<Expression> {
 	 * @throws AppendableException
 	 */
 	public abstract String toClojureCode(Environment env) throws AppendableException;
-
-	/**
-	 * Gets function type with specific representations in place
-	 * 
-	 * @param env Environment in which inference is carried out
-	 * @return TypeArrow
-	 * @throws AppendableException When used with invalid expression
-	 */
-	public TypeArrow getFunctionTypeWithRepresentations(TypeTuple argTypes, Environment env)
-			throws AppendableException {
-		throw new AppendableException(
-				this.getClass().getName() + " cannot use " + new Throwable().getStackTrace()[0].getMethodName());
-	}
 
 	/**
 	 * Empty expression

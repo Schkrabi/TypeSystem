@@ -3,6 +3,8 @@ package application;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import expression.Expression;
 import expression.Tuple;
@@ -73,15 +75,18 @@ public abstract class Application extends Expression {
 	 * @return a single TypeArrow which left is closest to argsType
 	 */
 	protected static TypeArrow getBestImplementationType(TypeTuple argsType, RepresentationOr funType) {
-		return funType.getRepresentations().stream()
+		Stream<Pair<Integer, TypeArrow>> costs = funType.getRepresentations().stream()
 				.map(t -> new Pair<Integer, TypeArrow>(((TypeTuple) ((TypeArrow) t).ltype).tupleDistance(argsType),
-						(TypeArrow) t))
-				.reduce(new Pair<Integer, TypeArrow>(Integer.MAX_VALUE, null), (p1, p2) -> {
-					if (p1.first < p2.first)
-						return p1;
-					else
-						return p2;
-				}).second;
+						(TypeArrow) t));
+		List<Pair<Integer, TypeArrow>> costsList = costs.collect(Collectors.toList());
+		Pair<Integer, TypeArrow> best = costsList.stream().reduce(new Pair<Integer, TypeArrow>(Integer.MAX_VALUE, null), (p1, p2) -> {
+			if (p1.first < p2.first)
+				return p1;
+			else
+				return p2;
+		});
+		
+		return best.second;
 	}
 	
 	/**

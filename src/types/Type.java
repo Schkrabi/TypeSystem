@@ -44,16 +44,6 @@ public abstract class Type implements Comparable<Type> {
 	public abstract Expression convertTo(Expression expr, Type toType) throws AppendableException;
 
 	/**
-	 * Creates clojure code converting argument to different type (if possible)
-	 * 
-	 * @param argument Expresion compiled to clojure to be converted
-	 * @param toType   target type
-	 * @return Clojure code
-	 * @throws when converting unconvertable types
-	 */
-	public abstract String convertToClojure(String argument, Type toType) throws AppendableException;
-
-	/**
 	 * Returns substitution that unifies this type with other type
 	 * 
 	 * @param other other type to unify with
@@ -63,18 +53,11 @@ public abstract class Type implements Comparable<Type> {
 	public abstract Substitution unifyWith(Type other) throws AppendableException;
 
 	/**
-	 * Replaces all type Representations in this type with its basic types
-	 * 
-	 * @return new Type with representations removed
-	 */
-	public abstract Type removeRepresentationInfo();
-
-	/**
 	 * Creates representing type as Clojure key
 	 * @return
 	 * @throws AppendableException
 	 */
-	public abstract String toClojureKey() throws AppendableException;
+	public abstract String clojureTypeRepresentation() throws AppendableException;
 
 	@Override
 	public int compareTo(Type other) {

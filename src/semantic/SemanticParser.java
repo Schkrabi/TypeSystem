@@ -13,6 +13,7 @@ import abstraction.Lambda;
 import application.AndExpression;
 import application.Construct;
 import application.Convert;
+import application.Deconstruct;
 import application.DefineConstructor;
 import application.AbstractionApplication;
 import application.DefineConversion;
@@ -205,6 +206,9 @@ public class SemanticParser {
 		case SemanticParserStatic.CONVERT:
 			e = SemanticParser.parseConvert(specialFormList);
 			break;
+		case SemanticParserStatic.DECONSTRUCT:
+			e = SemanticParser.parseDeconstruct(specialFormList);
+			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
 		}
@@ -395,12 +399,15 @@ public class SemanticParser {
 	
 	/**
 	 * Parses  Wildcard type
-	 * @param typeName name of the type
+	 * @param typeSymbol name of the type
 	 * @return TypeAtom
 	 * @throws UndefinedTypeException if Type was not defined
 	 */
-	private static TypeAtom parseTypeAtom(String typeName) throws UndefinedTypeException {
-		return SemanticParser.parseTypeAtom(typeName, TypeRepresentation.WILDCARD.toString());
+	private static Type parseTypeSymbol(String typeSymbol) throws UndefinedTypeException {
+		if(TypeEnvironment.singleton.existType(new TypeName(typeSymbol))) {
+			return SemanticParser.parseTypeAtom(typeSymbol, TypeRepresentation.WILDCARD.toString());
+		}
+		return new TypeVariable(typeSymbol);
 	}
 	
 	/**
@@ -466,7 +473,7 @@ public class SemanticParser {
 			List<SemanticNode> l = typeNode.asList();
 			return SemanticParser.parseTypeTuple(l);
 		case SYMBOL:
-			return SemanticParser.parseTypeAtom(typeNode.asSymbol());
+			return SemanticParser.parseTypeSymbol(typeNode.asSymbol());
 		default:
 			break;
 		}
@@ -731,5 +738,23 @@ public class SemanticParser {
 		}
 
 		return new Construct(type, arguments);
+	}
+	
+	/**
+	 * Parses Deconstruct special form
+	 * @param specialFormList
+	 * @return
+	 * @throws AppendableException
+	 */
+	private static Deconstruct parseDeconstruct(List<SemanticNode> specialFormList) throws AppendableException{
+		try {
+			Validations.validateDeconstructList(specialFormList);
+		}catch(AppendableException e) {
+			e.appendMessage("in " + specialFormList.toString());
+			throw e;
+		}
+		
+		Expression e = SemanticParser.parseNode(specialFormList.get(1));
+		
 	}
 }

@@ -1,19 +1,26 @@
-package abstraction;
+package application;
 
 import expression.Expression;
-import expression.Tuple;
 import interpretation.Environment;
 import types.Substitution;
 import types.Type;
 import util.AppendableException;
 import util.Pair;
 
-public class ConstructorReference extends Abstraction {
-
-	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-		// TODO Auto-generated method stub
-		return null;
+public class CanDeconstructAs extends Expression {
+	
+	/**
+	 * Inspected expression
+	 */
+	public final Expression expression;
+	/**
+	 * Tested type
+	 */
+	public final Type as;
+	
+	public CanDeconstructAs(Expression expression, Type as) {
+		this.expression = expression;
+		this.as = as;
 	}
 
 	@Override

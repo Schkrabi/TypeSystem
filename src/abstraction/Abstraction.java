@@ -6,9 +6,11 @@ import expression.Expression;
 import expression.Symbol;
 import expression.Tuple;
 import interpretation.Environment;
+import types.Substitution;
 import types.Type;
 import types.TypeTuple;
 import util.AppendableException;
+import util.Pair;
 
 /**
  * Parent class for all abstractions (lambdas, extended lambdas, functions,
@@ -20,8 +22,8 @@ import util.AppendableException;
 public abstract class Abstraction extends Expression {
 
 	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException;
-	
-	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException{
+
+	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 		return this.doSubstituteAndEvaluate(args, env);
 	}
 
@@ -52,6 +54,17 @@ public abstract class Abstraction extends Expression {
 		return ret;
 	}
 
+	/**
+	 * Creates lexical clojure for this abstraction
+	 * 
+	 * @param formalArgs      formal arguments (argument variables)
+	 * @param realArgs        arguments
+	 * @param baseEnvironment environment where body of abstraction will be
+	 *                        evaluated, also parent environment of lexical clojure
+	 * @return Environment that is lexical clojure with given formal and real
+	 *         arguments
+	 * @throws AppendableException
+	 */
 	protected static Environment lexicalClojure(Tuple formalArgs, Tuple realArgs, Environment baseEnvironment)
 			throws AppendableException {
 		Environment ret = Environment.create(baseEnvironment);
@@ -67,5 +80,25 @@ public abstract class Abstraction extends Expression {
 		return ret;
 	}
 	
+	/**
+	 * Creates clojure code for implementations of this abstraction
+	 * @param env environemnt where evaluation takes place
+	 * @return String containing clojure code
+	 * @throws AppendableException
+	 */
+	protected abstract String implementationsToClojure(Environment env) throws AppendableException;
 	
+	@Override
+	public String toClojureCode(Environment env) throws AppendableException{
+		StringBuilder sb = new StringBuilder();
+		sb.append("(with-meta [");
+		sb.append(this.implementationsToClojure(env));
+		sb.append("] {:lang-type ");
+		
+		Pair<Type, Substitution> p = this.infer(env);
+		sb.append(p.first.clojureTypeRepresentation());
+		sb.append("})");
+		return sb.toString();
+	}
+
 }

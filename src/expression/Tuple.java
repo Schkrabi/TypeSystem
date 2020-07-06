@@ -109,6 +109,9 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	@Override
 	public String toClojureCode(Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder();
+		
+		s.append("(with-meta ");
+		
 		s.append('[');
 
 		Iterator<Expression> i = this.iterator();
@@ -120,6 +123,12 @@ public class Tuple extends Expression implements Iterable<Expression> {
 			}
 		}
 		s.append(']');
+		
+		Pair<Type, Substitution> p = this.infer(env);
+		s.append(" {:lang-type ");
+		s.append(p.first.clojureTypeRepresentation());
+		s.append("})");
+		
 		return s.toString();
 	}
 

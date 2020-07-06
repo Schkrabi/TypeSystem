@@ -23,7 +23,7 @@ import interpretation.Environment;
  * 
  */
 public class AbstractionApplication extends Application {
-	
+
 	/**
 	 * Expression that should yield function
 	 */
@@ -33,9 +33,10 @@ public class AbstractionApplication extends Application {
 		super(args);
 		this.fun = fun;
 	}
-	
+
 	/**
 	 * Gets type of arguments of abstraction in this application
+	 * 
 	 * @param argsType
 	 * @param env
 	 * @return
@@ -44,46 +45,51 @@ public class AbstractionApplication extends Application {
 	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env) throws AppendableException {
 		Type funInfered = this.fun.infer(env).first;
 		if (funInfered instanceof RepresentationOr) {
-			return (TypeTuple)AbstractionApplication.getBestImplementationType(argsType, (RepresentationOr) funInfered).ltype;
+			return (TypeTuple) AbstractionApplication.getBestImplementationType(argsType,
+					(RepresentationOr) funInfered).ltype;
 		} else if (funInfered instanceof TypeArrow) {
-			return ((TypeTuple)((TypeArrow) funInfered).ltype);
+			return ((TypeTuple) ((TypeArrow) funInfered).ltype);
 		} else if (funInfered instanceof TypeVariable) {
-			return new TypeTuple(argsType.stream().map(x -> new TypeVariable(NameGenerator.next())).collect(Collectors.toList()));
+			return new TypeTuple(
+					argsType.stream().map(x -> new TypeVariable(NameGenerator.next())).collect(Collectors.toList()));
 		}
-		throw new AppendableException("Expecting expression yielding function at first place in application, got "
-					+ funInfered.toString());
+		throw new AppendableException(
+				"Expecting expression yielding function at first place in application, got " + funInfered.toString());
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			// Infer function type
-			TypeArrow funType = new TypeArrow(new TypeVariable(NameGenerator.next()),
-					new TypeVariable(NameGenerator.next()));
 			Pair<Type, Substitution> funInfered = this.fun.infer(env);
-			// Infer arguments type
-			final Pair<Type, Substitution> argsInfered = this.args.infer(env);
+			
+			Pair<Type, Substitution> argsInfered = this.args.infer(env);
+
+			if(!(funInfered.first instanceof TypeArrow)) {
+				// Find best implementation if applicable
+				if (funInfered.first instanceof RepresentationOr) {
+					Type best = AbstractionApplication.getBestImplementationType((TypeTuple) argsInfered.first,
+							(RepresentationOr) funInfered.first);
+					funInfered = new Pair<Type, Substitution>(best, funInfered.second);
+				}
+				// If type of function is unknown (unresolved variable) assume type arrow
+				else if (funInfered.first instanceof TypeVariable) {
+					funInfered = new Pair<Type, Substitution>(
+							new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next())),
+							Substitution.EMPTY);
+				}
+				else {
+					throw new AppendableException(funInfered.first.toString() + " is not applicable type! In:" + this.toString());
+				}
+			}
 
 			// Unify arguments and formal argument types
-			Substitution substArgs = Type.unify(argsInfered.first, funType.ltype);
+			Substitution substArgs = Type.unify(argsInfered.first, ((TypeArrow) funInfered.first).ltype);
+			substArgs = substArgs.union(argsInfered.second);
+			substArgs = substArgs.union(funInfered.second);
 
-			if (funInfered.first instanceof RepresentationOr) {
-				Type best = AbstractionApplication.getBestImplementationType((TypeTuple) argsInfered.first,
-						(RepresentationOr) funInfered.first);
-				funInfered = new Pair<Type, Substitution>(best, funInfered.second);
-			}
-			Substitution substFun = Type.unify(funType, funInfered.first);
+			TypeArrow funType = (TypeArrow) funInfered.first.apply(substArgs);
 
-			funType = (TypeArrow) funType.apply(substFun);
-
-			// Compose all substitutions (and check if they are compatible)
-			Substitution s = Substitution.EMPTY;
-			s = s.union(funInfered.second);
-			s = s.union(substFun);
-			s = s.union(argsInfered.second);
-			s = s.union(substArgs);
-
-			return new Pair<Type, Substitution>(funType.rtype.apply(s), s);
+			return new Pair<Type, Substitution>(funType.rtype, substArgs);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
@@ -105,7 +111,8 @@ public class AbstractionApplication extends Application {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof AbstractionApplication) {
-			return this.fun.equals(((AbstractionApplication) other).fun) && this.args.equals(((AbstractionApplication) other).args);
+			return this.fun.equals(((AbstractionApplication) other).fun)
+					&& this.args.equals(((AbstractionApplication) other).args);
 		}
 		return false;
 	}
@@ -114,7 +121,7 @@ public class AbstractionApplication extends Application {
 	public int hashCode() {
 		return this.fun.hashCode() * this.args.hashCode();
 	}
-	
+
 	@Override
 	protected String applicationToClojure(Tuple convertedArgs, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder("(");
@@ -126,9 +133,9 @@ public class AbstractionApplication extends Application {
 		s.append(this.fun.toClojureCode(env));
 
 		s.append(" ");
-		s.append(argsType.toClojureKey());
+		s.append(argsType.clojureTypeRepresentation());
 		s.append(" ");
-		
+
 		s.append(convertedArgs.toClojureCode(env));
 		s.append(")");
 
@@ -147,23 +154,21 @@ public class AbstractionApplication extends Application {
 		if (!(ifun instanceof Abstraction)) {
 			throw new AppendableException(ifun.toString() + "is not an abstration");
 		}
-		Abstraction abst = (Abstraction)ifun;
-		
-		Tuple interpretedArgs = (Tuple)convertedArgs.interpret(evaluationEnvironment);
-		
+		Abstraction abst = (Abstraction) ifun;
+
+		Tuple interpretedArgs = (Tuple) convertedArgs.interpret(evaluationEnvironment);
+
 		return abst.substituteAndEvaluate(interpretedArgs, evaluationEnvironment);
 	}
 
 	/**
 	 * code of eapply functionn for clojure
 	 */
-	public static final String clojureEapply = /*"eapply";*/
-														  "(fn [elambda type args]\n" +
-														  "    (letfn [(vectorDist [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))\n"
-														  +
-														  "            (rankImpls [v impls] (map (fn [u] [(vectorDist (get u 0) v) (get u 1)]) impls))\n"
-														  +
-														  "            (getImpl [type elambda] (get (reduce (fn [x y] (if (< (get x 0) (get y 0)) x y)) (rankImpls type elambda)) 1))]\n"
-														  + "        (apply (getImpl type elambda) args)))";
-														 	
+	public static final String clojureEapply = /* "eapply"; */
+			"(fn [elambda type args]\n"
+					+ "    (letfn [(vectorDist [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))\n"
+					+ "            (rankImpls [v impls] (map (fn [u] [(vectorDist (get u 0) v) (get u 1)]) impls))\n"
+					+ "            (getImpl [type elambda] (get (reduce (fn [x y] (if (< (get x 0) (get y 0)) x y)) (rankImpls type elambda)) 1))]\n"
+					+ "        (apply (getImpl type elambda) args)))";
+
 }

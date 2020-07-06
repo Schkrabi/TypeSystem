@@ -30,9 +30,9 @@ public class ExtendedLambda extends Abstraction {
 	/**
 	 * Various implementations of this function
 	 */
-	protected final Set<Lambda> implementations;
+	protected final Set<? extends Lambda> implementations;
 
-	protected ExtendedLambda(Collection<Lambda> implementations) {
+	protected ExtendedLambda(Collection<? extends Lambda> implementations) {
 		this.implementations = new TreeSet<Lambda>(implementations);
 	}
 	
@@ -48,15 +48,29 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		return ExtendedFunction.makeExtendedFunction(this.implementations, env);
+	public Expression interpret(final Environment env) throws AppendableException {
+		Set<Function> fs = null;
+		try {
+			fs = this.implementations.stream().map(ThrowingFunction.wrapper(x -> (Function)x.interpret(env))).collect(Collectors.toSet());
+		}catch(RuntimeException re) {
+			AppendableException e = (AppendableException)re.getCause();
+			throw e;
+		}
+		
+		return ExtendedFunction.makeExtendedFunction(fs, env);
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Set<Pair<Type, Substitution>> s = this.implementations.stream()
+			Set<Pair<Type, Substitution>> s = null;
+			try {
+				s = this.implementations.stream()
 					.map(ThrowingFunction.wrapper(x -> x.infer(env))).collect(Collectors.toSet());
+			} catch(RuntimeException re) {
+				AppendableException e = (AppendableException)re.getCause();
+				throw e;
+			}
 
 			return new Pair<Type, Substitution>(
 					RepresentationOr.makeRepresentationOr(s.stream().map(x -> x.first).collect(Collectors.toSet())),
@@ -73,7 +87,7 @@ public class ExtendedLambda extends Abstraction {
 	public String toString() {
 		StringBuilder s = new StringBuilder("(elambda (");
 
-		Iterator<Lambda> k = this.implementations.iterator();
+		Iterator<? extends Lambda> k = this.implementations.iterator();
 		while (k.hasNext()) {
 			Lambda l = k.next();
 			s.append('(');
@@ -89,31 +103,6 @@ public class ExtendedLambda extends Abstraction {
 		s.append(')');
 
 		return s.toString();
-	}
-
-	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
-		try {			
-			StringBuilder s = new StringBuilder("`(");
-			
-			Iterator<String> i = this.implementations.stream()
-					.map(ThrowingFunction
-							.wrapper(x -> "[" + x.argsType.toClojureKey() + " ~" + x.toClojureFn(env) + "]"))
-					.collect(Collectors.toList()).iterator();
-
-			while (i.hasNext()) {
-				String str = i.next();
-				s.append(str);
-				if (i.hasNext()) {
-					s.append(" ");
-				}
-			}
-			s.append(")");
-			return s.toString();
-		} catch (RuntimeException re) {
-			AppendableException e = (AppendableException) re.getCause();
-			throw e;
-		}
 	}
 
 	@Override
@@ -164,5 +153,21 @@ public class ExtendedLambda extends Abstraction {
 	public static ExtendedLambda makeExtendedLambda(Collection<Lambda> implementations) throws AppendableException {
 		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
 		return new ExtendedLambda(implementations);
+	}
+
+	@Override
+	protected String implementationsToClojure(Environment env) throws AppendableException {
+		StringBuilder sb = new StringBuilder();
+		
+		Iterator<? extends Lambda> i = this.implementations.iterator();
+		while(i.hasNext()) {
+			Lambda implementation = i.next();
+			sb.append(implementation.toClojureFn(env));
+			while(i.hasNext()) {
+				sb.append(" ");
+			}
+		}
+		
+		return sb.toString();
 	}
 }

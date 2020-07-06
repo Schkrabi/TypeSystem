@@ -17,8 +17,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import abstraction.ExtendedFunction;
+import abstraction.Function;
 import application.AbstractionApplication;
+import application.Construct;
+import application.IfExpression;
 import expression.Expression;
+import expression.Symbol;
 import expression.Tuple;
 import interpretation.Environment;
 import literal.LitComposite;
@@ -31,9 +36,12 @@ import semantic.SemanticParser;
 import semantic.TypeEnvironment;
 import types.Substitution;
 import types.Type;
+import types.TypeArrow;
 import types.TypeAtom;
 import types.TypeName;
 import types.TypeRepresentation;
+import types.TypeTuple;
+import types.TypeVariable;
 import util.AppendableException;
 import util.Pair;
 import util.RomanNumbers;
@@ -186,6 +194,243 @@ class TestComplex {
 				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\"))))"
 				+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x) (deconstruct y)))))",
 				new LitComposite(new LitString("2121"), TypeAtom.TypeIntString));
+
+		this.testInterpretString("((lambda ((A x) (B y)) (cons x y)) 42 (construct Int String  \"42\"))", new Tuple(
+				Arrays.asList(new LitInteger(42), new LitComposite(new LitString("42"), TypeAtom.TypeIntString))));
+
+		TypeName listTypeName = new TypeName("List");
+		TypeAtom typeListLinkedAtom = new TypeAtom(listTypeName, new TypeRepresentation("Linked"));
+		TypeAtom typeListFuntionalAtom = new TypeAtom(listTypeName, new TypeRepresentation("Functional"));
+
+		this.testInterpretString(
+				"(extended-lambda ((List l) (A x))" + "((List:Linked A) (if (equals? (deconstruct l) ())"
+						+ "(construct List Linked x (construct List Linked))"
+						+ "(construct List Linked (head-list l) (append-list (tail-list l) x))))"
+						+ "((List:Functional A) (if (equals? (deconstruct l) ())"
+						+ "(construct List Functional x (construct List Functional))"
+						+ "(construct List Functional (head-list l) (append-list (tail-list l) x)))))",
+				ExtendedFunction
+						.makeExtendedFunction(Arrays.asList(
+								new Function(
+										new TypeTuple(Arrays.asList(typeListLinkedAtom, new TypeVariable("A"))),
+										new Tuple(Arrays.asList(new Symbol("l"), new Symbol("x"))),
+										new IfExpression(
+												new AbstractionApplication(
+														new Symbol("equals?"),
+														new Tuple(
+																Arrays.asList(
+																		new AbstractionApplication(
+																				new Symbol("deconstruct"),
+																				new Tuple(Arrays
+																						.asList(new Symbol("l")))),
+																		Expression.EMPTY_EXPRESSION))),
+												new Construct(typeListLinkedAtom,
+														new Tuple(Arrays.asList(new Symbol("x"),
+																new Construct(typeListLinkedAtom, Tuple.EMPTY_TUPLE)))),
+												new Construct(typeListLinkedAtom,
+														new Tuple(Arrays.asList(
+																new AbstractionApplication(new Symbol("head-list"),
+																		new Tuple(Arrays.asList(new Symbol("l")))),
+																new AbstractionApplication(new Symbol("append-list"),
+																		new Tuple(Arrays.asList(
+																				new AbstractionApplication(
+																						new Symbol("tail-list"),
+																						new Tuple(Arrays.asList(
+																								new Symbol("l")))),
+																				new Symbol("x")))))))),
+										Environment.topLevelEnvironment),
+								new Function(new TypeTuple(Arrays.asList(typeListFuntionalAtom, new TypeVariable("A"))),
+										new Tuple(Arrays.asList(new Symbol("l"), new Symbol("x"))),
+										new IfExpression(
+												new AbstractionApplication(new Symbol("equals?"),
+														new Tuple(
+																Arrays.asList(
+																		new AbstractionApplication(
+																				new Symbol("deconstruct"),
+																				new Tuple(Arrays
+																						.asList(new Symbol("l")))),
+																		Expression.EMPTY_EXPRESSION))),
+												new Construct(typeListFuntionalAtom,
+														new Tuple(Arrays.asList(new Symbol("x"),
+																new Construct(typeListFuntionalAtom,
+																		Tuple.EMPTY_TUPLE)))),
+												new Construct(typeListFuntionalAtom,
+														new Tuple(Arrays.asList(
+																new AbstractionApplication(new Symbol("head-list"),
+																		new Tuple(Arrays.asList(new Symbol("l")))),
+																new AbstractionApplication(new Symbol("append-list"),
+																		new Tuple(Arrays.asList(
+																				new AbstractionApplication(
+																						new Symbol("tail-list"),
+																						new Tuple(Arrays.asList(
+																								new Symbol("l")))),
+																				new Symbol("x")))))))),
+										Environment.topLevelEnvironment)),
+								Environment.topLevelEnvironment));
+
+		this.testInterpretString("(extended-lambda ((List l))"
+				+ "                        ((List:Linked) (if (equals? (deconstruct l) ())"
+				+ "                                            (construct List Linked)"
+				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l))))"
+				+ "                        ((List:Functional) (if (equals? (deconstruct l) ())"
+				+ "                                            (construct List Functional)"
+				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l)))))",
+				ExtendedFunction
+						.makeExtendedFunction(
+								Arrays.asList(
+										new Function(new TypeTuple(Arrays.asList(typeListLinkedAtom)),
+												new Tuple(Arrays.asList(new Symbol("l"))),
+												new IfExpression(
+														new AbstractionApplication(new Symbol("equals?"),
+																new Tuple(Arrays.asList(
+																		new AbstractionApplication(
+																				new Symbol("deconstruct"),
+																				new Tuple(Arrays
+																						.asList(new Symbol("l")))),
+																		Expression.EMPTY_EXPRESSION))),
+														new Construct(typeListLinkedAtom, Tuple.EMPTY_TUPLE),
+														new AbstractionApplication(new Symbol("append-list"),
+																new Tuple(Arrays.asList(new AbstractionApplication(
+																		new Symbol("reverse-list"),
+																		new Tuple(Arrays
+																				.asList(new AbstractionApplication(
+																						new Symbol("tail-list"),
+																						new Tuple(Arrays.asList(
+																								new Symbol("l"))))))),
+																		new AbstractionApplication(
+																				new Symbol("head-list"),
+																				new Tuple(Arrays
+																						.asList(new Symbol("l")))))))),
+												Environment.topLevelEnvironment),
+										new Function(new TypeTuple(Arrays.asList(typeListFuntionalAtom)),
+												new Tuple(Arrays.asList(new Symbol("l"))),
+												new IfExpression(
+														new AbstractionApplication(new Symbol("equals?"),
+																new Tuple(Arrays.asList(
+																		new AbstractionApplication(
+																				new Symbol("deconstruct"),
+																				new Tuple(Arrays
+																						.asList(new Symbol("l")))),
+																		Expression.EMPTY_EXPRESSION))),
+														new Construct(typeListFuntionalAtom, Tuple.EMPTY_TUPLE),
+														new AbstractionApplication(new Symbol("append-list"),
+																new Tuple(Arrays.asList(new AbstractionApplication(
+																		new Symbol("reverse-list"),
+																		new Tuple(Arrays
+																				.asList(new AbstractionApplication(
+																						new Symbol("tail-list"),
+																						new Tuple(Arrays.asList(
+																								new Symbol("l"))))))),
+																		new AbstractionApplication(
+																				new Symbol("head-list"),
+																				new Tuple(Arrays
+																						.asList(new Symbol("l")))))))),
+												Environment.topLevelEnvironment)),
+								Environment.topLevelEnvironment));
+
+		this.testInterpretString("(extended-lambda ((((A) #> B) f) (List l))"
+				+ "                    ((((A) #> B) List:Linked) (if (equals? (deconstruct l) ())"
+				+ "                                                (construct List Linked)"
+				+ "                                                (construct List Linked (f (head-list l)) (map-list f (tail-list l)))))"
+				+ "                    ((((A) #> B) List:Functional) (if (equals? (deconstruct l) ())"
+				+ "                                                    (construct List Functional)"
+				+ "                                                    (construct List Functional (f (head-list l)) (map-list f (tail-list l))))))",
+				ExtendedFunction.makeExtendedFunction(Arrays.asList(
+						new Function(
+								new TypeTuple(Arrays.asList(
+										new TypeArrow(new TypeTuple(Arrays.asList(new TypeVariable("A"))),
+												new TypeVariable("B")),
+										typeListLinkedAtom)),
+								new Tuple(Arrays.asList(new Symbol("f"), new Symbol("l"))), new IfExpression(
+										new AbstractionApplication(new Symbol("equals?"), new Tuple(
+												Arrays.asList(
+														new AbstractionApplication(new Symbol("deconstruct"),
+																new Tuple(Arrays.asList(new Symbol("l")))),
+														Expression.EMPTY_EXPRESSION))),
+										new Construct(typeListLinkedAtom, Tuple.EMPTY_TUPLE), new Construct(
+												typeListLinkedAtom, new Tuple(Arrays.asList(
+														new AbstractionApplication(
+																new Symbol("f"),
+																new Tuple(Arrays
+																		.asList(new AbstractionApplication(
+																				new Symbol("head-list"),
+																				new Tuple(Arrays
+																						.asList(new Symbol("l"))))))),
+														new AbstractionApplication(new Symbol("map-list"),
+																new Tuple(Arrays.asList(new Symbol("f"),
+																		new AbstractionApplication(
+																				new Symbol("tail-list"),
+																				new Tuple(Arrays.asList(
+																						new Symbol("l"))))))))))),
+								Environment.topLevelEnvironment),
+						new Function(new TypeTuple(
+								Arrays.asList(new TypeArrow(new TypeTuple(Arrays.asList(new TypeVariable("A"))),
+										new TypeVariable("B")), typeListFuntionalAtom)),
+								new Tuple(Arrays.asList(new Symbol("f"),
+										new Symbol("l"))),
+								new IfExpression(
+										new AbstractionApplication(new Symbol("equals?"),
+												new Tuple(Arrays.asList(new AbstractionApplication(new Symbol(
+														"deconstruct"), new Tuple(Arrays.asList(new Symbol("l")))),
+														Expression.EMPTY_EXPRESSION))),
+										new Construct(typeListFuntionalAtom, Tuple.EMPTY_TUPLE),
+										new Construct(typeListFuntionalAtom,
+												new Tuple(
+														Arrays.asList(
+																new AbstractionApplication(new Symbol("f"),
+																		new Tuple(Arrays
+																				.asList(new AbstractionApplication(
+																						new Symbol("head-list"),
+																						new Tuple(Arrays.asList(
+																								new Symbol("l"))))))),
+																new AbstractionApplication(new Symbol("map-list"),
+																		new Tuple(Arrays.asList(new Symbol("f"),
+																				new AbstractionApplication(
+																						new Symbol("tail-list"),
+																						new Tuple(Arrays
+																								.asList(new Symbol(
+																										"l"))))))))))),
+								Environment.topLevelEnvironment)),
+						Environment.topLevelEnvironment));
+
+		this.testInterpretString("(define append-list-el (extended-lambda ((List l) (A x))"
+				+ "                        ((List:Linked A) (if (equals? (deconstruct l) ())"
+				+ "                                                (construct List Linked x (construct List Linked))"
+				+ "                                                (construct List Linked (head-list l) (append-list-el (tail-list l) x))))"
+				+ "                        ((List:Functional A) (if (equals? (deconstruct l) ())"
+				+ "                                                (construct List Functional x (construct List Functional))"
+				+ "                                                (construct List Functional (head-list l) (append-list-el (tail-list l) x))))))",
+				Expression.EMPTY_EXPRESSION);
+		this.testInterpretString("(head-list (append-list-el x 42))",
+				new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman));
+		this.testInterpretString("(head-list (append-list-el y 42))",
+				new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman));
+
+		this.testInterpretString("(define reverse-list-el (extended-lambda ((List l))\n"
+				+ "                        ((List:Linked) (if (equals? (deconstruct l) ())\n"
+				+ "                                            (construct List Linked)\n"
+				+ "                                            (append-list-el (reverse-list-el (tail-list l)) (head-list l))))\n"
+				+ "                        ((List:Functional) (if (equals? (deconstruct l) ())\n"
+				+ "                                            (construct List Functional)\n"
+				+ "                                            (append-list-el (reverse-list-el (tail-list l)) (head-list l))))))",
+				Expression.EMPTY_EXPRESSION);
+		this.testInterpretString("(reverse-list-el x)", 
+				new LitComposite(
+						new Tuple(Arrays.asList(
+								new LitInteger(42),
+								new LitComposite(
+										new Tuple(Arrays.asList(
+												new LitComposite(new LitString("42"), TypeAtom.TypeIntString),
+												new LitComposite(
+														new Tuple(Arrays.asList(
+																new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
+																new LitComposite(Expression.EMPTY_EXPRESSION, typeListLinkedAtom))), 
+														typeListLinkedAtom))), 
+										typeListLinkedAtom))), 
+						typeListLinkedAtom));
+		this.testInterpretString("(deconstruct y)", null);
+		//this.testInterpretString("(reverse-list-el y)", 
+		//		new LitInteger(42));
 	}
 
 	@Test
@@ -500,6 +745,115 @@ class TestComplex {
 						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:IntString] [x]) ("
 						+ AbstractionApplication.clojureEapply
 						+ " `([[:\\w*] ~identity]) [:IntString] [y])])]))]) [:IntString :IntString] [\\w* \\w*]))])])"));
+
+		this.testClojureCompileRegex("((lambda ((A x) (B y)) (cons x y)) 42 (construct Int String  \"42\"))",
+				TestComplex.escapeBrackets("(" + AbstractionApplication.clojureEapply
+						+ " `([[:A :B] ~(fn [x y] [x y])]) [:IntNative :IntString] [42 ("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"42\"])])"));
+
+		this.testClojureCompileRegex(
+				"(extended-lambda ((List2 l) (A x))" + "((List2:Linked A) (if (equals? (deconstruct l) ())"
+						+ "(construct List2 Linked x (construct List2 Linked))"
+						+ "(construct List2 Linked (head-list l) (append-list (tail-list l) x))))"
+						+ "((List2:Functional A) (if (equals? (deconstruct l) ())"
+						+ "(construct List2 Functional x (construct List2 Functional))"
+						+ "(construct List2 Functional (head-list l) (append-list (tail-list l) x)))))",
+				TestComplex.escapeBrackets("`([[:List2Functional :A] ~(fn [l x] (if ("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:\\w*] ~identity]) [:List2Functional] [l]) nil]) ("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w* :List2\\*] ~(fn [x l] ("
+						+ AbstractionApplication.clojureEapply
+						+ " fcons [:\\w* :List2\\*] [x l]))]) [:A :List2Functional] [x ("
+						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] [])]) ("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w* :List2\\*] ~(fn [x l] ("
+						+ AbstractionApplication.clojureEapply + " fcons [:\\w* :List2\\*] [x l]))]) [:\\w* :\\w*] [("
+						+ AbstractionApplication.clojureEapply + " head-list [:List2Functional] [l]) ("
+						+ AbstractionApplication.clojureEapply + " append-list [:\\w* :A] [("
+						+ AbstractionApplication.clojureEapply
+						+ " tail-list [:List2Functional] [l]) x])])))] [[:List2Linked :A] ~(fn [l x] (if ("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:List2Linked] [l]) nil]) ("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:A :List2Linked] [x ("
+						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] [])]) ("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:\\w* :\\w*] [("
+						+ AbstractionApplication.clojureEapply + " head-list [:List2Linked] [l]) ("
+						+ AbstractionApplication.clojureEapply + " append-list [:\\w* :A] [("
+						+ AbstractionApplication.clojureEapply + " tail-list [:List2Linked] [l]) x])])))])"));
+
+		this.testClojureCompileRegex("(extended-lambda ((List2 l))"
+				+ "                        ((List2:Linked) (if (equals? (deconstruct l) ())"
+				+ "                                            (construct List2 Linked)"
+				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l))))"
+				+ "                        ((List2:Functional) (if (equals? (deconstruct l) ())"
+				+ "                                            (construct List2 Functional)"
+				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l)))))",
+				TestComplex.escapeBrackets("`([[:List2Functional] ~(fn [l] (if (" + AbstractionApplication.clojureEapply
+						+ " `([[:\\w* :\\w*] ~=]) [:\\w* []] [(" + AbstractionApplication.clojureEapply
+						+ " `([[:\\w*] ~identity]) [:List2Functional] [l]) nil]) ("
+						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] []) ("
+						+ AbstractionApplication.clojureEapply + " append-list [:\\w* :\\w*] [("
+						+ AbstractionApplication.clojureEapply + " reverse-list [:\\w*] [("
+						+ AbstractionApplication.clojureEapply + " tail-list [:List2Functional] [l])]) ("
+						+ AbstractionApplication.clojureEapply
+						+ " head-list [:List2Functional] [l])])))] [[:List2Linked] ~(fn [l] (if ("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:List2Linked] [l]) nil]) ("
+						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] []) ("
+						+ AbstractionApplication.clojureEapply + " append-list [:\\w* :\\w*] [("
+						+ AbstractionApplication.clojureEapply + " reverse-list [:\\w*] [("
+						+ AbstractionApplication.clojureEapply + " tail-list [:List2Linked] [l])]) ("
+						+ AbstractionApplication.clojureEapply + " head-list [:List2Linked] [l])])))])"));
+
+		this.testClojureCompileRegex("(extended-lambda ((((A) #> B) f) (List l))"
+				+ "                    ((((A) #> B) List2:Linked) (if (equals? (deconstruct l) ())"
+				+ "                                                (construct List2 Linked)"
+				+ "                                                (construct List2 Linked (f (head-list l)) (map-list f (tail-list l)))))"
+				+ "                    ((((A) #> B) List2:Functional) (if (equals? (deconstruct l) ())"
+				+ "                                                    (construct List2 Functional)"
+				+ "                                                    (construct List2 Functional (f (head-list l)) (map-list f (tail-list l))))))",
+				TestComplex.escapeBrackets("`([[[[:A] :-> :B] :List2Functional] ~(fn [f l] (if ("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:\\w*] ~identity]) [:List2Functional] [l]) nil]) ("
+						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] []) ("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w* :List2\\*] ~(fn [x l] ("
+						+ AbstractionApplication.clojureEapply + " fcons [:\\w* :List2\\*] [x l]))]) [:B :\\w*] [("
+						+ AbstractionApplication.clojureEapply + " f [:\\w*] [(" + AbstractionApplication.clojureEapply
+						+ " head-list [:List2Functional] [l])]) (" + AbstractionApplication.clojureEapply
+						+ " map-list [[[:A] :-> :B] :\\w*] [f (" + AbstractionApplication.clojureEapply
+						+ " tail-list [:List2Functional] [l])])])))] [[[[:A] :-> :B] :List2Linked] ~(fn [f l] (if ("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
+						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:List2Linked] [l]) nil]) ("
+						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] []) ("
+						+ AbstractionApplication.clojureEapply
+						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:B :\\w*] [("
+						+ AbstractionApplication.clojureEapply + " f [:\\w*] [(" + AbstractionApplication.clojureEapply
+						+ " head-list [:List2Linked] [l])]) (" + AbstractionApplication.clojureEapply
+						+ " map-list [[[:A] :-> :B] :\\w*] [f (" + AbstractionApplication.clojureEapply
+						+ " tail-list [:List2Linked] [l])])])))])"));
+
+		/*
+		 * this.
+		 * testClojureCompile("(define append-list2-el (extended-lambda ((List2 l) (A x))"
+		 * +
+		 * "                        ((List2:Linked A) (if (equals? (deconstruct l) ())"
+		 * +
+		 * "                                                (construct List2 Linked x (construct List2 Linked))"
+		 * +
+		 * "                                                (construct List2 Linked (head-list2 l) (append-list2-el (tail-list2 l) x))))"
+		 * +
+		 * "                        ((List2:Functional A) (if (equals? (deconstruct l) ())"
+		 * +
+		 * "                                                (construct List2 Functional x (construct List2 Functional))"
+		 * +
+		 * "                                                (construct List2 Functional (head-list2 l) (append-list2-el (tail-list2 l) x))))))"
+		 * , ""); this.testClojureCompile("(head-list2 (append-list2-el x 42))", "");
+		 * this.testClojureCompile("(head-list2 (append-list2-el y 42))", "");
+		 */
 	}
 
 	private List<Expression> parseString(String s, SemanticParser semanticParser) throws AppendableException {

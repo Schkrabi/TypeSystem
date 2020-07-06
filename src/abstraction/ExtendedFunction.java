@@ -4,6 +4,7 @@ import interpretation.Environment;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -30,7 +31,7 @@ public class ExtendedFunction extends ExtendedLambda {
 
 	public final Environment creationEnvironment;
 
-	private ExtendedFunction(Collection<Lambda> implementations, Environment createdEnvironment) {
+	private ExtendedFunction(Collection<Function> implementations, Environment createdEnvironment) {
 		super(implementations);
 		creationEnvironment = createdEnvironment;
 	}
@@ -38,9 +39,15 @@ public class ExtendedFunction extends ExtendedLambda {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Set<Pair<Type, Substitution>> s = this.implementations.stream()
+			/*Set<Pair<Type, Substitution>> s = this.implementations.stream()
 					.map(ThrowingFunction.wrapper(x -> x.infer(env))).collect(Collectors.toSet());
-
+			*/
+			Set<Pair<Type, Substitution>> s = new HashSet<Pair<Type, Substitution>>();
+			for(Expression e : this.implementations) {
+				Pair<Type, Substitution> p = e.infer(env);
+				s.add(p);
+			}
+			
 			return new Pair<Type, Substitution>(
 					RepresentationOr.makeRepresentationOr(s.stream().map(x -> x.first).collect(Collectors.toSet())),
 					s.stream().map(x -> x.second).reduce(Substitution.EMPTY,
@@ -82,7 +89,7 @@ public class ExtendedFunction extends ExtendedLambda {
 		StringBuilder s = new StringBuilder("(ExFunctionInternal (");
 
 		// Arguments
-		Iterator<Lambda> k = this.implementations.iterator();
+		Iterator<? extends Lambda> k = this.implementations.iterator();
 		while (k.hasNext()) {
 			Lambda f = k.next();
 			s.append('(');
@@ -95,7 +102,7 @@ public class ExtendedFunction extends ExtendedLambda {
 			}
 		}
 
-		s.append(')');
+		s.append("))");
 
 		return s.toString();
 	}
@@ -114,7 +121,7 @@ public class ExtendedFunction extends ExtendedLambda {
 	 * @throws AppendableException thrown if argument types of function does not
 	 *                             unify
 	 */
-	public static ExtendedFunction makeExtendedFunction(Collection<Lambda> implementations,
+	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
 			Environment createdEnvironment) throws AppendableException {
 		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
 		return new ExtendedFunction(implementations, createdEnvironment);

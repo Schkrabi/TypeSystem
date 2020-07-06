@@ -34,7 +34,7 @@ public class LitString extends Literal {
 	}
 
 	@Override
-	public String toClojureCode(Environment env) {
+	public String valueToClojure(Environment env) {
 		return '"' + this.value + '"';
 	}
 
