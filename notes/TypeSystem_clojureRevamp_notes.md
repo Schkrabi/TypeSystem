@@ -286,7 +286,59 @@ car -CLJ-> (with-meta
                     (lang-type-atom. "Int" "Roman"))})
 ~~~
 
+* pro `IntRoman2IntNative`
+* `roman2intClojure` je předpřipravená clojure anonymní funkce
 
+~~~
+(with-meta 
+	(fn [_x] (with-meta
+				[(roman2intClojure (get (get _x 0) 0))]
+				{:lang-type (lang-type-arom. "Int" "Native"})))
+	{:lang-type (lang-type-arrow.
+					[(lang-type-atom. "Int" "Roman")]
+					(lang-type-atom. "Int" "Native"))});
+~~~
+
+* pro `IntRoman2IntString`
+* nejdříve konvertujeme hodnotu na int a pak z ní uděláme string
+
+~~~
+(with-meta
+	(fn [_x] (with-meta
+				[(with-meta
+					[(str (roman2intClojure (get (get _x 0) 0)))]
+					{:lang-type (lang-type-atom. "String" "Native")})]
+				{:lang-type (lang-type-atom. "Int" "String")}))
+	{:lang-type (lang-type-arrow.
+					[(lang-type-atom. "Int" "Roman")]
+					(lang-type-atom. "Int" "String"))})
+~~~
+
+* pro `IntString2IntNative`
+
+~~~
+(with-meta
+	(fn [_x] (with-meta
+				[(Integer/parseInt (get (get _x 0) 0))]
+				{:lang-type (lang-type-atom. "Int" "Native")}))
+	{:lang-type (lang-type-arrow.
+					[(lang-type-atom. "Int" "String")]
+					(lang-type-atom. "Int" "Native"))})
+~~~
+
+* pro `IntString2IntRoman`
+
+~~~
+(with-meta
+	(fn [_x] (with-meta
+				[(with-meta
+					[(int2romanClojure (Integer/parseInt (get (get _x 0) 0)))]
+					{:lang-type (lang-type-atom. "String" "Native")}))]
+				{:lang-type (lang-type-atom. "Int" "Roman")}))
+	{:lang-type (lang-type-arrow.
+					[(lang-type-atom. "Int" "String")]
+					(lang-type-atom. "Int" "Roman"))})
+~~~
 
 #### Primitivní konstruktory
 * primitivní konstruktory jsou v jazyku přítomny z důvodu úplnosti vzhlemdem ke speciální formě `construct`
