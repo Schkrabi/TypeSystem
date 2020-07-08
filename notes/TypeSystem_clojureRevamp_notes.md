@@ -417,8 +417,7 @@ car -CLJ-> (with-meta
 
 ### Construct
 * kompilátor automaticky dosazuje odpovídající konstruktor jako anonymní funkci (je to moudré?)
-* konstruktor jako anonymní funkce se překládá stejně jako jednotlivé implementace extended-lambda výrazů (potažmo i běžných lambda výrazů)
-* o správné přetypování hodnoty se stará výraz `LitComposite` kterým je každý konstruktor automaticky obalen při překladu
+* kompilátor potom vytvoří klasickou applikaci pomocí eapply a přeloží ji
 
 Příklad:
 
@@ -431,12 +430,24 @@ Příklad:
 CLJ
  |
  V
-((fn (name) (with-meta 
-                name
-                {:lang-type (lang-type-atom "Name" "Unstructured")})) 
+(eapply
+	(with-meta
+		[(with-meta 
+			(fn (name) (with-meta 
+		      				name
+		                	{:lang-type (lang-type-atom "Name" "Unstructured")}))
+			{:lang-type (lang-type-arrow.
+							[(lang-type-atom. "String" "Native")]
+							(lang-type-atom. "Name" "Unstructured"))})]
+		{:lang-type (lang-type-arrow.
+							[(lang-type-atom. "String" "Native")]
+							(lang-type-atom. "Name" "Unstructured"))})
     (with-meta
-        ["marvin"]
-        {:lang-type (lang-type-atom "String" "Native")}))
+		[(with-meta
+	        ["marvin"]
+	        {:lang-type (lang-type-atom. "String" "Native")})]
+		{:lang-type [(lang-type-atom. "String" "Native")]})
+	ranking-function)
 ~~~
 
 ### DeconstructAs
@@ -454,8 +465,12 @@ CLJ
  |
  V
 (get 
-    (<konstrukční lambda výraz pro typ Name:Structured> 
-        (with-meta ["marvin"] {:lang-type (lang-type-atom "String" "Native")})) 
+    (eapply
+		<konstrukční lambda výraz pro typ Name:Unstructured> 
+		(with-meta
+        	[(with-meta ["marvin"] {:lang-type (lang-type-atom. "String" "Native")})]
+			{:lang-type [(lang-type-atom. "String" "Native")]})
+		ranking-function) 
     0)
 ~~~
 

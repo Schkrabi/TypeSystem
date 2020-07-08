@@ -128,15 +128,14 @@ public class AbstractionApplication extends Application {
 		s.append(AbstractionApplication.clojureEapply);
 		s.append(" ");
 
-		TypeTuple argsType = (TypeTuple) this.args.infer(env).first;
-
 		s.append(this.fun.toClojureCode(env));
 
 		s.append(" ");
-		s.append(argsType.clojureTypeRepresentation());
-		s.append(" ");
-
 		s.append(convertedArgs.toClojureCode(env));
+		
+		s.append(" ");
+		s.append(AbstractionApplication.clojureRankingFunction);
+		
 		s.append(")");
 
 		return s.toString();
@@ -160,15 +159,32 @@ public class AbstractionApplication extends Application {
 
 		return abst.substituteAndEvaluate(interpretedArgs, evaluationEnvironment);
 	}
+	
+	public static final String clojureRankingFunction = /* "ranking-function" */
+			"(fn [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))";
 
 	/**
 	 * code of eapply functionn for clojure
 	 */
 	public static final String clojureEapply = /* "eapply"; */
-			"(fn [elambda type args]\n"
-					+ "    (letfn [(vectorDist [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))\n"
-					+ "            (rankImpls [v impls] (map (fn [u] [(vectorDist (get u 0) v) (get u 1)]) impls))\n"
-					+ "            (getImpl [type elambda] (get (reduce (fn [x y] (if (< (get x 0) (get y 0)) x y)) (rankImpls type elambda)) 1))]\n"
-					+ "        (apply (getImpl type elambda) args)))";
+			"(fn [abstraction arguments ranking-function]"
+				+ "(letfn [ "
+						+ "(implementation-arg-type "
+							+ "[implementation] "
+							+ "(:arg-type (:lang-type (meta implementation)))) "
+						+ "(rang-implementations "
+							+ "[v implementations] "
+							+ "(map "
+								+ "(fn [u] [(ranking-function (implementation-arg-type u)) u]) "
+								+ "implementations)) "
+						+ "(select-implementation "
+								+ "[type abstraction] "
+								+ "(get (reduce "
+										+ "(fn [x y] (if (< (get x 0) (get y 0)) x y)) "
+										+ "(rank-implementations type abstraction))))] "
+						+ "(apply "
+							+ "(select-implementation (:lang-type (meta arguments)) abstraction) "
+							+ "arguments)))";
+								
 
 }
