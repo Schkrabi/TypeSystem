@@ -39,19 +39,27 @@ public class OrExpression extends SpecialFormApplication {
 
 	@Override
 	protected String applicationToClojure(Tuple convertedArgs, Environment env) throws AppendableException {
-		StringBuilder s = new StringBuilder("(");
-		s.append("or");
+		StringBuilder s = new StringBuilder();
+		s.append("(with-meta ");
+		s.append("[(or");
 		s.append(' ');
 
 		Iterator<Expression> i = convertedArgs.iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
+			s.append("(get ");
 			s.append(e.toClojureCode(env));
+			s.append(" 0)");
 			if (i.hasNext()) {
 				s.append(' ');
 			}
 		}
-		s.append(')');
+		s.append(")]");
+		
+		s.append("{:lang-type ");
+		s.append(TypeAtom.TypeBoolNative.clojureTypeRepresentation());
+		s.append("})");
+		
 		return s.toString();
 	}
 

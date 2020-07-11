@@ -2,6 +2,7 @@ package application;
 
 import expression.Expression;
 import interpretation.Environment;
+import semantic.DuplicateTypeDefinitionException;
 import semantic.SemanticParserStatic;
 import semantic.TypeEnvironment;
 import types.Substitution;
@@ -55,7 +56,7 @@ public class DefineType extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) {
+	public Expression interpret(Environment env) throws DuplicateTypeDefinitionException {
 		TypeEnvironment.singleton.addType(this.typeName);
 		return Expression.EMPTY_EXPRESSION;
 	}

@@ -90,7 +90,9 @@ public class IfExpression extends SpecialFormApplication {
 		
 		StringBuilder s = new StringBuilder("(if ");
 
+		s.append("(get ");
 		s.append(cond.toClojureCode(env));
+		s.append(" 0)");
 		s.append(" ");
 
 		Pair<Type, Substitution> trueType = trueBranch.infer(env);

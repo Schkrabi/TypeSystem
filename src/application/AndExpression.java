@@ -1,6 +1,7 @@
 package application;
 
 import java.util.Arrays;
+import java.util.Iterator;
 
 import expression.Expression;
 import expression.Tuple;
@@ -36,11 +37,26 @@ public class AndExpression extends SpecialFormApplication {
 	@Override
 	protected String applicationToClojure(Tuple convertedArgs, Environment env) throws AppendableException {
 		StringBuilder s = new StringBuilder();
-		s.append("(and ");
-		s.append(convertedArgs.get(0).toClojureCode(env));
-		s.append(" ");
-		s.append(convertedArgs.get(1).toClojureCode(env));
-		s.append(")");
+		s.append("(with-meta ");
+		s.append("[(and");
+		s.append(' ');
+
+		Iterator<Expression> i = convertedArgs.iterator();
+		while (i.hasNext()) {
+			Expression e = i.next();
+			s.append("(get ");
+			s.append(e.toClojureCode(env));
+			s.append(" 0)");
+			if (i.hasNext()) {
+				s.append(' ');
+			}
+		}
+		s.append(")]");
+		
+		s.append("{:lang-type ");
+		s.append(TypeAtom.TypeBoolNative.clojureTypeRepresentation());
+		s.append("})");
+		
 		return s.toString();
 	}
 

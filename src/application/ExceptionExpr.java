@@ -54,7 +54,7 @@ public class ExceptionExpr extends SpecialFormApplication {
 
 	@Override
 	protected String applicationToClojure(Tuple convertedArgs, Environment env) throws AppendableException {
-		return "(throw (Throwable. " + convertedArgs.get(0).toClojureCode(env) + "))";
+		return "(throw (Throwable. (get " + convertedArgs.get(0).toClojureCode(env) + " 0)))";
 	}
 
 	@Override

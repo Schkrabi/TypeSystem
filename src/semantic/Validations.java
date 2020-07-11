@@ -453,4 +453,16 @@ public class Validations {
 			throw new UnexpectedExpressionException(representation);
 		}
 	}
+
+	public static void validateDeconstructList(List<SemanticNode> specialFormList) throws AppendableException {
+		if(specialFormList.size() < 3) {
+			throw new InvalidNumberOfArgsException(2, specialFormList.size() - 1);
+		}
+		
+		SemanticNode deconstructAs = specialFormList.get(0);
+		if (deconstructAs.type != SemanticNode.NodeType.SYMBOL
+				|| !deconstructAs.asSymbol().equals(SemanticParserStatic.DECONSTRUCT)) {
+			throw new UnexpectedExpressionException(deconstructAs);
+		}
+	}
 }
