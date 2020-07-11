@@ -35,6 +35,7 @@ public final class SemanticParserStatic {
 	public static final String AND = "and";
 	public static final String OR = "or";
 	public static final String DECONSTRUCT = "deconstruct";
+	public static final String CAN_DECONSTRUCT_AS = "can-deconstruct-as";
 	/**
 	 * Unused special form. For testing purposes only!
 	 */
@@ -60,6 +61,7 @@ public final class SemanticParserStatic {
 		specialForms.add(CONSTRUCT);
 		specialForms.add(CONVERT);
 		specialForms.add(DECONSTRUCT);
+		specialForms.add(CAN_DECONSTRUCT_AS);
 	}
 
 	/**

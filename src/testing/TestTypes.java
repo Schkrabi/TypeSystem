@@ -126,7 +126,6 @@ class TestTypes {
 
 		TestTypes.testGetUnconstrainedVariables(variable, Arrays.asList(new TypeVariable("x")));
 		TestTypes.testConvertTo(variable, Expression.EMPTY_EXPRESSION, TypeAtom.TypeInt, Expression.EMPTY_EXPRESSION);
-		TestTypes.testRemoveRepresentationInfo(variable, variable);
 
 		TestTypes.testApply(variable, Substitution.EMPTY, variable);
 		TestTypes.testApply(variable,
@@ -201,9 +200,6 @@ class TestTypes {
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),
 				new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman, TypeAtom.TypeInt, TypeAtom.TypeBool)));
 
-		TestTypes.testRemoveRepresentationInfo(tuple,
-				new TypeTuple(Arrays.asList(TypeAtom.TypeInt, new TypeVariable("a"), TypeAtom.TypeBool)));
-
 		int d = tuple.tupleDistance(TypeTuple.EMPTY_TUPLE);
 		if (d <= 0) {
 			fail(tuple + ".distance(" + TypeTuple.EMPTY_TUPLE + ") == " + d + " should be bigger than 0");
@@ -255,9 +251,6 @@ class TestTypes {
 
 		Assertions.assertThrows(ConversionException.class,
 				() -> typeArrow.convertTo(Expression.EMPTY_EXPRESSION, TypeAtom.TypeInt));
-
-		TestTypes.testRemoveRepresentationInfo(typeArrow,
-				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeInt)), TypeAtom.TypeInt));
 
 		TestTypes.testApply(new TypeArrow(TypeAtom.TypeBool, new TypeVariable("a")),
 				new Substitution(
@@ -358,7 +351,6 @@ class TestTypes {
 								Expression.EMPTY_EXPRESSION,
 								new TypeAtom(new TypeName("Test"), TypeRepresentation.STRING)));
 
-		TestTypes.testRemoveRepresentationInfo(TypeAtom.TypeIntNative, TypeAtom.TypeInt);
 		TestTypes.testApply(TypeAtom.TypeInt,
 				new Substitution(
 						Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeIntRoman))),
@@ -395,7 +387,6 @@ class TestTypes {
 		// ToString
 		ror.toString();
 		ror.getRepresentations();
-		Assertions.assertThrows(AppendableException.class, () -> ror.convertToClojure("", TypeTuple.EMPTY_TUPLE));
 
 		// Equals & CompareTo
 		TestTypes.testReflexivity(ror);
@@ -410,8 +401,6 @@ class TestTypes {
 
 		Assertions.assertThrows(AppendableException.class,
 				() -> ror.convertTo(Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntRoman));
-
-		TestTypes.testRemoveRepresentationInfo(ror, ror);
 
 		TestTypes.testApply(
 				RepresentationOr.makeRepresentationOr(
@@ -533,13 +522,6 @@ class TestTypes {
 
 		if (!converted.equals(expected)) {
 			fail(type + ".convertTo(" + from + ", " + to + ") failed got " + converted + " expected " + expected);
-		}
-	}
-
-	static void testRemoveRepresentationInfo(Type type, Type expected) {
-		Type got = type.removeRepresentationInfo();
-		if (!got.equals(expected)) {
-			fail(type + ".removeRepresentationInfo() expected " + expected + " got " + got);
 		}
 	}
 

@@ -17,8 +17,10 @@ import abstraction.ExtendedLambda;
 import abstraction.Function;
 import abstraction.Lambda;
 import application.AndExpression;
+import application.CanDeconstructAs;
 import application.Construct;
 import application.Convert;
+import application.Deconstruct;
 import application.DefineConstructor;
 import application.AbstractionApplication;
 import application.DefineConversion;
@@ -157,6 +159,9 @@ class TestParser {
 						new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, new TypeVariable("A"))),
 						new Symbol("y")));
 
+		this.testParse("(deconstruct x Int:Native)", new Deconstruct(new Symbol("x"), TypeAtom.TypeIntNative));;
+		this.testParse("(can-deconstruct-as x Int:Native)", new CanDeconstructAs(new Symbol("x"), TypeAtom.TypeIntNative));
+		
 		// Dummy object tests
 		new Validations();
 		new SemanticParserStatic();

@@ -1067,12 +1067,13 @@ class TestInterpretation {
 	
 	@Test
 	void testDeconstruct() throws AppendableException {
-		Deconstruct deconstruct = new Deconstruct(new LitComposite(new LitString("42"), TypeAtom.TypeIntString));
+		Deconstruct deconstruct = new Deconstruct(new LitComposite(new LitString("42"), TypeAtom.TypeIntString), TypeAtom.TypeStringNative);
 		
 		deconstruct.toString();
 		
 		TestInterpretation.testReflexivity(deconstruct);
-		TestInterpretation.testDifference(deconstruct, new Deconstruct(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman)));
+		TestInterpretation.testDifference(deconstruct, new Deconstruct(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman), TypeAtom.TypeStringNative));
+		TestInterpretation.testDifference(deconstruct, new Deconstruct(new LitComposite(new LitString("42"), TypeAtom.TypeIntString), TypeAtom.TypeIntNative));
 		TestInterpretation.testDifference(deconstruct, Expression.EMPTY_EXPRESSION);
 		
 		TestInterpretation.testInterpretation(deconstruct, new LitString("42"), Environment.topLevelEnvironment);

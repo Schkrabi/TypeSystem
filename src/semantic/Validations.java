@@ -454,6 +454,12 @@ public class Validations {
 		}
 	}
 
+	/**
+	 * Validates deconstruct-as special form 
+	 * 
+	 * @param specialFormList validated list
+	 * @throws AppendableException if validation fails
+	 */
 	public static void validateDeconstructList(List<SemanticNode> specialFormList) throws AppendableException {
 		if(specialFormList.size() < 3) {
 			throw new InvalidNumberOfArgsException(2, specialFormList.size() - 1);
@@ -463,6 +469,33 @@ public class Validations {
 		if (deconstructAs.type != SemanticNode.NodeType.SYMBOL
 				|| !deconstructAs.asSymbol().equals(SemanticParserStatic.DECONSTRUCT)) {
 			throw new UnexpectedExpressionException(deconstructAs);
+		}
+		
+		SemanticNode type = specialFormList.get(2);
+		if(Validations.isTypeIdentifierNode(type)) {
+			throw new UnexpectedExpressionException(type);
+		}
+	}
+	
+	/**
+	 * Validates can-deconstruct-as special form list
+	 * @param specialFormList validated list
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateCanDeconstructAsList(List<SemanticNode> specialFormList) throws AppendableException{
+		if(specialFormList.size() < 3) {
+			throw new InvalidNumberOfArgsException(2, specialFormList.size() - 1);
+		}
+		
+		SemanticNode deconstructAs = specialFormList.get(0);
+		if (deconstructAs.type != SemanticNode.NodeType.SYMBOL
+				|| !deconstructAs.asSymbol().equals(SemanticParserStatic.CAN_DECONSTRUCT_AS)) {
+			throw new UnexpectedExpressionException(deconstructAs);
+		}
+		
+		SemanticNode type = specialFormList.get(2);
+		if(Validations.isTypeIdentifierNode(type)) {
+			throw new UnexpectedExpressionException(type);
 		}
 	}
 }

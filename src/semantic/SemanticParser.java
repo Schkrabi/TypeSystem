@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import abstraction.ExtendedLambda;
 import abstraction.Lambda;
 import application.AndExpression;
+import application.CanDeconstructAs;
 import application.Construct;
 import application.Convert;
 import application.Deconstruct;
@@ -208,6 +209,9 @@ public class SemanticParser {
 			break;
 		case SemanticParserStatic.DECONSTRUCT:
 			e = SemanticParser.parseDeconstruct(specialFormList);
+			break;
+		case SemanticParserStatic.CAN_DECONSTRUCT_AS:
+			e = SemanticParser.parseCanDeconstructAs(specialFormList);
 			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
@@ -742,9 +746,9 @@ public class SemanticParser {
 	
 	/**
 	 * Parses Deconstruct special form
-	 * @param specialFormList
-	 * @return
-	 * @throws AppendableException
+	 * @param specialFormList parsed list
+	 * @return Deconstruct instance
+	 * @throws AppendableException if validations fails
 	 */
 	private static Deconstruct parseDeconstruct(List<SemanticNode> specialFormList) throws AppendableException{
 		try {
@@ -755,6 +759,28 @@ public class SemanticParser {
 		}
 		
 		Expression e = SemanticParser.parseNode(specialFormList.get(1));
+		Type t = SemanticParser.parseType(specialFormList.get(2));
 		
+		return new Deconstruct(e, t);
+	}
+	
+	/**
+	 * Parses can deconstruct as special from list
+	 * @param specialFormList parsed list
+	 * @return CanDeconstructAs instance
+	 * @throws AppendableException if validation fails
+	 */
+	private static CanDeconstructAs parseCanDeconstructAs(List<SemanticNode> specialFormList)  throws AppendableException{
+		try {
+			Validations.validateCanDeconstructAsList(specialFormList);
+		}catch(AppendableException e) {
+			e.appendMessage("in " + specialFormList.toString());
+			throw e;
+		}
+		
+		Expression e = SemanticParser.parseNode(specialFormList.get(1));
+		Type t = SemanticParser.parseType(specialFormList.get(2));
+		
+		return new CanDeconstructAs(e, t);
 	}
 }
