@@ -28,8 +28,7 @@ public class ConversionException extends AppendableException {
 	public final Expression converted;
 
 	public ConversionException(Type fromType, Type toType, Expression converted) {
-		super("Trying to convert uncovertable types " + fromType.toString() + " to " + toType.toString()
-				+ " on expression " + converted.toString());
+		super("Trying to convert uncovertable types " + fromType.toString() + " to " + toType.toString());
 		this.fromType = fromType;
 		this.toType = toType;
 		this.converted = converted;

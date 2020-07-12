@@ -137,8 +137,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		if (toType instanceof TypeVariable) {
 			return expr;
 		}
-		if (!(toType instanceof TypeTuple) || (!(expr instanceof Tuple)) || (this.size() != ((TypeTuple) toType).size())
-				|| (this.size() != ((Tuple) expr).size())) {
+		if (!(toType instanceof TypeTuple) || (!(expr instanceof Tuple)) || (this.size() != ((TypeTuple) toType).size())) {
 			throw new ConversionException(this, toType, expr);
 		}
 		TypeTuple ttpl = (TypeTuple) toType;

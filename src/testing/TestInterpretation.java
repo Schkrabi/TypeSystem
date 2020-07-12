@@ -22,6 +22,7 @@ import abstraction.Lambda;
 import abstraction.Abstraction;
 import abstraction.Operator;
 import application.AndExpression;
+import application.CanDeconstructAs;
 import application.Construct;
 import application.Convert;
 import application.Deconstruct;
@@ -833,10 +834,11 @@ class TestInterpretation {
 		TestInterpretation.testOperator(Operator.Subtraction,
 				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(42))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		/*TestInterpretation.testOperator(Operator.Deconstruct,
-				new Tuple(Arrays.asList(new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
-				new LitString("42"), null);
-				*/
+		/*
+		 * TestInterpretation.testOperator(Operator.Deconstruct, new
+		 * Tuple(Arrays.asList(new LitComposite(new LitString("42"),
+		 * TypeAtom.TypeIntString))), new LitString("42"), null);
+		 */
 	}
 
 	@Test
@@ -1064,22 +1066,48 @@ class TestInterpretation {
 		Pair<Type, Substitution> p = construct.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeAtom.TypeIntRoman, construct);
 	}
-	
+
 	@Test
 	void testDeconstruct() throws AppendableException {
-		Deconstruct deconstruct = new Deconstruct(new LitComposite(new LitString("42"), TypeAtom.TypeIntString), TypeAtom.TypeStringNative);
-		
+		Deconstruct deconstruct = new Deconstruct(new LitComposite(new LitString("42"), TypeAtom.TypeIntString),
+				TypeAtom.TypeStringNative);
+
 		deconstruct.toString();
-		
+
 		TestInterpretation.testReflexivity(deconstruct);
-		TestInterpretation.testDifference(deconstruct, new Deconstruct(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman), TypeAtom.TypeStringNative));
-		TestInterpretation.testDifference(deconstruct, new Deconstruct(new LitComposite(new LitString("42"), TypeAtom.TypeIntString), TypeAtom.TypeIntNative));
+		TestInterpretation.testDifference(deconstruct, new Deconstruct(
+				new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman), TypeAtom.TypeStringNative));
+		TestInterpretation.testDifference(deconstruct,
+				new Deconstruct(new LitComposite(new LitString("42"), TypeAtom.TypeIntString), TypeAtom.TypeIntNative));
 		TestInterpretation.testDifference(deconstruct, Expression.EMPTY_EXPRESSION);
-		
+
 		TestInterpretation.testInterpretation(deconstruct, new LitString("42"), Environment.topLevelEnvironment);
-		
+
 		Pair<Type, Substitution> p = deconstruct.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, TypeAtom.TypeStringNative, deconstruct);
+	}
+
+	@Test
+	void testCanDeconstructAs() throws AppendableException {
+		CanDeconstructAs canDeconstruct = new CanDeconstructAs(
+				new LitComposite(new LitString("42"), TypeAtom.TypeIntString), TypeAtom.TypeStringNative);
+		CanDeconstructAs cannotDeconstrut = new CanDeconstructAs(
+				new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman), TypeAtom.TypeIntNative);
+
+		canDeconstruct.toString();
+
+		TestInterpretation.testReflexivity(canDeconstruct);
+		TestInterpretation.testDifference(canDeconstruct, new CanDeconstructAs(
+				new LitComposite(new LitString("42"), TypeAtom.TypeIntString), TypeAtom.TypeIntNative));
+		TestInterpretation.testDifference(canDeconstruct,
+				new CanDeconstructAs(new LitDouble(3.14), TypeAtom.TypeStringNative));
+		TestInterpretation.testDifference(canDeconstruct, Expression.EMPTY_EXPRESSION);
+
+		TestInterpretation.testInterpretation(canDeconstruct, LitBoolean.TRUE, Environment.topLevelEnvironment);
+		TestInterpretation.testInterpretation(cannotDeconstrut, LitBoolean.FALSE, Environment.topLevelEnvironment);
+
+		Pair<Type, Substitution> p = canDeconstruct.infer(Environment.topLevelEnvironment);
+		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, canDeconstruct);
 	}
 
 	@Test

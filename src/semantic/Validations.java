@@ -472,7 +472,7 @@ public class Validations {
 		}
 		
 		SemanticNode type = specialFormList.get(2);
-		if(Validations.isTypeIdentifierNode(type)) {
+		if(!Validations.isTypeIdentifierNode(type)) {
 			throw new UnexpectedExpressionException(type);
 		}
 	}
@@ -494,7 +494,7 @@ public class Validations {
 		}
 		
 		SemanticNode type = specialFormList.get(2);
-		if(Validations.isTypeIdentifierNode(type)) {
+		if(!Validations.isTypeIdentifierNode(type)) {
 			throw new UnexpectedExpressionException(type);
 		}
 	}
