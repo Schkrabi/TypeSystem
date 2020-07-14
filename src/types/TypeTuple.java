@@ -137,11 +137,12 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		if (toType instanceof TypeVariable) {
 			return expr;
 		}
-		if (!(toType instanceof TypeTuple) || (!(expr instanceof Tuple)) || (this.size() != ((TypeTuple) toType).size())) {
+		if (!(toType instanceof TypeTuple) || (this.size() != ((TypeTuple) toType).size())) {
 			throw new ConversionException(this, toType, expr);
 		}
 		TypeTuple ttpl = (TypeTuple) toType;
 		Tuple tpl = (Tuple) expr;
+		//TODO create anonymous Expression instance that gets item from tuple
 
 		List<Expression> ts = new LinkedList<Expression>();
 		Iterator<Expression> i = tpl.iterator();

@@ -192,9 +192,6 @@ class TestTypes {
 				() -> tuple.convertTo(
 						new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString))));
-		Assertions.assertThrows(ConversionException.class,
-				() -> tuple.convertTo(new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"))),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString, TypeAtom.TypeBool))));
 
 		TestTypes.testApply(tuple,
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),

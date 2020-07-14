@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -436,13 +437,12 @@ class TestComplex {
 	@Test
 	void testClojure() throws AppendableException {
 		// Literals
-		this.testClojureCompile("0", "0");
-		this.testClojureCompile("3.141521", "3.141521");
-		this.testClojureCompile("#t", "true");
-		this.testClojureCompile("#f", "false");
-		this.testClojureCompile("\"Hello World\"", "\"Hello World\"");
-		this.testClojureCompile("(Int:Roman \"XLII\")", "(" + AbstractionApplication.clojureEapply
-				+ " `([[:StringNative] ~identity]) [:StringNative] [\"XLII\"])");
+		this.testClojureCompile("0", "(with-meta [0] {:lang-type (lang-type-atom. \"Int\" \"Native\")})");
+		this.testClojureCompile("3.141521", "(with-meta [3.141521] {:lang-type (lang-type-atom. \"Double\" \"Native\")})");
+		this.testClojureCompile("#t", "(with-meta [true] {:lang-type (lang-type-atom. \"Bool\" \"Native\")})");
+		this.testClojureCompile("#f", "(with-meta [false] {:lang-type (lang-type-atom. \"Bool\" \"Native\")})");
+		this.testClojureCompile("\"Hello World\"", "(with-meta [\"Hello World\"] {:lang-type (lang-type-atom. \"String\" \"Native\")})");
+		this.testClojureCompileExpression(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman), "(with-meta [(with-meta [\"XLII\"] {:lang-type (lang-type-atom. \"String\" \"Native\")})] {:lang-type (lang-type-atom. \"Int\" \"Roman\")})");
 		// Unbound Variable
 		this.testClojureCompile("variable", "variable");
 		// Lambda
@@ -881,12 +881,9 @@ class TestComplex {
 			fail("Interpretation of " + code + " yields " + last + " were expecting " + expected);
 		}
 	}
-
-	private String compileToClojure(String code) throws AppendableException {
-		SemanticParser semanticParser = new SemanticParser();
-		List<Expression> l = this.parseString(code, semanticParser);
+	
+	private String compileExpressionsToClojure(List<Expression> l) throws AppendableException {
 		StringBuilder s = new StringBuilder();
-
 		Iterator<Expression> i = l.iterator();
 		while (i.hasNext()) {
 			s.append(i.next().toClojureCode());
@@ -897,13 +894,30 @@ class TestComplex {
 		return s.toString();
 	}
 
+	private String compileToClojure(String code) throws AppendableException {
+		SemanticParser semanticParser = new SemanticParser();
+		List<Expression> l = this.parseString(code, semanticParser);
+		
+		return this.compileExpressionsToClojure(l);
+	}
+	
+	private void testClojureCodeCmp(String generatedCode, String expectedCode) {
+		if(generatedCode.compareTo(expectedCode) != 0) {
+			fail("Clojure compilation test failed, got " + generatedCode + " expected " + expectedCode);
+		}
+	}
+	
+	private void testClojureCompileExpression(Expression e, String expected) throws AppendableException{
+		List<Expression> l = new LinkedList<Expression>();
+		l.add(e);
+		String s = this.compileExpressionsToClojure(l);
+		this.testClojureCodeCmp(s, expected);
+	}
+
 	private void testClojureCompile(String code, String expected) throws AppendableException {
 		String s = this.compileToClojure(code);
 
-		if (s.compareTo(expected) != 0) {
-			fail("Clojure compilation test failed, compiling " + code + " expected " + expected + " got "
-					+ s.toString());
-		}
+		this.testClojureCodeCmp(s, expected);
 	}
 
 	private void testClojureCompileRegex(String code, String regex) throws AppendableException {

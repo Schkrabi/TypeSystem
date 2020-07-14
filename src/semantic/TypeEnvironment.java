@@ -369,7 +369,7 @@ public class TypeEnvironment {
 		 */
 		public Lambda getRawConstructor(TypeTuple argsType) throws AppendableException {
 			Optional<Lambda> o = this.findConstrutor(argsType);
-			if (o.isEmpty()) {
+			if (!o.isPresent()) {
 				throw new UnrecognizedConstructorException(this.type, argsType);
 			}
 			return o.get();
