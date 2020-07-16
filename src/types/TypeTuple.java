@@ -1,5 +1,6 @@
 package types;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -10,9 +11,15 @@ import java.util.Vector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import abstraction.Lambda;
+import application.AbstractionApplication;
 import expression.Expression;
+import expression.Symbol;
 import expression.Tuple;
+import interpretation.Environment;
 import util.AppendableException;
+import util.NameGenerator;
+import util.Pair;
 
 /**
  * Tuple of types
@@ -140,24 +147,74 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		if (!(toType instanceof TypeTuple) || (this.size() != ((TypeTuple) toType).size())) {
 			throw new ConversionException(this, toType, expr);
 		}
-		TypeTuple ttpl = (TypeTuple) toType;
-		Tuple tpl = (Tuple) expr;
-		//TODO create anonymous Expression instance that gets item from tuple
+		final TypeTuple me = this;
+		
+		Expression conversionSpecialForm = new Expression() {
+			public final Expression converted = expr;
+			public final TypeTuple fromTuple = me;
+			public final TypeTuple toTuple = (TypeTuple)toType;
 
-		List<Expression> ts = new LinkedList<Expression>();
-		Iterator<Expression> i = tpl.iterator();
-		Iterator<Type> j = this.iterator();
-		Iterator<Type> k = ttpl.iterator();
+			@Override
+			public Expression interpret(Environment env) throws AppendableException {
+				Expression intp = this.converted.interpret(env);
+				if(!(intp instanceof Tuple)) {
+					throw new ConversionException(toTuple, fromTuple, converted);
+				}
+				Tuple t = (Tuple)intp;
+				if(t.size() != fromTuple.size()) {
+					throw new ConversionException(toTuple, fromTuple, converted);
+				}
+				
+				List<Expression> l = new LinkedList<Expression>();
+				Iterator<Expression> i = t.iterator();
+				Iterator<Type> j = fromTuple.iterator();
+				Iterator<Type> k = toTuple.iterator();
+				while(i.hasNext()) {
+					Expression e = i.next();
+					Type from = j.next();
+					Type to = k.next();
+					
+					l.add(from.convertTo(e, to));
+				}
+				
+				return new Tuple(l);				
+			}
 
-		while (i.hasNext()) {
-			Expression e = i.next();
-			Type t = j.next();
-			Type u = k.next();
+			@Override
+			public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+				Pair<Type, Substitution> p = this.converted.infer(env);
+				return new Pair<Type, Substitution>(this.toTuple, p.second);
+			}
 
-			ts.add(t.convertTo(e, u));
-		}
-
-		return new Tuple(ts);
+			@Override
+			public String toClojureCode(Environment env) throws AppendableException {
+				StringBuilder s = new StringBuilder();
+				Symbol symbol = new Symbol(NameGenerator.next());
+				s.append("((fn [");
+				s.append(symbol.toClojureCode(env));
+				s.append("] [");
+				
+				Iterator<Type> i = fromTuple.iterator();
+				Iterator<Type> j = toTuple.iterator();
+				while(i.hasNext()) {
+					Type from = i.next();
+					Type to = j.next();
+					Expression e = from.convertTo(symbol, to);
+					s.append(e.toClojureCode(env));
+					if(i.hasNext()) {
+						s.append(" ");
+					}
+				}
+				s.append("])");
+				
+				s.append(this.converted.toClojureCode(env));
+				s.append(")");
+				
+				return s.toString();
+			}
+		};
+		
+		return conversionSpecialForm;
 	}
 
 	@Override
