@@ -14,13 +14,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import abstraction.Lambda;
-import abstraction.Operator;
-import application.AbstractionApplication;
 import expression.Expression;
 import expression.Tuple;
 import expression.Symbol;
 import interpretation.Environment;
 import literal.LitBoolean;
+import literal.LitComposite;
 import literal.LitString;
 import semantic.TypeEnvironment;
 import types.*;
@@ -172,25 +171,21 @@ class TestTypes {
 		TestTypes.testGetUnconstrainedVariables(tuple, Arrays.asList(new TypeVariable("a")));
 
 		TestTypes.testConvertTo(tuple,
-				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
+				new Tuple(Arrays.asList(new LitComposite(new LitString("XIII"), TypeAtom.TypeIntRoman), new Symbol("x"),
+						LitBoolean.TRUE)),
 				new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString, TypeAtom.TypeBool)),
-				new Tuple(Arrays.asList(
-						new AbstractionApplication(Operator.IntRomanToIntString, new Tuple(Arrays.asList(new LitString("XIII")))),
-						new Symbol("x"), LitBoolean.TRUE)));
+				new Tuple(Arrays.asList(new LitComposite(new LitString("13"), TypeAtom.TypeIntString), new Symbol("x"),
+						LitBoolean.TRUE)));
 		TestTypes.testConvertTo(tuple,
 				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
 				new TypeVariable("b"),
 				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)));
 
 		Assertions.assertThrows(ConversionException.class,
-				() -> tuple.convertTo(
-						new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
+				() -> tuple.convertTo(new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
 						TypeAtom.TypeInt));
-		Assertions.assertThrows(ConversionException.class, () -> tuple.convertTo(Expression.EMPTY_EXPRESSION,
-				new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString, TypeAtom.TypeBool))));
 		Assertions.assertThrows(ConversionException.class,
-				() -> tuple.convertTo(
-						new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
+				() -> tuple.convertTo(new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString))));
 
 		TestTypes.testApply(tuple,
@@ -335,8 +330,8 @@ class TestTypes {
 
 		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), new TypeVariable("a"),
 				new LitString("42"));
-		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), TypeAtom.TypeIntRoman,
-				new AbstractionApplication(Operator.IntStringToIntRoman, new Tuple(Arrays.asList(new LitString("42")))));
+		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitComposite(new LitString("42"), TypeAtom.TypeIntString),
+				TypeAtom.TypeIntRoman, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman));
 
 		Assertions.assertThrows(ConversionException.class,
 				() -> atom.convertTo(Expression.EMPTY_EXPRESSION, new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt)));
@@ -515,7 +510,7 @@ class TestTypes {
 	}
 
 	static void testConvertTo(Type type, Expression from, Type to, Expression expected) throws AppendableException {
-		Expression converted = type.convertTo(from, to);
+		Expression converted = type.convertTo(from, to).interpret(Environment.topLevelEnvironment);
 
 		if (!converted.equals(expected)) {
 			fail(type + ".convertTo(" + from + ", " + to + ") failed got " + converted + " expected " + expected);

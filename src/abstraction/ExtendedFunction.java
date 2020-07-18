@@ -19,7 +19,6 @@ import types.TypeTuple;
 import util.AppendableException;
 import util.Pair;
 import util.ThrowingBinaryOperator;
-import util.ThrowingFunction;
 
 /**
  * Expression for interpreted function with various implementations
