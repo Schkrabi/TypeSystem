@@ -27,6 +27,7 @@ import expression.Expression;
 import expression.Symbol;
 import expression.Tuple;
 import interpretation.Environment;
+import literal.LitBoolean;
 import literal.LitComposite;
 import literal.LitInteger;
 import literal.LitString;
@@ -117,8 +118,8 @@ class TestComplex {
 		this.testInterpretString(
 				"(define x (construct List Linked (construct Int Roman \"XLII\") (construct List Linked (construct Int String \"42\") (construct List Linked 42 (construct List Linked)))))"
 						+ "(define head-list (extended-lambda ((List l)) "
-						+ "((List:Linked) (if (equals? (deconstruct l) ()) (error \"Cannot make head of empty list!\") (car (deconstruct l)))) "
-						+ "((List:Functional) (if (equals? (deconstruct l) ()) (error \"Cannot make head of empty list\") (fcar (deconstruct l))))))"
+						+ "((List:Linked) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List:Linked))))) "
+						+ "((List:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list\") (fcar (deconstruct l ((((A B) #> C)) #> D)))))))"
 						+ "(head-list x)",
 				xlii);
 
@@ -128,8 +129,8 @@ class TestComplex {
 				xlii);
 
 		this.testInterpretString("(define tail-list (extended-lambda ((List l)) "
-				+ "((List:Linked) (if (equals? (deconstruct l) ()) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l))))"
-				+ "((List:Functional) (if (equals? (deconstruct l) ()) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l))))))"
+				+ "((List:Linked) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List:Linked)))))"
+				+ "((List:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A B) #> C)) #> D)))))))"
 				+ "(tail-list x)",
 				new LitComposite(
 						new Tuple(Arrays.asList(fortyTwoStr,
@@ -151,8 +152,16 @@ class TestComplex {
 						new Tuple(Arrays.asList(new LitInteger(1),
 								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
 						linkedList));
+		
+		this.testInterpretString("(define empty-list? (extended-lambda ((List l)) " 
+				+ "((List:Linked) (can-deconstruct-as l ())) "
+				+ "((List:Functional) (can-deconstruct-as l ()))))"
+				+ "(empty-list? x)",
+				LitBoolean.FALSE);
+		
+		this.testInterpretString("(empty-list? y)", LitBoolean.FALSE);
 
-		this.testInterpretString("(define append-list (lambda ((List l) x) " + "(if (equals? (deconstruct l) ()) "
+		this.testInterpretString("(define append-list (lambda ((List l) x) " + "(if (empty-list? l) "
 				+ "(construct List Linked x (construct List Linked)) "
 				+ "(construct List Linked (head-list l) (append-list (tail-list l) x)))))" + "(append-list x 21)",
 				new LitComposite(
@@ -175,7 +184,7 @@ class TestComplex {
 						linkedList));
 
 		this.testInterpretString(
-				"(define reverse-list (lambda ((List l)) " + "(if (equals? (deconstruct l) ()) "
+				"(define reverse-list (lambda ((List l)) " + "(if (empty-list? l) "
 						+ "(construct List Linked) " + "(append-list (reverse-list (tail-list l)) (head-list l)))))"
 						+ "(reverse-list x)",
 				new LitComposite(
@@ -415,39 +424,41 @@ class TestComplex {
 				+ "                                            (construct List Functional)\n"
 				+ "                                            (append-list-el (reverse-list-el (tail-list l)) (head-list l))))))",
 				Expression.EMPTY_EXPRESSION);
-		this.testInterpretString("(reverse-list-el x)", 
+		this.testInterpretString("(reverse-list-el x)",
 				new LitComposite(
-						new Tuple(Arrays.asList(
-								new LitInteger(42),
+						new Tuple(Arrays.asList(new LitInteger(42),
 								new LitComposite(
 										new Tuple(Arrays.asList(
 												new LitComposite(new LitString("42"), TypeAtom.TypeIntString),
-												new LitComposite(
-														new Tuple(Arrays.asList(
-																new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
-																new LitComposite(Expression.EMPTY_EXPRESSION, typeListLinkedAtom))), 
-														typeListLinkedAtom))), 
-										typeListLinkedAtom))), 
+												new LitComposite(new Tuple(Arrays.asList(
+														new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
+														new LitComposite(Expression.EMPTY_EXPRESSION,
+																typeListLinkedAtom))),
+														typeListLinkedAtom))),
+										typeListLinkedAtom))),
 						typeListLinkedAtom));
 		this.testInterpretString("(deconstruct y)", null);
-		//this.testInterpretString("(reverse-list-el y)", 
-		//		new LitInteger(42));
+		// this.testInterpretString("(reverse-list-el y)",
+		// new LitInteger(42));
 	}
 
 	@Test
 	void testClojure() throws AppendableException {
 		// Literals
 		this.testClojureCompile("0", "(with-meta [0] {:lang-type (lang-type-atom. \"Int\" \"Native\")})");
-		this.testClojureCompile("3.141521", "(with-meta [3.141521] {:lang-type (lang-type-atom. \"Double\" \"Native\")})");
+		this.testClojureCompile("3.141521",
+				"(with-meta [3.141521] {:lang-type (lang-type-atom. \"Double\" \"Native\")})");
 		this.testClojureCompile("#t", "(with-meta [true] {:lang-type (lang-type-atom. \"Bool\" \"Native\")})");
 		this.testClojureCompile("#f", "(with-meta [false] {:lang-type (lang-type-atom. \"Bool\" \"Native\")})");
-		this.testClojureCompile("\"Hello World\"", "(with-meta [\"Hello World\"] {:lang-type (lang-type-atom. \"String\" \"Native\")})");
-		this.testClojureCompileExpression(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman), "(with-meta [(with-meta [\"XLII\"] {:lang-type (lang-type-atom. \"String\" \"Native\")})] {:lang-type (lang-type-atom. \"Int\" \"Roman\")})");
+		this.testClojureCompile("\"Hello World\"",
+				"(with-meta [\"Hello World\"] {:lang-type (lang-type-atom. \"String\" \"Native\")})");
+		this.testClojureCompileExpression(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
+				"(with-meta [(with-meta [\"XLII\"] {:lang-type (lang-type-atom. \"String\" \"Native\")})] {:lang-type (lang-type-atom. \"Int\" \"Roman\")})");
 		// Unbound Variable
 		this.testClojureCompile("variable", "variable");
 		// Lambda
-		this.testClojureCompileRegex("(lambda (x y) x)",
-				TestComplex.escapeBrackets("`([[:\\w* :\\w*] ~(fn [x y] x)])"));
+		this.testClojureCompileRegex("(lambda (x y) x)", TestComplex.escapeBrackets(
+				"(with-meta [(with-meta (fn [x y] x) {:lang-type (lang-type-arrow. [\\w* \\w*] \\w*)})] {:lang-type (lang-type-arrow. [\\\\w* \\\\w*] \\\\w*)})"));
 		// Application
 		this.testClojureCompile("((lambda ((Int:Native x) (Int:Native y)) x) 42 21)",
 				"(" + AbstractionApplication.clojureEapply
@@ -881,7 +892,7 @@ class TestComplex {
 			fail("Interpretation of " + code + " yields " + last + " were expecting " + expected);
 		}
 	}
-	
+
 	private String compileExpressionsToClojure(List<Expression> l) throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		Iterator<Expression> i = l.iterator();
@@ -897,17 +908,17 @@ class TestComplex {
 	private String compileToClojure(String code) throws AppendableException {
 		SemanticParser semanticParser = new SemanticParser();
 		List<Expression> l = this.parseString(code, semanticParser);
-		
+
 		return this.compileExpressionsToClojure(l);
 	}
-	
+
 	private void testClojureCodeCmp(String generatedCode, String expectedCode) {
-		if(generatedCode.compareTo(expectedCode) != 0) {
+		if (generatedCode.compareTo(expectedCode) != 0) {
 			fail("Clojure compilation test failed, got " + generatedCode + " expected " + expectedCode);
 		}
 	}
-	
-	private void testClojureCompileExpression(Expression e, String expected) throws AppendableException{
+
+	private void testClojureCompileExpression(Expression e, String expected) throws AppendableException {
 		List<Expression> l = new LinkedList<Expression>();
 		l.add(e);
 		String s = this.compileExpressionsToClojure(l);
