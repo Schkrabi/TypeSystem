@@ -62,8 +62,16 @@ public class TypeVariable extends Type {
 	@Override
 	public Type apply(Substitution s) {
 		if (s.containsVariable(this)) {
-			Type t = s.get(this).get();
-			return t.apply(s);
+			Type t = this;
+			Type last = null;
+			while(t != last) {
+				last = t;
+				t = s.get(this).get();
+				if(t == this)
+					break;
+			}
+				
+			return t;
 		}
 		return this;
 	}

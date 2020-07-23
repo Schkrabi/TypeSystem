@@ -160,8 +160,12 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 				@Override
 				public Expression interpret(Environment env) throws AppendableException {
-					Tuple t = (Tuple) symbol.interpret(env);
-					// Should not interpret onverted value again as it will already be bound
+					Expression e = symbol.interpret(env);
+					if(!(e instanceof Tuple)) {
+						throw new AppendableException("Expected tuple got " + e.toString());
+					}
+					Tuple t = (Tuple) e;
+					// Should not interpret converted value again as it will already be bound
 					// interpreted
 					return t.get(constK);
 				}
