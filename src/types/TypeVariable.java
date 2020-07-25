@@ -61,19 +61,20 @@ public class TypeVariable extends Type {
 
 	@Override
 	public Type apply(Substitution s) {
-		if (s.containsVariable(this)) {
-			Type t = this;
-			Type last = null;
-			while(t != last) {
-				last = t;
-				t = s.get(this).get();
-				if(t == this)
-					break;
+		Type t = this;
+		Set<TypeVariable> history = new TreeSet<TypeVariable>();
+		while(t instanceof TypeVariable) {
+			TypeVariable tv = (TypeVariable)t;
+			if(!s.containsVariable(tv)) {
+				return tv;
 			}
-				
-			return t;
+			history.add(tv);
+			t = s.get(tv).get();
+			if(history.contains(t))
+				return t;
 		}
-		return this;
+			
+		return t.apply(s);
 	}
 
 	@Override
