@@ -104,28 +104,13 @@ public abstract class Application extends Expression {
 			throw new InvalidNumberOfArgumentsException(expectedType.size(), args, this);
 		}
 		
-		Iterator<Expression> i = args.iterator();
-		Iterator<Type> j = argsType.iterator();
-		Iterator<Type> k = expectedType.iterator();
-		
-		List<Expression> l = new LinkedList<Expression>();
-		
-		while(i.hasNext()) {
-			Expression arg = i.next();
-			Type fromType = j.next();
-			Type toType = k.next();
-			
-			l.add(fromType.convertTo(arg, toType));
-		}
-		
-		Tuple ret = new Tuple(l);
-		
-		return ret;
+		Expression e = argsType.convertTo(args, expectedType);
+		return (Tuple)e;
 	}
 	
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {		
-		Tuple interpretedAndConvertedArgs = (Tuple)this.convertArgs(this.args, env);
+	public Expression interpret(Environment env) throws AppendableException {
+		Tuple interpretedAndConvertedArgs = this.convertArgs(this.args, env);
 		
 		return this.apply(interpretedAndConvertedArgs, env);
 	}

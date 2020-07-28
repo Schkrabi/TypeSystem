@@ -142,4 +142,15 @@ public class IfExpression extends SpecialFormApplication {
 		TypeVariable v = new TypeVariable(NameGenerator.next());
 		return new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, v, v));
 	}
+	
+	@Override
+	protected Tuple convertArgs(Tuple args, Environment env) throws AppendableException {
+		Expression cond = args.get(0);
+		Pair<Type, Substitution> p = cond.infer(env);
+		Tuple t = new Tuple(Arrays.asList(p.first.convertTo(cond, TypeAtom.TypeBoolNative),
+				args.get(1),
+				args.get(2)
+				));
+		return t;
+	}
 }

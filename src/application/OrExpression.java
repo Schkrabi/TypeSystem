@@ -2,6 +2,9 @@ package application;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import expression.Expression;
 import expression.Tuple;
 import interpretation.Environment;
@@ -86,5 +89,18 @@ public class OrExpression extends SpecialFormApplication {
 	@Override
 	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env) throws AppendableException {
 		return new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, TypeAtom.TypeBoolNative));
+	}
+	
+	@Override
+	protected Tuple convertArgs(Tuple args, Environment env) throws AppendableException {
+		List<Expression> l = new LinkedList<Expression>();
+		for(Expression e : args) {
+			Pair<Type, Substitution> p = e.infer(env);
+			Expression c = p.first.convertTo(e, TypeAtom.TypeBoolNative);
+			l.add(c);
+		}
+		
+		Tuple t = new Tuple(l);
+		return t;
 	}
 }
