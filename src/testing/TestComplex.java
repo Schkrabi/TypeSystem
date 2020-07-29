@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import abstraction.ExtendedFunction;
 import abstraction.Function;
 import application.AbstractionApplication;
+import application.CanDeconstructAs;
 import application.Construct;
 import application.IfExpression;
 import expression.Expression;
@@ -202,7 +203,7 @@ class TestComplex {
 				new LitInteger(42));
 		this.testInterpretString("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
 				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\"))))"
-				+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x) (deconstruct y)))))",
+				+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))",
 				new LitComposite(new LitString("2121"), TypeAtom.TypeIntString));
 
 		this.testInterpretString("((lambda ((A x) (B y)) (cons x y)) 42 (construct Int String  \"42\"))", new Tuple(
@@ -213,10 +214,10 @@ class TestComplex {
 		TypeAtom typeListFuntionalAtom = new TypeAtom(listTypeName, new TypeRepresentation("Functional"));
 
 		this.testInterpretString(
-				"(extended-lambda ((List l) (A x))" + "((List:Linked A) (if (equals? (deconstruct l) ())"
+				"(extended-lambda ((List l) (A x))" + "((List:Linked A) (if (can-deconstruct-as l ())"
 						+ "(construct List Linked x (construct List Linked))"
 						+ "(construct List Linked (head-list l) (append-list (tail-list l) x))))"
-						+ "((List:Functional A) (if (equals? (deconstruct l) ())"
+						+ "((List:Functional A) (if (can-deconstruct-as l ())"
 						+ "(construct List Functional x (construct List Functional))"
 						+ "(construct List Functional (head-list l) (append-list (tail-list l) x)))))",
 				ExtendedFunction
@@ -225,15 +226,7 @@ class TestComplex {
 										new TypeTuple(Arrays.asList(typeListLinkedAtom, new TypeVariable("A"))),
 										new Tuple(Arrays.asList(new Symbol("l"), new Symbol("x"))),
 										new IfExpression(
-												new AbstractionApplication(
-														new Symbol("equals?"),
-														new Tuple(
-																Arrays.asList(
-																		new AbstractionApplication(
-																				new Symbol("deconstruct"),
-																				new Tuple(Arrays
-																						.asList(new Symbol("l")))),
-																		Expression.EMPTY_EXPRESSION))),
+												new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
 												new Construct(typeListLinkedAtom,
 														new Tuple(Arrays.asList(new Symbol("x"),
 																new Construct(typeListLinkedAtom, Tuple.EMPTY_TUPLE)))),
@@ -252,14 +245,7 @@ class TestComplex {
 								new Function(new TypeTuple(Arrays.asList(typeListFuntionalAtom, new TypeVariable("A"))),
 										new Tuple(Arrays.asList(new Symbol("l"), new Symbol("x"))),
 										new IfExpression(
-												new AbstractionApplication(new Symbol("equals?"),
-														new Tuple(
-																Arrays.asList(
-																		new AbstractionApplication(
-																				new Symbol("deconstruct"),
-																				new Tuple(Arrays
-																						.asList(new Symbol("l")))),
-																		Expression.EMPTY_EXPRESSION))),
+												new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
 												new Construct(typeListFuntionalAtom,
 														new Tuple(Arrays.asList(new Symbol("x"),
 																new Construct(typeListFuntionalAtom,
@@ -279,10 +265,10 @@ class TestComplex {
 								Environment.topLevelEnvironment));
 
 		this.testInterpretString("(extended-lambda ((List l))"
-				+ "                        ((List:Linked) (if (equals? (deconstruct l) ())"
+				+ "                        ((List:Linked) (if (can-deconstruct-as l ())"
 				+ "                                            (construct List Linked)"
 				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l))))"
-				+ "                        ((List:Functional) (if (equals? (deconstruct l) ())"
+				+ "                        ((List:Functional) (if (can-deconstruct-as l ())"
 				+ "                                            (construct List Functional)"
 				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l)))))",
 				ExtendedFunction
@@ -291,13 +277,7 @@ class TestComplex {
 										new Function(new TypeTuple(Arrays.asList(typeListLinkedAtom)),
 												new Tuple(Arrays.asList(new Symbol("l"))),
 												new IfExpression(
-														new AbstractionApplication(new Symbol("equals?"),
-																new Tuple(Arrays.asList(
-																		new AbstractionApplication(
-																				new Symbol("deconstruct"),
-																				new Tuple(Arrays
-																						.asList(new Symbol("l")))),
-																		Expression.EMPTY_EXPRESSION))),
+														new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
 														new Construct(typeListLinkedAtom, Tuple.EMPTY_TUPLE),
 														new AbstractionApplication(new Symbol("append-list"),
 																new Tuple(Arrays.asList(new AbstractionApplication(
@@ -315,13 +295,7 @@ class TestComplex {
 										new Function(new TypeTuple(Arrays.asList(typeListFuntionalAtom)),
 												new Tuple(Arrays.asList(new Symbol("l"))),
 												new IfExpression(
-														new AbstractionApplication(new Symbol("equals?"),
-																new Tuple(Arrays.asList(
-																		new AbstractionApplication(
-																				new Symbol("deconstruct"),
-																				new Tuple(Arrays
-																						.asList(new Symbol("l")))),
-																		Expression.EMPTY_EXPRESSION))),
+														new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
 														new Construct(typeListFuntionalAtom, Tuple.EMPTY_TUPLE),
 														new AbstractionApplication(new Symbol("append-list"),
 																new Tuple(Arrays.asList(new AbstractionApplication(
@@ -339,10 +313,10 @@ class TestComplex {
 								Environment.topLevelEnvironment));
 
 		this.testInterpretString("(extended-lambda ((((A) #> B) f) (List l))"
-				+ "                    ((((A) #> B) List:Linked) (if (equals? (deconstruct l) ())"
+				+ "                    ((((A) #> B) List:Linked) (if (can-deconstruct-as l ())"
 				+ "                                                (construct List Linked)"
 				+ "                                                (construct List Linked (f (head-list l)) (map-list f (tail-list l)))))"
-				+ "                    ((((A) #> B) List:Functional) (if (equals? (deconstruct l) ())"
+				+ "                    ((((A) #> B) List:Functional) (if (can-deconstruct-as l ())"
 				+ "                                                    (construct List Functional)"
 				+ "                                                    (construct List Functional (f (head-list l)) (map-list f (tail-list l))))))",
 				ExtendedFunction.makeExtendedFunction(Arrays.asList(
@@ -352,11 +326,7 @@ class TestComplex {
 												new TypeVariable("B")),
 										typeListLinkedAtom)),
 								new Tuple(Arrays.asList(new Symbol("f"), new Symbol("l"))), new IfExpression(
-										new AbstractionApplication(new Symbol("equals?"), new Tuple(
-												Arrays.asList(
-														new AbstractionApplication(new Symbol("deconstruct"),
-																new Tuple(Arrays.asList(new Symbol("l")))),
-														Expression.EMPTY_EXPRESSION))),
+										new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
 										new Construct(typeListLinkedAtom, Tuple.EMPTY_TUPLE), new Construct(
 												typeListLinkedAtom, new Tuple(Arrays.asList(
 														new AbstractionApplication(
@@ -379,10 +349,7 @@ class TestComplex {
 								new Tuple(Arrays.asList(new Symbol("f"),
 										new Symbol("l"))),
 								new IfExpression(
-										new AbstractionApplication(new Symbol("equals?"),
-												new Tuple(Arrays.asList(new AbstractionApplication(new Symbol(
-														"deconstruct"), new Tuple(Arrays.asList(new Symbol("l")))),
-														Expression.EMPTY_EXPRESSION))),
+										new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
 										new Construct(typeListFuntionalAtom, Tuple.EMPTY_TUPLE),
 										new Construct(typeListFuntionalAtom,
 												new Tuple(
@@ -404,10 +371,10 @@ class TestComplex {
 						Environment.topLevelEnvironment));
 
 		this.testInterpretString("(define append-list-el (extended-lambda ((List l) (A x))"
-				+ "                        ((List:Linked A) (if (equals? (deconstruct l) ())"
+				+ "                        ((List:Linked A) (if (can-deconstruct-as l ())"
 				+ "                                                (construct List Linked x (construct List Linked))"
 				+ "                                                (construct List Linked (head-list l) (append-list-el (tail-list l) x))))"
-				+ "                        ((List:Functional A) (if (equals? (deconstruct l) ())"
+				+ "                        ((List:Functional A) (if (can-deconstruct-as l ())"
 				+ "                                                (construct List Functional x (construct List Functional))"
 				+ "                                                (construct List Functional (head-list l) (append-list-el (tail-list l) x))))))",
 				Expression.EMPTY_EXPRESSION);
@@ -417,10 +384,10 @@ class TestComplex {
 				new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman));
 
 		this.testInterpretString("(define reverse-list-el (extended-lambda ((List l))\n"
-				+ "                        ((List:Linked) (if (equals? (deconstruct l) ())\n"
+				+ "                        ((List:Linked) (if (can-deconstruct-as l ())\n"
 				+ "                                            (construct List Linked)\n"
 				+ "                                            (append-list-el (reverse-list-el (tail-list l)) (head-list l))))\n"
-				+ "                        ((List:Functional) (if (equals? (deconstruct l) ())\n"
+				+ "                        ((List:Functional) (if (can-deconstruct-as l ())\n"
 				+ "                                            (construct List Functional)\n"
 				+ "                                            (append-list-el (reverse-list-el (tail-list l)) (head-list l))))))",
 				Expression.EMPTY_EXPRESSION);
@@ -437,9 +404,6 @@ class TestComplex {
 														typeListLinkedAtom))),
 										typeListLinkedAtom))),
 						typeListLinkedAtom));
-		this.testInterpretString("(deconstruct y)", null);
-		// this.testInterpretString("(reverse-list-el y)",
-		// new LitInteger(42));
 	}
 
 	@Test

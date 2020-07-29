@@ -71,4 +71,13 @@ public class ExceptionExpr extends SpecialFormApplication {
 	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env) throws AppendableException {
 		return new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative));
 	}
+	
+	@Override
+	protected Tuple convertArgs(Tuple args, Environment env) throws AppendableException {
+		Expression msg = args.get(0);
+		Pair<Type, Substitution> p = msg.infer(env);
+		Tuple t = new Tuple(Arrays.asList(p.first.convertTo(msg, TypeAtom.TypeStringNative)
+				));
+		return t;
+	}
 }
