@@ -138,7 +138,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 	@Override
 	public Expression convertTo(Expression expr, Type toType) throws AppendableException {
-		if (toType instanceof TypeVariable) {
+		if (toType instanceof TypeVariable || this.equals(toType)) {
 			return expr;
 		}
 		if (!(toType instanceof TypeTuple) || (this.size() != ((TypeTuple) toType).size())) {
