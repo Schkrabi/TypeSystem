@@ -1,7 +1,5 @@
 package application;
 
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -10,7 +8,6 @@ import expression.Expression;
 import expression.Tuple;
 import interpretation.Environment;
 import types.RepresentationOr;
-import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
 import util.AppendableException;

@@ -112,7 +112,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 		
 		s.append("(with-meta ");
 		
-		s.append('[');
+		s.append("[");
 
 		Iterator<Expression> i = this.iterator();
 		while (i.hasNext()) {
@@ -122,7 +122,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 				s.append(' ');
 			}
 		}
-		s.append(']');
+		s.append("]");
 		
 		Pair<Type, Substitution> p = this.infer(env);
 		s.append(" {:lang-type ");
