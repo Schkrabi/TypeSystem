@@ -614,25 +614,117 @@ class TestComplex {
 						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
 								.clojureTypeRepresentation()
 						+ "}) " + AbstractionApplication.clojureRankingFunction + ")");
-		this.testClojureCompile("(* 42 1)", "(" + AbstractionApplication.clojureEapply
-				+ " `([[:IntNative :IntNative] ~*]) [:IntNative :IntNative] [42 1])");
-		this.testClojureCompile("(not #t)",
-				"(" + AbstractionApplication.clojureEapply + " `([[:BoolNative] ~not]) [:BoolNative] [true])");
-		this.testClojureCompile("(= 42 42)", "(" + AbstractionApplication.clojureEapply
-				+ " `([[:IntNative :IntNative] ~=]) [:IntNative :IntNative] [42 42])");
-		this.testClojureCompile("(or #t #f)", "(or true false)");
-		this.testClojureCompile("(- 43 1)", "(" + AbstractionApplication.clojureEapply
-				+ " `([[:IntNative :IntNative] ~-]) [:IntNative :IntNative] [43 1])");
+		this.testClojureCompile("(* 42 1)",
+				"(" + AbstractionApplication.clojureEapply
+						+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(* (get _x 0) (get _y 0))] {:lang-type "
+						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
+						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+						+ "})] {:lang-type "
+						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+						+ "}) (with-meta [(with-meta [42] {:lang-type "
+						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}) (with-meta [1] {:lang-type "
+						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
+						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
+								.clojureTypeRepresentation()
+						+ "}) " + AbstractionApplication.clojureRankingFunction + ")");
+		this.testClojureCompile("(not #t)", "(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x] (with-meta [(not (get _x 0))] {:lang-type "
+				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})){:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)), TypeAtom.TypeBoolNative))
+						.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)), TypeAtom.TypeBoolNative))
+						.clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [true] {:lang-type " + TypeAtom.TypeBoolNative.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative))).clojureTypeRepresentation() + "}) "
+				+ AbstractionApplication.clojureRankingFunction + ")");
+		this.testClojureCompile("(= 42 42)",
+				"(" + AbstractionApplication.clojureEapply
+						+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(= (get _x 0) (get _y 0))] {:lang-type "
+						+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})){:lang-type "
+						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+								TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
+						+ "})] {:lang-type "
+						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+								TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
+						+ "}) (with-meta [(with-meta [42] {:lang-type "
+						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}) (with-meta [42] {:lang-type "
+						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
+						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
+								.clojureTypeRepresentation()
+						+ "}) " + AbstractionApplication.clojureRankingFunction + ")");
+		this.testClojureCompile("(or #t #f)", "(with-meta [(or (get (with-meta [true] {:lang-type "
+				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "}) 0) (get (with-meta [false] {:lang-type "
+				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "}) 0))]{:lang-type "
+				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})");
+		this.testClojureCompile("(- 43 1)",
+				"(" + AbstractionApplication.clojureEapply
+						+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(- (get _x 0) (get _y 0))] {:lang-type "
+						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
+						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+						+ "})] {:lang-type "
+						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+						+ "}) (with-meta [(with-meta [43] {:lang-type "
+						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}) (with-meta [1] {:lang-type "
+						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
+						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
+								.clojureTypeRepresentation()
+						+ "}) " + AbstractionApplication.clojureRankingFunction + ")");
 		// Conversions
-		this.testClojureCompile("(IntNative2IntRoman 42)", "(" + AbstractionApplication.clojureEapply
-				+ " `([[:IntNative] ~(fn [_x] (" + RomanNumbers.int2RomanClojure + " _x))]) [:IntNative] [42])");
+		this.testClojureCompile("(IntNative2IntRoman 42)",
+				"(" + AbstractionApplication.clojureEapply
+						+ " (with-meta [(with-meta (fn [_x] (with-meta [(with-meta (int2roman (get _x 0)){:lang-type "
+						+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})]{:lang-type "
+						+ TypeAtom.TypeIntRoman.clojureTypeRepresentation() + "})){:lang-type "
+						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntRoman))
+								.clojureTypeRepresentation()
+						+ "})] {:lang-type "
+						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntRoman))
+								.clojureTypeRepresentation()
+						+ "}) (with-meta [(with-meta [42] {:lang-type "
+						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
+						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative))).clojureTypeRepresentation() + "}) "
+						+ AbstractionApplication.clojureRankingFunction + ")");
 		this.testClojureCompile("(IntNative2IntString 42)", "(" + AbstractionApplication.clojureEapply
-				+ " `([[:IntNative] ~(fn [_x] (Integer/toString _x))]) [:IntNative] [42])");
-		this.testClojureCompile("(IntRoman2IntNative (Int:Roman \"XLII\"))",
-				"(" + AbstractionApplication.clojureEapply + " `([[:IntRoman] ~(fn [_x] ("
-						+ RomanNumbers.roman2intClojure + " _x))]) [:IntRoman] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~identity]) [:StringNative] [\"XLII\"])])");
+				+ " (with-meta [(with-meta (fn [_x] (with-meta [(with-meta (Integer/toString (get _x 0)){:lang-type "
+				+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})]{:lang-type "
+				+ TypeAtom.TypeIntString.clojureTypeRepresentation() + "})){:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntString))
+						.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntString))
+						.clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative))).clojureTypeRepresentation() + "}) "
+				+ AbstractionApplication.clojureRankingFunction + ")");
+		this.testClojureCompile("(IntRoman2IntNative (Int:Roman \"XLII\"))", "(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x] (with-meta [(roman2int (get (get _x 0) 0))]{:lang-type "
+				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntNative))
+						.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntNative))
+						.clojureTypeRepresentation()
+				+ "}) (with-meta [(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x] (with-meta [_x] {:lang-type "
+				+ TypeAtom.TypeIntRoman.clojureTypeRepresentation() + "})) {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntRoman))
+						.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntRoman))
+						.clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [\"XLII\"] {:lang-type "
+				+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative))).clojureTypeRepresentation() + "}) "
+				+ AbstractionApplication.clojureRankingFunction + ")] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman))).clojureTypeRepresentation() + "}) "
+				+ AbstractionApplication.clojureRankingFunction + ")");
 		this.testClojureCompile("(IntRoman2IntString (Int:Roman \"XLII\"))",
 				"(" + AbstractionApplication.clojureEapply + " `([[:IntRoman] ~(fn [_x] (str ("
 						+ RomanNumbers.roman2intClojure + " _x)))]) [:IntRoman] [("
