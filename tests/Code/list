@@ -16,15 +16,19 @@
 (define y (construct List Functional (construct Int Roman "XLII") (construct List Functional (construct Int String "42") (construct List Functional 42 (construct List Functional)))))
 (println x)
 
+(define is-list-empty (extended-lambda ((List l))
+                        ((List:Linked) (can-deconstruct-as l ()))
+                        ((List:Functional) (can-deconstruct-as l ()))))
+
 (define head-list (extended-lambda ((List l))
-          					((List:Linked) (if (equals? (deconstruct l) ()) (error "Cannot make head of empty list!") (car (deconstruct l))))
-          					((List:Functional) (if (equals? (deconstruct l) ()) (error "Cannot make head of empty list!") (fcar (deconstruct l))))))
+          					((List:Linked) (if (is-list-empty l) (error "Cannot make head of empty list!") (car (deconstruct l (A List:Linked)))))
+          					((List:Functional) (if (is-list-empty l) (error "Cannot make head of empty list!") (fcar (deconstruct l (A List:Linked)))))))
 (println (head-list x))
 (println (head-list y))
 
 (define tail-list (extended-lambda ((List l)) 
-          					((List:Linked) (if (equals? (deconstruct l) ()) (error "Cannot make tail of empty list!") (cdr (deconstruct l))))
-          					((List:Functional) (if (equals? (deconstruct l) ()) (error "Cannot make tail of empty list!") (fcdr (deconstruct l))))))
+          					((List:Linked) (if (is-list-empty l) (error "Cannot make tail of empty list!") (cdr (deconstruct l (A List:Linked)))))
+          					((List:Functional) (if (is-list-empty l) (error "Cannot make tail of empty list!") (fcdr (deconstruct l (A List:Linked)))))))
 (println (tail-list x))
 
 (define build-list-aux (lambda (i n f)
@@ -37,10 +41,10 @@
 (println (build-list 5 (lambda (x) (+ x 1))))
 
 (define append-list (extended-lambda ((List l) (A x))
-                        ((List:Linked A) (if (equals? (deconstruct l) ())
+                        ((List:Linked A) (if (is-list-empty l)
                             (construct List Linked x (construct List Linked))
                             (construct List Linked (head-list l) (append-list (tail-list l) x))))
-						((List:Functional A) (if (equals? (deconstruct l) ())
+						((List:Functional A) (if (is-list-empty l)
                             (construct List Functional x (construct List Functional))
                             (construct List Functional (head-list l) (append-list (tail-list l) x))))))
 
@@ -48,10 +52,10 @@
 (println (head-list (append-list y 21)))
 
 (define reverse-list (extended-lambda ((List l))
-                        ((List:Linked) (if (equals? (deconstruct l) ())
+                        ((List:Linked) (if (is-list-empty l)
                                             (construct List Linked)
                                             (append-list (reverse-list (tail-list l)) (head-list l))))
-                        ((List:Functional) (if (equals? (deconstruct l) ())
+                        ((List:Functional) (if (is-list-empty l)
                                             (construct List Functional)
                                             (append-list (reverse-list (tail-list l)) (head-list l))))))
 
@@ -59,10 +63,10 @@
 (println (head-list (reverse-list y)))
 
 (define map-list (extended-lambda ((((A) #> B) f) (List l))
-                    ((((A) #> B) List:Linked) (if (equals? (deconstruct l) ())
+                    ((((A) #> B) List:Linked) (if (is-list-empty l)
                                                 (construct List Linked)
                                                 (construct List Linked (f (head-list l)) (map-list f (tail-list l)))))
-                    ((((A) #> B) List:Functional) (if (equals? (deconstruct l) ())
+                    ((((A) #> B) List:Functional) (if (is-list-empty l)
                                                     (construct List Functional)
                                                     (construct List Functional (f (head-list l)) (map-list f (tail-list l)))))))
                                                     

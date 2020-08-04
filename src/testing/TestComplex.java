@@ -517,8 +517,7 @@ class TestComplex {
 				+ "})] {:lang-type " + (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
 						.clojureTypeRepresentation()
 				+ "}) " + AbstractionApplication.clojureRankingFunction + ")");
-		this.testClojureCompile("(bit-or 42 1)", "(" + AbstractionApplication.clojureEapply
-				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(bit-or (get _x 0) (get _y 0))] {:lang-type (lang-type-atom. \"Int\" \"Native\")})){:lang-type (lang-type-arrow. [(lang-type-atom. \"Int\" \"Native\") (lang-type-atom. \"Int\" \"Native\")] (lang-type-atom. \"Int\" \"Native\"))})] {:lang-type (lang-type-arrow. [(lang-type-atom. \"Int\" \"Native\") (lang-type-atom. \"Int\" \"Native\")] (lang-type-atom. \"Int\" \"Native\"))}) (with-meta [(with-meta [42] {:lang-type (lang-type-atom. \"Int\" \"Native\")}) (with-meta [1] {:lang-type (lang-type-atom. \"Int\" \"Native\")})] {:lang-type [(lang-type-atom. \"Int\" \"Native\") (lang-type-atom. \"Int\" \"Native\")]}) ranking-function)");
+		this.testClojureCompileNoCmp("(bit-or 42 1)");
 		this.testClojureCompileRegex("(car pair)", TestComplex.escapeBrackets("(" + AbstractionApplication.clojureEapply
 				+ " (with-meta [(with-meta (fn [_x] (get _x 0)){:lang-type "
 				+ (new TypeArrow(

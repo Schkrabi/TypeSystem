@@ -160,14 +160,14 @@ public class AbstractionApplication extends Application {
 		return abst.substituteAndEvaluate(interpretedArgs, evaluationEnvironment);
 	}
 	
-	public static final String clojureRankingFunction = "ranking-function";
-			/*"(fn [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))";*/
+	public static final String clojureRankingFunction = /*"ranking-function";*/
+			"(fn [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))";
 
 	/**
 	 * code of eapply functionn for clojure
 	 */
-	public static final String clojureEapply =  "eapply"; 
-			/*"(fn [abstraction arguments ranking-function]"
+	public static final String clojureEapply = /* "eapply";*/ 
+			"(fn [abstraction arguments ranking-function]"
 				+ "(letfn [ "
 						+ "(implementation-arg-type "
 							+ "[implementation] "
@@ -184,7 +184,7 @@ public class AbstractionApplication extends Application {
 										+ "(rank-implementations type abstraction))))] "
 						+ "(apply "
 							+ "(select-implementation (:lang-type (meta arguments)) abstraction) "
-							+ "arguments)))";*/
+							+ "arguments)))";
 								
 
 }

@@ -5,6 +5,5 @@
 (constructor Name Structured ((String:Native x) (String:Native y)) (cons x y))
 (println ((extended-lambda (x) ((Name:Unstructured) "unstructured") ((Name:Structured) "structured")) (construct Name Unstructured "Jan Novak")))
 (println ((extended-lambda (x) ((Name:Structured) "structured")) (construct Name Structured "Jan" "Novak")))
-(conversion Name:Structured Name:Unstructured ((Name:Structured x)) (construct Name Unstructured (concat (car (deconstruct x)) (cdr (deconstruct x)))))
+(conversion Name:Structured Name:Unstructured ((Name:Structured x)) (construct Name Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))
 (println ((lambda ((Name:Unstructured x)) x) (construct Name Structured "Jan" "Novak")))
-

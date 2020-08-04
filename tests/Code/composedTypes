@@ -8,4 +8,4 @@
 ((extended-lambda (f) 
     ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))
     ((((Int:String Int:String) #> Int:String)) (f (construct Int String "21") (construct Int String "21"))))
-(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x) (deconstruct y)))))
+(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))
