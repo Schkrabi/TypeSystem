@@ -47,7 +47,6 @@ import types.TypeTuple;
 import types.TypeVariable;
 import util.AppendableException;
 import util.Pair;
-import util.RomanNumbers;
 import util.ThrowingFunction;
 
 @SuppressWarnings("deprecation")
@@ -725,78 +724,92 @@ class TestComplex {
 				+ AbstractionApplication.clojureRankingFunction + ")] {:lang-type "
 				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman))).clojureTypeRepresentation() + "}) "
 				+ AbstractionApplication.clojureRankingFunction + ")");
-		this.testClojureCompile("(IntRoman2IntString (Int:Roman \"XLII\"))",
-				"(" + AbstractionApplication.clojureEapply + " `([[:IntRoman] ~(fn [_x] (str ("
-						+ RomanNumbers.roman2intClojure + " _x)))]) [:IntRoman] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~identity]) [:StringNative] [\"XLII\"])])");
+		this.testClojureCompile("(IntRoman2IntString (Int:Roman \"XLII\"))", "(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta(fn [_x] (with-meta[(with-meta[(str (roman2intClojure (get (get _x 0) 0)))]{:lang-type "
+				+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})]{:lang-type "
+				+ TypeAtom.TypeIntString.clojureTypeRepresentation() + "}))	{:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntString))
+						.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntString))
+						.clojureTypeRepresentation()
+				+ "}) (with-meta [(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x] (with-meta [_x] {:lang-type "
+				+ TypeAtom.TypeIntRoman.clojureTypeRepresentation() + "})) {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntRoman))
+						.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntRoman))
+						.clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [\"XLII\"] {:lang-type "
+				+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative))).clojureTypeRepresentation() + "}) "
+				+ AbstractionApplication.clojureRankingFunction + ")] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman))).clojureTypeRepresentation() + "}) "
+				+ AbstractionApplication.clojureRankingFunction + ")");
 		this.testClojureCompile("(IntString2IntNative (Int:String \"42\"))", "(" + AbstractionApplication.clojureEapply
-				+ " `([[:IntString] ~(fn [_x] (Integer/parseInt _x))]) [:IntString] [("
-				+ AbstractionApplication.clojureEapply + " `([[:StringNative] ~identity]) [:StringNative] [\"42\"])])");
-		this.testClojureCompile("(IntString2IntRoman (Int:String \"42\"))",
-				"(" + AbstractionApplication.clojureEapply + " `([[:IntString] ~(fn [_x] ("
-						+ RomanNumbers.int2RomanClojure + " (Integer/parseInt _x)))]) [:IntString] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~identity]) [:StringNative] [\"42\"])])");
+				+ " (with-meta [(with-meta (fn [_x] (with-meta [(Integer/parseInt (get (get _x 0) 0))] {:lang-type "
+				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})) {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntNative))
+						.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntNative))
+						.clojureTypeRepresentation()
+				+ "}) (with-meta [(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x] (with-meta [_x] {:lang-type "
+				+ TypeAtom.TypeIntString.clojureTypeRepresentation() + "})) {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntString))
+						.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntString))
+						.clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [\"42\"] {:lang-type "
+				+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative))).clojureTypeRepresentation() + "}) "
+				+ AbstractionApplication.clojureRankingFunction + ")] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntString))).clojureTypeRepresentation() + "}) "
+				+ AbstractionApplication.clojureRankingFunction + ")");
+		this.testClojureCompile("(IntString2IntRoman (Int:String \"42\"))", "(" + AbstractionApplication.clojureEapply
+				+ " `([" + (new TypeTuple(Arrays.asList(TypeAtom.TypeIntString))).clojureTypeRepresentation()
+				+ " ~(fn [_x] (int2roman (Integer/parseInt _x)))]) (with-meta [(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x] (with-meta [_x] {:lang-type "
+				+ TypeAtom.TypeIntString.clojureTypeRepresentation() + "})) {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntString))
+						.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntString))
+						.clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [\"42\"] {:lang-type "
+				+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative))).clojureTypeRepresentation() + "}) "
+				+ AbstractionApplication.clojureRankingFunction + ")] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntString))).clojureTypeRepresentation() + "}) "
+				+ AbstractionApplication.clojureRankingFunction + ")");
 		// Define
-		this.testClojureCompile("(define answer 42)", "(def answer 42)");
+		this.testClojureCompile("(define answer 42)", "(def answer (with-meta [42] {:lang-type "
+				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}))");
 		this.testClojureCompile("(type Name2)", "nil");
 		this.testClojureCompile("(representation Structured Name2)", "nil");
 		this.testClojureCompile("(constructor Name2 Structured ((String:Native x) (String:Native y)) (cons x y))", "");
 		this.testClojureCompile("(representation Unstructured Name2)", "nil");
 		this.testClojureCompile("(constructor Name2 Unstructured ((String:Native x)) x)", "");
 		this.testClojureCompile("(conversion Name2:Structured Name2:Unstructured"
-				+ "((Name2:Structured x)) (construct Name2 Unstructured (concat (car (deconstruct x)) (cdr (deconstruct x)))))",
+				+ "((Name2:Structured x)) (construct Name2 Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))",
 				"");
 
-		this.testClojureCompileRegex(
-				"((lambda ((Name2:Unstructured x)) x) (construct Name2 Structured \"Jan\" \"Novak\"))",
-				TestComplex.escapeBrackets("(" + AbstractionApplication.clojureEapply
-						+ " `([[:Name2Unstructured] ~(fn [x] x)]) [:Name2Structured] [("
-						+ AbstractionApplication.clojureEapply + " `([[:Name2Structured] ~(fn [x] ("
-						+ AbstractionApplication.clojureEapply + " `([[:StringNative] ~(fn [x] x)]) [:StringNative] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative :StringNative] ~str]) [:\\w* :\\w*] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[[:\\w* :\\w*]] ~(fn [_x] (get _x 0))]) [:\\w*] [("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:Name2Structured] [x])]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[[:\\w* :\\w*]] ~(fn [_x] (get _x 1))]) [:\\w*] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w*] ~identity]) [:Name2Structured] [x])])])]))]) [:Name2Structured] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative :StringNative] ~(fn [x y] [x y])]) [:StringNative :StringNative] [\"Jan\" \"Novak\"])])])"));
+		this.testClojureCompileNoCmp(
+				"((lambda ((Name2:Unstructured x)) x) (construct Name2 Structured \"Jan\" \"Novak\"))");
 		// Extended Lambda
-		this.testClojureCompile("(extended-lambda ((Int x)) ((Int:Native) \"Native\"))",
-				"`([[:IntNative] ~(fn [x] \"Native\")])");
-		this.testClojureCompile(
-				"((extended-lambda ((Int x)) ((Int:Native) \"Native\") ((Int:String) \"String\")) (Int:String \"42\"))",
-				"(" + AbstractionApplication.clojureEapply
-						+ " `([[:IntNative] ~(fn [x] \"Native\")] [[:IntString] ~(fn [x] \"String\")]) [:IntString] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~identity]) [:StringNative] [\"42\"])])");
+		this.testClojureCompileNoCmp("(extended-lambda ((Int x)) ((Int:Native) \"Native\"))");
+		this.testClojureCompileNoCmp(
+				"((extended-lambda ((Int x)) ((Int:Native) \"Native\") ((Int:String) \"String\")) (Int:String \"42\"))");
 
 		// Recursion
-		this.testClojureCompileRegex("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))",
-				TestComplex.escapeBrackets("(def fact `([[:\\w*] ~(fn [x] (if (" + AbstractionApplication.clojureEapply
-						+ " `([[:IntNative :IntNative] ~=]) [:\\w* :IntNative] [x 1]) x ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:IntNative :IntNative] ~\\*]) [:\\w* :IntNative] [x ("
-						+ AbstractionApplication.clojureEapply + " fact [:IntNative] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:IntNative :IntNative] ~-]) [:\\w* :IntNative] [x 1])])])))]))"));
+		this.testClojureCompileNoCmp("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))");
 
 		// Conversions
-		this.testClojureCompile(
-				"((extended-lambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (Int:Roman \"XLII\") 66)",
-				"(" + AbstractionApplication.clojureEapply
-						+ " `([[:BoolNative :IntString :IntString] ~(fn [x y z] (if x z y))]) [:BoolNative :IntRoman :IntNative] [false ("
-						+ AbstractionApplication.clojureEapply + " `([[:IntRoman] ~(fn [_x] (str ("
-						+ RomanNumbers.roman2intClojure + " _x)))]) [:IntRoman] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~identity]) [:StringNative] [\"XLII\"])]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:IntNative] ~(fn [_x] (Integer/toString _x))]) [:IntNative] [66])])");
+		this.testClojureCompileNoCmp(
+				"((extended-lambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (Int:Roman \"XLII\") 66)");
 
 		// List
 		this.testClojureCompile("(type List2)", "nil");
@@ -804,259 +817,71 @@ class TestComplex {
 		this.testClojureCompile("(constructor List2 Linked (x (List2 l)) (cons x l))", "");
 		this.testClojureCompile("(constructor List2 Linked () ())", "");
 		this.testClojureCompile("(representation Functional List2)", "nil");
-		this.testClojureCompileRegex("(define fcons (lambda (x y) (lambda (f) (f x y))))",
-				TestComplex.escapeBrackets("(def fcons `([[:\\w* :\\w*] ~(fn [x y] `([[:\\w*] ~(fn [f] ("
-						+ AbstractionApplication.clojureEapply + " f [:\\w* :\\w*] [x y]))]))]))"));
-		this.testClojureCompileRegex("(define fcar (lambda (p) (p (lambda (x y) x))))",
-				TestComplex.escapeBrackets("(def fcar `([[:\\w*] ~(fn [p] (" + AbstractionApplication.clojureEapply
-						+ " p [[[:\\w* :\\w*] :-> :\\w*]] [`([[:\\w* :\\w*] ~(fn [x y] x)])]))]))"));
-		this.testClojureCompileRegex("(define fcdr (lambda (p) (p (lambda (x y) y))))",
-				TestComplex.escapeBrackets("(def fcdr `([[:\\w*] ~(fn [p] (" + AbstractionApplication.clojureEapply
-						+ " p [[[:\\w* :\\w*] :-> :\\w*]] [`([[:\\w* :\\w*] ~(fn [x y] y)])]))]))"));
+		this.testClojureCompileNoCmp("(define fcons (lambda (x y) (lambda (f) (f x y))))");
+		this.testClojureCompileNoCmp("(define fcar (lambda (p) (p (lambda (x y) x))))");
 		this.testClojureCompile("(constructor List2 Functional (x (List2 l)) (fcons x l))", "");
 		this.testClojureCompile("(constructor List2 Functional () ())", "");
 
-		this.testClojureCompileRegex(
-				"(define x (construct List2 Linked (construct Int Roman \"XLII\") (construct List2 Linked (construct Int String \"42\") (construct List2 Linked 42 (construct List2 Linked)))))",
-				TestComplex.escapeBrackets("(def x (" + AbstractionApplication.clojureEapply
-						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:IntRoman :List2Linked] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"XLII\"]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:IntString :List2Linked] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"42\"]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:IntNative :List2Linked] [42 ("
-						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] [])])])]))"));
+		this.testClojureCompileNoCmp(
+				"(define x (construct List2 Linked (construct Int Roman \"XLII\") (construct List2 Linked (construct Int String \"42\") (construct List2 Linked 42 (construct List2 Linked)))))");
 
-		this.testClojureCompileRegex(
-				"(define y (construct List2 Functional (construct Int Roman \"XLII\") (construct List2 Functional (construct Int String \"42\") (construct List2 Functional 42 (construct List2 Functional)))))",
-				TestComplex.escapeBrackets("(def y (" + AbstractionApplication.clojureEapply
-						+ " `([[:\\w* :List2\\*] ~(fn [x l] (" + AbstractionApplication.clojureEapply
-						+ " fcons [:\\w* :List2\\*] [x l]))]) [:IntRoman :List2Functional] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"XLII\"]) ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :List2\\*] ~(fn [x l] ("
-						+ AbstractionApplication.clojureEapply
-						+ " fcons [:\\w* :List2\\*] [x l]))]) [:IntString :List2Functional] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"42\"]) ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :List2\\*] ~(fn [x l] ("
-						+ AbstractionApplication.clojureEapply
-						+ " fcons [:\\w* :List2\\*] [x l]))]) [:IntNative :List2Functional] [42 ("
-						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] [])])])]))"));
+		this.testClojureCompileNoCmp(
+				"(define y (construct List2 Functional (construct Int Roman \"XLII\") (construct List2 Functional (construct Int String \"42\") (construct List2 Functional 42 (construct List2 Functional)))))");
 
-		this.testClojureCompileRegex(
-				"(define head-list2 (extended-lambda ((List2 l)) ((List2:Linked) (if (equals? (deconstruct l) ()) (error \"Cannot make head of empty list!\") (car (deconstruct l))))"
-						+ "((List2:Functional) (if (equals? (deconstruct l) ()) (error \"Cannot make head of empty list!\") (fcar (deconstruct l))))))",
-				TestComplex.escapeBrackets("(def head-list2 `([[:List2Functional] ~(fn [l] (if ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w*] ~identity]) [:List2Functional] [l]) nil]) (throw (Throwable. \"Cannot make head of empty list!\")) ("
-						+ AbstractionApplication.clojureEapply + " fcar [:\\w*] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w*] ~identity]) [:List2Functional] [l])])))] [[:List2Linked] ~(fn [l] (if ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w*] ~identity]) [:List2Linked] [l]) nil]) (throw (Throwable. \"Cannot make head of empty list!\")) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[[:\\w* :\\w*]] ~(fn [_x] (get _x 0))]) [:\\w*] [("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:List2Linked] [l])])))]))"));
+		this.testClojureCompileNoCmp(
+				"(define head-list2 (extended-lambda ((List2 l)) ((List2:Linked) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List2:Linked)))))"
+						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list!\") (fcar (deconstruct l (A List2:Functional)))))))");
 
-		this.testClojureCompileRegex(
-				"(define tail-list2 (extended-lambda ((List2 l)) ((List2:Linked) (if (equals? (deconstruct l) ()) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l))))"
-						+ "((List2:Functional) (if (equals? (deconstruct l) ()) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l))))))",
-				TestComplex.escapeBrackets("(def tail-list2 `([[:List2Functional] ~(fn [l] (if ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w*] ~identity]) [:List2Functional] [l]) nil]) (throw (Throwable. \"Cannot make tail of empty list!\")) ("
-						+ AbstractionApplication.clojureEapply + " fcdr [:\\w*] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w*] ~identity]) [:List2Functional] [l])])))] [[:List2Linked] ~(fn [l] (if ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w*] ~identity]) [:List2Linked] [l]) nil]) (throw (Throwable. \"Cannot make tail of empty list!\")) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[[:\\w* :\\w*]] ~(fn [_x] (get _x 1))]) [:\\w*] [("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:List2Linked] [l])])))]))"));
+		this.testClojureCompileNoCmp(
+				"(define tail-list2 (extended-lambda ((List2 l)) ((List2:Linked) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List2:Linked)))))"
+						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l (A List2:Linked)))))))");
 
 		// This is interesting, extended lambda is not sufficient, when I might want to
 		// return a different representation.
 		// But on what would I base the representation?
-		this.testClojureCompileRegex(
-				"(define build-list2-aux (lambda (i n f) (if (= i n) (construct List2 Linked) (construct List2 Linked (f i) (build-list2-aux (+ i 1) n f)))))",
-				TestComplex.escapeBrackets("(def build-list2-aux `([[:\\w* :\\w* :\\w*] ~(fn [i n f] (if ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:IntNative :IntNative] ~=]) [:\\w* :\\w*] [i n]) ("
-						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] []) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:\\w* :List2Linked] [("
-						+ AbstractionApplication.clojureEapply + " f [:\\w*] [i]) ("
-						+ AbstractionApplication.clojureEapply + " build-list2-aux [:IntNative :\\w* :\\w*] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:IntNative :IntNative] ~+]) [:\\w* :IntNative] [i 1]) n f])])))]))"));
+		this.testClojureCompileNoCmp(
+				"(define build-list2-aux (lambda (i n f) (if (= i n) (construct List2 Linked) (construct List2 Linked (f i) (build-list2-aux (+ i 1) n f)))))");
 
-		this.testClojureCompileRegex("(define build-list2 (lambda (n f) (build-list2-aux 0 n f)))",
-				TestComplex.escapeBrackets(
-						"(def build-list2 `([[:\\w* :\\w*] ~(fn [n f] (" + AbstractionApplication.clojureEapply
-								+ " build-list2-aux [:IntNative :\\w* :\\w*] [0 n f]))]))"));
+		this.testClojureCompileNoCmp("(define build-list2 (lambda (n f) (build-list2-aux 0 n f)))");
 
-		this.testClojureCompileRegex("(define append-list2 (lambda ((List2 l) x) \n"
-				+ "(if (equals? (deconstruct l) ()) (construct List2 Linked x (construct List2 Linked))	(construct List2 Linked (head-list2 l) (append-list2 (tail-list2 l) x)))))",
-				TestComplex.escapeBrackets("(def append-list2 `([[:List2\\* :\\w*] ~(fn [l x] (if ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:List2\\*] [l]) nil]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:\\w* :List2Linked] [x ("
-						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] [])]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:\\w* :List2Linked] [("
-						+ AbstractionApplication.clojureEapply + " head-list2 [:List2\\*] [l]) ("
-						+ AbstractionApplication.clojureEapply + " append-list2 [:\\w* :\\w*] [("
-						+ AbstractionApplication.clojureEapply + " tail-list2 [:List2\\*] [l]) x])])))]))"));
+		this.testClojureCompileNoCmp("(define append-list2 (lambda ((List2 l) x) \n"
+				+ "(if (can-deconstruct-as l ()) (construct List2 Linked x (construct List2 Linked)) (construct List2 Linked (head-list2 l) (append-list2 (tail-list2 l) x)))))");
 
-		this.testClojureCompileRegex(
-				"(define reverse-list2 (lambda ((List2 l)) (if (equals? (deconstruct l) ()) (construct List2 Linked) (append-list2 (reverse-list2 (tail-list2 l)) (head-list2 l)))))",
-				TestComplex.escapeBrackets("(def reverse-list2 `([[:List2\\*] ~(fn [l] (if ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:List2\\*] [l]) nil]) ("
-						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] []) ("
-						+ AbstractionApplication.clojureEapply + " append-list2 [:List2Linked :\\w*] [("
-						+ AbstractionApplication.clojureEapply + " reverse-list2 [:\\w*] [("
-						+ AbstractionApplication.clojureEapply + " tail-list2 [:List2\\*] [l])]) ("
-						+ AbstractionApplication.clojureEapply + " head-list2 [:List2\\*] [l])])))]))"));
+		this.testClojureCompileNoCmp(
+				"(define reverse-list2 (lambda ((List2 l)) (if (can-deconstruct-as l ()) (construct List2 Linked) (append-list2 (reverse-list2 (tail-list2 l)) (head-list2 l)))))");
 
-		this.testClojureCompileRegex("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)",
-				TestComplex.escapeBrackets("(" + AbstractionApplication.clojureEapply
-						+ " `([[[[:IntNative :IntNative] :-> :IntNative]] ~(fn [f] ("
-						+ AbstractionApplication.clojureEapply
-						+ " f [:IntNative :IntNative] [21 21]))]) [[[:IntNative :IntNative] :-> :IntNative]] [`([[:IntNative :IntNative] ~(fn [\\w* \\w*] ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:IntNative :IntNative] ~+]) [:IntNative :IntNative] [\\w* \\w*]))])])"));
-		this.testClojureCompileRegex("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
-				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\")))) +)",
-				TestComplex.escapeBrackets("(" + AbstractionApplication.clojureEapply
-						+ " `([[[[:IntNative :IntNative] :-> :IntNative]] ~(fn [f] ("
-						+ AbstractionApplication.clojureEapply
-						+ " f [:IntNative :IntNative] [21 21]))] [[[[:IntString :IntString] :-> :IntString]] ~(fn [f] ("
-						+ AbstractionApplication.clojureEapply + " f [:IntString :IntString] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"21\"]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"21\"])]))]) [[[:IntNative :IntNative] :-> :IntNative]] [`([[:IntNative :IntNative] ~(fn [\\w* \\w*] ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:IntNative :IntNative] ~+]) [:IntNative :IntNative] [\\w* \\w*]))])])"));
-		this.testClojureCompileRegex("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
+		this.testClojureCompileNoCmp("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)");
+		this.testClojureCompileNoCmp("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
+				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\")))) +)");
+		this.testClojureCompileNoCmp("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
 				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\"))))"
-				+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x) (deconstruct y)))))",
-				TestComplex.escapeBrackets("(" + AbstractionApplication.clojureEapply
-						+ " `([[[[:IntNative :IntNative] :-> :IntNative]] ~(fn [f] ("
-						+ AbstractionApplication.clojureEapply
-						+ " f [:IntNative :IntNative] [21 21]))] [[[[:IntString :IntString] :-> :IntString]] ~(fn [f] ("
-						+ AbstractionApplication.clojureEapply + " f [:IntString :IntString] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"21\"]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"21\"])]))]) [[[:IntString :IntString] :-> :IntString]] [`([[:IntString :IntString] ~(fn [\\w* \\w*] ("
-						+ AbstractionApplication.clojureEapply + " `([[:IntString :IntString] ~(fn [x y] ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative :StringNative] ~str]) [:\\w* :\\w*] [("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:IntString] [x]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w*] ~identity]) [:IntString] [y])])]))]) [:IntString :IntString] [\\w* \\w*]))])])"));
+				+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))");
 
-		this.testClojureCompileRegex("((lambda ((A x) (B y)) (cons x y)) 42 (construct Int String  \"42\"))",
-				TestComplex.escapeBrackets("(" + AbstractionApplication.clojureEapply
-						+ " `([[:A :B] ~(fn [x y] [x y])]) [:IntNative :IntString] [42 ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:StringNative] ~(fn [\\w*] \\w*)]) [:StringNative] [\"42\"])])"));
+		this.testClojureCompileNoCmp("((lambda ((A x) (B y)) (cons x y)) 42 (construct Int String  \"42\"))");
 
-		this.testClojureCompileRegex(
-				"(extended-lambda ((List2 l) (A x))" + "((List2:Linked A) (if (equals? (deconstruct l) ())"
+		this.testClojureCompileNoCmp(
+				"(extended-lambda ((List2 l) (A x))" + "((List2:Linked A) (if (can-deconstruct-as l ())"
 						+ "(construct List2 Linked x (construct List2 Linked))"
 						+ "(construct List2 Linked (head-list l) (append-list (tail-list l) x))))"
-						+ "((List2:Functional A) (if (equals? (deconstruct l) ())"
+						+ "((List2:Functional A) (if (can-deconstruct-as l ())"
 						+ "(construct List2 Functional x (construct List2 Functional))"
-						+ "(construct List2 Functional (head-list l) (append-list (tail-list l) x)))))",
-				TestComplex.escapeBrackets("`([[:List2Functional :A] ~(fn [l x] (if ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w*] ~identity]) [:List2Functional] [l]) nil]) ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :List2\\*] ~(fn [x l] ("
-						+ AbstractionApplication.clojureEapply
-						+ " fcons [:\\w* :List2\\*] [x l]))]) [:A :List2Functional] [x ("
-						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] [])]) ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :List2\\*] ~(fn [x l] ("
-						+ AbstractionApplication.clojureEapply + " fcons [:\\w* :List2\\*] [x l]))]) [:\\w* :\\w*] [("
-						+ AbstractionApplication.clojureEapply + " head-list [:List2Functional] [l]) ("
-						+ AbstractionApplication.clojureEapply + " append-list [:\\w* :A] [("
-						+ AbstractionApplication.clojureEapply
-						+ " tail-list [:List2Functional] [l]) x])])))] [[:List2Linked :A] ~(fn [l x] (if ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:List2Linked] [l]) nil]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:A :List2Linked] [x ("
-						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] [])]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:\\w* :\\w*] [("
-						+ AbstractionApplication.clojureEapply + " head-list [:List2Linked] [l]) ("
-						+ AbstractionApplication.clojureEapply + " append-list [:\\w* :A] [("
-						+ AbstractionApplication.clojureEapply + " tail-list [:List2Linked] [l]) x])])))])"));
+						+ "(construct List2 Functional (head-list l) (append-list (tail-list l) x)))))");
 
-		this.testClojureCompileRegex("(extended-lambda ((List2 l))"
-				+ "                        ((List2:Linked) (if (equals? (deconstruct l) ())"
+		this.testClojureCompileNoCmp("(extended-lambda ((List2 l))"
+				+ "                        ((List2:Linked) (if (can-deconstruct-as l ())"
 				+ "                                            (construct List2 Linked)"
 				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l))))"
-				+ "                        ((List2:Functional) (if (equals? (deconstruct l) ())"
+				+ "                        ((List2:Functional) (if (can-deconstruct-as l ())"
 				+ "                                            (construct List2 Functional)"
-				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l)))))",
-				TestComplex.escapeBrackets("`([[:List2Functional] ~(fn [l] (if (" + AbstractionApplication.clojureEapply
-						+ " `([[:\\w* :\\w*] ~=]) [:\\w* []] [(" + AbstractionApplication.clojureEapply
-						+ " `([[:\\w*] ~identity]) [:List2Functional] [l]) nil]) ("
-						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] []) ("
-						+ AbstractionApplication.clojureEapply + " append-list [:\\w* :\\w*] [("
-						+ AbstractionApplication.clojureEapply + " reverse-list [:\\w*] [("
-						+ AbstractionApplication.clojureEapply + " tail-list [:List2Functional] [l])]) ("
-						+ AbstractionApplication.clojureEapply
-						+ " head-list [:List2Functional] [l])])))] [[:List2Linked] ~(fn [l] (if ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:List2Linked] [l]) nil]) ("
-						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] []) ("
-						+ AbstractionApplication.clojureEapply + " append-list [:\\w* :\\w*] [("
-						+ AbstractionApplication.clojureEapply + " reverse-list [:\\w*] [("
-						+ AbstractionApplication.clojureEapply + " tail-list [:List2Linked] [l])]) ("
-						+ AbstractionApplication.clojureEapply + " head-list [:List2Linked] [l])])))])"));
+				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l)))))");
 
-		this.testClojureCompileRegex("(extended-lambda ((((A) #> B) f) (List l))"
-				+ "                    ((((A) #> B) List2:Linked) (if (equals? (deconstruct l) ())"
+		this.testClojureCompileNoCmp("(extended-lambda ((((A) #> B) f) (List l))"
+				+ "                    ((((A) #> B) List2:Linked) (if (can-deconstruct-as l ())"
 				+ "                                                (construct List2 Linked)"
 				+ "                                                (construct List2 Linked (f (head-list l)) (map-list f (tail-list l)))))"
-				+ "                    ((((A) #> B) List2:Functional) (if (equals? (deconstruct l) ())"
+				+ "                    ((((A) #> B) List2:Functional) (if (can-deconstruct-as l ())"
 				+ "                                                    (construct List2 Functional)"
-				+ "                                                    (construct List2 Functional (f (head-list l)) (map-list f (tail-list l))))))",
-				TestComplex.escapeBrackets("`([[[[:A] :-> :B] :List2Functional] ~(fn [f l] (if ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w*] ~identity]) [:List2Functional] [l]) nil]) ("
-						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] []) ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :List2\\*] ~(fn [x l] ("
-						+ AbstractionApplication.clojureEapply + " fcons [:\\w* :List2\\*] [x l]))]) [:B :\\w*] [("
-						+ AbstractionApplication.clojureEapply + " f [:\\w*] [(" + AbstractionApplication.clojureEapply
-						+ " head-list [:List2Functional] [l])]) (" + AbstractionApplication.clojureEapply
-						+ " map-list [[[:A] :-> :B] :\\w*] [f (" + AbstractionApplication.clojureEapply
-						+ " tail-list [:List2Functional] [l])])])))] [[[[:A] :-> :B] :List2Linked] ~(fn [f l] (if ("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w* :\\w*] ~=]) [:\\w* []] [("
-						+ AbstractionApplication.clojureEapply + " `([[:\\w*] ~identity]) [:List2Linked] [l]) nil]) ("
-						+ AbstractionApplication.clojureEapply + " `([[] ~(fn [] nil)]) [] []) ("
-						+ AbstractionApplication.clojureEapply
-						+ " `([[:\\w* :List2\\*] ~(fn [x l] [x l])]) [:B :\\w*] [("
-						+ AbstractionApplication.clojureEapply + " f [:\\w*] [(" + AbstractionApplication.clojureEapply
-						+ " head-list [:List2Linked] [l])]) (" + AbstractionApplication.clojureEapply
-						+ " map-list [[[:A] :-> :B] :\\w*] [f (" + AbstractionApplication.clojureEapply
-						+ " tail-list [:List2Linked] [l])])])))])"));
+				+ "                                                    (construct List2 Functional (f (head-list l)) (map-list f (tail-list l))))))");
 
 		/*
 		 * this.
@@ -1148,6 +973,10 @@ class TestComplex {
 			fail("Clojure compilation test failed, compiling " + code + " do not match " + regex + " got "
 					+ s.toString());
 		}
+	}
+
+	private void testClojureCompileNoCmp(String code) throws AppendableException {
+		this.compileToClojure(code);
 	}
 
 	private static String escapeBrackets(String s) {

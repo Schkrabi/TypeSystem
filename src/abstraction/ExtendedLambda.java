@@ -163,7 +163,7 @@ public class ExtendedLambda extends Abstraction {
 		while(i.hasNext()) {
 			Lambda implementation = i.next();
 			sb.append(implementation.toClojureFn(env));
-			while(i.hasNext()) {
+			if(i.hasNext()) {
 				sb.append(" ");
 			}
 		}
