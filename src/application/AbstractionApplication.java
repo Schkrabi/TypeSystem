@@ -184,7 +184,6 @@ public class AbstractionApplication extends Application {
 										+ "(rank-implementations type abstraction ranking-function)) 1))] "
 						+ "(apply "
 							+ "(select-implementation (:lang-type (meta arguments)) abstraction ranking-function) "
-							+ "arguments)))";
-								
+							+ "arguments)))";							
 
 }

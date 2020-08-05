@@ -511,7 +511,7 @@ public abstract class Operator extends Abstraction {
 		@Override
 		protected String implementationsToClojure(Environment env) throws AppendableException {
 			Pair<Type, Substitution> p = this.infer(env);
-			return "(with-meta (fn [_x] (with-meta [(println (get _x 0))] " + "{:lang-type "
+			return "(with-meta (fn [_x] (with-meta [(println (str _x))] " + "{:lang-type "
 					+ ((TypeArrow) p.first).rtype.clojureTypeRepresentation() + "}))" + "{:lang-type "
 					+ p.first.clojureTypeRepresentation() + "})";
 		}
@@ -847,7 +847,7 @@ public abstract class Operator extends Abstraction {
 			return "(with-meta " 
 					+ "(fn [_x] (with-meta " 
 						+ "[(with-meta "
-							+ "(" + RomanNumbers.int2RomanClojure + " (get _x 0))"
+							+ "[(" + RomanNumbers.int2RomanClojure + " (get _x 0))]"
 							+ "{:lang-type " + TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})]"
 						+ "{:lang-type " + TypeAtom.TypeIntRoman.clojureTypeRepresentation() + "}))"
 					+ "{:lang-type " + p.first.clojureTypeRepresentation() + "})";
@@ -884,7 +884,7 @@ public abstract class Operator extends Abstraction {
 			return "(with-meta " 
 					+ "(fn [_x] (with-meta " 
 						+ "[(with-meta "
-							+ "(Integer/toString (get _x 0))"
+							+ "[(Integer/toString (get _x 0))]"
 							+ "{:lang-type " + TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})]"
 						+ "{:lang-type " + TypeAtom.TypeIntString.clojureTypeRepresentation() + "}))"
 					+ "{:lang-type " + p.first.clojureTypeRepresentation() + "})";
@@ -1036,7 +1036,7 @@ public abstract class Operator extends Abstraction {
 			return "(with-meta "
 					+ "(fn [_x] (with-meta "
 								+ "[(with-meta "
-								+ "[(int2romanClojure (Integer/parseInt (get (get _x 0) 0)))] "
+									+ "[(int2romanClojure (Integer/parseInt (get (get _x 0) 0)))] "
 								+ "{:lang-type " + TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})]) "
 							+ "{:lang-type " + TypeAtom.TypeIntRoman.clojureTypeRepresentation() + "}) "
 					+ "{:lang-type " + p.first.clojureTypeRepresentation() + "})";

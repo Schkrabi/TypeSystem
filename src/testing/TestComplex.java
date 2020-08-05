@@ -554,17 +554,7 @@ class TestComplex {
 				+ "})) (with-meta [pair] {:lang-type "
 				+ (new TypeTuple(Arrays.asList(new TypeVariable("\\w*")))).clojureTypeRepresentation() + "})) "
 				+ AbstractionApplication.clojureRankingFunction + ")"));
-		this.testClojureCompile("(concat \"Hello\" \"World\")",
-				"(" + AbstractionApplication.clojureEapply + " `(["
-						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeStringNative)))
-								.clojureTypeRepresentation()
-						+ " ~str]) (with-meta [(with-meta [\"Hello\"] {:lang-type "
-						+ TypeAtom.TypeStringNative.clojureTypeRepresentation()
-						+ "}) (with-meta [\"World\"] {:lang-type "
-						+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})] {:lang-type "
-						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeStringNative)))
-								.clojureTypeRepresentation()
-						+ "}) " + AbstractionApplication.clojureRankingFunction + ")");
+		this.testClojureCompileNoCmp("(concat \"Hello\" \"World\")");
 		this.testClojureCompile("(/ 84 2)",
 				"(" + AbstractionApplication.clojureEapply
 						+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(/ (get _x 0) (get _y 0))] {:lang-type "
@@ -882,24 +872,7 @@ class TestComplex {
 				+ "                                                    (construct List2 Functional)"
 				+ "                                                    (construct List2 Functional (f (head-list l)) (map-list f (tail-list l))))))");
 
-		/*
-		 * this.
-		 * testClojureCompile("(define append-list2-el (extended-lambda ((List2 l) (A x))"
-		 * +
-		 * "                        ((List2:Linked A) (if (equals? (deconstruct l) ())"
-		 * +
-		 * "                                                (construct List2 Linked x (construct List2 Linked))"
-		 * +
-		 * "                                                (construct List2 Linked (head-list2 l) (append-list2-el (tail-list2 l) x))))"
-		 * +
-		 * "                        ((List2:Functional A) (if (equals? (deconstruct l) ())"
-		 * +
-		 * "                                                (construct List2 Functional x (construct List2 Functional))"
-		 * +
-		 * "                                                (construct List2 Functional (head-list2 l) (append-list2-el (tail-list2 l) x))))))"
-		 * , ""); this.testClojureCompile("(head-list2 (append-list2-el x 42))", "");
-		 * this.testClojureCompile("(head-list2 (append-list2-el y 42))", "");
-		 */
+		this.testClojureCompileNoCmp("(println (cons 42 \"42\"))");
 	}
 
 	private List<Expression> parseString(String s, SemanticParser semanticParser) throws AppendableException {

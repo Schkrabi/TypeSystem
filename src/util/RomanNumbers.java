@@ -119,32 +119,36 @@ public class RomanNumbers {
 	/**
 	 * Clojure code of roman to int function
 	 */
-	public static final String roman2intClojure = "roman2int"; 
-			  /*"(fn [arg]\n"
-			+ "                    (letfn [(romanCheck [arg] (re-matches #\"(^(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$)\" arg))]\n"
-			+ "                        (when-not (romanCheck arg) (throw (Exception. (str \"Invalid roman number \" arg))))\n"
-			+ "                        (let [  values {\\I 1\n" + "                                        \\V 5\n"
-			+ "                                        \\X 10\n" + "                                        \\L 50\n"
-			+ "                                        \\C 100\n" + "                                        \\D 500\n"
-			+ "                                        \\M 1000}\n"
-			+ "                                numbered (map (fn [x] (get values x)) arg)\n"
-			+ "                                first   (reverse (cons 0 numbered))\n"
-			+ "                                second  (cons 0 (reverse numbered))]\n"
-			+ "                            (reduce +(map (fn [cur prev]\n"
-			+ "                                        (if (< cur prev)\n"
-			+ "                                                (- cur)\n"
-			+ "                                                cur)) first second)))))";*/
+	public static final String roman2intClojure = /*"roman2int";*/ 
+			  "(fn [arg]"
+			  + "(letfn [(romanCheck [arg] (re-matches #\"(^(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$)\" arg))] "
+			  	+ "(when-not (romanCheck arg) (throw (Exception. (str \"Invalid roman number \" arg)))) "
+			  		+ "(let [  values {\\I 1 " 
+			  						+ "\\V 5 "
+			  						+ "\\X 10 " 
+			  						+ "\\L 50 "
+			  						+ "\\C 100 " 
+			  						+ "\\D 500 "
+			  						+ "\\M 1000} "
+			  				+ "numbered (map (fn [x] (get values x)) arg) "
+			  				+ "first   (reverse (cons 0 numbered)) "
+			  				+ "second  (cons 0 (reverse numbered))] "
+			  			+ "(reduce + (map (fn [cur prev] "
+			  				+ "(if (< cur prev) "
+			  					+ "(- cur) "
+			  					+ "cur)) first second)))))";
 
 	/**
 	 * Clojure code if int to roman function
 	 */
-	public static final String int2RomanClojure = "int2roman"; 
-			  /*"(fn [n]\n"
-			+ "                (let [  hundreds    [\"\" \"C\" \"CC\" \"CCC\" \"CD\" \"D\" \"DC\" \"DCC\" \"DCCC\" \"CM\"]\n"
-			+ "                        tens        [\"\" \"X\" \"XX\" \"XXX\" \"XL\" \"L\" \"LX\" \"LXX\" \"LXXX\" \"XC\"]\n"
-			+ "                        ones        [\"\" \"I\" \"II\" \"III\" \"IV\" \"V\" \"VU\" \"VII\" \"VIII\" \"IX\"]]\n"
-			+ "                        (letfn [(rec [n] \n" + "                                    (if (>= n 1000)\n"
-			+ "                                        (str \"M\" (rec (- n 1000)))\n"
-			+ "                                        (str (get hundreds (quot n 100)) (get tens (quot (mod n 100) 10)) (get ones  (mod n 10)))))]\n"
-			+ "                            (rec n))))";*/
+	public static final String int2RomanClojure = /*"int2roman";*/ 
+			  "(fn [n] "
+			  + "(let [  hundreds    [\"\" \"C\" \"CC\" \"CCC\" \"CD\" \"D\" \"DC\" \"DCC\" \"DCCC\" \"CM\"] "
+			  		  + "tens        [\"\" \"X\" \"XX\" \"XXX\" \"XL\" \"L\" \"LX\" \"LXX\" \"LXXX\" \"XC\"] "
+			  		  + "ones        [\"\" \"I\" \"II\" \"III\" \"IV\" \"V\" \"VU\" \"VII\" \"VIII\" \"IX\"]] "
+			  		+ "(letfn [(rec [n] " 
+			  		  + "(if (>= n 1000) "
+			  		  		+ "(str \"M\" (rec (- n 1000))) "
+			  		  		+ "(str (get hundreds (quot n 100)) (get tens (quot (mod n 100) 10)) (get ones  (mod n 10)))))] "
+			  		  			+ "(rec n))))";
 }
