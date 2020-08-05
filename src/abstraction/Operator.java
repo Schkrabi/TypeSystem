@@ -224,12 +224,6 @@ public abstract class Operator extends Abstraction {
 		}
 
 		@Override
-		public String toClojureCode(Environment env) {
-			return "`([[" + TypeAtom.TypeStringNative.clojureTypeRepresentation() + " "
-					+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "] ~str])";
-		}
-
-		@Override
 		public String toString() {
 			return "concat";
 		}
@@ -510,11 +504,6 @@ public abstract class Operator extends Abstraction {
 		}
 
 		@Override
-		public String toClojureCode(Environment env) throws AppendableException {
-			return "`([" + type.ltype.clojureTypeRepresentation() + " ~println])";
-		}
-
-		@Override
 		public String toString() {
 			return "println";
 		}
@@ -522,7 +511,7 @@ public abstract class Operator extends Abstraction {
 		@Override
 		protected String implementationsToClojure(Environment env) throws AppendableException {
 			Pair<Type, Substitution> p = this.infer(env);
-			return "(with-meta (fn [_x _y] (with-meta [(println (get _x 0))] " + "{:lang-type "
+			return "(with-meta (fn [_x] (with-meta [(println (get _x 0))] " + "{:lang-type "
 					+ ((TypeArrow) p.first).rtype.clojureTypeRepresentation() + "}))" + "{:lang-type "
 					+ p.first.clojureTypeRepresentation() + "})";
 		}
