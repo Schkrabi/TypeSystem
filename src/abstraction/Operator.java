@@ -511,7 +511,7 @@ public abstract class Operator extends Abstraction {
 		@Override
 		protected String implementationsToClojure(Environment env) throws AppendableException {
 			Pair<Type, Substitution> p = this.infer(env);
-			return "(with-meta (fn [_x] (with-meta [(println (str _x))] " + "{:lang-type "
+			return "(with-meta (fn [_x] (with-meta [(println (lang-pstr _x))] " + "{:lang-type "
 					+ ((TypeArrow) p.first).rtype.clojureTypeRepresentation() + "}))" + "{:lang-type "
 					+ p.first.clojureTypeRepresentation() + "})";
 		}
@@ -957,7 +957,7 @@ public abstract class Operator extends Abstraction {
 			return "(with-meta"  
 					+ "(fn [_x] (with-meta"
 								+ "[(with-meta" 
-									+ "[(str (roman2intClojure (get (get _x 0) 0)))]"
+									+ "[(str (" + RomanNumbers.roman2intClojure +" (get (get _x 0) 0)))]"
 									+ "{:lang-type " + TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})]"
 								+ "{:lang-type " + TypeAtom.TypeIntString.clojureTypeRepresentation() + "}))" + 
 					"	{:lang-type " + p.first.clojureTypeRepresentation() + "})";
@@ -1020,12 +1020,6 @@ public abstract class Operator extends Abstraction {
 		}
 
 		@Override
-		public String toClojureCode(Environment env) throws AppendableException {
-			return "`([[" + TypeAtom.TypeIntString.clojureTypeRepresentation() + "] ~(fn [_x] ("
-					+ RomanNumbers.int2RomanClojure + " (Integer/parseInt _x)))])";
-		}
-
-		@Override
 		public String toString() {
 			return "IntString2IntRoman";
 		}
@@ -1036,9 +1030,9 @@ public abstract class Operator extends Abstraction {
 			return "(with-meta "
 					+ "(fn [_x] (with-meta "
 								+ "[(with-meta "
-									+ "[(int2romanClojure (Integer/parseInt (get (get _x 0) 0)))] "
-								+ "{:lang-type " + TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})]) "
-							+ "{:lang-type " + TypeAtom.TypeIntRoman.clojureTypeRepresentation() + "}) "
+									+ "[(" + RomanNumbers.int2RomanClojure + " (Integer/parseInt (get (get _x 0) 0)))] "
+								+ "{:lang-type " + TypeAtom.TypeStringNative.clojureTypeRepresentation() + "})] "
+							+ "{:lang-type " + TypeAtom.TypeIntRoman.clojureTypeRepresentation() + "})) "
 					+ "{:lang-type " + p.first.clojureTypeRepresentation() + "})";
 		}
 	};
