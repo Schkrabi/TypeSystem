@@ -71,13 +71,13 @@ public abstract class Expression implements Comparable<Expression> {
 		}
 
 		@Override
-		public String toClojureCode(Environment env) {
-			return "nil";
+		public String toClojureCode(Environment env) throws AppendableException {
+			return "(with-meta [] {:lang-type " + TypeTuple.EMPTY_TUPLE.clojureTypeRepresentation() + "})";
 		}
 		
 		@Override
 		public String toString() {
-			return "nil";
+			return "[]";
 		}
 	};
 }

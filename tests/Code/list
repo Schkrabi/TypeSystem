@@ -19,16 +19,21 @@
 (define is-list-empty (extended-lambda ((List l))
                         ((List:Linked) (can-deconstruct-as l ()))
                         ((List:Functional) (can-deconstruct-as l ()))))
+                        
+(println (is-list-empty x))
+(println (is-list-empty y))
+(println (is-list-empty (construct List Linked)))
+(println (is-list-empty (construct List Functional)))
 
 (define head-list (extended-lambda ((List l))
           					((List:Linked) (if (is-list-empty l) (error "Cannot make head of empty list!") (car (deconstruct l (A List:Linked)))))
-          					((List:Functional) (if (is-list-empty l) (error "Cannot make head of empty list!") (fcar (deconstruct l (A List:Linked)))))))
+          					((List:Functional) (if (is-list-empty l) (error "Cannot make head of empty list!") (fcar (deconstruct l ((A) #> B)))))))
 (println (head-list x))
 (println (head-list y))
 
 (define tail-list (extended-lambda ((List l)) 
           					((List:Linked) (if (is-list-empty l) (error "Cannot make tail of empty list!") (cdr (deconstruct l (A List:Linked)))))
-          					((List:Functional) (if (is-list-empty l) (error "Cannot make tail of empty list!") (fcdr (deconstruct l (A List:Linked)))))))
+          					((List:Functional) (if (is-list-empty l) (error "Cannot make tail of empty list!") (fcdr (deconstruct l ((A) #> B)))))))
 (println (tail-list x))
 
 (define build-list-aux (lambda (i n f)

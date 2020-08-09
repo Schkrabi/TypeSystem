@@ -29,9 +29,12 @@ public class ClojureCodeGenerator {
 				+ "(= type (lang-type-atom. \"Int\" \"Native\")) " + "(= type (lang-type-atom. \"String\" \"Native\")) "
 				+ "(= type (lang-type-atom. \"Double\" \"Native\")) "
 				+ "(= type (lang-type-atom. \"Bool\" \"Native\"))) (if " + "(= level 0) " + "(pr-str (get exp 0)) "
-				+ "(get exp 0)) " + "(instance? lang-type-atom type) (lang-pstr-aux (get exp 0) level) "
-				+ "(instance? clojure.lang.PersistentVector type) (pr-str (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp))) "
-				+ ":else (throw (Throwable. (str exp \" is not a printable expression\"))))))] "
+				+ "(get exp 0)) " + "(= type []) []"
+				+ "(instance? lang-type-atom type) (lang-pstr-aux (get exp 0) level) "
+				+ "(instance? clojure.lang.PersistentVector type) " + "(if " + "(= level 0) "
+				+ "(pr-str (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp))) "
+				+ " (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp))) "
+				+ ":else (throw (Throwable. (str (pr-str exp) \" is not a printable expression\"))))))] "
 				+ "(lang-pstr-aux exp 0))))");
 	}
 }

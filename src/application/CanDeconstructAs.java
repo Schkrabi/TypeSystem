@@ -59,8 +59,9 @@ public class CanDeconstructAs extends Expression {
 
 	@Override
 	public String toClojureCode(Environment env) throws AppendableException {
-		return "(= " + this.as.clojureTypeRepresentation() + " (:lang-type (meta (get "
-				+ this.expression.toClojureCode(env) + "))))";
+		return "(with-meta [(= " + this.as.clojureTypeRepresentation() + " (:lang-type (meta (get "
+				+ this.expression.toClojureCode(env) + " 0))))] {:lang-type "
+				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})";
 	}
 
 	@Override
