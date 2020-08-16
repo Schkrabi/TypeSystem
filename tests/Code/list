@@ -8,6 +8,10 @@
 (define fcar (lambda (p) (p (lambda (x y) x))))
 (define fcdr (lambda (p) (p (lambda (x y) y))))
 
+(define z (fcons 1 2))
+(println (fcar z))
+(println (fcdr z))
+
 (representation Functional List)
 (constructor List Functional (x (List l)) (fcons x l))
 (constructor List Functional () ())
@@ -24,6 +28,9 @@
 (println (is-list-empty y))
 (println (is-list-empty (construct List Linked)))
 (println (is-list-empty (construct List Functional)))
+(println (is-list-empty (cdr (deconstruct x (A List:Linked)))))
+(println (is-list-empty (fcdr (deconstruct y ((A) #> B)))))
+(println (is-list-empty (fcdr (deconstruct (construct List Functional 42 (construct List Functional)) ((A) #> B)))))
 
 (define head-list (extended-lambda ((List l))
           					((List:Linked) (if (is-list-empty l) (error "Cannot make head of empty list!") (car (deconstruct l (A List:Linked)))))
@@ -35,6 +42,7 @@
           					((List:Linked) (if (is-list-empty l) (error "Cannot make tail of empty list!") (cdr (deconstruct l (A List:Linked)))))
           					((List:Functional) (if (is-list-empty l) (error "Cannot make tail of empty list!") (fcdr (deconstruct l ((A) #> B)))))))
 (println (tail-list x))
+(println (head-list (tail-list y)))
 
 (define build-list-aux (lambda (i n f)
             						(if (= i n)
@@ -54,26 +62,4 @@
                             (construct List Functional (head-list l) (append-list (tail-list l) x))))))
 
 (println (append-list x 21))
-(println (head-list (append-list y 21)))
-
-(define reverse-list (extended-lambda ((List l))
-                        ((List:Linked) (if (is-list-empty l)
-                                            (construct List Linked)
-                                            (append-list (reverse-list (tail-list l)) (head-list l))))
-                        ((List:Functional) (if (is-list-empty l)
-                                            (construct List Functional)
-                                            (append-list (reverse-list (tail-list l)) (head-list l))))))
-
-(println (reverse-list x))
-(println (head-list (reverse-list y)))
-
-(define map-list (extended-lambda ((((A) #> B) f) (List l))
-                    ((((A) #> B) List:Linked) (if (is-list-empty l)
-                                                (construct List Linked)
-                                                (construct List Linked (f (head-list l)) (map-list f (tail-list l)))))
-                    ((((A) #> B) List:Functional) (if (is-list-empty l)
-                                                    (construct List Functional)
-                                                    (construct List Functional (f (head-list l)) (map-list f (tail-list l)))))))
-                                                    
-(println (map-list (lambda (x) (+ x 1)) x))
-(println (head-list (map-list (lambda (x) (+ x 1)) y)))
+(append-list y 21)

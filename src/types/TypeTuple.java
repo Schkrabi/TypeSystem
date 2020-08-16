@@ -151,6 +151,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		Iterator<Type> i = this.iterator();
 		Iterator<Type> j = toTuple.iterator();
 		int k = 0;
+		boolean anyConverted = false;
 		while (i.hasNext()) {
 			Type from = i.next();
 			Type to = j.next();
@@ -186,9 +187,18 @@ public class TypeTuple extends Type implements Iterable<Type> {
 				}
 
 			};
+			
+			Expression converted = from.convertTo(e, to);
+			if(!anyConverted && !converted.equals(e)) {
+				anyConverted = true;
+			}
 
-			l.add(from.convertTo(e, to));
+			l.add(converted);
 			k++;
+		}
+		
+		if(!anyConverted) {
+			return expr;
 		}
 
 		Tuple conversionTuple = new Tuple(l) {
