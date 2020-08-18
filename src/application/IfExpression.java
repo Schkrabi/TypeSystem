@@ -65,21 +65,14 @@ public class IfExpression extends SpecialFormApplication {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		Pair<Type, Substitution> condInfered = this.getCondition().infer(env);
-		Pair<Type, Substitution> trueInfered = this.getTrueBranch().infer(env);
-		Pair<Type, Substitution> falseInfered = this.getFalseBranch().infer(env);
+		Pair<Type, Substitution> argsInfered = this.args.infer(env);
+		TypeVariable tv = new TypeVariable(NameGenerator.next());
+		Type argsExpected = new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, tv, tv));
 		
-		Substitution condSubstitution = Type.unify(condInfered.first, TypeAtom.TypeBool);
-		Substitution branchSubstitution = Type.unify(trueInfered.first, falseInfered.first);
+		Substitution s = Type.unify(argsInfered.first, argsExpected); 
+		s = s.union(argsInfered.second);
 		
-		Substitution s = Substitution.EMPTY;
-		s = s.union(condInfered.second);
-		s = s.union(trueInfered.second);
-		s = s.union(falseInfered.second);
-		s = s.union(condSubstitution);
-		s = s.union(branchSubstitution);
-		
-		return new Pair<Type, Substitution>(trueInfered.first.apply(s), s);
+		return new Pair<Type, Substitution>(tv.apply(s), s);
 	}
 
 	@Override
