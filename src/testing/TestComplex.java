@@ -130,12 +130,14 @@ class TestComplex {
 
 		this.testInterpretString("(define tail-list (extended-lambda ((List l)) "
 				+ "((List:Linked) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List:Linked)))))"
-				+ "((List:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A B) #> C)) #> D)))))))"
+				+ "((List:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional)))))))"
 				+ "(tail-list x)",
 				new LitComposite(
 						new Tuple(Arrays.asList(fortyTwoStr,
 								new LitComposite(new Tuple(Arrays.asList(fortyTwo, emptyList)), linkedList))),
 						linkedList));
+		
+		this.testInterpretString("(head-list (tail-list y))", fortyTwoStr);
 
 		this.testInterpretString(
 				"(define build-list-aux (lambda (i n f) " + "(if (= i n) " + "(construct List Linked)"
@@ -159,10 +161,18 @@ class TestComplex {
 				LitBoolean.FALSE);
 
 		this.testInterpretString("(empty-list? y)", LitBoolean.FALSE);
+		
+		this.testInterpretString("(define is-list-empty (extended-lambda ((List l))\n" + 
+				"                        ((List:Linked) (can-deconstruct-as l ()))\n" + 
+				"                        ((List:Functional) (can-deconstruct-as l ()))))", Expression.EMPTY_EXPRESSION);
 
-		this.testInterpretString("(define append-list (lambda ((List l) x) " + "(if (empty-list? l) "
-				+ "(construct List Linked x (construct List Linked)) "
-				+ "(construct List Linked (head-list l) (append-list (tail-list l) x)))))" + "(append-list x 21)",
+		this.testInterpretString("(define append-list (extended-lambda ((List l) (A x))\n" + 
+				"                        ((List:Linked A) (if (is-list-empty l)\n" + 
+				"                            (construct List Linked x (construct List Linked))\n" + 
+				"                            (construct List Linked (head-list l) (append-list (tail-list l) x))))\n" + 
+				"						((List:Functional A) (if (is-list-empty l)\n" + 
+				"                            (construct List Functional x (construct List Functional))\n" + 
+				"                            (construct List Functional (head-list l) (append-list (tail-list l) x))))))\n" + "(append-list x 21)",
 				new LitComposite(
 						new Tuple(
 								Arrays.asList(xlii,
@@ -628,11 +638,11 @@ class TestComplex {
 
 		this.testClojureCompileNoCmp(
 				"(define head-list2 (extended-lambda ((List2 l)) ((List2:Linked) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List2:Linked)))))"
-						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list!\") (fcar (deconstruct l (A List2:Functional)))))))");
+						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional)))))))");
 
 		this.testClojureCompileNoCmp(
 				"(define tail-list2 (extended-lambda ((List2 l)) ((List2:Linked) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List2:Linked)))))"
-						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l (A List2:Linked)))))))");
+						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional)))))))");
 
 		// This is interesting, extended lambda is not sufficient, when I might want to
 		// return a different representation.

@@ -1,5 +1,6 @@
 package application;
 
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import abstraction.Abstraction;
@@ -73,9 +74,9 @@ public class AbstractionApplication extends Application {
 				}
 				// If type of function is unknown (unresolved variable) assume type arrow
 				else if (funInfered.first instanceof TypeVariable) {
-					funInfered = new Pair<Type, Substitution>(
-							new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next())),
-							Substitution.EMPTY);
+					TypeArrow ta = new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()));
+					Substitution sta = new Substitution(Arrays.asList(new Pair<TypeVariable, Type>((TypeVariable)funInfered.first, ta)));
+					funInfered = new Pair<Type, Substitution>(ta, sta);
 				}
 				else {
 					throw new AppendableException(funInfered.first.toString() + " is not applicable type! In:" + this.toString());
