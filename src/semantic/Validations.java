@@ -1,8 +1,10 @@
 package semantic;
 
 import java.util.List;
+import java.util.Map;
 
 import parser.SemanticNode;
+import types.TypeVariable;
 import util.AppendableException;
 import util.Pair;
 import util.ThrowingFunction;
@@ -115,11 +117,13 @@ public class Validations {
 	/**
 	 * Validates extended lambda special form list
 	 * 
-	 * @param l validated list
+	 * @param l       validated list
+	 * @param typeLet
 	 * @return true if list validates, throws exception otherwise
 	 * @throws AppendableException
 	 */
-	public static boolean validateElambdaList(List<SemanticNode> l) throws AppendableException {
+	public static boolean validateElambdaList(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+			throws AppendableException {
 		if (l.size() < 3) {
 			throw new AppendableException("Too few arguments (" + l.size() + ")");
 		}
@@ -130,7 +134,7 @@ public class Validations {
 		}
 
 		try {
-			Validations.validateImplementations(l.subList(2, l.size()));
+			Validations.validateImplementations(l.subList(2, l.size()), typeLet);
 		} catch (AppendableException e) {
 			e.appendMessage(" in " + l);
 			throw e;
@@ -142,16 +146,18 @@ public class Validations {
 	/**
 	 * Validates the list of implementations for extended lambda
 	 * 
-	 * @param l list of implementations
+	 * @param l       list of implementations
+	 * @param typeLet
 	 * @return true if list validates, otherwise throws AppendableException
 	 * @throws AppendableException
 	 */
-	public static boolean validateImplementations(List<SemanticNode> l) throws AppendableException {
+	public static boolean validateImplementations(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+			throws AppendableException {
 		for (SemanticNode n : l) {
 			if (n.type != SemanticNode.NodeType.LIST) {
 				throw new UnexpectedExpressionException(n);
 			}
-			Validations.validateImplementation(n.asList());
+			Validations.validateImplementation(n.asList(), typeLet);
 		}
 		return true;
 	}
@@ -159,11 +165,13 @@ public class Validations {
 	/**
 	 * Validates a single implementation for extended lambda
 	 * 
-	 * @param l list containing the implementation
+	 * @param l       list containing the implementation
+	 * @param typeLet
 	 * @return true if implementation validates, otherwise throws excetpion
 	 * @throws AppendableException
 	 */
-	public static boolean validateImplementation(List<SemanticNode> l) throws AppendableException {
+	public static boolean validateImplementation(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+			throws AppendableException {
 		if (l.size() != 2) {
 			throw new AppendableException("Badly formed implementation " + l);
 		}
@@ -455,47 +463,78 @@ public class Validations {
 	}
 
 	/**
-	 * Validates deconstruct-as special form 
+	 * Validates deconstruct-as special form
 	 * 
 	 * @param specialFormList validated list
 	 * @throws AppendableException if validation fails
 	 */
 	public static void validateDeconstructList(List<SemanticNode> specialFormList) throws AppendableException {
-		if(specialFormList.size() < 3) {
+		if (specialFormList.size() < 3) {
 			throw new InvalidNumberOfArgsException(2, specialFormList.size() - 1);
 		}
-		
+
 		SemanticNode deconstructAs = specialFormList.get(0);
 		if (deconstructAs.type != SemanticNode.NodeType.SYMBOL
 				|| !deconstructAs.asSymbol().equals(SemanticParserStatic.DECONSTRUCT)) {
 			throw new UnexpectedExpressionException(deconstructAs);
 		}
-		
+
 		SemanticNode type = specialFormList.get(2);
-		if(!Validations.isTypeIdentifierNode(type)) {
+		if (!Validations.isTypeIdentifierNode(type)) {
 			throw new UnexpectedExpressionException(type);
 		}
 	}
-	
+
 	/**
 	 * Validates can-deconstruct-as special form list
+	 * 
 	 * @param specialFormList validated list
 	 * @throws AppendableException if validation fails
 	 */
-	public static void validateCanDeconstructAsList(List<SemanticNode> specialFormList) throws AppendableException{
-		if(specialFormList.size() < 3) {
+	public static void validateCanDeconstructAsList(List<SemanticNode> specialFormList) throws AppendableException {
+		if (specialFormList.size() < 3) {
 			throw new InvalidNumberOfArgsException(2, specialFormList.size() - 1);
 		}
-		
+
 		SemanticNode deconstructAs = specialFormList.get(0);
 		if (deconstructAs.type != SemanticNode.NodeType.SYMBOL
 				|| !deconstructAs.asSymbol().equals(SemanticParserStatic.CAN_DECONSTRUCT_AS)) {
 			throw new UnexpectedExpressionException(deconstructAs);
 		}
-		
+
 		SemanticNode type = specialFormList.get(2);
-		if(!Validations.isTypeIdentifierNode(type)) {
+		if (!Validations.isTypeIdentifierNode(type)) {
 			throw new UnexpectedExpressionException(type);
 		}
+	}
+
+	/**
+	 * Validates let-type special form list
+	 * 
+	 * @param specialFormList validated list
+	 * @param typeLet current typelet
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateLetTypeList(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet)
+			throws AppendableException {
+		if (specialFormList.size() < 3) {
+			throw new InvalidNumberOfArgsException(2, specialFormList.size() - 1);
+		}
+
+		SemanticNode letType = specialFormList.get(0);
+		if (letType.type != SemanticNode.NodeType.SYMBOL || !letType.asSymbol().equals(SemanticParserStatic.LET_TYPE)) {
+			throw new UnexpectedExpressionException(letType);
+		}
+
+		SemanticNode typeVariableList = specialFormList.get(1);
+		if (typeVariableList.type != SemanticNode.NodeType.LIST) {
+			throw new UnexpectedExpressionException(typeVariableList);
+		}
+
+	}
+
+	public static void validateTypeVariableList(List<SemanticNode> list) {
+		// TODO Auto-generated method stub
+		
 	}
 }

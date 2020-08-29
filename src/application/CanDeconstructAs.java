@@ -59,6 +59,8 @@ public class CanDeconstructAs extends Expression {
 
 	@Override
 	public String toClojureCode(Environment env) throws AppendableException {
+		//TODO uživatel může v can-deconstruct-as specifikovat typové proměnné a tedy jednoduché srovnání v clojure nebude fungovat
+		
 		return "(with-meta [(= " + this.as.clojureTypeRepresentation() + " (:lang-type (meta (get "
 				+ this.expression.toClojureCode(env) + " 0))))] {:lang-type "
 				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})";
