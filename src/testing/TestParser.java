@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.TreeMap;
+
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -154,14 +156,16 @@ class TestParser {
 								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeIntNative))))),
 						new Symbol("f")));
 
-		this.testParse("(lambda ((String:Native x) (A y)) y)",
+		this.testParse("(let-type (A) (lambda ((String:Native x) (A y)) y))",
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, new TypeVariable("A"))),
 						new Symbol("y")));
 
-		this.testParse("(deconstruct x Int:Native)", new Deconstruct(new Symbol("x"), TypeAtom.TypeIntNative));;
-		this.testParse("(can-deconstruct-as x Int:Native)", new CanDeconstructAs(new Symbol("x"), TypeAtom.TypeIntNative));
-		
+		this.testParse("(deconstruct x Int:Native)", new Deconstruct(new Symbol("x"), TypeAtom.TypeIntNative));
+		;
+		this.testParse("(can-deconstruct-as x Int:Native)",
+				new CanDeconstructAs(new Symbol("x"), TypeAtom.TypeIntNative));
+
 		// Dummy object tests
 		new Validations();
 		new SemanticParserStatic();
@@ -310,9 +314,12 @@ class TestParser {
 
 		Assertions.assertThrows(AppendableException.class,
 				() -> Validations.validateImplementation(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "x"),
-						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"))));
-		Assertions.assertThrows(AppendableException.class, () -> Validations.validateImplementation(
-				Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"))));
+						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x")),
+						new TreeMap<TypeVariable, TypeVariable>()));
+		Assertions.assertThrows(AppendableException.class,
+				() -> Validations.validateImplementation(
+						Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x")),
+						new TreeMap<TypeVariable, TypeVariable>()));
 	}
 
 	@Test
@@ -587,6 +594,28 @@ class TestParser {
 				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
 						Environment.topLevelEnvironment));
 		new UndefinedTypeException("fail");
+	}
+
+	@Test
+	void testLetType() throws AppendableException {
+		Expression e = this.parseString("(let-type (A) (lambda ((A x)) (let-type (A) (lambda ((A y)) x))))");
+		
+		Lambda l = new Lambda(
+						new Tuple(Arrays.asList(new Symbol("x"))), 
+						new TypeTuple(Arrays.asList(new TypeVariable("A1"))), 
+						new Lambda(
+								new Tuple(Arrays.asList(new Symbol("y"))),
+								new TypeTuple(Arrays.asList(new TypeVariable("A2"))),
+								new Symbol("x")));
+		
+		if(!e.equals(l)) {
+			fail("Parse error expected " + l.toString() + " got " + e.toString());
+		}
+		Lambda l1 = (Lambda)e;
+		Lambda l2 = (Lambda)l1.body;
+		if(l1.argsType.equals(l2.argsType)) {
+			fail("Let-type not overcovering type variables correcly");
+		}
 	}
 
 	private Expression parseString(String s) throws AppendableException {

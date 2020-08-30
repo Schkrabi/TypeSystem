@@ -296,7 +296,7 @@ public class SemanticParser {
 	private static Expression parseAnd(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet)
 			throws AppendableException {
 		try {
-			Validations.validateAndList(specialFormList, typeLet);
+			Validations.validateAndList(specialFormList);
 		} catch (AppendableException e) {
 			e.appendMessage("in AndExpression " + specialFormList);
 			throw e;
@@ -324,7 +324,7 @@ public class SemanticParser {
 	private static Expression parseOr(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet)
 			throws AppendableException {
 		try {
-			Validations.validateOrList(specialFormList, typeLet);
+			Validations.validateOrList(specialFormList);
 		} catch (AppendableException e) {
 			e.appendMessage("in OrExpression " + specialFormList);
 			throw e;
@@ -351,7 +351,7 @@ public class SemanticParser {
 	private static Lambda parseLambda(List<SemanticNode> lambdaList, Map<TypeVariable, TypeVariable> typeLet)
 			throws AppendableException {
 		try {
-			Validations.validateLambdaList(lambdaList, typeLet);
+			Validations.validateLambdaList(lambdaList);
 		} catch (AppendableException e) {
 			e.appendMessage(" in Lambda " + lambdaList);
 			throw e;
@@ -377,7 +377,7 @@ public class SemanticParser {
 	private static Expression parseDeftype(List<SemanticNode> deftypeList, Map<TypeVariable, TypeVariable> typeLet)
 			throws AppendableException {
 		try {
-			Validations.validateDefTypeList(deftypeList, typeLet);
+			Validations.validateDefTypeList(deftypeList);
 		} catch (AppendableException e) {
 			e.appendMessage(" in deftype " + deftypeList);
 			throw e;
@@ -449,14 +449,22 @@ public class SemanticParser {
 	 * Parses Wildcard type
 	 * 
 	 * @param typeSymbol name of the type
+	 * @param letType 
 	 * @return TypeAtom
-	 * @throws UndefinedTypeException if Type was not defined
+	 * @throws AppendableException 
 	 */
-	private static Type parseTypeSymbol(String typeSymbol) throws UndefinedTypeException {
+	private static Type parseTypeSymbol(String typeSymbol, Map<TypeVariable, TypeVariable> letType) throws AppendableException {
 		if (TypeEnvironment.singleton.existType(new TypeName(typeSymbol))) {
 			return SemanticParser.parseTypeAtom(typeSymbol, TypeRepresentation.WILDCARD.toString());
 		}
-		return new TypeVariable(typeSymbol);
+		
+		TypeVariable tv = new TypeVariable(typeSymbol); 
+		
+		if(letType.containsKey(tv)) {
+			return letType.get(tv);
+		}
+		
+		throw new AppendableException("Undeclared type variable: " + tv);
 	}
 
 	/**
@@ -548,7 +556,7 @@ public class SemanticParser {
 	private static TypeVariablePair parseVariableTypePair(SemanticNode pair, Map<TypeVariable, TypeVariable> letType)
 			throws AppendableException {
 		try {
-			Validations.validateVariableTypePair(pair, letType);
+			Validations.validateVariableTypePair(pair);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + pair);
 			throw e;
@@ -607,13 +615,13 @@ public class SemanticParser {
 	private static Lambda parseImplementation(Tuple args, List<SemanticNode> l, Map<TypeVariable, TypeVariable> letType)
 			throws AppendableException {
 		try {
-			Validations.validateImplementation(l);
+			Validations.validateImplementation(l, letType);
 		} catch (AppendableException e) {
 			e.appendMessage("in implementation " + l);
 			throw e;
 		}
 		TypeTuple argsType = SemanticParser.parseTypeList(l.get(0).asList(), letType);
-		Expression body = SemanticParser.parseNode(l.get(1));
+		Expression body = SemanticParser.parseNode(l.get(1), letType);
 		return new Lambda(args, argsType, body);
 	}
 
@@ -635,7 +643,7 @@ public class SemanticParser {
 	private static Expression parseDefconversion(List<SemanticNode> l, Map<TypeVariable, TypeVariable> letType)
 			throws AppendableException {
 		try {
-			Validations.validateDefconversionList(l, letType);
+			Validations.validateDefconversionList(l);
 		} catch (AppendableException e) {
 			e.appendMessage("in" + l);
 			throw e;
@@ -670,7 +678,7 @@ public class SemanticParser {
 	private static Expression parseDefine(List<SemanticNode> l, Map<TypeVariable, TypeVariable> letType)
 			throws AppendableException {
 		try {
-			Validations.validateDefineList(l, letType);
+			Validations.validateDefineList(l);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + l);
 			throw e;
@@ -691,7 +699,7 @@ public class SemanticParser {
 	private static Expression parseCons(List<SemanticNode> l, Map<TypeVariable, TypeVariable> letType)
 			throws AppendableException {
 		try {
-			Validations.validateConsList(l, letType);
+			Validations.validateConsList(l);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + l);
 			throw e;
@@ -711,7 +719,7 @@ public class SemanticParser {
 	private static Expression parseError(List<SemanticNode> l, Map<TypeVariable, TypeVariable> letType)
 			throws AppendableException {
 		try {
-			Validations.validateErrorList(l, letType);
+			Validations.validateErrorList(l);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + l);
 			throw e;
@@ -730,7 +738,7 @@ public class SemanticParser {
 	private static Expression parseDefineConstructor(List<SemanticNode> l, Map<TypeVariable, TypeVariable> letType)
 			throws AppendableException {
 		try {
-			Validations.validateDefineConstructorList(l, letType);
+			Validations.validateDefineConstructorList(l);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + l);
 			throw e;
@@ -758,7 +766,7 @@ public class SemanticParser {
 	private static Expression parseConvert(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> letType)
 			throws AppendableException {
 		try {
-			Validations.validateConvertList(specialFormList, letType);
+			Validations.validateConvertList(specialFormList);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + specialFormList);
 			throw e;
@@ -786,7 +794,7 @@ public class SemanticParser {
 	private static Expression parseConstruct(List<SemanticNode> specialFormList,
 			Map<TypeVariable, TypeVariable> letType) throws AppendableException {
 		try {
-			Validations.validateConstructList(specialFormList, letType);
+			Validations.validateConstructList(specialFormList);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + specialFormList);
 			throw e;
@@ -820,7 +828,7 @@ public class SemanticParser {
 	private static Deconstruct parseDeconstruct(List<SemanticNode> specialFormList,
 			Map<TypeVariable, TypeVariable> letType) throws AppendableException {
 		try {
-			Validations.validateDeconstructList(specialFormList, letType);
+			Validations.validateDeconstructList(specialFormList);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + specialFormList.toString());
 			throw e;
@@ -842,7 +850,7 @@ public class SemanticParser {
 	private static CanDeconstructAs parseCanDeconstructAs(List<SemanticNode> specialFormList,
 			Map<TypeVariable, TypeVariable> letType) throws AppendableException {
 		try {
-			Validations.validateCanDeconstructAsList(specialFormList, letType);
+			Validations.validateCanDeconstructAsList(specialFormList);
 		} catch (AppendableException e) {
 			e.appendMessage("in " + specialFormList.toString());
 			throw e;
@@ -875,7 +883,13 @@ public class SemanticParser {
 		List<TypeVariable> typeVariables = SemanticParser.parseTypeVariableList(typeVariableList.asList());
 
 		Map<TypeVariable, TypeVariable> newTypeLet = new TreeMap<TypeVariable, TypeVariable>(typeLet);
-		for (TypeVariable tv : typeVariables) {
+		for (TypeVariable t : typeVariables) {
+			if(!(t instanceof TypeVariable)) {
+				throw new AppendableException("Only typevariables are allowed in let-type found: " + t );
+			}
+			
+			TypeVariable tv = (TypeVariable)t;
+			
 			newTypeLet.put(tv, new TypeVariable(NameGenerator.next()));
 		}
 
@@ -884,12 +898,27 @@ public class SemanticParser {
 		return SemanticParser.parseNode(bodyNode, newTypeLet);
 	}
 
+	/**
+	 * Parses typevariable list for let-type
+	 * 
+	 * @param list parsed list
+	 * @return Typetuple of parsed typevariables
+	 * @throws AppendableException if validation fails
+	 */
 	private static List<TypeVariable> parseTypeVariableList(List<SemanticNode> list) throws AppendableException {
 		try {
 			Validations.validateTypeVariableList(list);
 		} catch(AppendableException e) {
 			e.appendMessage("in " + list.toString());
 		}
-		return null;
+		
+		List<TypeVariable> l = new LinkedList<TypeVariable>();
+		for(SemanticNode n : list) {
+			if (TypeEnvironment.singleton.existType(new TypeName(n.asSymbol()))) {
+				throw new AppendableException("Only type variables allowed in let-type, found: " + n.asSymbol());
+			}
+			l.add(new TypeVariable(n.asSymbol()));
+		}
+		return l;
 	}
 }

@@ -76,6 +76,7 @@ Weight of the language lies in its type system, separated type and representatio
     conversion
     extended-lambda
     lambda
+    let-type
     representation
     type
     define
@@ -108,7 +109,7 @@ Weight of the language lies in its type system, separated type and representatio
     IntRoman2IntString
     
 #### Type signatures
-There are two kind of type signatures present in language: atomic types and composite types
+There are three kind of type signatures present in language: atomic types, composite types and type variables
 
 ##### Atomic Types
 Atomic types in language are described in two ways:
@@ -152,6 +153,33 @@ For example function that accept tvo native integers and returns native string h
     (Int:Native Int:Native) #> String:Native
     
 Composite types can be arbitrarily nested.
+
+##### Type variables
+In order to allow generic types (like generic list), type variables can be intorduced into type signatures.
+
+Type variable is a type that can be unified with arbitrary type, but when it is unified it stays assigned to that type.
+
+For example, lets have following identity function:
+
+~~~
+    (lambda (x) x)
+~~~
+
+This function has type of `(A) #> A` where `A` is a type variable. This allows funtion to accept argument of any type and return value of the same type. Howerver aaplication of this function forces unification of this type variable, so for example:
+
+~~~
+    ((lambda (x) x) 42)
+~~~
+
+Is of type `Int:Native`
+
+If we wanted to specify name for the type variable explicitely we can use:
+
+~~~
+    (let-type (A) (lambda ((A x)) x))
+~~~
+
+
 
 #### Lambda expression with type signatures
 Lambda expression in language supports type signatures on formal arguments of lambda expression. For example lambda that accepts only String arguments:

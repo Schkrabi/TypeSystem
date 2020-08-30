@@ -77,8 +77,40 @@ public class ExtendedFunction extends ExtendedLambda {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof ExtendedFunction) {
-			return this.creationEnvironment.equals(((ExtendedFunction) other).creationEnvironment)
-					&& this.implementations.equals(((ExtendedFunction) other).implementations);
+			boolean envEquals = this.creationEnvironment.equals(((ExtendedFunction) other).creationEnvironment);
+			
+			if(!envEquals) {
+				return false;
+			}
+			
+			//Have to compare implementation by implementation to get unification of argtypes
+			for(Lambda l : this.implementations) {
+				boolean found = false;
+				for(Lambda k : ((ExtendedFunction) other).implementations) {
+					if(k.equals(l)) {
+						found = true;
+						break;
+					}
+				}
+				if(!found) {
+					return false;
+				}
+			}
+			
+			for(Lambda k : ((ExtendedFunction) other).implementations) {
+				boolean found = false;
+				for(Lambda l : this.implementations) {
+					if(l.equals(k)) {
+						found = true;
+						break;
+					}
+				}
+				if(!found) {
+					return false;
+				}
+			}
+			
+			return true;
 		}
 		return false;
 	}

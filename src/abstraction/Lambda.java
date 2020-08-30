@@ -187,15 +187,29 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Lambda) {
-			return this.args.equals(((Lambda) other).args) && this.body.equals(((Lambda) other).body)
-					&& this.argsType.equals(((Lambda) other).argsType);
+			boolean argsEqual = this.args.equals(((Lambda) other).args);
+			if(!argsEqual) {
+				return false;
+			}
+			boolean bodyEqual = this.body.equals(((Lambda) other).body);
+			if(!bodyEqual) {
+				return false;
+			}
+			
+			try {
+				Type.unify(this.argsType, ((Lambda) other).argsType);
+			}catch(AppendableException e) {
+				return false;
+			}
+			
+			return true;
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return this.args.hashCode() * this.argsType.hashCode() * this.body.hashCode();
+		return this.args.hashCode() * this.body.hashCode();
 	}
 
 	@Override

@@ -532,9 +532,18 @@ public class Validations {
 		}
 
 	}
-
-	public static void validateTypeVariableList(List<SemanticNode> list) {
-		// TODO Auto-generated method stub
-		
+	
+	/**
+	 * Validates typeVariableList
+	 * 
+	 * @param list validated list
+	 * @throws UnexpectedExpressionException if validation fails
+	 */
+	public static void validateTypeVariableList(List<SemanticNode> list) throws UnexpectedExpressionException {
+		for(SemanticNode n : list) {
+			if(n.type != SemanticNode.NodeType.SYMBOL) {
+				throw new UnexpectedExpressionException(n);
+			}
+		}
 	}
 }
