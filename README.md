@@ -68,22 +68,303 @@ Language is similar to Scheme, (so far) without macro support and with limited s
 Weight of the language lies in its type system, separated type and representation definitions and usage of extended-lambda.
 
 #### Special forms
-    and
+Here is reference to all special form present in language.
+
+	and
+	can-deconstruct-as
     cons
     construct
     convert
     constructor
     conversion
+	deconstruct
+	define
+	error
     extended-lambda
+	if
     lambda
     let-type
+	or
     representation
     type
-    define
-    type
-    error
-    if
-    or
+
+##### _and_
+Syntax:
+~~~
+	(and <arg1> <arg2>
+~~~
+Type signature:
+~~~
+	(Bool:Native Bool:Native) #> Bool:Native
+~~~
+
+Represents logical and of two values. If first argument evaluates to _false_ second argument is not evaluated.
+
+Example:
+~~~
+	(and #t #f)
+~~~
+
+##### _can-deconstruct-as
+Syntax:
+~~~
+	(can-deconstruct-as <expression> <type-signature>)
+~~~
+Where:
+* _<expression>_ expresion which is evaluated and its value can be deconstructed as a specified type
+* _<type-signature>_ [type signature](TODO)
+
+Checks if value in the expression can be deconstructed as specified type. Returns _Bool:Native_.
+
+Example:
+~~~
+	(can-deconstruct-as (construct Name Structured "Jane" "Doe") (String:Native String:Native))
+~~~
+
+##### _cons_
+~~~
+	(cons <arg1> <arg2>)
+~~~
+Type signature:
+~~~
+	(A B) #> (A B)
+~~~
+
+Creates pair (a 2-tuple) of its arguments.
+
+Example:
+~~~
+	(cons 42 "fooL)
+~~~
+
+##### _construct_
+Syntax:
+~~~
+	(construct <type> <representation> <arg1>...)
+~~~
+
+Constructs value of given type and representation based on previously defined constructor. Also see [constructor](TODO)
+
+Example:
+~~~
+	(construct Int Native 42)
+	(construct Name Structured "Jane" "Doe")
+~~~
+
+##### _convert_
+Syntax:
+~~~
+	(convert <from representation> <to representation> <value>)
+~~~
+
+Converts its argument into another type representation if such conversion was previously defined. Also see [conversion](TODO)
+
+Example:
+~~~
+	(convert Int:Native Int:Roman 42)
+~~~
+
+##### _constructor_
+Syntax:
+~~~
+	(constructor <type> <representation> (<constructor arguments>...) <constructor body>)
+~~~
+
+Defines constructor for given type and representation
+
+Example:
+~~~
+	(constructor Name Structured ((String:Native first) (String:Native second)) (cons first second))
+~~~
+
+##### _conversion_
+Syntax:
+~~~
+	(conversion <from representation> <to representation> (<conversion argument>) <conversion body>)
+~~~
+
+Defines conversion from one representation to another.
+
+Example:
+~~~
+	(conversion Name:Structured Name:Unstructured ((Name:Structured x)) 
+		(construct Name Unstructured 
+			(concat 
+				(car (deconstruct x (String:Native String:Native))) 
+				(cdr (deconstruct x (String:Native String:Native))))))
+~~~
+
+##### _deconstruct_
+Syntax:
+~~~
+	(deconstruct <expression> <type-signature>)
+~~~
+Where:
+* _<expression>_ is expression which will be evaluated and deconstructed to given type. 
+* _<type-signature>_ [type signature](TODO)
+
+This special form attemps to deconstruct given value to a given type. Due to compiler limitations there is no check at compile time if the deconstruction is correct and user should use special form [_can-deconstruct-as](TODO) to check the deconstruction at runtime.
+
+Example:
+~~~
+	(deconstruct (construct Int Roman "XLII") String:Native)
+~~~
+
+##### _define_
+Sytax:
+~~~
+	(define <symbol> <expression>)
+~~~
+Where:
+* _symbol_ is symbol to which binding is created in top level environment
+* _expression_ is expression which will be evaluated and  value will be bound to symbol
+
+Binds value to symbol in top-level environment.
+
+Example:
+~~~
+	(def x 10)
+	(def identity (lambda (x) x))
+~~~
+
+##### _error_
+Syntax:
+~~~
+	(error <expression>)
+~~~
+Where:
+* _<expression>_ is a expression that yields _String_ and is contained in error message.
+
+Throws user defined exception.
+
+Example:
+~~~
+	(define safe-div
+		(lamdba (x y)
+			(if (= y 0)
+				(error "Error, division by zero.")
+				(/ x y))))
+~~~
+
+##### _extended-lambda_
+Syntax:
+~~~
+	(extended-lambda (<argument-list>) ((<argument-representation list>) <implementation>)...)
+~~~
+Where:
+* _<argument-list>_ is list of typed arguments without specified representations
+* _<argument-representation list>_ is list of argument representations used for a specific implementation
+* _<implementation>_ is a body of function for specific representations of arguments
+
+Creates extended function that is either directly applicable or can be bound to symbol via _define_.
+
+Example:
+~~~
+	(extended-lambda ((Int x))
+		((Int:Native) (+ x 1))
+		((Int:String) (construct Int String (concat "1" (deconstruct x String:Native)))))
+~~~
+
+##### _if_
+Sytax:
+~~~
+	(if <condition> <true-branch> <false-branch>)
+~~~
+Where:
+* _<condition>_ is an expression that yields _Bool_
+* _<true-branch>_ is an expression that will be evaluated if _<condition>_ yields _true_
+* _<false-branch>_ is an expression that will be evaluated if _<codition>_ yields _false_
+
+Traditional branchinch expression, _<condition>_ is always evaluated, if it yields _true_ _<true-branch>_ is evaluated, otherwise _<false-branch>_ is evaluated.
+
+~~~
+	(lambda (x)
+		(if (= x 0)
+			"zero"
+			"non-zero"))
+~~~
+
+##### _lambda_
+Syntax:
+~~~
+	(lambda (<argument-list>) <body>)
+~~~
+Where:
+* _<argument-list>_ is a list of either typed or untyped arguments
+* _<body>_ is expression evaluated when the function is applied
+
+Creates a function.
+
+Examples:
+~~~
+	(lambda (x) x)
+	(lambda ((Int x) (Int y)) (+ x y))
+	(lambda ((Name:Structured name)) (car (deconstruct name (String:Native String:Native))))
+	(lambda (value (List l)) (append-list value l))
+~~~
+
+##### _let-type_
+Syntax:
+~~~
+	(let-type (<list-of-type-variables>) <body>)
+~~~
+Where:
+* _<list-of-type-variables>_ is list of declared type variables
+* _<body>_ is expression that is evaluated within scope of type variables
+
+Declares number of type variables and defines its scope. In _<body>_ you can freely use type variables defined in _let-type_
+
+Example:
+~~~
+	(let-type (A)
+		(lambda ((A x)) x))
+~~~
+
+##### _or_
+Syntax:
+~~~
+	(or <arg1> <arg2>
+~~~
+Type signature:
+~~~
+	(Bool:Native Bool:Native) #> Bool:Native
+~~~
+
+Represents logical or of two values. If first argument evaluates to _true_ second argument is not evaluated.
+
+Example:
+~~~
+	(or #f #t)
+~~~
+
+##### _representation_
+Syntax:
+~~~
+	(representation <representation-name> <type-name>)
+~~~
+Where:
+* _<representation-name>_ is name of defined representation
+* _<type-name>_ is name of already defined type
+
+Defines new type representation to already defined type. See [type](TODO)
+
+Example:
+~~~
+	(representation Structured Name)
+~~~
+
+##### _type_
+Syntax:
+~~~
+	(type <type-name>)
+~~~
+
+Defines new type.
+
+Examples:
+~~~
+	(type Name)
+~~~
 
 #### Operators
     +
@@ -171,7 +452,7 @@ This function has type of `(A) #> A` where `A` is a type variable. This allows f
     ((lambda (x) x) 42)
 ~~~
 
-Is of type `Int:Native`
+Is of type `Int:Native` and during the inference type variable `A` is unfied with `Int:Native` substituing type of the function to `Int:Native #> Int:Native`.
 
 If we wanted to specify name for the type variable explicitely we can use:
 
@@ -179,6 +460,7 @@ If we wanted to specify name for the type variable explicitely we can use:
     (let-type (A) (lambda ((A x)) x))
 ~~~
 
+Where `let-type` is special form that declares and specifies scope of this type variable. For details on syntax see [let-type](TODO). Undeclared type variables are not allowed.
 
 
 #### Lambda expression with type signatures
