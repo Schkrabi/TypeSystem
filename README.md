@@ -71,19 +71,19 @@ Weight of the language lies in its type system, separated type and representatio
 Here is reference to all special form present in language.
 
 * [and](#and)
-* [can-deconstruct-as](#can-deconstruct-as)
+* [can-deconstruct-as](#canDeconstructAs)
 * [cons](#cons)
 * [construct](#construct)
 * [convert](#convert)
-* [constructor](#constructor)
+* [constructor](#constructorSpecForm)
 * [conversion](#conversion)
 * [deconstruct](#deconstruct)
 * [define](#define)
 * [error](#error)
-* [extended-lambda](#extended-lambda)
+* [extended-lambda](#extendedLambda)
 * [if](#if)
 * [lambda](#lambda)
-* [let-type](#let-type)
+* [let-type](#letType)
 * [or](#or)
 * [representation](#representation)
 * [type](#type)
@@ -105,14 +105,14 @@ Example:
 (and #t #f)
 ~~~
 
-#### can-deconstruct-as
+#### <a name="canDeconstructAs">can-deconstruct-as</a>
 Syntax:
 ~~~
 (can-deconstruct-as <expression> <type-signature>)
 ~~~
 Where:
 * _<expression>_ expresion which is evaluated and its value can be deconstructed as a specified type
-* _<type-signature>_ [type signature](#type-signatures)
+* _<type-signature>_ [type signature](#typeSignature)
 
 Checks if value in the expression can be deconstructed as specified type. Returns _Bool:Native_.
 
@@ -143,7 +143,7 @@ Syntax:
 (construct <type> <representation> <arg1>...)
 ~~~
 
-Constructs value of given type and representation based on previously defined constructor. Also see [constructor](#constructor)
+Constructs value of given type and representation based on previously defined constructor. Also see [constructor](#constructorSpecForm)
 
 Example:
 ~~~
@@ -164,7 +164,7 @@ Example:
 (convert Int:Native Int:Roman 42)
 ~~~
 
-#### constructor
+#### <a name="constructorSpecForm">constructor</a>
 Syntax:
 ~~~
 (constructor <type> <representation> (<constructor arguments>...) <constructor body>)
@@ -201,9 +201,9 @@ Syntax:
 ~~~
 Where:
 * _<expression>_ is expression which will be evaluated and deconstructed to given type. 
-* _<type-signature>_ [type signature](#type-signatures)
+* _<type-signature>_ [type signature](#typeSignature)
 
-This special form attemps to deconstruct given value to a given type. Due to compiler limitations there is no check at compile time if the deconstruction is correct and user should use special form [_can-deconstruct-as_](#can-deconstruct-as) to check the deconstruction at runtime.
+This special form attemps to deconstruct given value to a given type. Due to compiler limitations there is no check at compile time if the deconstruction is correct and user should use special form [_can-deconstruct-as_](#canDeconstructAs) to check the deconstruction at runtime.
 
 Example:
 ~~~
@@ -246,7 +246,7 @@ Example:
 			(/ x y))))
 ~~~
 
-#### extended-lambda
+#### <a name="extendedLambda">extended-lambda</a>
 Syntax:
 ~~~
 (extended-lambda (<argument-list>) ((<argument-representation list>) <implementation>)...)
@@ -303,7 +303,7 @@ Examples:
 (lambda (value (List l)) (append-list value l))
 ~~~
 
-#### let-type
+#### <a name="letType">let-type</a>
 Syntax:
 ~~~
 (let-type (<list-of-type-variables>) <body>)
@@ -369,18 +369,18 @@ Examples:
 ### Operators
 Operators are build in functions in the language. Following opertaors are available:
 
-* [+](#+)
-* [/](#/)
-* [<](#<)
-* [*](#*)
-* [=](#=)
-* [-](#-)
-* [bit-and](#bit-and)
-* [bit-or](#bit-or)
+* [+](#addition)
+* [/](#division)
+* [<](#lesserThan)
+* [*](#multiplication)
+* [=](#numericalEqual)
+* [-](#subtraction)
+* [bit-and](#bitAnd)
+* [bit-or](#bitOr)
 * [car](#car)
 * [cdr](#cdr)
 * [concat](#concat)
-* [equals?](#equals?)
+* [equals?](#equals)
 * [not](#not)
 * [println](#println)
 * [deconstruct](#deconstruct)
@@ -391,7 +391,7 @@ Operators are build in functions in the language. Following opertaors are availa
 * [IntRoman2IntNative](#introman2intnative)
 * [IntRoman2IntString](#introman2intstring)
 	
-#### +
+#### <a name="addition">+</a>
 Syntax:
 ~~~
 (+ <arg1> <arg2>)
@@ -411,7 +411,7 @@ Example:
 (+ 21 21) ; = 42
 ~~~
 
-#### /
+#### <a name="division">/</a>
 Syntax:
 ~~~
 (/ <arg1> <arg2)
@@ -431,7 +431,7 @@ Example:
 (/ 84 2) ; = 42
 ~~~
 
-#### <
+#### <a name="lesserThan"><</a>
 Syntax:
 ~~~
 (< <arg1> <arg2>)
@@ -451,7 +451,7 @@ Example:
 (< 42 1) ; = #f
 ~~~
 
-#### *
+#### <a name="multiplication">*</a>
 Syntax:
 ~~~
 (* <arg1> <arg2>
@@ -471,7 +471,7 @@ Example:
 (* 6 7) ; = 42
 ~~~
 
-#### =
+#### <a name="numericalEqual">=</a>
 Syntax:
 ~~~
 (= <arg1> <arg2>)
@@ -491,7 +491,7 @@ Example:
 (= 42 42) ; = #t
 ~~~
 
-#### -
+#### <a name="subtraction">-</a>
 Syntax:
 ~~~
 (- <arg1> <arg2>)
@@ -511,7 +511,7 @@ Example:
 (- 43 1) ; = 42
 ~~~
 
-#### bit-and
+#### <a name="bitAnd">bit-and</a>
 Syntax:
 ~~~
 (bit-and <arg1> <arg2>)
@@ -531,7 +531,7 @@ Example:
 (bit-and 5 1) ; = 1
 ~~~
 
-#### bit-or
+#### <a name="bitOr">bit-or</a>
 Syntax:
 ~~~
 (bit-or <arg1> <arg2>)
@@ -611,7 +611,7 @@ Example:
 (concat "foo" "bar") ; = "foobar"
 ~~~
 
-#### equals?
+#### <a name="equals">equals?</a>
 Syntax:
 ~~~
 (equals? <arg1> <arg2>)
@@ -622,7 +622,7 @@ Type Signature:
 (A B) #> Bool:Native
 ~~~
 
-Compares two values. For more information see [equality](equality)
+Compares two values. For more information see [equality](#equality)
 
 Examples:
 ~~~
@@ -791,7 +791,7 @@ Example:
 (IntRoman2IntString "XLII") ; = "42"
 ~~~
     
-### Type signatures
+### <a name="typeSignature">Type signatures</a>
 There are three kind of type signatures present in language: atomic types, composite types and type variables
 
 #### Atomic Types
@@ -973,11 +973,21 @@ Example:
 ~~~
 
 #### Functions and extended functions
-Functions are equal if their body equals, their argument list equals, their creation environment equals and their argument list equals
+Functions are equal if its following parts are equal:
+* argument list
+* arguemnt types
+* body
+* creation environment
+
+Also please note that automatically generated names of type variables are generated to be unique, so anonymous functions witout specified argument list might be counter intuitivelly not equal. Also declared type variables in _let-type_ are substitued to be unique, so type variables declared in different let types are different, even though they have same name.
 
 Example:
 ~~~
-(equals? (lambda (x) x) (lambda (x) x)) ; = #t
+(def f (lambda (x) x))
+(equals? x x) ; = #t
+(equals? (lambda (x) x) (lambda (x) x)) ; = #f generated argument list type variables are not equal
+(equals? (let-type (A) (lambda ((A x)) x)) (let-type (A) (lambda ((A x)) x))) ; = #f type variables declared in different let-types are considered different
+(let-type (A) (equals? (lambda ((A x)) x) (lambda ((A x)) x))) ; = #t
 (equals? (lambda (x) y) (lambda (x) x)) ; = #f body does not equals
 (equals? (lambda (y) x) (lambda (x) x)) ; = #f argument list does not equals
 (equals? ((lambda () (lambda (x) x))) (lambda (x) x)) ; = #f creation environment does not equals

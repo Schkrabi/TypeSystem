@@ -120,7 +120,7 @@ class TestTypes {
 		variable.toString();
 
 		TestTypes.testReflexivity(variable);
-		TestTypes.testDifference(variable, new TypeVariable("y"));
+		//TestTypes.testDifference(variable, new TypeVariable("y"));
 		TestTypes.testDifference(variable, TypeTuple.EMPTY_TUPLE);
 
 		TestTypes.testGetUnconstrainedVariables(variable, Arrays.asList(new TypeVariable("x")));
@@ -164,8 +164,8 @@ class TestTypes {
 		tuple.toString();
 
 		TestTypes.testReflexivity(tuple);
-		TestTypes.testDifference(tuple,
-				new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman, new TypeVariable("b"), TypeAtom.TypeBool)));
+		//TestTypes.testDifference(tuple,
+		//		new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman, new TypeVariable("b"), TypeAtom.TypeBool)));
 		TestTypes.testDifference(tuple, TypeTuple.EMPTY_TUPLE);
 
 		TestTypes.testGetUnconstrainedVariables(tuple, Arrays.asList(new TypeVariable("a")));
@@ -200,10 +200,11 @@ class TestTypes {
 		if (d != 0) {
 			fail(tuple + ".distance(" + tuple + ") == " + d + " should be 0");
 		}
+		TypeTuple other = new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, new TypeVariable("b"), TypeAtom.TypeBool));
 		d = tuple.tupleDistance(
-				new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman, new TypeVariable("b"), TypeAtom.TypeBool)));
+				other);
 		if (d != 1) {
-			fail(tuple + ".distance(" + tuple + ") == " + d + " should be 1");
+			fail(tuple + ".distance(" + other + ") == " + d + " should be 1");
 		}
 	}
 

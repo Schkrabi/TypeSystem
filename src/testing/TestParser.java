@@ -599,21 +599,19 @@ class TestParser {
 	@Test
 	void testLetType() throws AppendableException {
 		Expression e = this.parseString("(let-type (A) (lambda ((A x)) (let-type (A) (lambda ((A y)) x))))");
-		
-		Lambda l = new Lambda(
-						new Tuple(Arrays.asList(new Symbol("x"))), 
-						new TypeTuple(Arrays.asList(new TypeVariable("A1"))), 
-						new Lambda(
-								new Tuple(Arrays.asList(new Symbol("y"))),
-								new TypeTuple(Arrays.asList(new TypeVariable("A2"))),
-								new Symbol("x")));
-		
-		if(!e.equals(l)) {
+
+		Lambda l = new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
+				new TypeTuple(Arrays.asList(new TypeVariable("A1"))),
+				new Lambda(new Tuple(Arrays.asList(new Symbol("y"))),
+						new TypeTuple(Arrays.asList(new TypeVariable("A2"))), new Symbol("x")));
+
+		if (!e.equals(l)) {
 			fail("Parse error expected " + l.toString() + " got " + e.toString());
 		}
-		Lambda l1 = (Lambda)e;
-		Lambda l2 = (Lambda)l1.body;
-		if(l1.argsType.equals(l2.argsType)) {
+		Lambda l1 = (Lambda) e;
+		Lambda l2 = (Lambda) l1.body;
+		//Have to compare names directly as TypeVariables equals if they are not bound by substitution
+		if (((TypeVariable) l1.argsType.get(0)).name.equals(((TypeVariable) l2.argsType.get(0)).name)) {
 			fail("Let-type not overcovering type variables correcly");
 		}
 	}
