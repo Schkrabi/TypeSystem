@@ -11,6 +11,7 @@ import abstraction.Lambda;
 import abstraction.Operator;
 import application.AbstractionApplication;
 import expression.Expression;
+import expression.Symbol;
 import expression.Tuple;
 import interpretation.Environment;
 import literal.LitComposite;
@@ -20,6 +21,7 @@ import types.TypeAtom;
 import types.TypeName;
 import types.TypeRepresentation;
 import types.TypeTuple;
+import types.TypeVariable;
 import types.TypesDoesNotUnifyException;
 import types.TypeArrow;
 import util.AppendableException;
@@ -271,6 +273,15 @@ public class TypeEnvironment {
 		TypeEnvironment.singleton.addType(TypeAtom.TypeDouble.name);
 		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeDoubleNative);
 		TypeEnvironment.singleton.addPrimitiveConstructor(TypeAtom.TypeDoubleNative);
+		
+		// List
+		TypeEnvironment.singleton.addType(TypeAtom.TypeList.name);
+		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeListNative);
+		TypeEnvironment.singleton.addConstructor(TypeAtom.TypeListNative, new Lambda(Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE));
+		TypeEnvironment.singleton.addConstructor(TypeAtom.TypeListNative, new Lambda(
+																				new Tuple(Arrays.asList(new Symbol("x"), new Symbol("l"))),
+																				new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()), TypeAtom.TypeListNative)),
+																				new Tuple(Arrays.asList(new Symbol("x"), new Symbol("l")))));
 
 		// Conversions
 		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman,

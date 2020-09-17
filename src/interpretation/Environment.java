@@ -1,13 +1,19 @@
 package interpretation;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import abstraction.Lambda;
 import abstraction.Operator;
+import application.CanDeconstructAs;
+import application.IfExpression;
 import expression.Expression;
 import expression.Symbol;
+import expression.Tuple;
 import semantic.TypeEnvironment;
 import types.TypeAtom;
+import types.TypeTuple;
 import util.AppendableException;
 import util.UnboundVariableException;
 
@@ -215,6 +221,18 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Symbol("Double:Native"), Operator.DoubleNativeConstructor);
 		env.put(new Symbol("Bool"), Operator.BoolConstructor);
 		env.put(new Symbol("Bool:Native"), Operator.BoolNativeConstructor);
+		
+		env.put(new Symbol("is-list-native-empty"), new Lambda(
+														new Tuple(Arrays.asList(new Symbol("l"))),
+														new TypeTuple(Arrays.asList(TypeAtom.TypeListNative)),
+														new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE)));	
+		env.put(new Symbol("head-list-native"), new Lambda(
+														new Tuple(Arrays.asList(new Symbol("l"))),
+														new TypeTuple(Arrays.asList(TypeAtom.TypeListNative)),
+														new IfExpression(new AbstractionApplication())
+				)
+				);
+		
 
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
 				Operator.IntNativeToIntRoman);

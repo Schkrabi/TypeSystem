@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project name="compiler" basedir=".." default="main">
 
-    <property name="antlr.lib" value="/usr/local/lib/antlr-4.7.2-complete.jar" />    
-    <property name="jupiter.api.lib" value="/snap/eclipse/48/plugins/org.junit.jupiter.api_5.5.1.v20190826-0900.jar" />
-    <property name="apiguardian.lib" value="/snap/eclipse/48/plugins/org.apiguardian_1.1.0.v20190826-0900.jar" />
+    <property name="antlr.lib" value="../../lib/antlr-4.8-complete.jar" />    
+    <property name="jupiter.api.lib" value="../../junit-jupiter-api-5.6.2.jar" />
+    <property name="apiguardian.lib" value="" />
     
     <property name="jar.classpath" value=". ${antlr.lib} ${jupiter.api.lib} ${apiguardian.lib}" />
     

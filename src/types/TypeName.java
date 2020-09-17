@@ -43,4 +43,5 @@ public class TypeName implements Comparable<TypeName> {
 	public static final TypeName STRING = new TypeName("String");
 	public static final TypeName BOOL = new TypeName("Bool");
 	public static final TypeName DOUBLE = new TypeName("Double");
+	public static final TypeName LIST = new TypeName("List");
 }
