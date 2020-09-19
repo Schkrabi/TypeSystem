@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import expression.Expression;
+import langbase.ListNative;
 
 public class ClojureCodeGenerator {
 	public static void toClojureCode(List<Expression> exprs, Writer target) throws IOException, Exception {
@@ -35,6 +36,7 @@ public class ClojureCodeGenerator {
 				+ "(pr-str (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp))) "
 				+ " (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp))) "
 				+ ":else (throw (Throwable. (str (pr-str exp) \" is not a printable expression\"))))))] "
-				+ "(lang-pstr-aux exp 0))))");
+				+ "(lang-pstr-aux exp 0))))\n");
+		target.write(ListNative.makeClojureCode());
 	}
 }
