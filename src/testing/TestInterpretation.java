@@ -1132,6 +1132,38 @@ class TestInterpretation {
 		TestInterpretation.testInference(p, TypeAtom.TypeIntRoman, convert);
 	}
 
+	@Test
+	void testListNative() throws AppendableException {
+		this.testInterpretString("(construct List Native)",
+				new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative));
+		this.testInterpretString("(construct List Native 42 (construct List Native))",
+				new LitComposite(
+						new Tuple(Arrays.asList(new LitInteger(42),
+								new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
+						TypeAtom.TypeListNative));
+
+		this.testInterpretString("(is-list-empty (construct List Native))", LitBoolean.TRUE);
+		this.testInterpretString("(is-list-empty (construct List Native 42 (construct List Native)))",
+				LitBoolean.FALSE);
+
+		this.testInterpretString("(head-list-native (construct List Native 42 (construct List Native)))",
+				new LitInteger(42));
+		Assertions.assertThrows(UserException.class, () -> this
+				.testInterpretString("(head-list-native (construct List Native))", Expression.EMPTY_EXPRESSION));
+
+		this.testInterpretString("(tail-list-native (construct List Native 42 (construct List Native)))",
+				new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative));
+		Assertions.assertThrows(UserException.class, () -> this
+				.testInterpretString("(tail-list-native (construct List Native))", Expression.EMPTY_EXPRESSION));
+
+		this.testInterpretString(
+				"(map-list-native (lambda (x) (+ x 1)) (construct List Native 42 (construct List Native)))",
+				new LitComposite(
+						new Tuple(Arrays.asList(new LitInteger(42),
+								new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
+						TypeAtom.TypeListNative));
+	}
+
 	private Expression parseString(String s) throws AppendableException {
 		CharStream charStream = new ANTLRInputStream(s);
 		TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
@@ -1227,5 +1259,10 @@ class TestInterpretation {
 		TestInterpretation.testInterpretation(appl, expectedInterpret, Environment.topLevelEnvironment);
 		Pair<Type, Substitution> p = conversion.infer(Environment.topLevelEnvironment);
 		TestInterpretation.testInference(p, expectedInfer, conversion);
+	}
+
+	private void testInterpretString(String interpreted, Expression expected) throws AppendableException {
+		Expression e = this.parseString(interpreted);
+		TestInterpretation.testInterpretation(e, expected, Environment.topLevelEnvironment);
 	}
 }
