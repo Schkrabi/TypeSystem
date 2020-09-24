@@ -208,6 +208,7 @@ public class Environment implements Comparable<Environment> {
 		
 		env.put(ListNative.isListNativeEmptySymbol, ListNative.isListNativeEmpty);	
 		env.put(ListNative.headListNativeSymbol, ListNative.headListNative);
+		env.put(ListNative.tailListNativeSymbol, ListNative.tailListNative);
 		env.put(ListNative.mapListNativeSymbol, ListNative.mapListNative);
 		
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),

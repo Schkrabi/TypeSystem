@@ -95,7 +95,9 @@ public class DefineSymbol extends Expression {
 		StringBuilder s = new StringBuilder("(def ");
 		s.append(this.name.toClojureCode(env));
 		s.append(" ");
-		Type t = this.defined.infer(env).first;
+		Environment inferenceEnvironment = Environment.create(env);
+		inferenceEnvironment.put(this.name, new TypeHolder(new TypeVariable(NameGenerator.next())));
+		Type t = this.defined.infer(inferenceEnvironment).first;
 		env.put(this.name, new TypeHolder(t));
 		s.append(this.defined.toClojureCode(env));
 		s.append(")");

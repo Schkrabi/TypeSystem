@@ -36,6 +36,11 @@ public class ListNative {
 			new Tuple(Arrays.asList(new Symbol("x"), new Symbol("l"))));
 
 	/**
+	 * is-list-native-empty symbol
+	 */
+	public static final Symbol isListNativeEmptySymbol = new Symbol("is-list-native-empty");
+	
+	/**
 	 * is-list-native-empty function
 	 */
 	public static final Lambda isListNativeEmpty = new Lambda(new Tuple(Arrays.asList(new Symbol("l"))),
@@ -43,10 +48,10 @@ public class ListNative {
 			new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE));
 
 	/**
-	 * is-list-native-empty symbol
+	 * head-list-native symbol
 	 */
-	public static final Symbol isListNativeEmptySymbol = new Symbol("is-list-native-empty");
-
+	public static final Symbol headListNativeSymbol = new Symbol("head-list-native");
+	
 	/**
 	 * head-list-native function
 	 */
@@ -59,11 +64,12 @@ public class ListNative {
 					new AbstractionApplication(Operator.Car,
 							new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"), new TypeTuple(Arrays
 									.asList(new TypeVariable(NameGenerator.next()), TypeAtom.TypeListNative))))))));
+	
 	/**
-	 * head-list-native symbol
+	 * tail-list-native symbol
 	 */
-	public static final Symbol headListNativeSymbol = new Symbol("head-list-native");
-
+	public static final Symbol tailListNativeSymbol = new Symbol("tail-list-native");
+	
 	/**
 	 * tail-list-native function
 	 */
@@ -78,10 +84,10 @@ public class ListNative {
 									.asList(new TypeVariable(NameGenerator.next()), TypeAtom.TypeListNative))))))));;
 
 	/**
-	 * tail-list-native symbol
+	 * map-list-native symbol
 	 */
-	public static final Symbol tailListNativeSymbol = new Symbol("tail-list-native");
-
+	public static final Symbol mapListNativeSymbol = new Symbol("map-list-native");
+	
 	/**
 	 * map-list-native function
 	 */
@@ -103,11 +109,6 @@ public class ListNative {
 													new Tuple(Arrays.asList(new Symbol("l"))))))))))));
 
 	/**
-	 * map-list-native symbol
-	 */
-	public static final Symbol mapListNativeSymbol = new Symbol("map-list-native");
-
-	/**
 	 * Generates code for clojure regarding Native List
 	 * 
 	 * @return
@@ -120,6 +121,8 @@ public class ListNative {
 			s.append('\n');
 			s.append((new DefineSymbol(headListNativeSymbol, headListNative)).toClojureCode());
 			s.append('\n');
+			s.append((new DefineSymbol(tailListNativeSymbol, tailListNative)).toClojureCode());
+			s.append("\n");
 			s.append((new DefineSymbol(mapListNativeSymbol, mapListNative)).toClojureCode());
 			s.append('\n');
 		} catch (AppendableException e) {

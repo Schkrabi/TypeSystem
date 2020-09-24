@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,9 +20,11 @@ import abstraction.Lambda;
 import application.AbstractionApplication;
 import expression.Expression;
 import expression.Tuple;
+import interpretation.Environment;
 import expression.Symbol;
 import literal.LitBoolean;
 import literal.LitInteger;
+import semantic.TypeEnvironment;
 import types.TypeTuple;
 import util.AppendableException;
 import util.ClojureCodeGenerator;
@@ -36,13 +39,11 @@ import util.ThrowingFunction;
 import util.UnboundVariableException;
 
 class TestUtil {
-
-	@BeforeEach
-	void setUp() throws Exception {
-	}
-
-	@AfterEach
-	void tearDown() throws Exception {
+	
+	@BeforeAll
+	static void setUpBeforeClass() throws Exception {
+		Environment.initTopLevelEnvitonment();
+		TypeEnvironment.initBasicTypes();
 	}
 
 	@Test

@@ -77,6 +77,7 @@ class TestInterpretation {
 	void setUp() throws Exception {
 		if (!initFlag) {
 			TypeEnvironment.initBasicTypes();
+			Environment.initTopLevelEnvitonment();
 			initFlag = true;
 		}
 	}
@@ -1142,8 +1143,8 @@ class TestInterpretation {
 								new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
 						TypeAtom.TypeListNative));
 
-		this.testInterpretString("(is-list-empty (construct List Native))", LitBoolean.TRUE);
-		this.testInterpretString("(is-list-empty (construct List Native 42 (construct List Native)))",
+		this.testInterpretString("(is-list-native-empty (construct List Native))", LitBoolean.TRUE);
+		this.testInterpretString("(is-list-native-empty (construct List Native 42 (construct List Native)))",
 				LitBoolean.FALSE);
 
 		this.testInterpretString("(head-list-native (construct List Native 42 (construct List Native)))",

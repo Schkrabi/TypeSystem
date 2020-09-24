@@ -517,22 +517,22 @@ class TestParser {
 	public void testTypeEnvironment() throws AppendableException {
 		TypeEnvironment typeEnv = TypeEnvironment.singleton;
 
-		typeEnv.addType(new TypeName("List"));
-		typeEnv.addRepresentation(new TypeAtom(new TypeName("List"), new TypeRepresentation("Functional")));
+		typeEnv.addType(new TypeName("ListTestTypeEnv"));
+		typeEnv.addRepresentation(new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("Functional")));
 		typeEnv.addType(new TypeName("Test"));
 		typeEnv.addRepresentation(new TypeAtom(new TypeName("Test"), new TypeRepresentation("Functional")));
 
-		if (!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), TypeRepresentation.WILDCARD))) {
-			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"List\"), TypeRepresentation.WILDCARD)) == true");
+		if (!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), TypeRepresentation.WILDCARD))) {
+			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"ListTestTypeEnv\"), TypeRepresentation.WILDCARD)) == true");
 		}
-		if (!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), new TypeRepresentation("Functional")))) {
-			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"List\"), new TypeRepresentation(\"Functional\"))) == true");
+		if (!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("Functional")))) {
+			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"ListTestTypeEnv\"), new TypeRepresentation(\"Functional\"))) == true");
 		}
 		if (typeEnv.existsTypeAtom(new TypeAtom(new TypeName("kawabanga"), TypeRepresentation.WILDCARD))) {
 			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"kawabanga\"), TypeRepresentation.WILDCARD)) == false");
 		}
-		if (typeEnv.existsTypeAtom(new TypeAtom(new TypeName("List"), new TypeRepresentation("kawabanga")))) {
-			fail("Exprected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"List\"), new TypeRepresentation(\"kawabanga\"))) == false");
+		if (typeEnv.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("kawabanga")))) {
+			fail("Exprected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"ListTestTypeEnv\"), new TypeRepresentation(\"kawabanga\"))) == false");
 		}
 
 		typeEnv.getConstructor(TypeAtom.TypeIntRoman, new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)));
