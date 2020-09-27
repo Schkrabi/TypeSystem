@@ -40,6 +40,7 @@ import expression.Tuple;
 import expression.TypeHolder;
 import expression.Symbol;
 import interpretation.Environment;
+import langbase.ListNative;
 import literal.LitBoolean;
 import literal.LitComposite;
 import literal.LitDouble;
@@ -1135,6 +1136,11 @@ class TestInterpretation {
 
 	@Test
 	void testListNative() throws AppendableException {
+		(new DefineSymbol(ListNative.isListNativeEmptySymbol, ListNative.isListNativeEmpty)).interpret(Environment.topLevelEnvironment);
+		(new DefineSymbol(ListNative.headListNativeSymbol, ListNative.headListNative)).interpret(Environment.topLevelEnvironment);
+		(new DefineSymbol(ListNative.tailListNativeSymbol, ListNative.tailListNative)).interpret(Environment.topLevelEnvironment);
+		(new DefineSymbol(ListNative.mapListNativeSymbol, ListNative.mapListNative)).interpret(Environment.topLevelEnvironment);
+		
 		this.testInterpretString("(construct List Native)",
 				new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative));
 		this.testInterpretString("(construct List Native 42 (construct List Native))",
@@ -1160,7 +1166,7 @@ class TestInterpretation {
 		this.testInterpretString(
 				"(map-list-native (lambda (x) (+ x 1)) (construct List Native 42 (construct List Native)))",
 				new LitComposite(
-						new Tuple(Arrays.asList(new LitInteger(42),
+						new Tuple(Arrays.asList(new LitInteger(43),
 								new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
 						TypeAtom.TypeListNative));
 	}

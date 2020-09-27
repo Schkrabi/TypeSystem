@@ -156,10 +156,11 @@ class TestParser {
 								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeIntNative))))),
 						new Symbol("f")));
 
-		this.testParse("(let-type (A) (lambda ((String:Native x) (A y)) y))",
+		/*this.testParse("(let-type (A) (lambda ((String:Native x) (A y)) y))",
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, new TypeVariable("A"))),
 						new Symbol("y")));
+		*/
 
 		this.testParse("(deconstruct x Int:Native)", new Deconstruct(new Symbol("x"), TypeAtom.TypeIntNative));
 		;
@@ -525,13 +526,15 @@ class TestParser {
 		if (!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), TypeRepresentation.WILDCARD))) {
 			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"ListTestTypeEnv\"), TypeRepresentation.WILDCARD)) == true");
 		}
-		if (!typeEnv.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("Functional")))) {
+		if (!typeEnv
+				.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("Functional")))) {
 			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"ListTestTypeEnv\"), new TypeRepresentation(\"Functional\"))) == true");
 		}
 		if (typeEnv.existsTypeAtom(new TypeAtom(new TypeName("kawabanga"), TypeRepresentation.WILDCARD))) {
 			fail("Expected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"kawabanga\"), TypeRepresentation.WILDCARD)) == false");
 		}
-		if (typeEnv.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("kawabanga")))) {
+		if (typeEnv
+				.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("kawabanga")))) {
 			fail("Exprected typeEnv.existsTypeAtom(new TypeAtom(new TypeName(\"ListTestTypeEnv\"), new TypeRepresentation(\"kawabanga\"))) == false");
 		}
 
@@ -600,17 +603,16 @@ class TestParser {
 	void testLetType() throws AppendableException {
 		Expression e = this.parseString("(let-type (A) (lambda ((A x)) (let-type (A) (lambda ((A y)) x))))");
 
-		Lambda l = new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
-				new TypeTuple(Arrays.asList(new TypeVariable("A1"))),
-				new Lambda(new Tuple(Arrays.asList(new Symbol("y"))),
-						new TypeTuple(Arrays.asList(new TypeVariable("A2"))), new Symbol("x")));
+		TypeVariable outer = (TypeVariable) ((Lambda) e).argsType.get(0);
+		TypeVariable inner = (TypeVariable) ((Lambda) ((Lambda) e).body).argsType.get(0);
 
-		if (!e.equals(l)) {
-			fail("Parse error expected " + l.toString() + " got " + e.toString());
+		if (outer.equals(inner)) {
+			fail("Parse error expected " + outer.toString() + " and " + inner.toString() + " should not equal");
 		}
 		Lambda l1 = (Lambda) e;
 		Lambda l2 = (Lambda) l1.body;
-		//Have to compare names directly as TypeVariables equals if they are not bound by substitution
+		// Have to compare names directly as TypeVariables equals if they are not bound
+		// by substitution
 		if (((TypeVariable) l1.argsType.get(0)).name.equals(((TypeVariable) l2.argsType.get(0)).name)) {
 			fail("Let-type not overcovering type variables correcly");
 		}

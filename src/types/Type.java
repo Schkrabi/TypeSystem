@@ -63,6 +63,20 @@ public abstract class Type implements Comparable<Type> {
 	public int compareTo(Type other) {
 		return this.getClass().getName().compareTo(other.getClass().getName());
 	}
+	
+	/**
+	 * Equality based on unification. Returns true if two types unifies, false otherwise.
+	 * @param other other type
+	 * @return true or false
+	 */
+	public boolean equalsUpToIsomorphism(Type other) {
+		try {
+			Type.unify(this, other);
+		}catch(AppendableException e) {
+			return false;
+		}
+		return true;
+	}
 
 	/**
 	 * Returns unified type if the expression if two types unifies, otherwise throws

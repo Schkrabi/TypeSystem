@@ -253,13 +253,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 			Type ti = i.next();
 			Type tj = j.next();
 
-			// Do not increase distance if any of types is variable
-			/*
-			 * if ((ti instanceof TypeVariable) || (tj instanceof TypeVariable)) { continue;
-			 * }
-			 */
-
-			if (!ti.equals(tj))
+			if (!ti.equalsUpToIsomorphism(tj))
 				sum++;
 		}
 

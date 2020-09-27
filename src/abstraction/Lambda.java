@@ -196,13 +196,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 				return false;
 			}
 			
-			try {
-				Type.unify(this.argsType, ((Lambda) other).argsType);
-			}catch(AppendableException e) {
-				return false;
-			}
-			
-			return true;
+			return this.argsType.equals(((Lambda) other).argsType);
 		}
 		return false;
 	}
