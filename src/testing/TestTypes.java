@@ -428,13 +428,13 @@ class TestTypes {
 						new Pair<TypeVariable, Type>(new TypeVariable("b"), TypeAtom.TypeBoolNative))));
 
 		Assertions.assertThrows(TypesDoesNotUnifyException.class,
-				() -> Type.unify(TypeAtom.TypeBool, TypeAtom.TypeInt));
+				() -> Type.unifyTypes(TypeAtom.TypeBool, TypeAtom.TypeInt));
 		Assertions.assertThrows(TypesDoesNotUnifyException.class,
-				() -> Type.unify(new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt), TypeAtom.TypeInt));
+				() -> Type.unifyTypes(new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt), TypeAtom.TypeInt));
 		Assertions.assertThrows(TypesDoesNotUnifyException.class,
-				() -> Type.unify(new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt)), TypeAtom.TypeInt));
+				() -> Type.unifyTypes(new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt)), TypeAtom.TypeInt));
 		Assertions.assertThrows(TypesDoesNotUnifyException.class,
-				() -> Type.unify(new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt)),
+				() -> Type.unifyTypes(new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt)),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt, TypeAtom.TypeInt))));
 
 		TestTypes.testUnify(new TypeVariable("x"),
@@ -534,7 +534,7 @@ class TestTypes {
 	}
 
 	static void testUnify(Type first, Type second, Substitution expected) throws AppendableException {
-		Substitution s = Type.unify(first, second);
+		Substitution s = Type.unifyTypes(first, second);
 		if (!s.equals(expected)) {
 			fail("Type.unify(" + first + ", " + second + ") got " + s + " expected " + expected);
 		}

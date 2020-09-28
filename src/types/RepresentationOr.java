@@ -83,35 +83,61 @@ public class RepresentationOr extends Type {
 		throw new AppendableException(
 				"Cannot directly convert RepresentationOr type. Select specific representation in order to create conversion.");
 	}
+	
+	/**
+	 * Unites list of unifiers
+	 * @param unifiers list of unifiers
+	 * @return substitution uniting all the unifiers
+	 * @throws AppendableException if unifiers in list are not compatible
+	 */
+	private static Substitution uniteUnifiers(List<Substitution> unifiers) throws AppendableException {
+		final Set<TypeVariable> boundVariables = unifiers.stream()
+				.map(x -> x.variableStream().collect(Collectors.toSet()))
+				.reduce(unifiers.stream().findAny().get().variableStream().collect(Collectors.toSet()), (x, y) -> {
+					Set<TypeVariable> s = new TreeSet<TypeVariable>(x);
+					s.retainAll(y);
+					return s;
+				});
+
+		Set<Pair<TypeVariable, Type>> s = new HashSet<Pair<TypeVariable, Type>>();
+		for (TypeVariable v : boundVariables) {
+			Type t = RepresentationOr
+					.makeRepresentationOr(unifiers.stream().map(x -> x.get(v).get()).collect(Collectors.toSet()));
+			Pair<TypeVariable, Type> p = new Pair<TypeVariable, Type>(v, t);
+			s.add(p);
+		}
+		return new Substitution(s);
+	}
 
 	@Override
-	public Substitution unifyWith(Type other) throws AppendableException {
+	public Substitution unifyTypeWith(Type other) throws AppendableException {
 		if (other instanceof TypeVariable) {
-			return other.unifyWith(this);
+			return other.unifyTypeWith(this);
 		}
 
 		try {
 			final List<Substitution> unifiers = this.representations.stream()
-					.map(ThrowingFunction.wrapper(x -> Type.unify(x, other))).collect(Collectors.toList());
+					.map(ThrowingFunction.wrapper(x -> Type.unifyTypes(x, other))).collect(Collectors.toList());
 
-			// This step might be redundant, because all substituted variables in
-			// RepresentationOr should be the same for each representation
-			final Set<TypeVariable> boundVariables = unifiers.stream()
-					.map(x -> x.variableStream().collect(Collectors.toSet()))
-					.reduce(unifiers.stream().findAny().get().variableStream().collect(Collectors.toSet()), (x, y) -> {
-						Set<TypeVariable> s = new TreeSet<TypeVariable>(x);
-						s.retainAll(y);
-						return s;
-					});
+			return RepresentationOr.uniteUnifiers(unifiers);
 
-			Set<Pair<TypeVariable, Type>> s = new HashSet<Pair<TypeVariable, Type>>();
-			for (TypeVariable v : boundVariables) {
-				Type t = RepresentationOr
-						.makeRepresentationOr(unifiers.stream().map(x -> x.get(v).get()).collect(Collectors.toSet()));
-				Pair<TypeVariable, Type> p = new Pair<TypeVariable, Type>(v, t);
-				s.add(p);
-			}
-			return new Substitution(s);
+		} catch (RuntimeException e) {
+			AppendableException ae = (AppendableException) e.getCause();
+			throw ae;
+		}
+	}
+	
+	@Override
+	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
+		if (other instanceof TypeVariable) {
+			return other.unifyRepresentationWith(this);
+		}
+
+		try {
+			final List<Substitution> unifiers = this.representations.stream()
+					.map(ThrowingFunction.wrapper(x -> Type.unifyRepresentation(x, other))).collect(Collectors.toList());
+
+			return RepresentationOr.uniteUnifiers(unifiers);
 
 		} catch (RuntimeException e) {
 			AppendableException ae = (AppendableException) e.getCause();

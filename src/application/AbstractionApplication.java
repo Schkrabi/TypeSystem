@@ -84,7 +84,7 @@ public class AbstractionApplication extends Application {
 			}
 
 			// Unify arguments and formal argument types
-			Substitution substArgs = Type.unify(argsInfered.first, ((TypeArrow) funInfered.first).ltype);
+			Substitution substArgs = Type.unifyTypes(argsInfered.first, ((TypeArrow) funInfered.first).ltype);
 			substArgs = substArgs.union(argsInfered.second);
 			substArgs = substArgs.union(funInfered.second);
 

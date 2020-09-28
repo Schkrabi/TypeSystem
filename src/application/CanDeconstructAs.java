@@ -43,7 +43,7 @@ public class CanDeconstructAs extends Expression {
 		Pair<Type, Substitution> p = lc.value.infer(env);
 
 		try {
-			Type.unify(p.first, this.as);
+			Type.unifyTypes(p.first, this.as);
 		} catch (AppendableException ae) {
 			return LitBoolean.FALSE;
 		}

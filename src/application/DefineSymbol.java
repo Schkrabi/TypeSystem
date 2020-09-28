@@ -60,7 +60,7 @@ public class DefineSymbol extends Expression {
 		if (!s.containsVariable(tv)) {
 			tmp = new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(tv, infered.first)));
 		} else {
-			tmp = Type.unify(s.get(tv).get(), infered.first);
+			tmp = Type.unifyTypes(s.get(tv).get(), infered.first);
 		}
 		s = s.union(tmp);
 

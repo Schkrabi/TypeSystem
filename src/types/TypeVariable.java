@@ -83,11 +83,16 @@ public class TypeVariable extends Type {
 	}
 
 	@Override
-	public Substitution unifyWith(Type other) {
+	public Substitution unifyTypeWith(Type other) {
 		if (this.equals(other)) {
 			return Substitution.EMPTY;
 		}
 		return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(this, other)));
+	}
+	
+	@Override
+	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
+		return this.unifyTypeWith(other);
 	}
 
 	@Override

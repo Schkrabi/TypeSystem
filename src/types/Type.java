@@ -44,13 +44,21 @@ public abstract class Type implements Comparable<Type> {
 	public abstract Expression convertTo(Expression expr, Type toType) throws AppendableException;
 
 	/**
-	 * Returns substitution that unifies this type with other type
+	 * Tries to unify two types treating different type representation as the same type.
 	 * 
 	 * @param other other type to unify with
 	 * @return substitution unifying the types
-	 * @throws TypesDoesNotUnifyException is thrown if types cannot be unified
+	 * @throws AppenableException is thrown if types cannot be unified
 	 */
-	public abstract Substitution unifyWith(Type other) throws AppendableException;
+	public abstract Substitution unifyTypeWith(Type other) throws AppendableException;
+	
+	/**
+	 * Tries to unify with other type treating different type representation as different types.
+	 * @param other other other type to unify with
+	 * @return substitution unifying the types
+	 * @throws AppendableException is thrown if types cannot be unified
+	 */
+	public abstract Substitution unifyRepresentationWith(Type other) throws AppendableException;
 
 	/**
 	 * Creates representing type as Clojure key
@@ -63,31 +71,29 @@ public abstract class Type implements Comparable<Type> {
 	public int compareTo(Type other) {
 		return this.getClass().getName().compareTo(other.getClass().getName());
 	}
-	
-	/**
-	 * Equality based on unification. Returns true if two types unifies, false otherwise.
-	 * @param other other type
-	 * @return true or false
-	 */
-	public boolean equalsUpToIsomorphism(Type other) {
-		try {
-			Type.unify(this, other);
-		}catch(AppendableException e) {
-			return false;
-		}
-		return true;
-	}
 
 	/**
-	 * Returns unified type if the expression if two types unifies, otherwise throws
+	 * Tries to unify two types treating different type representation as the same type.
 	 * 
 	 * @param m first unified type
 	 * @param n second unified type
-	 * @return MGU of given types
+	 * @return Most General Unifier of given types
 	 * @throws AppendableException if types are not unifiable
 	 */
-	public static Substitution unify(Type m, Type n) throws AppendableException {
-		return m.unifyWith(n);
+	public static Substitution unifyTypes(Type m, Type n) throws AppendableException {
+		return m.unifyTypeWith(n);
+	}
+	
+	/**
+	 * Tries to unify two types treating different type representation as different types.
+	 * 
+	 * @param m Type
+	 * @param n Type
+	 * @return Most General Unifier of given types
+	 * @throws AppendableException if types are not unifiable
+	 */
+	public static Substitution unifyRepresentation(Type m, Type n) throws AppendableException {
+		return m.unifyRepresentationWith(n);
 	}
 
 	/**
@@ -101,7 +107,7 @@ public abstract class Type implements Comparable<Type> {
 		Type base = new TypeVariable(NameGenerator.next());
 		Substitution agg = Substitution.EMPTY;
 		for (Type t : types) {
-			Substitution s = Type.unify(base, t);
+			Substitution s = Type.unifyTypes(base, t);
 			agg = agg.union(s);
 			base = base.apply(agg);
 		}

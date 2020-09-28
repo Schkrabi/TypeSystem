@@ -77,7 +77,7 @@ public class Substitution {
 		}
 
 		for (TypeVariable v : intersection) {
-			Substitution mgu = Type.unify(this.get(v).get(), other.get(v).get());
+			Substitution mgu = Type.unifyTypes(this.get(v).get(), other.get(v).get());
 			composition.elements.put(v, this.get(v).get().apply(mgu));
 			composition = composition.union(mgu);
 		}

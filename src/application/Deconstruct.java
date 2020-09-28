@@ -41,7 +41,7 @@ public class Deconstruct extends Expression {
 		LitComposite lc = (LitComposite)e;
 		Pair<Type, Substitution> p = lc.value.infer(env);
 		try {
-			Type.unify(p.first, this.as);
+			Type.unifyTypes(p.first, this.as);
 		}catch(AppendableException ae) {
 			throw new IllegalDeconstructionException(e, this.as);
 		}

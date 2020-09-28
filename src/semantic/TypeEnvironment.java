@@ -350,7 +350,7 @@ public class TypeEnvironment {
 				TypeTuple type = entry.getKey();
 				try {
 					// Possible bottleneck?
-					Type.unify(type, argsType);
+					Type.unifyTypes(type, argsType);
 				} catch (TypesDoesNotUnifyException e) {
 					continue;
 				} catch (RuntimeException re) {

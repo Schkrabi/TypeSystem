@@ -41,7 +41,7 @@ My original motivation was to select implementation of extended lambda based on 
 (foo (construct Int String 42) (construct Int String 42))
 ~~~
 
-So in first application of `foo`, first implementation should be selectd, because representations of arguments and formal arguments fits perfectly. Second and third application should yield second and third application respectively for the same reason.
+So in first application of `foo`, first implementation should be selected, because representations of arguments and formal arguments fits perfectly. Second and third application should yield second and third implementation respectively for the same reason.
 
 Since I cannot use hard-equality for this (isomorphism of type variables would not be taken into account), logical choice is use unification for this task. However this will not work.
 

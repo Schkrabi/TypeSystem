@@ -33,7 +33,7 @@ public class OrExpression extends SpecialFormApplication {
 		Substitution agg = Substitution.EMPTY;
 		for (Expression e : this.args) {
 			Pair<Type, Substitution> p = e.infer(env);
-			Substitution s = Type.unify(p.first, TypeAtom.TypeBoolNative);
+			Substitution s = Type.unifyTypes(p.first, TypeAtom.TypeBoolNative);
 			agg = agg.union(p.second).union(s);
 		}
 

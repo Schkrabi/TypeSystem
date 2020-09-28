@@ -35,7 +35,7 @@ public class ExceptionExpr extends SpecialFormApplication {
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
 			Pair<Type, Substitution> infered = this.getMessage().infer(env);
-			Substitution s = Type.unify(infered.first, TypeAtom.TypeStringNative);
+			Substitution s = Type.unifyTypes(infered.first, TypeAtom.TypeStringNative);
 			s = s.union(infered.second);
 			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), s);
 		} catch (AppendableException e) {

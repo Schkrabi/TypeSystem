@@ -53,8 +53,8 @@ public class DefineConversion extends Expression {
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		Pair<Type, Substitution> p = this.lambda.infer(env);
 		TypeArrow type = (TypeArrow) p.first;
-		Substitution s = Type.unify(type.ltype, new TypeTuple(Arrays.asList(this.from)));
-		s = s.union(Type.unify(type.rtype, this.to));
+		Substitution s = Type.unifyTypes(type.ltype, new TypeTuple(Arrays.asList(this.from)));
+		s = s.union(Type.unifyTypes(type.rtype, this.to));
 		s = s.union(p.second);
 		return new Pair<Type, Substitution>(Expression.EMPTY_EXPRESSION.infer(env).first, s);
 	}

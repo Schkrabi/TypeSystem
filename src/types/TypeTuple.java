@@ -253,17 +253,20 @@ public class TypeTuple extends Type implements Iterable<Type> {
 			Type ti = i.next();
 			Type tj = j.next();
 
-			if (!ti.equalsUpToIsomorphism(tj))
+			try {
+				Type.unifyRepresentation(ti, tj);
+			}catch (AppendableException e) {
 				sum++;
+			}
 		}
 
 		return sum;
 	}
 
 	@Override
-	public Substitution unifyWith(Type other) throws AppendableException {
+	public Substitution unifyTypeWith(Type other) throws AppendableException {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
-			return other.unifyWith(this);
+			return other.unifyTypeWith(this);
 		}
 		if (other instanceof TypeTuple) {
 			TypeTuple o = (TypeTuple) other;
@@ -276,7 +279,33 @@ public class TypeTuple extends Type implements Iterable<Type> {
 					Type t = i.next();
 					Type u = j.next();
 
-					Substitution ot = Type.unify(t, u);
+					Substitution ot = Type.unifyTypes(t, u);
+
+					s = s.union(ot);
+				}
+				return s;
+			}
+		}
+		throw new TypesDoesNotUnifyException(this, other);
+	}
+	
+	@Override
+	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
+		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
+			return other.unifyRepresentationWith(this);
+		}
+		if (other instanceof TypeTuple) {
+			TypeTuple o = (TypeTuple) other;
+			if (this.size() == o.size()) {
+				Substitution s = Substitution.EMPTY;
+
+				Iterator<Type> i = this.iterator();
+				Iterator<Type> j = o.iterator();
+				while (i.hasNext()) {
+					Type t = i.next();
+					Type u = j.next();
+
+					Substitution ot = Type.unifyRepresentation(t, u);
 
 					s = s.union(ot);
 				}

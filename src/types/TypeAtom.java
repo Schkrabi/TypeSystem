@@ -102,12 +102,25 @@ public class TypeAtom extends Type {
 	}
 
 	@Override
-	public Substitution unifyWith(Type other) throws AppendableException {
+	public Substitution unifyTypeWith(Type other) throws AppendableException {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
-			return other.unifyWith(this);
+			return other.unifyTypeWith(this);
 		}
 		if (other instanceof TypeAtom) {
 			if (TypeAtom.isSameBasicType(this, (TypeAtom) other)) {
+				return Substitution.EMPTY;
+			}
+		}
+		throw new TypesDoesNotUnifyException(this, other);
+	}
+	
+	@Override
+	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
+		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
+			return other.unifyRepresentationWith(this);
+		}
+		if (other instanceof TypeAtom) {
+			if (this.equals(other)) {
 				return Substitution.EMPTY;
 			}
 		}

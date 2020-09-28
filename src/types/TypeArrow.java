@@ -98,15 +98,31 @@ public class TypeArrow extends Type {
 	}
 
 	@Override
-	public Substitution unifyWith(Type other) throws AppendableException {
+	public Substitution unifyTypeWith(Type other) throws AppendableException {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
-			return other.unifyWith(this);
+			return other.unifyTypeWith(this);
 		}
 		if (other instanceof TypeArrow) {
 			TypeArrow o = (TypeArrow) other;
 
-			Substitution left = this.ltype.unifyWith(o.ltype);
-			Substitution right = this.rtype.unifyWith(o.rtype);
+			Substitution left = this.ltype.unifyTypeWith(o.ltype);
+			Substitution right = this.rtype.unifyTypeWith(o.rtype);
+
+			return left.union(right);
+		}
+		throw new TypesDoesNotUnifyException(this, other);
+	}
+	
+	@Override
+	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
+		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
+			return other.unifyRepresentationWith(this);
+		}
+		if (other instanceof TypeArrow) {
+			TypeArrow o = (TypeArrow) other;
+
+			Substitution left = this.ltype.unifyRepresentationWith(o.ltype);
+			Substitution right = this.rtype.unifyRepresentationWith(o.rtype);
 
 			return left.union(right);
 		}

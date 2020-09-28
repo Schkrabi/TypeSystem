@@ -69,7 +69,7 @@ public class IfExpression extends SpecialFormApplication {
 		TypeVariable tv = new TypeVariable(NameGenerator.next());
 		Type argsExpected = new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, tv, tv));
 		
-		Substitution s = Type.unify(argsInfered.first, argsExpected); 
+		Substitution s = Type.unifyTypes(argsInfered.first, argsExpected); 
 		s = s.union(argsInfered.second);
 		
 		return new Pair<Type, Substitution>(tv.apply(s), s);

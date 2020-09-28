@@ -46,7 +46,7 @@ public class Convert extends Expression {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		Pair<Type, Substitution> p = this.expression.infer(env);
-		Substitution s = Type.unify(this.from, p.first);
+		Substitution s = Type.unifyTypes(this.from, p.first);
 		if (!TypeEnvironment.singleton.canConvert(this.from, this.to)) {
 			throw new ConversionException(this.from, this.to, this.expression);
 		}
