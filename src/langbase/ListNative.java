@@ -10,8 +10,10 @@ import application.Deconstruct;
 import application.DefineSymbol;
 import application.ExceptionExpr;
 import application.IfExpression;
+import application.OrExpression;
 import expression.Symbol;
 import expression.Tuple;
+import interpretation.Environment;
 import literal.LitString;
 import application.AbstractionApplication;
 import types.TypeArrow;
@@ -39,7 +41,7 @@ public class ListNative {
 	 * is-list-native-empty symbol
 	 */
 	public static final Symbol isListNativeEmptySymbol = new Symbol("is-list-native-empty");
-	
+
 	/**
 	 * is-list-native-empty function
 	 */
@@ -51,7 +53,7 @@ public class ListNative {
 	 * head-list-native symbol
 	 */
 	public static final Symbol headListNativeSymbol = new Symbol("head-list-native");
-	
+
 	/**
 	 * head-list-native function
 	 */
@@ -64,12 +66,12 @@ public class ListNative {
 					new AbstractionApplication(Operator.Car,
 							new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"), new TypeTuple(Arrays
 									.asList(new TypeVariable(NameGenerator.next()), TypeAtom.TypeListNative))))))));
-	
+
 	/**
 	 * tail-list-native symbol
 	 */
 	public static final Symbol tailListNativeSymbol = new Symbol("tail-list-native");
-	
+
 	/**
 	 * tail-list-native function
 	 */
@@ -87,7 +89,7 @@ public class ListNative {
 	 * map-list-native symbol
 	 */
 	public static final Symbol mapListNativeSymbol = new Symbol("map-list-native");
-	
+
 	/**
 	 * map-list-native function
 	 */
@@ -108,6 +110,40 @@ public class ListNative {
 											new AbstractionApplication(ListNative.tailListNativeSymbol,
 													new Tuple(Arrays.asList(new Symbol("l"))))))))))));
 
+	public static final Symbol map2ListNativeSymbol = new Symbol("map2-list-native");
+
+	private static TypeVariable A = new TypeVariable(NameGenerator.next());
+	private static TypeVariable B = new TypeVariable(NameGenerator.next());
+	private static TypeVariable C = new TypeVariable(NameGenerator.next());
+
+	public static final Lambda map2ListNative = new Lambda(
+			new Tuple(Arrays.asList(new Symbol("f"), new Symbol("l1"), new Symbol("l2"))),
+			new TypeTuple(Arrays.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), C), TypeAtom.TypeListNative,
+					TypeAtom.TypeListNative)),
+			new IfExpression(
+					new OrExpression(
+							new Tuple(
+									Arrays.asList(
+											new AbstractionApplication(isListNativeEmptySymbol,
+													new Tuple(Arrays.asList(new Symbol("l1")))),
+											new AbstractionApplication(isListNativeEmptySymbol,
+													new Tuple(Arrays.asList(new Symbol("l2"))))))),
+					new Construct(TypeAtom.TypeListNative, Tuple.EMPTY_TUPLE),
+					new Construct(TypeAtom.TypeListNative,
+							new Tuple(Arrays.asList(
+									new AbstractionApplication(new Symbol("f"),
+											new Tuple(Arrays.asList(
+													new AbstractionApplication(ListNative.headListNativeSymbol,
+															new Tuple(Arrays.asList(new Symbol("l1")))),
+													new AbstractionApplication(ListNative.headListNativeSymbol,
+															new Tuple(Arrays.asList(new Symbol("l2"))))))),
+									new AbstractionApplication(ListNative.map2ListNativeSymbol,
+											new Tuple(Arrays.asList(new Symbol("f"),
+													new AbstractionApplication(ListNative.tailListNativeSymbol,
+															new Tuple(Arrays.asList(new Symbol("l1")))),
+													new AbstractionApplication(ListNative.tailListNativeSymbol,
+															new Tuple(Arrays.asList(new Symbol("l2"))))))))))));
+
 	/**
 	 * Generates code for clojure regarding Native List
 	 * 
@@ -125,10 +161,27 @@ public class ListNative {
 			s.append("\n");
 			s.append((new DefineSymbol(mapListNativeSymbol, mapListNative)).toClojureCode());
 			s.append('\n');
+			s.append((new DefineSymbol(map2ListNativeSymbol, map2ListNative)).toClojureCode());
+			s.append('\n');
 		} catch (AppendableException e) {
-			System.err.println("Compilation error occured in " + ListNative.class.getName());
+			System.err.println("Compilation error " + e.getMessage() + " occured in " + ListNative.class.getName());
 		}
 
 		return s.toString();
+	}
+
+	/**
+	 * Initializes list functions in environment
+	 */
+	public static void initializeInEnvironment(Environment env) {
+		try {
+			(new DefineSymbol(isListNativeEmptySymbol, isListNativeEmpty)).interpret(env);
+			(new DefineSymbol(headListNativeSymbol, headListNative)).interpret(env);
+			(new DefineSymbol(tailListNativeSymbol, tailListNative)).interpret(env);
+			(new DefineSymbol(mapListNativeSymbol, mapListNative)).interpret(env);
+			(new DefineSymbol(map2ListNativeSymbol, map2ListNative)).interpret(env);
+		} catch (AppendableException e) {
+			System.err.println("Interpretation error " + e.getMessage() + " occured in " + ListNative.class.getName());
+		}
 	}
 }

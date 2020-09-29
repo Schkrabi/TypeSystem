@@ -207,12 +207,6 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Symbol(Operator.PrintlnOperator.toString()), Operator.PrintlnOperator);
 		//env.put(new Symbol(Operator.Deconstruct.toString()), Operator.Deconstruct);
 		
-		/*env.put(ListNative.isListNativeEmptySymbol, ListNative.isListNativeEmpty);	
-		env.put(ListNative.headListNativeSymbol, ListNative.headListNative);
-		env.put(ListNative.tailListNativeSymbol, ListNative.tailListNative);
-		env.put(ListNative.mapListNativeSymbol, ListNative.mapListNative);
-		*/
-		
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
 				Operator.IntNativeToIntRoman);
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)),
@@ -225,6 +219,8 @@ public class Environment implements Comparable<Environment> {
 				Operator.IntStringToIntNative);
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)),
 				Operator.IntStringToIntRoman);
+		
+		ListNative.initializeInEnvironment(env);
 	}
 
 }

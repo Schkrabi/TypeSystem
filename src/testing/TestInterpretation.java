@@ -1135,12 +1135,7 @@ class TestInterpretation {
 	}
 
 	@Test
-	void testListNative() throws AppendableException {
-		(new DefineSymbol(ListNative.isListNativeEmptySymbol, ListNative.isListNativeEmpty)).interpret(Environment.topLevelEnvironment);
-		(new DefineSymbol(ListNative.headListNativeSymbol, ListNative.headListNative)).interpret(Environment.topLevelEnvironment);
-		(new DefineSymbol(ListNative.tailListNativeSymbol, ListNative.tailListNative)).interpret(Environment.topLevelEnvironment);
-		(new DefineSymbol(ListNative.mapListNativeSymbol, ListNative.mapListNative)).interpret(Environment.topLevelEnvironment);
-		
+	void testListNative() throws AppendableException {		
 		this.testInterpretString("(construct List Native)",
 				new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative));
 		this.testInterpretString("(construct List Native 42 (construct List Native))",

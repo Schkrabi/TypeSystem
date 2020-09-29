@@ -91,64 +91,64 @@ class TestComplex {
 				new LitComposite(new LitString("JanNovak"),
 						new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured"))));
 
-		final TypeAtom linkedList = new TypeAtom(new TypeName("List"), new TypeRepresentation("Linked"));
+		final TypeAtom linkedList = new TypeAtom(new TypeName("TestComplexList"), new TypeRepresentation("Linked"));
 		final LitComposite emptyList = new LitComposite(Expression.EMPTY_EXPRESSION, linkedList);
 
 		this.testInterpretString(
-				"(type List)" + "(representation Linked List)" + "(constructor List Linked (x (List l)) (cons x l))"
-						+ "(constructor List Linked () ())"
-						+ "(construct List Linked 1 (construct List Linked 2 (construct List Linked)))",
+				"(type TestComplexList)" + "(representation Linked TestComplexList)" + "(constructor TestComplexList Linked (x (TestComplexList l)) (cons x l))"
+						+ "(constructor TestComplexList Linked () ())"
+						+ "(construct TestComplexList Linked 1 (construct TestComplexList Linked 2 (construct TestComplexList Linked)))",
 				new LitComposite(
 						new Tuple(Arrays.asList(new LitInteger(1),
 								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
 						linkedList));
 
-		// final TypeAtom functionalList = new TypeAtom(new TypeName("List"), new
+		// final TypeAtom functionalList = new TypeAtom(new TypeName("TestComplexList"), new
 		// TypeRepresentation("Functional"));
 
 		this.testInterpretString("(define fcons (lambda (x y) (lambda (f) (f x y))))"
 				+ "(define fcar (lambda (p) (p (lambda (x y) x))))" + "(define fcdr (lambda (p) (p (lambda (x y) y))))"
-				+ "(representation Functional List)" + "(constructor List Functional (x (List l)) (fcons x l))"
-				+ "(constructor List Functional () ())", Expression.EMPTY_EXPRESSION);
+				+ "(representation Functional TestComplexList)" + "(constructor TestComplexList Functional (x (TestComplexList l)) (fcons x l))"
+				+ "(constructor TestComplexList Functional () ())", Expression.EMPTY_EXPRESSION);
 
 		final LitComposite xlii = new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman);
 		final LitComposite fortyTwoStr = new LitComposite(new LitString("42"), TypeAtom.TypeIntString);
 		final LitInteger fortyTwo = new LitInteger(42);
 
 		this.testInterpretString(
-				"(define x (construct List Linked (construct Int Roman \"XLII\") (construct List Linked (construct Int String \"42\") (construct List Linked 42 (construct List Linked)))))",
+				"(define x (construct TestComplexList Linked (construct Int Roman \"XLII\") (construct TestComplexList Linked (construct Int String \"42\") (construct TestComplexList Linked 42 (construct TestComplexList Linked)))))",
 				Expression.EMPTY_EXPRESSION);
 
 		this.testInterpretString(
-				"(define y (construct List Functional (construct Int Roman \"XLII\") (construct List Functional (construct Int String \"42\") (construct List Functional 42 (construct List Functional)))))",
+				"(define y (construct TestComplexList Functional (construct Int Roman \"XLII\") (construct TestComplexList Functional (construct Int String \"42\") (construct TestComplexList Functional 42 (construct TestComplexList Functional)))))",
 				Expression.EMPTY_EXPRESSION);
 
 		this.testInterpretString(
-				"(define is-list-empty (extended-lambda ((List l))\n"
-						+ "                        ((List:Linked) (can-deconstruct-as l ()))\n"
-						+ "                        ((List:Functional) (can-deconstruct-as l ()))))",
+				"(define is-list-empty (extended-lambda ((TestComplexList l))\n"
+						+ "                        ((TestComplexList:Linked) (can-deconstruct-as l ()))\n"
+						+ "                        ((TestComplexList:Functional) (can-deconstruct-as l ()))))",
 				Expression.EMPTY_EXPRESSION);
 
 		this.testInterpretString("(is-list-empty x)", LitBoolean.FALSE);
 		this.testInterpretString("(is-list-empty y)", LitBoolean.FALSE);
-		this.testInterpretString("(is-list-empty (construct List Linked))", LitBoolean.TRUE);
-		this.testInterpretString("(is-list-empty (construct List Functional))", LitBoolean.TRUE);
+		this.testInterpretString("(is-list-empty (construct TestComplexList Linked))", LitBoolean.TRUE);
+		this.testInterpretString("(is-list-empty (construct TestComplexList Functional))", LitBoolean.TRUE);
 
-		this.testInterpretString("(define head-list (let-type (A) (extended-lambda ((List l))\n"
-				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List:Linked)))))\n"
-				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))",
+		this.testInterpretString("(define head-list (let-type (A) (extended-lambda ((TestComplexList l))\n"
+				+ "          					((TestComplexList:Linked) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (car (deconstruct l (A TestComplexList:Linked)))))\n"
+				+ "          					((TestComplexList:Functional) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A TestComplexList:Functional) #> TestComplexList:Functional)) #> TestComplexList:Functional))))))))",
 				Expression.EMPTY_EXPRESSION);
 
 		this.testInterpretString("(head-list x)", xlii);
 
 		this.testInterpretString(
-				"(define y (construct List Functional (construct Int Roman \"XLII\") (construct List Functional (construct Int String \"42\") (construct List Functional 42 (construct List Functional)))))"
+				"(define y (construct TestComplexList Functional (construct Int Roman \"XLII\") (construct TestComplexList Functional (construct Int String \"42\") (construct TestComplexList Functional 42 (construct TestComplexList Functional)))))"
 						+ "(head-list y)",
 				xlii);
 
-		this.testInterpretString("(define tail-list (let-type (A) (extended-lambda ((List l)) \n"
-				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List:Linked)))))\n"
-				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))",
+		this.testInterpretString("(define tail-list (let-type (A) (extended-lambda ((TestComplexList l)) \n"
+				+ "          					((TestComplexList:Linked) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A TestComplexList:Linked)))))\n"
+				+ "          					((TestComplexList:Functional) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A TestComplexList:Functional) #> TestComplexList:Functional)) #> TestComplexList:Functional))))))))",
 				Expression.EMPTY_EXPRESSION);
 
 		this.testInterpretString("(tail-list x)",
@@ -160,8 +160,8 @@ class TestComplex {
 		this.testInterpretString("(head-list (tail-list y))", fortyTwoStr);
 
 		this.testInterpretString(
-				"(define build-list-aux (lambda (i n f) " + "(if (= i n) " + "(construct List Linked)"
-						+ "(construct List Linked (f i) (build-list-aux (+ i 1) n f)))))"
+				"(define build-list-aux (lambda (i n f) " + "(if (= i n) " + "(construct TestComplexList Linked)"
+						+ "(construct TestComplexList Linked (f i) (build-list-aux (+ i 1) n f)))))"
 						+ "(build-list-aux 0 2 (lambda (x) (+ x 1)))",
 				new LitComposite(
 						new Tuple(Arrays.asList(new LitInteger(1),
@@ -175,13 +175,13 @@ class TestComplex {
 								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
 						linkedList));
 
-		this.testInterpretString("(define append-list (let-type (A) (extended-lambda ((List l) (A x))\n"
-				+ "                        ((List:Linked A) (if (is-list-empty l)\n"
-				+ "                            (construct List Linked x (construct List Linked))\n"
-				+ "                            (construct List Linked (head-list l) (append-list (tail-list l) x))))\n"
-				+ "						((List:Functional A) (if (is-list-empty l)\n"
-				+ "                            (construct List Functional x (construct List Functional))\n"
-				+ "                            (construct List Functional (head-list l) (append-list (tail-list l) x)))))))\n",
+		this.testInterpretString("(define append-list (let-type (A) (extended-lambda ((TestComplexList l) (A x))\n"
+				+ "                        ((TestComplexList:Linked A) (if (is-list-empty l)\n"
+				+ "                            (construct TestComplexList Linked x (construct TestComplexList Linked))\n"
+				+ "                            (construct TestComplexList Linked (head-list l) (append-list (tail-list l) x))))\n"
+				+ "						((TestComplexList:Functional A) (if (is-list-empty l)\n"
+				+ "                            (construct TestComplexList Functional x (construct TestComplexList Functional))\n"
+				+ "                            (construct TestComplexList Functional (head-list l) (append-list (tail-list l) x)))))))\n",
 				Expression.EMPTY_EXPRESSION);
 
 		this.testInterpretString("(append-list x 21)",
@@ -205,7 +205,7 @@ class TestComplex {
 						linkedList));
 
 		this.testInterpretString(
-				"(define reverse-list (lambda ((List l)) " + "(if (is-list-empty l) " + "(construct List Linked) "
+				"(define reverse-list (lambda ((TestComplexList l)) " + "(if (is-list-empty l) " + "(construct TestComplexList Linked) "
 						+ "(append-list (reverse-list (tail-list l)) (head-list l)))))" + "(reverse-list x)",
 				new LitComposite(
 						new Tuple(Arrays.asList(fortyTwo,
@@ -228,17 +228,17 @@ class TestComplex {
 		this.testInterpretString("(let-type (A B) ((lambda ((A x) (B y)) (cons x y)) 42 (construct Int String  \"42\")))", new Tuple(
 				Arrays.asList(new LitInteger(42), new LitComposite(new LitString("42"), TypeAtom.TypeIntString))));
 
-		TypeName listTypeName = new TypeName("List");
+		TypeName listTypeName = new TypeName("TestComplexList");
 		TypeAtom typeListLinkedAtom = new TypeAtom(listTypeName, new TypeRepresentation("Linked"));
 		TypeAtom typeListFuntionalAtom = new TypeAtom(listTypeName, new TypeRepresentation("Functional"));
 
 		this.testInterpretString(
-				"(let-type (A) (extended-lambda ((List l) (A x))" + "((List:Linked A) (if (can-deconstruct-as l ())"
-						+ "(construct List Linked x (construct List Linked))"
-						+ "(construct List Linked (head-list l) (append-list (tail-list l) x))))"
-						+ "((List:Functional A) (if (can-deconstruct-as l ())"
-						+ "(construct List Functional x (construct List Functional))"
-						+ "(construct List Functional (head-list l) (append-list (tail-list l) x))))))",
+				"(let-type (A) (extended-lambda ((TestComplexList l) (A x))" + "((TestComplexList:Linked A) (if (can-deconstruct-as l ())"
+						+ "(construct TestComplexList Linked x (construct TestComplexList Linked))"
+						+ "(construct TestComplexList Linked (head-list l) (append-list (tail-list l) x))))"
+						+ "((TestComplexList:Functional A) (if (can-deconstruct-as l ())"
+						+ "(construct TestComplexList Functional x (construct TestComplexList Functional))"
+						+ "(construct TestComplexList Functional (head-list l) (append-list (tail-list l) x))))))",
 				ExtendedFunction.makeExtendedFunction(
 						Arrays.asList(
 								new Function(new TypeTuple(Arrays.asList(typeListLinkedAtom, new TypeVariable("A"))),
@@ -281,12 +281,12 @@ class TestComplex {
 										Environment.topLevelEnvironment)),
 						Environment.topLevelEnvironment));
 
-		this.testInterpretString("(extended-lambda ((List l))"
-				+ "                        ((List:Linked) (if (can-deconstruct-as l ())"
-				+ "                                            (construct List Linked)"
+		this.testInterpretString("(extended-lambda ((TestComplexList l))"
+				+ "                        ((TestComplexList:Linked) (if (can-deconstruct-as l ())"
+				+ "                                            (construct TestComplexList Linked)"
 				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l))))"
-				+ "                        ((List:Functional) (if (can-deconstruct-as l ())"
-				+ "                                            (construct List Functional)"
+				+ "                        ((TestComplexList:Functional) (if (can-deconstruct-as l ())"
+				+ "                                            (construct TestComplexList Functional)"
 				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l)))))",
 				ExtendedFunction
 						.makeExtendedFunction(Arrays.asList(
@@ -324,13 +324,13 @@ class TestComplex {
 										Environment.topLevelEnvironment)),
 								Environment.topLevelEnvironment));
 
-		this.testInterpretString("(let-type (A B) (extended-lambda ((((A) #> B) f) (List l))"
-				+ "                    ((((A) #> B) List:Linked) (if (can-deconstruct-as l ())"
-				+ "                                                (construct List Linked)"
-				+ "                                                (construct List Linked (f (head-list l)) (map-list f (tail-list l)))))"
-				+ "                    ((((A) #> B) List:Functional) (if (can-deconstruct-as l ())"
-				+ "                                                    (construct List Functional)"
-				+ "                                                    (construct List Functional (f (head-list l)) (map-list f (tail-list l)))))))",
+		this.testInterpretString("(let-type (A B) (extended-lambda ((((A) #> B) f) (TestComplexList l))"
+				+ "                    ((((A) #> B) TestComplexList:Linked) (if (can-deconstruct-as l ())"
+				+ "                                                (construct TestComplexList Linked)"
+				+ "                                                (construct TestComplexList Linked (f (head-list l)) (map-list f (tail-list l)))))"
+				+ "                    ((((A) #> B) TestComplexList:Functional) (if (can-deconstruct-as l ())"
+				+ "                                                    (construct TestComplexList Functional)"
+				+ "                                                    (construct TestComplexList Functional (f (head-list l)) (map-list f (tail-list l)))))))",
 				ExtendedFunction
 						.makeExtendedFunction(
 								Arrays.asList(
