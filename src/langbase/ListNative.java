@@ -162,7 +162,24 @@ public class ListNative {
 	/**
 	 * Symbol for foldl-list-native
 	 */
-	public static final Symbol foldlListNativeSymbol = new Symbol("fold-list-native");
+	public static final Symbol foldlListNativeSymbol = new Symbol("foldl-list-native");
+
+	public static final Lambda foldlListNative = new Lambda(
+			new Tuple(Arrays.asList(new Symbol("f"), new Symbol("term"), new Symbol("l"))),
+			new TypeTuple(
+					Arrays.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, TypeAtom.TypeListNative)),
+			new IfExpression(
+					new AbstractionApplication(
+							ListNative.isListNativeEmptySymbol, new Tuple(Arrays.asList(new Symbol("l")))),
+					new Symbol("term"),
+					new AbstractionApplication(foldlListNativeSymbol,
+							new Tuple(Arrays.asList(new Symbol("f"), new AbstractionApplication(new Symbol("f"),
+									new Tuple(Arrays.asList(new Symbol("term"), new AbstractionApplication(Operator.Car,
+											new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"),
+													new TypeTuple(Arrays.asList(A, TypeAtom.TypeListNative))))))))),
+									new AbstractionApplication(Operator.Cdr,
+											new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"),
+													new TypeTuple(Arrays.asList(A, TypeAtom.TypeListNative)))))))))));
 
 	/**
 	 * Symbol for foldr-list-native
@@ -174,7 +191,7 @@ public class ListNative {
 	 */
 	public static final Lambda foldrListNative = new Lambda(
 			new Tuple(Arrays.asList(new Symbol("f"), new Symbol("term"), new Symbol("l"))),
-			new TypeTuple(Arrays.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), C), A,
+			new TypeTuple(Arrays.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A,
 					TypeAtom.TypeListNative)),
 			new IfExpression(
 					new AbstractionApplication(ListNative.isListNativeEmptySymbol, new Tuple(
@@ -183,10 +200,9 @@ public class ListNative {
 					new AbstractionApplication(new Symbol("f"),
 							new Tuple(
 									Arrays.asList(
-											new AbstractionApplication(
-													foldrListNativeSymbol,
-													new Tuple(Arrays.asList(new AbstractionApplication(
-															Operator.Cdr,
+											new AbstractionApplication(foldrListNativeSymbol, new Tuple(Arrays.asList(
+													new Symbol("f"), new Symbol("term"),
+													new AbstractionApplication(Operator.Cdr,
 															new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"),
 																	new TypeTuple(Arrays.asList(A,
 																			TypeAtom.TypeListNative))))))))),
@@ -214,6 +230,8 @@ public class ListNative {
 			s.append('\n');
 			s.append((new DefineSymbol(map2ListNativeSymbol, map2ListNative)).toClojureCode());
 			s.append('\n');
+			s.append((new DefineSymbol(foldlListNativeSymbol, foldlListNative)).toClojureCode());
+			s.append('\n');
 			s.append((new DefineSymbol(foldrListNativeSymbol, foldrListNative)).toClojureCode());
 			s.append('\n');
 		} catch (AppendableException e) {
@@ -233,6 +251,7 @@ public class ListNative {
 			(new DefineSymbol(tailListNativeSymbol, tailListNative)).interpret(env);
 			(new DefineSymbol(mapListNativeSymbol, mapListNative)).interpret(env);
 			(new DefineSymbol(map2ListNativeSymbol, map2ListNative)).interpret(env);
+			(new DefineSymbol(foldlListNativeSymbol, foldlListNative)).interpret(env);
 			(new DefineSymbol(foldrListNativeSymbol, foldrListNative)).interpret(env);
 		} catch (AppendableException e) {
 			System.err.println("Interpretation error " + e.getMessage() + " occured in " + ListNative.class.getName());
