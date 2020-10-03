@@ -40,7 +40,6 @@ import expression.Tuple;
 import expression.TypeHolder;
 import expression.Symbol;
 import interpretation.Environment;
-import langbase.ListNative;
 import literal.LitBoolean;
 import literal.LitComposite;
 import literal.LitDouble;
@@ -1135,7 +1134,7 @@ class TestInterpretation {
 	}
 
 	@Test
-	void testListNative() throws AppendableException {		
+	void testListNative() throws AppendableException {
 		this.testInterpretString("(construct List Native)",
 				new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative));
 		this.testInterpretString("(construct List Native 42 (construct List Native))",
@@ -1164,6 +1163,25 @@ class TestInterpretation {
 						new Tuple(Arrays.asList(new LitInteger(43),
 								new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
 						TypeAtom.TypeListNative));
+
+		this.testInterpretString(
+				"(map2-list-native + (construct List Native 21 (construct List Native 21 (construct List Native))) (construct List Native 21 (construct List Native 21 (construct List Native))))",
+				new LitComposite(
+						new Tuple(Arrays.asList(
+								new LitInteger(42),
+								new LitComposite(
+										new Tuple(Arrays.asList(
+												new LitInteger(42),
+												new LitComposite(
+														Tuple.EMPTY_TUPLE, 
+														TypeAtom.TypeListNative))),
+										TypeAtom.TypeListNative))), 
+						TypeAtom.TypeListNative));
+		
+		this.testInterpretString("(foldl-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native))))", 
+				new LitInteger(3));
+		this.testInterpretString("(foldr-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native))))", 
+				new LitInteger(3));
 	}
 
 	private Expression parseString(String s) throws AppendableException {
