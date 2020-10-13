@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -185,6 +187,15 @@ class TestUtil {
 		new InvalidClojureCompilationException(Expression.EMPTY_EXPRESSION);
 		new InvalidNumberOfArgumentsException(2, Expression.EMPTY_EXPRESSION, new AbstractionApplication(
 				new Lambda(Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION), Tuple.EMPTY_TUPLE));
+	}
+	
+	@Test
+	void testSandbox() throws ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException {
+		Class<?> clazz = Class.forName("java.util.HashMap");
+		Object inst = clazz.newInstance();		
+		Method met = clazz.getMethod("put", Object.class, Object.class);
+		Object[] args = {new String("key"), new Integer(42)};
+		met.invoke(inst, args);
 	}
 
 }
