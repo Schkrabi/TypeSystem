@@ -14,6 +14,7 @@ import types.Type;
 import types.TypeArrow;
 import types.TypeTuple;
 import types.TypeVariable;
+import types.TypesDoesNotUnifyException;
 import util.AppendableException;
 import util.NameGenerator;
 import util.Pair;
@@ -196,7 +197,12 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 				return false;
 			}
 			
-			return this.argsType.equals(((Lambda) other).argsType);
+			try {
+				Type.unifyRepresentation(this.argsType, ((Lambda) other).argsType);
+				return true;
+			}catch(AppendableException e) {
+				return false;
+			}
 		}
 		return false;
 	}
