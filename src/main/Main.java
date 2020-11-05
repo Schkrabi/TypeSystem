@@ -13,8 +13,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
 
@@ -34,7 +34,6 @@ import expression.Expression;
  * @author Mgr. Radomir Skrabal
  * 
  */
-@SuppressWarnings("deprecation")
 public class Main {
 
 	/**
@@ -85,7 +84,7 @@ public class Main {
 		try {
 			while (true) {
 				System.out.print(">");
-				CharStream charStream = new ANTLRInputStream(input.nextLine());
+				CharStream charStream = CharStreams.fromString(input.nextLine());
 				TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
 				SchemeParser parser = new SchemeParser(tokens);
 
@@ -116,7 +115,7 @@ public class Main {
 		try {
 			input = Files.newBufferedReader(inputPath);
 
-			CharStream charStream = new ANTLRInputStream(input);
+			CharStream charStream = CharStreams.fromReader(input);
 			TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
 			SchemeParser parser = new SchemeParser(tokens);
 			ExprsContext exprsContext = parser.exprs();
@@ -155,7 +154,7 @@ public class Main {
 		try {
 			input = Files.newBufferedReader(inputPath);
 
-			CharStream charStream = new ANTLRInputStream(input);
+			CharStream charStream = CharStreams.fromReader(input);
 			TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
 			SchemeParser parser = new SchemeParser(tokens);
 			ExprsContext exprsContext = parser.exprs();
@@ -192,7 +191,7 @@ public class Main {
 		try {
 			input = Files.newBufferedReader(inputPath);
 
-			CharStream charStream = new ANTLRInputStream(input);
+			CharStream charStream = CharStreams.fromReader(input);
 			TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
 			SchemeParser parser = new SchemeParser(tokens);
 			ExprsContext exprsContext = parser.exprs();
@@ -211,7 +210,7 @@ public class Main {
 			inputI = new Scanner(System.in);
 			while (true) {
 				System.out.print(">");
-				charStream = new ANTLRInputStream(inputI.nextLine());
+				charStream = CharStreams.fromString(inputI.nextLine());
 				tokens = new CommonTokenStream(new SchemeLexer(charStream));
 				parser = new SchemeParser(tokens);
 
