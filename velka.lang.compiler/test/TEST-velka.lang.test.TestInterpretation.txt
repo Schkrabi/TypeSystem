@@ -1,0 +1,2 @@
+Testcase: velka.lang.test.TestInterpretation
+Tests run: 0, Failures: 1, Skipped: 0, Aborted: 0, Time elapsed: 3 milli sec(s)
