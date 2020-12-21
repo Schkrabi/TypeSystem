@@ -8,6 +8,7 @@ import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
 import velka.lang.abstraction.Operator;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 
 /**
  * Variable expression
@@ -36,11 +37,11 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		if (!env.containsVariable(this)) {
 			return this;
 		}
-		return env.getVariableValue(this).interpret(env);
+		return env.getVariableValue(this).interpret(env, typeEnv);
 	}
 
 	@Override
@@ -49,10 +50,10 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
 			if (env.containsVariable(this)) {
-				return env.getVariableValue(this).infer(env);
+				return env.getVariableValue(this).infer(env, typeEnv);
 			}
 			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), Substitution.EMPTY);
 		} catch (AppendableException e) {
@@ -62,11 +63,11 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		if (env.containsVariable(this)) {
 			Expression e = env.getVariableValue(this);
 			if (e instanceof Operator) {
-				return e.toClojureCode(env);
+				return e.toClojureCode(env, typeEnv);
 			}
 		}
 

@@ -4,6 +4,7 @@
 package velka.lang.expression;
 
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
 import velka.lang.util.AppendableException;
@@ -44,7 +45,7 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	 * @see expression.Expression#interpret(interpretation.Environment)
 	 */
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		if (this.placeholderOf == null || !env.containsVariable(this.placeholderOf)) {
 			throw new AppendableException(this.getClass().getName() + " is not to be interpreted!");
 		}
@@ -53,9 +54,9 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 			if (env.isTopLevel()) {
 				throw new AppendableException(this.getClass().getName() + " is not to be interpreted!");
 			}
-			return this.placeholderOf.interpret(env.parent);
+			return this.placeholderOf.interpret(env.parent, typeEnv);
 		}
-		return e.interpret(env);
+		return e.interpret(env, typeEnv);
 	}
 
 	/*
@@ -64,12 +65,12 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	 * @see expression.Expression#infer(interpretation.Environment)
 	 */
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
 		return new Pair<Type, Substitution>(this.type, Substitution.EMPTY);
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		throw new AppendableException(this.getClass().getName() + " is not to be converted to Clojure!");
 	}
 

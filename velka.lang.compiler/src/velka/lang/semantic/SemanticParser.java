@@ -20,15 +20,15 @@ import velka.lang.application.Deconstruct;
 import velka.lang.application.DefineConstructor;
 import velka.lang.application.AbstractionApplication;
 import velka.lang.application.DefineConversion;
+import velka.lang.application.DefineRepresentation;
 import velka.lang.application.DefineSymbol;
+import velka.lang.application.DefineType;
 import velka.lang.application.ExceptionExpr;
 import velka.lang.application.IfExpression;
-import velka.lang.exceptions.DuplicateTypeDefinitionException;
 import velka.lang.exceptions.UndefinedTypeException;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.expression.Symbol;
-import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitDouble;
 import velka.lang.literal.LitInteger;
@@ -386,8 +386,7 @@ public class SemanticParser {
 			throw e;
 		}
 
-		TypeEnvironment.singleton.addType(new TypeName(deftypeList.get(1).asSymbol()));
-		return Expression.EMPTY_EXPRESSION;
+		return new DefineType(new TypeName(deftypeList.get(1).asSymbol()));
 	}
 
 	/**
@@ -410,8 +409,7 @@ public class SemanticParser {
 		TypeRepresentation repName = new TypeRepresentation(defrepList.get(1).asSymbol());
 		TypeName typeName = new TypeName(defrepList.get(2).asSymbol());
 
-		TypeEnvironment.singleton.addRepresentation(new TypeAtom(typeName, repName));
-		return Expression.EMPTY_EXPRESSION;
+		return new DefineRepresentation(typeName, repName);
 	}
 
 	/**
@@ -456,18 +454,14 @@ public class SemanticParser {
 	 * @return TypeAtom
 	 * @throws AppendableException 
 	 */
-	private static Type parseTypeSymbol(String typeSymbol, Map<TypeVariable, TypeVariable> letType) throws AppendableException {
-		if (TypeEnvironment.singleton.existType(new TypeName(typeSymbol))) {
-			return SemanticParser.parseTypeAtom(typeSymbol, TypeRepresentation.WILDCARD.toString());
-		}
-		
+	private static Type parseTypeSymbol(String typeSymbol, Map<TypeVariable, TypeVariable> letType) throws AppendableException {		
 		TypeVariable tv = new TypeVariable(typeSymbol); 
 		
 		if(letType.containsKey(tv)) {
 			return letType.get(tv);
 		}
 		
-		throw new AppendableException("Undeclared type variable: " + tv);
+		return SemanticParser.parseTypeAtom(typeSymbol, TypeRepresentation.WILDCARD.toString());
 	}
 
 	/**
@@ -480,9 +474,6 @@ public class SemanticParser {
 	 */
 	private static TypeAtom parseTypeAtom(String typeName, String typeRepresentation) throws UndefinedTypeException {
 		TypeAtom typeAtom = new TypeAtom(new TypeName(typeName), new TypeRepresentation(typeRepresentation));
-		if (!TypeEnvironment.singleton.existsTypeAtom(typeAtom)) {
-			throw new UndefinedTypeException(typeAtom.toString());
-		}
 		return typeAtom;
 	}
 
@@ -666,9 +657,7 @@ public class SemanticParser {
 			throw e;
 		}
 
-		Lambda lambda = new Lambda(lambdaArgs, new TypeTuple(Arrays.asList(fromType)), body);
-
-		return DefineConversion.makeDefineConversion(fromType, toType, lambda);
+		return new DefineConversion(fromType, toType, lambdaArgs, body);
 	}
 
 	/**
@@ -917,9 +906,6 @@ public class SemanticParser {
 		
 		List<TypeVariable> l = new LinkedList<TypeVariable>();
 		for(SemanticNode n : list) {
-			if (TypeEnvironment.singleton.existType(new TypeName(n.asSymbol()))) {
-				throw new AppendableException("Only type variables allowed in let-type, found: " + n.asSymbol());
-			}
 			l.add(new TypeVariable(n.asSymbol()));
 		}
 		return l;

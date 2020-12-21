@@ -2,6 +2,7 @@ package velka.lang.application;
 
 import velka.lang.expression.Expression;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitComposite;
 import velka.lang.types.Substitution;
@@ -34,13 +35,13 @@ public class CanDeconstructAs extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		Expression e = this.expression.interpret(env);
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Expression e = this.expression.interpret(env, typeEnv);
 		if (!(e instanceof LitComposite)) {
 			return LitBoolean.FALSE;
 		}
 		LitComposite lc = (LitComposite) e;
-		Pair<Type, Substitution> p = lc.value.infer(env);
+		Pair<Type, Substitution> p = lc.value.infer(env, typeEnv);
 
 		try {
 			Type.unifyTypes(p.first, this.as);
@@ -52,17 +53,17 @@ public class CanDeconstructAs extends Expression {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		Pair<Type, Substitution> p = this.expression.infer(env);
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Pair<Type, Substitution> p = this.expression.infer(env, typeEnv);
 		return new Pair<Type, Substitution>(TypeAtom.TypeBoolNative, p.second);
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		//TODO uživatel může v can-deconstruct-as specifikovat typové proměnné a tedy jednoduché srovnání v clojure nebude fungovat
 		
 		return "(with-meta [(= " + this.as.clojureTypeRepresentation() + " (:lang-type (meta (get "
-				+ this.expression.toClojureCode(env) + " 0))))] {:lang-type "
+				+ this.expression.toClojureCode(env, typeEnv) + " 0))))] {:lang-type "
 				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})";
 	}
 

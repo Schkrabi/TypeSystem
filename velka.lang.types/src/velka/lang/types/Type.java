@@ -114,4 +114,11 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	public abstract Type uniteRepresentationsWith(Type other) throws AppendableException;
+	
+	/**
+	 * Maps function recursively on type
+	 * @param fun function
+	 * @return type with applied function
+	 */
+	public abstract Type map(java.util.function.Function<Type, Type> fun) throws AppendableException;
 }

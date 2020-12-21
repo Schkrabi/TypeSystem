@@ -2,6 +2,7 @@ package velka.lang.types;
 
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 import velka.lang.util.AppendableException;
 
@@ -154,4 +155,9 @@ public class TypeAtom extends Type {
 	 */
 	public static final TypeAtom TypeList = new TypeAtom(TypeName.LIST, TypeRepresentation.WILDCARD);
 	public static final TypeAtom TypeListNative = new TypeAtom(TypeName.LIST, TypeRepresentation.NATIVE);
+
+	@Override
+	public Type map(Function<Type, Type> fun) throws AppendableException {
+		return fun.apply(this);
+	}
 }

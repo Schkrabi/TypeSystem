@@ -42,9 +42,6 @@ import velka.lang.util.NameGenerator;
 public class TypeEnvironment {
 	private Map<TypeAtom, TypeInformation> typeInfo = new HashMap<TypeAtom, TypeInformation>();
 
-	private TypeEnvironment() {
-	}
-
 	/**
 	 * Gets TypeInformation for given TypeAtom
 	 * 
@@ -83,7 +80,7 @@ public class TypeEnvironment {
 		if (this.existType(name)) {
 			throw new DuplicateTypeDefinitionException(typeAtom);
 		}
-		this.typeInfo.put(typeAtom, new TypeInformation(typeAtom, NameGenerator.next()));
+		this.typeInfo.put(typeAtom, new TypeInformation(typeAtom, NameGenerator.next(), this));
 	}
 
 	/**
@@ -96,7 +93,7 @@ public class TypeEnvironment {
 		if (this.existsTypeAtom(newType)) {
 			throw new DuplicateTypeDefinitionException(newType);
 		}
-		this.typeInfo.put(newType, new TypeInformation(newType, NameGenerator.next()));
+		this.typeInfo.put(newType, new TypeInformation(newType, NameGenerator.next(), this));
 	}
 
 	/**
@@ -107,9 +104,9 @@ public class TypeEnvironment {
 	 * @throws AppendableException if type does not exists or constructor with same
 	 *                             argument types already exists
 	 */
-	public void addConstructor(TypeAtom typeAtom, Lambda constructorLambda) throws AppendableException {
+	public void addConstructor(TypeAtom typeAtom, Lambda constructorLambda, Environment env) throws AppendableException {
 		TypeInformation info = this.getTypeInfo(typeAtom);
-		info.addConstructor(constructorLambda);
+		info.addConstructor(constructorLambda, env);
 	}
 
 	/**
@@ -119,8 +116,8 @@ public class TypeEnvironment {
 	 * @throws AppendableException if type does not exists or constructor with same
 	 *                             argument types already exists
 	 */
-	private void addPrimitiveConstructor(TypeAtom typeAtom) throws AppendableException {
-		this.addConstructor(typeAtom, Lambda.identity);
+	private void addPrimitiveConstructor(TypeAtom typeAtom, Environment env) throws AppendableException {
+		this.addConstructor(typeAtom, Lambda.identity, env);
 	}
 
 	/**
@@ -243,60 +240,59 @@ public class TypeEnvironment {
 	}
 
 	/**
-	 * Type environment only one exists
-	 */
-	public static TypeEnvironment singleton = new TypeEnvironment();
-
-	/**
 	 * Initializes basic types
 	 * 
 	 * @throws AppendableException
 	 */
-	public static void initBasicTypes() throws AppendableException {
+	public static TypeEnvironment initBasicTypes(Environment env) throws AppendableException {
+		TypeEnvironment typeEnvitonment = new TypeEnvironment();
+		
 		// Int
-		TypeEnvironment.singleton.addType(TypeAtom.TypeInt.name);
-		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeIntNative);
-		TypeEnvironment.singleton.addPrimitiveConstructor(TypeAtom.TypeIntNative);
-		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeIntRoman);
-		TypeEnvironment.singleton.addConstructor(TypeAtom.TypeIntRoman, Lambda.makeIdentity(TypeAtom.TypeStringNative));
-		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeIntString);
-		TypeEnvironment.singleton.addConstructor(TypeAtom.TypeIntString,
-				Lambda.makeIdentity(TypeAtom.TypeStringNative));
+		typeEnvitonment.addType(TypeAtom.TypeInt.name);
+		typeEnvitonment.addRepresentation(TypeAtom.TypeIntNative);
+		typeEnvitonment.addPrimitiveConstructor(TypeAtom.TypeIntNative, env);
+		typeEnvitonment.addRepresentation(TypeAtom.TypeIntRoman);
+		typeEnvitonment.addConstructor(TypeAtom.TypeIntRoman, Lambda.makeIdentity(TypeAtom.TypeStringNative), env);
+		typeEnvitonment.addRepresentation(TypeAtom.TypeIntString);
+		typeEnvitonment.addConstructor(TypeAtom.TypeIntString,
+				Lambda.makeIdentity(TypeAtom.TypeStringNative), env);
 
 		// Bool
-		TypeEnvironment.singleton.addType(TypeAtom.TypeBool.name);
-		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeBoolNative);
-		TypeEnvironment.singleton.addPrimitiveConstructor(TypeAtom.TypeBoolNative);
+		typeEnvitonment.addType(TypeAtom.TypeBool.name);
+		typeEnvitonment.addRepresentation(TypeAtom.TypeBoolNative);
+		typeEnvitonment.addPrimitiveConstructor(TypeAtom.TypeBoolNative, env);
 
 		// String
-		TypeEnvironment.singleton.addType(TypeAtom.TypeString.name);
-		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeStringNative);
-		TypeEnvironment.singleton.addPrimitiveConstructor(TypeAtom.TypeStringNative);
+		typeEnvitonment.addType(TypeAtom.TypeString.name);
+		typeEnvitonment.addRepresentation(TypeAtom.TypeStringNative);
+		typeEnvitonment.addPrimitiveConstructor(TypeAtom.TypeStringNative, env);
 
 		// Double
-		TypeEnvironment.singleton.addType(TypeAtom.TypeDouble.name);
-		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeDoubleNative);
-		TypeEnvironment.singleton.addPrimitiveConstructor(TypeAtom.TypeDoubleNative);
+		typeEnvitonment.addType(TypeAtom.TypeDouble.name);
+		typeEnvitonment.addRepresentation(TypeAtom.TypeDoubleNative);
+		typeEnvitonment.addPrimitiveConstructor(TypeAtom.TypeDoubleNative, env);
 		
 		// List
-		TypeEnvironment.singleton.addType(TypeAtom.TypeList.name);
-		TypeEnvironment.singleton.addRepresentation(TypeAtom.TypeListNative);
-		TypeEnvironment.singleton.addConstructor(TypeAtom.TypeListNative, ListNative.constructorEmpty);
-		TypeEnvironment.singleton.addConstructor(TypeAtom.TypeListNative, ListNative.constructor);
+		typeEnvitonment.addType(TypeAtom.TypeList.name);
+		typeEnvitonment.addRepresentation(TypeAtom.TypeListNative);
+		typeEnvitonment.addConstructor(TypeAtom.TypeListNative, ListNative.constructorEmpty, env);
+		typeEnvitonment.addConstructor(TypeAtom.TypeListNative, ListNative.constructor, env);
 
 		// Conversions
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman,
+		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman,
 				Operator.IntNativeToIntRoman);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString,
+		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString,
 				Operator.IntNativeToIntString);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative,
+		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative,
 				Operator.IntRomanToIntNative);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
+		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
 				Operator.IntRomanToIntString);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative,
+		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative,
 				Operator.IntStringToIntNative);
-		TypeEnvironment.singleton.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman,
+		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman,
 				Operator.IntStringToIntRoman);
+		
+		return typeEnvitonment;
 	}
 
 	//TODO Remove?
@@ -335,12 +331,18 @@ public class TypeEnvironment {
 		 * Name of deconstruction function
 		 */
 		public final String deconstructionCheckFunctionName;
+		
+		/**
+		 * Type environment this typeinfomration belongs to
+		 */
+		public final TypeEnvironment typeEnvironment;
 
-		public TypeInformation(TypeAtom type, String checkDeconstructionFunctionName) {
+		public TypeInformation(TypeAtom type, String checkDeconstructionFunctionName, TypeEnvironment typeEnv) {
 			this.type = type;
 			this.deconstructionCheckFunctionName = checkDeconstructionFunctionName;
 			this.constructors = new TreeMap<TypeTuple, Lambda>();
 			this.conversions = new TreeMap<TypeAtom, Expression>();
+			this.typeEnvironment = typeEnv;
 		}
 
 		/**
@@ -405,9 +407,9 @@ public class TypeEnvironment {
 		 * @param constructorLambda constructor lambda expression
 		 * @throws AppendableException
 		 */
-		public void addConstructor(Lambda constructorLambda) throws AppendableException {
+		public void addConstructor(Lambda constructorLambda, Environment env) throws AppendableException {
 			TypeTuple argsType = (TypeTuple) ((TypeArrow) (constructorLambda
-					.infer(Environment.topLevelEnvironment).first)).ltype;
+					.infer(env, this.typeEnvironment).first)).ltype;
 
 			if (this.findConstrutor(argsType).isPresent()) {
 				throw new DuplicateTypeConstructorException(this.type, this.constructors.get(argsType),

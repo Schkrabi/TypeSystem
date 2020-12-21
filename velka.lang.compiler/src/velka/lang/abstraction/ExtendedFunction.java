@@ -1,6 +1,7 @@
 package velka.lang.abstraction;
 
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -36,14 +37,14 @@ public class ExtendedFunction extends ExtendedLambda {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
 			/*Set<Pair<Type, Substitution>> s = this.implementations.stream()
 					.map(ThrowingFunction.wrapper(x -> x.infer(env))).collect(Collectors.toSet());
 			*/
 			Set<Pair<Type, Substitution>> s = new HashSet<Pair<Type, Substitution>>();
 			for(Expression e : this.implementations) {
-				Pair<Type, Substitution> p = e.infer(env);
+				Pair<Type, Substitution> p = e.infer(env, typeEnv);
 				s.add(p);
 			}
 			
@@ -159,14 +160,14 @@ public class ExtendedFunction extends ExtendedLambda {
 	}
 	
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {	
-		TypeTuple argsType = (TypeTuple)args.infer(env).first;
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {	
+		TypeTuple argsType = (TypeTuple)args.infer(env, typeEnv).first;
 		Lambda l = this.getMostFitLambda(argsType);
-		return l.doSubstituteAndEvaluate(args, env);
+		return l.doSubstituteAndEvaluate(args, env, typeEnv);
 	}
 	
 	@Override
-	public Expression interpret(Environment env) {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
 		return this;
 	}
 }

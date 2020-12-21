@@ -18,6 +18,7 @@ import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 
 /**
  * Simple lambda expression
@@ -54,7 +55,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	public Expression interpret(Environment env) {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
 		return new Function(this.argsType, this.args, this.body, env);
 	}
 
@@ -87,7 +88,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
 			// First infer types in body, use typeholders for argument variables
 			Environment childEnv = Environment.create(env);
@@ -106,7 +107,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 
 			Type argsType = new TypeTuple(argsTypeArr);
 
-			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv);
+			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv, typeEnv);
 
 			// Update argument type with found bindings
 			argsType = argsType.apply(bodyInfered.second);
@@ -125,11 +126,12 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	 * 
 	 * @param expectedType expected type of this lambda
 	 * @param env          environment where lambda is evaluated
+	 * @param typeEnv 
 	 * @return string containing lcojure code
 	 * @throws AppendableException Thrown on unification error or when any argument
 	 *                             is not a variable
 	 */
-	protected String toClojureFn(Environment env) throws AppendableException {
+	protected String toClojureFn(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		
 		s.append("(with-meta ");
@@ -148,18 +150,18 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			}
 			Symbol v = (Symbol) e;
 			child.put(v, new TypeHolder(t));
-			s.append(v.toClojureCode());
+			s.append(v.toClojureCode(env, typeEnv));
 			if (i.hasNext()) {
 				s.append(' ');
 			}
 		}
 		s.append("] ");
 
-		s.append(this.body.toClojureCode(child));
+		s.append(this.body.toClojureCode(child, typeEnv));
 		s.append(")");
 		
 		s.append(" {:lang-type ");
-		Pair<Type, Substitution> p = this.infer(env);
+		Pair<Type, Substitution> p = this.infer(env, typeEnv);
 		s.append(p.first.clojureTypeRepresentation());
 		s.append("})");
 		
@@ -212,9 +214,9 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-		Function f = (Function) this.interpret(env);
-		return f.doSubstituteAndEvaluate(args, env);
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Function f = (Function) this.interpret(env, typeEnv);
+		return f.doSubstituteAndEvaluate(args, env, typeEnv);
 	}
 
 	/**
@@ -229,7 +231,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	protected String implementationsToClojure(Environment env) throws AppendableException {
-		return this.toClojureFn(env);
+	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		return this.toClojureFn(env, typeEnv);
 	}
 }

@@ -6,6 +6,7 @@ import velka.lang.types.TypeAtom;
 import velka.lang.util.Pair;
 import velka.lang.expression.Expression;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 
 /**
  * Abstract class for Integer Literals representations
@@ -22,12 +23,12 @@ public class LitInteger extends Literal {
 	}
 
 	@Override
-	public Expression interpret(Environment env) {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
 		return this;
 	}
 
 	@Override
-	public String valueToClojure(Environment env) {
+	public String valueToClojure(Environment env, TypeEnvironment typeEnv) {
 		return Integer.toString(this.value);
 	}
 
@@ -37,7 +38,7 @@ public class LitInteger extends Literal {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
 		return new Pair<Type, Substitution>(TypeAtom.TypeIntNative, Substitution.EMPTY);
 	}
 

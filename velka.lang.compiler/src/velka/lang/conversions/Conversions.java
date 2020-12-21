@@ -27,29 +27,29 @@ import velka.lang.util.Pair;
 
 public class Conversions {
 	
-	public static Expression convert(Type from, Expression converted, Type to) throws AppendableException {
+	public static Expression convert(Type from, Expression converted, Type to, TypeEnvironment typeEnv) throws AppendableException {
 		//TODO find a better solution
 		if(from instanceof RepresentationOr) {
-			return Conversions.convertRepresentationOr((RepresentationOr)from, converted, to);
+			return Conversions.convertRepresentationOr((RepresentationOr)from, converted, to, typeEnv);
 		}
 		else if(from instanceof TypeArrow) {
-			return Conversions.convertTypeArrow((TypeArrow)from, converted, to);
+			return Conversions.convertTypeArrow((TypeArrow)from, converted, to, typeEnv);
 		} else if(from instanceof TypeAtom) {
-			return Conversions.convertTypeAtom((TypeAtom)from, converted, to);
+			return Conversions.convertTypeAtom((TypeAtom)from, converted, to, typeEnv);
 		} else if(from instanceof TypeTuple) {
-			return Conversions.convertTypeTuple((TypeTuple)from, converted, to);
+			return Conversions.convertTypeTuple((TypeTuple)from, converted, to, typeEnv);
 		} else if(from instanceof TypeVariable) {
-			return Conversions.convertTypeVariable((TypeVariable)from, converted, to);
+			return Conversions.convertTypeVariable((TypeVariable)from, converted, to, typeEnv);
 		}
 		throw new AppendableException("Unrecognized type " + from + " for conversion");
 	}
 
-	private static Expression convertRepresentationOr(RepresentationOr from, Expression converted, Type to) throws AppendableException{
+	private static Expression convertRepresentationOr(RepresentationOr from, Expression converted, Type to, TypeEnvironment typeEnv) throws AppendableException{
 		throw new AppendableException(
 				"Cannot directly convert RepresentationOr type. Select specific representation in order to create conversion.");
 	}
 	
-	private static Expression convertTypeArrow(TypeArrow from, Expression converted, Type to) throws AppendableException {
+	private static Expression convertTypeArrow(TypeArrow from, Expression converted, Type to, TypeEnvironment typeEnv) throws AppendableException {
 		if (to instanceof TypeVariable) {
 			return converted;
 		}
@@ -61,14 +61,14 @@ public class Conversions {
 		Tuple formalArgs = new Tuple(
 				((TypeTuple) t.ltype).stream().map(x -> new Symbol(NameGenerator.next())).collect(Collectors.toList()));
 		TypeTuple argsType = (TypeTuple) t.ltype;
-		Tuple realArgs = (Tuple) Conversions.convert(t.ltype, formalArgs, from.ltype);
-		Expression body = Conversions.convert(from.rtype, new AbstractionApplication(converted, realArgs), t.rtype);
+		Tuple realArgs = (Tuple) Conversions.convert(t.ltype, formalArgs, from.ltype, typeEnv);
+		Expression body = Conversions.convert(from.rtype, new AbstractionApplication(converted, realArgs), t.rtype, typeEnv);
 
 		Lambda l = new Lambda(formalArgs, argsType, body);
 		return l;
 	}
 	
-	private static Expression convertTypeAtom(TypeAtom from, Expression converted, Type to) throws AppendableException {
+	private static Expression convertTypeAtom(TypeAtom from, Expression converted, Type to, TypeEnvironment typeEnv) throws AppendableException {
 		if (to instanceof TypeVariable || to.equals(from)) {
 			return converted;
 		}
@@ -80,12 +80,12 @@ public class Conversions {
 			return converted;
 		}
 
-		Expression e = TypeEnvironment.singleton.convertTo(converted, from, (TypeAtom) to);
+		Expression e = typeEnv.convertTo(converted, from, (TypeAtom) to);
 
 		return e;
 	}
 	
-	private static Expression convertTypeTuple(TypeTuple from, Expression converted, Type to) throws AppendableException {
+	private static Expression convertTypeTuple(TypeTuple from, Expression converted, Type to, TypeEnvironment typeEnv) throws AppendableException {
 		if (to instanceof TypeVariable || from.equals(to)) {
 			return converted;
 		}
@@ -108,8 +108,8 @@ public class Conversions {
 			Expression e = new Expression() {
 
 				@Override
-				public Expression interpret(Environment env) throws AppendableException {
-					Expression e = symbol.interpret(env);
+				public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+					Expression e = symbol.interpret(env, typeEnv);
 					if(!(e instanceof Tuple)) {
 						throw new AppendableException("Expected tuple got " + e.toString());
 					}
@@ -120,13 +120,13 @@ public class Conversions {
 				}
 
 				@Override
-				public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+				public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 					return new Pair<Type, Substitution>(subfrom, Substitution.EMPTY);
 				}
 
 				@Override
-				public String toClojureCode(Environment env) throws AppendableException {
-					return "(get " + symbol.toClojureCode(env) + " " + constK + ")";
+				public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+					return "(get " + symbol.toClojureCode(env, typeEnv) + " " + constK + ")";
 				}
 				
 				@Override
@@ -136,7 +136,7 @@ public class Conversions {
 
 			};
 			
-			Expression subconverted = Conversions.convert(subfrom, e, subto);
+			Expression subconverted = Conversions.convert(subfrom, e, subto, typeEnv);
 			if(!anyConverted && !subconverted.equals(e)) {
 				anyConverted = true;
 			}
@@ -151,30 +151,30 @@ public class Conversions {
 
 		Tuple conversionTuple = new Tuple(l) {
 			@Override
-			public Expression interpret(Environment env) throws AppendableException {
-				Expression e = converted.interpret(env);
+			public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+				Expression e = converted.interpret(env, typeEnv);
 				Environment bound = Environment.create(env);
 				bound.put(symbol, e);
-				return super.interpret(bound);
+				return super.interpret(bound, typeEnv);
 			}
 
 			@Override
-			public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-				Pair<Type, Substitution> p = converted.infer(env);
+			public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+				Pair<Type, Substitution> p = converted.infer(env, typeEnv);
 				return new Pair<Type, Substitution>(to, p.second);
 			}
 
 			@Override
-			public String toClojureCode(Environment env) throws AppendableException {
-				return "((fn [" + symbol.toClojureCode(env) + "] " + super.toClojureCode(env) + ") "
-						+ converted.toClojureCode(env) + ")";
+			public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+				return "((fn [" + symbol.toClojureCode(env, typeEnv) + "] " + super.toClojureCode(env, typeEnv) + ") "
+						+ converted.toClojureCode(env, typeEnv) + ")";
 			}
 		};
 
 		return conversionTuple;
 	}
 	
-	private static Expression convertTypeVariable(TypeVariable from, Expression converted, Type to) {
+	private static Expression convertTypeVariable(TypeVariable from, Expression converted, Type to, TypeEnvironment typeEnv) {
 		return converted;
 	}
 }

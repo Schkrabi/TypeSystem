@@ -7,6 +7,7 @@ import velka.lang.expression.Expression;
 import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
 import velka.lang.types.TypeTuple;
@@ -22,10 +23,10 @@ import velka.lang.util.Pair;
  */
 public abstract class Abstraction extends Expression {
 
-	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException;
+	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException;
 
-	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-		return this.doSubstituteAndEvaluate(args, env);
+	public Expression substituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		return this.doSubstituteAndEvaluate(args, env, typeEnv);
 	}
 
 	/**
@@ -38,7 +39,7 @@ public abstract class Abstraction extends Expression {
 	 * @return new environment where all the arguments will be converted
 	 * @throws Exception
 	 */
-	protected static Environment autoConvertArgs(Environment e, Tuple args, TypeTuple fromType, TypeTuple toType)
+	protected static Environment autoConvertArgs(Environment e, Tuple args, TypeTuple fromType, TypeTuple toType, TypeEnvironment typeEnv)
 			throws AppendableException {
 		Environment ret = Environment.create(e.parent);
 
@@ -49,7 +50,7 @@ public abstract class Abstraction extends Expression {
 			Symbol name = (Symbol) i.next();
 			Expression arg = e.getVariableValue(name);
 
-			ret.put(name, Conversions.convert(j.next(), arg, k.next()));
+			ret.put(name, Conversions.convert(j.next(), arg, k.next(), typeEnv));
 		}
 
 		return ret;
@@ -87,16 +88,16 @@ public abstract class Abstraction extends Expression {
 	 * @return String containing clojure code
 	 * @throws AppendableException
 	 */
-	protected abstract String implementationsToClojure(Environment env) throws AppendableException;
+	protected abstract String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException;
 	
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException{
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException{
 		StringBuilder sb = new StringBuilder();
 		sb.append("(with-meta [");
-		sb.append(this.implementationsToClojure(env));
+		sb.append(this.implementationsToClojure(env, typeEnv));
 		sb.append("] {:lang-type ");
 		
-		Pair<Type, Substitution> p = this.infer(env);
+		Pair<Type, Substitution> p = this.infer(env, typeEnv);
 		sb.append(p.first.clojureTypeRepresentation());
 		sb.append("})");
 		return sb.toString();

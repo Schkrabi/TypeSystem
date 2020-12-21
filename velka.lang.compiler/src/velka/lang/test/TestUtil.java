@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -19,8 +17,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-//import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
@@ -28,14 +24,14 @@ import velka.lang.abstraction.Lambda;
 import velka.lang.application.AbstractionApplication;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
-import velka.lang.interpretation.Environment;
 import velka.lang.expression.Symbol;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitInteger;
-import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.TypeTuple;
 import velka.lang.util.AppendableException;
 import velka.lang.interpretation.ClojureCodeGenerator;
+import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.exceptions.InvalidNumberOfArgumentsException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
@@ -46,32 +42,28 @@ import velka.lang.util.ThrowingFunction;
 import velka.lang.exceptions.UnboundVariableException;
 
 class TestUtil {
-	
-	@BeforeAll
-	static void setUpBeforeClass() throws Exception {
-// 		Environment.initTopLevelEnvitonment();
-// 		TypeEnvironment.initBasicTypes();
-	}
 
 	@Test
 	@DisplayName("AppendableException")
 	void testAppendableException() {
-        assertAll(() -> {
-                AppendableException e = new AppendableException("Test");
-                e.appendMessage(" in One");
-                e.appendMessage(" in two");
-                e.getMessage();
-                new AppendableException();
-                });
+		assertAll(() -> {
+			AppendableException e = new AppendableException("Test");
+			e.appendMessage(" in One");
+			e.appendMessage(" in two");
+			e.getMessage();
+			new AppendableException();
+		});
 	}
 
 	@Test
 	@DisplayName("ClojureCodeGenerator")
 	public void testClojureCodeGeneratorBasic() throws IOException, Exception {
-        assertAll(
-            () -> new ClojureCodeGenerator(),
-            () -> ClojureCodeGenerator.toClojureCode(
-                    Arrays.asList(new LitInteger(128), Expression.EMPTY_EXPRESSION, LitBoolean.TRUE), new StringWriter()));
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		assertAll(() -> new ClojureCodeGenerator(),
+				() -> ClojureCodeGenerator.toClojureCode(
+						Arrays.asList(new LitInteger(128), Expression.EMPTY_EXPRESSION, LitBoolean.TRUE),
+						new StringWriter(), env, typeEnv));
 	}
 
 	@Test
@@ -82,7 +74,7 @@ class TestUtil {
 		assertAll(() -> new NameGenerator());
 
 		Set<String> s = new TreeSet<String>();
-		
+
 		for (int i = 0; i < size; i++) {
 			assertAll(() -> s.add(NameGenerator.next()));
 		}
@@ -94,27 +86,27 @@ class TestUtil {
 	@DisplayName("Pair")
 	public void testPair() {
 		assertAll(() -> {
-                Pair<Object, Object> p = new Pair<Object, Object>(true, 128);
-                p.toString();
-                Object o = new Pair<Object, Object>(true, 128);
-                assertEquals(p, o);
-                o = new Pair<Object, Object>(true, true);
-                assertNotEquals(p, o);
-                o = new Pair<Object, Object>(128, 128);
-                assertNotEquals(p, o);
-                o = new Object();
-                assertNotEquals(p, o);
-            });
+			Pair<Object, Object> p = new Pair<Object, Object>(true, 128);
+			p.toString();
+			Object o = new Pair<Object, Object>(true, 128);
+			assertEquals(p, o);
+			o = new Pair<Object, Object>(true, true);
+			assertNotEquals(p, o);
+			o = new Pair<Object, Object>(128, 128);
+			assertNotEquals(p, o);
+			o = new Object();
+			assertNotEquals(p, o);
+		});
 	}
 
 	@Test
 	@DisplayName("RomanNumbers")
 	public void testRomanNumbers() throws Exception {
-        assertAll(() -> new RomanNumbers());
-        
+		assertAll(() -> new RomanNumbers());
+
 		String r1989 = "MCMLXXXIX";
 		assertTrue(RomanNumbers.check(r1989));
-		
+
 		String fail = "fail";
 		assertFalse(RomanNumbers.check(fail));
 
@@ -131,7 +123,7 @@ class TestUtil {
 
 		for (Pair<String, Integer> p : ns) {
 			String s = RomanNumbers.int2roman(p.second);
-            assertEquals(p.first, s);
+			assertEquals(p.first, s);
 			Integer i = RomanNumbers.roman2int(p.first);
 			assertEquals(p.second, i);
 		}
@@ -144,7 +136,8 @@ class TestUtil {
 	@Test
 	@DisplayName("ThrowingFunction")
 	void testThrowingFunction() {
-        assertAll(() -> Arrays.asList(1, 2, 3, 4, 5).stream().map(ThrowingFunction.wrapper(x -> x)).collect(Collectors.toList()));
+		assertAll(() -> Arrays.asList(1, 2, 3, 4, 5).stream().map(ThrowingFunction.wrapper(x -> x))
+				.collect(Collectors.toList()));
 		assertThrows(RuntimeException.class,
 				() -> Arrays.asList(1, 2, 3, 4, 5).stream().map(ThrowingFunction.wrapper(x -> {
 					throw new AppendableException("test");
@@ -165,8 +158,7 @@ class TestUtil {
 	@Test
 	@DisplayName("ThrowingConsumer")
 	void testThrowingConsumer() {
-        assertAll(() ->
-		Arrays.asList(1, 2, 3, 4, 5).stream().forEach(ThrowingConsumer.wrapper(x -> {
+		assertAll(() -> Arrays.asList(1, 2, 3, 4, 5).stream().forEach(ThrowingConsumer.wrapper(x -> {
 			if (x < 5)
 				x++;
 		})));
@@ -181,22 +173,24 @@ class TestUtil {
 	@Test
 	@DisplayName("Exceptions")
 	void testExceptions() {
-		assertAll(
-            () -> new UnboundVariableException(new Symbol("x")),
-            () -> new InvalidNumberOfArgumentsException(2, Expression.EMPTY_EXPRESSION, new AbstractionApplication(
-				new Lambda(Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION), Tuple.EMPTY_TUPLE)));
+		assertAll(() -> new UnboundVariableException(new Symbol("x")),
+				() -> new InvalidNumberOfArgumentsException(2, Expression.EMPTY_EXPRESSION,
+						new AbstractionApplication(
+								new Lambda(Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION),
+								Tuple.EMPTY_TUPLE)));
 	}
-	
+
 	@Test
 	@DisplayName("Sandbox (various experiments)")
-	void testSandbox() throws ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException {
+	void testSandbox() throws ClassNotFoundException, InstantiationException, IllegalAccessException,
+			NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException {
 		assertAll(() -> {
-            Class<?> clazz = Class.forName("java.util.HashMap");
-            Object inst = clazz.getDeclaredConstructor().newInstance();
-            Method met = clazz.getMethod("put", Object.class, Object.class);
-            Object[] args = {new String("key"), Integer.valueOf(42)};
-            met.invoke(inst, args);
-            });
+			Class<?> clazz = Class.forName("java.util.HashMap");
+			Object inst = clazz.getDeclaredConstructor().newInstance();
+			Method met = clazz.getMethod("put", Object.class, Object.class);
+			Object[] args = { new String("key"), Integer.valueOf(42) };
+			met.invoke(inst, args);
+		});
 	}
 
 }

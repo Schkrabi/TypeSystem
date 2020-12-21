@@ -7,12 +7,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import velka.lang.util.AppendableException;
-import velka.lang.util.NameGenerator;
-import velka.lang.util.Pair;
 
 /**
  * Tuple of types
@@ -255,5 +254,17 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		}
 
 		return new TypeTuple(l);
+	}
+
+	@Override
+	public Type map(Function<Type, Type> fun) throws AppendableException {
+		Type t = null;
+		try {
+			t = new TypeTuple(this.stream().map(velka.lang.util.ThrowingFunction.wrapper(x -> x.map(fun))).collect(Collectors.toList()));
+		}catch(RuntimeException re) {
+			AppendableException e = (AppendableException) re.getCause();
+			throw e;
+		}
+		return t;
 	}
 }

@@ -35,20 +35,20 @@ public class DefineConstructor extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		TypeEnvironment.singleton.addConstructor(this.constructedType, this.constructionLambda);
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		typeEnv.addConstructor(this.constructedType, this.constructionLambda, env);
 		return Expression.EMPTY_EXPRESSION;
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		Pair<Type, Substitution> p = this.constructionLambda.infer(env);
-		return new Pair<Type, Substitution>(Expression.EMPTY_EXPRESSION.infer(env).first, p.second);
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Pair<Type, Substitution> p = this.constructionLambda.infer(env, typeEnv);
+		return new Pair<Type, Substitution>(Expression.EMPTY_EXPRESSION.infer(env, typeEnv).first, p.second);
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
-		TypeEnvironment.singleton.addConstructor(this.constructedType, this.constructionLambda);
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		typeEnv.addConstructor(this.constructedType, this.constructionLambda, env);
 		return "";
 	}
 

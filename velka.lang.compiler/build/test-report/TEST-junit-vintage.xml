@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="JUnit Vintage" tests="0" skipped="0" failures="0" errors="0" time="0.001" hostname="Olja2018" timestamp="2020-12-06T12:20:48">
+<testsuite name="JUnit Vintage" tests="0" skipped="0" failures="0" errors="0" time="0.001" hostname="Olja2018" timestamp="2020-12-21T16:33:56">
 <properties>
 <property name="awt.toolkit" value="sun.awt.X11.XToolkit"/>
 <property name="file.encoding" value="UTF-8"/>
 <property name="file.separator" value="/"/>
 <property name="java.awt.graphicsenv" value="sun.awt.X11GraphicsEnvironment"/>
 <property name="java.awt.printerjob" value="sun.print.PSPrinterJob"/>
-<property name="java.class.path" value="/home/schkabi/Documents/Java/lib/antlr-4.7.2-complete.jar:/home/schkabi/Documents/Java/lib/apiguardian-api-1.1.0.jar:/home/schkabi/Documents/Java/lib/junit-jupiter-api-5.7.0.jar:/home/schkabi/Documents/Java/lib/junit-platform-commons-1.7.0.jar:/home/schkabi/Documents/Java/lib/opentest4j-1.2.0.jar:/home/schkabi/Documents/Java/velka.lang.compiler/classes:/home/schkabi/Documents/Java/lib/junit-platform-console-standalone-1.7.0.jar:/home/schkabi/Documents/Java/lib/velka.lang.util.jar:/home/schkabi/Documents/Java/lib/velka.lang.types.jar"/>
+<property name="java.class.path" value="/home/schkabi/Documents/Java/TypeSystem/lib/antlr-4.7.2-complete.jar:/home/schkabi/Documents/Java/TypeSystem/lib/apiguardian-api-1.1.0.jar:/home/schkabi/Documents/Java/TypeSystem/lib/junit-jupiter-api-5.7.0.jar:/home/schkabi/Documents/Java/TypeSystem/lib/junit-platform-commons-1.7.0.jar:/home/schkabi/Documents/Java/TypeSystem/lib/opentest4j-1.2.0.jar:/home/schkabi/Documents/Java/TypeSystem/velka.lang.compiler/classes:/home/schkabi/Documents/Java/TypeSystem/lib/junit-platform-console-standalone-1.7.0.jar:/home/schkabi/Documents/Java/TypeSystem/lib/velka.lang.util.jar:/home/schkabi/Documents/Java/TypeSystem/lib/velka.lang.types.jar"/>
 <property name="java.class.version" value="55.0"/>
 <property name="java.home" value="/usr/lib/jvm/java-11-openjdk-amd64"/>
 <property name="java.io.tmpdir" value="/tmp"/>
@@ -34,7 +34,7 @@
 "/>
 <property name="os.arch" value="amd64"/>
 <property name="os.name" value="Linux"/>
-<property name="os.version" value="4.15.0-126-generic"/>
+<property name="os.version" value="4.15.0-128-generic"/>
 <property name="path.separator" value=":"/>
 <property name="sun.arch.data.model" value="64"/>
 <property name="sun.boot.library.path" value="/usr/lib/jvm/java-11-openjdk-amd64/lib"/>
@@ -47,7 +47,7 @@
 <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
 <property name="sun.os.patch.level" value="unknown"/>
 <property name="user.country" value="US"/>
-<property name="user.dir" value="/home/schkabi/Documents/Java/velka.lang.compiler"/>
+<property name="user.dir" value="/home/schkabi/Documents/Java/TypeSystem/velka.lang.compiler"/>
 <property name="user.home" value="/home/schkabi"/>
 <property name="user.language" value="en"/>
 <property name="user.name" value="schkabi"/>

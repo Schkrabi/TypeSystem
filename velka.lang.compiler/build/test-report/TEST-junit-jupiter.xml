@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="JUnit Jupiter" tests="78" skipped="0" failures="1" errors="5" time="1.199" hostname="Olja2018" timestamp="2020-12-06T12:20:48">
+<testsuite name="JUnit Jupiter" tests="85" skipped="0" failures="0" errors="0" time="1.44" hostname="Olja2018" timestamp="2020-12-21T16:33:56">
 <properties>
 <property name="awt.toolkit" value="sun.awt.X11.XToolkit"/>
 <property name="file.encoding" value="UTF-8"/>
 <property name="file.separator" value="/"/>
 <property name="java.awt.graphicsenv" value="sun.awt.X11GraphicsEnvironment"/>
 <property name="java.awt.printerjob" value="sun.print.PSPrinterJob"/>
-<property name="java.class.path" value="/home/schkabi/Documents/Java/lib/antlr-4.7.2-complete.jar:/home/schkabi/Documents/Java/lib/apiguardian-api-1.1.0.jar:/home/schkabi/Documents/Java/lib/junit-jupiter-api-5.7.0.jar:/home/schkabi/Documents/Java/lib/junit-platform-commons-1.7.0.jar:/home/schkabi/Documents/Java/lib/opentest4j-1.2.0.jar:/home/schkabi/Documents/Java/velka.lang.compiler/classes:/home/schkabi/Documents/Java/lib/junit-platform-console-standalone-1.7.0.jar:/home/schkabi/Documents/Java/lib/velka.lang.util.jar:/home/schkabi/Documents/Java/lib/velka.lang.types.jar"/>
+<property name="java.class.path" value="/home/schkabi/Documents/Java/TypeSystem/lib/antlr-4.7.2-complete.jar:/home/schkabi/Documents/Java/TypeSystem/lib/apiguardian-api-1.1.0.jar:/home/schkabi/Documents/Java/TypeSystem/lib/junit-jupiter-api-5.7.0.jar:/home/schkabi/Documents/Java/TypeSystem/lib/junit-platform-commons-1.7.0.jar:/home/schkabi/Documents/Java/TypeSystem/lib/opentest4j-1.2.0.jar:/home/schkabi/Documents/Java/TypeSystem/velka.lang.compiler/classes:/home/schkabi/Documents/Java/TypeSystem/lib/junit-platform-console-standalone-1.7.0.jar:/home/schkabi/Documents/Java/TypeSystem/lib/velka.lang.util.jar:/home/schkabi/Documents/Java/TypeSystem/lib/velka.lang.types.jar"/>
 <property name="java.class.version" value="55.0"/>
 <property name="java.home" value="/usr/lib/jvm/java-11-openjdk-amd64"/>
 <property name="java.io.tmpdir" value="/tmp"/>
@@ -34,7 +34,7 @@
 "/>
 <property name="os.arch" value="amd64"/>
 <property name="os.name" value="Linux"/>
-<property name="os.version" value="4.15.0-126-generic"/>
+<property name="os.version" value="4.15.0-128-generic"/>
 <property name="path.separator" value=":"/>
 <property name="sun.arch.data.model" value="64"/>
 <property name="sun.boot.library.path" value="/usr/lib/jvm/java-11-openjdk-amd64/lib"/>
@@ -47,235 +47,235 @@
 <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
 <property name="sun.os.patch.level" value="unknown"/>
 <property name="user.country" value="US"/>
-<property name="user.dir" value="/home/schkabi/Documents/Java/velka.lang.compiler"/>
+<property name="user.dir" value="/home/schkabi/Documents/Java/TypeSystem/velka.lang.compiler"/>
 <property name="user.home" value="/home/schkabi"/>
 <property name="user.language" value="en"/>
 <property name="user.name" value="schkabi"/>
 <property name="user.timezone" value="Europe/Prague"/>
 </properties>
-<testcase name="testExceptions()" classname="velka.lang.test.TestTypes" time="0.022">
+<testcase name="testExceptions()" classname="velka.lang.test.TestTypes" time="0.066">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestTypes]/[method:testExceptions()]
-display-name: testExceptions()
+display-name: Exceptions
 ]]></system-out>
 </testcase>
-<testcase name="testTypeRepresentation()" classname="velka.lang.test.TestTypes" time="0">
+<testcase name="testTypeRepresentation()" classname="velka.lang.test.TestTypes" time="0.017">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestTypes]/[method:testTypeRepresentation()]
-display-name: testTypeRepresentation()
+display-name: Test Type Representation
 ]]></system-out>
 </testcase>
-<testcase name="testRepresentationOr()" classname="velka.lang.test.TestTypes" time="0.01">
+<testcase name="testRepresentationOr()" classname="velka.lang.test.TestTypes" time="0.077">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestTypes]/[method:testRepresentationOr()]
-display-name: testRepresentationOr()
+display-name: Test Representation Or
 ]]></system-out>
 </testcase>
-<testcase name="testType()" classname="velka.lang.test.TestTypes" time="0.009">
+<testcase name="testType()" classname="velka.lang.test.TestTypes" time="0.01">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestTypes]/[method:testType()]
-display-name: testType()
+display-name: Test Type
 ]]></system-out>
 </testcase>
-<testcase name="testTypeAtom()" classname="velka.lang.test.TestTypes" time="0.002">
+<testcase name="testTypeAtom()" classname="velka.lang.test.TestTypes" time="0.007">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestTypes]/[method:testTypeAtom()]
-display-name: testTypeAtom()
+display-name: Test Type Atom
 ]]></system-out>
 </testcase>
 <testcase name="testTypeName()" classname="velka.lang.test.TestTypes" time="0">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestTypes]/[method:testTypeName()]
-display-name: testTypeName()
+display-name: Test Type Name
 ]]></system-out>
 </testcase>
-<testcase name="testTypeVariable()" classname="velka.lang.test.TestTypes" time="0">
+<testcase name="testTypeVariable()" classname="velka.lang.test.TestTypes" time="0.003">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestTypes]/[method:testTypeVariable()]
-display-name: testTypeVariable()
+display-name: Test Type Variable
 ]]></system-out>
 </testcase>
-<testcase name="testTypeArrow()" classname="velka.lang.test.TestTypes" time="0.001">
+<testcase name="testTypeArrow()" classname="velka.lang.test.TestTypes" time="0.007">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestTypes]/[method:testTypeArrow()]
-display-name: testTypeArrow()
+display-name: Test Type Arrow
 ]]></system-out>
 </testcase>
-<testcase name="testTypeTuple()" classname="velka.lang.test.TestTypes" time="0.001">
+<testcase name="testTypeTuple()" classname="velka.lang.test.TestTypes" time="0.008">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestTypes]/[method:testTypeTuple()]
-display-name: testTypeTuple()
+display-name: Test Type Tuple
 ]]></system-out>
 </testcase>
-<testcase name="testSubstitution()" classname="velka.lang.test.TestTypes" time="0">
+<testcase name="testSubstitution()" classname="velka.lang.test.TestTypes" time="0.01">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestTypes]/[method:testSubstitution()]
-display-name: testSubstitution()
+display-name: Substitution
 ]]></system-out>
 </testcase>
-<testcase name="testVariableTypePair()" classname="velka.lang.test.TestParser" time="0.001">
+<testcase name="testVariableTypePair()" classname="velka.lang.test.TestParser" time="0.01">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testVariableTypePair()]
-display-name: testVariableTypePair()
+display-name: Test Variable Type Pair
 ]]></system-out>
 </testcase>
-<testcase name="testElambda()" classname="velka.lang.test.TestParser" time="0.083">
+<testcase name="testElambda()" classname="velka.lang.test.TestParser" time="0.046">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testElambda()]
-display-name: testElambda()
+display-name: Test Extended Lambda
 ]]></system-out>
 </testcase>
-<testcase name="testExceptions()" classname="velka.lang.test.TestParser" time="0.046">
+<testcase name="testExceptions()" classname="velka.lang.test.TestParser" time="0.013">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testExceptions()]
-display-name: testExceptions()
+display-name: Test Exceptions
 ]]></system-out>
 </testcase>
-<testcase name="testValidateLambda()" classname="velka.lang.test.TestParser" time="0.034">
+<testcase name="testValidateLambda()" classname="velka.lang.test.TestParser" time="0.017">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testValidateLambda()]
-display-name: testValidateLambda()
+display-name: Test Validate Lambda
 ]]></system-out>
 </testcase>
-<testcase name="testParseVariableTypePair()" classname="velka.lang.test.TestParser" time="0.009">
+<testcase name="testParseVariableTypePair()" classname="velka.lang.test.TestParser" time="0.005">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testParseVariableTypePair()]
-display-name: testParseVariableTypePair()
+display-name: Test Parse Variable Type Pair
 ]]></system-out>
 </testcase>
-<testcase name="testParseDefRep()" classname="velka.lang.test.TestParser" time="0.003">
+<testcase name="testParseDefRep()" classname="velka.lang.test.TestParser" time="0.004">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testParseDefRep()]
-display-name: testParseDefRep()
+display-name: Test Parse Define Representation
 ]]></system-out>
 </testcase>
-<testcase name="testParseDefine()" classname="velka.lang.test.TestParser" time="0.007">
+<testcase name="testParseDefine()" classname="velka.lang.test.TestParser" time="0.003">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testParseDefine()]
-display-name: testParseDefine()
+display-name: Test Parse Define
 ]]></system-out>
 </testcase>
-<testcase name="testParseError()" classname="velka.lang.test.TestParser" time="0.005">
+<testcase name="testParseError()" classname="velka.lang.test.TestParser" time="0.003">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testParseError()]
-display-name: testParseError()
+display-name: Test Parse Error
 ]]></system-out>
 </testcase>
-<testcase name="testValidateElambda()" classname="velka.lang.test.TestParser" time="0.008">
+<testcase name="testValidateElambda()" classname="velka.lang.test.TestParser" time="0.006">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testValidateElambda()]
-display-name: testValidateElambda()
+display-name: Test Validate Extended Lambda
 ]]></system-out>
 </testcase>
-<testcase name="testParseCons()" classname="velka.lang.test.TestParser" time="0.007">
+<testcase name="testParseCons()" classname="velka.lang.test.TestParser" time="0.002">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testParseCons()]
-display-name: testParseCons()
+display-name: Test Parse Cons
 ]]></system-out>
 </testcase>
-<testcase name="testParseNode()" classname="velka.lang.test.TestParser" time="0.006">
+<testcase name="testParseNode()" classname="velka.lang.test.TestParser" time="0.004">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testParseNode()]
-display-name: testParseNode()
+display-name: Test Parse Node
 ]]></system-out>
 </testcase>
 <testcase name="testParseType()" classname="velka.lang.test.TestParser" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testParseType()]
-display-name: testParseType()
+display-name: Test Parse Type
 ]]></system-out>
 </testcase>
 <testcase name="testParseDefConversion()" classname="velka.lang.test.TestParser" time="0.006">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testParseDefConversion()]
-display-name: testParseDefConversion()
+display-name: Test Parse Define Conversion
 ]]></system-out>
 </testcase>
-<testcase name="testSemanticSimple()" classname="velka.lang.test.TestParser" time="0.029">
+<testcase name="testSemanticSimple()" classname="velka.lang.test.TestParser" time="0.03">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testSemanticSimple()]
-display-name: testSemanticSimple()
+display-name: Test Semantic Simple
 ]]></system-out>
 </testcase>
 <testcase name="testValidateIf()" classname="velka.lang.test.TestParser" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testValidateIf()]
-display-name: testValidateIf()
+display-name: Vailade If Expression
 ]]></system-out>
 </testcase>
-<testcase name="testParseImplementation()" classname="velka.lang.test.TestParser" time="0.002">
+<testcase name="testParseImplementation()" classname="velka.lang.test.TestParser" time="0.005">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testParseImplementation()]
-display-name: testParseImplementation()
+display-name: Test Parse Implementation
 ]]></system-out>
 </testcase>
-<testcase name="testLetType()" classname="velka.lang.test.TestParser" time="0.001">
+<testcase name="testLetType()" classname="velka.lang.test.TestParser" time="0">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testLetType()]
-display-name: testLetType()
+display-name: Test Let Type
 ]]></system-out>
 </testcase>
-<testcase name="testSemanticParserStatic()" classname="velka.lang.test.TestParser" time="0.002">
+<testcase name="testSemanticParserStatic()" classname="velka.lang.test.TestParser" time="0.005">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testSemanticParserStatic()]
-display-name: testSemanticParserStatic()
+display-name: Test Semantic Parses Static
 ]]></system-out>
 </testcase>
-<testcase name="testSemanticNode()" classname="velka.lang.test.TestParser" time="0.008">
+<testcase name="testSemanticNode()" classname="velka.lang.test.TestParser" time="0.018">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testSemanticNode()]
-display-name: testSemanticNode()
+display-name: Test Semantic Node
 ]]></system-out>
 </testcase>
-<testcase name="testParseDefType()" classname="velka.lang.test.TestParser" time="0.003">
+<testcase name="testParseDefType()" classname="velka.lang.test.TestParser" time="0.004">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testParseDefType()]
-display-name: testParseDefType()
+display-name: Test Parse Define Type
 ]]></system-out>
 </testcase>
-<testcase name="testTypeEnvironment()" classname="velka.lang.test.TestParser" time="0.01">
+<testcase name="testTypeEnvironment()" classname="velka.lang.test.TestParser" time="0.002">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testTypeEnvironment()]
-display-name: testTypeEnvironment()
+display-name: Test Type Environment
 ]]></system-out>
 </testcase>
-<testcase name="testLambda()" classname="velka.lang.test.TestParser" time="0">
+<testcase name="testLambda()" classname="velka.lang.test.TestParser" time="0.002">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testLambda()]
-display-name: testLambda()
+display-name: Test Lambda
 ]]></system-out>
 </testcase>
 <testcase name="testParseSpecialForm()" classname="velka.lang.test.TestParser" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestParser]/[method:testParseSpecialForm()]
-display-name: testParseSpecialForm()
+display-name: Test Parse Special Form
 ]]></system-out>
 </testcase>
-<testcase name="testExceptions()" classname="velka.lang.test.TestUtil" time="0.041">
+<testcase name="testExceptions()" classname="velka.lang.test.TestUtil" time="0.027">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestUtil]/[method:testExceptions()]
 display-name: Exceptions
 ]]></system-out>
 </testcase>
-<testcase name="testThrowingConsumer()" classname="velka.lang.test.TestUtil" time="0.006">
+<testcase name="testThrowingConsumer()" classname="velka.lang.test.TestUtil" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestUtil]/[method:testThrowingConsumer()]
 display-name: ThrowingConsumer
 ]]></system-out>
 </testcase>
-<testcase name="testClojureCodeGeneratorBasic()" classname="velka.lang.test.TestUtil" time="0.068">
+<testcase name="testClojureCodeGeneratorBasic()" classname="velka.lang.test.TestUtil" time="0.05">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestUtil]/[method:testClojureCodeGeneratorBasic()]
 display-name: ClojureCodeGenerator
 ]]></system-out>
 </testcase>
-<testcase name="testPair()" classname="velka.lang.test.TestUtil" time="0.012">
+<testcase name="testPair()" classname="velka.lang.test.TestUtil" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestUtil]/[method:testPair()]
 display-name: Pair
 ]]></system-out>
 </testcase>
-<testcase name="testRomanNumbers()" classname="velka.lang.test.TestUtil" time="0.004">
+<testcase name="testRomanNumbers()" classname="velka.lang.test.TestUtil" time="0.005">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestUtil]/[method:testRomanNumbers()]
 display-name: RomanNumbers
@@ -287,13 +287,13 @@ unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestUtil]/[method:testA
 display-name: AppendableException
 ]]></system-out>
 </testcase>
-<testcase name="testThrowingFunction()" classname="velka.lang.test.TestUtil" time="0.007">
+<testcase name="testThrowingFunction()" classname="velka.lang.test.TestUtil" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestUtil]/[method:testThrowingFunction()]
 display-name: ThrowingFunction
 ]]></system-out>
 </testcase>
-<testcase name="testNameGenerator()" classname="velka.lang.test.TestUtil" time="0.335">
+<testcase name="testNameGenerator()" classname="velka.lang.test.TestUtil" time="0.484">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestUtil]/[method:testNameGenerator()]
 display-name: NameGenerator
@@ -311,690 +311,256 @@ unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestUtil]/[method:testT
 display-name: ThrowingBinaryOperator
 ]]></system-out>
 </testcase>
-<testcase name="testClojure()" classname="velka.lang.test.TestComplex" time="0.082">
+<testcase name="testClojureOperators()" classname="velka.lang.test.TestComplex" time="0.06">
 <system-out><![CDATA[
-unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestComplex]/[method:testClojure()]
-display-name: testClojure()
+unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestComplex]/[method:testClojureOperators()]
+display-name: Clojure Operators
 ]]></system-out>
 </testcase>
-<testcase name="testComplex()" classname="velka.lang.test.TestComplex" time="0.004">
-<error message="velka.lang.exceptions.DuplicateTypeDefinitionException: Type Name:* was already defined!" type="java.lang.RuntimeException"><![CDATA[java.lang.RuntimeException: velka.lang.exceptions.DuplicateTypeDefinitionException: Type Name:* was already defined!
-	at velka.lang.util.ThrowingFunction.lambda$wrapper$0(Unknown Source)
-	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)
-	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1655)
-	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:484)
-	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)
-	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:913)
-	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
-	at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:578)
-	at velka.lang.test.TestComplex.parseString(TestComplex.java:682)
-	at velka.lang.test.TestComplex.testInterpretString(TestComplex.java:689)
-	at velka.lang.test.TestComplex.testComplex(TestComplex.java:78)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
-	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:688)
-	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:149)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:140)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:84)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(ExecutableInvoker.java:115)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.lambda$invoke$0(ExecutableInvoker.java:105)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:104)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:98)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$6(TestMethodTestDescriptor.java:210)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:206)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:131)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:65)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:139)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:32)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:51)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:88)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:54)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:67)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:52)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:96)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:75)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.executeTests(ConsoleTestExecutor.java:66)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.lambda$execute$0(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.tasks.CustomContextClassLoaderExecutor.invoke(CustomContextClassLoaderExecutor.java:33)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.execute(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.ConsoleLauncher.executeTests(ConsoleLauncher.java:95)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:73)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:50)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:43)
-	at org.junit.platform.console.ConsoleLauncher.main(ConsoleLauncher.java:37)
-Caused by: velka.lang.exceptions.DuplicateTypeDefinitionException: Type Name:* was already defined!
-	at velka.lang.interpretation.TypeEnvironment.addType(TypeEnvironment.java:84)
-	at velka.lang.semantic.SemanticParser.parseDeftype(SemanticParser.java:389)
-	at velka.lang.semantic.SemanticParser.parseSpecialForm(SemanticParser.java:206)
-	at velka.lang.semantic.SemanticParser.parseNodelist(SemanticParser.java:88)
-	at velka.lang.semantic.SemanticParser.parseNode(SemanticParser.java:137)
-	at velka.lang.semantic.SemanticParser.parseNode(SemanticParser.java:102)
-	at velka.lang.test.TestComplex.lambda$parseString$0(TestComplex.java:681)
-	... 81 more
-]]></error>
+<testcase name="testComplexList()" classname="velka.lang.test.TestComplex" time="0.147">
 <system-out><![CDATA[
-unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestComplex]/[method:testComplex()]
-display-name: testComplex()
+unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestComplex]/[method:testComplexList()]
+display-name: Test User List Interpretation
+]]></system-out>
+</testcase>
+<testcase name="testExtemdedLambda()" classname="velka.lang.test.TestComplex" time="0.003">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestComplex]/[method:testExtemdedLambda()]
+display-name: Test Basic Extended lambda
+]]></system-out>
+</testcase>
+<testcase name="testListClojure()" classname="velka.lang.test.TestComplex" time="0.021">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestComplex]/[method:testListClojure()]
+display-name: Clojure List
+]]></system-out>
+</testcase>
+<testcase name="testComplexTypes()" classname="velka.lang.test.TestComplex" time="0.003">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestComplex]/[method:testComplexTypes()]
+display-name: Test Complex Types
+]]></system-out>
+</testcase>
+<testcase name="testClojureLiterals()" classname="velka.lang.test.TestComplex" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestComplex]/[method:testClojureLiterals()]
+display-name: Clojure Literals
+]]></system-out>
+</testcase>
+<testcase name="testClojureConversions()" classname="velka.lang.test.TestComplex" time="0.005">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestComplex]/[method:testClojureConversions()]
+display-name: Clojure Conversions
+]]></system-out>
+</testcase>
+<testcase name="testSpecialFormsAndApplication()" classname="velka.lang.test.TestComplex" time="0.02">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestComplex]/[method:testSpecialFormsAndApplication()]
+display-name: Clojure Special Forms and Applications
+]]></system-out>
+</testcase>
+<testcase name="testRecursion()" classname="velka.lang.test.TestComplex" time="0.006">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestComplex]/[method:testRecursion()]
+display-name: Test Recursion
 ]]></system-out>
 </testcase>
 <testcase name="testExceptionExpr()" classname="velka.lang.test.TestInterpretation" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testExceptionExpr()]
-display-name: testExceptionExpr()
+display-name: Test User Exception
 ]]></system-out>
 </testcase>
-<testcase name="testOperators()" classname="velka.lang.test.TestInterpretation" time="0.001">
+<testcase name="testOperators()" classname="velka.lang.test.TestInterpretation" time="0.003">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testOperators()]
-display-name: testOperators()
+display-name: Test Operators
 ]]></system-out>
 </testcase>
-<testcase name="testConversions()" classname="velka.lang.test.TestInterpretation" time="0">
+<testcase name="testConversions()" classname="velka.lang.test.TestInterpretation" time="0.005">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testConversions()]
-display-name: testConversions()
+display-name: Test Conversions
 ]]></system-out>
 </testcase>
-<testcase name="testLitInteger()" classname="velka.lang.test.TestInterpretation" time="0.001">
+<testcase name="testLitInteger()" classname="velka.lang.test.TestInterpretation" time="0.002">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testLitInteger()]
-display-name: testLitInteger()
+display-name: Test Integer Literal
 ]]></system-out>
 </testcase>
 <testcase name="testTuple()" classname="velka.lang.test.TestInterpretation" time="0.002">
-<error message="velka.lang.expression.TypeHolder is not to be interpreted!" type="velka.lang.util.AppendableException"><![CDATA[velka.lang.util.AppendableException: velka.lang.expression.TypeHolder is not to be interpreted!
-	at velka.lang.expression.TypeHolder.interpret(TypeHolder.java:49)
-	at velka.lang.expression.Symbol.interpret(Symbol.java:43)
-	at velka.lang.expression.Tuple.interpret(Tuple.java:65)
-	at velka.lang.test.TestInterpretation.testInterpretation(TestInterpretation.java:1247)
-	at velka.lang.test.TestInterpretation.testTuple(TestInterpretation.java:307)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
-	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:688)
-	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:149)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:140)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:84)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(ExecutableInvoker.java:115)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.lambda$invoke$0(ExecutableInvoker.java:105)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:104)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:98)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$6(TestMethodTestDescriptor.java:210)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:206)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:131)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:65)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:139)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:32)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:51)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:88)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:54)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:67)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:52)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:96)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:75)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.executeTests(ConsoleTestExecutor.java:66)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.lambda$execute$0(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.tasks.CustomContextClassLoaderExecutor.invoke(CustomContextClassLoaderExecutor.java:33)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.execute(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.ConsoleLauncher.executeTests(ConsoleLauncher.java:95)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:73)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:50)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:43)
-	at org.junit.platform.console.ConsoleLauncher.main(ConsoleLauncher.java:37)
-]]></error>
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testTuple()]
-display-name: testTuple()
+display-name: Test Tuple
 ]]></system-out>
 </testcase>
-<testcase name="testLitDouble()" classname="velka.lang.test.TestInterpretation" time="0">
+<testcase name="testLitDouble()" classname="velka.lang.test.TestInterpretation" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testLitDouble()]
-display-name: testLitDouble()
+display-name: Test Double Literal
 ]]></system-out>
 </testcase>
-<testcase name="testIfExpression()" classname="velka.lang.test.TestInterpretation" time="0">
+<testcase name="testIfExpression()" classname="velka.lang.test.TestInterpretation" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testIfExpression()]
-display-name: testIfExpression()
+display-name: Test If
 ]]></system-out>
 </testcase>
 <testcase name="testDefTypeExpression()" classname="velka.lang.test.TestInterpretation" time="0.001">
-<error message="Type Test:* was already defined!" type="velka.lang.exceptions.DuplicateTypeDefinitionException"><![CDATA[velka.lang.exceptions.DuplicateTypeDefinitionException: Type Test:* was already defined!
-	at velka.lang.interpretation.TypeEnvironment.addType(TypeEnvironment.java:84)
-	at velka.lang.application.DefineType.interpret(DefineType.java:60)
-	at velka.lang.test.TestInterpretation.testInterpretation(TestInterpretation.java:1247)
-	at velka.lang.test.TestInterpretation.testDefTypeExpression(TestInterpretation.java:943)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
-	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:688)
-	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:149)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:140)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:84)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(ExecutableInvoker.java:115)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.lambda$invoke$0(ExecutableInvoker.java:105)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:104)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:98)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$6(TestMethodTestDescriptor.java:210)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:206)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:131)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:65)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:139)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:32)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:51)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:88)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:54)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:67)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:52)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:96)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:75)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.executeTests(ConsoleTestExecutor.java:66)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.lambda$execute$0(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.tasks.CustomContextClassLoaderExecutor.invoke(CustomContextClassLoaderExecutor.java:33)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.execute(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.ConsoleLauncher.executeTests(ConsoleLauncher.java:95)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:73)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:50)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:43)
-	at org.junit.platform.console.ConsoleLauncher.main(ConsoleLauncher.java:37)
-]]></error>
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testDefTypeExpression()]
-display-name: testDefTypeExpression()
+display-name: Test Define Type
 ]]></system-out>
 </testcase>
-<testcase name="testExpendedLambda()" classname="velka.lang.test.TestInterpretation" time="0.007">
+<testcase name="testExpendedLambda()" classname="velka.lang.test.TestInterpretation" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testExpendedLambda()]
-display-name: testExpendedLambda()
+display-name: Test Extended Lambda
 ]]></system-out>
 </testcase>
-<testcase name="testEnvironment()" classname="velka.lang.test.TestInterpretation" time="0.001">
+<testcase name="testEnvironment()" classname="velka.lang.test.TestInterpretation" time="0">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testEnvironment()]
-display-name: testEnvironment()
+display-name: Test Environment
 ]]></system-out>
 </testcase>
-<testcase name="testEmptyExpression()" classname="velka.lang.test.TestInterpretation" time="0">
+<testcase name="testEmptyExpression()" classname="velka.lang.test.TestInterpretation" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testEmptyExpression()]
-display-name: testEmptyExpression()
+display-name: Test Empty Expression
 ]]></system-out>
 </testcase>
-<testcase name="testLitString()" classname="velka.lang.test.TestInterpretation" time="0">
+<testcase name="testLitString()" classname="velka.lang.test.TestInterpretation" time="0.003">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testLitString()]
-display-name: testLitString()
+display-name: Test String Literal
 ]]></system-out>
 </testcase>
-<testcase name="testVariable()" classname="velka.lang.test.TestInterpretation" time="0">
-<error message="velka.lang.expression.TypeHolder is not to be interpreted!" type="velka.lang.util.AppendableException"><![CDATA[velka.lang.util.AppendableException: velka.lang.expression.TypeHolder is not to be interpreted!
-	at velka.lang.expression.TypeHolder.interpret(TypeHolder.java:49)
-	at velka.lang.expression.Symbol.interpret(Symbol.java:43)
-	at velka.lang.test.TestInterpretation.testInterpretation(TestInterpretation.java:1247)
-	at velka.lang.test.TestInterpretation.testVariable(TestInterpretation.java:251)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
-	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:688)
-	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:149)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:140)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:84)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(ExecutableInvoker.java:115)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.lambda$invoke$0(ExecutableInvoker.java:105)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:104)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:98)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$6(TestMethodTestDescriptor.java:210)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:206)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:131)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:65)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:139)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:32)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:51)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:88)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:54)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:67)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:52)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:96)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:75)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.executeTests(ConsoleTestExecutor.java:66)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.lambda$execute$0(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.tasks.CustomContextClassLoaderExecutor.invoke(CustomContextClassLoaderExecutor.java:33)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.execute(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.ConsoleLauncher.executeTests(ConsoleLauncher.java:95)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:73)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:50)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:43)
-	at org.junit.platform.console.ConsoleLauncher.main(ConsoleLauncher.java:37)
-]]></error>
+<testcase name="testVariable()" classname="velka.lang.test.TestInterpretation" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testVariable()]
-display-name: testVariable()
+display-name: Test Symbol
 ]]></system-out>
 </testcase>
-<testcase name="testListNative()" classname="velka.lang.test.TestInterpretation" time="0.007">
-<error message="velka.lang.expression.TypeHolder is not to be interpreted!" type="velka.lang.util.AppendableException"><![CDATA[velka.lang.util.AppendableException: velka.lang.expression.TypeHolder is not to be interpreted!
-	at velka.lang.expression.TypeHolder.interpret(TypeHolder.java:49)
-	at velka.lang.expression.Symbol.interpret(Symbol.java:43)
-	at velka.lang.application.AbstractionApplication.apply(AbstractionApplication.java:152)
-	at velka.lang.application.Application.interpret(Application.java:113)
-	at velka.lang.test.TestInterpretation.testInterpretation(TestInterpretation.java:1247)
-	at velka.lang.test.TestInterpretation.testInterpretString(TestInterpretation.java:1279)
-	at velka.lang.test.TestInterpretation.testListNative(TestInterpretation.java:1139)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
-	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:688)
-	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:149)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:140)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:84)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(ExecutableInvoker.java:115)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.lambda$invoke$0(ExecutableInvoker.java:105)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:104)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:98)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$6(TestMethodTestDescriptor.java:210)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:206)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:131)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:65)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:139)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:32)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:51)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:88)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:54)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:67)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:52)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:96)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:75)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.executeTests(ConsoleTestExecutor.java:66)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.lambda$execute$0(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.tasks.CustomContextClassLoaderExecutor.invoke(CustomContextClassLoaderExecutor.java:33)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.execute(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.ConsoleLauncher.executeTests(ConsoleLauncher.java:95)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:73)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:50)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:43)
-	at org.junit.platform.console.ConsoleLauncher.main(ConsoleLauncher.java:37)
-]]></error>
+<testcase name="testListNative()" classname="velka.lang.test.TestInterpretation" time="0.013">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testListNative()]
-display-name: testListNative()
+display-name: Test List Native
 ]]></system-out>
 </testcase>
-<testcase name="testOrExpression()" classname="velka.lang.test.TestInterpretation" time="0.001">
+<testcase name="testOrExpression()" classname="velka.lang.test.TestInterpretation" time="0">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testOrExpression()]
 display-name: testOrExpression()
 ]]></system-out>
 </testcase>
-<testcase name="testLitEnum()" classname="velka.lang.test.TestInterpretation" time="0.001">
+<testcase name="testLitEnum()" classname="velka.lang.test.TestInterpretation" time="0">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testLitEnum()]
-display-name: testLitEnum()
+display-name: Test Enum Literal
 ]]></system-out>
 </testcase>
-<testcase name="testDefExpression()" classname="velka.lang.test.TestInterpretation" time="0.01">
+<testcase name="testDefExpression()" classname="velka.lang.test.TestInterpretation" time="0.003">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testDefExpression()]
-display-name: testDefExpression()
+display-name: Test Define Expression
 ]]></system-out>
 </testcase>
-<testcase name="testConstruct()" classname="velka.lang.test.TestInterpretation" time="0.001">
+<testcase name="testConstruct()" classname="velka.lang.test.TestInterpretation" time="0">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testConstruct()]
-display-name: testConstruct()
+display-name: Test Construct
 ]]></system-out>
 </testcase>
-<testcase name="testCanDeconstructAs()" classname="velka.lang.test.TestInterpretation" time="0.001">
+<testcase name="testCanDeconstructAs()" classname="velka.lang.test.TestInterpretation" time="0">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testCanDeconstructAs()]
-display-name: testCanDeconstructAs()
+display-name: Test Can Deconstruct As
 ]]></system-out>
 </testcase>
 <testcase name="testConvert()" classname="velka.lang.test.TestInterpretation" time="0.001">
-<failure message="Interpretation of (convert Int:Native Int:Roman 42) in [fcar, IntNative2IntString, fact, IntNative2IntRoman, tail-list2, nil, not, println, car, IntRoman2IntNative, build-list2-aux, IntRoman2IntString, head-list-native, foldl-list-native, bit-or, map2-list-native, fcons, bit-and, reverse-list2, IntString2IntRoman, head-list2, is-list-native-empty, foldr-list-native, equals?, *, +, concat, map-list-native, -, /, cdr, IntString2IntNative, answer, x, tail-list-native, y, pi, &lt;, append-list2, =, build-list2] expected &quot;XLII&quot; got (IntNative2IntRoman [42])" type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: Interpretation of (convert Int:Native Int:Roman 42) in [fcar, IntNative2IntString, fact, IntNative2IntRoman, tail-list2, nil, not, println, car, IntRoman2IntNative, build-list2-aux, IntRoman2IntString, head-list-native, foldl-list-native, bit-or, map2-list-native, fcons, bit-and, reverse-list2, IntString2IntRoman, head-list2, is-list-native-empty, foldr-list-native, equals?, *, +, concat, map-list-native, -, /, cdr, IntString2IntNative, answer, x, tail-list-native, y, pi, <, append-list2, =, build-list2] expected "XLII" got (IntNative2IntRoman [42])
-	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:39)
-	at org.junit.jupiter.api.Assertions.fail(Assertions.java:117)
-	at velka.lang.test.TestInterpretation.testInterpretation(TestInterpretation.java:1249)
-	at velka.lang.test.TestInterpretation.testConvert(TestInterpretation.java:1122)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
-	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:688)
-	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:149)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:140)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:84)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(ExecutableInvoker.java:115)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.lambda$invoke$0(ExecutableInvoker.java:105)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:104)
-	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:98)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$6(TestMethodTestDescriptor.java:210)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:206)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:131)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:65)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:139)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:38)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:143)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$7(NodeTestTask.java:129)
-	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:127)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:126)
-	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:84)
-	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:32)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
-	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:51)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:88)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:54)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:67)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:52)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:96)
-	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:75)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.executeTests(ConsoleTestExecutor.java:66)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.lambda$execute$0(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.tasks.CustomContextClassLoaderExecutor.invoke(CustomContextClassLoaderExecutor.java:33)
-	at org.junit.platform.console.tasks.ConsoleTestExecutor.execute(ConsoleTestExecutor.java:58)
-	at org.junit.platform.console.ConsoleLauncher.executeTests(ConsoleLauncher.java:95)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:73)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:50)
-	at org.junit.platform.console.ConsoleLauncher.execute(ConsoleLauncher.java:43)
-	at org.junit.platform.console.ConsoleLauncher.main(ConsoleLauncher.java:37)
-]]></failure>
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testConvert()]
-display-name: testConvert()
+display-name: Test Convert
 ]]></system-out>
 </testcase>
 <testcase name="testDefinceConstructorExpression()" classname="velka.lang.test.TestInterpretation" time="0">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testDefinceConstructorExpression()]
-display-name: testDefinceConstructorExpression()
+display-name: Test Define Constructor
 ]]></system-out>
 </testcase>
-<testcase name="testDefConversionExpression()" classname="velka.lang.test.TestInterpretation" time="0.003">
+<testcase name="testDefConversionExpression()" classname="velka.lang.test.TestInterpretation" time="0.009">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testDefConversionExpression()]
-display-name: testDefConversionExpression()
+display-name: Test Define Conversion
 ]]></system-out>
 </testcase>
-<testcase name="testLitBoolean()" classname="velka.lang.test.TestInterpretation" time="0">
+<testcase name="testLitBoolean()" classname="velka.lang.test.TestInterpretation" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testLitBoolean()]
-display-name: testLitBoolean()
+display-name: Test Boolean Literal
 ]]></system-out>
 </testcase>
-<testcase name="testApplication()" classname="velka.lang.test.TestInterpretation" time="0.014">
+<testcase name="testApplication()" classname="velka.lang.test.TestInterpretation" time="0.003">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testApplication()]
-display-name: testApplication()
+display-name: Test Application
 ]]></system-out>
 </testcase>
-<testcase name="testDefRepresentationExpression()" classname="velka.lang.test.TestInterpretation" time="0">
+<testcase name="testDefRepresentationExpression()" classname="velka.lang.test.TestInterpretation" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testDefRepresentationExpression()]
-display-name: testDefRepresentationExpression()
+display-name: Test Define Representation
 ]]></system-out>
 </testcase>
 <testcase name="testAutoConversion()" classname="velka.lang.test.TestInterpretation" time="0">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testAutoConversion()]
-display-name: testAutoConversion()
+display-name: Test Automatic conversion
 ]]></system-out>
 </testcase>
-<testcase name="testDeconstruct()" classname="velka.lang.test.TestInterpretation" time="0">
+<testcase name="testDeconstruct()" classname="velka.lang.test.TestInterpretation" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testDeconstruct()]
-display-name: testDeconstruct()
+display-name: Test Deconstruct
 ]]></system-out>
 </testcase>
 <testcase name="testAndExpression()" classname="velka.lang.test.TestInterpretation" time="0">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testAndExpression()]
-display-name: testAndExpression()
+display-name: Test AND
 ]]></system-out>
 </testcase>
 <testcase name="testLambda()" classname="velka.lang.test.TestInterpretation" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testLambda()]
-display-name: testLambda()
+display-name: Test Lambda
 ]]></system-out>
 </testcase>
-<testcase name="testLitComposite()" classname="velka.lang.test.TestInterpretation" time="0">
+<testcase name="testLitComposite()" classname="velka.lang.test.TestInterpretation" time="0.001">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testLitComposite()]
-display-name: testLitComposite()
+display-name: Test Composite Literal
 ]]></system-out>
 </testcase>
 <testcase name="testExtendedFunction()" classname="velka.lang.test.TestInterpretation" time="0.002">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testExtendedFunction()]
-display-name: testExtendedFunction()
+display-name: Test Extended Function
 ]]></system-out>
 </testcase>
-<testcase name="testTypeHolder()" classname="velka.lang.test.TestInterpretation" time="0.001">
+<testcase name="testTypeHolder()" classname="velka.lang.test.TestInterpretation" time="0.004">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testTypeHolder()]
-display-name: testTypeHolder()
+display-name: Test Type Holder
 ]]></system-out>
 </testcase>
-<testcase name="testFunction()" classname="velka.lang.test.TestInterpretation" time="0.001">
+<testcase name="testFunction()" classname="velka.lang.test.TestInterpretation" time="0.002">
 <system-out><![CDATA[
 unique-id: [engine:junit-jupiter]/[class:velka.lang.test.TestInterpretation]/[method:testFunction()]
-display-name: testFunction()
+display-name: Test Function
 ]]></system-out>
 </testcase>
 <system-out><![CDATA[

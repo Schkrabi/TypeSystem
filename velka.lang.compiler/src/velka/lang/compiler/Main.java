@@ -24,6 +24,7 @@ import velka.lang.parser.SchemeParser.ExprsContext;
 import velka.lang.parser.SemanticNode;
 import velka.lang.semantic.SemanticParser;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.langbase.ListNative;
 import velka.lang.util.AppendableException;
 import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.expression.Expression;
@@ -43,17 +44,20 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		try {
-			Main.init();
+			Environment topLevel = Environment.initTopLevelEnvitonment();
+			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(topLevel);
+			
+			Main.init(topLevel, typeEnv);
 			// Very basic options, didn't wanted to add more external libraries etc...
 			if (args.length == 0) {
 				// Interactive parser mode
-				Main.interpretLoop();
+				Main.interpretLoop(topLevel, typeEnv);
 			} else if (args.length == 1) {
 				// Load code and interpret further
-				Main.interpretFile(Paths.get(args[0]));
+				Main.interpretFile(Paths.get(args[0]), topLevel, typeEnv);
 			} else if (args.length == 2) {
 				// Compiler mode
-				Main.compile(Paths.get(args[0]), Paths.get(args[1]));
+				Main.compile(Paths.get(args[0]), Paths.get(args[1]), topLevel, typeEnv);
 			} else {
 				System.out.println("Wrong number of arguments specified.");
 				return;
@@ -64,22 +68,21 @@ public class Main {
 		}
 	}
 
-	private static Environment initTopLevelEnvironment() throws AppendableException {
-		Environment.initTopLevelEnvitonment();
-		return Environment.topLevelEnvironment;
+	private static void initTopLevelEnvironment(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		ListNative.initializeInEnvironment(env, typeEnv);
 	}
 
-	private static void initTypesConversions() throws Exception {
-		TypeEnvironment.initBasicTypes();
+	private static void initTypesConversions(Environment env) throws Exception {
+		TypeEnvironment.initBasicTypes(env);
 	}
 
-	public static void init() throws Exception {
-		Main.initTypesConversions();
+	private static void init(Environment env, TypeEnvironment typeEnv) throws Exception {
+		Main.initTopLevelEnvironment(env, typeEnv);
+		Main.initTypesConversions(env);
 	}
 
-	private static void interpretLoop() throws Exception {
+	private static void interpretLoop(Environment topLevel, TypeEnvironment typeEnv) throws Exception {
 		Scanner input = new Scanner(System.in);
-		Environment topLevel = Main.initTopLevelEnvironment();
 
 		try {
 			while (true) {
@@ -96,8 +99,8 @@ public class Main {
 				}
 
 				for (Expression e : exprs) {
-					e.infer(topLevel);
-					System.out.println(e.interpret(topLevel));
+					e.infer(topLevel, typeEnv);
+					System.out.println(e.interpret(topLevel, typeEnv));
 				}
 			}
 		} catch (Exception e) {
@@ -107,10 +110,9 @@ public class Main {
 		}
 	}
 
-	private static void compile(Path inputPath, Path outputPath) throws Exception {
+	private static void compile(Path inputPath, Path outputPath, Environment topLevel, TypeEnvironment typeEnv) throws Exception {
 		Reader input = null;
 		Writer output = null;
-		Environment topLevel = Main.initTopLevelEnvironment();
 
 		try {
 			input = Files.newBufferedReader(inputPath);
@@ -128,12 +130,12 @@ public class Main {
 			}
 
 			for (Expression e : exprs) {
-				e.infer(topLevel);
+				e.infer(topLevel, typeEnv);
 				l.add(e);
 			}
 
 			output = Files.newBufferedWriter(outputPath, Charset.defaultCharset());
-			ClojureCodeGenerator.toClojureCode(l, output);
+			ClojureCodeGenerator.toClojureCode(l, output, topLevel, typeEnv);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -146,10 +148,9 @@ public class Main {
 		}
 	}
 
-	private static void interpretFile(Path inputPath) throws Exception {
+	private static void interpretFile(Path inputPath, Environment topLevel, TypeEnvironment typeEnv) throws Exception {
 		Reader input = null;
 		Scanner inputI = null;
-		Environment topLevel = Main.initTopLevelEnvironment();
 
 		try {
 			input = Files.newBufferedReader(inputPath);
@@ -166,67 +167,10 @@ public class Main {
 			}
 
 			for (Expression e : exprs) {
-				e.infer(topLevel);
-				e.interpret(topLevel);
+				e.infer(topLevel, typeEnv);
+				e.interpret(topLevel, typeEnv);
 			}
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			if (input != null) {
-				input.close();
-			}
-			if (inputI != null) {
-				inputI.close();
-			}
-		}
-	}
-
-	@SuppressWarnings("unused")
-	private static void load(Path inputPath) throws Exception {
-		Reader input = null;
-		Scanner inputI = null;
-		Environment topLevel = Main.initTopLevelEnvironment();
-
-		try {
-			input = Files.newBufferedReader(inputPath);
-
-			CharStream charStream = CharStreams.fromReader(input);
-			TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
-			SchemeParser parser = new SchemeParser(tokens);
-			ExprsContext exprsContext = parser.exprs();
-
-			List<Expression> exprs = new ArrayList<Expression>();
-
-			for (SemanticNode s : exprsContext.val) {
-				exprs.add(SemanticParser.parseNode(s));
-			}
-
-			for (Expression e : exprs) {
-				e.infer(topLevel);
-				System.out.println(e.interpret(topLevel));
-			}
-
-			inputI = new Scanner(System.in);
-			while (true) {
-				System.out.print(">");
-				charStream = CharStreams.fromString(inputI.nextLine());
-				tokens = new CommonTokenStream(new SchemeLexer(charStream));
-				parser = new SchemeParser(tokens);
-
-				exprsContext = parser.exprs();
-				exprs = new ArrayList<Expression>();
-
-				for (SemanticNode s : exprsContext.val) {
-					exprs.add(SemanticParser.parseNode(s));
-				}
-
-				for (Expression e : exprs) {
-					e.infer(topLevel);
-					Expression interpreted = e.interpret(topLevel);
-					System.out.println(interpreted);
-				}
-			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

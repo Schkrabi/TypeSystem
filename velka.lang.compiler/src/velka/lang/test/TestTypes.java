@@ -1,6 +1,13 @@
 package velka.lang.test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,8 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import velka.lang.abstraction.Lambda;
@@ -30,76 +36,70 @@ import velka.lang.util.Pair;
 
 class TestTypes {
 
-	@BeforeAll
-	static void setUp() throws Exception {
-		TypeEnvironment.initBasicTypes();
-	}
-
 	@Test
+	@DisplayName("Exceptions")
 	void testExceptions() {
-		new TypeNotRecognizedException("test");
-		new TypesDoesNotUnifyException(TypeAtom.TypeInt, TypeAtom.TypeBool);
-		new UnexpectedTypeException(TypeAtom.TypeInt, TypeArrow.class);
-		new ConversionException(TypeAtom.TypeInt, TypeAtom.TypeBool, Expression.EMPTY_EXPRESSION);
+		assertAll(() -> {
+			new TypeNotRecognizedException("test");
+			new TypesDoesNotUnifyException(TypeAtom.TypeInt, TypeAtom.TypeBool);
+			new UnexpectedTypeException(TypeAtom.TypeInt, TypeArrow.class);
+			new ConversionException(TypeAtom.TypeInt, TypeAtom.TypeBool, Expression.EMPTY_EXPRESSION);
+		});
 	}
 
-	@SuppressWarnings("unlikely-arg-type")
 	@Test
+	@DisplayName("Substitution")
 	void testSubstitution() throws AppendableException {
-		Substitution subst = new Substitution(
+		final Substitution subst = new Substitution(
 				Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt),
 						new Pair<TypeVariable, Type>(new TypeVariable("b"), new TypeVariable("a")),
 						new Pair<TypeVariable, Type>(new TypeVariable("c"), TypeAtom.TypeIntString)));
+		assertAll(() -> {
+			subst.toString();
+			subst.variableStream();
+		});
 
-		subst.toString();
-		subst.variableStream();
+		assertEquals(subst, subst);
 
-		if (!subst.equals(subst)) {
-			fail(subst + ".equals(" + subst + ") != true");
-		}
 		int hash1 = subst.hashCode();
 		int hash2 = subst.hashCode();
-		if (hash1 != hash2) {
-			fail("Hash of " + subst + " is incosnsistent got " + hash1 + " and " + hash2);
-		}
-		if (subst.equals(Substitution.EMPTY)) {
-			fail(subst + ".equals(" + Substitution.EMPTY + ") != false");
-		}
-		if (subst.equals(TypeTuple.EMPTY_TUPLE)) {
-			fail(subst + ".equals(" + TypeTuple.EMPTY_TUPLE + ") != false");
-		}
+		assertEquals(hash1, hash2);
+
+		assertNotEquals(subst, Substitution.EMPTY);
+		assertNotEquals(subst, TypeTuple.EMPTY_TUPLE);
 
 		TypeVariable tv = new TypeVariable("a");
-		if (!subst.containsVariable(tv)) {
-			fail(subst + ".containsVariable(" + tv + ") == false and should be true");
-		}
+		assertTrue(subst.containsVariable(tv));
+
 		Optional<Type> o = subst.get(tv);
-		if (!o.isPresent()) {
-			fail(subst + ".get(" + tv + ") is not present!");
-		}
-		if (o.get() != TypeAtom.TypeInt) {
-			fail(subst + ".get(" + tv + ").get() != " + TypeAtom.TypeInt + " got " + o.get());
-		}
+		assertTrue(o.isPresent());
+		assertEquals(o.get(), TypeAtom.TypeInt);
 
 		tv = new TypeVariable("d");
-		if (subst.containsVariable(tv)) {
-			fail(subst + ".containsVariable(" + tv + ") == true and should be false");
-		}
-		o = subst.get(tv);
-		if (o.isPresent()) {
-			fail(subst + ".get(" + tv + ") is present. Should be " + o.get());
-		}
+		assertFalse(subst.containsVariable(tv));
 
-		TestTypes.testSubstUnion(
-				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),
-				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),
-				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))));
-		TestTypes.testSubstUnion(
-				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),
-				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("b"), TypeAtom.TypeInt))),
-				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt),
-						new Pair<TypeVariable, Type>(new TypeVariable("b"), TypeAtom.TypeInt))));
-		Assertions.assertThrows(TypesDoesNotUnifyException.class,
+		o = subst.get(tv);
+		assertFalse(o.isPresent());
+
+		assertAll(() -> {
+			TestTypes.testSubstUnion(
+					new Substitution(
+							Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),
+					new Substitution(
+							Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),
+					new Substitution(
+							Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))));
+			TestTypes.testSubstUnion(
+					new Substitution(
+							Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),
+					new Substitution(
+							Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("b"), TypeAtom.TypeInt))),
+					new Substitution(
+							Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt),
+									new Pair<TypeVariable, Type>(new TypeVariable("b"), TypeAtom.TypeInt))));
+		});
+
+		assertThrows(TypesDoesNotUnifyException.class,
 				() -> (new Substitution(
 						Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))))
 								.union(new Substitution(Arrays.asList(
@@ -107,13 +107,15 @@ class TestTypes {
 	}
 
 	@Test
+	@DisplayName("Test Type Variable")
 	void testTypeVariable() throws AppendableException {
 		TypeVariable variable = new TypeVariable("x");
-
-		variable.toString();
+		assertAll(() -> {
+			variable.toString();
+		});
 
 		TestTypes.testReflexivity(variable);
-		//TestTypes.testDifference(variable, new TypeVariable("y"));
+		// TestTypes.testDifference(variable, new TypeVariable("y"));
 		TestTypes.testDifference(variable, TypeTuple.EMPTY_TUPLE);
 
 		TestTypes.testGetUnconstrainedVariables(variable, Arrays.asList(new TypeVariable("x")));
@@ -131,34 +133,24 @@ class TestTypes {
 	}
 
 	@Test
+	@DisplayName("Test Type Tuple")
 	void testTypeTuple() throws AppendableException {
 		TypeTuple tuple = new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman, new TypeVariable("a"), TypeAtom.TypeBool));
+		assertAll(() -> {
+			tuple.stream();
+			tuple.iterator();
+			tuple.toString();
+		});
 
-		Type t = tuple.get(0);
-		if (!t.equals(TypeAtom.TypeIntRoman)) {
-			fail(tuple + ".get(0) got " + t + " expected " + TypeAtom.TypeIntRoman);
-		}
-		t = tuple.get(1);
-		if (!t.equals(new TypeVariable("a"))) {
-			fail(tuple + ".get(1) got " + t + " expected " + new TypeVariable("a"));
-		}
-		t = tuple.get(2);
-		if (!t.equals(TypeAtom.TypeBool)) {
-			fail(tuple + ".get(2) got " + t + " expected " + TypeAtom.TypeBool);
-		}
-
-		int s = tuple.size();
-		if (s != 3) {
-			fail(tuple + ".size() got " + s + " expected " + 3);
-		}
-
-		tuple.stream();
-		tuple.iterator();
-		tuple.toString();
+		assertEquals(tuple.get(0), TypeAtom.TypeIntRoman);
+		assertEquals(tuple.get(1), new TypeVariable("a"));
+		assertEquals(tuple.get(2), TypeAtom.TypeBool);
+		assertEquals(tuple.size(), 3);
 
 		TestTypes.testReflexivity(tuple);
-		//TestTypes.testDifference(tuple,
-		//		new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman, new TypeVariable("b"), TypeAtom.TypeBool)));
+		// TestTypes.testDifference(tuple,
+		// new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman, new TypeVariable("b"),
+		// TypeAtom.TypeBool)));
 		TestTypes.testDifference(tuple, TypeTuple.EMPTY_TUPLE);
 
 		TestTypes.testGetUnconstrainedVariables(tuple, Arrays.asList(new TypeVariable("a")));
@@ -174,39 +166,36 @@ class TestTypes {
 				new TypeVariable("b"),
 				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)));
 
-		Assertions.assertThrows(ConversionException.class,
-				() -> Conversions.convert(tuple, new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
-						TypeAtom.TypeInt));
-		Assertions.assertThrows(ConversionException.class,
-				() -> Conversions.convert(tuple, new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString))));
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+
+		assertThrows(ConversionException.class,
+				() -> Conversions.convert(tuple,
+						new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
+						TypeAtom.TypeInt, typeEnv));
+		assertThrows(ConversionException.class,
+				() -> Conversions.convert(tuple,
+						new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString)), typeEnv));
 
 		TestTypes.testApply(tuple,
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),
 				new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman, TypeAtom.TypeInt, TypeAtom.TypeBool)));
 
-		int d = tuple.tupleDistance(TypeTuple.EMPTY_TUPLE);
-		if (d <= 0) {
-			fail(tuple + ".distance(" + TypeTuple.EMPTY_TUPLE + ") == " + d + " should be bigger than 0");
-		}
-		d = tuple.tupleDistance(tuple);
-		if (d != 0) {
-			fail(tuple + ".distance(" + tuple + ") == " + d + " should be 0");
-		}
-		TypeTuple other = new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, new TypeVariable("b"), TypeAtom.TypeBool));
-		d = tuple.tupleDistance(
-				other);
-		if (d != 1) {
-			fail(tuple + ".distance(" + other + ") == " + d + " should be 1");
-		}
+		assertTrue(tuple.tupleDistance(TypeTuple.EMPTY_TUPLE) >= 0);
+		assertTrue(tuple.tupleDistance(tuple) == 0);
+		TypeTuple other = new TypeTuple(
+				Arrays.asList(TypeAtom.TypeIntString, new TypeVariable("b"), TypeAtom.TypeBool));
+		assertTrue(tuple.tupleDistance(other) == 1);
 	}
 
 	@Test
+	@DisplayName("Test Type Arrow")
 	void testTypeArrow() throws AppendableException {
-		TypeArrow typeArrow = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
-				TypeAtom.TypeIntString);
-
-		typeArrow.toString();
+		TypeArrow typeArrow = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntString);
+		assertAll(() -> {
+			typeArrow.toString();
+		});
 
 		TestTypes.testReflexivity(typeArrow);
 		TestTypes.testDifference(typeArrow,
@@ -220,23 +209,22 @@ class TestTypes {
 		TestTypes.testConvertTo(typeArrow, Expression.EMPTY_EXPRESSION, new TypeVariable("c"),
 				Expression.EMPTY_EXPRESSION);
 
-		Expression e = Conversions.convert(typeArrow, 
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+
+		Expression e = Conversions.convert(typeArrow,
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Symbol("x")),
-				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman));
-		if (!(e instanceof Lambda)) {
-			fail("Conversion of typearrow to typearrow should yield lambda got " + e + " of class "
-					+ e.getClass().getName());
-		}
-		Pair<Type, Substitution> p = e.infer(Environment.topLevelEnvironment);
-		if (!p.first
-				.equals(new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman))) {
-			fail("Infered type of converted expression is " + p.first + " expected "
-					+ new TypeArrow(TypeAtom.TypeIntRoman, TypeAtom.TypeIntRoman));
-		}
+				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman), typeEnv);
 
-		Assertions.assertThrows(ConversionException.class,
-				() -> Conversions.convert(typeArrow, Expression.EMPTY_EXPRESSION, TypeAtom.TypeInt));
+		assertTrue(e instanceof Lambda);
+
+		Pair<Type, Substitution> p = e.infer(env, typeEnv);
+		assertEquals(p.first,
+				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman));
+
+		assertThrows(ConversionException.class,
+				() -> Conversions.convert(typeArrow, Expression.EMPTY_EXPRESSION, TypeAtom.TypeInt, typeEnv));
 
 		TestTypes.testApply(new TypeArrow(TypeAtom.TypeBool, new TypeVariable("a")),
 				new Substitution(
@@ -244,78 +232,47 @@ class TestTypes {
 				new TypeArrow(TypeAtom.TypeBool, TypeAtom.TypeIntRoman));
 	}
 
-	@SuppressWarnings("unlikely-arg-type")
 	@Test
+	@DisplayName("Test Type Representation")
 	void testTypeRepresentation() {
 		TypeRepresentation rep = new TypeRepresentation("test");
 
-		if (!rep.equals(rep)) {
-			fail(rep + ".equals(" + rep + ") != true");
-		}
-		int hash1 = rep.hashCode();
-		int hash2 = rep.hashCode();
-		if (hash1 != hash2) {
-			fail("Hash of " + rep + " is incosnsistent got " + hash1 + " and " + hash2);
-		}
-		int cmp = rep.compareTo(rep);
-		if (cmp != 0) {
-			fail(rep + ".compareTo(" + rep + ") != 0");
-		}
+		assertEquals(rep, rep);
+		assertEquals(rep.hashCode(), rep.hashCode());
+		assertTrue(rep.compareTo(rep) == 0);
 
 		Object other = new TypeRepresentation("other");
-		if (rep.equals(other)) {
-			fail(rep + ".equaks(" + other + ") == true");
-		}
-		cmp = rep.compareTo((TypeRepresentation) other);
-		if (cmp == 0) {
-			fail(rep + ".compareTo(" + other + ") == 0");
-		}
+		assertNotEquals(rep, other);
+		assertTrue(rep.compareTo((TypeRepresentation) other) != 0);
 
-		if (rep.equals(Expression.EMPTY_EXPRESSION)) {
-			fail(rep + ".equaks(" + Expression.EMPTY_EXPRESSION + ") == true");
-		}
+		assertNotEquals(rep, Expression.EMPTY_EXPRESSION);
 	}
 
-	@SuppressWarnings("unlikely-arg-type")
 	@Test
+	@DisplayName("Test Type Name")
 	void testTypeName() {
 		TypeName name = new TypeName("test");
 
-		if (!name.equals(name)) {
-			fail(name + ".equals(" + name + ") != true");
-		}
-		int hash1 = name.hashCode();
-		int hash2 = name.hashCode();
-		if (hash1 != hash2) {
-			fail("Hash of " + name + " is incosnsistent got " + hash1 + " and " + hash2);
-		}
-		int cmp = name.compareTo(name);
-		if (cmp != 0) {
-			fail(name + ".compareTo(" + name + ") != 0");
-		}
+		assertEquals(name, name);
+		assertEquals(name.hashCode(), name.hashCode());
+		assertEquals(name.compareTo(name), 0);
 
 		Object other = new TypeName("other");
-		if (name.equals(other)) {
-			fail(name + ".equaks(" + other + ") == true");
-		}
-		cmp = name.compareTo((TypeName) other);
-		if (cmp == 0) {
-			fail(name + ".compareTo(" + other + ") == 0");
-		}
+		assertNotEquals(name, other);
+		assertNotEquals(name.compareTo((TypeName) other), 0);
 
-		if (name.equals(Expression.EMPTY_EXPRESSION)) {
-			fail(name + ".equaks(" + Expression.EMPTY_EXPRESSION + ") == true");
-		}
+		assertNotEquals(name, Expression.EMPTY_EXPRESSION);
 	}
 
 	@Test
+	@DisplayName("Test Type Atom")
 	void testTypeAtom() throws AppendableException {
 		TypeAtom atom = new TypeAtom(new TypeName("Test"), TypeRepresentation.WILDCARD);
-
-		atom.toString();
+		assertAll(() -> {
+			atom.toString();
+		});
 
 		TestTypes.testReflexivity(atom);
-		;
 		TestTypes.testDifference(atom, TypeAtom.TypeInt);
 		TestTypes.testDifference(atom, new TypeAtom(new TypeName("Test"), TypeRepresentation.NATIVE));
 		TestTypes.testDifference(atom, TypeTuple.EMPTY_TUPLE);
@@ -327,52 +284,49 @@ class TestTypes {
 		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitComposite(new LitString("42"), TypeAtom.TypeIntString),
 				TypeAtom.TypeIntRoman, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman));
 
-		Assertions.assertThrows(ConversionException.class,
-				() -> Conversions.convert(atom, Expression.EMPTY_EXPRESSION, new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt)));
-		Assertions.assertThrows(ConversionException.class,
-				() -> Conversions.convert(atom, Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntString));
-		Assertions
-				.assertThrows(ConversionException.class,
-						() -> Conversions.convert((new TypeAtom(new TypeName("Test"), TypeRepresentation.NATIVE)), 
-								Expression.EMPTY_EXPRESSION,
-								new TypeAtom(new TypeName("Test"), TypeRepresentation.STRING)));
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+
+		assertThrows(ConversionException.class, () -> Conversions.convert(atom, Expression.EMPTY_EXPRESSION,
+				new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt), typeEnv));
+		assertThrows(ConversionException.class,
+				() -> Conversions.convert(atom, Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntString, typeEnv));
+		assertThrows(ConversionException.class,
+				() -> Conversions.convert((new TypeAtom(new TypeName("Test"), TypeRepresentation.NATIVE)),
+						Expression.EMPTY_EXPRESSION, new TypeAtom(new TypeName("Test"), TypeRepresentation.STRING),
+						typeEnv));
 
 		TestTypes.testApply(TypeAtom.TypeInt,
 				new Substitution(
 						Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeIntRoman))),
 				TypeAtom.TypeInt);
 
-		if (!TypeAtom.isSameBasicType(TypeAtom.TypeInt, TypeAtom.TypeIntRoman)) {
-			fail("TypeAtom.isSameBasicType(" + TypeAtom.TypeInt + ", " + TypeAtom.TypeIntRoman + " != true");
-		}
-		if (TypeAtom.isSameBasicType(TypeAtom.TypeDouble, TypeAtom.TypeIntRoman)) {
-			fail("TypeAtom.isSameBasicType(" + TypeAtom.TypeDouble + ", " + TypeAtom.TypeIntRoman + " == true");
-		}
+		assertTrue(TypeAtom.isSameBasicType(TypeAtom.TypeInt, TypeAtom.TypeIntRoman));
+		assertFalse(TypeAtom.isSameBasicType(TypeAtom.TypeDouble, TypeAtom.TypeIntRoman));
 	}
 
 	@Test
+	@DisplayName("Test Representation Or")
 	void testRepresentationOr() throws AppendableException {
-		RepresentationOr ror;
-
 		// Test construction
-		Type rslt = RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt));
-		if (!(rslt instanceof TypeAtom) || !rslt.equals(TypeAtom.TypeInt)) {
-			fail("makeRepresentationOr error, expected " + TypeAtom.TypeInt + " got " + rslt);
-		}
-		rslt = RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString));
-		if (!(rslt instanceof RepresentationOr)) {
-			fail("makeRepresentationOr error, expected RepresentationOr got " + rslt);
-		}
-		ror = (RepresentationOr) rslt;
+		assertEquals(RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt)), TypeAtom.TypeInt);
+		
+		assertAll(() -> {
+			RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString));
+		});
+		
+		RepresentationOr ror = (RepresentationOr) RepresentationOr
+				.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString));
+		assertAll(() -> {
+			ror.toString();
+			ror.getRepresentations();
+		});
+		
+		assertTrue(ror instanceof RepresentationOr);
 
-		Assertions.assertThrows(AppendableException.class,
-				() -> RepresentationOr.makeRepresentationOr(Arrays.asList()));
-		Assertions.assertThrows(TypesDoesNotUnifyException.class,
+		assertThrows(AppendableException.class, () -> RepresentationOr.makeRepresentationOr(Arrays.asList()));
+		assertThrows(TypesDoesNotUnifyException.class,
 				() -> RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeBool)));
-
-		// ToString
-		ror.toString();
-		ror.getRepresentations();
 
 		// Equals & CompareTo
 		TestTypes.testReflexivity(ror);
@@ -385,8 +339,11 @@ class TestTypes {
 
 		TestTypes.testGetUnconstrainedVariables(ror, Arrays.asList());
 
-		Assertions.assertThrows(AppendableException.class,
-				() -> Conversions.convert(ror, Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntRoman));
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+
+		assertThrows(AppendableException.class,
+				() -> Conversions.convert(ror, Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntRoman, typeEnv));
 
 		TestTypes.testApply(
 				RepresentationOr.makeRepresentationOr(
@@ -400,6 +357,7 @@ class TestTypes {
 	}
 
 	@Test
+	@DisplayName("Test Type")
 	void testType() throws AppendableException {
 		TestTypes.testUnify(TypeAtom.TypeInt, TypeAtom.TypeInt, Substitution.EMPTY);
 		TestTypes.testUnify(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, Substitution.EMPTY);
@@ -420,13 +378,13 @@ class TestTypes {
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeDouble),
 						new Pair<TypeVariable, Type>(new TypeVariable("b"), TypeAtom.TypeBoolNative))));
 
-		Assertions.assertThrows(TypesDoesNotUnifyException.class,
+		assertThrows(TypesDoesNotUnifyException.class,
 				() -> Type.unifyTypes(TypeAtom.TypeBool, TypeAtom.TypeInt));
-		Assertions.assertThrows(TypesDoesNotUnifyException.class,
+		assertThrows(TypesDoesNotUnifyException.class,
 				() -> Type.unifyTypes(new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt), TypeAtom.TypeInt));
-		Assertions.assertThrows(TypesDoesNotUnifyException.class,
-				() -> Type.unifyTypes(new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt)), TypeAtom.TypeInt));
-		Assertions.assertThrows(TypesDoesNotUnifyException.class,
+		assertThrows(TypesDoesNotUnifyException.class, () -> Type
+				.unifyTypes(new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt)), TypeAtom.TypeInt));
+		assertThrows(TypesDoesNotUnifyException.class,
 				() -> Type.unifyTypes(new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt)),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt, TypeAtom.TypeInt))));
 
@@ -467,32 +425,22 @@ class TestTypes {
 	}
 
 	static void testReflexivity(Type type) {
-		if (!type.equals(type)) {
-			fail(type + ".equals(" + type + ") != true");
-		}
-		int hash1 = type.hashCode();
-		int hash2 = type.hashCode();
-		if (hash1 != hash2) {
-			fail("Hash of " + type + " is incosnsistent got " + hash1 + " and " + hash2);
-		}
-		int cmp = type.compareTo(type);
-		if (cmp != 0) {
-			fail(type + ".compareTo(" + type + ") != 0 got " + cmp);
-		}
-
+		assertNotNull(type);
+		assertEquals(type, type);
+		assertEquals(type.hashCode(), type.hashCode());
+		assertEquals(type.compareTo(type), 0);
 	}
 
 	static void testDifference(Type type, Type other) {
-		if (type.equals(other)) {
-			fail(type + ".equals(" + other + ") != false");
-		}
-		int cmp = type.compareTo(other);
-		if (cmp == 0) {
-			fail(type + ".compareTo(" + type + ") != 0 got " + cmp);
-		}
+		assertNotNull(type);
+		assertNotNull(other);
+		assertNotEquals(type, other);
+		assertNotEquals(type.compareTo(other), 0);
 	}
 
 	static void testGetUnconstrainedVariables(Type type, Collection<TypeVariable> shouldContain) {
+		assertNotNull(type);
+		assertNotNull(shouldContain);
 		Set<TypeVariable> unconstrained = type.getUnconstrainedVariables();
 
 		if (!unconstrained.containsAll(shouldContain)) {
@@ -504,32 +452,41 @@ class TestTypes {
 	}
 
 	static void testConvertTo(Type type, Expression from, Type to, Expression expected) throws AppendableException {
-		Expression converted = Conversions.convert(type, from, to).interpret(Environment.topLevelEnvironment);
+		assertNotNull(type);
+		assertNotNull(from);
+		assertNotNull(to);
+		assertNotNull(expected);
+		
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		
+		Expression converted = Conversions.convert(type, from, to, typeEnv).interpret(env, typeEnv);
 
-		if (!converted.equals(expected)) {
-			fail(type + ".convertTo(" + from + ", " + to + ") failed got " + converted + " expected " + expected);
-		}
+		assertEquals(converted, expected);
 	}
 
 	static void testApply(Type type, Substitution s, Type expected) throws AppendableException {
+		assertNotNull(type);
+		assertNotNull(s);
+		assertNotNull(expected);
 		Type got = type.apply(s);
-		if (!got.equals(expected)) {
-			fail(type + ".apply(" + s + ") expected " + expected + " got " + got);
-		}
+		assertEquals(got, expected);
 	}
 
 	static void testSubstUnion(Substitution subst1, Substitution subst2, Substitution expected)
 			throws AppendableException {
+		assertNotNull(subst1);
+		assertNotNull(subst2);
+		assertNotNull(expected);
 		Substitution composed = subst1.union(subst2);
-		if (!composed.equals(expected)) {
-			fail(subst1 + ".compose(" + subst2 + ") yields " + composed + " expected " + expected);
-		}
+		assertEquals(composed, expected);
 	}
 
 	static void testUnify(Type first, Type second, Substitution expected) throws AppendableException {
+		assertNotNull(first);
+		assertNotNull(second);
+		assertNotNull(expected);
 		Substitution s = Type.unifyTypes(first, second);
-		if (!s.equals(expected)) {
-			fail("Type.unify(" + first + ", " + second + ") got " + s + " expected " + expected);
-		}
+		assertEquals(s, expected);
 	}
 }

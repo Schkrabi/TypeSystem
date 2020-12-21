@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.RepresentationOr;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
@@ -48,10 +49,10 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	public Expression interpret(final Environment env) throws AppendableException {
+	public Expression interpret(final Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Set<Function> fs = null;
 		try {
-			fs = this.implementations.stream().map(ThrowingFunction.wrapper(x -> (Function)x.interpret(env))).collect(Collectors.toSet());
+			fs = this.implementations.stream().map(ThrowingFunction.wrapper(x -> (Function)x.interpret(env, typeEnv))).collect(Collectors.toSet());
 		}catch(RuntimeException re) {
 			AppendableException e = (AppendableException)re.getCause();
 			throw e;
@@ -61,12 +62,12 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
 			Set<Pair<Type, Substitution>> s = null;
 			try {
 				s = this.implementations.stream()
-					.map(ThrowingFunction.wrapper(x -> x.infer(env))).collect(Collectors.toSet());
+					.map(ThrowingFunction.wrapper(x -> x.infer(env, typeEnv))).collect(Collectors.toSet());
 			} catch(RuntimeException re) {
 				AppendableException e = (AppendableException)re.getCause();
 				throw e;
@@ -137,9 +138,9 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-		ExtendedFunction f = (ExtendedFunction)this.interpret(env);
-		return f.doSubstituteAndEvaluate(args, env);
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		ExtendedFunction f = (ExtendedFunction)this.interpret(env, typeEnv);
+		return f.doSubstituteAndEvaluate(args, env, typeEnv);
 	}
 	
 	/**
@@ -156,13 +157,13 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	protected String implementationsToClojure(Environment env) throws AppendableException {
+	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder sb = new StringBuilder();
 		
 		Iterator<? extends Lambda> i = this.implementations.iterator();
 		while(i.hasNext()) {
 			Lambda implementation = i.next();
-			sb.append(implementation.toClojureFn(env));
+			sb.append(implementation.toClojureFn(env, typeEnv));
 			if(i.hasNext()) {
 				sb.append(" ");
 			}

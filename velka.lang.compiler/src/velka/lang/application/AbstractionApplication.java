@@ -16,6 +16,7 @@ import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 
 /**
  * Expression for function application in form (fun arg1 arg2 ...)
@@ -43,8 +44,8 @@ public class AbstractionApplication extends Application {
 	 * @return
 	 * @throws AppendableException
 	 */
-	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env) throws AppendableException {
-		Type funInfered = this.fun.infer(env).first;
+	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Type funInfered = this.fun.infer(env, typeEnv).first;
 		if (funInfered instanceof RepresentationOr) {
 			return (TypeTuple) AbstractionApplication.getBestImplementationType(argsType,
 					(RepresentationOr) funInfered).ltype;
@@ -59,11 +60,11 @@ public class AbstractionApplication extends Application {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
-			Pair<Type, Substitution> funInfered = this.fun.infer(env);
+			Pair<Type, Substitution> funInfered = this.fun.infer(env, typeEnv);
 			
-			Pair<Type, Substitution> argsInfered = this.args.infer(env);
+			Pair<Type, Substitution> argsInfered = this.args.infer(env, typeEnv);
 
 			if(!(funInfered.first instanceof TypeArrow)) {
 				// Find best implementation if applicable
@@ -124,15 +125,15 @@ public class AbstractionApplication extends Application {
 	}
 
 	@Override
-	protected String applicationToClojure(Tuple convertedArgs, Environment env) throws AppendableException {
+	protected String applicationToClojure(Tuple convertedArgs, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder s = new StringBuilder("(");
 		s.append(AbstractionApplication.clojureEapply);
 		s.append(" ");
 
-		s.append(this.fun.toClojureCode(env));
+		s.append(this.fun.toClojureCode(env, typeEnv));
 
 		s.append(" ");
-		s.append(convertedArgs.toClojureCode(env));
+		s.append(convertedArgs.toClojureCode(env, typeEnv));
 		
 		s.append(" ");
 		s.append(AbstractionApplication.clojureRankingFunction);
@@ -148,17 +149,17 @@ public class AbstractionApplication extends Application {
 	}
 
 	@Override
-	protected Expression apply(Tuple convertedArgs, Environment evaluationEnvironment) throws AppendableException {
-		Expression ifun = fun.interpret(evaluationEnvironment);
+	protected Expression apply(Tuple convertedArgs, Environment evaluationEnvironment, TypeEnvironment typeEnv) throws AppendableException {
+		Expression ifun = fun.interpret(evaluationEnvironment, typeEnv);
 
 		if (!(ifun instanceof Abstraction)) {
 			throw new AppendableException(ifun.toString() + "is not an abstration");
 		}
 		Abstraction abst = (Abstraction) ifun;
 
-		Tuple interpretedArgs = (Tuple) convertedArgs.interpret(evaluationEnvironment);
+		Tuple interpretedArgs = (Tuple) convertedArgs.interpret(evaluationEnvironment, typeEnv);
 
-		return abst.substituteAndEvaluate(interpretedArgs, evaluationEnvironment);
+		return abst.substituteAndEvaluate(interpretedArgs, evaluationEnvironment, typeEnv);
 	}
 	
 	public static final String clojureRankingFunction = /*"ranking-function";*/

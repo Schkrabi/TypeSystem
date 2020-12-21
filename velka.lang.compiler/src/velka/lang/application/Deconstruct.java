@@ -2,6 +2,7 @@ package velka.lang.application;
 
 import velka.lang.expression.Expression;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitComposite;
 import velka.lang.semantic.SemanticParserStatic;
 import velka.lang.types.Substitution;
@@ -33,13 +34,13 @@ public class Deconstruct extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		Expression e = this.argument.interpret(env);
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Expression e = this.argument.interpret(env, typeEnv);
 		if(!(e instanceof LitComposite)) {
 			throw new IllegalDeconstructionException(e, this.as);
 		}
 		LitComposite lc = (LitComposite)e;
-		Pair<Type, Substitution> p = lc.value.infer(env);
+		Pair<Type, Substitution> p = lc.value.infer(env, typeEnv);
 		try {
 			Type.unifyTypes(p.first, this.as);
 		}catch(AppendableException ae) {
@@ -49,14 +50,14 @@ public class Deconstruct extends Expression {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		Pair<Type, Substitution> p = this.argument.infer(env);
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Pair<Type, Substitution> p = this.argument.infer(env, typeEnv);
 		return new Pair<Type, Substitution>(this.as, p.second);
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
-		return "(get " + this.argument.toClojureCode(env) + " 0)";
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		return "(get " + this.argument.toClojureCode(env, typeEnv) + " 0)";
 	}
 	
 	@Override

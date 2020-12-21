@@ -67,21 +67,21 @@ public class DefineRepresentation extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		TypeAtom type = new TypeAtom(this.typeName, this.representation);
-		TypeEnvironment.singleton.addRepresentation(type);
+		typeEnv.addRepresentation(type);
 		return Expression.EMPTY_EXPRESSION;
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		return Expression.EMPTY_EXPRESSION.infer(env);
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		return Expression.EMPTY_EXPRESSION.infer(env, typeEnv);
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		TypeAtom ta = new TypeAtom(this.typeName, this.representation);
-		TypeEnvironment.singleton.addRepresentation(ta);
+		typeEnv.addRepresentation(ta);
 		return "";
 	}
 

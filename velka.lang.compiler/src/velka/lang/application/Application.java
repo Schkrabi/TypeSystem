@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.RepresentationOr;
 import velka.lang.types.TypeArrow;
 import velka.lang.types.TypeTuple;
@@ -39,7 +40,7 @@ public abstract class Application extends Expression {
 	 * @return Clojure code representing this application
 	 * @throws AppendableException
 	 */
-	protected abstract String applicationToClojure(Tuple convertedArgs, Environment env) throws AppendableException;
+	protected abstract String applicationToClojure(Tuple convertedArgs, Environment env, TypeEnvironment typeEnv) throws AppendableException;
 	
 	/**
 	 * Returns name of fucntion or special form of this application
@@ -54,7 +55,7 @@ public abstract class Application extends Expression {
 	 * @return expression
 	 * @throws AppendableException
 	 */
-	protected abstract Expression apply(Tuple convertedArgs, Environment evaluationEnvironment) throws AppendableException;
+	protected abstract Expression apply(Tuple convertedArgs, Environment evaluationEnvironment, TypeEnvironment typeEnv) throws AppendableException;
 	
 	/**
 	 * Gets type of arguments that this application is expecting
@@ -63,7 +64,7 @@ public abstract class Application extends Expression {
 	 * @return
 	 * @throws AppendableException
 	 */
-	protected abstract TypeTuple getFunArgsType(TypeTuple argsType, Environment env) throws AppendableException;
+	protected abstract TypeTuple getFunArgsType(TypeTuple argsType, Environment env, TypeEnvironment typeEnv) throws AppendableException;
 	
 	/**
 	 * Finds type closest to argsType in RepresentationOr of elambda
@@ -94,23 +95,23 @@ public abstract class Application extends Expression {
 	 * @return tuple with converted arguments
 	 * @throws AppendableException 
 	 */
-	protected Tuple convertArgs(Tuple args, Environment env) throws AppendableException {		
-		TypeTuple argsType = (TypeTuple)args.infer(env).first;
-		TypeTuple expectedType = this.getFunArgsType(argsType, env);
+	protected Tuple convertArgs(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {		
+		TypeTuple argsType = (TypeTuple)args.infer(env, typeEnv).first;
+		TypeTuple expectedType = this.getFunArgsType(argsType, env, typeEnv);
 		
 		if(args.size() != expectedType.size()) {
 			throw new InvalidNumberOfArgumentsException(expectedType.size(), args, this);
 		}
 		
-		Expression e = Conversions.convert(argsType, args, expectedType);
+		Expression e = Conversions.convert(argsType, args, expectedType, typeEnv);
 		return (Tuple)e;
 	}
 	
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		Tuple interpretedAndConvertedArgs = this.convertArgs(this.args, env);
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Tuple interpretedAndConvertedArgs = this.convertArgs(this.args, env, typeEnv);
 		
-		return this.apply(interpretedAndConvertedArgs, env);
+		return this.apply(interpretedAndConvertedArgs, env, typeEnv);
 	}
 	
 	@Override
@@ -119,9 +120,9 @@ public abstract class Application extends Expression {
 	}
 	
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
-		Tuple convertedArgs = this.convertArgs(this.args, env);
-		return this.applicationToClojure(convertedArgs, env);
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Tuple convertedArgs = this.convertArgs(this.args, env, typeEnv);
+		return this.applicationToClojure(convertedArgs, env, typeEnv);
 	}
 	
 	@Override

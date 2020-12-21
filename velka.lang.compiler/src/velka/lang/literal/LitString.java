@@ -2,6 +2,7 @@ package velka.lang.literal;
 
 import velka.lang.expression.Expression;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
 import velka.lang.types.TypeAtom;
@@ -24,7 +25,7 @@ public class LitString extends Literal {
 	}
 
 	@Override
-	public Expression interpret(Environment env) {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
 		return this;
 	}
 
@@ -34,12 +35,12 @@ public class LitString extends Literal {
 	}
 
 	@Override
-	public String valueToClojure(Environment env) {
+	public String valueToClojure(Environment env, TypeEnvironment typeEnv) {
 		return '"' + this.value + '"';
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
 		return new Pair<Type, Substitution>(TypeAtom.TypeStringNative, Substitution.EMPTY);
 	}
 

@@ -6,6 +6,7 @@ import velka.lang.expression.Expression;
 import velka.lang.expression.TypeHolder;
 import velka.lang.expression.Symbol;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.semantic.SemanticParserStatic;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
@@ -45,14 +46,14 @@ public class DefineSymbol extends Expression {
 	 * @return Pair of Type and used Substitution
 	 * @throws AppendableException
 	 */
-	public Pair<Type, Substitution> inferDefined(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> inferDefined(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Environment childEnv = Environment.create(env);
 
 		// Define creates new binding in environment, need to have reference to type of
 		// this variable existing in environment from we are infering
 		TypeVariable tv = new TypeVariable(NameGenerator.next());
 		childEnv.put(this.name, new TypeHolder(tv));
-		Pair<Type, Substitution> infered = this.defined.infer(childEnv);
+		Pair<Type, Substitution> infered = this.defined.infer(childEnv, typeEnv);
 
 		Substitution s = infered.second;
 		Substitution tmp;
@@ -68,19 +69,19 @@ public class DefineSymbol extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Environment e = Environment.create(env);
-		Pair<Type, Substitution> innerInfered = this.inferDefined(env);
+		Pair<Type, Substitution> innerInfered = this.inferDefined(env, typeEnv);
 		e.put(this.name, new TypeHolder(innerInfered.first, this.name));
-		Expression interpreted = this.defined.interpret(e);
+		Expression interpreted = this.defined.interpret(e, typeEnv);
 		env.put(this.name, interpreted);
 		return Expression.EMPTY_EXPRESSION;
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
-			Pair<Type, Substitution> definedInfered = this.inferDefined(env);
+			Pair<Type, Substitution> definedInfered = this.inferDefined(env, typeEnv);
 
 			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, definedInfered.second);
 
@@ -91,15 +92,15 @@ public class DefineSymbol extends Expression {
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder s = new StringBuilder("(def ");
-		s.append(this.name.toClojureCode(env));
+		s.append(this.name.toClojureCode(env, typeEnv));
 		s.append(" ");
 		Environment inferenceEnvironment = Environment.create(env);
 		inferenceEnvironment.put(this.name, new TypeHolder(new TypeVariable(NameGenerator.next())));
-		Type t = this.defined.infer(inferenceEnvironment).first;
+		Type t = this.defined.infer(inferenceEnvironment, typeEnv).first;
 		env.put(this.name, new TypeHolder(t));
-		s.append(this.defined.toClojureCode(env));
+		s.append(this.defined.toClojureCode(env, typeEnv));
 		s.append(")");
 		return s.toString();
 	}

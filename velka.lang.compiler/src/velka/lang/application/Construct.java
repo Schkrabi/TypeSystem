@@ -47,28 +47,28 @@ public class Construct extends Expression {
 	 * @throws AppendableException if error during inference or no suitable
 	 *                             constructor found
 	 */
-	private Application deriveApplication(Environment env) throws AppendableException {
-		TypeTuple argumentsType = (TypeTuple) this.arguments.infer(env).first;
-		Abstraction constructor = TypeEnvironment.singleton.getConstructor(this.constructedType, argumentsType);
+	private Application deriveApplication(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		TypeTuple argumentsType = (TypeTuple) this.arguments.infer(env, typeEnv).first;
+		Abstraction constructor = typeEnv.getConstructor(this.constructedType, argumentsType);
 		return new AbstractionApplication(constructor, this.arguments);
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		Application application = this.deriveApplication(env);
-		return application.interpret(env);
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Application application = this.deriveApplication(env, typeEnv);
+		return application.interpret(env, typeEnv);
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		Pair<Type, Substitution> argumentsInfered = this.arguments.infer(env);
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Pair<Type, Substitution> argumentsInfered = this.arguments.infer(env, typeEnv);
 		return new Pair<Type, Substitution>(this.constructedType, argumentsInfered.second);
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
-		Application application = this.deriveApplication(env);
-		return application.toClojureCode(env);
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Application application = this.deriveApplication(env, typeEnv);
+		return application.toClojureCode(env, typeEnv);
 	}
 
 	@Override

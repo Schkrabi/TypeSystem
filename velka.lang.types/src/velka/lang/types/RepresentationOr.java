@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import velka.lang.util.AppendableException;
@@ -225,5 +226,10 @@ public class RepresentationOr extends Type {
 			return other;
 		}
 		throw new AppendableException("Cannot unite types " + this + " " + other);
+	}
+
+	@Override
+	public Type map(Function<Type, Type> fun) throws AppendableException {
+		return RepresentationOr.makeRepresentationOr(this.representations.stream().map(fun).collect(Collectors.toList()));
 	}
 }

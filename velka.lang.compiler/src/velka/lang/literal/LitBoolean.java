@@ -6,6 +6,7 @@ import velka.lang.types.TypeAtom;
 import velka.lang.util.Pair;
 import velka.lang.expression.Expression;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 
 /**
  * Boolean literal implementation
@@ -25,7 +26,7 @@ public class LitBoolean extends Literal {
 	}
 
 	@Override
-	public Expression interpret(Environment env) {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
 		return this;
 	}
 
@@ -38,12 +39,12 @@ public class LitBoolean extends Literal {
 	public static final LitBoolean FALSE = new LitBoolean(false);
 
 	@Override
-	public String valueToClojure(Environment env) {
+	public String valueToClojure(Environment env, TypeEnvironment typeEnv) {
 		return Boolean.toString(this.value);
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
 		return new Pair<Type, Substitution>(TypeAtom.TypeBoolNative, Substitution.EMPTY);
 	}
 

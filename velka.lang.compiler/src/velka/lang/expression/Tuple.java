@@ -13,6 +13,7 @@ import velka.lang.types.TypeTuple;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 
 /**
  * Tuple expression
@@ -58,11 +59,11 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		List<Expression> vls = new LinkedList<Expression>();
 
 		for (Expression e : this) {
-			vls.add(e.interpret(env));
+			vls.add(e.interpret(env, typeEnv));
 		}
 		return new Tuple(vls);
 	}
@@ -83,13 +84,13 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
 			Substitution s = Substitution.EMPTY;
 			List<Type> types = new LinkedList<Type>();
 
 			for (Expression e : this) {
-				Pair<Type, Substitution> infered = e.infer(env);
+				Pair<Type, Substitution> infered = e.infer(env, typeEnv);
 				types.add(infered.first);
 				s = s.union(infered.second);
 			}
@@ -107,7 +108,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		
 		s.append("(with-meta ");
@@ -117,14 +118,14 @@ public class Tuple extends Expression implements Iterable<Expression> {
 		Iterator<Expression> i = this.iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
-			s.append(e.toClojureCode(env));
+			s.append(e.toClojureCode(env, typeEnv));
 			if (i.hasNext()) {
 				s.append(' ');
 			}
 		}
 		s.append("]");
 		
-		Pair<Type, Substitution> p = this.infer(env);
+		Pair<Type, Substitution> p = this.infer(env, typeEnv);
 		s.append(" {:lang-type ");
 		s.append(p.first.clojureTypeRepresentation());
 		s.append("})");

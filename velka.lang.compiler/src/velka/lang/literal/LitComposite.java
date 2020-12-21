@@ -2,6 +2,7 @@ package velka.lang.literal;
 
 import velka.lang.expression.Expression;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
 import velka.lang.types.TypeAtom;
@@ -32,18 +33,18 @@ public class LitComposite extends Literal {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		return new LitComposite(this.value.interpret(env), this.composedType);
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		return new LitComposite(this.value.interpret(env, typeEnv), this.composedType);
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
 		return new Pair<Type, Substitution>(this.composedType, Substitution.EMPTY);
 	}
 
 	@Override
-	public String valueToClojure(Environment env) throws AppendableException {
-		return this.value.toClojureCode(env);
+	public String valueToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		return this.value.toClojureCode(env, typeEnv);
 	}
 
 	@Override

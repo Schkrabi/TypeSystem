@@ -2,10 +2,9 @@ package velka.lang.types;
 
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import velka.lang.util.AppendableException;
-import velka.lang.util.NameGenerator;
 
 /**
  * Class for functions types
@@ -132,5 +131,10 @@ public class TypeArrow extends Type {
 
 		return new TypeArrow(this.ltype.uniteRepresentationsWith(o.ltype),
 				this.rtype.uniteRepresentationsWith(o.rtype));
+	}
+
+	@Override
+	public Type map(Function<Type, Type> fun) throws AppendableException {
+		return new TypeArrow(this.ltype.map(fun), this.rtype.map(fun));
 	}
 }

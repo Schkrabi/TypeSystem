@@ -9,6 +9,7 @@ import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitBoolean;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
@@ -30,10 +31,10 @@ public class OrExpression extends SpecialFormApplication {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Substitution agg = Substitution.EMPTY;
 		for (Expression e : this.args) {
-			Pair<Type, Substitution> p = e.infer(env);
+			Pair<Type, Substitution> p = e.infer(env, typeEnv);
 			Substitution s = Type.unifyTypes(p.first, TypeAtom.TypeBoolNative);
 			agg = agg.union(p.second).union(s);
 		}
@@ -42,7 +43,7 @@ public class OrExpression extends SpecialFormApplication {
 	}
 
 	@Override
-	protected String applicationToClojure(Tuple convertedArgs, Environment env) throws AppendableException {
+	protected String applicationToClojure(Tuple convertedArgs, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		s.append("(with-meta ");
 		s.append("[(or");
@@ -52,7 +53,7 @@ public class OrExpression extends SpecialFormApplication {
 		while (i.hasNext()) {
 			Expression e = i.next();
 			s.append("(get ");
-			s.append(e.toClojureCode(env));
+			s.append(e.toClojureCode(env, typeEnv));
 			s.append(" 0)");
 			if (i.hasNext()) {
 				s.append(' ');
@@ -73,14 +74,14 @@ public class OrExpression extends SpecialFormApplication {
 	}
 
 	@Override
-	protected Expression apply(Tuple convertedArgs, Environment evaluationEnvironment) throws AppendableException {
+	protected Expression apply(Tuple convertedArgs, Environment evaluationEnvironment, TypeEnvironment typeEnv) throws AppendableException {
 		Expression arg0 = convertedArgs.get(0);
-		LitBoolean b0 = (LitBoolean)arg0.interpret(evaluationEnvironment);
+		LitBoolean b0 = (LitBoolean)arg0.interpret(evaluationEnvironment, typeEnv);
 		if(b0.value) {
 			return LitBoolean.TRUE;
 		}
 		Expression arg1 = convertedArgs.get(1);
-		LitBoolean b1 = (LitBoolean)arg1.interpret(evaluationEnvironment);
+		LitBoolean b1 = (LitBoolean)arg1.interpret(evaluationEnvironment, typeEnv);
 		if(b1.value) {
 			return LitBoolean.TRUE;
 		}
@@ -88,16 +89,16 @@ public class OrExpression extends SpecialFormApplication {
 	}
 
 	@Override
-	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env) throws AppendableException {
+	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		return new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, TypeAtom.TypeBoolNative));
 	}
 	
 	@Override
-	protected Tuple convertArgs(Tuple args, Environment env) throws AppendableException {
+	protected Tuple convertArgs(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		List<Expression> l = new LinkedList<Expression>();
 		for(Expression e : args) {
-			Pair<Type, Substitution> p = e.infer(env);
-			Expression c = Conversions.convert(p.first, e, TypeAtom.TypeBoolNative);
+			Pair<Type, Substitution> p = e.infer(env, typeEnv);
+			Expression c = Conversions.convert(p.first, e, TypeAtom.TypeBoolNative, typeEnv);
 			l.add(c);
 		}
 		

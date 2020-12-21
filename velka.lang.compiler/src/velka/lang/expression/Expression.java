@@ -7,6 +7,7 @@ import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
 
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 
 /**
  * Abstract superclass for all expressions
@@ -22,7 +23,7 @@ public abstract class Expression implements Comparable<Expression> {
 	 * @return Expression
 	 * @throws Exception
 	 */
-	public abstract Expression interpret(Environment env) throws AppendableException;
+	public abstract Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException;
 
 	/**
 	 * Infers type of expression and returns used substitutions
@@ -30,7 +31,7 @@ public abstract class Expression implements Comparable<Expression> {
 	 * @return Pair of infered type and used substitution
 	 * @throws AppendableException
 	 */
-	public abstract Pair<Type, Substitution> infer(Environment env) throws AppendableException;
+	public abstract Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException;
 
 	@Override
 	public int compareTo(Expression other) {
@@ -43,35 +44,24 @@ public abstract class Expression implements Comparable<Expression> {
 	 * @return string containing clojure expression
 	 * @throws AppendableException
 	 */
-	public String toClojureCode() throws AppendableException
-	{
-		return this.toClojureCode(Environment.topLevelEnvironment);
-	}
-
-	/**
-	 * Transforms expression into equivalent clojure expression
-	 * 
-	 * @return string containing clojure expression
-	 * @throws AppendableException
-	 */
-	public abstract String toClojureCode(Environment env) throws AppendableException;
+	public abstract String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException;
 
 	/**
 	 * Empty expression
 	 */
 	public static final Expression EMPTY_EXPRESSION = new Expression() {
 		@Override
-		public Expression interpret(Environment env) {
+		public Expression interpret(Environment env, TypeEnvironment typeEnv) {
 			return this;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env) {
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
 			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, Substitution.EMPTY);
 		}
 
 		@Override
-		public String toClojureCode(Environment env) throws AppendableException {
+		public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(with-meta [] {:lang-type " + TypeTuple.EMPTY_TUPLE.clojureTypeRepresentation() + "})";
 		}
 		

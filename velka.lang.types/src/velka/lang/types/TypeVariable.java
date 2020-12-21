@@ -3,6 +3,7 @@ package velka.lang.types;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
@@ -97,5 +98,10 @@ public class TypeVariable extends Type {
 	@Override
 	public Type uniteRepresentationsWith(Type other){
 		return other;
+	}
+
+	@Override
+	public Type map(Function<Type, Type> fun) throws AppendableException {
+		return fun.apply(this);
 	}
 }

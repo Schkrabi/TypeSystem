@@ -56,19 +56,19 @@ public class DefineType extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws DuplicateTypeDefinitionException {
-		TypeEnvironment.singleton.addType(this.typeName);
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
+		typeEnv.addType(this.typeName);
 		return Expression.EMPTY_EXPRESSION;
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		return Expression.EMPTY_EXPRESSION.infer(env);
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		return Expression.EMPTY_EXPRESSION.infer(env, typeEnv);
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
-		TypeEnvironment.singleton.addType(this.typeName);
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		typeEnv.addType(this.typeName);
 		return "";
 	}
 

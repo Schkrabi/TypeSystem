@@ -14,6 +14,7 @@ import velka.lang.application.OrExpression;
 import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitString;
 import velka.lang.application.AbstractionApplication;
 import velka.lang.types.TypeArrow;
@@ -216,23 +217,23 @@ public class ListNative {
 	 * 
 	 * @return
 	 */
-	public static String makeClojureCode() {
+	public static String makeClojureCode(Environment env, TypeEnvironment typeEnv) {
 		StringBuilder s = new StringBuilder();
 
 		try {
-			s.append((new DefineSymbol(isListNativeEmptySymbol, isListNativeEmpty)).toClojureCode());
+			s.append((new DefineSymbol(isListNativeEmptySymbol, isListNativeEmpty)).toClojureCode(env, typeEnv));
 			s.append('\n');
-			s.append((new DefineSymbol(headListNativeSymbol, headListNative)).toClojureCode());
+			s.append((new DefineSymbol(headListNativeSymbol, headListNative)).toClojureCode(env, typeEnv));
 			s.append('\n');
-			s.append((new DefineSymbol(tailListNativeSymbol, tailListNative)).toClojureCode());
+			s.append((new DefineSymbol(tailListNativeSymbol, tailListNative)).toClojureCode(env, typeEnv));
 			s.append("\n");
-			s.append((new DefineSymbol(mapListNativeSymbol, mapListNative)).toClojureCode());
+			s.append((new DefineSymbol(mapListNativeSymbol, mapListNative)).toClojureCode(env, typeEnv));
 			s.append('\n');
-			s.append((new DefineSymbol(map2ListNativeSymbol, map2ListNative)).toClojureCode());
+			s.append((new DefineSymbol(map2ListNativeSymbol, map2ListNative)).toClojureCode(env, typeEnv));
 			s.append('\n');
-			s.append((new DefineSymbol(foldlListNativeSymbol, foldlListNative)).toClojureCode());
+			s.append((new DefineSymbol(foldlListNativeSymbol, foldlListNative)).toClojureCode(env, typeEnv));
 			s.append('\n');
-			s.append((new DefineSymbol(foldrListNativeSymbol, foldrListNative)).toClojureCode());
+			s.append((new DefineSymbol(foldrListNativeSymbol, foldrListNative)).toClojureCode(env, typeEnv));
 			s.append('\n');
 		} catch (AppendableException e) {
 			System.err.println("Compilation error " + e.getMessage() + " occured in " + ListNative.class.getName());
@@ -244,15 +245,15 @@ public class ListNative {
 	/**
 	 * Initializes list functions in environment
 	 */
-	public static void initializeInEnvironment(Environment env) {
+	public static void initializeInEnvironment(Environment env, TypeEnvironment typeEnv) {
 		try {
-			(new DefineSymbol(isListNativeEmptySymbol, isListNativeEmpty)).interpret(env);
-			(new DefineSymbol(headListNativeSymbol, headListNative)).interpret(env);
-			(new DefineSymbol(tailListNativeSymbol, tailListNative)).interpret(env);
-			(new DefineSymbol(mapListNativeSymbol, mapListNative)).interpret(env);
-			(new DefineSymbol(map2ListNativeSymbol, map2ListNative)).interpret(env);
-			(new DefineSymbol(foldlListNativeSymbol, foldlListNative)).interpret(env);
-			(new DefineSymbol(foldrListNativeSymbol, foldrListNative)).interpret(env);
+			(new DefineSymbol(isListNativeEmptySymbol, isListNativeEmpty)).interpret(env, typeEnv);
+			(new DefineSymbol(headListNativeSymbol, headListNative)).interpret(env, typeEnv);
+			(new DefineSymbol(tailListNativeSymbol, tailListNative)).interpret(env, typeEnv);
+			(new DefineSymbol(mapListNativeSymbol, mapListNative)).interpret(env, typeEnv);
+			(new DefineSymbol(map2ListNativeSymbol, map2ListNative)).interpret(env, typeEnv);
+			(new DefineSymbol(foldlListNativeSymbol, foldlListNative)).interpret(env, typeEnv);
+			(new DefineSymbol(foldrListNativeSymbol, foldrListNative)).interpret(env, typeEnv);
 		} catch (AppendableException e) {
 			System.err.println("Interpretation error " + e.getMessage() + " occured in " + ListNative.class.getName());
 		}

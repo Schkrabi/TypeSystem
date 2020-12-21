@@ -40,15 +40,15 @@ public class Convert extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		return Conversions.convert(from, this.expression, this.to);
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		return Conversions.convert(from, this.expression, this.to, typeEnv).interpret(env, typeEnv);
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		Pair<Type, Substitution> p = this.expression.infer(env);
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Pair<Type, Substitution> p = this.expression.infer(env, typeEnv);
 		Substitution s = Type.unifyTypes(this.from, p.first);
-		if (!TypeEnvironment.singleton.canConvert(this.from, this.to)) {
+		if (!typeEnv.canConvert(this.from, this.to)) {
 			throw new ConversionException(this.from, this.to, this.expression);
 		}
 
@@ -57,8 +57,8 @@ public class Convert extends Expression {
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
-		return Conversions.convert(this.from, this.expression, to).toClojureCode(env);
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		return Conversions.convert(this.from, this.expression, to, typeEnv).toClojureCode(env, typeEnv);
 	}
 
 	@Override

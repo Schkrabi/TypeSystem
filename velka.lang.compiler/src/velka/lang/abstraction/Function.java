@@ -9,6 +9,7 @@ import velka.lang.expression.Tuple;
 import velka.lang.expression.TypeHolder;
 import velka.lang.expression.Symbol;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
 import velka.lang.types.TypeArrow;
@@ -33,7 +34,7 @@ public class Function extends Lambda implements Comparable<Expression> {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
 			// First infer types in body, use typeholders for argument variables
 			Environment childEnv = Environment.create(this.creationEnvironment);
@@ -52,7 +53,7 @@ public class Function extends Lambda implements Comparable<Expression> {
 
 			Type argsType = new TypeTuple(l);
 
-			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv);
+			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv, typeEnv);
 
 			// Update argument type with found bindings
 			argsType = argsType.apply(bodyInfered.second);
@@ -127,13 +128,13 @@ public class Function extends Lambda implements Comparable<Expression> {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Environment childEnvironment = Abstraction.lexicalClojure(this.args, args, this.creationEnvironment);
-		return this.body.interpret(childEnvironment);
+		return this.body.interpret(childEnvironment, typeEnv);
 	}
 
 	@Override
-	public Expression interpret(Environment env) {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
 		return this;
 	}
 }

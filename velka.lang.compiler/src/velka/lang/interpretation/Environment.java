@@ -6,7 +6,6 @@ import java.util.Map;
 import velka.lang.abstraction.Operator;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Symbol;
-import velka.lang.langbase.ListNative;
 import velka.lang.types.TypeAtom;
 import velka.lang.util.AppendableException;
 import velka.lang.exceptions.UnboundVariableException;
@@ -152,11 +151,6 @@ public class Environment implements Comparable<Environment> {
 	}
 
 	/**
-	 * Top level environment, only one exists
-	 */
-	public static Environment topLevelEnvironment = new Environment();
-
-	/**
 	 * Construction method for new environments
 	 * 
 	 * @param parent
@@ -186,8 +180,8 @@ public class Environment implements Comparable<Environment> {
 		return new Environment(parent, initFrom);
 	}
 
-	public static void initTopLevelEnvitonment() {
-		Environment env = Environment.topLevelEnvironment;
+	public static Environment initTopLevelEnvitonment() {
+		Environment env = new Environment();
 		env.put(new Symbol(Operator.Addition.toString()), Operator.Addition);
 		env.put(new Symbol(Operator.Subtraction.toString()), Operator.Subtraction);
 		env.put(new Symbol(Operator.Multiplication.toString()), Operator.Multiplication);
@@ -218,7 +212,9 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)),
 				Operator.IntStringToIntRoman);
 		
-		ListNative.initializeInEnvironment(env);
+		//ListNative.initializeInEnvironment(env);
+		
+		return env;
 	}
 
 }

@@ -1,6 +1,7 @@
 package velka.lang.expression;
 
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
 import velka.lang.util.AppendableException;
@@ -24,17 +25,17 @@ public class TypeSymbol extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		return this;
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env) {
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
 		return new Pair<Type, Substitution>(this.type, Substitution.EMPTY);
 	}
 
 	@Override
-	public String toClojureCode(Environment env) throws AppendableException {
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		return "(with-meta [] {:lang-type " + this.type.clojureTypeRepresentation() + "})";
 	}
 	

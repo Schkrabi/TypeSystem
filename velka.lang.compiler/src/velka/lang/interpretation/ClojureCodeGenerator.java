@@ -9,20 +9,20 @@ import velka.lang.expression.Expression;
 import velka.lang.langbase.ListNative;
 
 public class ClojureCodeGenerator {
-	public static void toClojureCode(List<Expression> exprs, Writer target) throws IOException, Exception {
-		ClojureCodeGenerator.writeHeaders(target);
+	public static void toClojureCode(List<Expression> exprs, Writer target, Environment env, TypeEnvironment typeEnv) throws IOException, Exception {
+		ClojureCodeGenerator.writeHeaders(target, env, typeEnv);
 
 		Iterator<Expression> i = exprs.iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
-			target.write(e.toClojureCode());
+			target.write(e.toClojureCode(env, typeEnv));
 			if (i.hasNext()) {
 				target.write('\n');
 			}
 		}
 	}
 
-	private static void writeHeaders(Writer target) throws IOException {
+	private static void writeHeaders(Writer target, Environment env, TypeEnvironment typeEnv) throws IOException {
 		target.write("(defrecord lang-type-atom [name representation])\n");
 		target.write("(defrecord lang-type-arrow [arg-type return-type])\n");
 		target.write("(def lang-pstr " + "(fn [exp] " + "(letfn [(lang-pstr-aux [exp level] "
@@ -37,6 +37,6 @@ public class ClojureCodeGenerator {
 				+ " (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp))) "
 				+ ":else (throw (Throwable. (str (pr-str exp) \" is not a printable expression\"))))))] "
 				+ "(lang-pstr-aux exp 0))))\n");
-		target.write(ListNative.makeClojureCode());
+		target.write(ListNative.makeClojureCode(env, typeEnv));
 	}
 }
