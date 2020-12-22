@@ -1,0 +1,8 @@
+;; The deps.edn file describes the information needed to build a classpath.
+{
+    :paths 
+        [
+            "../lib/velka.lang.util.jar"
+            "../lib/velka.lang.types.jar"
+        ]
+}
