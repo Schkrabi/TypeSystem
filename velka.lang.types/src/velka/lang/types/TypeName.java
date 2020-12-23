@@ -38,6 +38,14 @@ public class TypeName implements Comparable<TypeName> {
 	public int compareTo(TypeName arg0) {
 		return this.name.compareTo(arg0.name);
 	}
+	
+	/**
+	 * Creates code to create instance of this type in clojure
+	 * @return string with code
+	 */
+	public String toClojureRepresentation() {
+		return "(new velka.lang.types.TypeName \"" + this.name + "\")";
+	}
 
 	public static final TypeName INT = new TypeName("Int");
 	public static final TypeName STRING = new TypeName("String");

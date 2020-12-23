@@ -94,7 +94,7 @@ public class TypeAtom extends Type {
 		}
 		throw new TypesDoesNotUnifyException(this, other);
 	}
-	
+
 	@Override
 	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
@@ -110,7 +110,8 @@ public class TypeAtom extends Type {
 
 	@Override
 	public String clojureTypeRepresentation() {
-		return "(lang-type-atom. \"" + this.name.toString() + "\" \"" + this.representation.toString() + "\")";
+		return "(new velka.lang.types.TypeAtom " + this.name.toClojureRepresentation() + " "
+				+ this.representation.toClojureRepresentation() + ")";
 	}
 
 	@Override
@@ -149,7 +150,7 @@ public class TypeAtom extends Type {
 	 */
 	public static final TypeAtom TypeDouble = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.WILDCARD);
 	public static final TypeAtom TypeDoubleNative = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.NATIVE);
-	
+
 	/**
 	 * Type of List
 	 */

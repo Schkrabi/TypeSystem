@@ -39,6 +39,14 @@ public class TypeRepresentation implements Comparable<TypeRepresentation> {
 	public int compareTo(TypeRepresentation arg0) {
 		return this.name.compareTo(arg0.name);
 	}
+	
+	/**
+	 * Creates code to create instance of this type in clojure
+	 * @return string with code
+	 */
+	public String toClojureRepresentation() {
+		return "(new velka.lang.types.TypeRepresentation \"" + this.name + "\")";
+	}
 
 	/**
 	 * Represents no concrete representation of type, for internal use only

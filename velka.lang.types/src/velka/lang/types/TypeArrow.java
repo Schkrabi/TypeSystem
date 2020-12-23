@@ -105,7 +105,7 @@ public class TypeArrow extends Type {
 
 	@Override
 	public String clojureTypeRepresentation() throws AppendableException {
-		return "(lang-type-arrow. " + this.ltype.clojureTypeRepresentation() + " "
+		return "(new velka.lang.types.TypeArrow " + this.ltype.clojureTypeRepresentation() + " "
 				+ this.rtype.clojureTypeRepresentation() + ")";
 	}
 

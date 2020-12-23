@@ -222,7 +222,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 	@Override
 	public String clojureTypeRepresentation() throws AppendableException {
-		StringBuilder s = new StringBuilder("[");
+		StringBuilder s = new StringBuilder("(new velka.lang.types.TypeTuple [");
 		Iterator<Type> i = this.values.iterator();
 		while (i.hasNext()) {
 			Type t = i.next();
@@ -231,7 +231,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 				s.append(" ");
 			}
 		}
-		s.append("]");
+		s.append("])");
 		return s.toString();
 	}
 

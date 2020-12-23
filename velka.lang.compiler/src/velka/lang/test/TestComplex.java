@@ -58,8 +58,9 @@ class TestComplex {
 
 		TestComplex.testInterpretString("(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))" + "(fact 5)",
 				new LitInteger(120), env, typeEnv);
-		
-		TestComplex.testClojureCompileNoCmp("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))", env, typeEnv);
+
+		TestComplex.testClojureCompileNoCmp("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))", env,
+				typeEnv);
 	}
 
 	@Test
@@ -92,37 +93,36 @@ class TestComplex {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		ListNative.initializeInEnvironment(env, typeEnv);
-		
+
 		TypeName listTypeName = new TypeName("List");
 
 		final TypeAtom linkedList = new TypeAtom(listTypeName, new TypeRepresentation("Linked"));
 		final TypeAtom typeListFuntionalAtom = new TypeAtom(listTypeName, new TypeRepresentation("Functional"));
 		final LitComposite emptyList = new LitComposite(Expression.EMPTY_EXPRESSION, linkedList);
 
-		TestComplex.testInterpretString("(representation Linked List)"
-				+ "(constructor List Linked (x (List l)) (cons x l))"
-				+ "(constructor List Linked () ())"
-				+ "(construct List Linked 1 (construct List Linked 2 (construct List Linked)))",
+		TestComplex.testInterpretString(
+				"(representation Linked List)" + "(constructor List Linked (x (List l)) (cons x l))"
+						+ "(constructor List Linked () ())"
+						+ "(construct List Linked 1 (construct List Linked 2 (construct List Linked)))",
 				new LitComposite(
 						new Tuple(Arrays.asList(new LitInteger(1),
 								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
 						linkedList),
 				env, typeEnv);
-		
+
 		TestComplex.testInterpretString("(define fcons (lambda (x y) (lambda (f) (f x y))))"
 				+ "(define fcar (lambda (p) (p (lambda (x y) x))))" + "(define fcdr (lambda (p) (p (lambda (x y) y))))"
-				+ "(representation Functional List)"
-				+ "(constructor List Functional (x (List l)) (fcons x l))"
+				+ "(representation Functional List)" + "(constructor List Functional (x (List l)) (fcons x l))"
 				+ "(constructor List Functional () ())", Expression.EMPTY_EXPRESSION, env, typeEnv);
-		
+
 		final LitComposite xlii = new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman);
 		final LitComposite fortyTwoStr = new LitComposite(new LitString("42"), TypeAtom.TypeIntString);
 		final LitInteger fortyTwo = new LitInteger(42);
-		
+
 		TestComplex.testInterpretString(
 				"(define x (construct List Linked (construct Int Roman \"XLII\") (construct List Linked (construct Int String \"42\") (construct List Linked 42 (construct List Linked)))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
-		
+
 		TestComplex.testInterpretString(
 				"(define y (construct List Functional (construct Int Roman \"XLII\") (construct List Functional (construct Int String \"42\") (construct List Functional 42 (construct List Functional)))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
@@ -135,26 +135,27 @@ class TestComplex {
 		TestComplex.testInterpretString("(is-list-empty y)", LitBoolean.FALSE, env, typeEnv);
 		TestComplex.testInterpretString("(is-list-empty (construct List Linked))", LitBoolean.TRUE, env, typeEnv);
 		TestComplex.testInterpretString("(is-list-empty (construct List Functional))", LitBoolean.TRUE, env, typeEnv);
-		
+
 		TestComplex.testInterpretString("(define head-list (let-type (A) (extended-lambda ((List l))\n"
 				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List:Linked)))))\n"
 				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
 		TestComplex.testInterpretString("(head-list x)", xlii, env, typeEnv);
 		TestComplex.testInterpretString("(head-list y)", xlii, env, typeEnv);
-		
+
 		TestComplex.testInterpretString("(define tail-list (let-type (A) (extended-lambda ((List l)) \n"
 				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List:Linked)))))\n"
 				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
-		
+
 		TestComplex.testInterpretString("(tail-list x)",
 				new LitComposite(
 						new Tuple(Arrays.asList(fortyTwoStr,
 								new LitComposite(new Tuple(Arrays.asList(fortyTwo, emptyList)), linkedList))),
-						linkedList), env, typeEnv);
+						linkedList),
+				env, typeEnv);
 		TestComplex.testInterpretString("(head-list (tail-list y))", fortyTwoStr, env, typeEnv);
-		
+
 		TestComplex.testInterpretString(
 				"(define build-list-aux (lambda (i n f) " + "(if (= i n) " + "(construct List Linked)"
 						+ "(construct List Linked (f i) (build-list-aux (+ i 1) n f)))))"
@@ -162,15 +163,17 @@ class TestComplex {
 				new LitComposite(
 						new Tuple(Arrays.asList(new LitInteger(1),
 								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
-						linkedList), env, typeEnv);
-		
+						linkedList),
+				env, typeEnv);
+
 		TestComplex.testInterpretString(
 				"(define build-list (lambda (n f) (build-list-aux 0 n f)))" + "(build-list 2 (lambda (x) (+ x 1)))",
 				new LitComposite(
 						new Tuple(Arrays.asList(new LitInteger(1),
 								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
-						linkedList), env, typeEnv);
-		
+						linkedList),
+				env, typeEnv);
+
 		TestComplex.testInterpretString(
 				"(let-type (A) (extended-lambda ((List l) (A x))"
 						+ "((List:Linked A) (if (can-deconstruct-as l ())"
@@ -179,11 +182,10 @@ class TestComplex {
 						+ "((List:Functional A) (if (can-deconstruct-as l ())"
 						+ "(construct List Functional x (construct List Functional))"
 						+ "(construct List Functional (head-list l) (append-list (tail-list l) x))))))",
-				ExtendedFunction.makeExtendedFunction(
-						Arrays.asList(
+				ExtendedFunction
+						.makeExtendedFunction(Arrays.asList(
 								new Function(new TypeTuple(Arrays.asList(linkedList, new TypeVariable("A"))),
-										new Tuple(Arrays.asList(new Symbol("l"),
-												new Symbol("x"))),
+										new Tuple(Arrays.asList(new Symbol("l"), new Symbol("x"))),
 										new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
 												new Construct(linkedList,
 														new Tuple(Arrays.asList(new Symbol("x"),
@@ -219,8 +221,9 @@ class TestComplex {
 																								new Symbol("l")))),
 																				new Symbol("x")))))))),
 										env)),
-						env), env, typeEnv);
-		
+								env),
+				env, typeEnv);
+
 		TestComplex.testInterpretString("(define append-list (let-type (A) (extended-lambda ((List l) (A x))\n"
 				+ "                        ((List:Linked A) (if (is-list-empty l)\n"
 				+ "                            (construct List Linked x (construct List Linked))\n"
@@ -229,27 +232,28 @@ class TestComplex {
 				+ "                            (construct List Functional x (construct List Functional))\n"
 				+ "                            (construct List Functional (head-list l) (append-list (tail-list l) x)))))))\n",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
-		
-		TestComplex.testInterpretString("(append-list x 21)",
-				new LitComposite(
-						new Tuple(
-								Arrays.asList(xlii,
-										new LitComposite(
-												new Tuple(
-														Arrays.asList(fortyTwoStr,
-																new LitComposite(
-																		new Tuple(
-																				Arrays.asList(fortyTwo,
+
+		TestComplex
+				.testInterpretString("(append-list x 21)",
+						new LitComposite(
+								new Tuple(
+										Arrays.asList(xlii,
+												new LitComposite(
+														new Tuple(
+																Arrays.asList(fortyTwoStr,
+																		new LitComposite(
+																				new Tuple(Arrays.asList(fortyTwo,
 																						new LitComposite(
 																								new Tuple(Arrays.asList(
 																										new LitInteger(
 																												21),
 																										emptyList)),
 																								linkedList))),
-																		linkedList))),
-												linkedList))),
-						linkedList), env, typeEnv);
-		
+																				linkedList))),
+														linkedList))),
+								linkedList),
+						env, typeEnv);
+
 		TestComplex.testInterpretString("(extended-lambda ((List l))"
 				+ "                        ((List:Linked) (if (can-deconstruct-as l ())"
 				+ "                                            (construct List Linked)"
@@ -257,14 +261,17 @@ class TestComplex {
 				+ "                        ((List:Functional) (if (can-deconstruct-as l ())"
 				+ "                                            (construct List Functional)"
 				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l)))))",
-				ExtendedFunction
-						.makeExtendedFunction(Arrays.asList(
-								new Function(new TypeTuple(Arrays.asList(linkedList)),
-										new Tuple(Arrays.asList(new Symbol("l"))),
-										new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
-												new Construct(linkedList, Tuple.EMPTY_TUPLE),
-												new AbstractionApplication(new Symbol("append-list"),
-														new Tuple(Arrays.asList(
+				ExtendedFunction.makeExtendedFunction(Arrays.asList(
+						new Function(new TypeTuple(Arrays.asList(linkedList)),
+								new Tuple(Arrays
+										.asList(new Symbol("l"))),
+								new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
+										new Construct(linkedList,
+												Tuple.EMPTY_TUPLE),
+										new AbstractionApplication(new Symbol(
+												"append-list"),
+												new Tuple(
+														Arrays.asList(
 																new AbstractionApplication(
 																		new Symbol("reverse-list"),
 																		new Tuple(Arrays
@@ -274,13 +281,16 @@ class TestComplex {
 																								new Symbol("l"))))))),
 																new AbstractionApplication(new Symbol("head-list"),
 																		new Tuple(Arrays.asList(new Symbol("l")))))))),
-										env),
-								new Function(new TypeTuple(Arrays.asList(typeListFuntionalAtom)),
-										new Tuple(Arrays.asList(new Symbol("l"))),
-										new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
-												new Construct(typeListFuntionalAtom, Tuple.EMPTY_TUPLE),
-												new AbstractionApplication(new Symbol("append-list"),
-														new Tuple(Arrays.asList(
+								env),
+						new Function(new TypeTuple(Arrays.asList(typeListFuntionalAtom)),
+								new Tuple(Arrays
+										.asList(new Symbol("l"))),
+								new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
+										new Construct(typeListFuntionalAtom, Tuple.EMPTY_TUPLE),
+										new AbstractionApplication(
+												new Symbol("append-list"),
+												new Tuple(
+														Arrays.asList(
 																new AbstractionApplication(
 																		new Symbol("reverse-list"),
 																		new Tuple(Arrays
@@ -290,21 +300,23 @@ class TestComplex {
 																								new Symbol("l"))))))),
 																new AbstractionApplication(new Symbol("head-list"),
 																		new Tuple(Arrays.asList(new Symbol("l")))))))),
-										env)),
-								env), env, typeEnv);
-		
+								env)),
+						env),
+				env, typeEnv);
+
 		TestComplex.testInterpretString(
-				"(define reverse-list (lambda ((List l)) " + "(if (is-list-empty l) "
-						+ "(construct List Linked) "
+				"(define reverse-list (lambda ((List l)) "
+						+ "(if (is-list-empty l) " + "(construct List Linked) "
 						+ "(append-list (reverse-list (tail-list l)) (head-list l)))))" + "(reverse-list x)",
 				new LitComposite(
 						new Tuple(Arrays.asList(fortyTwo,
 								new LitComposite(new Tuple(Arrays.asList(fortyTwoStr,
 										new LitComposite(new Tuple(Arrays.asList(xlii, emptyList)), linkedList))),
 										linkedList))),
-						linkedList), env, typeEnv);
-		
-		//map
+						linkedList),
+				env, typeEnv);
+
+		// map
 		TestComplex.testInterpretString("(let-type (A B) (extended-lambda ((((A) #> B) f) (List l))"
 				+ "                    ((((A) #> B) List:Linked) (if (can-deconstruct-as l ())"
 				+ "                                                (construct List Linked)"
@@ -312,18 +324,18 @@ class TestComplex {
 				+ "                    ((((A) #> B) List:Functional) (if (can-deconstruct-as l ())"
 				+ "                                                    (construct List Functional)"
 				+ "                                                    (construct List Functional (f (head-list l)) (map-list f (tail-list l)))))))",
-				ExtendedFunction
-						.makeExtendedFunction(
-								Arrays.asList(
-										new Function(
-												new TypeTuple(Arrays.asList(new TypeArrow(
-														new TypeTuple(Arrays.asList(new TypeVariable("A"))),
-														new TypeVariable("B")), linkedList)),
-												new Tuple(Arrays.asList(new Symbol("f"), new Symbol("l"))),
-												new IfExpression(
-														new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
-														new Construct(linkedList, Tuple.EMPTY_TUPLE),
-														new Construct(linkedList, new Tuple(Arrays.asList(
+				ExtendedFunction.makeExtendedFunction(
+						Arrays.asList(
+								new Function(
+										new TypeTuple(Arrays.asList(
+												new TypeArrow(new TypeTuple(Arrays.asList(new TypeVariable("A"))),
+														new TypeVariable("B")),
+												linkedList)),
+										new Tuple(Arrays.asList(new Symbol("f"), new Symbol("l"))),
+										new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
+												new Construct(linkedList, Tuple.EMPTY_TUPLE),
+												new Construct(linkedList,
+														new Tuple(Arrays.asList(
 																new AbstractionApplication(new Symbol("f"),
 																		new Tuple(Arrays
 																				.asList(new AbstractionApplication(
@@ -337,40 +349,40 @@ class TestComplex {
 																						new Tuple(Arrays
 																								.asList(new Symbol(
 																										"l"))))))))))),
-												env),
-										new Function(
-												new TypeTuple(
-														Arrays.asList(new TypeArrow(
-																new TypeTuple(Arrays.asList(new TypeVariable("A"))),
-																new TypeVariable("B")), typeListFuntionalAtom)),
-												new Tuple(Arrays.asList(new Symbol("f"), new Symbol("l"))),
-												new IfExpression(
-														new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
-														new Construct(typeListFuntionalAtom, Tuple.EMPTY_TUPLE),
-														new Construct(typeListFuntionalAtom, new Tuple(Arrays.asList(
-																new AbstractionApplication(new Symbol("f"),
-																		new Tuple(Arrays
-																				.asList(new AbstractionApplication(
-																						new Symbol("head-list"),
-																						new Tuple(Arrays.asList(
-																								new Symbol("l"))))))),
-																new AbstractionApplication(new Symbol("map-list"),
-																		new Tuple(Arrays.asList(new Symbol("f"),
-																				new AbstractionApplication(
-																						new Symbol("tail-list"),
-																						new Tuple(Arrays
-																								.asList(new Symbol(
-																										"l"))))))))))),
-												env)),
-								env), env, typeEnv);
+										env),
+								new Function(
+										new TypeTuple(Arrays.asList(
+												new TypeArrow(new TypeTuple(Arrays.asList(new TypeVariable("A"))),
+														new TypeVariable("B")),
+												typeListFuntionalAtom)),
+										new Tuple(Arrays.asList(new Symbol("f"), new Symbol("l"))),
+										new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
+												new Construct(typeListFuntionalAtom, Tuple.EMPTY_TUPLE),
+												new Construct(typeListFuntionalAtom, new Tuple(Arrays.asList(
+														new AbstractionApplication(
+																new Symbol("f"),
+																new Tuple(Arrays
+																		.asList(new AbstractionApplication(
+																				new Symbol("head-list"),
+																				new Tuple(Arrays
+																						.asList(new Symbol("l"))))))),
+														new AbstractionApplication(new Symbol("map-list"),
+																new Tuple(Arrays.asList(new Symbol("f"),
+																		new AbstractionApplication(
+																				new Symbol("tail-list"),
+																				new Tuple(Arrays.asList(
+																						new Symbol("l"))))))))))),
+										env)),
+						env),
+				env, typeEnv);
 	}
-	
+
 	@Test
 	@DisplayName("Test Complex Types")
 	void testComplexTypes() throws AppendableException {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
+
 		TestComplex.testInterpretString("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)",
 				new LitInteger(42), env, typeEnv);
 		TestComplex.testInterpretString("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
@@ -383,37 +395,48 @@ class TestComplex {
 		TestComplex.testInterpretString(
 				"(let-type (A B) ((lambda ((A x) (B y)) (cons x y)) 42 (construct Int String  \"42\")))",
 				new Tuple(Arrays.asList(new LitInteger(42),
-						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))), env, typeEnv);
+						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
+				env, typeEnv);
 	}
-	
+
 	@Test
 	@DisplayName("Clojure Literals")
 	void testClojureLiterals() throws AppendableException {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
-		TestComplex.testClojureCompile("0", "(with-meta [0] {:lang-type (lang-type-atom. \"Int\" \"Native\")})", env, typeEnv);
+
+		TestComplex.testClojureCompile("0",
+				"(with-meta [0] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"Int\") (new velka.lang.types.TypeRepresentation \"Native\"))})",
+				env, typeEnv);
 		TestComplex.testClojureCompile("3.141521",
-				"(with-meta [3.141521] {:lang-type (lang-type-atom. \"Double\" \"Native\")})", env, typeEnv);
-		TestComplex.testClojureCompile("#t", "(with-meta [true] {:lang-type (lang-type-atom. \"Bool\" \"Native\")})", env, typeEnv);
-		TestComplex.testClojureCompile("#f", "(with-meta [false] {:lang-type (lang-type-atom. \"Bool\" \"Native\")})", env, typeEnv);
+				"(with-meta [3.141521] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"Double\") (new velka.lang.types.TypeRepresentation \"Native\"))})",
+				env, typeEnv);
+		TestComplex.testClojureCompile("#t",
+				"(with-meta [true] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"Bool\") (new velka.lang.types.TypeRepresentation \"Native\"))})",
+				env, typeEnv);
+		TestComplex.testClojureCompile("#f",
+				"(with-meta [false] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"Bool\") (new velka.lang.types.TypeRepresentation \"Native\"))})",
+				env, typeEnv);
 		TestComplex.testClojureCompile("\"Hello World\"",
-				"(with-meta [\"Hello World\"] {:lang-type (lang-type-atom. \"String\" \"Native\")})", env, typeEnv);
+				"(with-meta [\"Hello World\"] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"String\") (new velka.lang.types.TypeRepresentation \"Native\"))})",
+				env, typeEnv);
 		TestComplex.testClojureCompileExpression(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
-				"(with-meta [(with-meta [\"XLII\"] {:lang-type (lang-type-atom. \"String\" \"Native\")})] {:lang-type (lang-type-atom. \"Int\" \"Roman\")})", env, typeEnv);
-		
+				"(with-meta [(with-meta [\"XLII\"] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"String\") (new velka.lang.types.TypeRepresentation \"Native\"))})] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"Int\") (new velka.lang.types.TypeRepresentation \"Roman\"))})",
+				env, typeEnv);
+
 		TestComplex.testClojureCompile("variable", "variable", env, typeEnv);
 	}
-	
+
 	@Test
 	@DisplayName("Clojure Special Forms and Applications")
-	void testSpecialFormsAndApplication () throws AppendableException {
+	void testSpecialFormsAndApplication() throws AppendableException {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
+
 		// Lambda
 		TestComplex.testClojureCompileRegex("(lambda (x y) x)", TestComplex.escapeBrackets(
-				"(with-meta [(with-meta (fn [x y] x) {:lang-type (lang-type-arrow. [\"\\w*\" \"\\w*\"] \"\\w*\")})] {:lang-type (lang-type-arrow. [\"\\w*\" \"\\w*\"] \"\\w*\")})"), env, typeEnv);
+				"(with-meta [(with-meta (fn [x y] x) {:lang-type (new velka.lang.types.TypeArrow (new velka.lang.types.TypeTuple [(new velka.lang.types.TypeVariable \"\\w*\") (new velka.lang.types.TypeVariable \"\\w*\")]) (new velka.lang.types.TypeVariable \"\\w*\"))})] {:lang-type (new velka.lang.types.TypeArrow (new velka.lang.types.TypeTuple [(new velka.lang.types.TypeVariable \"\\w*\") (new velka.lang.types.TypeVariable \"\\w*\")]) (new velka.lang.types.TypeVariable \"\\w*\"))})"),
+				env, typeEnv);
 		// Application
 		TestComplex.testClojureCompile("((lambda ((Int:Native x) (Int:Native y)) x) 42 21)",
 				"(" + AbstractionApplication.clojureEapply + " (with-meta [(with-meta (fn [x y] x) {:lang-type "
@@ -427,14 +450,17 @@ class TestComplex {
 						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
 						+ new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative))
 								.clojureTypeRepresentation()
-						+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
+						+ "}) " + AbstractionApplication.clojureRankingFunction + ")",
+				env, typeEnv);
 		// If
 		TestComplex.testClojureCompile("(if #t 42 21)",
 				"(if (get (with-meta [true] {:lang-type " + TypeAtom.TypeBoolNative.clojureTypeRepresentation()
 						+ "}) 0) (with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
 						+ "}) (with-meta [21] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-						+ "}))", env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("(if #t (construct Int Roman \"XLII\") (construct Int String \"42\"))", env, typeEnv);
+						+ "}))",
+				env, typeEnv);
+		TestComplex.testClojureCompileNoCmp("(if #t (construct Int Roman \"XLII\") (construct Int String \"42\"))", env,
+				typeEnv);
 		// Cons
 		TestComplex.testClojureCompile("(cons 21 21)",
 				"(with-meta [(with-meta [21] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
@@ -442,28 +468,32 @@ class TestComplex {
 						+ "})] {:lang-type "
 						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
 								.clojureTypeRepresentation()
-						+ "})", env, typeEnv);
+						+ "})",
+				env, typeEnv);
 		// Exception
 		TestComplex.testClojureCompile("(error \"error msg\")",
 				"(throw (Throwable. (get (with-meta [\"error msg\"] {:lang-type "
-						+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "}) 0)))", env, typeEnv);
-		//And
+						+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "}) 0)))",
+				env, typeEnv);
+		// And
 		TestComplex.testClojureCompile("(and #t #f)", "(with-meta [(and (get (with-meta [true] {:lang-type "
 				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "}) 0) (get (with-meta [false] {:lang-type "
 				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "}) 0))]{:lang-type "
 				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})", env, typeEnv);
-		//Or
+		// Or
 		TestComplex.testClojureCompile("(or #t #f)", "(with-meta [(or (get (with-meta [true] {:lang-type "
 				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "}) 0) (get (with-meta [false] {:lang-type "
 				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "}) 0))]{:lang-type "
 				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})", env, typeEnv);
-		
+
 		// Define
-		TestComplex.testClojureCompile("(define answer 42)", "(def answer (with-meta [42] {:lang-type "
-				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}))", env, typeEnv);
+		TestComplex.testClojureCompile("(define answer 42)",
+				"(def answer (with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}))",
+				env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(type Name2)", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(representation Structured Name2)", env, typeEnv);
-		TestComplex.testClojureCompile("(constructor Name2 Structured ((String:Native x) (String:Native y)) (cons x y))", "", env, typeEnv);
+		TestComplex.testClojureCompile(
+				"(constructor Name2 Structured ((String:Native x) (String:Native y)) (cons x y))", "", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(representation Unstructured Name2)", env, typeEnv);
 		TestComplex.testClojureCompile("(constructor Name2 Unstructured ((String:Native x)) x)", "", env, typeEnv);
 		TestComplex.testClojureCompile("(conversion Name2:Structured Name2:Unstructured"
@@ -475,30 +505,30 @@ class TestComplex {
 		// Extended Lambda
 		TestComplex.testClojureCompileNoCmp("(extended-lambda ((Int x)) ((Int:Native) \"Native\"))", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp(
-				"((extended-lambda ((Int x)) ((Int:Native) \"Native\") ((Int:String) \"String\")) (Int:String \"42\"))", env, typeEnv);
+				"((extended-lambda ((Int x)) ((Int:Native) \"Native\") ((Int:String) \"String\")) (Int:String \"42\"))",
+				env, typeEnv);
 	}
-	
+
 	@Test
 	@DisplayName("Clojure Operators")
-	void testClojureOperators () throws AppendableException {
+	void testClojureOperators() throws AppendableException {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
-		TestComplex.testClojureCompile("(+ 41 1)",
-				"(" + AbstractionApplication.clojureEapply
-						+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(+ (get _x 0) (get _y 0))] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-						+ "})] {:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-						+ "}) (with-meta [(with-meta [41] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}) (with-meta [1] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
-						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-								.clojureTypeRepresentation()
-						+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
+
+		TestComplex.testClojureCompile("(+ 41 1)", "(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(+ (get _x 0) (get _y 0))] {:lang-type "
+				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [41] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "}) (with-meta [1] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
+						.clojureTypeRepresentation()
+				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
 		TestComplex.testClojureCompile("(bit-and 42 1)", "(" + AbstractionApplication.clojureEapply
 				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(bit-and (get _x 0) (get _y 0))] {:lang-type "
 				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
@@ -509,59 +539,57 @@ class TestComplex {
 						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
 				+ "}) (with-meta [(with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
 				+ "}) (with-meta [1] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "})] {:lang-type " + (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
+				+ "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
 						.clojureTypeRepresentation()
 				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(bit-or 42 1)", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(car pair)", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(cdr pair)", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(concat \"Hello\" \"World\")", env, typeEnv);
-		TestComplex.testClojureCompile("(/ 84 2)",
-				"(" + AbstractionApplication.clojureEapply
-						+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(/ (get _x 0) (get _y 0))] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-						+ "})] {:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-						+ "}) (with-meta [(with-meta [84] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}) (with-meta [2] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
-						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-								.clojureTypeRepresentation()
-						+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
+		TestComplex.testClojureCompile("(/ 84 2)", "(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(/ (get _x 0) (get _y 0))] {:lang-type "
+				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [84] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "}) (with-meta [2] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
+						.clojureTypeRepresentation()
+				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(equals? 42 \"42\")", env, typeEnv);
-		TestComplex.testClojureCompile("(< 42 42)",
-				"(" + AbstractionApplication.clojureEapply
-						+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(< (get _x 0) (get _y 0))] {:lang-type "
-						+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})){:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
-						+ "})] {:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
-						+ "}) (with-meta [(with-meta [42] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}) (with-meta [42] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
-						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-								.clojureTypeRepresentation()
-						+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
-		TestComplex.testClojureCompile("(* 42 1)",
-				"(" + AbstractionApplication.clojureEapply
-						+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(* (get _x 0) (get _y 0))] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-						+ "})] {:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-						+ "}) (with-meta [(with-meta [42] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}) (with-meta [1] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
-						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-								.clojureTypeRepresentation()
-						+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
+		TestComplex.testClojureCompile("(< 42 42)", "(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(< (get _x 0) (get _y 0))] {:lang-type "
+				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})){:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "}) (with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
+						.clojureTypeRepresentation()
+				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
+		TestComplex.testClojureCompile("(* 42 1)", "(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(* (get _x 0) (get _y 0))] {:lang-type "
+				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "}) (with-meta [1] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
+						.clojureTypeRepresentation()
+				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
 		TestComplex.testClojureCompile("(not #t)", "(" + AbstractionApplication.clojureEapply
 				+ " (with-meta [(with-meta (fn [_x] (with-meta [(not (get _x 0))] {:lang-type "
 				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})){:lang-type "
@@ -574,61 +602,60 @@ class TestComplex {
 				+ "})] {:lang-type "
 				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative))).clojureTypeRepresentation() + "}) "
 				+ AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
-		TestComplex.testClojureCompile("(= 42 42)",
-				"(" + AbstractionApplication.clojureEapply
-						+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(= (get _x 0) (get _y 0))] {:lang-type "
-						+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})){:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
-						+ "})] {:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
-						+ "}) (with-meta [(with-meta [42] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}) (with-meta [42] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
-						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-								.clojureTypeRepresentation()
-						+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
-		TestComplex.testClojureCompile("(- 43 1)",
-				"(" + AbstractionApplication.clojureEapply
-						+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(- (get _x 0) (get _y 0))] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-						+ "})] {:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-						+ "}) (with-meta [(with-meta [43] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}) (with-meta [1] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
-						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-								.clojureTypeRepresentation()
-						+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
+		TestComplex.testClojureCompile("(= 42 42)", "(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(= (get _x 0) (get _y 0))] {:lang-type "
+				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})){:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "}) (with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
+						.clojureTypeRepresentation()
+				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
+		TestComplex.testClojureCompile("(- 43 1)", "(" + AbstractionApplication.clojureEapply
+				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(- (get _x 0) (get _y 0))] {:lang-type "
+				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
+						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
+				+ "}) (with-meta [(with-meta [43] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "}) (with-meta [1] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ "})] {:lang-type "
+				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
+						.clojureTypeRepresentation()
+				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
 	}
-	
+
 	@Test
 	@DisplayName("Clojure Conversions")
 	void testClojureConversions() throws AppendableException {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
+
 		TestComplex.testClojureCompileNoCmp("(IntNative2IntRoman 42)", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(IntNative2IntString 42)", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(IntRoman2IntNative (Int:Roman \"XLII\"))", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(IntRoman2IntString (Int:Roman \"XLII\"))", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(IntString2IntNative (Int:String \"42\"))", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(IntString2IntRoman (Int:String \"42\"))", env, typeEnv);
-		
+
 		TestComplex.testClojureCompileNoCmp(
-				"((extended-lambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (Int:Roman \"XLII\") 66)", env, typeEnv);
+				"((extended-lambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (Int:Roman \"XLII\") 66)",
+				env, typeEnv);
 	}
 
 	@Test
 	@DisplayName("Clojure List")
-	void testListClojure() throws AppendableException {		
+	void testListClojure() throws AppendableException {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
+
 		// List
 		TestComplex.testClojureCompileNoCmp("(type List2)", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(representation Linked List2)", env, typeEnv);
@@ -641,39 +668,52 @@ class TestComplex {
 		TestComplex.testClojureCompile("(constructor List2 Functional () ())", "", env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp(
-				"(define x (construct List2 Linked (construct Int Roman \"XLII\") (construct List2 Linked (construct Int String \"42\") (construct List2 Linked 42 (construct List2 Linked)))))", env, typeEnv);
+				"(define x (construct List2 Linked (construct Int Roman \"XLII\") (construct List2 Linked (construct Int String \"42\") (construct List2 Linked 42 (construct List2 Linked)))))",
+				env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp(
-				"(define y (construct List2 Functional (construct Int Roman \"XLII\") (construct List2 Functional (construct Int String \"42\") (construct List2 Functional 42 (construct List2 Functional)))))", env, typeEnv);
+				"(define y (construct List2 Functional (construct Int Roman \"XLII\") (construct List2 Functional (construct Int String \"42\") (construct List2 Functional 42 (construct List2 Functional)))))",
+				env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp(
 				"(define head-list2 (let-type (A) (extended-lambda ((List2 l)) ((List2:Linked) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List2:Linked)))))"
-						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))))", env, typeEnv);
+						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))))",
+				env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp(
 				"(define tail-list2 (let-type (A) (extended-lambda ((List2 l)) ((List2:Linked) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List2:Linked)))))"
-						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))))", env, typeEnv);
+						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))))",
+				env, typeEnv);
 
 		// This is interesting, extended lambda is not sufficient, when I might want to
 		// return a different representation.
 		// But on what would I base the representation?
 		TestComplex.testClojureCompileNoCmp(
-				"(define build-list2-aux (lambda (i n f) (if (= i n) (construct List2 Linked) (construct List2 Linked (f i) (build-list2-aux (+ i 1) n f)))))", env, typeEnv);
+				"(define build-list2-aux (lambda (i n f) (if (= i n) (construct List2 Linked) (construct List2 Linked (f i) (build-list2-aux (+ i 1) n f)))))",
+				env, typeEnv);
 
-		TestComplex.testClojureCompileNoCmp("(define build-list2 (lambda (n f) (build-list2-aux 0 n f)))", env, typeEnv);
+		TestComplex.testClojureCompileNoCmp("(define build-list2 (lambda (n f) (build-list2-aux 0 n f)))", env,
+				typeEnv);
 
 		TestComplex.testClojureCompileNoCmp("(define append-list2 (lambda ((List2 l) x) \n"
-				+ "(if (can-deconstruct-as l ()) (construct List2 Linked x (construct List2 Linked)) (construct List2 Linked (head-list2 l) (append-list2 (tail-list2 l) x)))))", env, typeEnv);
+				+ "(if (can-deconstruct-as l ()) (construct List2 Linked x (construct List2 Linked)) (construct List2 Linked (head-list2 l) (append-list2 (tail-list2 l) x)))))",
+				env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp(
-				"(define reverse-list2 (lambda ((List2 l)) (if (can-deconstruct-as l ()) (construct List2 Linked) (append-list2 (reverse-list2 (tail-list2 l)) (head-list2 l)))))", env, typeEnv);
+				"(define reverse-list2 (lambda ((List2 l)) (if (can-deconstruct-as l ()) (construct List2 Linked) (append-list2 (reverse-list2 (tail-list2 l)) (head-list2 l)))))",
+				env, typeEnv);
 
-		TestComplex.testClojureCompileNoCmp("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)", env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
-				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\")))) +)", env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
-				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\"))))"
-				+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))", env, typeEnv);
+		TestComplex.testClojureCompileNoCmp("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)", env,
+				typeEnv);
+		TestComplex.testClojureCompileNoCmp(
+				"((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
+						+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\")))) +)",
+				env, typeEnv);
+		TestComplex.testClojureCompileNoCmp(
+				"((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
+						+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\"))))"
+						+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))",
+				env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp(
 				"(let-type (A B) ((lambda ((A x) (B y)) (cons x y)) 42 (construct Int String  \"42\")))", env, typeEnv);
@@ -684,7 +724,8 @@ class TestComplex {
 						+ "(construct List2 Linked (head-list l) (append-list (tail-list l) x))))"
 						+ "((List2:Functional A) (if (can-deconstruct-as l ())"
 						+ "(construct List2 Functional x (construct List2 Functional))"
-						+ "(construct List2 Functional (head-list l) (append-list (tail-list l) x))))))", env, typeEnv);
+						+ "(construct List2 Functional (head-list l) (append-list (tail-list l) x))))))",
+				env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp("(extended-lambda ((List2 l))"
 				+ "                        ((List2:Linked) (if (can-deconstruct-as l ())"
@@ -692,7 +733,8 @@ class TestComplex {
 				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l))))"
 				+ "                        ((List2:Functional) (if (can-deconstruct-as l ())"
 				+ "                                            (construct List2 Functional)"
-				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l)))))", env, typeEnv);
+				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l)))))",
+				env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp("(let-type (A B) (extended-lambda ((((A) #> B) f) (List2 l))"
 				+ "                    ((((A) #> B) List2:Linked) (if (can-deconstruct-as l ())"
@@ -700,7 +742,8 @@ class TestComplex {
 				+ "                                                (construct List2 Linked (f (head-list l)) (map-list f (tail-list l)))))"
 				+ "                    ((((A) #> B) List2:Functional) (if (can-deconstruct-as l ())"
 				+ "                                                    (construct List2 Functional)"
-				+ "                                                    (construct List2 Functional (f (head-list l)) (map-list f (tail-list l)))))))", env, typeEnv);
+				+ "                                                    (construct List2 Functional (f (head-list l)) (map-list f (tail-list l)))))))",
+				env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp("(println (cons 42 \"42\"))", env, typeEnv);
 	}
