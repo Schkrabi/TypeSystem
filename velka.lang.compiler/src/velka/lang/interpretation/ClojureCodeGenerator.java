@@ -23,20 +23,28 @@ public class ClojureCodeGenerator {
 	}
 
 	private static void writeHeaders(Writer target, Environment env, TypeEnvironment typeEnv) throws IOException {
-		target.write("(defrecord lang-type-atom [name representation])\n");
-		target.write("(defrecord lang-type-arrow [arg-type return-type])\n");
-		target.write("(def lang-pstr " + "(fn [exp] " + "(letfn [(lang-pstr-aux [exp level] "
-				+ "(let [type (:lang-type (meta exp))] " + "(cond " + "(or "
-				+ "(= type (lang-type-atom. \"Int\" \"Native\")) " + "(= type (lang-type-atom. \"String\" \"Native\")) "
-				+ "(= type (lang-type-atom. \"Double\" \"Native\")) "
-				+ "(= type (lang-type-atom. \"Bool\" \"Native\"))) (if " + "(= level 0) " + "(pr-str (get exp 0)) "
-				+ "(get exp 0)) " + "(= type []) []"
-				+ "(instance? lang-type-atom type) (lang-pstr-aux (get exp 0) level) "
-				+ "(instance? clojure.lang.PersistentVector type) " + "(if " + "(= level 0) "
-				+ "(pr-str (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp))) "
-				+ " (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp))) "
-				+ ":else (throw (Throwable. (str (pr-str exp) \" is not a printable expression\"))))))] "
-				+ "(lang-pstr-aux exp 0))))\n");
+		target.write("(def lang-pstr\n" + 
+				"    (fn [exp]\n" + 
+				"        (letfn [(lang-pstr-aux [exp level]\n" + 
+				"                    (let [type (:lang-type (meta exp))]\n" + 
+				"                        (cond\n" + 
+				"                            (or \n" + 
+				"                                (= type velka.lang.types.TypeAtom/TypeIntNative)\n" + 
+				"                                (= type velka.lang.types.TypeAtom/TypeStringNative) \n" + 
+				"                                (= type velka.lang.types.TypeAtom/TypeDoubleNative) \n" + 
+				"                                (= type velka.lang.types.TypeAtom/TypeBoolNative)) \n" + 
+				"                                    (if (= level 0) \n" + 
+				"                                        (pr-str (get exp 0)) \n" + 
+				"                                        (get exp 0))\n" + 
+				"                            (= type velka.lang.types.TypeTuple/EMPTY_TUPLE) []\n" + 
+				"                            (instance? velka.lang.types.TypeAtom type) (lang-pstr-aux (get exp 0) level)\n" + 
+				"                            (instance? velka.lang.types.TypeTuple type) \n" + 
+				"                            (if \n" + 
+				"                                (= level 0) \n" + 
+				"                                (pr-str (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))\n" + 
+				"                                (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))\n" + 
+				"                            :else (throw (Throwable. (str exp \" is not a printable expression\"))))))]\n" + 
+				"            (lang-pstr-aux exp 0))))");
 		target.write(ListNative.makeClojureCode(env, typeEnv));
 	}
 }

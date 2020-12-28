@@ -173,7 +173,7 @@ public class AbstractionApplication extends Application {
 				+ "(letfn [ "
 						+ "(implementation-arg-type "
 							+ "[implementation] "
-							+ "(:arg-type (:lang-type (meta implementation)))) "
+							+ "(.ltype (:lang-type (meta implementation)))) "
 						+ "(rank-implementations "
 							+ "[v implementations ranking-function] "
 							+ "(map "
