@@ -1,4 +1,5 @@
-(type List)
+;;List is now already defined internal type, so we omit it
+;;(type List)
 
 (representation Linked List)
 (constructor List Linked (x (List l)) (cons x l))
