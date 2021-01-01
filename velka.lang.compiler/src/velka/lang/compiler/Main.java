@@ -2,20 +2,24 @@ package velka.lang.compiler;
 
 import velka.lang.interpretation.Environment;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.io.Writer;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.TokenStream;
 
 import velka.lang.parser.SchemeLexer;
@@ -26,6 +30,7 @@ import velka.lang.semantic.SemanticParser;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.langbase.ListNative;
 import velka.lang.util.AppendableException;
+import velka.lang.util.ThrowingFunction;
 import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.expression.Expression;
 
@@ -46,18 +51,44 @@ public class Main {
 		try {
 			Environment topLevel = Environment.initTopLevelEnvitonment();
 			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(topLevel);
-			
+
 			Main.init(topLevel, typeEnv);
 			// Very basic options, didn't wanted to add more external libraries etc...
 			if (args.length == 0) {
 				// Interactive parser mode
-				Main.interpretLoop(topLevel, typeEnv);
+				Main.repl(System.in, System.out, topLevel, typeEnv, true);
 			} else if (args.length == 1) {
 				// Load code and interpret further
-				Main.interpretFile(Paths.get(args[0]), topLevel, typeEnv);
+				InputStream inStream = null;
+				try {
+					inStream = Files.newInputStream(Paths.get(args[0]));
+					Main.interpret(inStream, System.out, topLevel, typeEnv);
+				}catch(Exception e) {
+					e.printStackTrace();
+				}finally {
+					if(inStream != null) {
+						inStream.close();
+					}
+				}
 			} else if (args.length == 2) {
 				// Compiler mode
-				Main.compile(Paths.get(args[0]), Paths.get(args[1]), topLevel, typeEnv);
+				InputStream inStream = null;
+				PrintStream outStream = null;
+				
+				try {
+					inStream = Files.newInputStream(Paths.get(args[0]));
+					outStream = new PrintStream(Files.newOutputStream(Paths.get(args[1])));
+					Main.clojure(inStream, outStream, topLevel, typeEnv);
+				} catch(Exception e) {
+					e.printStackTrace();
+				}finally {
+					if(inStream != null) {
+						inStream.close();
+					}
+					if(outStream != null) {
+						outStream.close();
+					}
+				}
 			} else {
 				System.out.println("Wrong number of arguments specified.");
 				return;
@@ -81,27 +112,106 @@ public class Main {
 		Main.initTypesConversions(env);
 	}
 
-	private static void interpretLoop(Environment topLevel, TypeEnvironment typeEnv) throws Exception {
-		Scanner input = new Scanner(System.in);
+	/**
+	 * Read function for the REPL
+	 * 
+	 * @param in input stream
+	 * @return list of parsed expressions
+	 * @throws IOException
+	 * @throws RecognitionException
+	 * @throws AppendableException
+	 */
+	private static List<Expression> read(InputStream in) throws IOException, RecognitionException, AppendableException {
+		CharStream charStream = CharStreams.fromStream(in);
+		TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
+		SchemeParser parser = new SchemeParser(tokens);
+
+		ExprsContext exprsContext = parser.exprs();
+		List<Expression> exprs = new ArrayList<Expression>();
+
+		for (SemanticNode s : exprsContext.val) {
+			exprs.add(SemanticParser.parseNode(s));
+		}
+
+		return exprs;
+	}
+
+	/**
+	 * Eval function for the REPL
+	 * 
+	 * @param in      input parsed expressions
+	 * @param env     environment for evaluation
+	 * @param typeEnv type environment for evaluation
+	 * @return list of evaluated expressions
+	 */
+	private static List<Expression> eval(List<Expression> in, Environment env, TypeEnvironment typeEnv) {
+		return in.stream().map(ThrowingFunction.wrapper(e -> {
+			e.infer(env, typeEnv);
+			return e.interpret(env, typeEnv);
+		})).collect(Collectors.toList());
+	}
+
+	/**
+	 * Compile function for clojure compilation. Compiles list of expression into
+	 * clojure code
+	 * 
+	 * @param in      input list of expression
+	 * @param env     used environment
+	 * @param typeEnv type environment
+	 * @return string with compiled clojure codes
+	 * @throws Exception
+	 */
+	private static String compile(List<Expression> in, Environment env, TypeEnvironment typeEnv) throws Exception {
+		return ClojureCodeGenerator.toClojureCode(in, env, typeEnv);
+	}
+
+	/**
+	 * Print function for the repl
+	 * 
+	 * @param in list of expression to print to string
+	 * @return string with printed expression
+	 */
+	private static String print(List<Expression> in) {
+		StringBuilder sb = new StringBuilder();
+		Iterator<Expression> i = in.iterator();
+
+		while (i.hasNext()) {
+			Expression e = i.next();
+			sb.append(e.toString());
+			if (i.hasNext()) {
+				sb.append('\n');
+			}
+		}
+
+		return sb.toString();
+	}
+	
+	/**
+	 * Char to be printed to output for repl
+	 */
+	public static final String PROMPT_LEADING_CHAR = ">";
+	
+	/**
+	 * Repl function
+	 * @param in input stream for repl, usually System.in (stdin)
+	 * @param out output stream for repl, usually System.out (stdout)
+	 * @param topLevel environment for repl
+	 * @param typeEnv type environment for repl
+	 * @param showPromptLeadingChar whether to print Main.PROMPT_LEADING_CHAR to output stream before reading line
+	 * @throws Exception
+	 */
+	private static void repl(InputStream in, PrintStream out, Environment topLevel, TypeEnvironment typeEnv,
+			boolean showPromptLeadingChar) throws Exception {
+		Scanner input = new Scanner(in);
 
 		try {
 			while (true) {
-				System.out.print(">");
-				CharStream charStream = CharStreams.fromString(input.nextLine());
-				TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
-				SchemeParser parser = new SchemeParser(tokens);
-
-				ExprsContext exprsContext = parser.exprs();
-				List<Expression> exprs = new ArrayList<Expression>();
-
-				for (SemanticNode s : exprsContext.val) {
-					exprs.add(SemanticParser.parseNode(s));
+				if (showPromptLeadingChar) {
+					out.print(Main.PROMPT_LEADING_CHAR);
 				}
 
-				for (Expression e : exprs) {
-					e.infer(topLevel, typeEnv);
-					System.out.println(e.interpret(topLevel, typeEnv));
-				}
+				out.println(Main.print(Main.eval(Main.read(new ByteArrayInputStream(input.nextLine().getBytes())),
+						topLevel, typeEnv)));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -110,32 +220,21 @@ public class Main {
 		}
 	}
 
-	private static void compile(Path inputPath, Path outputPath, Environment topLevel, TypeEnvironment typeEnv) throws Exception {
+	/**
+	 * Compiles contents of in stream into a clojure code and prints it to out stream
+	 * @param in input stream
+	 * @param out output stream
+	 * @param topLevel top level environment for compilation
+	 * @param typeEnv type environment for compilation
+	 * @throws Exception
+	 */
+	private static void clojure(InputStream in, PrintStream out, Environment topLevel, TypeEnvironment typeEnv)
+			throws Exception {
 		Reader input = null;
 		Writer output = null;
 
 		try {
-			input = Files.newBufferedReader(inputPath);
-
-			CharStream charStream = CharStreams.fromReader(input);
-			TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
-			SchemeParser parser = new SchemeParser(tokens);
-			ExprsContext exprsContext = parser.exprs();
-
-			List<Expression> l = new LinkedList<Expression>();
-			List<Expression> exprs = new ArrayList<Expression>();
-
-			for (SemanticNode s : exprsContext.val) {
-				exprs.add(SemanticParser.parseNode(s));
-			}
-
-			for (Expression e : exprs) {
-				e.infer(topLevel, typeEnv);
-				l.add(e);
-			}
-
-			output = Files.newBufferedWriter(outputPath, Charset.defaultCharset());
-			ClojureCodeGenerator.toClojureCode(l, output, topLevel, typeEnv);
+			out.print(Main.compile(Main.read(in), topLevel, typeEnv));
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -148,38 +247,15 @@ public class Main {
 		}
 	}
 
-	private static void interpretFile(Path inputPath, Environment topLevel, TypeEnvironment typeEnv) throws Exception {
-		Reader input = null;
-		Scanner inputI = null;
-
-		try {
-			input = Files.newBufferedReader(inputPath);
-
-			CharStream charStream = CharStreams.fromReader(input);
-			TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
-			SchemeParser parser = new SchemeParser(tokens);
-			ExprsContext exprsContext = parser.exprs();
-
-			List<Expression> exprs = new ArrayList<Expression>();
-
-			for (SemanticNode s : exprsContext.val) {
-				exprs.add(SemanticParser.parseNode(s));
-			}
-
-			for (Expression e : exprs) {
-				e.infer(topLevel, typeEnv);
-				e.interpret(topLevel, typeEnv);
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			if (input != null) {
-				input.close();
-			}
-			if (inputI != null) {
-				inputI.close();
-			}
-		}
+	/**
+	 * Interprets content of in stream and prints result into out stream
+	 * @param in input stream with code
+	 * @param out output stream
+	 * @param topLevel environment for interpretation
+	 * @param typeEnv type environment for interpretation
+	 * @throws Exception 
+	 */
+	private static void interpret(InputStream in, PrintStream out, Environment topLevel, TypeEnvironment typeEnv) throws Exception {
+		out.print(Main.print(Main.eval(Main.read(in), topLevel, typeEnv)));
 	}
 }

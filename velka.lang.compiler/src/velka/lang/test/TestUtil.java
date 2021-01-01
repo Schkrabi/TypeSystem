@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -62,8 +61,7 @@ class TestUtil {
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		assertAll(() -> new ClojureCodeGenerator(),
 				() -> ClojureCodeGenerator.toClojureCode(
-						Arrays.asList(new LitInteger(128), Expression.EMPTY_EXPRESSION, LitBoolean.TRUE),
-						new StringWriter(), env, typeEnv));
+						Arrays.asList(new LitInteger(128), Expression.EMPTY_EXPRESSION, LitBoolean.TRUE), env, typeEnv));
 	}
 
 	@Test
