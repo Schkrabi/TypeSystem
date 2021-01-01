@@ -58,11 +58,11 @@ public class Main {
 				// Interactive parser mode
 				Main.repl(System.in, System.out, topLevel, typeEnv, true);
 			} else if (args.length == 1) {
-				// Load code and interpret further
+				// Load code and interpret
 				InputStream inStream = null;
 				try {
 					inStream = Files.newInputStream(Paths.get(args[0]));
-					Main.interpret(inStream, System.out, topLevel, typeEnv);
+					Main.interpret(inStream, topLevel, typeEnv);
 				}catch(Exception e) {
 					e.printStackTrace();
 				}finally {
@@ -255,7 +255,7 @@ public class Main {
 	 * @param typeEnv type environment for interpretation
 	 * @throws Exception 
 	 */
-	private static void interpret(InputStream in, PrintStream out, Environment topLevel, TypeEnvironment typeEnv) throws Exception {
-		out.print(Main.print(Main.eval(Main.read(in), topLevel, typeEnv)));
+	private static void interpret(InputStream in, Environment topLevel, TypeEnvironment typeEnv) throws Exception {
+		Main.print(Main.eval(Main.read(in), topLevel, typeEnv));
 	}
 }
