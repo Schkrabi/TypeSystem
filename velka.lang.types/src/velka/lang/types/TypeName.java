@@ -52,4 +52,5 @@ public class TypeName implements Comparable<TypeName> {
 	public static final TypeName BOOL = new TypeName("Bool");
 	public static final TypeName DOUBLE = new TypeName("Double");
 	public static final TypeName LIST = new TypeName("List");
+	public static final TypeName TYPE = new TypeName("Type");
 }

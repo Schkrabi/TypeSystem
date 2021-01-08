@@ -3,6 +3,13 @@ package velka.lang.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -25,6 +32,7 @@ import velka.lang.application.IfExpression;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitComposite;
@@ -52,7 +60,7 @@ class TestComplex {
 
 	@Test
 	@DisplayName("Test Recursion")
-	void testRecursion() throws AppendableException {
+	void testRecursion() throws Exception {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
@@ -61,11 +69,16 @@ class TestComplex {
 
 		TestComplex.testClojureCompileNoCmp("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))", env,
 				typeEnv);
+
+		TestComplex.testClojureCompileClj(
+				"(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))" + "(println (fact 5))", "120\n");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))" + "(println (fact 5))");
 	}
 
 	@Test
 	@DisplayName("Test Basic Extended lambda")
-	void testExtemdedLambda() throws AppendableException {
+	void testExtemdedLambda() throws Exception {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
@@ -85,6 +98,11 @@ class TestComplex {
 				new LitComposite(new LitString("JanNovak"),
 						new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured"))),
 				env, typeEnv);
+
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(println ((lambda ((String:Native x) (Int:String y)) x) \"test\" (construct Int String \"1984\")))\n"
+						+ "(println ((extended-lambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (construct Int Roman \"XLII\") 66))\n"
+						+ "");
 	}
 
 	@Test
@@ -379,7 +397,7 @@ class TestComplex {
 
 	@Test
 	@DisplayName("Test Complex Types")
-	void testComplexTypes() throws AppendableException {
+	void testComplexTypes() throws Exception {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
@@ -397,6 +415,15 @@ class TestComplex {
 				new Tuple(Arrays.asList(new LitInteger(42),
 						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
 				env, typeEnv);
+
+		TestComplex.assertIntprtAndCompPrintSameValues("(type Name)\n" + "(representation Unstructured Name)\n"
+				+ "(constructor Name Unstructured ((String:Native x)) x)\n" + "(representation Structured Name)\n"
+				+ "(constructor Name Structured ((String:Native x) (String:Native y)) (cons x y))\n"
+				+ "(println ((extended-lambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (construct Name Unstructured \"Jan Novak\")))\n"
+				+ "(println ((extended-lambda (x) ((Name:Structured) \"structured\")) (construct Name Structured \"Jan\" \"Novak\")))\n"
+				+ "(conversion Name:Structured Name:Unstructured ((Name:Structured x)) (construct Name Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))\n"
+				+ "(println ((lambda ((Name:Unstructured x)) x) (construct Name Structured \"Jan\" \"Novak\")))\n"
+				+ "");
 	}
 
 	@Test
@@ -511,7 +538,7 @@ class TestComplex {
 
 	@Test
 	@DisplayName("Clojure Operators")
-	void testClojureOperators() throws AppendableException {
+	void testClojureOperators() throws Exception {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
@@ -630,11 +657,19 @@ class TestComplex {
 				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
 						.clojureTypeRepresentation()
 				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
+
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(println (+ 21 21))\n" + "(println (* 1 42))\n" + "(println (/ 84 2))\n" + "(println (- 63 21))\n"
+						+ "(println (and #t #f))\n" + "(println (bit-and 42 1))\n" + "(println (bit-or 42 1))\n"
+						+ "(println (concat \"Hello \" \"World\"))\n" + "(println (equals? 42 \"42\"))\n"
+						+ "(println (< 42 42))\n" + "(println (not #t))\n" + "(println (= 42 42))\n"
+						+ "(println (or #t #f))\n" + "(println (cons 42 \"42\"))\n"
+						+ "(println (car (cons 42 \"42\")))\n" + "(println (cdr (cons 42 \"42\")))");
 	}
 
 	@Test
 	@DisplayName("Clojure Conversions")
-	void testClojureConversions() throws AppendableException {
+	void testClojureConversions() throws Exception {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
@@ -648,11 +683,18 @@ class TestComplex {
 		TestComplex.testClojureCompileNoCmp(
 				"((extended-lambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (Int:Roman \"XLII\") 66)",
 				env, typeEnv);
+
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(println (convert Int:Native Int:String 42))\n" + "(println (convert Int:Native Int:Roman 42))\n"
+						+ "(println (convert Int:String Int:Native (construct Int String \"42\")))\n"
+						+ "(println (convert Int:String Int:Roman (construct Int String \"42\")))\n"
+						+ "(println (convert Int:Roman Int:Native (construct Int Roman \"XLII\")))\n"
+						+ "(println (convert Int:Roman Int:String (construct Int Roman \"XLII\")))");
 	}
 
 	@Test
 	@DisplayName("Clojure List")
-	void testListClojure() throws AppendableException {
+	void testListClojure() throws Exception {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
@@ -746,6 +788,63 @@ class TestComplex {
 				env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp("(println (cons 42 \"42\"))", env, typeEnv);
+
+		TestComplex.assertIntprtAndCompPrintSameValues(";;List is now already defined internal type, so we omit it\n"
+				+ ";;(type List)\n" + "\n" + "(representation Linked List)\n"
+				+ "(constructor List Linked (x (List l)) (cons x l))\n" + "(constructor List Linked () ())\n" + "\n"
+				+ "(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
+				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
+				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" + "\n" + "(define z (fcons 1 2))\n"
+				+ "(println (fcar z))\n" + "(println (fcdr z))\n" + "\n" + "(representation Functional List)\n"
+				+ "(constructor List Functional (x (List l)) (fcons x l))\n" + "(constructor List Functional () ())\n"
+				+ "\n"
+				+ "(define x (construct List Linked (construct Int Roman \"XLII\") (construct List Linked (construct Int String \"42\") (construct List Linked 42 (construct List Linked)))))\n"
+				+ "(define y (construct List Functional (construct Int Roman \"XLII\") (construct List Functional (construct Int String \"42\") (construct List Functional 42 (construct List Functional)))))\n"
+				+ "(println x)\n" + "\n" + "(define is-list-empty (extended-lambda ((List l))\n"
+				+ "                        ((List:Linked) (can-deconstruct-as l ()))\n"
+				+ "                        ((List:Functional) (can-deconstruct-as l ()))))\n"
+				+ "                        \n" + "(println (is-list-empty x))\n" + "(println (is-list-empty y))\n"
+				+ "(println (is-list-empty (construct List Linked)))\n"
+				+ "(println (is-list-empty (construct List Functional)))\n"
+				+ "(println (is-list-empty (let-type (A) (cdr (deconstruct x (A List:Linked))))))\n"
+				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct y ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
+				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct (construct List Functional 42 (construct List Functional)) ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
+				+ "\n" + "(define head-list (let-type (A)\n" + "                    (extended-lambda ((List l))\n"
+				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List:Linked)))))\n"
+				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))\n"
+				+ "(println (head-list x))\n" + "(println (head-list y))\n" + "\n" + "(define tail-list (let-type (A)\n"
+				+ "                    (extended-lambda ((List l)) \n"
+				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List:Linked)))))\n"
+				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))\n"
+				+ "(println (tail-list x))\n" + "(println (head-list (tail-list y)))\n" + "\n"
+				+ "(define build-list-aux (lambda (i n f)\n" + "            						(if (= i n)\n"
+				+ "            							(construct List Linked)\n"
+				+ "            							(construct List Linked (f i) (build-list-aux (+ i 1) n f)))))\n"
+				+ "(println (build-list-aux 0 5 (lambda (x) (+ x 1))))\n" + "\n"
+				+ "(define build-list (lambda (n f) (build-list-aux 0 n f)))\n"
+				+ "(println (build-list 5 (lambda (x) (+ x 1))))\n" + "\n" + "(define append-list (let-type (A)\n"
+				+ "                    (extended-lambda ((List l) (A x))\n"
+				+ "                        ((List:Linked A) (if (is-list-empty l)\n"
+				+ "                            (construct List Linked x (construct List Linked))\n"
+				+ "                            (construct List Linked (head-list l) (append-list (tail-list l) x))))\n"
+				+ "						((List:Functional A) (if (is-list-empty l)\n"
+				+ "                            (construct List Functional x (construct List Functional))\n"
+				+ "                            (construct List Functional (head-list l) (append-list (tail-list l) x)))))))\n"
+				+ "                            \n" + "(println (append-list x 21))\n" + "\n"
+				+ "(define reverse-list (extended-lambda ((List l))\n"
+				+ "                        ((List:Linked) (if (is-list-empty l) \n"
+				+ "                                            (construct List Linked) \n"
+				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l))))\n"
+				+ "                        ((List:Functional) (if (is-list-empty l)\n"
+				+ "                                                (construct List Functional)\n"
+				+ "                                                (append-list (reverse-list (tail-list l)) (head-list l))))))\n"
+				+ "(println (reverse-list x))\n" + "(println (head-list (reverse-list y)))\n" + "");
+	}
+
+	@Test
+	@DisplayName("Test Clojure TypeSymbol")
+	void testClojureTypeSymbol() {
+
 	}
 
 	private static List<Expression> parseString(String s) throws AppendableException {
@@ -823,6 +922,62 @@ class TestComplex {
 	private static void testClojureCompileNoCmp(String code, Environment env, TypeEnvironment typeEnv)
 			throws AppendableException {
 		TestComplex.compileToClojure(code, env, typeEnv);
+	}
+
+	private static void assertIntprtAndCompPrintSameValues(String code) throws Exception {
+		PrintStream stdOut = System.out;
+		ByteArrayOutputStream tmp = new ByteArrayOutputStream();
+		System.setOut(new PrintStream(tmp));
+
+		Environment intpEnv = Environment.initTopLevelEnvitonment();
+		TypeEnvironment intpTypeEnv = TypeEnvironment.initBasicTypes(intpEnv);
+		InputStream inStream = new ByteArrayInputStream(code.getBytes());
+		velka.lang.interpretation.Compiler.interpret(inStream, intpEnv, intpTypeEnv);
+
+		String intpResult = tmp.toString();
+
+		System.setOut(stdOut);
+
+		TestComplex.testClojureCompileClj(code, intpResult);
+	}
+
+	private static String clojureCompilationResult(List<Expression> l, Environment env, TypeEnvironment typeEnv)
+			throws Exception {
+		File tempFile = File.createTempFile("velka_clojure_test", null);
+
+		String code = velka.lang.interpretation.Compiler.compile(l, env, typeEnv);
+		FileOutputStream ofs = new FileOutputStream(tempFile);
+		ofs.write(ClojureCodeGenerator.writeHeaders(env, typeEnv).getBytes());
+		ofs.write(code.getBytes());
+		ofs.close();
+
+		ProcessBuilder pb = new ProcessBuilder("clj", tempFile.getAbsolutePath());
+		pb.inheritIO();
+		pb.directory(new File("/home/schkabi/Documents/Java/TypeSystem/lib"));
+
+		File tempOut = File.createTempFile("velka_clojure_test_out", null);
+
+		pb.redirectOutput(tempOut);
+
+		Process p = pb.start();
+		p.waitFor();
+
+		String result = Files.readString(tempOut.toPath());
+		tempFile.delete();
+		tempOut.delete();
+
+		return result;
+	}
+
+	private static void testClojureCompileClj(String code, String expected) throws Exception {
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+
+		InputStream inStream = new ByteArrayInputStream(code.getBytes());
+		String result = TestComplex.clojureCompilationResult(velka.lang.interpretation.Compiler.read(inStream), env,
+				typeEnv);
+
+		assertEquals(expected, result);
 	}
 
 	private static String escapeBrackets(String s) {

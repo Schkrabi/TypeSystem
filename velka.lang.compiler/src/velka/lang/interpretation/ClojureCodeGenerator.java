@@ -1,6 +1,5 @@
 package velka.lang.interpretation;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -22,7 +21,7 @@ public class ClojureCodeGenerator {
 		return sb.toString();
 	}
 
-	public static String writeHeaders(Environment env, TypeEnvironment typeEnv) throws IOException {
+	public static String writeHeaders(Environment env, TypeEnvironment typeEnv) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("(def lang-pstr\n" + 
 				"    (fn [exp]\n" + 

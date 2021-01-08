@@ -156,6 +156,12 @@ public class TypeAtom extends Type {
 	 */
 	public static final TypeAtom TypeList = new TypeAtom(TypeName.LIST, TypeRepresentation.WILDCARD);
 	public static final TypeAtom TypeListNative = new TypeAtom(TypeName.LIST, TypeRepresentation.NATIVE);
+	
+	/**
+	 * Type of TypeSymbol
+	 */
+	public static final TypeAtom TypeType = new TypeAtom(TypeName.TYPE, TypeRepresentation.WILDCARD);
+	public static final TypeAtom TypeTypeNative = new TypeAtom(TypeName.TYPE, TypeRepresentation.NATIVE);
 
 	@Override
 	public Type map(Function<Type, Type> fun) throws AppendableException {

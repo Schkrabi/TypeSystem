@@ -40,6 +40,7 @@ import velka.lang.application.DefineRepresentation;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.expression.TypeHolder;
+import velka.lang.expression.TypeSymbol;
 import velka.lang.expression.Symbol;
 import velka.lang.interpretation.Environment;
 import velka.lang.literal.LitBoolean;
@@ -66,6 +67,7 @@ import velka.lang.types.TypeTuple;
 import velka.lang.types.TypeVariable;
 import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
+import velka.lang.util.NameGenerator;
 import velka.lang.exceptions.InvalidNumberOfArgumentsException;
 import velka.lang.util.Pair;
 import velka.lang.exceptions.UnboundVariableException;
@@ -900,11 +902,34 @@ class TestInterpretation {
 		TestInterpretation.testOperator(Operator.Subtraction,
 				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(42))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		/*
-		 * TestInterpretation.testOperator(Operator.Deconstruct, new
-		 * Tuple(Arrays.asList(new LitComposite(new LitString("42"),
-		 * TypeAtom.TypeIntString))), new LitString("42"), null);
-		 */
+		TestInterpretation.testOperator(Operator.CanUnifyRepresentations,
+				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
+						new TypeSymbol(new TypeVariable(NameGenerator.next())))),
+				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.CanUnifyRepresentations,
+				new Tuple(
+						Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative))),
+				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.CanUnifyRepresentations,
+				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman))),
+				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.CanUnifyRepresentations, new Tuple(
+				Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeStringNative))),
+				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.CanUnifyTypes,
+				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
+						new TypeSymbol(new TypeVariable(NameGenerator.next())))),
+				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.CanUnifyTypes,
+				new Tuple(
+						Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative))),
+				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.CanUnifyTypes,
+				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman))),
+				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.CanUnifyTypes, new Tuple(
+				Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeStringNative))),
+				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
 	}
 
 	@Test
@@ -1001,7 +1026,7 @@ class TestInterpretation {
 			defTypeExpression.toString();
 			defTypeExpression.hashCode();
 			TypeEnvironment cljTypeEnv = TypeEnvironment.initBasicTypes(top);
-			defTypeExpression.toClojureCode(top, cljTypeEnv); 
+			defTypeExpression.toClojureCode(top, cljTypeEnv);
 		});
 
 		TestInterpretation.testReflexivity(defTypeExpression);
@@ -1033,10 +1058,10 @@ class TestInterpretation {
 		assertAll(() -> {
 			defCon.toString();
 			defCon.hashCode();
-			
+
 			TypeEnvironment cljTypeEnv = TypeEnvironment.initBasicTypes(top);
 			cljTypeEnv.addType(name);
-			cljTypeEnv.addRepresentation(typeAtomNative);			
+			cljTypeEnv.addRepresentation(typeAtomNative);
 			defCon.toClojureCode(top, cljTypeEnv);
 		});
 
@@ -1075,7 +1100,7 @@ class TestInterpretation {
 		assertAll(() -> {
 			defRep.toString();
 			defRep.hashCode();
-			
+
 			TypeEnvironment cljTypeEnv = TypeEnvironment.initBasicTypes(top);
 			cljTypeEnv.addType(name);
 			defRep.toClojureCode(top, cljTypeEnv);
@@ -1117,7 +1142,7 @@ class TestInterpretation {
 			TypeEnvironment cljTypeEnv = TypeEnvironment.initBasicTypes(top);
 			cljTypeEnv.addType(name);
 			cljTypeEnv.addRepresentation(type);
-			
+
 			defCon.toClojureCode(top, cljTypeEnv);
 		});
 
@@ -1194,7 +1219,7 @@ class TestInterpretation {
 				new LitComposite(new LitString("42"), TypeAtom.TypeIntString), TypeAtom.TypeStringNative);
 		CanDeconstructAs cannotDeconstrut = new CanDeconstructAs(
 				new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman), TypeAtom.TypeIntNative);
-		
+
 		Environment top = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
@@ -1222,7 +1247,7 @@ class TestInterpretation {
 	@DisplayName("Test Convert")
 	void testConvert() throws AppendableException {
 		Convert convert = new Convert(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, new LitInteger(42));
-		
+
 		Environment top = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
@@ -1254,7 +1279,7 @@ class TestInterpretation {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		ListNative.initializeInEnvironment(env, typeEnv);
-		
+
 		TestInterpretation.testInterpretString("(construct List Native)",
 				new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative));
 		TestInterpretation.testInterpretString("(construct List Native 42 (construct List Native))",
@@ -1263,26 +1288,31 @@ class TestInterpretation {
 								new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
 						TypeAtom.TypeListNative));
 
-		TestInterpretation.testInterpretString("(is-list-native-empty (construct List Native))", LitBoolean.TRUE, env, typeEnv);
-		TestInterpretation.testInterpretString("(is-list-native-empty (construct List Native 42 (construct List Native)))",
-				LitBoolean.FALSE, env, typeEnv);
+		TestInterpretation.testInterpretString("(is-list-native-empty (construct List Native))", LitBoolean.TRUE, env,
+				typeEnv);
+		TestInterpretation.testInterpretString(
+				"(is-list-native-empty (construct List Native 42 (construct List Native)))", LitBoolean.FALSE, env,
+				typeEnv);
 
 		TestInterpretation.testInterpretString("(head-list-native (construct List Native 42 (construct List Native)))",
 				new LitInteger(42), env, typeEnv);
-		assertThrows(UserException.class, () -> TestInterpretation
-				.testInterpretString("(head-list-native (construct List Native))", Expression.EMPTY_EXPRESSION, env, typeEnv));
+		assertThrows(UserException.class,
+				() -> TestInterpretation.testInterpretString("(head-list-native (construct List Native))",
+						Expression.EMPTY_EXPRESSION, env, typeEnv));
 
 		TestInterpretation.testInterpretString("(tail-list-native (construct List Native 42 (construct List Native)))",
 				new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative), env, typeEnv);
-		assertThrows(UserException.class, () -> TestInterpretation
-				.testInterpretString("(tail-list-native (construct List Native))", Expression.EMPTY_EXPRESSION, env, typeEnv));
+		assertThrows(UserException.class,
+				() -> TestInterpretation.testInterpretString("(tail-list-native (construct List Native))",
+						Expression.EMPTY_EXPRESSION, env, typeEnv));
 
 		TestInterpretation.testInterpretString(
 				"(map-list-native (lambda (x) (+ x 1)) (construct List Native 42 (construct List Native)))",
 				new LitComposite(
 						new Tuple(Arrays.asList(new LitInteger(43),
 								new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
-						TypeAtom.TypeListNative), env, typeEnv);
+						TypeAtom.TypeListNative),
+				env, typeEnv);
 
 		TestInterpretation.testInterpretString(
 				"(map2-list-native + (construct List Native 21 (construct List Native 21 (construct List Native))) (construct List Native 21 (construct List Native 21 (construct List Native))))",
@@ -1291,7 +1321,8 @@ class TestInterpretation {
 								new Tuple(Arrays.asList(new LitInteger(42),
 										new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
 								TypeAtom.TypeListNative))),
-						TypeAtom.TypeListNative), env, typeEnv);
+						TypeAtom.TypeListNative),
+				env, typeEnv);
 
 		TestInterpretation.testInterpretString(
 				"(foldl-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native))))",
@@ -1299,6 +1330,30 @@ class TestInterpretation {
 		TestInterpretation.testInterpretString(
 				"(foldr-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native))))",
 				new LitInteger(3), env, typeEnv);
+	}
+
+	@Test
+	@DisplayName("Test Type Symbol")
+	void testTypeSymbol() throws AppendableException {
+		TypeSymbol typeSymbol = new TypeSymbol(TypeAtom.TypeIntNative);
+
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+
+		assertAll(() -> {
+			typeSymbol.toString();
+			typeSymbol.hashCode();
+			typeSymbol.toClojureCode(env, typeEnv);
+		});
+
+		TestInterpretation.testReflexivity(typeSymbol);
+		TestInterpretation.testDifference(typeSymbol, new TypeSymbol(TypeAtom.TypeBoolNative));
+		TestInterpretation.testDifference(typeSymbol, Expression.EMPTY_EXPRESSION);
+
+		TestInterpretation.testInterpretation(typeSymbol, typeSymbol, env, typeEnv);
+
+		Pair<Type, Substitution> p = typeSymbol.infer(env, typeEnv);
+		TestInterpretation.testInference(p, TypeAtom.TypeTypeNative, typeSymbol);
 	}
 
 	private static Expression parseString(String s) throws AppendableException {
@@ -1385,14 +1440,15 @@ class TestInterpretation {
 		Pair<Type, Substitution> p = conversion.infer(env, typeEnv);
 		TestInterpretation.testInference(p, expectedInfer, conversion);
 	}
-	
+
 	private static void testInterpretString(String interpreted, Expression expected) throws AppendableException {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		TestInterpretation.testInterpretString(interpreted, expected, env, typeEnv);
 	}
 
-	private static void testInterpretString(String interpreted, Expression expected, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	private static void testInterpretString(String interpreted, Expression expected, Environment env,
+			TypeEnvironment typeEnv) throws AppendableException {
 		Expression e = TestInterpretation.parseString(interpreted);
 		TestInterpretation.testInterpretation(e, expected, env, typeEnv);
 	}

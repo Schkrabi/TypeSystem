@@ -31,12 +31,12 @@ public class TypeSymbol extends Expression {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
-		return new Pair<Type, Substitution>(this.type, Substitution.EMPTY);
+		return new Pair<Type, Substitution>(velka.lang.types.TypeAtom.TypeTypeNative, Substitution.EMPTY);
 	}
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return "(with-meta [] {:lang-type " + this.type.clojureTypeRepresentation() + "})";
+		return "(with-meta " + this.type.clojureTypeRepresentation() + " {:lang-type " + velka.lang.types.TypeAtom.TypeTypeNative.clojureTypeRepresentation() + "})";
 	}
 	
 	@Override
