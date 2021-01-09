@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import velka.lang.abstraction.ExtendedFunction;
 import velka.lang.abstraction.Function;
+import velka.lang.abstraction.Operator;
 import velka.lang.application.AbstractionApplication;
 import velka.lang.application.CanDeconstructAs;
 import velka.lang.application.Construct;
@@ -32,6 +33,7 @@ import velka.lang.application.IfExpression;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
+import velka.lang.expression.TypeSymbol;
 import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.literal.LitBoolean;
@@ -53,6 +55,7 @@ import velka.lang.types.TypeRepresentation;
 import velka.lang.types.TypeTuple;
 import velka.lang.types.TypeVariable;
 import velka.lang.util.AppendableException;
+import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
 import velka.lang.util.ThrowingFunction;
 
@@ -843,8 +846,175 @@ class TestComplex {
 
 	@Test
 	@DisplayName("Test Clojure TypeSymbol")
-	void testClojureTypeSymbol() {
-
+	void testClojureTypeSymbol() throws Exception {
+		//(println (let-type (A) (can-unify-representations Int:Native A)))
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				Arrays.asList(
+						new AbstractionApplication(
+								Operator.PrintlnOperator,
+								new Tuple(
+										Arrays.asList(
+												new AbstractionApplication(
+														Operator.CanUnifyRepresentations,
+														new Tuple(
+																Arrays.asList(
+																		new TypeSymbol(TypeAtom.TypeIntNative),
+																		new TypeSymbol(new TypeVariable(NameGenerator.next()))
+																		)
+																)
+														)
+											)
+										)
+								)
+						)
+				);		
+		//(println (can-unify-representations Int:Native Int:Native))
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				Arrays.asList(
+						new AbstractionApplication(
+								Operator.PrintlnOperator,
+								new Tuple(
+										Arrays.asList(
+												new AbstractionApplication(
+														Operator.CanUnifyRepresentations,
+														new Tuple(
+																Arrays.asList(
+																		new TypeSymbol(TypeAtom.TypeIntNative),
+																		new TypeSymbol(TypeAtom.TypeIntNative)
+																		)
+																)
+														)
+											)
+										)
+								)
+						)
+				);
+		//(println (can-unify-representations Int:Native Int:Roman))
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				Arrays.asList(
+						new AbstractionApplication(
+								Operator.PrintlnOperator,
+								new Tuple(
+										Arrays.asList(
+												new AbstractionApplication(
+														Operator.CanUnifyRepresentations,
+														new Tuple(
+																Arrays.asList(
+																		new TypeSymbol(TypeAtom.TypeIntNative),
+																		new TypeSymbol(TypeAtom.TypeIntRoman)
+																		)
+																)
+														)
+											)
+										)
+								)
+						)
+				);
+		//(println (can-unify-representations Int:Native String:Native))
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				Arrays.asList(
+						new AbstractionApplication(
+								Operator.PrintlnOperator,
+								new Tuple(
+										Arrays.asList(
+												new AbstractionApplication(
+														Operator.CanUnifyRepresentations,
+														new Tuple(
+																Arrays.asList(
+																		new TypeSymbol(TypeAtom.TypeIntNative),
+																		new TypeSymbol(TypeAtom.TypeStringNative)
+																		)
+																)
+														)
+											)
+										)
+								)
+						)
+				);
+		//(println (let-type (A) (can-unify-types Int:Native A)))
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				Arrays.asList(
+						new AbstractionApplication(
+								Operator.PrintlnOperator,
+								new Tuple(
+										Arrays.asList(
+												new AbstractionApplication(
+														Operator.CanUnifyTypes,
+														new Tuple(
+																Arrays.asList(
+																		new TypeSymbol(TypeAtom.TypeIntNative),
+																		new TypeSymbol(new TypeVariable(NameGenerator.next()))
+																		)
+																)
+														)
+											)
+										)
+								)
+						)
+				);
+		//(println (can-unify-types Int:Native Int:Native))
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				Arrays.asList(
+						new AbstractionApplication(
+								Operator.PrintlnOperator,
+								new Tuple(
+										Arrays.asList(
+												new AbstractionApplication(
+														Operator.CanUnifyTypes,
+														new Tuple(
+																Arrays.asList(
+																		new TypeSymbol(TypeAtom.TypeIntNative),
+																		new TypeSymbol(TypeAtom.TypeIntNative)
+																		)
+																)
+														)
+											)
+										)
+								)
+						)
+				);
+		//(println (can-unify-types Int:Native Int:Roman))
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				Arrays.asList(
+						new AbstractionApplication(
+								Operator.PrintlnOperator,
+								new Tuple(
+										Arrays.asList(
+												new AbstractionApplication(
+														Operator.CanUnifyTypes,
+														new Tuple(
+																Arrays.asList(
+																		new TypeSymbol(TypeAtom.TypeIntNative),
+																		new TypeSymbol(TypeAtom.TypeIntRoman)
+																		)
+																)
+														)
+											)
+										)
+								)
+						)
+				);
+		//(println (can-unify-types Int:Native String:Native))
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				Arrays.asList(
+						new AbstractionApplication(
+								Operator.PrintlnOperator,
+								new Tuple(
+										Arrays.asList(
+												new AbstractionApplication(
+														Operator.CanUnifyTypes,
+														new Tuple(
+																Arrays.asList(
+																		new TypeSymbol(TypeAtom.TypeIntNative),
+																		new TypeSymbol(TypeAtom.TypeStringNative)
+																		)
+																)
+														)
+											)
+										)
+								)
+						)
+				);
 	}
 
 	private static List<Expression> parseString(String s) throws AppendableException {
@@ -925,30 +1095,49 @@ class TestComplex {
 	}
 
 	private static void assertIntprtAndCompPrintSameValues(String code) throws Exception {
+		InputStream in = new ByteArrayInputStream(code.getBytes());
+		List<Expression> exprs = velka.lang.interpretation.Compiler.read(in);
+		
+		TestComplex.assertIntprtAndCompPrintSameValues(exprs);
+	}
+	
+	private static void assertIntprtAndCompPrintSameValues(List<Expression> in) throws Exception {
+		Environment intpEnv = Environment.initTopLevelEnvitonment();
+		TypeEnvironment intpTypeEnv = TypeEnvironment.initBasicTypes(intpEnv);
+		
+		String interpretationPrintOut = TestComplex.interpretationPrint(in, intpEnv, intpTypeEnv);
+		
+		Environment cmplEnv = Environment.initTopLevelEnvitonment();
+		TypeEnvironment cmplTypeEnv = TypeEnvironment.initBasicTypes(cmplEnv);
+		
+		String compilationPrintOut = TestComplex.clojureCompilationResult(in, cmplEnv, cmplTypeEnv);
+		
+		assertEquals(interpretationPrintOut, compilationPrintOut);
+	}
+	
+	private static String interpretationPrint(List<Expression> in, Environment env, TypeEnvironment typeEnv) throws Exception {
 		PrintStream stdOut = System.out;
 		ByteArrayOutputStream tmp = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(tmp));
-
-		Environment intpEnv = Environment.initTopLevelEnvitonment();
-		TypeEnvironment intpTypeEnv = TypeEnvironment.initBasicTypes(intpEnv);
-		InputStream inStream = new ByteArrayInputStream(code.getBytes());
-		velka.lang.interpretation.Compiler.interpret(inStream, intpEnv, intpTypeEnv);
-
-		String intpResult = tmp.toString();
-
+		
+		velka.lang.interpretation.Compiler.eval(in, env, typeEnv);
+		
+		String result = tmp.toString();
 		System.setOut(stdOut);
-
-		TestComplex.testClojureCompileClj(code, intpResult);
+		
+		return result;
 	}
 
 	private static String clojureCompilationResult(List<Expression> l, Environment env, TypeEnvironment typeEnv)
 			throws Exception {
 		File tempFile = File.createTempFile("velka_clojure_test", null);
-
-		String code = velka.lang.interpretation.Compiler.compile(l, env, typeEnv);
+		
+		StringBuilder code = new StringBuilder(); 
+		code.append(ClojureCodeGenerator.writeHeaders(env, typeEnv));
+		code.append(velka.lang.interpretation.Compiler.compile(l, env, typeEnv));
 		FileOutputStream ofs = new FileOutputStream(tempFile);
 		ofs.write(ClojureCodeGenerator.writeHeaders(env, typeEnv).getBytes());
-		ofs.write(code.getBytes());
+		ofs.write(code.toString().getBytes());
 		ofs.close();
 
 		ProcessBuilder pb = new ProcessBuilder("clj", tempFile.getAbsolutePath());

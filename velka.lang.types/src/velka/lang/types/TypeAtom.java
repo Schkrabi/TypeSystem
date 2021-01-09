@@ -128,7 +128,7 @@ public class TypeAtom extends Type {
 	/**
 	 * Type of Bool
 	 */
-	public static final TypeAtom TypeBool = new TypeAtom(TypeName.BOOL, TypeRepresentation.WILDCARD);
+	public static final TypeAtom TypeBool = new TypeAtom(TypeName.BOOL, TypeRepresentation.WILDCARD) ;
 	public static final TypeAtom TypeBoolNative = new TypeAtom(TypeName.BOOL, TypeRepresentation.NATIVE);
 
 	/**

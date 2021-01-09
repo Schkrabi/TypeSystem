@@ -23,28 +23,28 @@ public class ClojureCodeGenerator {
 
 	public static String writeHeaders(Environment env, TypeEnvironment typeEnv) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("(def lang-pstr\n" + 
-				"    (fn [exp]\n" + 
-				"        (letfn [(lang-pstr-aux [exp level]\n" + 
-				"                    (let [type (:lang-type (meta exp))]\n" + 
-				"                        (cond\n" + 
-				"                            (or \n" + 
-				"                                (= type velka.lang.types.TypeAtom/TypeIntNative)\n" + 
-				"                                (= type velka.lang.types.TypeAtom/TypeStringNative) \n" + 
-				"                                (= type velka.lang.types.TypeAtom/TypeDoubleNative) \n" + 
-				"                                (= type velka.lang.types.TypeAtom/TypeBoolNative)) \n" + 
-				"                                    (if (= level 0) \n" + 
-				"                                        (pr-str (get exp 0)) \n" + 
-				"                                        (get exp 0))\n" + 
-				"                            (= type velka.lang.types.TypeTuple/EMPTY_TUPLE) []\n" + 
-				"                            (instance? velka.lang.types.TypeAtom type) (lang-pstr-aux (get exp 0) level)\n" + 
-				"                            (instance? velka.lang.types.TypeTuple type) \n" + 
-				"                            (if \n" + 
-				"                                (= level 0) \n" + 
-				"                                (pr-str (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))\n" + 
-				"                                (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))\n" + 
-				"                            :else (throw (Throwable. (str exp \" is not a printable expression\"))))))]\n" + 
-				"            (lang-pstr-aux exp 0))))");
+		sb.append("(def lang-pstr" + 
+					"(fn [exp]" + 
+						"(letfn [(lang-pstr-aux [exp level]" + 
+							"(let [type (:lang-type (meta exp))]" + 
+								"(cond" + 
+									"(or" + 
+										"(= type velka.lang.types.TypeAtom/TypeIntNative)" + 
+										"(= type velka.lang.types.TypeAtom/TypeStringNative)" + 
+										"(= type velka.lang.types.TypeAtom/TypeDoubleNative)" + 
+										"(= type velka.lang.types.TypeAtom/TypeBoolNative))" + 
+											"(if (= level 0)" + 
+												"(pr-str (get exp 0))" + 
+												"(get exp 0))" + 
+												"(= type velka.lang.types.TypeTuple/EMPTY_TUPLE) []" + 
+									"(instance? velka.lang.types.TypeAtom type) (lang-pstr-aux (get exp 0) level)" + 
+									"(instance? velka.lang.types.TypeTuple type) " + 
+										"(if" + 
+											"(= level 0)" + 
+											"(pr-str (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))" + 
+											"(vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))" + 
+									":else (throw (Throwable. (str exp \" is not a printable expression\"))))))]" + 
+							"(lang-pstr-aux exp 0))))");
 		sb.append(ListNative.makeClojureCode(env, typeEnv));
 		return sb.toString();
 	}

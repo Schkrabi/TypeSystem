@@ -554,13 +554,14 @@ public abstract class Operator extends Abstraction {
 
 		@Override
 		protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-
-			String fn = "(fn [t1 t2] (try (if (!= (velka.lang.types.Type/unifyTypes t1 t2) nil) "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv)
-					+ "  nil) (catch velka.lang.types.TypesDoesNotUnifyException e "
+			Pair<Type, Substitution> infered = this.infer(env, typeEnv);
+			
+			String fn = "(fn [t1 t2] (try (if (= (velka.lang.types.Type/unifyTypes (get t1 0) (get t2 0)) velka.lang.types.Substitution/EMPTY) "
+					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + " " + LitBoolean.TRUE.toClojureCode(env, typeEnv)
+					+ ") (catch velka.lang.types.TypesDoesNotUnifyException e "
 					+ LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
 
-			return "(with-meta " + fn + "{:lang-type " + TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})";
+			return "(with-meta " + fn + "{:lang-type " + infered.first.clojureTypeRepresentation() + "})";
 		}
 
 		@Override
@@ -598,12 +599,14 @@ public abstract class Operator extends Abstraction {
 		@Override
 		protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [t1 t2] (try (if (!= (velka.lang.types.Type/unifyRepresentation t1 t2) nil) "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv)
-					+ "  nil) (catch velka.lang.types.TypesDoesNotUnifyException e "
+			Pair<Type, Substitution> infered = this.infer(env, typeEnv);
+			
+			String fn = "(fn [t1 t2] (try (if (= (velka.lang.types.Type/unifyRepresentation (get t1 0) (get t2 0)) velka.lang.types.Substitution/EMPTY) "
+					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + " " + LitBoolean.TRUE.toClojureCode(env, typeEnv)
+					+ ") (catch velka.lang.types.TypesDoesNotUnifyException e "
 					+ LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
 
-			return "(with-meta " + fn + "{:lang-type " + TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})";
+			return "(with-meta " + fn + "{:lang-type " + infered.first.clojureTypeRepresentation() + "})";
 		}
 
 		@Override

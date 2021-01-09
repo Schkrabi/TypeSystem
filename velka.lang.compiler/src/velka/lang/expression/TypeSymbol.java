@@ -36,7 +36,7 @@ public class TypeSymbol extends Expression {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return "(with-meta " + this.type.clojureTypeRepresentation() + " {:lang-type " + velka.lang.types.TypeAtom.TypeTypeNative.clojureTypeRepresentation() + "})";
+		return "(with-meta [" + this.type.clojureTypeRepresentation() + "] {:lang-type " + velka.lang.types.TypeAtom.TypeTypeNative.clojureTypeRepresentation() + "})";
 	}
 	
 	@Override
