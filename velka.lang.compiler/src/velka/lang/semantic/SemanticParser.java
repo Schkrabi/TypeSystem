@@ -25,6 +25,8 @@ import velka.lang.application.DefineSymbol;
 import velka.lang.application.DefineType;
 import velka.lang.application.ExceptionExpr;
 import velka.lang.application.IfExpression;
+import velka.lang.application.InstanceOf;
+import velka.lang.application.InstanceOfRepresentation;
 import velka.lang.exceptions.UndefinedTypeException;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
@@ -249,6 +251,12 @@ public class SemanticParser {
 			break;
 		case SemanticParserStatic.LET_TYPE:
 			e = SemanticParser.parseLetType(specialFormList, typeLet);
+			break;
+		case SemanticParserStatic.INSTANCE_OF:
+			e = SemanticParser.parseInstanceOf(specialFormList, typeLet);
+			break;
+		case SemanticParserStatic.INSTANCE_OF_REPRESENTATION:
+			e = SemanticParser.parseInstanceOfRepresentation(specialFormList, typeLet);
 			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
@@ -902,6 +910,7 @@ public class SemanticParser {
 			Validations.validateTypeVariableList(list);
 		} catch(AppendableException e) {
 			e.appendMessage("in " + list.toString());
+			throw e;
 		}
 		
 		List<TypeVariable> l = new LinkedList<TypeVariable>();
@@ -909,5 +918,49 @@ public class SemanticParser {
 			l.add(new TypeVariable(n.asSymbol()));
 		}
 		return l;
+	}
+	
+	/**
+	 * parses instance-of special form list
+	 * @param specialFormList list of the special form
+	 * @param typeLet used typelet
+	 * @return InstanceOf expression
+	 * @throws AppendableException if validation fails
+	 */
+	private static Expression parseInstanceOfRepresentation(List<SemanticNode> specialFormList,
+			Map<TypeVariable, TypeVariable> typeLet) throws AppendableException {
+		try {
+			Validations.validateInstanceOfRepresentationList(specialFormList);
+		}catch(AppendableException e) {
+			e.appendMessage("in " + specialFormList.toString());
+			throw e;
+		}
+		
+		Expression e = SemanticParser.parseNode(specialFormList.get(1), typeLet);
+		Type t = SemanticParser.parseType(specialFormList.get(2), typeLet);
+		
+		return new InstanceOfRepresentation(e, t);
+	}
+
+	/**
+	 * parses instance-of-representation special form list
+	 * @param specialFormList list of the special form
+	 * @param typeLet used typelet
+	 * @return InstanceOfRepresentation expression
+	 * @throws AppendableException if validation fails
+	 */
+	private static Expression parseInstanceOf(List<SemanticNode> specialFormList,
+			Map<TypeVariable, TypeVariable> typeLet) throws AppendableException {
+		try {
+			Validations.validateInstanceOfList(specialFormList);
+		}catch(AppendableException e) {
+			e.appendMessage("in " + specialFormList.toString());
+			throw e;
+		}
+		
+		Expression e = SemanticParser.parseNode(specialFormList.get(1), typeLet);
+		Type t = SemanticParser.parseType(specialFormList.get(2), typeLet);
+		
+		return new InstanceOf(e, t);
 	}
 }

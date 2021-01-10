@@ -34,6 +34,8 @@ import velka.lang.application.DefineSymbol;
 import velka.lang.application.DefineType;
 import velka.lang.application.ExceptionExpr;
 import velka.lang.application.IfExpression;
+import velka.lang.application.InstanceOf;
+import velka.lang.application.InstanceOfRepresentation;
 import velka.lang.application.OrExpression;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
@@ -83,7 +85,8 @@ class TestParser {
 		// this.testParse("(representation Unstructured Name)",
 		// new DefineRepresentation(new TypeName("Name"), new
 		// TypeRepresentation("Unstructured")));
-		this.testParse("(representation Unstructured Name)", new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Unstructured")));
+		this.testParse("(representation Unstructured Name)",
+				new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Unstructured")));
 		this.testParse("(constructor Name Unstructured ((String:Native x)) x)",
 				new DefineConstructor(new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured")),
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
@@ -91,7 +94,8 @@ class TestParser {
 		// this.testParse("(representation Structured Name)",
 		// new DefineRepresentation(new TypeName("Name"), new
 		// TypeRepresentation("Structured")));
-		this.testParse("(representation Structured Name)", new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Structured")));
+		this.testParse("(representation Structured Name)",
+				new DefineRepresentation(new TypeName("Name"), new TypeRepresentation("Structured")));
 		this.testParse("(constructor Name Structured ((String:Native x) (String:Native y)) (cons x y))",
 				new DefineConstructor(new TypeAtom(new TypeName("Name"), new TypeRepresentation("Structured")),
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
@@ -137,6 +141,9 @@ class TestParser {
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative)),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeIntNative))))),
 						new Symbol("f")));
+		this.testParse("(instance-of 42 Int:Native)", new InstanceOf(new LitInteger(42), TypeAtom.TypeIntNative));
+		this.testParse("(instance-of-representation 42 Int:Native)",
+				new InstanceOfRepresentation(new LitInteger(42), TypeAtom.TypeIntNative));
 
 		/*
 		 * this.testParse("(let-type (A) (lambda ((String:Native x) (A y)) y))", new
@@ -484,15 +491,16 @@ class TestParser {
 			typeEnv.addType(new TypeName("Test"));
 			typeEnv.addRepresentation(new TypeAtom(new TypeName("Test"), new TypeRepresentation("Functional")));
 		});
-		
+
 		assertTrue(typeEnv.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), TypeRepresentation.WILDCARD)));
 		assertTrue(typeEnv
 				.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("Functional"))));
 		assertFalse(typeEnv.existsTypeAtom(new TypeAtom(new TypeName("kawabanga"), TypeRepresentation.WILDCARD)));
 		assertFalse(typeEnv
 				.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("kawabanga"))));
-		
-		assertAll(() -> typeEnv.getConstructor(TypeAtom.TypeIntRoman, new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative))));
+
+		assertAll(() -> typeEnv.getConstructor(TypeAtom.TypeIntRoman,
+				new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative))));
 		assertThrows(AppendableException.class,
 				() -> typeEnv.getConstructor(new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD),
 						TypeTuple.EMPTY_TUPLE));
@@ -500,19 +508,18 @@ class TestParser {
 		assertThrows(AppendableException.class,
 				() -> typeEnv.addRepresentation(new TypeAtom(new TypeName("Int"), new TypeRepresentation("Roman"))));
 
-		assertThrows(AppendableException.class, () -> typeEnv.addConversion(TypeAtom.TypeIntNative,
-				TypeAtom.TypeStringNative,
-				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env)));
+		assertThrows(AppendableException.class,
+				() -> typeEnv.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative,
+						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env)));
 
 		assertThrows(DuplicateConversionException.class,
 				() -> typeEnv.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
-						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
-								env)));
+						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env)));
 
 		typeEnv.convertTo(new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString),
 				TypeAtom.TypeIntString, TypeAtom.TypeIntRoman);
-		assertThrows(ConversionException.class, () -> typeEnv
-				.convertTo(Expression.EMPTY_EXPRESSION, TypeAtom.TypeStringNative, TypeAtom.TypeIntNative));
+		assertThrows(ConversionException.class, () -> typeEnv.convertTo(Expression.EMPTY_EXPRESSION,
+				TypeAtom.TypeStringNative, TypeAtom.TypeIntNative));
 	}
 
 	@Test
@@ -527,19 +534,13 @@ class TestParser {
 		assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, Boolean.valueOf(true)));
 		assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, Arrays.asList(128)));
 
-		assertThrows(AppendableException.class,
-				() -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asSymbol());
-		assertThrows(AppendableException.class,
-				() -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asPair());
+		assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asSymbol());
+		assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asPair());
 		assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.SYMBOL, "fail").asInt());
-		assertThrows(AppendableException.class,
-				() -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asDouble());
-		assertThrows(AppendableException.class,
-				() -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asString());
-		assertThrows(AppendableException.class,
-				() -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asBool());
-		assertThrows(AppendableException.class,
-				() -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asList());
+		assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asDouble());
+		assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asString());
+		assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asBool());
+		assertThrows(AppendableException.class, () -> SemanticNode.make(NodeType.INT, Integer.valueOf(128)).asList());
 
 	}
 
@@ -548,13 +549,11 @@ class TestParser {
 	void testExceptions() {
 		Environment env = Environment.initTopLevelEnvitonment();
 		assertAll(() -> {
-		new UserException("test");
-		new DuplicateConversionException(TypeAtom.TypeBool, TypeAtom.TypeBoolNative,
-				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
-						env),
-				new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION,
-						env));
-		new UndefinedTypeException("fail");
+			new UserException("test");
+			new DuplicateConversionException(TypeAtom.TypeBool, TypeAtom.TypeBoolNative,
+					new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env),
+					new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env));
+			new UndefinedTypeException("fail");
 		});
 	}
 
@@ -567,7 +566,7 @@ class TestParser {
 		TypeVariable inner = (TypeVariable) ((Lambda) ((Lambda) e).body).argsType.get(0);
 
 		assertNotEquals(outer, inner);
-		
+
 		Lambda l1 = (Lambda) e;
 		Lambda l2 = (Lambda) l1.body;
 		// Have to compare names directly as TypeVariables equals if they are not bound

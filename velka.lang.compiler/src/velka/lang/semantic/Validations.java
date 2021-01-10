@@ -514,7 +514,7 @@ public class Validations {
 	 * Validates let-type special form list
 	 * 
 	 * @param specialFormList validated list
-	 * @param typeLet current typelet
+	 * @param typeLet         current typelet
 	 * @throws AppendableException if validation fails
 	 */
 	public static void validateLetTypeList(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet)
@@ -534,7 +534,7 @@ public class Validations {
 		}
 
 	}
-	
+
 	/**
 	 * Validates typeVariableList
 	 * 
@@ -542,10 +542,58 @@ public class Validations {
 	 * @throws UnexpectedExpressionException if validation fails
 	 */
 	public static void validateTypeVariableList(List<SemanticNode> list) throws UnexpectedExpressionException {
-		for(SemanticNode n : list) {
-			if(n.type != SemanticNode.NodeType.SYMBOL) {
+		for (SemanticNode n : list) {
+			if (n.type != SemanticNode.NodeType.SYMBOL) {
 				throw new UnexpectedExpressionException(n);
 			}
 		}
+	}
+
+	/**
+	 * Valdiates instance-of-representation list
+	 * 
+	 * @param specialFormList validated list
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateInstanceOfRepresentationList(List<SemanticNode> specialFormList)
+			throws AppendableException {
+		if (specialFormList.size() < 3) {
+			throw new InvalidNumberOfArgsException(2, specialFormList.size() - 1);
+		}
+
+		SemanticNode iofr = specialFormList.get(0);
+		if (iofr.type != SemanticNode.NodeType.SYMBOL
+				|| !iofr.asSymbol().contentEquals(SemanticParserStatic.INSTANCE_OF_REPRESENTATION)) {
+			throw new UnexpectedExpressionException(iofr);
+		}
+
+		SemanticNode type = specialFormList.get(2);
+		if (!Validations.isTypeIdentifierNode(type)) {
+			throw new UnexpectedExpressionException(type);
+		}
+	}
+
+	/**
+	 * validates instance-of list
+	 * 
+	 * @param specialFormList validated list
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateInstanceOfList(List<SemanticNode> specialFormList) throws AppendableException {
+		if (specialFormList.size() < 3) {
+			throw new InvalidNumberOfArgsException(2, specialFormList.size() - 1);
+		}
+
+		SemanticNode iof = specialFormList.get(0);
+		if (iof.type != SemanticNode.NodeType.SYMBOL
+				|| !iof.asSymbol().contentEquals(SemanticParserStatic.INSTANCE_OF)) {
+			throw new UnexpectedExpressionException(iof);
+		}
+
+		SemanticNode type = specialFormList.get(2);
+		if (!Validations.isTypeIdentifierNode(type)) {
+			throw new UnexpectedExpressionException(type);
+		}
+
 	}
 }

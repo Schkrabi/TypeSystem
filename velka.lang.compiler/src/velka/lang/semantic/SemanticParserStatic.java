@@ -39,6 +39,8 @@ public final class SemanticParserStatic {
 	public static final String DECONSTRUCT = "deconstruct";
 	public static final String CAN_DECONSTRUCT_AS = "can-deconstruct-as";
 	public static final String LET_TYPE = "let-type";
+	public static final String INSTANCE_OF = "instance-of";
+	public static final String INSTANCE_OF_REPRESENTATION = "instance-of-representation";
 	/**
 	 * Unused special form. For testing purposes only!
 	 */
@@ -66,6 +68,8 @@ public final class SemanticParserStatic {
 		specialForms.add(DECONSTRUCT);
 		specialForms.add(CAN_DECONSTRUCT_AS);
 		specialForms.add(LET_TYPE);
+		specialForms.add(INSTANCE_OF);
+		specialForms.add(INSTANCE_OF_REPRESENTATION);
 	}
 
 	/**

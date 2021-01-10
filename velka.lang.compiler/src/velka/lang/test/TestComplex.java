@@ -1016,6 +1016,20 @@ class TestComplex {
 						)
 				);
 	}
+	
+	@Test
+	@DisplayName("Test clojure instance-of and instance-of-representation")
+	void testClojureInstanceOf() throws Exception{
+		TestComplex.assertIntprtAndCompPrintSameValues("(instance-of 42 Int:Native)");
+		TestComplex.assertIntprtAndCompPrintSameValues("(let-type (A) (instance-of 42 A))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(instance-of 42 Int:Roman)");
+		TestComplex.assertIntprtAndCompPrintSameValues("(instance-of 42 String:Native)");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(instance-of-representation 42 Int:Native)");
+		TestComplex.assertIntprtAndCompPrintSameValues("(let-type (A) (instance-of-representation 42 A))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(instance-of-representation 42 Int:Roman)");
+		TestComplex.assertIntprtAndCompPrintSameValues("(instance-of-representation 42 String:Native)");
+	}
 
 	private static List<Expression> parseString(String s) throws AppendableException {
 		CharStream charStream = CharStreams.fromString(s);
