@@ -199,6 +199,8 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Symbol(Operator.PrintlnOperator.toString()), Operator.PrintlnOperator);
 		env.put(new Symbol(Operator.CanUnifyRepresentations.toString()), Operator.CanUnifyRepresentations);
 		env.put(new Symbol(Operator.CanUnifyTypes.toString()), Operator.CanUnifyTypes);
+		env.put(new Symbol(Operator.IsSameType.toString()), Operator.IsSameType);
+		env.put(new Symbol(Operator.IsSameRepresentation.toString()), Operator.IsSameRepresentation);
 		
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
 				Operator.IntNativeToIntRoman);

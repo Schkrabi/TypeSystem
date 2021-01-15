@@ -622,6 +622,124 @@ public abstract class Operator extends Abstraction {
 			return "can-unify-representations"; 
 		}
 	};
+	
+	/**
+	 * is-same-type operator
+	 */
+	public static final Operator IsSameType = new Operator() {
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			Expression e1 = args.get(0);
+			Expression e2 = args.get(1);
+			
+			Pair<Type, Substitution> p1 = e1.infer(env, typeEnv);
+			Pair<Type, Substitution> p2 = e2.infer(env, typeEnv);
+			
+			try {
+				Type.unifyTypes(p1.first, p2.first);
+				//p1.second.union(p2.second);
+				return LitBoolean.TRUE;				
+			}catch(velka.lang.types.TypesDoesNotUnifyException tdnue) {
+				return LitBoolean.FALSE;
+			}
+		}
+
+		@Override
+		protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Pair<Type, Substitution> p = this.infer(env, typeEnv);
+			
+			String fn = "(fn [e1 e2] "
+						+ "(try "
+							+ "(get (doall ["
+								+ "(velka.lang.types.Type/unifyTypes (:lang-type (meta e1)) (:lang-type (meta e2))) "
+								+ LitBoolean.TRUE.toClojureCode(env, typeEnv)
+								+ "]) 1)"
+							+ "(catch velka.lang.types.TypesDoesNotUnifyException e "
+							+ LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
+			
+			return "(with-meta " + fn + " {:lang-type " + p.first.clojureTypeRepresentation() + "})";
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow t = new TypeArrow(
+					new TypeTuple(Arrays.asList(
+							new TypeVariable(NameGenerator.next()),
+							new TypeVariable(NameGenerator.next())
+							)),
+					TypeAtom.TypeBoolNative
+				);
+				
+			return new Pair<Type, Substitution>(t, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "is-same-type";
+		}
+		
+	};
+	
+	/**
+	 * is-same-representation operator
+	 */
+	public static final Operator IsSameRepresentation = new Operator() {
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			Expression e1 = args.get(0);
+			Expression e2 = args.get(1);
+			
+			Pair<Type, Substitution> p1 = e1.infer(env, typeEnv);
+			Pair<Type, Substitution> p2 = e2.infer(env, typeEnv);
+			
+			try {
+				Type.unifyRepresentation(p1.first, p2.first);
+				//p1.second.union(p2.second);
+				return LitBoolean.TRUE;				
+			}catch(velka.lang.types.TypesDoesNotUnifyException tdnue) {
+				return LitBoolean.FALSE;
+			}
+		}
+
+		@Override
+		protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Pair<Type, Substitution> p = this.infer(env, typeEnv);
+			
+			String fn = "(fn [e1 e2] "
+						+ "(try "
+							+ "(get (doall ["
+								+ "(velka.lang.types.Type/unifyRepresentation (:lang-type (meta e1)) (:lang-type (meta e2))) "
+								+ LitBoolean.TRUE.toClojureCode(env, typeEnv)
+								+ "]) 1)"
+							+ "(catch velka.lang.types.TypesDoesNotUnifyException e "
+							+ LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
+			
+			return "(with-meta " + fn + " {:lang-type " + p.first.clojureTypeRepresentation() + "})";
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow t = new TypeArrow(
+						new TypeTuple(Arrays.asList(
+								new TypeVariable(NameGenerator.next()),
+								new TypeVariable(NameGenerator.next())
+								)),
+						TypeAtom.TypeBoolNative
+					);
+					
+			return new Pair<Type, Substitution>(t, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "is-same-representation";
+		}
+		
+	};
 
 	/**
 	 * Int:Native constructor

@@ -932,6 +932,28 @@ class TestInterpretation {
 		TestInterpretation.testOperator(Operator.CanUnifyTypes, new Tuple(
 				Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeStringNative))),
 				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+
+		TestInterpretation.testOperator(Operator.IsSameType,
+				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(21))), LitBoolean.TRUE,
+				TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.IsSameType,
+				new Tuple(Arrays.asList(new LitInteger(42),
+						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
+				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.IsSameType,
+				new Tuple(Arrays.asList(new LitInteger(42), new LitString("42"))), LitBoolean.FALSE,
+				TypeAtom.TypeBoolNative);
+
+		TestInterpretation.testOperator(Operator.IsSameRepresentation,
+				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(21))), LitBoolean.TRUE,
+				TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.IsSameRepresentation,
+				new Tuple(Arrays.asList(new LitInteger(42),
+						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
+				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operator.IsSameRepresentation,
+				new Tuple(Arrays.asList(new LitInteger(42), new LitString("42"))), LitBoolean.FALSE,
+				TypeAtom.TypeBoolNative);
 	}
 
 	@Test
@@ -1357,21 +1379,21 @@ class TestInterpretation {
 		Pair<Type, Substitution> p = typeSymbol.infer(env, typeEnv);
 		TestInterpretation.testInference(p, TypeAtom.TypeTypeNative, typeSymbol);
 	}
-	
+
 	@Test
 	@DisplayName("Test instance-of")
 	void testInstanceOf() throws AppendableException {
 		InstanceOf iof = new InstanceOf(new LitInteger(42), TypeAtom.TypeIntNative);
-		
+
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
+
 		assertAll(() -> {
 			iof.toString();
 			iof.hashCode();
 			iof.toClojureCode(env, typeEnv);
 		});
-		
+
 		TestInterpretation.testReflexivity(iof);
 		InstanceOf iof_isStrInt = new InstanceOf(new LitString("foo"), TypeAtom.TypeIntNative);
 		TestInterpretation.testDifference(iof, iof_isStrInt);
@@ -1379,47 +1401,51 @@ class TestInterpretation {
 		TestInterpretation.testDifference(iof, iof_typevar);
 		InstanceOf iof_otherRepre = new InstanceOf(new LitInteger(42), TypeAtom.TypeIntRoman);
 		TestInterpretation.testDifference(iof, iof_otherRepre);
-		TestInterpretation.testDifference(iof, new InstanceOfRepresentation(new LitInteger(42), TypeAtom.TypeIntNative));
+		TestInterpretation.testDifference(iof,
+				new InstanceOfRepresentation(new LitInteger(42), TypeAtom.TypeIntNative));
 		TestInterpretation.testDifference(iof, Expression.EMPTY_EXPRESSION);
-		
+
 		TestInterpretation.testInterpretation(iof, LitBoolean.TRUE, env, typeEnv);
 		TestInterpretation.testInterpretation(iof_isStrInt, LitBoolean.FALSE, env, typeEnv);
 		TestInterpretation.testInterpretation(iof_typevar, LitBoolean.TRUE, env, typeEnv);
 		TestInterpretation.testInterpretation(iof_otherRepre, LitBoolean.TRUE, env, typeEnv);
-		
+
 		Pair<Type, Substitution> p = iof.infer(env, typeEnv);
 		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, iof);
 	}
-	
+
 	@Test
 	@DisplayName("Test instance-of-representation")
 	void testInstanceOfRepresentation() throws AppendableException {
 		InstanceOfRepresentation iofr = new InstanceOfRepresentation(new LitInteger(42), TypeAtom.TypeIntNative);
-		
+
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
+
 		assertAll(() -> {
 			iofr.toString();
 			iofr.hashCode();
 			iofr.toClojureCode(env, typeEnv);
 		});
-		
+
 		TestInterpretation.testReflexivity(iofr);
-		InstanceOfRepresentation iofr_isStrInt = new InstanceOfRepresentation(new LitString("foo"), TypeAtom.TypeIntNative);
+		InstanceOfRepresentation iofr_isStrInt = new InstanceOfRepresentation(new LitString("foo"),
+				TypeAtom.TypeIntNative);
 		TestInterpretation.testDifference(iofr, iofr_isStrInt);
-		InstanceOfRepresentation iofr_typevar = new InstanceOfRepresentation(new LitInteger(42), new TypeVariable(NameGenerator.next()));
+		InstanceOfRepresentation iofr_typevar = new InstanceOfRepresentation(new LitInteger(42),
+				new TypeVariable(NameGenerator.next()));
 		TestInterpretation.testDifference(iofr, iofr_typevar);
-		InstanceOfRepresentation iofr_otherRepre = new InstanceOfRepresentation(new LitInteger(42), TypeAtom.TypeIntRoman);
+		InstanceOfRepresentation iofr_otherRepre = new InstanceOfRepresentation(new LitInteger(42),
+				TypeAtom.TypeIntRoman);
 		TestInterpretation.testDifference(iofr, iofr_otherRepre);
 		TestInterpretation.testDifference(iofr, new InstanceOf(new LitInteger(42), TypeAtom.TypeIntNative));
 		TestInterpretation.testDifference(iofr, Expression.EMPTY_EXPRESSION);
-		
+
 		TestInterpretation.testInterpretation(iofr, LitBoolean.TRUE, env, typeEnv);
 		TestInterpretation.testInterpretation(iofr_isStrInt, LitBoolean.FALSE, env, typeEnv);
 		TestInterpretation.testInterpretation(iofr_typevar, LitBoolean.TRUE, env, typeEnv);
 		TestInterpretation.testInterpretation(iofr_otherRepre, LitBoolean.FALSE, env, typeEnv);
-		
+
 		Pair<Type, Substitution> p = iofr.infer(env, typeEnv);
 		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, iofr);
 	}
