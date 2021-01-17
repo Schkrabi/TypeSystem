@@ -67,6 +67,20 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		return this.values.stream();
 	}
 
+	/**
+	 * Revreses this type tuple
+	 * 
+	 * @return new type tuple
+	 */
+	public TypeTuple reverse() {
+		List<Type> l = new LinkedList<Type>();
+
+		for (int i = this.values.size() - 1; i >= 0; i--) {
+			l.add(this.values.get(i));
+		}
+		return new TypeTuple(l);
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder("[");
@@ -160,7 +174,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 			try {
 				Type.unifyRepresentation(ti, tj);
-			}catch (AppendableException e) {
+			} catch (AppendableException e) {
 				sum++;
 			}
 		}
@@ -193,7 +207,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		}
 		throw new TypesDoesNotUnifyException(this, other);
 	}
-	
+
 	@Override
 	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
@@ -260,8 +274,9 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	public Type map(Function<Type, Type> fun) throws AppendableException {
 		Type t = null;
 		try {
-			t = new TypeTuple(this.stream().map(velka.lang.util.ThrowingFunction.wrapper(x -> x.map(fun))).collect(Collectors.toList()));
-		}catch(RuntimeException re) {
+			t = new TypeTuple(this.stream().map(velka.lang.util.ThrowingFunction.wrapper(x -> x.map(fun)))
+					.collect(Collectors.toList()));
+		} catch (RuntimeException re) {
 			AppendableException e = (AppendableException) re.getCause();
 			throw e;
 		}

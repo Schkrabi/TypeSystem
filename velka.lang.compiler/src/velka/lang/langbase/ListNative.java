@@ -15,6 +15,7 @@ import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.literal.LitComposite;
 import velka.lang.literal.LitString;
 import velka.lang.application.AbstractionApplication;
 import velka.lang.types.TypeArrow;
@@ -50,6 +51,11 @@ public class ListNative {
 	 * Type variable for use in lambda
 	 */
 	private static TypeVariable C = new TypeVariable(NameGenerator.next());
+	
+	/**
+	 * Empty list native
+	 */
+	public static final LitComposite EMPTY_LIST_NATIVE = new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative);
 
 	/**
 	 * is-list-native-empty symbol
@@ -257,5 +263,17 @@ public class ListNative {
 		} catch (AppendableException e) {
 			System.err.println("Interpretation error " + e.getMessage() + " occured in " + ListNative.class.getName());
 		}
+	}
+	
+	/**
+	 * Converts tuple into equvivalent list
+	 * @param t converted tuple
+	 * @return LitComposite object containing native list
+	 */
+	public static LitComposite tupleToListNative(Tuple t) {
+		return t.reverse().stream().reduce(
+				ListNative.EMPTY_LIST_NATIVE, 
+				(x, y) -> new LitComposite(new Tuple(Arrays.asList(y, x)), TypeAtom.TypeListNative), 
+				(x, y) -> y);
 	}
 }

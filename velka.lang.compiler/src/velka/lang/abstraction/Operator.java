@@ -567,7 +567,7 @@ public abstract class Operator extends Abstraction {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return new Pair<Type, Substitution>(
-					new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeTypeNative, TypeAtom.TypeTypeNative)),
+					new TypeArrow(new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))),
 							TypeAtom.TypeBoolNative),
 					Substitution.EMPTY);
 		}
@@ -612,7 +612,7 @@ public abstract class Operator extends Abstraction {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return new Pair<Type, Substitution>(
-					new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeTypeNative, TypeAtom.TypeTypeNative)),
+					new TypeArrow(new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))),
 							TypeAtom.TypeBoolNative),
 					Substitution.EMPTY);
 		}

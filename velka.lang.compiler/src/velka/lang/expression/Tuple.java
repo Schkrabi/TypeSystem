@@ -58,6 +58,19 @@ public class Tuple extends Expression implements Iterable<Expression> {
 		return this.values.size();
 	}
 
+	/**
+	 * Reverses this tuple
+	 * 
+	 * @return new tuple object reversed
+	 */
+	public Tuple reverse() {
+		List<Expression> l = new LinkedList<Expression>();
+		for (int i = this.values.size() - 1; i >= 0; i--) {
+			l.add(this.values.get(i));
+		}
+		return new Tuple(l);
+	}
+
 	@Override
 	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		List<Expression> vls = new LinkedList<Expression>();
@@ -110,9 +123,9 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder s = new StringBuilder();
-		
+
 		s.append("(with-meta ");
-		
+
 		s.append("[");
 
 		Iterator<Expression> i = this.iterator();
@@ -124,12 +137,12 @@ public class Tuple extends Expression implements Iterable<Expression> {
 			}
 		}
 		s.append("]");
-		
+
 		Pair<Type, Substitution> p = this.infer(env, typeEnv);
 		s.append(" {:lang-type ");
 		s.append(p.first.clojureTypeRepresentation());
 		s.append("})");
-		
+
 		return s.toString();
 	}
 

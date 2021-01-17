@@ -4,19 +4,24 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import velka.lang.abstraction.Abstraction;
+import velka.lang.abstraction.Operator;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.types.RepresentationOr;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
 import velka.lang.types.TypeArrow;
+import velka.lang.types.TypeAtom;
 import velka.lang.types.TypeTuple;
 import velka.lang.types.TypeVariable;
+import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.literal.LitComposite;
+import velka.lang.literal.LitInteger;
 
 /**
  * Expression for function application in form (fun arg1 arg2 ...)
@@ -30,10 +35,19 @@ public class AbstractionApplication extends Application {
 	 * Expression that should yield function
 	 */
 	public final Expression fun;
+	
+	public final Abstraction rankingFunction;
 
 	public AbstractionApplication(Expression fun, Tuple args) {
 		super(args);
 		this.fun = fun;
+		this.rankingFunction = AbstractionApplication.defaultRanking;
+	}
+	
+	public AbstractionApplication(Expression fun, Tuple args, Abstraction rankingFunction){
+		super(args);
+		this.fun = fun;
+		this.rankingFunction = rankingFunction;
 	}
 
 	/**
@@ -130,13 +144,15 @@ public class AbstractionApplication extends Application {
 		s.append(AbstractionApplication.clojureEapply);
 		s.append(" ");
 
-		s.append(this.fun.toClojureCode(env, typeEnv));
+		String funCode = this.fun.toClojureCode(env, typeEnv); 
+		s.append(funCode);
 
 		s.append(" ");
 		s.append(convertedArgs.toClojureCode(env, typeEnv));
 		
 		s.append(" ");
-		s.append(AbstractionApplication.clojureRankingFunction);
+		String defaultRanking = AbstractionApplication.defaultRanking.toClojureCode(env, typeEnv); 
+		s.append(defaultRanking);
 		
 		s.append(")");
 
@@ -164,6 +180,91 @@ public class AbstractionApplication extends Application {
 	
 	public static final String clojureRankingFunction = /*"ranking-function";*/
 			"(fn [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))";
+	
+	public static final Operator defaultRanking = new Operator() {
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite formalArgList = (LitComposite)args.get(0);
+			LitComposite realArgList = (LitComposite)args.get(1);
+			
+			int acc = 0;
+			Tuple formalArgCons = (Tuple)formalArgList.value;
+			Tuple realArgCons = (Tuple)realArgList.value;
+			
+			while(!formalArgCons.equals(Tuple.EMPTY_TUPLE)
+					&& !realArgCons.equals(Tuple.EMPTY_TUPLE)) {
+				Expression formalArg = formalArgCons.get(0);
+				Expression realArg = realArgCons.get(0);
+				Type formalArgType = formalArg.infer(env, typeEnv).first;
+				Type realArgType = realArg.infer(env, typeEnv).first;
+				try {
+					Type.unifyRepresentation(formalArgType, realArgType);
+				}catch(TypesDoesNotUnifyException e) {
+					acc++;
+				}
+				
+				formalArgCons = (Tuple)((LitComposite)formalArgCons.get(1)).value;
+				realArgCons = (Tuple)((LitComposite)realArgCons.get(1)).value;
+			}
+			
+			return new LitInteger(acc);
+		}
+
+		@Override
+		protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			StringBuilder s = new StringBuilder();
+			s.append("(with-meta ");
+			s.append("(fn [formalArgList realArgList] "
+						+ "(letfn ["
+							+ "(is-list-empty "
+								+ "[l] "
+								+ "(= [] l))"
+							+ "(list-head"
+								+ "[l] "
+								+ "(get l 0))"
+							+ "(list-tail "
+								+ "[l] "
+								+ "(get l 1))"
+							+ "(equal-heads "
+								+ "[formalArgList realArgList] "
+								+ "(try (get (doall ["
+									+ "(velka.lang.types.Type/unifyRepresentation "
+										+ "(:lang-type (meta (list-head formalArgList))) "
+										+ "(:lang-type (meta (list-head realArgList))))"
+									+ "0]) 1) "
+									+ "(catch velka.lang.types.TypesDoesNotUnifyException e 1)))"
+							+ "(aggregate "
+								+ "[formalArgList realArgList] "
+								+ "(if (or (is-list-empty formalArgList) (is-list-empty realArgList)) "
+									+ "0"
+									+ "(+ "
+										+ "(equal-heads formalArgList realArgList)"
+										+ "(aggregate (list-tail formalArgList) (list-tail realArgList)))))"
+						+ "]"
+						+ "(with-meta [(aggregate formalArgList realArgList)] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation() 
+						+ "}))) ");
+			s.append("{:lang-type " + this.infer(env, typeEnv).first.clojureTypeRepresentation() + "})");
+			
+			return s.toString();
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type t = new TypeArrow(
+					new TypeTuple(Arrays.asList(TypeAtom.TypeListNative, TypeAtom.TypeListNative)),
+					TypeAtom.TypeIntNative
+					);
+			return new Pair<Type, Substitution>(t, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "defaultRankingFunction";
+		}
+		
+	};
 
 	/**
 	 * code of eapply functionn for clojure
@@ -174,11 +275,23 @@ public class AbstractionApplication extends Application {
 						+ "(implementation-arg-type "
 							+ "[implementation] "
 							+ "(.ltype (:lang-type (meta implementation)))) "
+						+ "(tuple-to-list "
+							+ "[t] "
+							+ "(reduce "
+								+ "(fn [x y] (with-meta "
+									+ "[y x] "
+									+ "{:lang-type velka.lang.types.TypeAtom/TypeListNative})) "
+								+ "[] "
+								+ "t))"
+						+ "(type-to-type-symbol "
+								+ "[type] "
+								+ "(with-meta [type] {:lang-type type}))"
 						+ "(rank-implementations "
 							+ "[v implementations ranking-function] "
-							+ "(map "
-								+ "(fn [u] [(ranking-function (implementation-arg-type u) v) u]) "
-								+ "implementations)) "
+							+ "(let [typeList (tuple-to-list (map type-to-type-symbol v))]"
+								+ "(map "
+									+ "(fn [u] [(get ((get ranking-function 0) (tuple-to-list (map type-to-type-symbol (implementation-arg-type u))) typeList) 0) u]) "
+									+ "implementations))) "
 						+ "(select-implementation "
 								+ "[type abstraction ranking-function] "
 								+ "(get (reduce "

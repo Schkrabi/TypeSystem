@@ -11,12 +11,12 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import velka.lang.application.AbstractionApplication;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.types.RepresentationOr;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
-import velka.lang.types.TypeTuple;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
 import velka.lang.util.ThrowingBinaryOperator;
@@ -31,23 +31,26 @@ public class ExtendedFunction extends ExtendedLambda {
 
 	public final Environment creationEnvironment;
 
-	private ExtendedFunction(Collection<Function> implementations, Environment createdEnvironment) {
-		super(implementations);
+	private ExtendedFunction(Collection<Function> implementations, Abstraction rankingFunction,
+			Environment createdEnvironment) {
+		super(implementations, rankingFunction);
 		creationEnvironment = createdEnvironment;
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
-			/*Set<Pair<Type, Substitution>> s = this.implementations.stream()
-					.map(ThrowingFunction.wrapper(x -> x.infer(env))).collect(Collectors.toSet());
-			*/
+			/*
+			 * Set<Pair<Type, Substitution>> s = this.implementations.stream()
+			 * .map(ThrowingFunction.wrapper(x ->
+			 * x.infer(env))).collect(Collectors.toSet());
+			 */
 			Set<Pair<Type, Substitution>> s = new HashSet<Pair<Type, Substitution>>();
-			for(Expression e : this.implementations) {
+			for (Expression e : this.implementations) {
 				Pair<Type, Substitution> p = e.infer(env, typeEnv);
 				s.add(p);
 			}
-			
+
 			return new Pair<Type, Substitution>(
 					RepresentationOr.makeRepresentationOr(s.stream().map(x -> x.first).collect(Collectors.toSet())),
 					s.stream().map(x -> x.second).reduce(Substitution.EMPTY,
@@ -79,38 +82,39 @@ public class ExtendedFunction extends ExtendedLambda {
 	public boolean equals(Object other) {
 		if (other instanceof ExtendedFunction) {
 			boolean envEquals = this.creationEnvironment.equals(((ExtendedFunction) other).creationEnvironment);
-			
-			if(!envEquals) {
+
+			if (!envEquals) {
 				return false;
 			}
-			
-			//Have to compare implementation by implementation to get unification of argtypes
-			for(Lambda l : this.implementations) {
+
+			// Have to compare implementation by implementation to get unification of
+			// argtypes
+			for (Lambda l : this.implementations) {
 				boolean found = false;
-				for(Lambda k : ((ExtendedFunction) other).implementations) {
-					if(k.equals(l)) {
+				for (Lambda k : ((ExtendedFunction) other).implementations) {
+					if (k.equals(l)) {
 						found = true;
 						break;
 					}
 				}
-				if(!found) {
+				if (!found) {
 					return false;
 				}
 			}
-			
-			for(Lambda k : ((ExtendedFunction) other).implementations) {
+
+			for (Lambda k : ((ExtendedFunction) other).implementations) {
 				boolean found = false;
-				for(Lambda l : this.implementations) {
-					if(l.equals(k)) {
+				for (Lambda l : this.implementations) {
+					if (l.equals(k)) {
 						found = true;
 						break;
 					}
 				}
-				if(!found) {
+				if (!found) {
 					return false;
 				}
 			}
-			
+
 			return true;
 		}
 		return false;
@@ -155,17 +159,33 @@ public class ExtendedFunction extends ExtendedLambda {
 	 */
 	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
 			Environment createdEnvironment) throws AppendableException {
-		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
-		return new ExtendedFunction(implementations, createdEnvironment);
+		return ExtendedFunction.makeExtendedFunction(implementations, AbstractionApplication.defaultRanking,
+				createdEnvironment);
 	}
-	
+
+	/**
+	 * Creates new extended function
+	 * 
+	 * @param implementations    function implementations
+	 * @param rankingFunction    ranking function used for selecting implementation
+	 * @param createdEnvironment environment where function was created
+	 * @return new ExtendedFunction object
+	 * @throws AppendableException thrown if argument types of function does not
+	 *                             unify
+	 */
+	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations, Abstraction rankingFunction,
+			Environment createdEnvironment) throws AppendableException {
+		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
+		return new ExtendedFunction(implementations, rankingFunction, createdEnvironment);
+	}
+
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {	
-		TypeTuple argsType = (TypeTuple)args.infer(env, typeEnv).first;
-		Lambda l = this.getMostFitLambda(argsType);
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		Lambda l = this.getMostFitLambda(args, env, typeEnv);
 		return l.doSubstituteAndEvaluate(args, env, typeEnv);
 	}
-	
+
 	@Override
 	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
 		return this;

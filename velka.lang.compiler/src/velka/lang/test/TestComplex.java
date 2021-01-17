@@ -460,208 +460,33 @@ class TestComplex {
 
 	@Test
 	@DisplayName("Clojure Special Forms and Applications")
-	void testSpecialFormsAndApplication() throws AppendableException {
+	void testSpecialFormsAndApplication() throws Exception {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		// Lambda
-		TestComplex.testClojureCompileRegex("(lambda (x y) x)", TestComplex.escapeBrackets(
-				"(with-meta [(with-meta (fn [x y] x) {:lang-type (new velka.lang.types.TypeArrow (new velka.lang.types.TypeTuple [(new velka.lang.types.TypeVariable \"\\w*\") (new velka.lang.types.TypeVariable \"\\w*\")]) (new velka.lang.types.TypeVariable \"\\w*\"))})] {:lang-type (new velka.lang.types.TypeArrow (new velka.lang.types.TypeTuple [(new velka.lang.types.TypeVariable \"\\w*\") (new velka.lang.types.TypeVariable \"\\w*\")]) (new velka.lang.types.TypeVariable \"\\w*\"))})"),
-				env, typeEnv);
-		// Application
-		TestComplex.testClojureCompile("((lambda ((Int:Native x) (Int:Native y)) x) 42 21)",
-				"(" + AbstractionApplication.clojureEapply + " (with-meta [(with-meta (fn [x y] x) {:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-						+ "})] {:lang-type "
-						+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-								TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-						+ "}) (with-meta [(with-meta [42] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}) (with-meta [21] {:lang-type "
-						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})] {:lang-type "
-						+ new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative))
-								.clojureTypeRepresentation()
-						+ "}) " + AbstractionApplication.clojureRankingFunction + ")",
-				env, typeEnv);
-		// If
-		TestComplex.testClojureCompile("(if #t 42 21)",
-				"(if (get (with-meta [true] {:lang-type " + TypeAtom.TypeBoolNative.clojureTypeRepresentation()
-						+ "}) 0) (with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-						+ "}) (with-meta [21] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-						+ "}))",
-				env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("(if #t (construct Int Roman \"XLII\") (construct Int String \"42\"))", env,
-				typeEnv);
-		// Cons
-		TestComplex.testClojureCompile("(cons 21 21)",
-				"(with-meta [(with-meta [21] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-						+ "}) (with-meta [21] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-						+ "})] {:lang-type "
-						+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-								.clojureTypeRepresentation()
-						+ "})",
-				env, typeEnv);
-		// Exception
-		TestComplex.testClojureCompile("(error \"error msg\")",
-				"(throw (Throwable. (get (with-meta [\"error msg\"] {:lang-type "
-						+ TypeAtom.TypeStringNative.clojureTypeRepresentation() + "}) 0)))",
-				env, typeEnv);
-		// And
-		TestComplex.testClojureCompile("(and #t #f)", "(with-meta [(and (get (with-meta [true] {:lang-type "
-				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "}) 0) (get (with-meta [false] {:lang-type "
-				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "}) 0))]{:lang-type "
-				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})", env, typeEnv);
-		// Or
-		TestComplex.testClojureCompile("(or #t #f)", "(with-meta [(or (get (with-meta [true] {:lang-type "
-				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "}) 0) (get (with-meta [false] {:lang-type "
-				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "}) 0))]{:lang-type "
-				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})", env, typeEnv);
+		TestComplex.assertIntprtAndCompPrintSameValues("(println ((lambda (x y) x) 42 21))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println ((lambda ((Int:Native x) (Int:Native y)) x) 42 21))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (if #t 42 21))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(println (if #t (construct Int Roman \"XLII\") (construct Int String \"42\")))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (cons 21 21))");
+		TestComplex.testClojureCompileNoCmp("(error \"error msg\")", env, typeEnv);
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (and #t #f))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (or #t #f))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define answer 42)" + "(println answer)");
 
-		// Define
-		TestComplex.testClojureCompile("(define answer 42)",
-				"(def answer (with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation() + "}))",
-				env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("(type Name2)", env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("(representation Structured Name2)", env, typeEnv);
-		TestComplex.testClojureCompile(
-				"(constructor Name2 Structured ((String:Native x) (String:Native y)) (cons x y))", "", env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("(representation Unstructured Name2)", env, typeEnv);
-		TestComplex.testClojureCompile("(constructor Name2 Unstructured ((String:Native x)) x)", "", env, typeEnv);
-		TestComplex.testClojureCompile("(conversion Name2:Structured Name2:Unstructured"
-				+ "((Name2:Structured x)) (construct Name2 Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))",
-				"", env, typeEnv);
-
-		TestComplex.testClojureCompileNoCmp(
-				"((lambda ((Name2:Unstructured x)) x) (construct Name2 Structured \"Jan\" \"Novak\"))", env, typeEnv);
-		// Extended Lambda
-		TestComplex.testClojureCompileNoCmp("(extended-lambda ((Int x)) ((Int:Native) \"Native\"))", env, typeEnv);
-		TestComplex.testClojureCompileNoCmp(
-				"((extended-lambda ((Int x)) ((Int:Native) \"Native\") ((Int:String) \"String\")) (Int:String \"42\"))",
-				env, typeEnv);
+		TestComplex.assertIntprtAndCompPrintSameValues("(type Name2)" + "(representation Structured Name2)"
+				+ "(constructor Name2 Structured ((String:Native x) (String:Native y)) (cons x y))"
+				+ "(representation Unstructured Name2)" + "(constructor Name2 Unstructured ((String:Native x)) x)"
+				+ "(conversion Name2:Structured Name2:Unstructured"
+				+ "((Name2:Structured x)) (construct Name2 Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))"
+				+ "(println ((lambda ((Name2:Unstructured x)) x) (construct Name2 Structured \"Jan\" \"Novak\")))"
+				+ "(println ((extended-lambda ((Int x)) ((Int:Native) \"Native\") ((Int:String) \"String\")) (construct Int String \"42\")))");
 	}
 
 	@Test
 	@DisplayName("Clojure Operators")
 	void testClojureOperators() throws Exception {
-		Environment env = Environment.initTopLevelEnvitonment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-
-		TestComplex.testClojureCompile("(+ 41 1)", "(" + AbstractionApplication.clojureEapply
-				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(+ (get _x 0) (get _y 0))] {:lang-type "
-				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-				+ "}) (with-meta [(with-meta [41] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "}) (with-meta [1] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-						.clojureTypeRepresentation()
-				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
-		TestComplex.testClojureCompile("(bit-and 42 1)", "(" + AbstractionApplication.clojureEapply
-				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(bit-and (get _x 0) (get _y 0))] {:lang-type "
-				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-				+ "}) (with-meta [(with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "}) (with-meta [1] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-						.clojureTypeRepresentation()
-				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("(bit-or 42 1)", env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("(car pair)", env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("(cdr pair)", env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("(concat \"Hello\" \"World\")", env, typeEnv);
-		TestComplex.testClojureCompile("(/ 84 2)", "(" + AbstractionApplication.clojureEapply
-				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(/ (get _x 0) (get _y 0))] {:lang-type "
-				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-				+ "}) (with-meta [(with-meta [84] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "}) (with-meta [2] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-						.clojureTypeRepresentation()
-				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
-		TestComplex.testClojureCompileNoCmp("(equals? 42 \"42\")", env, typeEnv);
-		TestComplex.testClojureCompile("(< 42 42)", "(" + AbstractionApplication.clojureEapply
-				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(< (get _x 0) (get _y 0))] {:lang-type "
-				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})){:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
-				+ "}) (with-meta [(with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "}) (with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-						.clojureTypeRepresentation()
-				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
-		TestComplex.testClojureCompile("(* 42 1)", "(" + AbstractionApplication.clojureEapply
-				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(* (get _x 0) (get _y 0))] {:lang-type "
-				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-				+ "}) (with-meta [(with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "}) (with-meta [1] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-						.clojureTypeRepresentation()
-				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
-		TestComplex.testClojureCompile("(not #t)", "(" + AbstractionApplication.clojureEapply
-				+ " (with-meta [(with-meta (fn [_x] (with-meta [(not (get _x 0))] {:lang-type "
-				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})){:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)), TypeAtom.TypeBoolNative))
-						.clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)), TypeAtom.TypeBoolNative))
-						.clojureTypeRepresentation()
-				+ "}) (with-meta [(with-meta [true] {:lang-type " + TypeAtom.TypeBoolNative.clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative))).clojureTypeRepresentation() + "}) "
-				+ AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
-		TestComplex.testClojureCompile("(= 42 42)", "(" + AbstractionApplication.clojureEapply
-				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(= (get _x 0) (get _y 0))] {:lang-type "
-				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})){:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeBoolNative)).clojureTypeRepresentation()
-				+ "}) (with-meta [(with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "}) (with-meta [42] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-						.clojureTypeRepresentation()
-				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
-		TestComplex.testClojureCompile("(- 43 1)", "(" + AbstractionApplication.clojureEapply
-				+ " (with-meta [(with-meta (fn [_x _y] (with-meta [(- (get _x 0) (get _y 0))] {:lang-type "
-				+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + "})){:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
-						TypeAtom.TypeIntNative)).clojureTypeRepresentation()
-				+ "}) (with-meta [(with-meta [43] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "}) (with-meta [1] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ "})] {:lang-type "
-				+ (new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)))
-						.clojureTypeRepresentation()
-				+ "}) " + AbstractionApplication.clojureRankingFunction + ")", env, typeEnv);
-
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(println (+ 21 21))\n" + "(println (* 1 42))\n" + "(println (/ 84 2))\n" + "(println (- 63 21))\n"
 						+ "(println (and #t #f))\n" + "(println (bit-and 42 1))\n" + "(println (bit-or 42 1))\n"
@@ -914,138 +739,76 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(is-same-type 42 42)");
 		TestComplex.assertIntprtAndCompPrintSameValues("(is-same-type 42 (construct Int String \"42\"))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(is-same-type 42 \"42\")");
-		
+
 		TestComplex.assertIntprtAndCompPrintSameValues("(is-same-representation 42 42)");
 		TestComplex.assertIntprtAndCompPrintSameValues("(is-same-representation 42 (construct Int String \"42\"))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(is-same-representation 42 \"42\")");
 	}
-	
+
 	@Test
 	@DisplayName("Test user defined ranking function")
 	void testUserDefRanking() throws Exception {
-		String ranking = "(lambda (formalArgTypes realArgs)"
-							+ "(foldr-list-native + 0 (map2-list-native "
-								+ "(lambda (x y) (if (is-same-representation x y) 0 1)) "
-								+ "formalArgTypes "
-								+ "realArgs)))";
-		
+		String ranking = "(lambda (formalArgTypes realArgs)" + "(foldr-list-native + 0 (map2-list-native "
+				+ "(lambda (x y) (if (is-same-representation x y) 0 1)) " + "formalArgTypes " + "realArgs)))";
+
 		String realArgs = "(construct List Native 42 (construct List Native \"42\" (construct List Native #t (construct List Native))))";
-		
+
 		List<Expression> l = velka.lang.interpretation.Compiler.read(new ByteArrayInputStream(ranking.getBytes()));
-		Lambda rankingLambda = (Lambda)l.get(0);
+		Lambda rankingLambda = (Lambda) l.get(0);
 		l = velka.lang.interpretation.Compiler.read(new ByteArrayInputStream(realArgs.getBytes()));
 		Expression realArgsExpr = l.get(0);
-		
-		Expression formalArgs1 = new LitComposite(
-				new Tuple(Arrays.asList(
-						new TypeSymbol(TypeAtom.TypeIntNative), //TypeSymbol
-						new LitComposite(
-								new Tuple(Arrays.asList(
-										new TypeSymbol(TypeAtom.TypeStringNative), //TypeSymbol
+
+		Expression formalArgs1 = new LitComposite(new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), // TypeSymbol
+				new LitComposite(new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeStringNative), // TypeSymbol
+						new LitComposite(new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeBoolNative), // TypeSymbol
+								new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
+								TypeAtom.TypeListNative))),
+						TypeAtom.TypeListNative))),
+				TypeAtom.TypeListNative);
+
+		Expression formalArgs2 = new LitComposite(new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntString), // TypeSymbol
+				new LitComposite(new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeStringNative), // TypeSymbol
+						new LitComposite(new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeBoolNative), // TypeSymbol
+								new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
+								TypeAtom.TypeListNative))),
+						TypeAtom.TypeListNative))),
+				TypeAtom.TypeListNative);
+
+		Expression formalArgs3 = new LitComposite(new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntString), // TypeSymbol
+				new LitComposite(
+						new Tuple(Arrays
+								.asList(new TypeSymbol(new TypeAtom(TypeName.STRING, new TypeRepresentation("other"))), // TypeSymbol
 										new LitComposite(
 												new Tuple(Arrays.asList(
-														new TypeSymbol(TypeAtom.TypeBoolNative), //TypeSymbol
-														new LitComposite(
-																Tuple.EMPTY_TUPLE,
-																TypeAtom.TypeListNative
-																)
-														)),
-												TypeAtom.TypeListNative
-												)
-										)),
-								TypeAtom.TypeListNative
-								)
-						)),
-				TypeAtom.TypeListNative
-				);
-		
-		Expression formalArgs2 = new LitComposite(
-				new Tuple(Arrays.asList(
-						new TypeSymbol(TypeAtom.TypeIntString), //TypeSymbol
-						new LitComposite(
-								new Tuple(Arrays.asList(
-										new TypeSymbol(TypeAtom.TypeStringNative), //TypeSymbol
-										new LitComposite(
-												new Tuple(Arrays.asList(
-														new TypeSymbol(TypeAtom.TypeBoolNative), //TypeSymbol
-														new LitComposite(
-																Tuple.EMPTY_TUPLE,
-																TypeAtom.TypeListNative
-																)
-														)),
-												TypeAtom.TypeListNative
-												)
-										)),
-								TypeAtom.TypeListNative
-								)
-						)),
-				TypeAtom.TypeListNative
-				);
-		
-		Expression formalArgs3 = new LitComposite(
-				new Tuple(Arrays.asList(
-						new TypeSymbol(TypeAtom.TypeIntString), //TypeSymbol
-						new LitComposite(
-								new Tuple(Arrays.asList(
-										new TypeSymbol(new TypeAtom(TypeName.STRING, new TypeRepresentation("other"))), //TypeSymbol
-										new LitComposite(
-												new Tuple(Arrays.asList(
-														new TypeSymbol(new TypeAtom(TypeName.BOOL, new TypeRepresentation("other"))), //TypeSymbol
-														new LitComposite(
-																Tuple.EMPTY_TUPLE,
-																TypeAtom.TypeListNative
-																)
-														)),
-												TypeAtom.TypeListNative
-												)
-										)),
-								TypeAtom.TypeListNative
-								)
-						)),
-				TypeAtom.TypeListNative
-				);
-		
-		Expression e1 = new AbstractionApplication(
-				rankingLambda,
-				new Tuple(Arrays.asList(
-						formalArgs1,
-						realArgsExpr
-						))
-				);
-		
-		Expression e2 = new AbstractionApplication(
-				rankingLambda,
-				new Tuple(Arrays.asList(
-						formalArgs2,
-						realArgsExpr
-						))
-				);
-		
-		Expression e3 = new AbstractionApplication(
-				rankingLambda,
-				new Tuple(Arrays.asList(
-						formalArgs3,
-						realArgsExpr
-						))
-				);
-		
+														new TypeSymbol(new TypeAtom(TypeName.BOOL,
+																new TypeRepresentation("other"))), // TypeSymbol
+														new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
+												TypeAtom.TypeListNative))),
+						TypeAtom.TypeListNative))),
+				TypeAtom.TypeListNative);
+
+		Expression e1 = new AbstractionApplication(rankingLambda, new Tuple(Arrays.asList(formalArgs1, realArgsExpr)));
+
+		Expression e2 = new AbstractionApplication(rankingLambda, new Tuple(Arrays.asList(formalArgs2, realArgsExpr)));
+
+		Expression e3 = new AbstractionApplication(rankingLambda, new Tuple(Arrays.asList(formalArgs3, realArgsExpr)));
+
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		ListNative.initializeInEnvironment(env, typeEnv);
 		l = velka.lang.interpretation.Compiler.eval(Arrays.asList(e1), env, typeEnv);
 		assertEquals(new LitInteger(0), l.get(0));
-		
+
 		l = velka.lang.interpretation.Compiler.eval(Arrays.asList(e2), env, typeEnv);
 		assertEquals(new LitInteger(1), l.get(0));
-		
+
 		l = velka.lang.interpretation.Compiler.eval(Arrays.asList(e3), env, typeEnv);
 		assertEquals(new LitInteger(3), l.get(0));
-		
-		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(
-				new AbstractionApplication(Operator.PrintlnOperator, new Tuple(Arrays.asList(e1))),
-				new AbstractionApplication(Operator.PrintlnOperator, new Tuple(Arrays.asList(e2))),
-				new AbstractionApplication(Operator.PrintlnOperator, new Tuple(Arrays.asList(e3)))
-				));
+
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				Arrays.asList(new AbstractionApplication(Operator.PrintlnOperator, new Tuple(Arrays.asList(e1))),
+						new AbstractionApplication(Operator.PrintlnOperator, new Tuple(Arrays.asList(e2))),
+						new AbstractionApplication(Operator.PrintlnOperator, new Tuple(Arrays.asList(e3)))));
 	}
 
 	private static List<Expression> parseString(String s) throws AppendableException {
@@ -1111,6 +874,7 @@ class TestComplex {
 		TestComplex.testClojureCodeCmp(s, expected);
 	}
 
+	@SuppressWarnings("unused")
 	private static void testClojureCompileRegex(String code, String regex, Environment env, TypeEnvironment typeEnv)
 			throws AppendableException {
 		String s = TestComplex.compileToClojure(code, env, typeEnv);

@@ -1377,7 +1377,7 @@ class TestInterpretation {
 		TestInterpretation.testInterpretation(typeSymbol, typeSymbol, env, typeEnv);
 
 		Pair<Type, Substitution> p = typeSymbol.infer(env, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeTypeNative, typeSymbol);
+		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, typeSymbol);
 	}
 
 	@Test

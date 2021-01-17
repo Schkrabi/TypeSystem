@@ -127,7 +127,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	 * @param expectedType expected type of this lambda
 	 * @param env          environment where lambda is evaluated
 	 * @param typeEnv 
-	 * @return string containing lcojure code
+	 * @return string containing clojure code
 	 * @throws AppendableException Thrown on unification error or when any argument
 	 *                             is not a variable
 	 */

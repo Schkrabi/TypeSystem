@@ -1,19 +1,23 @@
 package velka.lang.abstraction;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import velka.lang.application.AbstractionApplication;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
+import velka.lang.expression.TypeSymbol;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.langbase.ListNative;
+import velka.lang.literal.LitInteger;
 import velka.lang.types.RepresentationOr;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
-import velka.lang.types.TypeTuple;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
 import velka.lang.util.ThrowingBinaryOperator;
@@ -33,31 +37,64 @@ public class ExtendedLambda extends Abstraction {
 	 */
 	protected final Set<? extends Lambda> implementations;
 
-	protected ExtendedLambda(Collection<? extends Lambda> implementations) {
+	/**
+	 * Ranking function for implementation selection
+	 */
+	public final Abstraction rankingFunction;
+
+	protected ExtendedLambda(Collection<? extends Lambda> implementations, Abstraction rankingFunction2) {
 		this.implementations = new TreeSet<Lambda>(implementations);
+		this.rankingFunction = rankingFunction2;
 	}
-	
-	protected Lambda getMostFitLambda(final TypeTuple argsType) {
+
+	protected Lambda getMostFitLambda(final Tuple args, final Environment env, final TypeEnvironment typeEnv)
+			throws AppendableException {
+		try {
 		return this.implementations.stream()
-				.map(impl -> new Pair<Integer, Lambda>(impl.argsType.tupleDistance(argsType), impl))
+				.map(ThrowingFunction.wrapper(impl -> {
+					Expression formalArgList = ListNative.tupleToListNative(
+							new Tuple(impl.argsType.stream().map(x -> new TypeSymbol(x)).collect(Collectors.toList())));
+					Expression realArgList = ListNative.tupleToListNative(args);
+					
+					AbstractionApplication apl = new AbstractionApplication(
+							this.rankingFunction,
+							new Tuple(Arrays.asList(
+									formalArgList,
+									realArgList
+									))
+							);
+					
+					Expression e = apl.interpret(env, typeEnv);
+					if(!(e instanceof LitInteger)) {
+						throw new AppendableException("Badly formed ranking function " + this.rankingFunction.toString() + " in " + this.toString());
+					}
+					LitInteger i = (LitInteger)e;
+					
+					return new Pair<Integer, Lambda>(i.value, impl);
+				}))
 				.reduce(new Pair<Integer, Lambda>(Integer.MAX_VALUE, null), (p1, p2) -> {
 					if (p1.first < p2.first)
 						return p1;
 					else
 						return p2;
-				}).second;						
+				}).second;
+		}catch(RuntimeException re) {
+			AppendableException e = (AppendableException) re.getCause();
+			throw e;
+		}
 	}
 
 	@Override
 	public Expression interpret(final Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Set<Function> fs = null;
 		try {
-			fs = this.implementations.stream().map(ThrowingFunction.wrapper(x -> (Function)x.interpret(env, typeEnv))).collect(Collectors.toSet());
-		}catch(RuntimeException re) {
-			AppendableException e = (AppendableException)re.getCause();
+			fs = this.implementations.stream().map(ThrowingFunction.wrapper(x -> (Function) x.interpret(env, typeEnv)))
+					.collect(Collectors.toSet());
+		} catch (RuntimeException re) {
+			AppendableException e = (AppendableException) re.getCause();
 			throw e;
 		}
-		
+
 		return ExtendedFunction.makeExtendedFunction(fs, env);
 	}
 
@@ -66,10 +103,10 @@ public class ExtendedLambda extends Abstraction {
 		try {
 			Set<Pair<Type, Substitution>> s = null;
 			try {
-				s = this.implementations.stream()
-					.map(ThrowingFunction.wrapper(x -> x.infer(env, typeEnv))).collect(Collectors.toSet());
-			} catch(RuntimeException re) {
-				AppendableException e = (AppendableException)re.getCause();
+				s = this.implementations.stream().map(ThrowingFunction.wrapper(x -> x.infer(env, typeEnv)))
+						.collect(Collectors.toSet());
+			} catch (RuntimeException re) {
+				AppendableException e = (AppendableException) re.getCause();
 				throw e;
 			}
 
@@ -138,37 +175,52 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		ExtendedFunction f = (ExtendedFunction)this.interpret(env, typeEnv);
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		ExtendedFunction f = (ExtendedFunction) this.interpret(env, typeEnv);
 		return f.doSubstituteAndEvaluate(args, env, typeEnv);
 	}
-	
+
 	/**
 	 * Creates new Extended lambda exppression
 	 * 
-	 * @param implementations implementations of extended lambdas
+	 * @param implementations implementations of extended lambda
 	 * @return new ExtendedLambda object
 	 * @throws AppendableException thrown if any of the argument types does not
 	 *                             unify
 	 */
 	public static ExtendedLambda makeExtendedLambda(Collection<Lambda> implementations) throws AppendableException {
+		return ExtendedLambda.makeExtendedLambda(implementations, AbstractionApplication.defaultRanking);
+	}
+
+	/**
+	 * Creates new Extended lambda exppression
+	 * 
+	 * @param implementations implementations of extended lambda
+	 * @param rankingFunction ranking function used for selecting implementation
+	 * @return new ExtendedLambda object
+	 * @throws AppendableException thrown if any of the argument types does not
+	 *                             unify
+	 */
+	public static ExtendedLambda makeExtendedLambda(Collection<Lambda> implementations, Abstraction rankingFunction)
+			throws AppendableException {
 		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
-		return new ExtendedLambda(implementations);
+		return new ExtendedLambda(implementations, rankingFunction);
 	}
 
 	@Override
 	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder sb = new StringBuilder();
-		
+
 		Iterator<? extends Lambda> i = this.implementations.iterator();
-		while(i.hasNext()) {
+		while (i.hasNext()) {
 			Lambda implementation = i.next();
 			sb.append(implementation.toClojureFn(env, typeEnv));
-			if(i.hasNext()) {
+			if (i.hasNext()) {
 				sb.append(" ");
 			}
 		}
-		
+
 		return sb.toString();
 	}
 }
