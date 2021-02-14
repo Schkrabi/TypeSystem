@@ -1,5 +1,6 @@
 package velka.lang.expression;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -30,6 +31,10 @@ public class Tuple extends Expression implements Iterable<Expression> {
 
 	public Tuple(Collection<? extends Expression> values) {
 		this.values = new Vector<Expression>(values);
+	}
+	
+	public Tuple(Expression ...exprs) {
+		this.values = new Vector<Expression>(Arrays.asList(exprs));
 	}
 
 	/**

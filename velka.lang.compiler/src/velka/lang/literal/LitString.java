@@ -65,4 +65,13 @@ public class LitString extends Literal {
 	public int hashCode() {
 		return this.value.hashCode();
 	}
+	
+	/**
+	 * Creates code for string literal in clojure
+	 * @param clojureCode code providing string value for literal
+	 * @return clojure code
+	 */
+	public static String clojureStringToClojureLitString(String clojureCode) {
+		return Literal.clojureValueToClojureLiteral(clojureCode, TypeAtom.TypeStringNative);
+	}
 }

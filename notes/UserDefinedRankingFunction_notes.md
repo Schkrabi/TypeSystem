@@ -52,12 +52,13 @@ _(instanceof value type)_
 * special form, that infers type of _value_ and tries to unify it with _type_
 
 ## TODO
-* special symbols carrying type
-* _List:Native_ utility functions, _map_, _map-2_ and _reduce_
-* unificationa and type comparison in clojure
-* _instanceof_ and _instanceof-representation_
-* _is-same-representation_ and _is-same-type_
-* implement new ranking function in clojure
+* special symbols carrying type DONE
+* _List:Native_ utility functions, _map_, _map-2_ and _reduce_ DONE
+* unificationa and type comparison in clojure DONE
+* instantiation of special symbols carrying types (new special form) (is it necessary?)
+* _instanceof_ and _instanceof-representation_ DONE
+* _is-same-representation_ and _is-same-type_ DONE
+* implement new ranking function in velka
 * modify _eapply_ in clojure to reflect new argument type
 * _abstractionApplication_ with customable ranking function
 * ranking function in _extended-lambda_

@@ -74,7 +74,9 @@ public class DefineSymbol extends Expression {
 		Pair<Type, Substitution> innerInfered = this.inferDefined(env, typeEnv);
 		e.put(this.name, new TypeHolder(innerInfered.first, this.name));
 		Expression interpreted = this.defined.interpret(e, typeEnv);
-		env.put(this.name, interpreted);
+		if(!env.containsVariable(this.name)) {
+			env.put(this.name, interpreted);
+		}
 		return Expression.EMPTY_EXPRESSION;
 	}
 
@@ -99,7 +101,9 @@ public class DefineSymbol extends Expression {
 		Environment inferenceEnvironment = Environment.create(env);
 		inferenceEnvironment.put(this.name, new TypeHolder(new TypeVariable(NameGenerator.next())));
 		Type t = this.defined.infer(inferenceEnvironment, typeEnv).first;
-		env.put(this.name, new TypeHolder(t));
+		if(!env.containsVariable(this.name)) {
+			env.put(this.name, new TypeHolder(t));
+		}
 		s.append(this.defined.toClojureCode(env, typeEnv));
 		s.append(")");
 		return s.toString();

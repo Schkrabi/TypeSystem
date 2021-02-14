@@ -56,13 +56,27 @@ public class IfExpression extends SpecialFormApplication {
 	protected Expression getFalseBranch() {
 		return this.args.get(2);
 	}
-
+	
 	@Override
-	public boolean equals(Object other) {
-		if (other instanceof IfExpression) {
-			return super.equals(other);
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Expression iCond = this.getCondition().interpret(env, typeEnv);
+		if(!(iCond instanceof LitBoolean)) {
+			Pair<Type, Substitution> inf = iCond.infer(env, typeEnv);
+			iCond = Conversions.convert(inf.first, iCond, TypeAtom.TypeBoolNative, typeEnv);
+			iCond = iCond.interpret(env, typeEnv);
 		}
-		return false;
+		LitBoolean cond = (LitBoolean)iCond;
+		if(cond.value) {
+			return this.getTrueBranch().interpret(env, typeEnv);
+		}
+		
+		Expression iFalse = this.getFalseBranch().interpret(env, typeEnv);
+		Pair<Type, Substitution> inf = this.infer(env, typeEnv);
+		Pair<Type, Substitution> fInf = iFalse.infer(env, typeEnv);
+		
+		iFalse = Conversions.convert(fInf.first, iFalse, inf.first, typeEnv);
+		iFalse = iFalse.interpret(env, typeEnv);
+		return iFalse;
 	}
 
 	@Override
@@ -75,6 +89,12 @@ public class IfExpression extends SpecialFormApplication {
 		s = s.union(argsInfered.second);
 		
 		return new Pair<Type, Substitution>(tv.apply(s), s);
+	}
+	
+	@Override
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
@@ -112,40 +132,12 @@ public class IfExpression extends SpecialFormApplication {
 	protected String applicatedToString() {
 		return "if";
 	}
-
-	@Override
-	protected Expression apply(Tuple convertedArgs, Environment evaluationEnvironment, TypeEnvironment typeEnv) throws AppendableException {
-		LitBoolean cond = (LitBoolean)convertedArgs.get(0).interpret(evaluationEnvironment, typeEnv);
-		Expression trueBranch = convertedArgs.get(1);
-		Expression falseBranch = convertedArgs.get(2);
-		
-		if (cond.value) {
-			return trueBranch.interpret(evaluationEnvironment, typeEnv);
-		} 
-		
-		Pair<Type, Substitution> retInfered = this.infer(evaluationEnvironment, typeEnv);
-		Pair<Type, Substitution> falseInfered = falseBranch.infer(evaluationEnvironment, typeEnv);
-		
-		if(retInfered.first.equals(falseInfered.first)) {
-			return falseBranch.interpret(evaluationEnvironment, typeEnv);
-		}
-		return Conversions.convert(falseInfered.first, falseBranch, retInfered.first, typeEnv).interpret(evaluationEnvironment, typeEnv);	
-	}
-
-	@Override
-	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		TypeVariable v = new TypeVariable(NameGenerator.next());
-		return new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, v, v));
-	}
 	
 	@Override
-	protected Tuple convertArgs(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Expression cond = args.get(0);
-		Pair<Type, Substitution> p = cond.infer(env, typeEnv);
-		Tuple t = new Tuple(Arrays.asList(Conversions.convert(p.first, cond, TypeAtom.TypeBoolNative, typeEnv),
-				args.get(1),
-				args.get(2)
-				));
-		return t;
+	public boolean equals(Object other) {
+		if (other instanceof IfExpression) {
+			return super.equals(other);
+		}
+		return false;
 	}
 }

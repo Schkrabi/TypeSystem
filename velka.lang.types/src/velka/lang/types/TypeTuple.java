@@ -1,5 +1,6 @@
 package velka.lang.types;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -33,6 +34,10 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 	public TypeTuple(Collection<? extends Type> values) {
 		this.values = new Vector<Type>(values);
+	}
+	
+	public TypeTuple(Type ...types) {
+		this.values = new Vector<Type>(Arrays.asList(types));
 	}
 
 	private TypeTuple() {

@@ -1,5 +1,6 @@
 package velka.lang.types;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -9,6 +10,7 @@ import java.util.stream.Stream;
 
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
+import velka.lang.util.ThrowingBinaryOperator;
 
 /**
  * Substituion used for type inference
@@ -23,12 +25,15 @@ public class Substitution {
 	private final TreeMap<TypeVariable, Type> elements = new TreeMap<TypeVariable, Type>();
 
 	private Substitution() {
-		super();
 	}
 
 	public Substitution(Collection<Pair<TypeVariable, Type>> init) {
-		super();
 		init.stream().forEach(x -> this.elements.put(x.first, x.second));
+	}
+
+	@SafeVarargs
+	public Substitution(Pair<TypeVariable, Type>... pairs) {
+		Arrays.asList(pairs).stream().forEach(x -> this.elements.put(x.first, x.second));
 	}
 
 	/**
@@ -110,6 +115,18 @@ public class Substitution {
 	@Override
 	public int hashCode() {
 		return this.elements.hashCode();
+	}
+
+	public static Substitution unionMany(Collection<Substitution> substitutions) throws AppendableException {
+		try {
+			return substitutions.stream().reduce(Substitution.EMPTY,
+					ThrowingBinaryOperator.wrapper((x, y) -> x.union(y)));
+		} catch (RuntimeException re) {
+			if (re.getCause() instanceof AppendableException) {
+				throw (AppendableException) re.getCause();
+			}
+			throw re;
+		}
 	}
 
 	/**

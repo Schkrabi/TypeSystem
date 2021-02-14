@@ -7,11 +7,11 @@ import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.literal.LitString;
 import velka.lang.exceptions.UserException;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
 import velka.lang.types.TypeAtom;
-import velka.lang.types.TypeTuple;
 import velka.lang.types.TypeVariable;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
@@ -32,6 +32,21 @@ public class ExceptionExpr extends SpecialFormApplication {
 	public Expression getMessage() {
 		return this.args.get(0);
 	}
+	
+	@Override
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Tuple iArgs = (Tuple)this.args.interpret(env, typeEnv);
+		Expression iArg = iArgs.get(0);
+		if(!(iArg instanceof LitString)) {
+			Pair<Type, Substitution> inf = iArg.infer(env, typeEnv);
+			iArg = Conversions.convert(inf.first, iArg, TypeAtom.TypeStringNative, typeEnv);
+			iArg = iArg.interpret(env, typeEnv);
+		}
+		
+		String message = ((LitString)iArg).value;
+		
+		throw new UserException(message);
+	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -44,6 +59,12 @@ public class ExceptionExpr extends SpecialFormApplication {
 			e.appendMessage("in " + this);
 			throw e;
 		}
+	}
+	
+	@Override
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
@@ -62,23 +83,5 @@ public class ExceptionExpr extends SpecialFormApplication {
 	@Override
 	protected String applicatedToString() {
 		return "error";
-	}
-
-	@Override
-	protected Expression apply(Tuple convertedArgs, Environment evaluationEnvironment, TypeEnvironment typeEnv) throws AppendableException {
-		throw new UserException(convertedArgs.get(0).interpret(evaluationEnvironment, typeEnv).toString());
-	}
-
-	@Override
-	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative));
-	}
-	
-	@Override
-	protected Tuple convertArgs(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Expression msg = args.get(0);
-		Pair<Type, Substitution> p = msg.infer(env, typeEnv);
-		Tuple t = new Tuple(Arrays.asList(Conversions.convert(p.first, msg, TypeAtom.TypeStringNative, typeEnv)));
-		return t;
 	}
 }

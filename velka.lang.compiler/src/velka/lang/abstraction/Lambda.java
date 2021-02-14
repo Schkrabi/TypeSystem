@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
@@ -17,6 +18,7 @@ import velka.lang.types.TypeVariable;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 
@@ -134,8 +136,6 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	protected String toClojureFn(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder s = new StringBuilder();
 		
-		s.append("(with-meta ");
-		
 		s.append("(fn [");
 
 		Iterator<Expression> i = this.args.iterator();
@@ -160,12 +160,9 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 		s.append(this.body.toClojureCode(child, typeEnv));
 		s.append(")");
 		
-		s.append(" {:lang-type ");
 		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		s.append(p.first.clojureTypeRepresentation());
-		s.append("})");
 		
-		return s.toString();
+		return ClojureCodeGenerator.addTypeMetaInfo(s.toString(), p.first);
 	}
 
 	@Override
@@ -214,9 +211,10 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+			Optional<Abstraction> rankingFunction) throws AppendableException {
 		Function f = (Function) this.interpret(env, typeEnv);
-		return f.doSubstituteAndEvaluate(args, env, typeEnv);
+		return f.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
 	}
 
 	/**
@@ -232,6 +230,21 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 
 	@Override
 	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return this.toClojureFn(env, typeEnv);
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("(let [impl ");
+		sb.append(this.toClojureFn(env, typeEnv));
+		sb.append("] ");
+		sb.append("(fn ");
+		sb.append("([args] impl) ");
+		sb.append("([args ranking-fn] impl)))");
+		
+		return sb.toString();
+	}
+
+	@Override
+	public Abstraction selectImplementation(Tuple args, Optional<Abstraction> rankingFunction, Environment env,
+			TypeEnvironment typeEnv) throws AppendableException {
+		return this;
 	}
 }

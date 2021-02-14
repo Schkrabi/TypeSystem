@@ -63,4 +63,13 @@ public class LitInteger extends Literal {
 	public int hashCode() {
 		return ((Integer) this.value).hashCode();
 	}
+	
+	/**
+	 * Creates code for int literal in clojure
+	 * @param clojureCode code providing int value for literal
+	 * @return clojure code
+	 */
+	public static String clojureIntToClojureLitInteger(String clojureCode) {
+		return Literal.clojureValueToClojureLiteral(clojureCode, TypeAtom.TypeIntNative);
+	}
 }

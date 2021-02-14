@@ -1,6 +1,7 @@
 package velka.lang.literal;
 
 import velka.lang.expression.Expression;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.Substitution;
@@ -19,8 +20,7 @@ public abstract class Literal extends Expression {
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		return "(with-meta [" + this.valueToClojure(env, typeEnv) + "] {:lang-type " + p.first.clojureTypeRepresentation()
-				+ "})";
+		return clojureValueToClojureLiteral(this.valueToClojure(env, typeEnv), p.first);
 	}
 
 	/**
@@ -30,4 +30,14 @@ public abstract class Literal extends Expression {
 	 * @throws AppendableException if anything goes wrong during compilation
 	 */
 	protected abstract String valueToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	
+	/**
+	 * Creates code for literal with metadata type in clojure
+	 * @param clojureValue clojure code providing value for the literal
+	 * @param type type of the literal
+	 * @return clojure code
+	 */
+	public static String clojureValueToClojureLiteral(String clojureValue, Type type) {
+		return ClojureCodeGenerator.addTypeMetaInfo("[" + clojureValue + "]", type);
+	}
 }

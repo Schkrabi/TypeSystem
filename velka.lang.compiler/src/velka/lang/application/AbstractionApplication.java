@@ -1,10 +1,14 @@
 package velka.lang.application;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import velka.lang.abstraction.Abstraction;
 import velka.lang.abstraction.Operator;
+import velka.lang.conversions.Conversions;
+import velka.lang.exceptions.InvalidNumberOfArgumentsException;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.types.RepresentationOr;
@@ -18,6 +22,8 @@ import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
+import velka.lang.util.ThrowingFunction;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitComposite;
@@ -35,81 +41,133 @@ public class AbstractionApplication extends Application {
 	 * Expression that should yield function
 	 */
 	public final Expression fun;
-	
-	public final Abstraction rankingFunction;
+
+	/**
+	 * Ranking function for this abstraction application
+	 */
+	public final Optional<Abstraction> rankingFunction;
 
 	public AbstractionApplication(Expression fun, Tuple args) {
 		super(args);
 		this.fun = fun;
-		this.rankingFunction = AbstractionApplication.defaultRanking;
+		this.rankingFunction = Optional.empty();
 	}
-	
-	public AbstractionApplication(Expression fun, Tuple args, Abstraction rankingFunction){
+
+	public AbstractionApplication(Expression fun, Tuple args, Abstraction rankingFunction) {
 		super(args);
 		this.fun = fun;
-		this.rankingFunction = rankingFunction;
+		this.rankingFunction = Optional.of(rankingFunction);
+	}
+
+	@Override
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		// Interpret the abstraction
+		Expression ifun = this.fun.interpret(env, typeEnv);
+
+		if (!(ifun instanceof Abstraction)) {
+			throw new AppendableException(ifun.toString() + "is not an abstration");
+		}
+		Abstraction abst = (Abstraction) ifun;
+
+		// Interpret arguments
+		Tuple iArgs = (Tuple) this.args.interpret(env, typeEnv);
+		Pair<Type, Substitution> iArgsInfered = iArgs.infer(env, typeEnv);
+
+		// Select implementation to use (if applicable)
+		abst = abst.selectImplementation(iArgs, this.rankingFunction, env, typeEnv);
+
+		// Convert arguments to specific representations
+		Pair<Type, Substitution> abstInfered = abst.infer(env, typeEnv);
+		Type abstArgsType = ((TypeArrow) abstInfered.first).ltype;
+
+		int expectedNumberOfArgs = ((TypeTuple) abstArgsType).size();
+		int providedNumberOfArgs = ((TypeTuple) iArgsInfered.first).size();
+
+		if (expectedNumberOfArgs != providedNumberOfArgs) {
+			throw new InvalidNumberOfArgumentsException(expectedNumberOfArgs, iArgs, this);
+		}
+
+		Expression cArgs = Conversions.convert(iArgsInfered.first, iArgs, abstArgsType, typeEnv);
+		Tuple cArgsTuple = (Tuple) cArgs.interpret(env, typeEnv);
+
+		// Finally evaluate application
+		return abst.substituteAndEvaluate(cArgsTuple, env, typeEnv, this.rankingFunction);
 	}
 
 	/**
-	 * Gets type of arguments of abstraction in this application
+	 * For given types and substitutions infers result of the abstraction
+	 * application
 	 * 
-	 * @param argsType
-	 * @param env
-	 * @return
+	 * @param argsType  application arguments type
+	 * @param argsSubst application arguments inference substitution
+	 * @param abstType  application abstraction type
+	 * @param abstSubst application abstraction substitution
+	 * @return Pair of type and substitution
 	 * @throws AppendableException
 	 */
-	protected TypeTuple getFunArgsType(TypeTuple argsType, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Type funInfered = this.fun.infer(env, typeEnv).first;
-		if (funInfered instanceof RepresentationOr) {
-			return (TypeTuple) AbstractionApplication.getBestImplementationType(argsType,
-					(RepresentationOr) funInfered).ltype;
-		} else if (funInfered instanceof TypeArrow) {
-			return ((TypeTuple) ((TypeArrow) funInfered).ltype);
-		} else if (funInfered instanceof TypeVariable) {
-			return new TypeTuple(
-					argsType.stream().map(x -> new TypeVariable(NameGenerator.next())).collect(Collectors.toList()));
-		}
-		throw new AppendableException(
-				"Expecting expression yielding function at first place in application, got " + funInfered.toString());
+	private static Pair<Type, Substitution> inferResultType(TypeTuple argsType, Substitution argsSubst,
+			TypeArrow abstType, Substitution abstSubst) throws AppendableException {
+		Substitution s = Type.unifyTypes(argsType, abstType.ltype);
+		s.union(argsSubst);
+		s.union(abstSubst);
+
+		TypeArrow finalFnType = (TypeArrow) abstType.apply(s);
+		return new Pair<Type, Substitution>(finalFnType.rtype, s);
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
 			Pair<Type, Substitution> funInfered = this.fun.infer(env, typeEnv);
-			
 			Pair<Type, Substitution> argsInfered = this.args.infer(env, typeEnv);
 
-			if(!(funInfered.first instanceof TypeArrow)) {
-				// Find best implementation if applicable
-				if (funInfered.first instanceof RepresentationOr) {
-					Type best = AbstractionApplication.getBestImplementationType((TypeTuple) argsInfered.first,
-							(RepresentationOr) funInfered.first);
-					funInfered = new Pair<Type, Substitution>(best, funInfered.second);
+			if (funInfered.first instanceof TypeArrow) {
+				return AbstractionApplication.inferResultType((TypeTuple) argsInfered.first, argsInfered.second,
+						(TypeArrow) funInfered.first, funInfered.second);
+			}
+			if (funInfered.first instanceof TypeVariable) {
+				TypeArrow abstArrowType = new TypeArrow(new TypeVariable(NameGenerator.next()),
+						new TypeVariable(NameGenerator.next()));
+				Substitution s = new Substitution(
+						new Pair<TypeVariable, Type>((TypeVariable) funInfered.first, abstArrowType));
+				s = s.union(funInfered.second);
+				return AbstractionApplication.inferResultType((TypeTuple) argsInfered.first, argsInfered.second,
+						abstArrowType, s);
+			}
+			if (funInfered.first instanceof RepresentationOr && ((RepresentationOr) funInfered.first)
+					.getRepresentations().stream().allMatch(x -> x instanceof TypeArrow)) {
+				RepresentationOr abstRepOr = (RepresentationOr) funInfered.first;
+				List<Pair<Type, Substitution>> l = null;
+				try {
+					l = abstRepOr.getRepresentations().stream().map(ThrowingFunction.wrapper(x -> {
+						return AbstractionApplication.inferResultType((TypeTuple) argsInfered.first, argsInfered.second,
+								(TypeArrow) x, funInfered.second);
+					})).collect(Collectors.toList());
+				} catch (RuntimeException re) {
+					if (re.getCause() instanceof AppendableException) {
+						throw (AppendableException) re.getCause();
+					}
+					throw re;
 				}
-				// If type of function is unknown (unresolved variable) assume type arrow
-				else if (funInfered.first instanceof TypeVariable) {
-					TypeArrow ta = new TypeArrow(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()));
-					Substitution sta = new Substitution(Arrays.asList(new Pair<TypeVariable, Type>((TypeVariable)funInfered.first, ta)));
-					funInfered = new Pair<Type, Substitution>(ta, sta);
-				}
-				else {
-					throw new AppendableException(funInfered.first.toString() + " is not applicable type! In:" + this.toString());
-				}
+
+				Substitution finalSubst = Substitution
+						.unionMany(l.stream().map(x -> x.second).collect(Collectors.toList()));
+				Type finalType = RepresentationOr
+						.makeRepresentationOr(l.stream().map(x -> x.first).collect(Collectors.toList()));
+				return new Pair<Type, Substitution>(finalType, finalSubst);
 			}
 
-			// Unify arguments and formal argument types
-			Substitution substArgs = Type.unifyTypes(argsInfered.first, ((TypeArrow) funInfered.first).ltype);
-			substArgs = substArgs.union(argsInfered.second);
-			substArgs = substArgs.union(funInfered.second);
-
-			TypeArrow funType = (TypeArrow) funInfered.first.apply(substArgs);
-
-			return new Pair<Type, Substitution>(funType.rtype, substArgs);
+			throw new AppendableException(funInfered.first.toString() + " is not applicable type!");
 		} catch (AppendableException e) {
-			e.appendMessage("in " + this);
+			e.appendMessage(" in " + this);
 			throw e;
 		}
+	}
+
+	@Override
+	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		// TODO Auto-generated method stub
+		return "";
 	}
 
 	@Override
@@ -119,7 +177,17 @@ public class AbstractionApplication extends Application {
 			int c = this.fun.compareTo(o.fun);
 			if (c != 0)
 				return c;
-			return this.args.compareTo(o.args);
+			c = this.args.compareTo(o.args);
+			if (c != 0)
+				return c;
+			if (this.rankingFunction.isEmpty() && o.rankingFunction.isEmpty())
+				return 0;
+			if (this.rankingFunction.isEmpty() && o.rankingFunction.isPresent())
+				return -1;
+			if (this.rankingFunction.isPresent() && o.rankingFunction.isEmpty())
+				return 1;
+			c = this.rankingFunction.get().compareTo(o.rankingFunction.get());
+			return c;
 		}
 		return super.compareTo(other);
 	}
@@ -128,35 +196,22 @@ public class AbstractionApplication extends Application {
 	public boolean equals(Object other) {
 		if (other instanceof AbstractionApplication) {
 			return this.fun.equals(((AbstractionApplication) other).fun)
-					&& this.args.equals(((AbstractionApplication) other).args);
+					&& this.args.equals(((AbstractionApplication) other).args)
+					&& this.rankingFunction.equals(((AbstractionApplication) other).rankingFunction);
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return this.fun.hashCode() * this.args.hashCode();
+		return this.fun.hashCode() * this.args.hashCode() * this.rankingFunction.hashCode();
 	}
 
 	@Override
-	protected String applicationToClojure(Tuple convertedArgs, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		StringBuilder s = new StringBuilder("(");
-		s.append(AbstractionApplication.clojureEapply);
-		s.append(" ");
-
-		String funCode = this.fun.toClojureCode(env, typeEnv); 
-		s.append(funCode);
-
-		s.append(" ");
-		s.append(convertedArgs.toClojureCode(env, typeEnv));
-		
-		s.append(" ");
-		String defaultRanking = AbstractionApplication.defaultRanking.toClojureCode(env, typeEnv); 
-		s.append(defaultRanking);
-		
-		s.append(")");
-
-		return s.toString();
+	protected String applicationToClojure(Tuple convertedArgs, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		// TODO
+		return "";
 	}
 
 	@Override
@@ -164,141 +219,93 @@ public class AbstractionApplication extends Application {
 		return this.fun.toString();
 	}
 
-	@Override
-	protected Expression apply(Tuple convertedArgs, Environment evaluationEnvironment, TypeEnvironment typeEnv) throws AppendableException {
-		Expression ifun = fun.interpret(evaluationEnvironment, typeEnv);
-
-		if (!(ifun instanceof Abstraction)) {
-			throw new AppendableException(ifun.toString() + "is not an abstration");
-		}
-		Abstraction abst = (Abstraction) ifun;
-
-		Tuple interpretedArgs = (Tuple) convertedArgs.interpret(evaluationEnvironment, typeEnv);
-
-		return abst.substituteAndEvaluate(interpretedArgs, evaluationEnvironment, typeEnv);
-	}
-	
-	public static final String clojureRankingFunction = /*"ranking-function";*/
-			"(fn [v1 v2] (reduce + (map (fn [x y] (if (= x y) 0 1)) v1 v2)))";
-	
+	/**
+	 * default ranking function
+	 */
 	public static final Operator defaultRanking = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
-				throws AppendableException {
-			LitComposite formalArgList = (LitComposite)args.get(0);
-			LitComposite realArgList = (LitComposite)args.get(1);
-			
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Abstraction> rankingFunction) throws AppendableException {
+			LitComposite formalArgList = (LitComposite) args.get(0);
+			LitComposite realArgList = (LitComposite) args.get(1);
+
 			int acc = 0;
-			Tuple formalArgCons = (Tuple)formalArgList.value;
-			Tuple realArgCons = (Tuple)realArgList.value;
-			
-			while(!formalArgCons.equals(Tuple.EMPTY_TUPLE)
-					&& !realArgCons.equals(Tuple.EMPTY_TUPLE)) {
+			Tuple formalArgCons = (Tuple) formalArgList.value;
+			Tuple realArgCons = (Tuple) realArgList.value;
+
+			while (!formalArgCons.equals(Tuple.EMPTY_TUPLE) && !realArgCons.equals(Tuple.EMPTY_TUPLE)) {
 				Expression formalArg = formalArgCons.get(0);
 				Expression realArg = realArgCons.get(0);
 				Type formalArgType = formalArg.infer(env, typeEnv).first;
 				Type realArgType = realArg.infer(env, typeEnv).first;
 				try {
 					Type.unifyRepresentation(formalArgType, realArgType);
-				}catch(TypesDoesNotUnifyException e) {
+				} catch (TypesDoesNotUnifyException e) {
 					acc++;
 				}
-				
-				formalArgCons = (Tuple)((LitComposite)formalArgCons.get(1)).value;
-				realArgCons = (Tuple)((LitComposite)realArgCons.get(1)).value;
+
+				formalArgCons = (Tuple) ((LitComposite) formalArgCons.get(1)).value;
+				realArgCons = (Tuple) ((LitComposite) realArgCons.get(1)).value;
 			}
-			
+
 			return new LitInteger(acc);
 		}
 
 		@Override
-		protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			StringBuilder s = new StringBuilder();
-			s.append("(with-meta ");
-			s.append("(fn [formalArgList realArgList] "
-						+ "(letfn ["
-							+ "(is-list-empty "
-								+ "[l] "
-								+ "(= [] l))"
-							+ "(list-head"
-								+ "[l] "
-								+ "(get l 0))"
-							+ "(list-tail "
-								+ "[l] "
-								+ "(get l 1))"
-							+ "(equal-heads "
-								+ "[formalArgList realArgList] "
-								+ "(try (get (doall ["
-									+ "(velka.lang.types.Type/unifyRepresentation "
-										+ "(:lang-type (meta (list-head formalArgList))) "
-										+ "(:lang-type (meta (list-head realArgList))))"
-									+ "0]) 1) "
-									+ "(catch velka.lang.types.TypesDoesNotUnifyException e 1)))"
-							+ "(aggregate "
-								+ "[formalArgList realArgList] "
-								+ "(if (or (is-list-empty formalArgList) (is-list-empty realArgList)) "
-									+ "0"
-									+ "(+ "
-										+ "(equal-heads formalArgList realArgList)"
-										+ "(aggregate (list-tail formalArgList) (list-tail realArgList)))))"
-						+ "]"
-						+ "(with-meta [(aggregate formalArgList realArgList)] {:lang-type " + TypeAtom.TypeIntNative.clojureTypeRepresentation() 
-						+ "}))) ");
-			s.append("{:lang-type " + this.infer(env, typeEnv).first.clojureTypeRepresentation() + "})");
-			
-			return s.toString();
-		}
-
-		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type t = new TypeArrow(
-					new TypeTuple(Arrays.asList(TypeAtom.TypeListNative, TypeAtom.TypeListNative)),
-					TypeAtom.TypeIntNative
-					);
+			Type t = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeListNative, TypeAtom.TypeListNative)),
+					TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(t, Substitution.EMPTY);
 		}
-		
+
 		@Override
 		public String toString() {
 			return "defaultRankingFunction";
 		}
-		
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			return 
+					"(fn [formalArgList realArgList]\n" + 
+					"    (letfn [\n" + 
+					"        (is-list-empty [l] (= [] l))\n" + 
+					"        (list-head [l] (get l 0))\n" + 
+					"        (list-tail [l] (get l 1))\n" + 
+					"        (equal-heads [formalArgList realArgList]\n" + 
+					"            (try (get \n" + 
+					"                    (doall [\n" + 
+					"                        (velka.lang.types.Type/unifyRepresentation\n" + 
+					"                            (" + ClojureCodeGenerator.getTypeClojureSymbol + "(list-head formalArgList))\n" + 
+					"                            (" + ClojureCodeGenerator.getTypeClojureSymbol + " (list-head realArgList)) 0])\n" + 
+					"                    1)\n" + 
+					"                 (catch velka.lang.types.TypesDoesNotUnifyException e 1))))\n" + 
+					"        (aggregate [formalArgList realArgList]\n" + 
+					"            (if (or (is-list-empty formalArgList) (is-list-empty realArgList))\n" + 
+					"                0\n" + 
+					"                (+\n"+ 
+					"                    (equal-heads formalArgList realArgList)\n" + 
+					"                    (aggregate (list-tail formalArgList) (list-tail realArgList)))))]\n" + 
+					LitInteger.clojureIntToClojureLitInteger("(aggregate formalArgList realArgList)") + "))";	
+		}
+
 	};
 
 	/**
 	 * code of eapply functionn for clojure
 	 */
-	public static final String clojureEapply = /* "eapply";*/ 
-			"(fn [abstraction arguments ranking-function]"
-				+ "(letfn [ "
-						+ "(implementation-arg-type "
-							+ "[implementation] "
-							+ "(.ltype (:lang-type (meta implementation)))) "
-						+ "(tuple-to-list "
-							+ "[t] "
-							+ "(reduce "
-								+ "(fn [x y] (with-meta "
-									+ "[y x] "
-									+ "{:lang-type velka.lang.types.TypeAtom/TypeListNative})) "
-								+ "[] "
-								+ "t))"
-						+ "(type-to-type-symbol "
-								+ "[type] "
-								+ "(with-meta [type] {:lang-type type}))"
-						+ "(rank-implementations "
-							+ "[v implementations ranking-function] "
-							+ "(let [typeList (tuple-to-list (map type-to-type-symbol v))]"
-								+ "(map "
-									+ "(fn [u] [(get ((get ranking-function 0) (tuple-to-list (map type-to-type-symbol (implementation-arg-type u))) typeList) 0) u]) "
-									+ "implementations))) "
-						+ "(select-implementation "
-								+ "[type abstraction ranking-function] "
-								+ "(get (reduce "
-										+ "(fn [x y] (if (< (get x 0) (get y 0)) x y)) "
-										+ "(rank-implementations type abstraction ranking-function)) 1))] "
-						+ "(apply "
-							+ "(select-implementation (:lang-type (meta arguments)) abstraction ranking-function) "
-							+ "arguments)))";							
-
+	public static final String clojureEapply = /* "eapply"; */
+			"(fn [abstraction arguments ranking-function]" + "(letfn [ " + "(implementation-arg-type "
+					+ "[implementation] " + "(.ltype (:lang-type (meta implementation)))) " + "(tuple-to-list " + "[t] "
+					+ "(reduce " + "(fn [x y] (with-meta " + "[y x] "
+					+ "{:lang-type velka.lang.types.TypeAtom/TypeListNative})) " + "[] " + "t))"
+					+ "(type-to-type-symbol " + "[type] " + "(with-meta [type] {:lang-type type}))"
+					+ "(rank-implementations " + "[v implementations ranking-function] "
+					+ "(let [typeList (tuple-to-list (map type-to-type-symbol v))]" + "(map "
+					+ "(fn [u] [(get ((get ranking-function 0) (tuple-to-list (map type-to-type-symbol (implementation-arg-type u))) typeList) 0) u]) "
+					+ "implementations))) " + "(select-implementation " + "[type abstraction ranking-function] "
+					+ "(get (reduce " + "(fn [x y] (if (< (get x 0) (get y 0)) x y)) "
+					+ "(rank-implementations type abstraction ranking-function)) 1)) " + "]" + "(apply "
+					+ "(select-implementation (:lang-type (meta arguments)) abstraction ranking-function) "
+					+ "arguments)))";
 }

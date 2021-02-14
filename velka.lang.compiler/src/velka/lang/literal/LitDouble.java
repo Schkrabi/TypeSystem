@@ -68,4 +68,13 @@ public class LitDouble extends Literal {
 	public int hashCode() {
 		return ((Double) this.value).hashCode();
 	}
+	
+	/**
+	 * Creates code for double literal in clojure
+	 * @param clojureCode code providing double value for literal
+	 * @return clojure code
+	 */
+	public static String clojureDoubleToClojureLitDouble(String clojureCode) {
+		return Literal.clojureValueToClojureLiteral(clojureCode, TypeAtom.TypeDoubleNative);
+	}
 }

@@ -1,5 +1,6 @@
 package velka.lang.types;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -51,6 +52,19 @@ public class RepresentationOr extends Type {
 		}
 
 		return new RepresentationOr(unifiedTypes);
+	}
+	
+	/**
+	 * Creates new RepresentationOr type.
+	 * Convenience constructor
+	 * 
+	 * @param representations types in representation Or
+	 * @return new RepresentationOr type
+	 * @throws AppendableException thrown if representation is empty or if any of
+	 *                             the types in representation does not unify
+	 */
+	public static Type makeRepresentationOr(Type ...reps) throws AppendableException{
+		return RepresentationOr.makeRepresentationOr(Arrays.asList(reps));
 	}
 
 	private RepresentationOr(Collection<Type> representations) {

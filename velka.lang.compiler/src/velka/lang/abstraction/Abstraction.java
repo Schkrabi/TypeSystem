@@ -1,16 +1,16 @@
 package velka.lang.abstraction;
 
 import java.util.Iterator;
+import java.util.Optional;
 
-import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
-import velka.lang.types.TypeTuple;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
 
@@ -23,41 +23,15 @@ import velka.lang.util.Pair;
  */
 public abstract class Abstraction extends Expression {
 
-	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv, Optional<Abstraction> rankingFunction) throws AppendableException;
 
-	public Expression substituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return this.doSubstituteAndEvaluate(args, env, typeEnv);
+	public Expression substituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv, Optional<Abstraction> rankingFunction) throws AppendableException {
+		return this.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
 	}
 
 	/**
-	 * Lazily converts all the arguments to given representation
-	 * 
-	 * @param e        environment containing the arguments associated with their
-	 *                 names
-	 * @param args     argument names in the environment
-	 * @param argTypes formal inferred types of the arguments
-	 * @return new environment where all the arguments will be converted
-	 * @throws Exception
-	 */
-	protected static Environment autoConvertArgs(Environment e, Tuple args, TypeTuple fromType, TypeTuple toType, TypeEnvironment typeEnv)
-			throws AppendableException {
-		Environment ret = Environment.create(e.parent);
-
-		Iterator<Expression> i = args.iterator();
-		Iterator<Type> j = fromType.iterator();
-		Iterator<Type> k = toType.iterator();
-		while (i.hasNext()) {
-			Symbol name = (Symbol) i.next();
-			Expression arg = e.getVariableValue(name);
-
-			ret.put(name, Conversions.convert(j.next(), arg, k.next(), typeEnv));
-		}
-
-		return ret;
-	}
-
-	/**
-	 * Creates lexical clojure for this abstraction
+	 * Creates lexical clojure for this abstraction.
+	 * Runtime interpretation method
 	 * 
 	 * @param formalArgs      formal arguments (argument variables)
 	 * @param realArgs        arguments
@@ -92,15 +66,21 @@ public abstract class Abstraction extends Expression {
 	
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException{
-		StringBuilder sb = new StringBuilder();
-		sb.append("(with-meta [");
-		sb.append(this.implementationsToClojure(env, typeEnv));
-		sb.append("] {:lang-type ");
-		
 		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		sb.append(p.first.clojureTypeRepresentation());
-		sb.append("})");
-		return sb.toString();
+		String code = ClojureCodeGenerator.addTypeMetaInfo(this.implementationsToClojure(env, typeEnv), p.first);
+		
+		return code;
 	}
-
+	
+	/**
+	 * Selects implementation for this abstraction based on arguments and ranking function
+	 * Runtime interpretation method
+	 * 
+	 * @param args arguments of application
+	 * @param rankingFunction ranking function
+	 * @return abstraction
+	 * @throws AppendableException 
+	 */
+	public abstract Abstraction selectImplementation(Tuple args, Optional<Abstraction> rankingFunction, Environment env,
+			TypeEnvironment typeEnv) throws AppendableException;
 }

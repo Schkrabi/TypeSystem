@@ -3,6 +3,7 @@ package velka.lang.abstraction;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
@@ -128,7 +129,8 @@ public class Function extends Lambda implements Comparable<Expression> {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+			Optional<Abstraction> rankingFunction) throws AppendableException {
 		Environment childEnvironment = Abstraction.lexicalClojure(this.args, args, this.creationEnvironment);
 		return this.body.interpret(childEnvironment, typeEnv);
 	}

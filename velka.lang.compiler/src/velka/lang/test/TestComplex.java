@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import velka.lang.abstraction.ExtendedFunction;
+import velka.lang.abstraction.ExtendedLambda;
 import velka.lang.abstraction.Function;
 import velka.lang.abstraction.Lambda;
 import velka.lang.abstraction.Operator;
@@ -104,9 +106,9 @@ class TestComplex {
 				env, typeEnv);
 
 		TestComplex.assertIntprtAndCompPrintSameValues(
-				"(println ((lambda ((String:Native x) (Int:String y)) x) \"test\" (construct Int String \"1984\")))\n"
-						+ "(println ((extended-lambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (construct Int Roman \"XLII\") 66))\n"
-						+ "");
+				"(println ((lambda ((String:Native x) (Int:String y)) x) \"test\" (construct Int String \"1984\")))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(println ((extended-lambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (construct Int Roman \"XLII\") 66))");
 	}
 
 	@Test
@@ -158,9 +160,9 @@ class TestComplex {
 		TestComplex.testInterpretString("(is-list-empty (construct List Linked))", LitBoolean.TRUE, env, typeEnv);
 		TestComplex.testInterpretString("(is-list-empty (construct List Functional))", LitBoolean.TRUE, env, typeEnv);
 
-		TestComplex.testInterpretString("(define head-list (let-type (A) (extended-lambda ((List l))\n"
+		TestComplex.testInterpretString("(define head-list (let-type (A C) (extended-lambda ((List l))\n"
 				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List:Linked)))))\n"
-				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))",
+				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List:Functional) #> C)) #> C))))))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
 		TestComplex.testInterpretString("(head-list x)", xlii, env, typeEnv);
 		TestComplex.testInterpretString("(head-list y)", xlii, env, typeEnv);
@@ -810,6 +812,214 @@ class TestComplex {
 						new AbstractionApplication(Operator.PrintlnOperator, new Tuple(Arrays.asList(e2))),
 						new AbstractionApplication(Operator.PrintlnOperator, new Tuple(Arrays.asList(e3)))));
 	}
+	
+	@Test
+	@DisplayName("Test Custom Ranking Function Compilation")
+	void testCustomRanking() throws Exception {
+		Lambda impl1 = new Lambda(
+				new Tuple(new Symbol("a")),
+				new TypeTuple(TypeAtom.TypeIntNative),
+				new LitString("Int Native")
+				);
+		Lambda impl2 = new Lambda(
+				new Tuple(new Symbol("a")),
+				new TypeTuple(TypeAtom.TypeIntString),
+				new LitString("Int String")
+				);
+		Lambda impl3 = new Lambda(
+				new Tuple(new Symbol("a")),
+				new TypeTuple(TypeAtom.TypeIntRoman),
+				new LitString("Int Roman")
+				);
+		
+		ExtendedLambda elambda_defaultRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3));
+		
+		Lambda ranking = (Lambda)TestComplex.parseString("(lambda (formalArgList realArgList) "
+																		+ "(if (instance-of-representation (head-list-native formalArgList) Int:Roman) 0 999))").get(0);
+		
+		Expression rnkAppl = new AbstractionApplication(
+				ranking,
+				new Tuple(
+						new LitComposite(
+								new Tuple(
+										new TypeSymbol(TypeAtom.TypeIntRoman), 
+										new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative)), 
+								TypeAtom.TypeListNative),
+						new LitComposite(
+								new Tuple(
+										new TypeSymbol(TypeAtom.TypeIntNative),
+										new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative)
+										), 
+								TypeAtom.TypeListNative
+								)
+						)
+				);
+		
+		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(rnkAppl));
+		
+		Expression rnkAppl2 = new AbstractionApplication(
+				ranking,
+				new Tuple(
+						new LitComposite(
+								new Tuple(
+										new TypeSymbol(TypeAtom.TypeIntString), 
+										new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative)), 
+								TypeAtom.TypeListNative),
+						new LitComposite(
+								new Tuple(
+										new TypeSymbol(TypeAtom.TypeIntNative),
+										new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative)
+										), 
+								TypeAtom.TypeListNative
+								)
+						)
+				); 
+		
+		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(rnkAppl2));		 
+		
+		//Lambda ranking2 = (Lambda)TestComplex.parseString("(lambda (formalArgList realArgList) "
+		//																+ "(if (instance-of-representation (head-list-native formalArgList) Int:String) 0 999))").get(0);
+		
+		//ExtendedLambda elambda_customRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3), ranking);
+		
+		Tuple args = new Tuple(new LitInteger(42));
+		
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		ListNative.initializeInEnvironment(env, typeEnv);
+		
+		AbstractionApplication app_defElambda_defRanking = new AbstractionApplication(Operator.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_defaultRanking, args)));
+		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defElambda_defRanking));
+		
+		AbstractionApplication app_defElambda_cusRanking = new AbstractionApplication(Operator.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_defaultRanking, args, ranking)));
+		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defElambda_cusRanking));
+		
+		//AbstractionApplication app_cusElambda_defRanking = new AbstractionApplication(Operator.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_customRanking, args)));
+		//TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_cusElambda_defRanking));
+		
+		//AbstractionApplication app_cusElambda_cusRanking = new AbstractionApplication(Operator.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_customRanking, args, ranking2)));
+		//TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_cusElambda_cusRanking));
+	}
+	
+	@Test
+	@DisplayName("Test Clojure Headers")
+	void testClojureHeaders() throws Exception {
+		StringBuilder definitions = new StringBuilder();
+		definitions.append(ClojureCodeGenerator.tuple2velkaListDef + "\n");
+		
+		assertClojureFunction(
+				definitions.toString(), 
+				"(println (" + ClojureCodeGenerator.tuple2velkaListSymbol + " [1 2 3]))",
+				"[1 [2 [3 []]]]");
+		
+		definitions.append(ClojureCodeGenerator.getTypeClojureDef + "\n");
+		assertClojureFunction(
+				definitions.toString(),
+				"(println (.toString (" + ClojureCodeGenerator.getTypeClojureSymbol + " " + LitInteger.clojureIntToClojureLitInteger("1") + ")))",
+				TypeAtom.TypeIntNative.toString());
+		
+		definitions.append(ClojureCodeGenerator.atomicConversionMapClojureDef + "\n");
+		definitions.append(ClojureCodeGenerator.convertAtomClojureDef + "\n");
+		assertClojureFunction(
+				definitions.toString(),
+				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " + 
+						TypeAtom.TypeIntNative.clojureTypeRepresentation() + " " + 
+						TypeAtom.TypeIntRoman.clojureTypeRepresentation() + 
+						LitInteger.clojureIntToClojureLitInteger("1") + "))",
+				"[[I]]");
+		
+		assertClojureFunction(
+				definitions.toString(),
+				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " + 
+						TypeAtom.TypeIntNative.clojureTypeRepresentation() + " " + 
+						TypeAtom.TypeIntString.clojureTypeRepresentation() + 
+						LitInteger.clojureIntToClojureLitInteger("1") + "))",
+				"[[1]]");
+		
+		assertClojureFunction(
+				definitions.toString(),
+				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " + 
+						TypeAtom.TypeIntString.clojureTypeRepresentation() + " " + 
+						TypeAtom.TypeIntNative.clojureTypeRepresentation() + 
+						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"1\""), TypeAtom.TypeIntString) + "))",
+				"[1]");
+		
+		assertClojureFunction(
+				definitions.toString(),
+				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " + 
+						TypeAtom.TypeIntString.clojureTypeRepresentation() + " " + 
+						TypeAtom.TypeIntRoman.clojureTypeRepresentation() + 
+						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"1\""), TypeAtom.TypeIntString) + "))",
+				"[[I]]");
+		
+		assertClojureFunction(
+				definitions.toString(),
+				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " + 
+						TypeAtom.TypeIntRoman.clojureTypeRepresentation() + " " + 
+						TypeAtom.TypeIntNative.clojureTypeRepresentation() + 
+						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"I\""), TypeAtom.TypeIntRoman) + "))",
+				"[1]");
+		
+		assertClojureFunction(
+				definitions.toString(),
+				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " + 
+						TypeAtom.TypeIntRoman.clojureTypeRepresentation() + " " + 
+						TypeAtom.TypeIntString.clojureTypeRepresentation() + 
+						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"I\""), TypeAtom.TypeIntRoman) + "))",
+				"[[1]]");
+		
+		definitions.append("(declare " + ClojureCodeGenerator.convertClojureSymbol + ")");
+		definitions.append("(declare " + ClojureCodeGenerator.convertTupleClojureSymbol + ")");
+		definitions.append("(declare " + ClojureCodeGenerator.convertFnClojureSymbol + ")");
+		definitions.append(ClojureCodeGenerator.convertClojureDef);
+		TestComplex.clojureCodeResult(definitions.toString());
+		
+		definitions.append(ClojureCodeGenerator.convertTupleClojureDef);
+		TestComplex.clojureCodeResult(definitions.toString());
+		
+		definitions.append(ClojureCodeGenerator.convertFnClojureDef);
+		TestComplex.clojureCodeResult(definitions.toString());
+		
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		
+		TypeTuple from = new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntString);
+		Tuple t = new Tuple(new LitInteger(1), new LitComposite(new LitString("1"), TypeAtom.TypeIntString));
+		
+		assertClojureFunction(
+				definitions.toString(),
+				"(println (" + ClojureCodeGenerator.convertTupleClojureSymbol + " " +
+						from.clojureTypeRepresentation() + " " +
+						new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman).clojureTypeRepresentation() + " " +
+						t.toClojureCode(env, typeEnv) + "))",
+				"[[1] [[I]]]");
+		
+		Lambda l = (Lambda)(TestComplex.parseString("(lambda ((Int:String x)) 1)").get(0));
+		TypeArrow lambda_from = new TypeArrow(new TypeTuple(TypeAtom.TypeIntString), TypeAtom.TypeIntNative);
+		TypeArrow lambda_to = new TypeArrow(new TypeTuple(TypeAtom.TypeIntRoman), TypeAtom.TypeIntString);
+		
+		Expression arg = new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman);
+		assertClojureFunction(
+				definitions.toString(),
+				"(println (((" + ClojureCodeGenerator.convertFnClojureSymbol + " " + lambda_from.clojureTypeRepresentation() + " " + 
+				lambda_to.clojureTypeRepresentation() + " " + l.toClojureCode(env, typeEnv) + ") nil) " + arg.toClojureCode(env, typeEnv) + "))",
+				"[[1]]");
+		
+		definitions.append(ClojureCodeGenerator.eapplyClojureDef);
+		assertClojureFunction(
+				definitions.toString(),
+				"(println (" + ClojureCodeGenerator.eapplyClojureSymbol + " " + l.toClojureCode(env, typeEnv) + " "
+						+ (new Tuple(arg)).toClojureCode(env, typeEnv) + "))",
+				"[1]");
+	}
+	
+	private static void assertClojureFunction(String definitions, String testCase, String expectedResult) throws IOException, InterruptedException {
+		//Test that definitions are sound
+		TestComplex.clojureCodeResult(definitions);
+		//Test the testcase
+		String result = TestComplex.clojureCodeResult(definitions + "\n" + testCase);
+		assertEquals(expectedResult + "\n", result);
+	}
 
 	private static List<Expression> parseString(String s) throws AppendableException {
 		CharStream charStream = CharStreams.fromString(s);
@@ -925,17 +1135,11 @@ class TestComplex {
 
 		return result;
 	}
-
-	private static String clojureCompilationResult(List<Expression> l, Environment env, TypeEnvironment typeEnv)
-			throws Exception {
+	
+	private static String clojureCodeResult(String code) throws IOException, InterruptedException {
 		File tempFile = File.createTempFile("velka_clojure_test", null);
-
-		StringBuilder code = new StringBuilder();
-		code.append(ClojureCodeGenerator.writeHeaders(env, typeEnv));
-		code.append(velka.lang.interpretation.Compiler.compile(l, env, typeEnv));
 		FileOutputStream ofs = new FileOutputStream(tempFile);
-		ofs.write(ClojureCodeGenerator.writeHeaders(env, typeEnv).getBytes());
-		ofs.write(code.toString().getBytes());
+		ofs.write(code.getBytes());
 		ofs.close();
 
 		ProcessBuilder pb = new ProcessBuilder("clj", tempFile.getAbsolutePath());
@@ -956,6 +1160,17 @@ class TestComplex {
 		return result;
 	}
 
+	private static String clojureCompilationResult(List<Expression> l, Environment env, TypeEnvironment typeEnv)
+			throws Exception {
+
+		StringBuilder code = new StringBuilder();
+		code.append(ClojureCodeGenerator.writeHeaders(env, typeEnv));
+		code.append(velka.lang.interpretation.Compiler.compile(l, env, typeEnv));
+		
+		String result = TestComplex.clojureCodeResult(code.toString());
+		return result;
+	}
+
 	private static void testClojureCompileClj(String code, String expected) throws Exception {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
@@ -967,6 +1182,7 @@ class TestComplex {
 		assertEquals(expected, result);
 	}
 
+	@SuppressWarnings("unused")
 	private static String escapeBrackets(String s) {
 		return s.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)").replaceAll("\\[", "\\\\[")
 				.replaceAll("\\]", "\\\\]").replaceAll("\\{", "\\\\{").replaceAll("\\}", "\\\\}")

@@ -762,17 +762,17 @@ class TestInterpretation {
 		TestInterpretation.testInterpretation(useString,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString), top, typeEnv);
 		p = useString.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntString, useString);
+		TestInterpretation.testInference(p, RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman), useString);
 
 		AbstractionApplication useRoman = new AbstractionApplication(elambda, new Tuple(
 				Arrays.asList(new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman))));
 		TestInterpretation.testInterpretation(useRoman,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman), top, typeEnv);
 		p = useRoman.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntRoman, useRoman);
+		TestInterpretation.testInference(p, RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman), useRoman);
 
 		assertThrows(AppendableException.class,
-				() -> new AbstractionApplication(useString, new Tuple(Arrays.asList(new LitString("fail")))).infer(top,
+				() -> new AbstractionApplication(elambda, new Tuple(Arrays.asList(new LitString("fail")))).infer(top,
 						typeEnv));
 
 	}
@@ -1449,6 +1449,54 @@ class TestInterpretation {
 		Pair<Type, Substitution> p = iofr.infer(env, typeEnv);
 		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, iofr);
 	}
+	
+	@Test
+	@DisplayName("Test custom ranking function interpretation")
+	void testCustomRanking() throws AppendableException{
+		Lambda impl1 = new Lambda(
+				new Tuple(new Symbol("a")),
+				new TypeTuple(TypeAtom.TypeIntNative),
+				new LitString("Int Native")
+				);
+		Lambda impl2 = new Lambda(
+				new Tuple(new Symbol("a")),
+				new TypeTuple(TypeAtom.TypeIntString),
+				new LitString("Int String")
+				);
+		Lambda impl3 = new Lambda(
+				new Tuple(new Symbol("a")),
+				new TypeTuple(TypeAtom.TypeIntRoman),
+				new LitString("Int Roman")
+				);
+		
+		ExtendedLambda elambda_defaultRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3));
+		
+		Lambda ranking = (Lambda)TestInterpretation.parseString("(lambda (formalArgList realArgList) "
+																		+ "(if (instance-of-representation (head-list-native formalArgList) Int:Roman) 0 999))");
+		
+		Lambda ranking2 = (Lambda)TestInterpretation.parseString("(lambda (formalArgList realArgList) "
+																		+ "(if (instance-of-representation (head-list-native formalArgList) Int:String) 0 999))");
+		
+		ExtendedLambda elambda_customRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3), ranking);
+		
+		Tuple args = new Tuple(new LitInteger(42));
+		
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		ListNative.initializeInEnvironment(env, typeEnv);
+		
+		AbstractionApplication app_defElambda_defRanking = new AbstractionApplication(elambda_defaultRanking, args);
+		TestInterpretation.testInterpretation(app_defElambda_defRanking, new LitString("Int Native"), env, typeEnv);
+		
+		AbstractionApplication app_defElambda_cusRanking = new AbstractionApplication(elambda_defaultRanking, args, ranking);
+		TestInterpretation.testInterpretation(app_defElambda_cusRanking, new LitString("Int Roman"), env, typeEnv);
+		
+		AbstractionApplication app_cusElambda_defRanking = new AbstractionApplication(elambda_customRanking, args);
+		TestInterpretation.testInterpretation(app_cusElambda_defRanking, new LitString("Int Roman"), env, typeEnv);
+		
+		AbstractionApplication app_cusElambda_cusRanking = new AbstractionApplication(elambda_customRanking, args, ranking2);
+		TestInterpretation.testInterpretation(app_cusElambda_cusRanking, new LitString("Int String"), env, typeEnv);
+	}
 
 	private static Expression parseString(String s) throws AppendableException {
 		CharStream charStream = CharStreams.fromString(s);
@@ -1479,7 +1527,7 @@ class TestInterpretation {
 			boolean shouldeBeSUbstEmpty) {
 		assertEquals(p.first, expected);
 		if (shouldeBeSUbstEmpty) {
-			assertEquals(p.second, Substitution.EMPTY);
+			assertEquals(Substitution.EMPTY, p.second);
 		}
 	}
 
@@ -1499,7 +1547,7 @@ class TestInterpretation {
 	private static void testInterpretation(Expression interpreted, Expression expected, Environment env,
 			TypeEnvironment typeEnv) throws AppendableException {
 		Expression e = interpreted.interpret(env, typeEnv);
-		assertEquals(e, expected);
+		assertEquals(expected, e);
 	}
 
 	private static void testOperator(final Operator operator, Tuple args, Expression expectedInterpret,

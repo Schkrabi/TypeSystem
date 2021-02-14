@@ -4,10 +4,9 @@ import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.PriorityQueue;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,7 +30,7 @@ public class ExtendedFunction extends ExtendedLambda {
 
 	public final Environment creationEnvironment;
 
-	private ExtendedFunction(Collection<Function> implementations, Abstraction rankingFunction,
+	private ExtendedFunction(Collection<Function> implementations, Expression rankingFunction,
 			Environment createdEnvironment) {
 		super(implementations, rankingFunction);
 		creationEnvironment = createdEnvironment;
@@ -40,11 +39,6 @@ public class ExtendedFunction extends ExtendedLambda {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
-			/*
-			 * Set<Pair<Type, Substitution>> s = this.implementations.stream()
-			 * .map(ThrowingFunction.wrapper(x ->
-			 * x.infer(env))).collect(Collectors.toSet());
-			 */
 			Set<Pair<Type, Substitution>> s = new HashSet<Pair<Type, Substitution>>();
 			for (Expression e : this.implementations) {
 				Pair<Type, Substitution> p = e.infer(env, typeEnv);
@@ -60,12 +54,6 @@ public class ExtendedFunction extends ExtendedLambda {
 			e.appendMessage("in " + this);
 			throw e;
 		}
-	}
-
-	public PriorityQueue<Lambda> getSortedImplementations(Comparator<? super Lambda> c) {
-		PriorityQueue<Lambda> q = new PriorityQueue<Lambda>(c);
-		q.addAll(this.implementations);
-		return q;
 	}
 
 	@Override
@@ -159,8 +147,8 @@ public class ExtendedFunction extends ExtendedLambda {
 	 */
 	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
 			Environment createdEnvironment) throws AppendableException {
-		return ExtendedFunction.makeExtendedFunction(implementations, AbstractionApplication.defaultRanking,
-				createdEnvironment);
+		return ExtendedFunction.makeExtendedFunction(implementations, createdEnvironment,
+				AbstractionApplication.defaultRanking);
 	}
 
 	/**
@@ -173,17 +161,17 @@ public class ExtendedFunction extends ExtendedLambda {
 	 * @throws AppendableException thrown if argument types of function does not
 	 *                             unify
 	 */
-	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations, Abstraction rankingFunction,
-			Environment createdEnvironment) throws AppendableException {
+	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
+			Environment createdEnvironment, Expression rankingFunction) throws AppendableException {
 		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
 		return new ExtendedFunction(implementations, rankingFunction, createdEnvironment);
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
-			throws AppendableException {
-		Lambda l = this.getMostFitLambda(args, env, typeEnv);
-		return l.doSubstituteAndEvaluate(args, env, typeEnv);
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+			Optional<Abstraction> rankingFunction) throws AppendableException {
+		Abstraction a = this.selectImplementation(args, rankingFunction, env, typeEnv);
+		return a.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
 	}
 
 	@Override

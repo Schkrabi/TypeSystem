@@ -34,7 +34,7 @@ public class InstanceOf extends Expression {
 
 	@Override
 	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> infered = this.expression.infer(env, typeEnv);
+		Pair<Type, Substitution> infered = this.expression.interpret(env, typeEnv).infer(env, typeEnv);
 		
 		try {
 			Type.unifyTypes(infered.first, this.type);

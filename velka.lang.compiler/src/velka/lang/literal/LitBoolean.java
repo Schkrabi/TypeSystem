@@ -69,4 +69,13 @@ public class LitBoolean extends Literal {
 		}
 		return super.compareTo(other);
 	}
+	
+	/**
+	 * Creates code for bool literal in clojure
+	 * @param clojureCode code providing bool value for literal
+	 * @return clojure code
+	 */
+	public static String clojureBooleanToClojureLitBoolean(String clojureCode) {
+		return Literal.clojureValueToClojureLiteral(clojureCode, TypeAtom.TypeBoolNative);
+	}
 }
