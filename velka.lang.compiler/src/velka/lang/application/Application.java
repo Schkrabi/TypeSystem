@@ -3,9 +3,6 @@ package velka.lang.application;
 
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
-import velka.lang.interpretation.Environment;
-import velka.lang.interpretation.TypeEnvironment;
-import velka.lang.util.AppendableException;
 
 /**
  * Expression for various kind of application (application of abstractions or
@@ -24,17 +21,6 @@ public abstract class Application extends Expression {
 	public Application(Tuple args) {
 		this.args = args;
 	}
-
-	/**
-	 * Produces clojure code for this application with already converted arguments
-	 * 
-	 * @param convertedArgs
-	 * @param env
-	 * @return Clojure code representing this application
-	 * @throws AppendableException
-	 */
-	protected abstract String applicationToClojure(Tuple convertedArgs, Environment env, TypeEnvironment typeEnv)
-			throws AppendableException;
 
 	/**
 	 * Returns name of function or special form of this application

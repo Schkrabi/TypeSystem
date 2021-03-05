@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.abstraction.Lambda;
 import velka.lang.semantic.SemanticParserStatic;
@@ -70,8 +71,22 @@ public class DefineConversion extends Expression {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		typeEnv.addConversion(this.from, this.to, this.makeConversionLambda(env));
-		return "";
+		Lambda conversionLambda = this.makeConversionLambda(env);
+		typeEnv.addConversion(this.from, this.to, conversionLambda);
+		StringBuilder s = new StringBuilder();
+		s.append("(def ^:dynamic ");
+		s.append(ClojureCodeGenerator.atomicConversionMapClojureSymbol);
+		s.append(" (assoc ");
+		s.append(ClojureCodeGenerator.atomicConversionMapClojureSymbol);
+		s.append(" [");
+		s.append(this.from.clojureTypeRepresentation());
+		s.append(" ");
+		s.append(this.to.clojureTypeRepresentation());
+		s.append("] ");
+		s.append(conversionLambda.toClojureCode(env, typeEnv));
+		s.append("))");
+		
+		return s.toString();
 	}
 
 	@Override

@@ -166,8 +166,23 @@ public class AbstractionApplication extends Application {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		// TODO Auto-generated method stub
-		return "";
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("(");
+		sb.append(ClojureCodeGenerator.eapplyClojureSymbol);
+		sb.append(" \n");
+		sb.append(this.fun.toClojureCode(env, typeEnv));
+		sb.append(" \n");
+		sb.append(this.args.toClojureCode(env, typeEnv));
+		
+		if(this.rankingFunction.isPresent()) {
+			sb.append(" \n");
+			sb.append(this.rankingFunction.get().toClojureCode(env, typeEnv));
+		}
+		
+		sb.append(")");
+		
+		return sb.toString();
 	}
 
 	@Override
@@ -205,13 +220,6 @@ public class AbstractionApplication extends Application {
 	@Override
 	public int hashCode() {
 		return this.fun.hashCode() * this.args.hashCode() * this.rankingFunction.hashCode();
-	}
-
-	@Override
-	protected String applicationToClojure(Tuple convertedArgs, Environment env, TypeEnvironment typeEnv)
-			throws AppendableException {
-		// TODO
-		return "";
 	}
 
 	@Override
@@ -269,17 +277,16 @@ public class AbstractionApplication extends Application {
 			return 
 					"(fn [formalArgList realArgList]\n" + 
 					"    (letfn [\n" + 
-					"        (is-list-empty [l] (= [] l))\n" + 
-					"        (list-head [l] (get l 0))\n" + 
-					"        (list-tail [l] (get l 1))\n" + 
+					"        (is-list-empty [l] (= [] (first l)))\n" + 
+					"        (list-head [l] (first (first l)))\n" + 
+					"        (list-tail [l] (second (first l)))\n" + 
 					"        (equal-heads [formalArgList realArgList]\n" + 
-					"            (try (get \n" + 
+					"            (try (second \n" + 
 					"                    (doall [\n" + 
 					"                        (velka.lang.types.Type/unifyRepresentation\n" + 
-					"                            (" + ClojureCodeGenerator.getTypeClojureSymbol + "(list-head formalArgList))\n" + 
-					"                            (" + ClojureCodeGenerator.getTypeClojureSymbol + " (list-head realArgList)) 0])\n" + 
-					"                    1)\n" + 
-					"                 (catch velka.lang.types.TypesDoesNotUnifyException e 1))))\n" + 
+					"                            (" + ClojureCodeGenerator.getTypeClojureSymbol + " (list-head formalArgList))\n" + 
+					"                            (" + ClojureCodeGenerator.getTypeClojureSymbol + " (list-head realArgList))) 0]))\n" + 
+					"                 (catch velka.lang.types.TypesDoesNotUnifyException e 1)))\n" + 
 					"        (aggregate [formalArgList realArgList]\n" + 
 					"            (if (or (is-list-empty formalArgList) (is-list-empty realArgList))\n" + 
 					"                0\n" + 
@@ -290,22 +297,4 @@ public class AbstractionApplication extends Application {
 		}
 
 	};
-
-	/**
-	 * code of eapply functionn for clojure
-	 */
-	public static final String clojureEapply = /* "eapply"; */
-			"(fn [abstraction arguments ranking-function]" + "(letfn [ " + "(implementation-arg-type "
-					+ "[implementation] " + "(.ltype (:lang-type (meta implementation)))) " + "(tuple-to-list " + "[t] "
-					+ "(reduce " + "(fn [x y] (with-meta " + "[y x] "
-					+ "{:lang-type velka.lang.types.TypeAtom/TypeListNative})) " + "[] " + "t))"
-					+ "(type-to-type-symbol " + "[type] " + "(with-meta [type] {:lang-type type}))"
-					+ "(rank-implementations " + "[v implementations ranking-function] "
-					+ "(let [typeList (tuple-to-list (map type-to-type-symbol v))]" + "(map "
-					+ "(fn [u] [(get ((get ranking-function 0) (tuple-to-list (map type-to-type-symbol (implementation-arg-type u))) typeList) 0) u]) "
-					+ "implementations))) " + "(select-implementation " + "[type abstraction ranking-function] "
-					+ "(get (reduce " + "(fn [x y] (if (< (get x 0) (get y 0)) x y)) "
-					+ "(rank-implementations type abstraction ranking-function)) 1)) " + "]" + "(apply "
-					+ "(select-implementation (:lang-type (meta arguments)) abstraction ranking-function) "
-					+ "arguments)))";
 }

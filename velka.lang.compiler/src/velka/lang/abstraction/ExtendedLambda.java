@@ -177,9 +177,10 @@ public class ExtendedLambda extends Abstraction {
 	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("(let [impls {");
+		sb.append("(let [impls #{");
 		for (Lambda l : this.implementations) {
 			sb.append(l.toClojureFn(env, typeEnv));
+			sb.append("\n");
 		}
 		sb.append("}]");
 		sb.append("(fn ");
@@ -188,7 +189,7 @@ public class ExtendedLambda extends Abstraction {
 		sb.append(ClojureCodeGenerator.selectImplementationClojureSymbol);
 		sb.append(" ");
 		sb.append(this.rankingFunction.toClojureCode(env, typeEnv));
-		sb.append(" args impls))");
+		sb.append(" args impls))\n");
 
 		sb.append("([args ranking-fn] (");
 		sb.append(ClojureCodeGenerator.selectImplementationClojureSymbol);

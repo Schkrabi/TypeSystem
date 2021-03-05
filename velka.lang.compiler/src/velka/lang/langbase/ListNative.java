@@ -84,8 +84,8 @@ public class ListNative {
 							new Tuple(Arrays.asList(new Symbol("l")))),
 					new ExceptionExpr(new LitString("Cannot take head of empty list.")),
 					new AbstractionApplication(Operator.Car,
-							new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"), new TypeTuple(Arrays
-									.asList(new TypeVariable(NameGenerator.next()), TypeAtom.TypeListNative))))))));
+							new Tuple(new Deconstruct(new Symbol("l"), new TypeTuple(
+									new TypeVariable(NameGenerator.next()), TypeAtom.TypeListNative))))));
 
 	/**
 	 * tail-list-native symbol

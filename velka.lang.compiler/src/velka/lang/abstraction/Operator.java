@@ -1219,16 +1219,15 @@ public abstract class Operator extends Abstraction {
 
 	@Override
 	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Pair<Type, Substitution> p = this.infer(env, typeEnv);
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("(let [impl ");
-		sb.append(this.toClojureOperator(env, typeEnv));
-		sb.append("] ");
+		sb.append(ClojureCodeGenerator.addTypeMetaInfo(this.toClojureOperator(env, typeEnv), p.first));
+		sb.append("] \n");
 		sb.append("(fn ");
-		sb.append("([args] impl) ");
+		sb.append("([args] impl) \n");
 		sb.append("([args ranking-fn] impl)))");
-
-		Pair<Type, Substitution> p = this.infer(env, typeEnv);
 
 		return ClojureCodeGenerator.addTypeMetaInfo(sb.toString(), p.first);
 	}

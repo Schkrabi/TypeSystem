@@ -13,6 +13,7 @@ import velka.lang.types.Type;
 import velka.lang.types.TypeTuple;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 
@@ -129,7 +130,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder s = new StringBuilder();
 
-		s.append("(with-meta ");
+		s.append("(let [tuple ");
 
 		s.append("[");
 
@@ -141,12 +142,12 @@ public class Tuple extends Expression implements Iterable<Expression> {
 				s.append(' ');
 			}
 		}
-		s.append("]");
-
-		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		s.append(" {:lang-type ");
-		s.append(p.first.clojureTypeRepresentation());
-		s.append("})");
+		s.append("]] ");
+		
+		s.append(ClojureCodeGenerator.addTypeMetaInfo_str("tuple", 
+				"(velka.lang.types.TypeTuple. (map " + ClojureCodeGenerator.getTypeClojureSymbol + " tuple))"));
+		s.append(")");
+		
 
 		return s.toString();
 	}

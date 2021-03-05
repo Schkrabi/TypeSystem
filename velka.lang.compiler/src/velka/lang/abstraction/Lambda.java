@@ -155,7 +155,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 				s.append(' ');
 			}
 		}
-		s.append("] ");
+		s.append("] \n");
 
 		s.append(this.body.toClojureCode(child, typeEnv));
 		s.append(")");
@@ -234,9 +234,9 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 		
 		sb.append("(let [impl ");
 		sb.append(this.toClojureFn(env, typeEnv));
-		sb.append("] ");
+		sb.append("] \n");
 		sb.append("(fn ");
-		sb.append("([args] impl) ");
+		sb.append("([args] impl) \n");
 		sb.append("([args ranking-fn] impl)))");
 		
 		return sb.toString();

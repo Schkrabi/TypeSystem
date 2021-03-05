@@ -5,6 +5,7 @@ import java.util.Iterator;
 import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitBoolean;
@@ -57,34 +58,28 @@ public class OrExpression extends SpecialFormApplication {
 	
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	protected String applicationToClojure(Tuple convertedArgs, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		StringBuilder s = new StringBuilder();
-		s.append("(with-meta ");
-		s.append("[(or");
-		s.append(' ');
-
-		Iterator<Expression> i = convertedArgs.iterator();
+		StringBuilder sb = new StringBuilder();
+		sb.append("(or ");
+		
+		Iterator<Expression> i = this.args.iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
-			s.append("(get ");
-			s.append(e.toClojureCode(env, typeEnv));
-			s.append(" 0)");
+			sb.append("(first (");
+			sb.append(ClojureCodeGenerator.convertClojureSymbol);
+			sb.append(" ");
+			sb.append(TypeAtom.TypeBoolNative.clojureTypeRepresentation());
+			sb.append(" \n");
+			sb.append(e.toClojureCode(env, typeEnv));
+			sb.append("))");
 			if (i.hasNext()) {
-				s.append(' ');
+				sb.append(" \n");
 			}
 		}
-		s.append(")]");
 		
-		s.append("{:lang-type ");
-		s.append(TypeAtom.TypeBoolNative.clojureTypeRepresentation());
-		s.append("})");
+		sb.append(")");
 		
-		return s.toString();
+		
+		return LitBoolean.clojureBooleanToClojureLitBoolean(sb.toString());
 	}
 
 	@Override

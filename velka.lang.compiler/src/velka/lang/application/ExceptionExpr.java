@@ -5,6 +5,7 @@ import java.util.Arrays;
 import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitString;
@@ -63,8 +64,14 @@ public class ExceptionExpr extends SpecialFormApplication {
 	
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		// TODO Auto-generated method stub
-		return null;
+		StringBuilder sb = new StringBuilder();
+		sb.append("(throw (Throwable.");
+		sb.append("(first (");
+		sb.append(ClojureCodeGenerator.convertClojureSymbol);
+		sb.append(" ");
+		sb.append(this.getMessage().toClojureCode(env, typeEnv));
+		sb.append("))))");
+		return sb.toString();
 	}
 
 	@Override
@@ -73,11 +80,6 @@ public class ExceptionExpr extends SpecialFormApplication {
 			return this.args.equals(((ExceptionExpr) other).args);
 		}
 		return false;
-	}
-
-	@Override
-	protected String applicationToClojure(Tuple convertedArgs, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return "(throw (Throwable. (get " + convertedArgs.get(0).toClojureCode(env, typeEnv) + " 0)))";
 	}
 
 	@Override

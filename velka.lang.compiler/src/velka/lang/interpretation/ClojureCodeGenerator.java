@@ -8,6 +8,7 @@ import velka.lang.expression.Expression;
 import velka.lang.langbase.ListNative;
 import velka.lang.types.Type;
 import velka.lang.types.TypeAtom;
+import velka.lang.types.TypeTuple;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 
@@ -21,31 +22,42 @@ public class ClojureCodeGenerator {
 	 * @return clojure code with meta information
 	 */
 	public static String addTypeMetaInfo(String cljCode, Type type) {
+		try {
+			return ClojureCodeGenerator.addTypeMetaInfo_str(cljCode, type.clojureTypeRepresentation());
+		} catch (AppendableException e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+	
+	/**
+	 * Adds type meta information to given clojure code piece
+	 * 
+	 * @param cljCode code to put the meta information to
+	 * @param type    type
+	 * @return clojure code with meta information
+	 */
+	public static String addTypeMetaInfo_str(String cljCode, String typeInfo) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("(with-meta ");
 		sb.append(cljCode);
 		sb.append(" {:lang-type ");
-		try {
-			sb.append(type.clojureTypeRepresentation());
-		} catch (AppendableException e) {
-			e.printStackTrace();
-		}
+		sb.append(typeInfo);
 		sb.append("})");
 		return sb.toString();
 	}
-
+	
 	/**
-	 * Symbol for tuple-2-velka-list function
+	 * Symbol for type-2-type-symbol function
 	 */
-	public static String tuple2velkaListSymbol = "TUPLE2VELKA-List" + NameGenerator.next();
-
+	public static String type2typeSymbolSymbol = "TYPE2TYPE-SYMBOL" + NameGenerator.next();
+	
 	/**
-	 * Definition for tuple-2-velka-list function
+	 * Definition for type-2-type-symbol function
 	 */
-	public static String tuple2velkaListDef = 	"(defn " + tuple2velkaListSymbol + " [tuple] \n" + 
-												"    (reduce \n" + 
-												"        (fn [rest x] " + ClojureCodeGenerator.addTypeMetaInfo("[x rest]", TypeAtom.TypeListNative) + ") \n" + 
-												"        " + ClojureCodeGenerator.addTypeMetaInfo("[]", TypeAtom.TypeListNative) + " (reverse tuple)))";
+	public static String type2typeSymbolDef = 
+			"(defn " + type2typeSymbolSymbol + " [type] \n" +
+			ClojureCodeGenerator.addTypeMetaInfo_str("[type]", "type") + ")";
 
 	/**
 	 * Symbol for get-type clojure symbol
@@ -56,11 +68,29 @@ public class ClojureCodeGenerator {
 	 * Definition for get-type clojure symbol
 	 */
 	public static String getTypeClojureDef = "(defn " + getTypeClojureSymbol + " [expr] (:lang-type (meta expr)))";
+	
+	/**
+	 * Symbol for tuple-2-velka-list function
+	 */
+	public static String tuple2velkaListSymbol = "TUPLE2VELKA-List" + NameGenerator.next();
+
+	/**
+	 * Definition for tuple-2-velka-list function
+	 */
+	public static String tuple2velkaListDef = 	"(defn " + tuple2velkaListSymbol + " [tuple] \n" + 
+												"    (reduce \n" + 
+												"        (fn [rest x] " + ClojureCodeGenerator.addTypeMetaInfo(
+														"[" + 
+												addTypeMetaInfo_str("[x rest]", "(velka.lang.types.TypeTuple. [(" + getTypeClojureSymbol + " x) " + TypeAtom.TypeListNative.clojureTypeRepresentation() + "])") +
+														"]", TypeAtom.TypeListNative) + ") \n" + 
+												"        " + ClojureCodeGenerator.addTypeMetaInfo("[" + 
+														addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE) +
+														"]", TypeAtom.TypeListNative) + " (reverse tuple)))";
 
 	/**
 	 * Symbol for map of atomic type conversion
 	 */
-	public static String atomicConversionMapClojureSymbol = "ATOMIC-CONVERSION-MAP" + NameGenerator.next();
+	public static String atomicConversionMapClojureSymbol = "*ATOMIC-CONVERSION-MAP*" + NameGenerator.next();
 	
 	/**
 	 * Creates record for atomic conversion map
@@ -85,7 +115,7 @@ public class ClojureCodeGenerator {
 	 * Definition for map of atomic type conversion
 	 */
 	public static String atomicConversionMapClojureDef = 
-			"(def " + atomicConversionMapClojureSymbol + 
+			"(def ^:dynamic " + atomicConversionMapClojureSymbol + 
 				"{" + 
 					makeAtomicConversionRecord(TypeAtom.TypeIntNative, TypeAtom.TypeIntString,
 							Operator.IntNativeToIntString.clojureDef()) + "\n"
@@ -123,38 +153,47 @@ public class ClojureCodeGenerator {
 	 * Definition for convert-type-atom clojure function
 	 */
 	public static String convertAtomClojureDef = 
-			"(defn " + convertAtomClojureSymbol + " [from to arg]\n" +
-			"    (((get " + atomicConversionMapClojureSymbol + " [from to]) nil) arg))";
+			"(defn " + convertAtomClojureSymbol + " [to arg]\n" +
+			"    (let [from (" + getTypeClojureSymbol + " arg)]\n" +
+			"        (cond (= from to) arg\n" + 
+			"              (and (instance? velka.lang.types.TypeAtom to) (= (.representation to) velka.lang.types.TypeRepresentation/WILDCARD)) arg\n" +
+			"              (contains? " + atomicConversionMapClojureSymbol + " [from to])\n" +
+			"                  (((get " + atomicConversionMapClojureSymbol + " [from to]) nil) arg)\n" + 
+			"              :else (throw (Throwable. (str \"Conversion from \" from \" to \" to \" does not exists.\"))))))";
 	
 	/**
 	 * Definition for convert-tuple clojure function
 	 */
 	public static String convertTupleClojureDef = 
-			"(defn " + convertTupleClojureSymbol + " [from to arg]\n" +
-			"    (vec (map " + convertClojureSymbol + " from to arg)))";
+			"(defn " + convertTupleClojureSymbol + " [to arg]\n" +
+			addTypeMetaInfo_str(
+			"    (vec (map " + convertClojureSymbol + " to arg))",
+			"to") + ")";
 
 	/**
 	 * Definition for convert-fn clojure function
 	 */
 	public static String convertFnClojureDef = 
-			"(defn " + convertFnClojureSymbol + " [from to arg]\n" +
-			"    (let [impl (fn [& a] (" + convertClojureSymbol + " (.rtype from) (.rtype to)\n" +
-			"                                (apply (arg nil) (" + convertClojureSymbol + " (.ltype to) (.ltype from) a))))]\n" +
+			"(defn " + convertFnClojureSymbol + " [to arg]\n" +
+			"    (let [from (" + getTypeClojureSymbol + " arg)\n" +
+			"          impl " + addTypeMetaInfo_str("(fn [& a] (" + convertClojureSymbol + " (.rtype to)\n" +
+			"                                (apply (arg nil) (" + convertClojureSymbol + " (.ltype from) " + addTypeMetaInfo_str("a", "(.ltype to)") + "))))", "to") + "]\n" +
+			addTypeMetaInfo_str(
 			"        (fn ([args] impl)\n" +
-			"            ([args ranking-fn] impl))))";
+			"            ([args ranking-fn] impl))", "to") + "))";
 	
 	/**
 	 * Definition for convert clojure function
 	 */
 	public static String convertClojureDef = 
-			"(defn " + convertClojureSymbol + " [from to arg]\n" +
-			"        (if (or (instance? velka.lang.types.TypeVariable to)\n" +
-			"                (= from to))\n" +
+			"(defn " + convertClojureSymbol + " [to arg]\n" +
+			"    (let [from (" + getTypeClojureSymbol + " arg)]" +
+			"        (if (instance? velka.lang.types.TypeVariable to)\n" +
 			"            arg\n" +
-			"            (cond (instance? velka.lang.types.TypeAtom from) (" + convertAtomClojureSymbol + " from to arg)\n" + 
-			"                  (instance? velka.lang.types.TypeTuple from) (" + convertTupleClojureSymbol + " from to arg)\n" +
-			"                  (instance? velka.lang.types.TypeArrow from) (" + convertFnClojureSymbol + " from to arg)\n" + 
-			"                  (instance? velka.lang.types.RepresentationOr from) (throw (Throwable. \"trying to convert representationor\")))))";
+			"            (cond (instance? velka.lang.types.TypeAtom from) (" + convertAtomClojureSymbol + " to arg)\n" + 
+			"                  (instance? velka.lang.types.TypeTuple from) (" + convertTupleClojureSymbol + " to arg)\n" +
+			"                  (instance? velka.lang.types.TypeArrow from) (" + convertFnClojureSymbol + " to arg)\n" + 
+			"                  (instance? velka.lang.types.RepresentationOr from) (throw (Throwable. \"trying to convert representationor\"))))))";
 	
 	/**
 	 * Symbol for eapply function
@@ -168,15 +207,13 @@ public class ClojureCodeGenerator {
 			"(defn " + eapplyClojureSymbol + "\n" +
 			"    ([abstraction args ranking]\n" +
 			"        (let [impl (abstraction args ranking)\n" +
-			"              converted-args (" + convertClojureSymbol + "\n" + 
-			"                                 (" + getTypeClojureSymbol + " args)\n" + 
+			"              converted-args (" + convertClojureSymbol + "\n" +  
 			"                                 (.ltype (" + getTypeClojureSymbol + " impl))\n" + 
 			"                                 args)]\n" +
 			"            (apply impl converted-args)))\n" + 
 			"    ([abstraction args]\n" + 
 			"        (let [impl (abstraction args)\n" +
 			"              converted-args (" + convertClojureSymbol + "\n" +
-			"                                 (" + getTypeClojureSymbol + " args)\n" + 
 			"                                 (.ltype (" + getTypeClojureSymbol + " impl))\n" + 
 			"                                 args)]\n" +
 			"            (apply impl converted-args))))";
@@ -192,18 +229,23 @@ public class ClojureCodeGenerator {
 	public static String selectImplementationClojureDef = 
 			"(defn " + selectImplementationClojureSymbol + "\n" + 
 			"    [ranking-fn args impls] \n" + 
-			"    (let [args-type (" + tuple2velkaListSymbol + " (" + getTypeClojureSymbol + " args))]\n" + 
+			"    (let [args-type (" + tuple2velkaListSymbol + "\n" +  
+			"                        (map " + type2typeSymbolSymbol +" (" + getTypeClojureSymbol + " args)))]\n" + 
 			"        (get \n" +
 			"            (reduce \n" +
 			"                (fn [x y] (if (< (get x 0) (get y 0)) x y))\n" +
 			"                (map \n" + 
 			"                    (fn [impl] [\n" + 
-			"                        (" + eapplyClojureSymbol + "\n" +
-			"                            ranking-fn\n" +
-			"                            [(" + tuple2velkaListSymbol + " (.ltype (" + getTypeClojureSymbol + " impl)))])\n"+
+			"                        (first (" + eapplyClojureSymbol + "\n" +
+			"                                  ranking-fn\n" +
+			addTypeMetaInfo(
+			"                                  [(" + tuple2velkaListSymbol + "\n" + 
+			"                                       (map " + type2typeSymbolSymbol + 
+			"                                                (.ltype (" + getTypeClojureSymbol + " impl)))) \n" + 
+			"                                   args-type]", new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeListNative)) + "))\n"+
 			"                        impl])\n" + 
 			"                    impls))\n" +
-			"        0)))";
+			"        1)))";
 	
 	private static String makeDeclaration(String symbol) {
 		return "(declare " + symbol + ")";
@@ -226,6 +268,7 @@ public class ClojureCodeGenerator {
 
 	public static String writeHeaders(Environment env, TypeEnvironment typeEnv) {
 		StringBuilder sb = new StringBuilder();
+		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.type2typeSymbolSymbol));
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.tuple2velkaListSymbol));
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.getTypeClojureSymbol));
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.atomicConversionMapClojureSymbol));
@@ -236,6 +279,8 @@ public class ClojureCodeGenerator {
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.selectImplementationClojureSymbol));
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.eapplyClojureSymbol));
 		
+		sb.append(type2typeSymbolDef);
+		sb.append("\n");
 		sb.append(tuple2velkaListDef);
 		sb.append("\n");
 		sb.append(getTypeClojureDef);

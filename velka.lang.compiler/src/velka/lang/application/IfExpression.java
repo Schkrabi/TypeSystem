@@ -14,6 +14,7 @@ import java.util.Arrays;
 import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitBoolean;
@@ -93,39 +94,30 @@ public class IfExpression extends SpecialFormApplication {
 	
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	protected String applicationToClojure(Tuple convertedArgs, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Expression cond = convertedArgs.get(0);
-		Expression trueBranch = convertedArgs.get(1);
-		Expression falseBranch = convertedArgs.get(2);
+		StringBuilder sb = new StringBuilder();
+		sb.append("(if ");
+		sb.append("(first ");
+		sb.append("(");
+		sb.append(ClojureCodeGenerator.convertClojureSymbol);
+		sb.append(" \n");
+		sb.append(TypeAtom.TypeBoolNative.clojureTypeRepresentation());
+		sb.append(" \n");
+		sb.append(this.getCondition().toClojureCode(env, typeEnv));
+		sb.append(")) ");
+		sb.append(this.getTrueBranch().toClojureCode(env, typeEnv));
+		//sb.append(" \n(");
 		
-		StringBuilder s = new StringBuilder("(if ");
-
-		s.append("(get ");
-		s.append(cond.toClojureCode(env, typeEnv));
-		s.append(" 0)");
-		s.append(" ");
-
-		Pair<Type, Substitution> trueType = trueBranch.infer(env, typeEnv);
-
-		s.append(trueBranch.toClojureCode(env, typeEnv));
-		s.append(" ");
-
-		Pair<Type, Substitution> falseType = falseBranch.infer(env, typeEnv);
-
-		if (!falseType.first.apply(trueType.second).equals(trueType.first.apply(falseType.second))) {
-			s.append(Conversions.convert(falseType.first, falseBranch, trueType.first, typeEnv).toClojureCode(env, typeEnv));
-		} else {
-			s.append(falseBranch.toClojureCode(env, typeEnv));
-		}
-
-		s.append(")");
-
-		return s.toString();
+		//Pair<Type, Substitution> trueType = this.getTrueBranch().infer(env, typeEnv);
+		
+		//sb.append(ClojureCodeGenerator.convertClojureSymbol);
+		//sb.append(" \n");
+		//sb.append(trueType.first.clojureTypeRepresentation());
+		sb.append(" \n");
+		sb.append(this.getFalseBranch().toClojureCode(env, typeEnv));
+		//sb.append(")");
+		sb.append(")");
+		
+		return sb.toString();
 	}
 
 	@Override
