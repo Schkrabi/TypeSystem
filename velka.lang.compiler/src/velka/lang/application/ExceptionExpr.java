@@ -31,7 +31,7 @@ public class ExceptionExpr extends SpecialFormApplication {
 	}
 	
 	public Expression getMessage() {
-		return this.args.get(0);
+		return ((Tuple)this.args).get(0);
 	}
 	
 	@Override

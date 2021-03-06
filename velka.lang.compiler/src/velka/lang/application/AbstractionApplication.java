@@ -45,15 +45,15 @@ public class AbstractionApplication extends Application {
 	/**
 	 * Ranking function for this abstraction application
 	 */
-	public final Optional<Abstraction> rankingFunction;
+	public final Optional<Expression> rankingFunction;
 
-	public AbstractionApplication(Expression fun, Tuple args) {
+	public AbstractionApplication(Expression fun, Expression args) {
 		super(args);
 		this.fun = fun;
 		this.rankingFunction = Optional.empty();
 	}
 
-	public AbstractionApplication(Expression fun, Tuple args, Abstraction rankingFunction) {
+	public AbstractionApplication(Expression fun, Expression args, Expression rankingFunction) {
 		super(args);
 		this.fun = fun;
 		this.rankingFunction = Optional.of(rankingFunction);
@@ -70,7 +70,12 @@ public class AbstractionApplication extends Application {
 		Abstraction abst = (Abstraction) ifun;
 
 		// Interpret arguments
-		Tuple iArgs = (Tuple) this.args.interpret(env, typeEnv);
+		Expression intArgs = this.args.interpret(env, typeEnv);
+		if(!(intArgs instanceof Tuple)) {
+			throw new AppendableException("Invalid argument expression " + intArgs.toString() + " in " + this.toString());
+		}
+		
+		Tuple iArgs = (Tuple)intArgs; 
 		Pair<Type, Substitution> iArgsInfered = iArgs.infer(env, typeEnv);
 
 		// Select implementation to use (if applicable)
@@ -234,7 +239,7 @@ public class AbstractionApplication extends Application {
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Abstraction> rankingFunction) throws AppendableException {
+				Optional<Expression> rankingFunction) throws AppendableException {
 			LitComposite formalArgList = (LitComposite) args.get(0);
 			LitComposite realArgList = (LitComposite) args.get(1);
 

@@ -141,7 +141,7 @@ public class ExtendedLambda extends Abstraction {
 
 	@Override
 	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-			Optional<Abstraction> rankingFunction) throws AppendableException {
+			Optional<Expression> rankingFunction) throws AppendableException {
 		ExtendedFunction f = (ExtendedFunction) this.interpret(env, typeEnv);
 		return f.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
 	}
@@ -199,7 +199,7 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	public Abstraction selectImplementation(Tuple args, Optional<Abstraction> rankingFunction, Environment env,
+	public Abstraction selectImplementation(Tuple args, Optional<Expression> rankingFunction, Environment env,
 			TypeEnvironment typeEnv) throws AppendableException {
 		TypeTuple argsType = (TypeTuple) args.infer(env, typeEnv).first;
 		final Expression realArgsList = ListNative.tupleToListNative(

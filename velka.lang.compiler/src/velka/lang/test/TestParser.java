@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
@@ -156,6 +157,21 @@ class TestParser {
 		;
 		this.testParse("(can-deconstruct-as x Int:Native)",
 				new CanDeconstructAs(new Symbol("x"), TypeAtom.TypeIntNative));
+
+		Lambda ranking = new Lambda(new Tuple(new Symbol("x"), new Symbol("y")),
+				new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeListNative), new LitInteger(1));
+
+		this.testParse("(eapply + (cons 1 2))",
+				new AbstractionApplication(new Symbol("+"), new Tuple(new LitInteger(1), new LitInteger(2))));
+		this.testParse("(eapply + (cons 1 2) (lambda ((List:Native x) (List:Native y)) 1))",
+				new AbstractionApplication(new Symbol("+"), new Tuple(new LitInteger(1), new LitInteger(2)), ranking));
+
+		Lambda impl = new Lambda(new Tuple(new Symbol("x")), new TypeTuple(TypeAtom.TypeIntNative), new Symbol("x"));
+		List<Lambda> impls = new ArrayList<Lambda>();
+		impls.add(impl);
+		this.testParse(
+				"(extended-lambda-ranking ((Int x)) (lambda ((List:Native x) (List:Native y)) 1) ((Int:Native) x))",
+				ExtendedLambda.makeExtendedLambda(impls, ranking));
 
 		// Dummy object tests
 		new Validations();

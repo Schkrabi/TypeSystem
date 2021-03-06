@@ -258,6 +258,12 @@ public class SemanticParser {
 		case SemanticParserStatic.INSTANCE_OF_REPRESENTATION:
 			e = SemanticParser.parseInstanceOfRepresentation(specialFormList, typeLet);
 			break;
+		case SemanticParserStatic.EAPPLY:
+			e = SemanticParser.parseEapply(specialFormList, typeLet);
+			break;
+		case SemanticParserStatic.EXTENDED_LAMBDA_RANKING:
+			e = SemanticParser.parseExtendedLambdaRanking(specialFormList, typeLet);
+			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
 		}
@@ -458,17 +464,18 @@ public class SemanticParser {
 	 * Parses Wildcard type
 	 * 
 	 * @param typeSymbol name of the type
-	 * @param letType 
+	 * @param letType
 	 * @return TypeAtom
-	 * @throws AppendableException 
+	 * @throws AppendableException
 	 */
-	private static Type parseTypeSymbol(String typeSymbol, Map<TypeVariable, TypeVariable> letType) throws AppendableException {		
-		TypeVariable tv = new TypeVariable(typeSymbol); 
-		
-		if(letType.containsKey(tv)) {
+	private static Type parseTypeSymbol(String typeSymbol, Map<TypeVariable, TypeVariable> letType)
+			throws AppendableException {
+		TypeVariable tv = new TypeVariable(typeSymbol);
+
+		if (letType.containsKey(tv)) {
 			return letType.get(tv);
 		}
-		
+
 		return SemanticParser.parseTypeAtom(typeSymbol, TypeRepresentation.WILDCARD.toString());
 	}
 
@@ -884,12 +891,12 @@ public class SemanticParser {
 
 		Map<TypeVariable, TypeVariable> newTypeLet = new TreeMap<TypeVariable, TypeVariable>(typeLet);
 		for (TypeVariable t : typeVariables) {
-			if(!(t instanceof TypeVariable)) {
-				throw new AppendableException("Only typevariables are allowed in let-type found: " + t );
+			if (!(t instanceof TypeVariable)) {
+				throw new AppendableException("Only typevariables are allowed in let-type found: " + t);
 			}
-			
-			TypeVariable tv = (TypeVariable)t;
-			
+
+			TypeVariable tv = (TypeVariable) t;
+
 			newTypeLet.put(tv, new TypeVariable(NameGenerator.next()));
 		}
 
@@ -908,22 +915,23 @@ public class SemanticParser {
 	private static List<TypeVariable> parseTypeVariableList(List<SemanticNode> list) throws AppendableException {
 		try {
 			Validations.validateTypeVariableList(list);
-		} catch(AppendableException e) {
+		} catch (AppendableException e) {
 			e.appendMessage("in " + list.toString());
 			throw e;
 		}
-		
+
 		List<TypeVariable> l = new LinkedList<TypeVariable>();
-		for(SemanticNode n : list) {
+		for (SemanticNode n : list) {
 			l.add(new TypeVariable(n.asSymbol()));
 		}
 		return l;
 	}
-	
+
 	/**
 	 * parses instance-of special form list
+	 * 
 	 * @param specialFormList list of the special form
-	 * @param typeLet used typelet
+	 * @param typeLet         used typelet
 	 * @return InstanceOf expression
 	 * @throws AppendableException if validation fails
 	 */
@@ -931,21 +939,22 @@ public class SemanticParser {
 			Map<TypeVariable, TypeVariable> typeLet) throws AppendableException {
 		try {
 			Validations.validateInstanceOfRepresentationList(specialFormList);
-		}catch(AppendableException e) {
+		} catch (AppendableException e) {
 			e.appendMessage("in " + specialFormList.toString());
 			throw e;
 		}
-		
+
 		Expression e = SemanticParser.parseNode(specialFormList.get(1), typeLet);
 		Type t = SemanticParser.parseType(specialFormList.get(2), typeLet);
-		
+
 		return new InstanceOfRepresentation(e, t);
 	}
 
 	/**
 	 * parses instance-of-representation special form list
+	 * 
 	 * @param specialFormList list of the special form
-	 * @param typeLet used typelet
+	 * @param typeLet         used typelet
 	 * @return InstanceOfRepresentation expression
 	 * @throws AppendableException if validation fails
 	 */
@@ -953,14 +962,70 @@ public class SemanticParser {
 			Map<TypeVariable, TypeVariable> typeLet) throws AppendableException {
 		try {
 			Validations.validateInstanceOfList(specialFormList);
-		}catch(AppendableException e) {
+		} catch (AppendableException e) {
 			e.appendMessage("in " + specialFormList.toString());
 			throw e;
 		}
-		
+
 		Expression e = SemanticParser.parseNode(specialFormList.get(1), typeLet);
 		Type t = SemanticParser.parseType(specialFormList.get(2), typeLet);
-		
+
 		return new InstanceOf(e, t);
+	}
+
+	/**
+	 * parses eapply special form list
+	 * 
+	 * @param specialFormList list of the special form
+	 * @param typeLet         used typelet
+	 * @return AbstractionApplication expression
+	 * @throws AppendableException if validation fails
+	 */
+	private static Expression parseEapply(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet)
+			throws AppendableException {
+		try {
+			Validations.validateEapplyList(specialFormList);
+		} catch (AppendableException e) {
+			e.appendMessage("in " + specialFormList.toString());
+			throw e;
+		}
+
+		Expression abstraction = SemanticParser.parseNode(specialFormList.get(1), typeLet);
+		Expression args = SemanticParser.parseNode(specialFormList.get(2), typeLet);
+
+		if (specialFormList.size() == 4) {
+			Expression ranking = SemanticParser.parseNode(specialFormList.get(3), typeLet);
+			return new AbstractionApplication(abstraction, args, ranking);
+		}
+
+		return new AbstractionApplication(abstraction, args);
+	}
+
+	/**
+	 * parses extended-lambda-ranking special form list
+	 * 
+	 * @param specialFormList list of the special form
+	 * @param typeLet         used typelet
+	 * @return ExtendedLambda expression
+	 * @throws AppendableException if validation fails
+	 */
+	private static Expression parseExtendedLambdaRanking(List<SemanticNode> specialFormList,
+			Map<TypeVariable, TypeVariable> typeLet) throws AppendableException {
+		try {
+			Validations.validateExtendedLambdaRankingList(specialFormList, typeLet);
+		} catch (AppendableException e) {
+			e.appendMessage("in " + specialFormList.toString());
+			throw e;
+		}
+
+		List<TypeVariablePair> args = SemanticParser.parseTypedArgList(specialFormList.get(1).asList(), typeLet);
+		Tuple argsTuple = new Tuple(args.stream().map(x -> x.second).collect(Collectors.toList()));
+
+		Expression ranking = SemanticParser.parseNode(specialFormList.get(2), typeLet);
+
+		List<SemanticNode> impls = specialFormList.subList(3, specialFormList.size());
+		Set<Lambda> implementations = SemanticParser.parseImplementations(argsTuple, impls, typeLet);
+
+		return ExtendedLambda.makeExtendedLambda(implementations, ranking);
 	}
 }

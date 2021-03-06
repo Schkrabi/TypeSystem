@@ -596,4 +596,55 @@ public class Validations {
 		}
 
 	}
+
+	/**
+	 * Validates eapply special form list
+	 * 
+	 * @param specialFormList validated list
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateEapplyList(List<SemanticNode> specialFormList) throws AppendableException {
+		if (specialFormList.size() != 4 && specialFormList.size() != 3) {
+			throw new AppendableException(
+					"error, invalid number of arguments.\n eapply has syntax \n\t(eapply fun arg-tuple)\nOR\n\t(eapply fun arg-tuple ranking-fun)");
+		}
+
+		SemanticNode eapply = specialFormList.get(0);
+		if (eapply.type != SemanticNode.NodeType.SYMBOL
+				|| !eapply.asSymbol().contentEquals(SemanticParserStatic.EAPPLY)) {
+			throw new UnexpectedExpressionException(eapply);
+		}
+	}
+
+	/**
+	 * Validates extended-lambda-ranking special form
+	 * 
+	 * @param l       validated list
+	 * @param typeLet used typelet
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateExtendedLambdaRankingList(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+			throws AppendableException {
+		if (l.size() < 4) {
+			throw new AppendableException("Too few arguments (" + l.size() + ")");
+		}
+
+		SemanticNode elambdaRanking = l.get(0);
+		if (elambdaRanking.type != SemanticNode.NodeType.SYMBOL
+				|| !elambdaRanking.asSymbol().contentEquals(SemanticParserStatic.EXTENDED_LAMBDA_RANKING)) {
+			throw new UnexpectedExpressionException(elambdaRanking);
+		}
+
+		SemanticNode argsList = l.get(1);
+		if (argsList.type != SemanticNode.NodeType.LIST) {
+			throw new UnexpectedExpressionException(argsList);
+		}
+
+		try {
+			Validations.validateImplementations(l.subList(3, l.size()), typeLet);
+		} catch (AppendableException e) {
+			e.appendMessage(" in " + l);
+			throw e;
+		}
+	}
 }

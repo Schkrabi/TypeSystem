@@ -2,7 +2,6 @@ package velka.lang.application;
 
 
 import velka.lang.expression.Expression;
-import velka.lang.expression.Tuple;
 
 /**
  * Expression for various kind of application (application of abstractions or
@@ -16,9 +15,9 @@ public abstract class Application extends Expression {
 	/**
 	 * Arguments of the function
 	 */
-	public final Tuple args;
+	public final Expression args;
 
-	public Application(Tuple args) {
+	public Application(Expression args) {
 		this.args = args;
 	}
 

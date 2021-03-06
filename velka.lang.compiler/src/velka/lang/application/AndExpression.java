@@ -30,7 +30,7 @@ public class AndExpression extends SpecialFormApplication {
 	
 	@Override
 	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		for(Expression e : args) {
+		for(Expression e : (Tuple)args) {
 			Expression ie = e.interpret(env, typeEnv);
 			if(!(ie instanceof LitBoolean)) {
 				Pair<Type, Substitution> inf = ie.infer(env, typeEnv);
@@ -57,7 +57,7 @@ public class AndExpression extends SpecialFormApplication {
 		StringBuilder sb = new StringBuilder();
 		sb.append("(and ");
 		
-		Iterator<Expression> i = this.args.iterator();
+		Iterator<Expression> i = ((Tuple)this.args).iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
 			sb.append("(first (");

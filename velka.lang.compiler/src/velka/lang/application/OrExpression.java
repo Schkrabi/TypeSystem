@@ -29,7 +29,7 @@ public class OrExpression extends SpecialFormApplication {
 	
 	@Override
 	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		for(Expression e : args) {
+		for(Expression e : (Tuple)args) {
 			Expression ie = e.interpret(env, typeEnv);
 			if(!(ie instanceof LitBoolean)) {
 				Pair<Type, Substitution> inf = ie.infer(env, typeEnv);
@@ -47,7 +47,7 @@ public class OrExpression extends SpecialFormApplication {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Substitution agg = Substitution.EMPTY;
-		for (Expression e : this.args) {
+		for (Expression e : ((Tuple)this.args)) {
 			Pair<Type, Substitution> p = e.infer(env, typeEnv);
 			Substitution s = Type.unifyTypes(p.first, TypeAtom.TypeBoolNative);
 			agg = agg.union(p.second).union(s);
@@ -61,7 +61,7 @@ public class OrExpression extends SpecialFormApplication {
 		StringBuilder sb = new StringBuilder();
 		sb.append("(or ");
 		
-		Iterator<Expression> i = this.args.iterator();
+		Iterator<Expression> i = ((Tuple)this.args).iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
 			sb.append("(first (");

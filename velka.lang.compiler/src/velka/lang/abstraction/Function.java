@@ -130,7 +130,7 @@ public class Function extends Lambda implements Comparable<Expression> {
 
 	@Override
 	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-			Optional<Abstraction> rankingFunction) throws AppendableException {
+			Optional<Expression> rankingFunction) throws AppendableException {
 		Environment childEnvironment = Abstraction.lexicalClojure(this.args, args, this.creationEnvironment);
 		return this.body.interpret(childEnvironment, typeEnv);
 	}

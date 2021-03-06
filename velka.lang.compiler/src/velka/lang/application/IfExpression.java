@@ -37,7 +37,7 @@ public class IfExpression extends SpecialFormApplication {
 	 * @return expression
 	 */
 	protected Expression getCondition() {
-		return this.args.get(0);
+		return ((Tuple)this.args).get(0);
 	}
 
 	/**
@@ -46,7 +46,7 @@ public class IfExpression extends SpecialFormApplication {
 	 * @return expression
 	 */
 	protected Expression getTrueBranch() {
-		return this.args.get(1);
+		return ((Tuple)this.args).get(1);
 	}
 
 	/**
@@ -55,7 +55,7 @@ public class IfExpression extends SpecialFormApplication {
 	 * @return
 	 */
 	protected Expression getFalseBranch() {
-		return this.args.get(2);
+		return ((Tuple)this.args).get(2);
 	}
 	
 	@Override

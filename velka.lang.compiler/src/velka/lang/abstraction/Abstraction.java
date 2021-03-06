@@ -23,9 +23,9 @@ import velka.lang.util.Pair;
  */
 public abstract class Abstraction extends Expression {
 
-	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv, Optional<Abstraction> rankingFunction) throws AppendableException;
+	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv, Optional<Expression> rankingFunction) throws AppendableException;
 
-	public Expression substituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv, Optional<Abstraction> rankingFunction) throws AppendableException {
+	public Expression substituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv, Optional<Expression> rankingFunction) throws AppendableException {
 		return this.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
 	}
 
@@ -81,6 +81,6 @@ public abstract class Abstraction extends Expression {
 	 * @return abstraction
 	 * @throws AppendableException 
 	 */
-	public abstract Abstraction selectImplementation(Tuple args, Optional<Abstraction> rankingFunction, Environment env,
+	public abstract Abstraction selectImplementation(Tuple args, Optional<Expression> rankingFunction, Environment env,
 			TypeEnvironment typeEnv) throws AppendableException;
 }

@@ -169,7 +169,7 @@ public class ExtendedFunction extends ExtendedLambda {
 
 	@Override
 	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-			Optional<Abstraction> rankingFunction) throws AppendableException {
+			Optional<Expression> rankingFunction) throws AppendableException {
 		Abstraction a = this.selectImplementation(args, rankingFunction, env, typeEnv);
 		return a.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
 	}
