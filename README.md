@@ -1,68 +1,68 @@
 # Type System
+
+Version 0.1.0
+
 ## Manual
 ### Compilation
+Project is formed from three sub-projects:
+
+* **velka.lang.util**
+* **velka.lang.types**
+* **velka.lang.compiler**
+
+_velka.lang.util_ and _velka.lang.types_ are libraries used for _velka.lang.compiler_ as well as any clojure code generated with compiler. _velka.lang.compiler_ is an executable jar, for more details see [usage](#usage).
+
 #### Prerequisities
-For compilation you will need following libraries
+Library _velka.lang.util_ does not have any prerequisities (other that core java). _velka.lang.types_ requires _velka.lang.util_. 
+
+As for _velka.lang.compiler_ it requires two beforementioned velka libraries as well as following external libraries:
 
 * **antlr4**
- You can get it [here][antlr4]. Version used during development is antlr-4.7.2-complete.
-* **junit5** 
- You will need jupiter.api library you can get sources from [here][junit5]. Version used during development was org.junit.jupiter.api_5.5.1.v20190826-0900.
-* **apiguardian**
- Not strictly necessary, will prevent some false warnings during build, git-hub [here][apiguardian]. Version used during developemnt was org.apiguardian_1.1.0.v20190826-0900.
+ Used version 4.7.2-complete.
+* **apiguardian.api** 
+ Used version 1.7.0. 
+* **junit.jupiter.api**
+ Used version 5.7.0. 
+* **junit.platform.commons**
+ Used version 1.7.0. 
+* **opentest4j**
+ Used version 1.2.0. 
+* **junit.platform.console**
+ Used version 1.7.0.
+ 
+All external libraries should be placed into _lib_ folder in repository root where ant script should be able to find them during build.
     
-#### Ant properties
-Before compilation, set following properties in ant script Ant/build.xml
+#### Build script
+A build script _build-velka.sh_ is provided in repository root. You might need to give it executable privilege with _chmod_ first. Build on not-bash platforms is currently not supported.
 
-* **antlr.lib**
- location of antlr4 library
-* **jupiter.lib.api**
- location of junit5 library
-* **apiguardian.lib** 
- location of apiguardian library
-    
-#### Ant targets
-Ant script in Ant/build.xml has following targets
+Script will build all three velka jars and copy them to _lib_ folder in repository root.
 
-* **clean**
- deletes build forlder and all its contents
-* **compile**
- compiles all sources to .class files
-* **jar**
- creates executable jar in build/jar/
-* **run**
- runs the compiler
-* **main**
- cleans build and runs the compiler
-
-### Usage
+### <a name="usage">Usage</a>
 
 Program can be used in 3 general modes: as interpreter, as interpreter with preloaded definitions and as compiler to clojure code. Used mode is dependent on number of arguments provided.
 
 #### Interpreter
 To use interpreter simply start program without arguments:
 
-    >java -jar compiler.jar
+    >java -jar velka.lang.compiler.jar
     
-In interpreter mode you can evaluate expressions and modify top level environment and type environment (see "define", "type", "representation", "constructor", "conversion").
+In interpreter mode you can evaluate expressions and modify top level environment and type environment (see [define](#define), [type](#type), [representation](#representation), [constructor](#constructor), [conversion](#conversion)).
 
 #### Interpretr with loaded definitions
 To use interpreter with loaded definitions supply file with code as first argument.
 
-    >java -jar compiler.jar definitions.src
+    >java -jar velka.lang.compiler.jar definitions.vel
     
 This mode works in the same way as interpreter. Only difference is that expressions from supplied file is evaluated before running interpretter loop.
 
 #### Compiler
 To use compiler to clojure code, supply two arguments. First argument is input file with code, second file is output file with compiled clojure code.
 
-    >java -jar compiler.jar input.src output.clj
+    >java -jar velka.lang.compiler.jar input.vel output.clj
     
-Output file is standalone and is ready to be compiled by clojure compilator.
+Output file requires _velka.lang.util_ and _velka.lang.types_ libraries on classpath to run and is ready to be compiled by clojure compilator.
 
-## Language
-Language has no name so far.
-
+## Language Velka
 Language is similar to Scheme, (so far) without macro support and with limited set of build-in functions and operators. 
 
 Weight of the language lies in its type system, separated type and representation definitions and usage of extended-lambda.
@@ -79,21 +79,27 @@ Here is reference to all special form present in language.
 * [conversion](#conversion)
 * [deconstruct](#deconstruct)
 * [define](#define)
+* [eapply](#eapply)
 * [error](#error)
 * [extended-lambda](#extendedLambda)
+* [extended-lambda-ranking](#extendedLambdaRanking)
 * [if](#if)
+* [instance-of](#instanceOf)
+* [instance-of-representation](#instanceOfRepresentation)
 * [lambda](#lambda)
 * [let-type](#letType)
 * [or](#or)
 * [representation](#representation)
 * [type](#type)
 
-#### and
+#### <a name="and">and</a>
 Syntax:
+
 ~~~
-(and <arg1> <arg2>
+(and <arg1> <arg2>)
 ~~~
 Type signature:
+
 ~~~
 (Bool:Native Bool:Native) #> Bool:Native
 ~~~
@@ -101,31 +107,39 @@ Type signature:
 Represents logical and of two values. If first argument evaluates to _false_ second argument is not evaluated.
 
 Example:
+
 ~~~
 (and #t #f)
 ~~~
 
 #### <a name="canDeconstructAs">can-deconstruct-as</a>
 Syntax:
+
 ~~~
 (can-deconstruct-as <expression> <type-signature>)
 ~~~
 Where:
-* _<expression>_ expresion which is evaluated and its value can be deconstructed as a specified type
-* _<type-signature>_ [type signature](#typeSignature)
+
+* _expression_ expresion which is evaluated and its value can be deconstructed as a specified type
+* _type-signature_ [type signature](#typeSignature)
 
 Checks if value in the expression can be deconstructed as specified type. Returns _Bool:Native_.
 
 Example:
+
 ~~~
-(can-deconstruct-as (construct Name Structured "Jane" "Doe") (String:Native String:Native))
+(can-deconstruct-as 
+    (construct Name Structured "Jane" "Doe") 
+    (String:Native String:Native))
 ~~~
 
-#### cons
+#### <a name="cons">cons</a>
+
 ~~~
 (cons <arg1> <arg2>)
 ~~~
 Type signature:
+
 ~~~
 (A B) #> (A B)
 ~~~
@@ -133,12 +147,14 @@ Type signature:
 Creates pair (a 2-tuple) of its arguments.
 
 Example:
+
 ~~~
-(cons 42 "fooL)
+(cons 42 "foo")
 ~~~
 
-#### construct
+#### <a name="construct">construct</a>
 Syntax:
+
 ~~~
 (construct <type> <representation> <arg1>...)
 ~~~
@@ -146,46 +162,65 @@ Syntax:
 Constructs value of given type and representation based on previously defined constructor. Also see [constructor](#constructorSpecForm)
 
 Example:
+
 ~~~
 (construct Int Native 42)
 (construct Name Structured "Jane" "Doe")
 ~~~
 
-#### convert
+#### <a name="convert">convert</a>
 Syntax:
+
 ~~~
-(convert <from representation> <to representation> <value>)
+(convert <from-representation> <to-representation> <value>)
 ~~~
 
 Converts its argument into another type representation if such conversion was previously defined. Also see [conversion](#conversion)
 
 Example:
+
 ~~~
 (convert Int:Native Int:Roman 42)
 ~~~
 
 #### <a name="constructorSpecForm">constructor</a>
 Syntax:
+
 ~~~
-(constructor <type> <representation> (<constructor arguments>...) <constructor body>)
+(constructor 
+    <type> 
+    <representation> 
+    (<constructor arguments>...) 
+    <constructor body>)
 ~~~
 
 Defines constructor for given type and representation
 
 Example:
+
 ~~~
-(constructor Name Structured ((String:Native first) (String:Native second)) (cons first second))
+(constructor 
+    Name 
+    Structured 
+    ((String:Native first) (String:Native second)) 
+    (cons first second))
 ~~~
 
-#### conversion
+#### <a name="conversion">conversion</a>
 Syntax:
+
 ~~~
-(conversion <from representation> <to representation> (<conversion argument>) <conversion body>)
+(conversion 
+    <from-representation> 
+    <to-representation> 
+    (<conversion argument>) 
+    <conversion body>)
 ~~~
 
 Defines conversion from one representation to another.
 
 Example:
+
 ~~~
 (conversion Name:Structured Name:Unstructured ((Name:Structured x)) 
 	(construct Name Unstructured 
@@ -194,50 +229,98 @@ Example:
 			(cdr (deconstruct x (String:Native String:Native))))))
 ~~~
 
-#### deconstruct
+#### <a name="deconstruct">deconstruct</a>
 Syntax:
+
 ~~~
 (deconstruct <expression> <type-signature>)
 ~~~
 Where:
-* _<expression>_ is expression which will be evaluated and deconstructed to given type. 
-* _<type-signature>_ [type signature](#typeSignature)
 
-This special form attemps to deconstruct given value to a given type. Due to compiler limitations there is no check at compile time if the deconstruction is correct and user should use special form [_can-deconstruct-as_](#canDeconstructAs) to check the deconstruction at runtime.
+* _expression_ is expression which will be evaluated and deconstructed to given type. 
+* _type-signature_ is [type signature](#typeSignature)
+
+This special form attemps to deconstruct given value to a given type. Due to compiler limitations there is no check at compile time if the deconstruction is correct and user should use special form [_can-deconstruct-as_](#canDeconstructAs) to check if deconstruction is valid at runtime.
 
 Example:
+
 ~~~
 (deconstruct (construct Int Roman "XLII") String:Native)
 ~~~
 
-#### define
+#### <a name="define">define</a>
 Sytax:
+
 ~~~
 (define <symbol> <expression>)
 ~~~
 Where:
+
 * _symbol_ is symbol to which binding is created in top level environment
 * _expression_ is expression which will be evaluated and  value will be bound to symbol
 
 Binds value to symbol in top-level environment.
 
 Example:
+
 ~~~
 (def x 10)
 (def identity (lambda (x) x))
 ~~~
 
-#### error
+#### <a name="eapply">eapply</a>
 Syntax:
+
+~~~
+(eapply <abstraction> <arguments>)
+~~~
+
+OR
+
+~~~
+(eapply <abstraction> <arguments> <ranking-function>)
+~~~
+
+Where:
+
+* _abstraction_ is an expression that evaluates into function or extended-function
+* _arguments_ is an exprpression that evaluates into tuple of arguments
+* _ranking-function_ is an expression that evaluates into [ranking function](#rankingFunction)
+
+This is application special form, it has two main purposes:
+
+* application of function or extended function with arguments in a tuple
+* usage of specific ranking function for application
+
+Example:
+
+~~~
+(eapply (lambda (x y) x) (cons 42 "foo"))
+(eapply 
+    (extended-lambda ((Int x) (Int y)) 
+        ((Int:Native Int:Native) "native")
+        ((Int:Roman Int:Roman) "roman))
+    (cons 42 42)
+    (lambda ((List:Native formal-arg-list) (List:Native real-arg-list))
+        (if (instance-of-representation (head-list formal-arg-list) Int:Roman)
+            0
+            999)))
+~~~
+
+#### <a name="error">error</a>
+Syntax:
+
 ~~~
 (error <expression>)
 ~~~
 Where:
-* _<expression>_ is a expression that yields _String_ and is contained in error message.
+
+* _expression_ is an expression that yields _String_ and is contained in error message.
 
 Throws user defined exception.
 
 Example:
+
 ~~~
 (define safe-div
 	(lamdba (x y)
@@ -248,34 +331,78 @@ Example:
 
 #### <a name="extendedLambda">extended-lambda</a>
 Syntax:
+
 ~~~
-(extended-lambda (<argument-list>) ((<argument-representation list>) <implementation>)...)
+(extended-lambda 
+    (<argument-list>) 
+    ((<argument-representation-list>) <implementation>)...)
 ~~~
 Where:
-* _<argument-list>_ is list of typed arguments without specified representations
-* _<argument-representation list>_ is list of argument representations used for a specific implementation
-* _<implementation>_ is a body of function for specific representations of arguments
+
+* _argument-list_ is list of typed arguments without specified representations
+* _argument-representation-list_ is list of argument representations used for a specific implementation
+* _implementation_ is a body of function for specific representations of arguments
 
 Creates extended function that is either directly applicable or can be bound to symbol via _define_.
 
 Example:
+
 ~~~
 (extended-lambda ((Int x))
 	((Int:Native) (+ x 1))
-	((Int:String) (construct Int String (concat "1" (deconstruct x String:Native)))))
+	((Int:String) (construct 
+                    Int 
+                    String 
+                    (concat "1" (deconstruct x String:Native)))))
 ~~~
 
-#### if
+#### <a name="extendedLambdaRanking">extended-lambda-ranking</a>
+Syntax:
+
+~~~
+(extended-lambda-ranking 
+    (<argument-list>) 
+    <ranking-function> 
+    ((<argument-representation-list>) <implementation>)...)
+~~~
+
+Where:
+
+* _<argument-list>_ is list of typed arguments without specified representations
+* _<ranking-function>_ is an expression that evaluates into [ranking function](#rankingFunction)
+* _<argument-representation list>_ is list of argument representations used for a specific implementation
+* _<implementation>_ is a body of function for specific representations of arguments
+
+Creates extended function similar to [_extended-lambda_](#extendedLambda) but it will use _<ranking-function>_ for implementation selection, unless it is overriden by usage of [eapply](#eapply) special form.
+
+Example:
+
+~~~
+(extended-lambda-ranking
+    ((Int x) (Int y))
+    (lambda ((List:Native formal-arg-list) (List:Native real-arg-list))
+        (if (instance-of-representation (head-list formal-arg-list) Int:Roman)
+            0
+            999))
+    ((Int:Native Int:Native) "native")
+    ((Int:Roman Int:Roman) "roman))
+~~~
+
+#### <a name="if">if</a>
 Sytax:
+
 ~~~
 (if <condition> <true-branch> <false-branch>)
 ~~~
 Where:
-* _<condition>_ is an expression that yields _Bool_
-* _<true-branch>_ is an expression that will be evaluated if _<condition>_ yields _true_
-* _<false-branch>_ is an expression that will be evaluated if _<codition>_ yields _false_
 
-Traditional branchinch expression, _<condition>_ is always evaluated, if it yields _true_ _<true-branch>_ is evaluated, otherwise _<false-branch>_ is evaluated.
+* _condition_ is an expression that yields _Bool_
+* _true-branch_ is an expression that will be evaluated if _<condition>_ yields _true_
+* _false-branch_ is an expression that will be evaluated if _<codition>_ yields _false_
+
+Traditional branchinch expression, _condition_ is always evaluated, if it yields _true_ _true-branch_ is evaluated, otherwise _false-branch_ is evaluated.
+
+Example:
 
 ~~~
 (lambda (x)
@@ -284,48 +411,107 @@ Traditional branchinch expression, _<condition>_ is always evaluated, if it yiel
 		"non-zero"))
 ~~~
 
-#### lambda
+#### <a name="instanceOf">instance-of</a>
 Syntax:
+
+~~~
+(instance-of <expression> <type-signature>)
+~~~
+
+Where
+
+* _expression_ is an arbitrary expression
+* _type-signature_ is a [type signature](#typeSignature)
+
+This special form evaluates to _true_ if _expression_ is of type _type-signature_. Otherwise it evaluates to _false_.
+
+This special form is working only with types, it is not taking representation information into account, meaning expression yielding different representation of the same base type will evaluate to _true_. 
+
+For version granular to representation level see [instance-of-representation](#instanceOfRepresentation).
+
+Example:
+
+~~~
+(instance-of 42 Int:Native) ; = true
+(instance-of (construct Int String "42") Int:Native) ; = true
+(instance-of "42" Int:Native) ; = false
+~~~
+
+#### <a name="instanceOfRepresentation">instance-of-representation</a>
+Syntax:
+
+~~~
+(instance-of <expression> <type-signature>)
+~~~
+
+Where
+
+* _expression_ is an arbitrary expression
+* _type-signature_ i a [type signature](#typeSignature)
+
+This special form evaluates to _true_ if _expression_ is of type and representation _type-signature_. Otherwise it evaluates to false.
+
+This special form is working with both types and representations. This means expressions yielding different representation of the same base type will evaluate to _false_.
+
+For version only taking types into account see [instance-of](#instanceOf).
+
+~~~
+(instance-of-representation 42 Int:Native) ; = true
+(instance-of-representation (construct Int String "42") Int:Native) ; = false
+(instance-of-representation "42" Int:Native) ; = false
+~~~
+
+#### <a name="lambda">lambda</a>
+Syntax:
+
 ~~~
 (lambda (<argument-list>) <body>)
 ~~~
 Where:
-* _<argument-list>_ is a list of either typed or untyped arguments
-* _<body>_ is expression evaluated when the function is applied
+
+* _argument-list_ is a list of either typed or untyped arguments
+* _body_ is expression evaluated when the function is applied
 
 Creates a function.
 
 Examples:
+
 ~~~
 (lambda (x) x)
 (lambda ((Int x) (Int y)) (+ x y))
-(lambda ((Name:Structured name)) (car (deconstruct name (String:Native String:Native))))
+(lambda ((Name:Structured name)) 
+    (car (deconstruct name (String:Native String:Native))))
 (lambda (value (List l)) (append-list value l))
 ~~~
 
 #### <a name="letType">let-type</a>
 Syntax:
+
 ~~~
 (let-type (<list-of-type-variables>) <body>)
 ~~~
 Where:
-* _<list-of-type-variables>_ is list of declared type variables
-* _<body>_ is expression that is evaluated within scope of type variables
 
-Declares number of type variables and defines its scope. In _<body>_ you can freely use type variables defined in _let-type_
+* _list-of-type-variables_ is list of declared type variables
+* _body_ is expression that is evaluated within scope of type variables
+
+Declares number of type variables and defines its scope. In _body_ you can freely use type variables defined in _let-type_.
 
 Example:
+
 ~~~
 (let-type (A)
 	(lambda ((A x)) x))
 ~~~
 
-#### or
+#### <a name="or">or</a>
 Syntax:
+
 ~~~
-(or <arg1> <arg2>
+(or <arg1> <arg2>)
 ~~~
 Type signature:
+
 ~~~
 (Bool:Native Bool:Native) #> Bool:Native
 ~~~
@@ -333,28 +519,33 @@ Type signature:
 Represents logical or of two values. If first argument evaluates to _true_ second argument is not evaluated.
 
 Example:
+
 ~~~
 (or #f #t)
 ~~~
 
-#### representation
+#### <a name="representation">representation</a>
 Syntax:
+
 ~~~
 (representation <representation-name> <type-name>)
 ~~~
 Where:
-* _<representation-name>_ is name of defined representation
-* _<type-name>_ is name of already defined type
 
-Defines new type representation to already defined type. See [type](#type)
+* _representation-name_ is name of defined representation
+* _type-name_ is name of already defined type
+
+Defines new type representation to already defined type. See [type](#type).
 
 Example:
+
 ~~~
 (representation Structured Name)
 ~~~
 
-#### type
+#### <a name="type">type</a>
 Syntax:
+
 ~~~
 (type <type-name>)
 ~~~
@@ -362,6 +553,7 @@ Syntax:
 Defines new type.
 
 Examples:
+
 ~~~
 (type Name)
 ~~~
@@ -369,37 +561,44 @@ Examples:
 ### Operators
 Operators are build in functions in the language. Following opertaors are available:
 
-* [+](#addition)
-* [/](#division)
-* [<](#lesserThan)
-* [*](#multiplication)
-* [=](#numericalEqual)
-* [-](#subtraction)
+* [+ (addition)](#addition)
+* [/ (division)](#division)
+* [< (lesser than)](#lesserThan)
+* [* (multiplication)](#multiplication)
+* [= (equals)](#numericalEqual)
+* [- (subtraction)](#subtraction)
 * [bit-and](#bitAnd)
 * [bit-or](#bitOr)
 * [car](#car)
+* [can-unify-representations](#canUnifyRepresentations)
+* [can-unify-types](#canUnifyTypes)
 * [cdr](#cdr)
 * [concat](#concat)
 * [equals?](#equals)
-* [not](#not)
-* [println](#println)
-* [deconstruct](#deconstruct)
 * [IntNative2IntString](#intnative2intstring)
 * [IntNative2IntRoman](#intnative2introman)
-* [IntString2IntNative](#intstring2intnative)
-* [IntString2IntRoman](#intstring2introman)
 * [IntRoman2IntNative](#introman2intnative)
 * [IntRoman2IntString](#introman2intstring)
-	
-#### <a name="addition">+</a>
+* [IntString2IntNative](#intstring2intnative)
+* [IntString2IntRoman](#intstring2introman)
+* [is-same-type](#isSameType)
+* [is-same-representation](#isSameRepresentation)
+* [not](#not)
+* [println](#println)
+
+
+#### <a name="addition">+ (addition)</a>
 Syntax:
+
 ~~~
 (+ <arg1> <arg2>)
 ~~~
 Where:
-* _<arg1>_ and _<arg2>_ are integers
+
+* _arg1_ and _arg2_ are integers
 
 Type Signature:
+
 ~~~
 (Int:Native Int:Native) #> Int:Native
 ~~~
@@ -407,39 +606,47 @@ Type Signature:
 Adds two integers.
 
 Example:
+
 ~~~
 (+ 21 21) ; = 42
 ~~~
 
-#### <a name="division">/</a>
+#### <a name="division">/ (division)</a>
 Syntax:
+
 ~~~
 (/ <arg1> <arg2)
 ~~~
 Where:
-* _<arg1>_ and _<arg2>_ are integers
+
+* _arg1_ and _arg2_ are integers
 
 Type Signature:
+
 ~~~
 (Int:Native Int:Native) #> Int:Native
 ~~~
 
-Divides _<arg1>_ by _<arg2>_. if _<arg2>_ evaluates to zero, causes exception.
+Divides _arg1_ by _arg2_. if _arg2_ evaluates to zero, causes exception.
 
 Example:
+
 ~~~
 (/ 84 2) ; = 42
 ~~~
 
-#### <a name="lesserThan"><</a>
+#### <a name="lesserThan">< (lesser than)</a>
 Syntax:
+
 ~~~
 (< <arg1> <arg2>)
 ~~~
 Where:
-* _<arg1>_ and _<arg2>_ are integers
+
+* _arg1_ and _arg2_ are integers
 
 Type Signature:
+
 ~~~
 (Int:Native Int:Native) #> Bool:Native
 ~~~
@@ -447,19 +654,23 @@ Type Signature:
 Compares two integers.
 
 Example:
+
 ~~~
 (< 42 1) ; = #f
 ~~~
 
-#### <a name="multiplication">*</a>
+#### <a name="multiplication">* (multiplication)</a>
 Syntax:
+
 ~~~
 (* <arg1> <arg2>
 ~~~
 Where:
-* _<arg1>_ and _<arg2>_ are integers
+
+* _arg1_ and _arg2_ are integers
 
 Type Signature:
+
 ~~~
 (Int:Native Int:Native) #> Int:Native
 ~~~
@@ -467,19 +678,23 @@ Type Signature:
 Multiplies two integers.
 
 Example:
+
 ~~~
 (* 6 7) ; = 42
 ~~~
 
-#### <a name="numericalEqual">=</a>
+#### <a name="numericalEqual">= (equals)</a>
 Syntax:
+
 ~~~
 (= <arg1> <arg2>)
 ~~~
 Where:
-* _<arg1>_ and _<arg2>_ are integers
+
+* _arg1_ and _arg2_ are integers
 
 Type Signature:
+
 ~~~
 (Int:Native Int:Native) #> Bool:Native
 ~~~
@@ -487,39 +702,47 @@ Type Signature:
 Compares two integers for equality.
 
 Example:
+
 ~~~
 (= 42 42) ; = #t
 ~~~
 
-#### <a name="subtraction">-</a>
+#### <a name="subtraction">- (subtraction)</a>
 Syntax:
+
 ~~~
 (- <arg1> <arg2>)
 ~~~
 Where:
-* _<arg1>_ and _<arg2>_ are integers
+
+* _arg1_ and _arg2_ are integers
 
 Type Signature:
+
 ~~~
 (Int:Native Int:Native) #> Int:Native
 ~~~
 
-Subtracts _<arg2>_ from _<arg1>_.
+Subtracts _arg2_ from _arg1_.
 
 Example:
+
 ~~~
 (- 43 1) ; = 42
 ~~~
 
 #### <a name="bitAnd">bit-and</a>
 Syntax:
+
 ~~~
 (bit-and <arg1> <arg2>)
 ~~~
 Where
-* _<arg1>_ and _<arg2>_ are integers
+
+* _arg1_ and _arg2_ are integers
 
 Type Signature:
+
 ~~~
 (Int:Native Int:Native) #> Int:Native
 ~~~
@@ -527,19 +750,23 @@ Type Signature:
 Performs bit-wise and of two integers.
 
 Example:
+
 ~~~
 (bit-and 5 1) ; = 1
 ~~~
 
 #### <a name="bitOr">bit-or</a>
 Syntax:
+
 ~~~
 (bit-or <arg1> <arg2>)
 ~~~
 Where
-* _<arg1>_ and _<arg2>_ are integers
+
+* _arg1_ and _arg2_ are integers
 
 Type Signature:
+
 ~~~
 (Int:Native Int:Native) #> Int:Native
 ~~~
@@ -547,19 +774,23 @@ Type Signature:
 Performs bit-wise or of two integers.
 
 Example:
+
 ~~~
 (bit-or 5 1) ; = 5
 ~~~
 
-#### car
+#### <a name="car">car</a>
 Syntax:
+
 ~~~
 (car <arg>)
 ~~~  
 Where:
-* _<arg>_ is a pair.
+
+* _arg_ is a pair.
 
 Type Signature:
+
 ~~~
 ((A B)) #> A
 ~~~
@@ -567,19 +798,23 @@ Type Signature:
 Extracts first value from a pair.
 
 Example:
+
 ~~~
 (car (cons 42 "42")) ; = 42
 ~~~
 
-#### cdr
+#### <a name="cdr">cdr</a>
 Syntax:
+
 ~~~
 (cdr <arg>)
 ~~~
 Where:
-* _<arg>_ is a pair.
+
+* _arg_ is a pair.
 
 Type Signature:
+
 ~~~
 ((A B)) #> B
 ~~~
@@ -587,19 +822,23 @@ Type Signature:
 Extracts second value from a pair.
 
 Example:
+
 ~~~
 (cdr (cons 42 "42")) ; = "42"
 ~~~
 
-#### concat
+#### <a name="concat">concat</a>
 Syntax:
+
 ~~~
 (concat <arg1> <arg2>)
 ~~~
 Where:
-* _<arg1>_ and _<arg2>_ are strings
+
+* _arg1_ and _arg2_ are strings
 
 Type Signature:
+
 ~~~
 (String:Native String:Native) #> String:Native
 ~~~
@@ -607,38 +846,45 @@ Type Signature:
 Concatenates two strings.
 
 Example:
+
 ~~~
 (concat "foo" "bar") ; = "foobar"
 ~~~
 
 #### <a name="equals">equals?</a>
 Syntax:
+
 ~~~
 (equals? <arg1> <arg2>)
 ~~~
 
 Type Signature:
+
 ~~~
 (A B) #> Bool:Native
 ~~~
 
-Compares two values. For more information see [equality](#equality)
+Compares two values. For more information see [equality](#equality).
 
 Examples:
+
 ~~~
 (equals? 42 "42") ; = #f
 (equals? (cons 42 42) (cons 42 42)) ; = #t
 ~~~
 
-#### not
+#### <a name="not">not</not>
 Syntax:
+
 ~~~
 (not <arg>)
 ~~~
 Where:
-* _<arg>_ is a boolean
+
+* _arg_ is a boolean
 
 Type Signature:
+
 ~~~
 (Bool:Native) #> Bool:Native
 ~~~
@@ -646,20 +892,24 @@ Type Signature:
 Logical not of argument.
 
 Examples:
+
 ~~~
 (not #t) ; = #f
 (not (equals? 42 "42")) ; = #t
 ~~~
 
-#### println
+#### <a name="println">println</a>
 Syntax:
+
 ~~~
 (println <arg>)
 ~~~
 Where:
-* _<arg>_ evaluates to string.
+
+* _arg_ evaluates to string.
 
 Type Signature:
+
 ~~~
 (String:Native) #> Int:Native
 ~~~
@@ -667,130 +917,474 @@ Type Signature:
 Prints its argument to standard output with endline and returns number of printed characters.
 
 Example:
+
 ~~~
 (println "foo") ; prints "foo" and returns 5
 ~~~
 
-#### IntNative2IntString
+#### <a name="canUnifyTypes">can-unify-types</a>
 Syntax:
+
+~~~
+(can-unify-types <arg1> <arg2>)
+~~~
+
+Where:
+
+* _<arg1>_ and _<arg2>_ evaluates to [type symbols](#typeSymbol)
+
+Type Signature:
+
+~~~
+(A B) #> Bool:Native
+~~~
+
+Returns _true_ if types carried by _arg1_ and _arg2_ can be unified. Otherwise returns _false_. This operator works on level of types, not taking type representations into account. Meaning for example _Int:Native_ and _Int:String_ can unify and type symbols carriing them will yield _true_ on application of the operator. 
+
+For representation level variant see [can-unify-representations](#canUnifyRepresentations).
+
+#### <a name="canUnifyRepresentations">can-unify-representations</a>
+Syntax:
+
+~~~
+(can-unify-representations <arg1> <arg2>)
+~~~
+
+Where:
+
+* _arg1_ and _arg2_ are [type symbols](#typeSymbol)
+
+Type Signature:
+
+~~~
+(A B) #> Bool:Native
+~~~
+
+Returns _true_ if representations carried by _arg1_ and _arg2_ can be unified. Otherwise returns _false_. This operator works on level of representations, meaning for example _Int:Native_ and _Int:String_ cannot unify and type symbols carriing them will yield _false_ on application of the operator.
+
+For type level variant see [can-unify-types](#canUnifyTypes).
+
+#### <a name="isSameType">is-same-type</a>
+Syntax:
+
+~~~
+(is-same-type <arg1> <arg2>)
+~~~
+
+Type Signature:
+
+~~~
+(A B) #> Bool:Native
+~~~
+
+Returns _true_ if types _A_ and _B_ can be unified. Otherwise returns _false_. This operator works on level of types, not taking type representations into account. 
+For representation level variant see [is-same-representation](#isSameRepresentation).
+
+Example:
+
+~~~
+(is-same-type 42 84) ; = true
+(is-same-type 42 (construct Int String "84")) ; = true
+(is-same-type 42 "84") ; = false
+~~~
+
+#### <a name="isSameRepresentation">is-same-representation</a>
+Syntax:
+
+~~~
+(is-same-representation <arg1> <arg2>)
+~~~
+
+Type Signature:
+
+~~~
+(A B) #> Bool:Native
+~~~
+
+Returns _true_ if representations _A_ and _B_ can be unified. Otherwise returns _false_. This operator works on level of representations.
+For type level variant see [is-same-type](#isSameType).
+
+Example:
+
+~~~
+(is-same-type 42 84) ; = true
+(is-same-type 42 (construct Int String "84")) ; = false
+(is-same-type 42 "84") ; = false
+~~~
+
+#### <a name="IntNative2IntString">IntNative2IntString</a>
+Syntax:
+
 ~~~
 (IntNative2IntString <arg>)
 ~~~
 Where:
-* _<arg>_ evaluates to integer
+
+* _arg_ evaluates to integer
 
 Type Signature:
+
 ~~~
 (Int:Native) #> Int:String
 ~~~
 
-Converts integer in native represetation into string representation. This is shorthand for _(convert Int:Native Int:String <arg>)_.
+Converts integer in native represetation into string representation. This is shorthand for _(convert Int:Native Int:String arg)_.
 
 Example:
+
 ~~~
 (IntNative2IntString 42) ; = "42"
 ~~~
 
-#### IntNative2IntRoman
+#### <a name="IntNative2IntRoman">IntNative2IntRoman</a>
 Syntax:
+
 ~~~
 (IntNative2IntRoman <arg>)
 ~~~
 Where:
-* _<arg>_ evaluates to integer
+
+* _arg_ evaluates to integer
 
 Type Signature:
+
 ~~~
 (Int:Native) #> Int:Roman
 ~~~
 
-Converts integer in native represetation into roman representation. This is shorthand for _(convert Int:Native Int:Roman <arg>)_.
+Converts integer in native represetation into roman representation. This is shorthand for _(convert Int:Native Int:Roman arg)_.
 
 Example:
+
 ~~~
 (IntNative2IntRoman 42) ; = "XLII"
 ~~~
 
-#### IntString2IntNative
+#### <a name="IntString2IntNative">IntString2IntNative</a>
 Syntax:
+
 ~~~
 (IntString2IntNative <arg>)
 ~~~
 Where:
-* _<arg>_ evaluates to integer
+
+* _arg_ evaluates to integer
 
 Type Signature:
+
 ~~~
 (Int:String) #> Int:Native
 ~~~
 
-Converts integer in string represetation into native representation. This is shorthand for _(convert Int:String Int:Native <arg>)_.
+Converts integer in string represetation into native representation. This is shorthand for _(convert Int:String Int:Native arg)_.
 
 Example:
+
 ~~~
-(IntString2IntNative "42") ; = 42
+(IntString2IntNative (construct Int String "42")) ; = 42
 ~~~
 
-#### IntString2IntRoman
+#### <a name="IntString2IntRoman">IntString2IntRoman</a>
 Syntax:
+
 ~~~
 (IntString2IntRoman <arg>)
 ~~~
 Where:
-* _<arg>_ evaluates to integer
+
+* _arg_ evaluates to integer
 
 Type Signature:
+
 ~~~
 (Int:String) #> Int:Roman
 ~~~
 
-Converts integer in string represetation into roman representation. This is shorthand for _(convert Int:String Int:Roman <arg>)_.
+Converts integer in string represetation into roman representation. This is shorthand for _(convert Int:String Int:Roman arg)_.
 
 Example:
+
 ~~~
-(IntString2IntRoman "42") => "XLII"
+(IntString2IntRoman (construct Int String "42")) => "XLII"
 ~~~
 
-#### IntRoman2IntNative
+#### <a name="IntRoman2IntNative">IntRoman2IntNative</a>
 Syntax:
+
 ~~~
 (IntRoman2IntNative <arg>)
 ~~~
 Where:
-* _<arg>_ evaluates to integer
+
+* _arg_ evaluates to integer
 
 Type Signature:
+
 ~~~
 (Int:Roman) #> Int:Native
 ~~~
 
-Converts integer in roman represetation into native representation. This is shorthand for _(convert Int:Roman Int:Native <arg>)_.
+Converts integer in roman represetation into native representation. This is shorthand for _(convert Int:Roman Int:Native arg)_.
 
 Example:
+
 ~~~
-(IntRoman2IntNative "XLII") ; = 42
+(IntRoman2IntNative (construct Int Roman "XLII")) ; = 42
 ~~~
 
-#### IntRoman2IntString
+#### <a name="IntRoman2IntString">IntRoman2IntString</a>
 Syntax:
+
 ~~~
 (IntRoman2IntString <arg>)
 ~~~
 Where:
-* _<arg>_ evaluates to integer
+
+* _arg_ evaluates to integer
 
 Type Signature:
+
 ~~~
 (Int:Roman) #> Int:String
 ~~~
 
-Converts integer in roman represetation into string representation. This is shorthand for _(convert Int:Roman Int:String <arg>)_.
+Converts integer in roman represetation into string representation. This is shorthand for _(convert Int:Roman Int:String arg)_.
 
 Example:
+
 ~~~
-(IntRoman2IntString "XLII") ; = "42"
+(IntRoman2IntString (construct Int Roman "XLII")) ; = "42"
 ~~~
+
+### Language base
+
+Following functions are always available in language. All these functions are (unlike operators) implemented directly in Velka.
+
+* [foldl-list-native](#foldlListNative)
+* [foldr-list-native](#foldrListNative)
+* [head-list-native](#headListNative)
+* [is-list-native-empty](#isListNativeEmpty)
+* [map-list-native](#mapListNative)
+* [map2-list-native](#map2ListNative)
+* [tail-list-native](#tailListNative)
+
+#### <a name="foldlListNative">foldl-list-native</a>
+
+Syntax:
+
+~~~
+(foldl-list-native <function> <terminator> <list>)
+~~~
+Type signature:
+
+~~~
+(((A A) #> A) A List:Native) #> A
+~~~
+
+Where:
+
+* _function is function of type _(A A) #> A
+* _terminator_ is value of type _A_
+* _list_ is value of type _List:Native_, containing values of type _A_
+
+_foldl-list-native_ aggregates given _list_ from left to right with _function_ using _terminal_ as first value to base aggregation upon.
+
+Example:
+
+~~~
+(foldl-list-native 
+    +
+    0
+    (construct List Native 1 
+        (construct List Native 2 
+            (construct List Native)))) ; = 3
     
+(foldl-list-native
+    (lambda (x y) y)
+    "a"
+    (construct List Native "b" 
+        (construct List Native "c" 
+            (construct List Native))))  ; = "c"
+~~~
+
+#### <a name="foldrListNative">foldr-list-native</a>
+
+Syntax:
+
+~~~
+(foldr-list-native <function> <terminator> <list>)
+~~~
+Type signature:
+
+~~~
+(((A A) #> A) A List:Native) #> A
+~~~
+
+Where:
+
+* _function_ is function of type _(A A) #> A_
+* _terminator_ is value of type _A_
+* _list_ is value of type _List:Native_, containing values of type _A_
+
+_foldr-list-native_ aggregates given _list_ from right to left with _function_ using _terminal_ as first value to base aggregation upon.
+
+Example:
+
+~~~
+(foldr-list-native 
+    +
+    0
+    (construct List Native 1 (
+        construct List Native 2 
+            (construct List Native)))) ; = 3
+    
+(foldr-list-native
+    (lambda (x y) y)
+    "a"
+    (construct List Native "b" 
+        (construct List Native "c" 
+            (construct List Native)))) ; = "b"
+~~~
+
+#### <a name="headListNative">head-list-native</a>
+
+Syntax:
+
+~~~
+(head-list-native <list>)
+~~~
+Type Signature:
+
+~~~
+(List:Native) #> A
+~~~
+
+Returns head (first element) of given _List:Native_. Causes error if used on empty list.
+
+Example:
+
+~~~
+(head-list-native 
+    (construct List Native 1 
+        (construct List Native 2 
+            (construct List Native)))) ; = 1
+            
+(head-list-native (construct List Native)) ; ERROR
+~~~
+
+#### <a name="isListNativeEmpty">is-list-native-empty</a>
+
+Syntax:
+
+~~~
+(is-list-native-empty <list>)
+~~~
+
+Type Signature:
+
+~~~
+(List:Native) #> Bool:Native
+~~~
+
+Returns _true_ if given _list_ is an empty list, returns _false_ otherwise.
+
+Examples:
+
+~~~
+(is-list-native-empty 
+    (construct List Native 1 
+        (construct List Native))) ; = false
+        
+(is-list-native-empty (construct List Native)) ; = true
+~~~
+
+#### <a name="mapListNative">map-list-native</a>
+Syntax:
+
+~~~
+(map-list-native <function> <list>)
+~~~
+Type Signature:
+
+~~~
+(((A) #> B) List:Native) #> List:Native
+~~~
+Where:
+
+* _function_ is function with type signature _(A) #> B_
+* _list_ is _List:Native_ containing values of type _A_
+
+Maps _function_ to each element of _list_ and returns list containing the results. Plese note the elements of resulting list will be of type _B_.
+
+Example:
+
+~~~
+(map-list-native
+    (lambda (x) (+ x 1))
+    (construct List Native 1 (
+        construct List Native 2 
+            (construct List Native)))) ; = list containing (2 3)
+~~~
+
+#### <a name="map2ListNative">map2-list-native</a>
+Syntax:
+
+~~~
+(map2-list-native <function> <list-1> <list-2>)
+~~~
+Type Signature:
+
+~~~
+(((A B) #> C) List:Native List:Native) #> List:Native
+~~~
+
+Where:
+
+* _function_ is function with type signature _(A B) #> C_
+* _list-1_ is _List:Native_ with elements of type _A_
+* _list-2_ is _List:Native_ with elements of type _B_
+* _list-1_ and _list-2_ must be of same length
+
+Maps _function_ to each element of list _list-1_ and _list-2_ and returns _List:Native_ containign results. Please note the result will be _List:Native_ containing elements of type _C_. Throws error if lists are not of the same length.
+
+Example:
+
+~~~
+(map2-list-native
+    +
+    (construct List Native 1 
+        (construct List Native 2 
+            (construct List Native)))
+    (construct List Native 9 
+        (construct List Native 8 
+            (construct List Native)))) ; = List containing (10 10)
+~~~
+
+#### <a name="tailListNative">tail-list-native</a>
+Syntax:
+
+~~~
+(tail-list-native <list>)
+~~~
+Type Signature:
+
+~~~
+(List:Native) #> List:Native
+~~~
+
+Returns tail (remainder of list after the first element) of given _list_. Throws an error if used with empty list.
+
+Example:
+
+~~~
+(tail-list-native 
+    (construct List Native 1 
+        (construct List Native 2 
+            (construct List Native)))) ; = list containing (2)
+            
+(tail-list-native (construct List Native)) ; ERROR
+~~~
+
 ### <a name="typeSignature">Type signatures</a>
 There are three kind of type signatures present in language: atomic types, composite types and type variables
 
@@ -808,14 +1402,14 @@ For example signature of integer represented by string of roman number would be:
     
 For example signature of general double type (without specific representation) would be:
 
-    Int
+    Double
 
 or
 
-    Int:*
+    Double:*
 
 #### Composite types
-There are two kind of composite types in language: type tuples and arrow types (functiona types).
+There are two kind of composite types in language: type tuples and arrow types (types of functions).
 
 For type tuples we use list syntax:
 
@@ -854,7 +1448,7 @@ This function has type of `(A) #> A` where `A` is a type variable. This allows f
 ((lambda (x) x) 42)
 ~~~
 
-Is of type `Int:Native` and during the inference type variable `A` is unfied with `Int:Native` substituing type of the function to `(Int:Native) #> Int:Native`.
+Is of type `Int:Native` and during the inference type variable `A` is unified with `Int:Native` substituing type of the function to `(Int:Native) #> Int:Native`.
 
 If we wanted to specify name for the type variable explicitely we can use:
 
@@ -863,7 +1457,6 @@ If we wanted to specify name for the type variable explicitely we can use:
 ~~~
 
 Where `let-type` is special form that declares and specifies scope of this type variable. For details on syntax see [let-type](#let-type). Undeclared type variables are not allowed.
-
 
 ### Lambda expression with type signatures
 Lambda expression in language supports type signatures on formal arguments of lambda expression. For example lambda that accepts only String arguments:
@@ -887,6 +1480,7 @@ Following types and their representations are build-in to compiler:
 | String | Native         |                                                 |
 | Double | Native         |                                                 |
 | Bool   | Native         |                                                 |
+| List   | Native         | Native lists used in ranking functions.         |
     
 ### Types, Representations and Constructors
 To define a new type use _type_ special form. For example to define a type called Name:
@@ -898,7 +1492,7 @@ Type cannot be instantiated without representation and constructor. To define re
     (representation Structured Name)
     (representation Unstructured Name)
     
-Representation cannot be instantiated without constructor. Any representation can have multiple constructors. This is due to requirement for each representation to be able to represent all values any value of given type. To define constructor use _constructor_ special form. For example to define constructors for Name:Structured representation and Name:Unstructured representation.
+Representation cannot be instantiated without constructor. Any representation can have multiple constructors distinguished by number of arguments. This is due to requirement for each representation to be able to represent all values any value of given type. To define constructor use _constructor_ special form. For example to define constructors for Name:Structured representation and Name:Unstructured representation.
 
     (constructor Name Structured 
         ((String:Native firstName) (String:Native secondName)) 
@@ -916,8 +1510,8 @@ Language supports and uses conversions between individual representations. To de
     (conversion Name:Structured Name:Unstructured 
         ((Name:Structured x) 
             (construct Name Unstructured (concat 
-                (car (deconstruct x)) 
-                (cdr (deconstruct x))))))
+                (car (deconstruct x (String:Native String:Native))) 
+                (cdr (deconstruct x (String:Native String:Native)))))))
     
 To explicitely invoke conversion use _convert_ special form. For example:
 
@@ -926,7 +1520,8 @@ To explicitely invoke conversion use _convert_ special form. For example:
     
 However conversions are mostly invoked implicitely during evaluation of functiona application. For example lets have lambda that only accepts Name:Unstructured argument:
 
-    ((lambda ((Name:Unstructured x)) (concat (deconstruct x) "0")) 
+    ((lambda ((Name:Unstructured x)) 
+            (concat (deconstruct x) "0")) 
         (construct Name Structured "John" "Doe")) => JohnDoe0
     
 System tries to convert any arguments to required representations and then applies function to converted arguments. If conversion does not exists error is thrown.
@@ -939,14 +1534,20 @@ Extended-lambda is special form, allowing us to create functions which can behav
                                 
     (f (construct Name Structured "John" "Doe")) => Structured
     (f (construct Name Unstructured "John Doe")) => Unstructured
+    
+#### <a name="typeSymbol">Type symbols</a>
+**THIS IS SUBJECT TO CHANGE AND MIGHT BE RENDERED OBSOLETE IN FUTURE RELEASES**
+
+Some build in operators are working with so called type symbols. Type symbol is a special value, that is of given _type_ and also holds that type as a value. Its usage is currently only in [ranking functions](#rankingFunction). They cannot be explicitely created, nor should be used outside of ranking functions.
 
 ### Equality
 When using _equals?_ operator, equality is checked in following way:
 
 #### Literals
-For primitive literals (Native Integers, Native Doubles, Native Strings and Native Booleans), equality is checked by value. Internally for Java _equals_ method (for interpretation) or Clojure _=_ operator (for compilation) is used.  
+For primitive literals (Native Integers, Native Doubles, Native Strings and Native Booleans), equality is checked by value. Internally Java _equals_ method (for interpretation) or Clojure _=_ operator (for compilation) is used.  
 
 Example:
+
 ~~~
 (equals? 42 42) ; = #t
 (equals? 3.14 2.24) ; = #f
@@ -957,16 +1558,22 @@ Example:
 For composite literals first, type of both values are checked. If they equals, then underlying value is checked for equality.
 
 Example:
+
 ~~~
-(equals? (construct Name Structured "Jane" "Doe") (construct Name Structured "Jane" "Doe")) ; = #t
-(equals? (construct Name Unstructured "Jane Doe") (construct Name Unstructured "Muhamad Lee")) ; = #f
+(equals? 
+    (construct Name Structured "Jane" "Doe") 
+    (construct Name Structured "Jane" "Doe")) ; = #t
+(equals? 
+    (construct Name Unstructured "Jane Doe") 
+    (construct Name Unstructured "Muhamad Lee")) ; = #f
 (equals? (construct Name Unstructured "42") (construct Int String "42")) ; = #f
 ~~~
 
 #### Tuples
-Tuples are equal if they have the same length and each of they values equals.
+Tuples are equal if they have the same length and each their value equals.
 
 Example:
+
 ~~~
 (equals? (cons 42 "foo") (cons 42 "foo")) ; = #t
 (equals? (cons 42 "foo") (cons "foo" 42)) ; = #f
@@ -974,24 +1581,147 @@ Example:
 
 #### Functions and extended functions
 Functions are equal if its following parts are equal:
+
 * argument list
 * arguemnt types
 * body
 * creation environment
 
-Also please note that automatically generated names of type variables are generated to be unique, so anonymous functions witout specified argument list might be counter intuitivelly not equal. Also declared type variables in _let-type_ are substitued to be unique, so type variables declared in different let types are different, even though they have same name.
+Also please note that automatically generated names of type variables are generated to be unique, so anonymous functions without specified argument list might be counter intuitivelly not equal. Also declared type variables in _let-type_ are substitued to be unique, so type variables declared in different let types are different, even though they have same name.
 
 Example:
+
 ~~~
 (def f (lambda (x) x))
 (equals? x x) ; = #t
-(equals? (lambda (x) x) (lambda (x) x)) ; = #f generated argument list type variables are not equal
-(equals? (let-type (A) (lambda ((A x)) x)) (let-type (A) (lambda ((A x)) x))) ; = #f type variables declared in different let-types are considered different
+(equals? 
+    (lambda (x) x) 
+    (lambda (x) x)) ; = #f generated argument list type variables are not equal
+    
+(equals? 
+    (let-type (A) (lambda ((A x)) x)) 
+    (let-type (A) (lambda ((A x)) x))) ; = #f type variables declared in 
+                                       ;      different let-types are considered 
+                                       ;      different
+
 (let-type (A) (equals? (lambda ((A x)) x) (lambda ((A x)) x))) ; = #t
 (equals? (lambda (x) y) (lambda (x) x)) ; = #f body does not equals
 (equals? (lambda (y) x) (lambda (x) x)) ; = #f argument list does not equals
-(equals? ((lambda () (lambda (x) x))) (lambda (x) x)) ; = #f creation environment does not equals
-(equals? (lambda ((Int:Native x)) x) (lambda ((String:Native x)))) ; = #f argument list does not equals
+
+(equals? 
+    ((lambda () (lambda (x) x))) 
+    (lambda (x) x)) ; = #f creation environment does not equals
+    
+(equals? 
+    (lambda ((Int:Native x)) x) 
+    (lambda ((String:Native x)))) ; = #f argument list does not equals
+~~~
+
+#### Extended function application
+Extended function can have multiple different implementations depending on representations of arguments it is applied to. They are created by special form [_extended-lambda_](#extendedLambda) or [_extended-lambda-ranking](#extendedLambdaRanking). For example:
+
+~~~
+(def foo (extended-lambda ((Int x))
+    ((Int:Native) "This is Int:Native")
+    ((Int:String) "This is Int:String"))
+    
+(foo 42) ; = "This is Int:Native"
+(foo (construct Int String "42")) ; = "This is Int:String"
+~~~
+
+Extended functions are usefull when dealing with data that can come in various different implementation. Extended functions allow us to use specific algorithms for specific representations of data. For example binary matrix can be represented by two dimensional array, bit array or incidence list. Extended functions allow us to tranparently implement functions using efficient algorithms based on representations of arguments.
+
+##### Implementation selection
+When extended function is applied, it is using auxiliary *ranking function* to rank and select implementation that will be used. Ranking function maps each implementation along with arguments of application to integer. Then implementation with least rank is selected and applied.
+
+If no ranking function is specified, default ranking function is used. Default ranking function compares representations of supplied arguments and formal arguments of implementations and increases rank by _1_ for each representation that is different. Therefore if supplied arguments have exactly same representation as formal arguments of implementations default ranking function will return _0_. On the other hand if representation of each supplied argument and formal argument of implementation is different, default ranking function will return number equal to number of arguments.
+
+##### Ranking function
+Ranking function is any function or extended-function with following type signature:
+
+~~~
+(List:Native List:Native) #> Int:Native
+~~~
+
+During each application of extended function ranking function is called for each implementation of that extended function. First argument passed to ranking function is _List:Native_ of [type symbols](#typeSymbol) containing types of arguments implementation is expecting, second argument is list of [type symbols](#typeSymbol) containing types of arguments that extended function is applied to. For example following expression:
+
+~~~
+((extended-lambda 
+        ((Int x)) 
+        ((Int:Native) "Native")) 
+    (construct Int Roman "XLII"))
+~~~
+
+Will result in application of ranking function roughly equivalent to following pseudo-expression:
+
+~~~
+(ranking-function
+    ((type-symbol Int:Native))
+    ((type-symbol Int:Roman)))
+~~~
+
+Such application would be evaluated for each implementation of applied extended function (above example has only one implementation).
+
+Default ranking funtion has roughly following implementation:
+
+~~~
+(lambda ((List:Native formalArgTypes) (List:Native realArgs))
+    (foldr-list-native + 0 (map2-list-native 
+                            (lambda (x y) (if (is-same-representation x y) 0 1)) 
+                            formalArgTypes
+                            realArgs)))
+~~~
+
+##### Specifing ranking function
+To specify ranking function we are using special forms [_extended-lambda-ranking_](#extendedLambdaRanking) and [_eapply_](#eapply). Latter allows us to specify ranking function for specific application of any extended function (or even function but for them ranking function would be ignored).
+
+Special form [_extended-lambda-ranking_](#extendedLambdaRanking) allows us to associate specific ranking function with defined extended function. Then, any time this extended function is applied, its associated ranking function is used for implementation selection, unless [_eapply_](#eapply) with different ranking function is used.
+
+Therefore priority in which specific ranking functions are used is following:
+
+1. ranking function used with [_eapply_](#eapply) special form
+2. ranking function associated with extended function by [_extended-lambda-ranking_](#extendedLambdaRanking) special form
+3. default ranking function
+
+Following example, shows usage of both ways to specify ranking function:
+
+~~~
+(def rank-prefer-int-roman
+    (lambda ((List:Native formal-arg-types) (List:Native real-arg-types))
+                (if (instance-of-representation 
+                        (head-list formal-arg-types) 
+                        Int:Roman)
+                    0
+                    999)))
+                    
+(def rank-prefer-int-string 
+    (lambda ((List:Native formal-arg-types) (List:Native real-arg-types))
+                (if (instance-of-representation 
+                        (head-list formal-arg-types) 
+                        Int:String)
+                    0
+                    999)))
+
+(def no-ranking-fn (extended-lambda ((Int x) (Int y)) 
+                    ((Int:Native Int:Native) "Int:Native")
+                    ((Int:Roman Int:Native) "Int:Roman")
+                    ((Int:String Int:Native) "Int:String"))
+
+(def ranking-fn (extended-lambda-ranking 
+                    ((Int x) (Int y))  
+                    rank-prefer-int-roman
+                    ((Int:Native Int:Native) "Int:Native")
+                    ((Int:Roman Int:Native) "Int:Roman")
+                    ((Int:String Int:Native) "Int:String"))
+
+;; Use default ranking
+(no-ranking-fn 42 42)                                   ; = "Int:Native"
+
+;; Use ranking specified in function
+(ranking-fn 42 42)                                      ; = "Int:Roman"
+
+;; Use ranking specified by eapply
+(eapply ranking-fn (cons 42 42) rank-prefer-int-string) ; = "Int:String"
 ~~~
     
 [antlr4]: https://www.antlr.org/download.html
