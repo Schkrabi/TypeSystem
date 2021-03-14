@@ -1618,7 +1618,7 @@ Example:
 ~~~
 
 #### Extended function application
-Extended function can have multiple different implementations depending on representations of arguments it is applied to. They are created by special form [_extended-lambda_](#extendedLambda) or [_extended-lambda-ranking](#extendedLambdaRanking). For example:
+Extended function can have multiple different implementations depending on representations of arguments it is applied to. They are created by special form [_extended-lambda_](#extendedLambda) or [_extended-lambda-ranking_](#extendedLambdaRanking). For example:
 
 ~~~
 (def foo (extended-lambda ((Int x))
@@ -1636,7 +1636,7 @@ When extended function is applied, it is using auxiliary *ranking function* to r
 
 If no ranking function is specified, default ranking function is used. Default ranking function compares representations of supplied arguments and formal arguments of implementations and increases rank by _1_ for each representation that is different. Therefore if supplied arguments have exactly same representation as formal arguments of implementations default ranking function will return _0_. On the other hand if representation of each supplied argument and formal argument of implementation is different, default ranking function will return number equal to number of arguments.
 
-##### Ranking function
+##### <a name="rankingFunction">Ranking function</a>
 Ranking function is any function or extended-function with following type signature:
 
 ~~~
