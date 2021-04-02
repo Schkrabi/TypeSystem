@@ -6,9 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -50,12 +53,14 @@ import velka.lang.literal.LitComposite;
 import velka.lang.literal.LitDouble;
 import velka.lang.literal.LitEnum;
 import velka.lang.literal.LitInteger;
+import velka.lang.literal.LitInteropObject;
 import velka.lang.literal.LitString;
 import velka.lang.parser.SchemeLexer;
 import velka.lang.parser.SchemeParser;
 import velka.lang.parser.SchemeParser.ExprsContext;
 import velka.lang.semantic.SemanticParser;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.langbase.JavaArrayList;
 import velka.lang.langbase.ListNative;
 import velka.lang.exceptions.UserException;
 import velka.lang.types.RepresentationOr;
@@ -72,6 +77,7 @@ import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.exceptions.InvalidNumberOfArgumentsException;
 import velka.lang.util.Pair;
+import velka.lang.util.ThrowingFunction;
 import velka.lang.exceptions.UnboundVariableException;
 
 class TestInterpretation {
@@ -762,14 +768,16 @@ class TestInterpretation {
 		TestInterpretation.testInterpretation(useString,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString), top, typeEnv);
 		p = useString.infer(top, typeEnv);
-		TestInterpretation.testInference(p, RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman), useString);
+		TestInterpretation.testInference(p,
+				RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman), useString);
 
 		AbstractionApplication useRoman = new AbstractionApplication(elambda, new Tuple(
 				Arrays.asList(new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman))));
 		TestInterpretation.testInterpretation(useRoman,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman), top, typeEnv);
 		p = useRoman.infer(top, typeEnv);
-		TestInterpretation.testInference(p, RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman), useRoman);
+		TestInterpretation.testInference(p,
+				RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman), useRoman);
 
 		assertThrows(AppendableException.class,
 				() -> new AbstractionApplication(elambda, new Tuple(Arrays.asList(new LitString("fail")))).infer(top,
@@ -1449,53 +1457,210 @@ class TestInterpretation {
 		Pair<Type, Substitution> p = iofr.infer(env, typeEnv);
 		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, iofr);
 	}
-	
+
 	@Test
 	@DisplayName("Test custom ranking function interpretation")
-	void testCustomRanking() throws AppendableException{
-		Lambda impl1 = new Lambda(
-				new Tuple(new Symbol("a")),
-				new TypeTuple(TypeAtom.TypeIntNative),
-				new LitString("Int Native")
-				);
-		Lambda impl2 = new Lambda(
-				new Tuple(new Symbol("a")),
-				new TypeTuple(TypeAtom.TypeIntString),
-				new LitString("Int String")
-				);
-		Lambda impl3 = new Lambda(
-				new Tuple(new Symbol("a")),
-				new TypeTuple(TypeAtom.TypeIntRoman),
-				new LitString("Int Roman")
-				);
-		
+	void testCustomRanking() throws AppendableException {
+		Lambda impl1 = new Lambda(new Tuple(new Symbol("a")), new TypeTuple(TypeAtom.TypeIntNative),
+				new LitString("Int Native"));
+		Lambda impl2 = new Lambda(new Tuple(new Symbol("a")), new TypeTuple(TypeAtom.TypeIntString),
+				new LitString("Int String"));
+		Lambda impl3 = new Lambda(new Tuple(new Symbol("a")), new TypeTuple(TypeAtom.TypeIntRoman),
+				new LitString("Int Roman"));
+
 		ExtendedLambda elambda_defaultRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3));
-		
-		Lambda ranking = (Lambda)TestInterpretation.parseString("(lambda (formalArgList realArgList) "
-																		+ "(if (instance-of-representation (head-list-native formalArgList) Int:Roman) 0 999))");
-		
-		Lambda ranking2 = (Lambda)TestInterpretation.parseString("(lambda (formalArgList realArgList) "
-																		+ "(if (instance-of-representation (head-list-native formalArgList) Int:String) 0 999))");
-		
-		ExtendedLambda elambda_customRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3), ranking);
-		
+
+		Lambda ranking = (Lambda) TestInterpretation.parseString("(lambda (formalArgList realArgList) "
+				+ "(if (instance-of-representation (head-list-native formalArgList) Int:Roman) 0 999))");
+
+		Lambda ranking2 = (Lambda) TestInterpretation.parseString("(lambda (formalArgList realArgList) "
+				+ "(if (instance-of-representation (head-list-native formalArgList) Int:String) 0 999))");
+
+		ExtendedLambda elambda_customRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3),
+				ranking);
+
 		Tuple args = new Tuple(new LitInteger(42));
-		
+
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		ListNative.initializeInEnvironment(env, typeEnv);
-		
+
 		AbstractionApplication app_defElambda_defRanking = new AbstractionApplication(elambda_defaultRanking, args);
 		TestInterpretation.testInterpretation(app_defElambda_defRanking, new LitString("Int Native"), env, typeEnv);
-		
-		AbstractionApplication app_defElambda_cusRanking = new AbstractionApplication(elambda_defaultRanking, args, ranking);
+
+		AbstractionApplication app_defElambda_cusRanking = new AbstractionApplication(elambda_defaultRanking, args,
+				ranking);
 		TestInterpretation.testInterpretation(app_defElambda_cusRanking, new LitString("Int Roman"), env, typeEnv);
-		
+
 		AbstractionApplication app_cusElambda_defRanking = new AbstractionApplication(elambda_customRanking, args);
 		TestInterpretation.testInterpretation(app_cusElambda_defRanking, new LitString("Int Roman"), env, typeEnv);
-		
-		AbstractionApplication app_cusElambda_cusRanking = new AbstractionApplication(elambda_customRanking, args, ranking2);
+
+		AbstractionApplication app_cusElambda_cusRanking = new AbstractionApplication(elambda_customRanking, args,
+				ranking2);
 		TestInterpretation.testInterpretation(app_cusElambda_cusRanking, new LitString("Int String"), env, typeEnv);
+	}
+
+	@Test
+	@DisplayName("Test Java Array List")
+	void testJavaArrayList() throws Exception {
+		TestInterpretation.testInterpretString("(construct List JavaArray)",
+				new LitComposite(new LitInteropObject(new ArrayList<Object>()), JavaArrayList.TypeListJavaArray));
+
+		ArrayList<Object> l = new ArrayList<Object>();
+		l.add(new LitInteger(42));
+
+		TestInterpretation.testInterpretString(
+				"(" + JavaArrayList.addToEndSymbol.toString() + " (construct List JavaArray) 42)", LitBoolean.TRUE);
+		TestInterpretation.testInterpretString(
+				"(" + JavaArrayList.addToIndexSymbol.toString() + " (construct List JavaArray) 0 42)",
+				Expression.EMPTY_EXPRESSION);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaArrayList.addAllSymbol + " l1 l2)",
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaArrayList.containsSymbol + " l1 42)",
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaArrayList.containsSymbol + " l1 84)",
+				LitBoolean.FALSE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaArrayList.containsAllSymbol + " l1 l2)",
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 42)"
+				+ "(" + JavaArrayList.containsAllSymbol + " l1 l2)",
+				LitBoolean.FALSE);
+		
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.getSymbol + " l1 0)",
+				new LitInteger(1));
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaArrayList.indexOfSymbol + " l1 1)",
+				new LitInteger(0));
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaArrayList.indexOfSymbol + " l1 42)",
+				new LitInteger(-1));
+		
+		TestInterpretation.testInterpretString("(" + JavaArrayList.isEmptySymbol + " (construct List JavaArray))", 
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaArrayList.isEmptySymbol + " l1)", 
+				LitBoolean.FALSE);
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaArrayList.lastIndexOfSymbol + " l1 1)",
+				new LitInteger(0));
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaArrayList.lastIndexOfSymbol + " l1 42)",
+				new LitInteger(-1));
+		/*TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaArrayList.removeSymbol + " l1 0)", 
+				new LitInteger(1));*/
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaArrayList.removeSymbol + " l1 2)", 
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaArrayList.removeAllSymbol + " l1 l2)",
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 4)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 5)"
+				+ "(" + JavaArrayList.removeAllSymbol + " l2 l1)",
+				LitBoolean.FALSE);
+		
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaArrayList.retainAllSymbol + " l1 l2)",
+				LitBoolean.TRUE);
+		
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaArrayList.retainAllSymbol + " l2 l1)",
+				LitBoolean.FALSE);
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaArrayList.setSymbol + " l1 0 2)", 
+				new LitInteger(1));
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaArrayList.sizeSymbol + " l1)", 
+				new LitInteger(2));
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 84)" 
+				+ "(" + JavaArrayList.sublistSymbol + " l1 0 1)", 
+				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
 	}
 
 	private static Expression parseString(String s) throws AppendableException {
@@ -1505,6 +1670,23 @@ class TestInterpretation {
 
 		ExprsContext exprsContext = parser.exprs();
 		return SemanticParser.parseNode(exprsContext.val.get(0));
+	}
+	
+	private static List<Expression> parseString_multipleExpression(String s) throws AppendableException{
+		CharStream charStream = CharStreams.fromString(s);
+		TokenStream tokens = new CommonTokenStream(new SchemeLexer(charStream));
+		SchemeParser parser = new SchemeParser(tokens);
+
+		ExprsContext exprsContext = parser.exprs();
+		try {
+		return exprsContext.val.stream().map(ThrowingFunction.wrapper(SemanticParser::parseNode)).collect(Collectors.toList());
+		}catch(RuntimeException re) {
+			if(re.getCause() instanceof AppendableException) {
+				AppendableException e = (AppendableException)re.getCause();
+				throw e;
+			}
+			throw re;
+		}
 	}
 
 	private static void testReflexivity(Expression original) {
@@ -1549,6 +1731,14 @@ class TestInterpretation {
 		Expression e = interpreted.interpret(env, typeEnv);
 		assertEquals(expected, e);
 	}
+	
+	private static void testInterpretation(Collection<Expression> interpreted, Expression expected, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Expression f = null;
+		for(Expression e : interpreted) {
+			f = e.interpret(env, typeEnv);
+		}
+		assertEquals(expected, f);
+	}
 
 	private static void testOperator(final Operator operator, Tuple args, Expression expectedInterpret,
 			Type expectedInference) throws AppendableException {
@@ -1591,7 +1781,7 @@ class TestInterpretation {
 
 	private static void testInterpretString(String interpreted, Expression expected, Environment env,
 			TypeEnvironment typeEnv) throws AppendableException {
-		Expression e = TestInterpretation.parseString(interpreted);
-		TestInterpretation.testInterpretation(e, expected, env, typeEnv);
+		List<Expression> l = TestInterpretation.parseString_multipleExpression(interpreted);
+		TestInterpretation.testInterpretation(l, expected, env, typeEnv);
 	}
 }

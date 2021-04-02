@@ -609,9 +609,9 @@ public abstract class Operator extends Abstraction {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [e1 e2] " + "(try " + "(get (doall ["
+			String fn = "(fn [e1 e2] " + "(try " + "(second (doall ["
 					+ "(velka.lang.types.Type/unifyTypes (:lang-type (meta e1)) (:lang-type (meta e2))) "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + "]) 1)"
+					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + "]))"
 					+ "(catch velka.lang.types.TypesDoesNotUnifyException e "
 					+ LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
 
@@ -660,9 +660,9 @@ public abstract class Operator extends Abstraction {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [e1 e2] " + "(try " + "(get (doall ["
+			String fn = "(fn [e1 e2] " + "(try " + "(second (doall ["
 					+ "(velka.lang.types.Type/unifyRepresentation (:lang-type (meta e1)) (:lang-type (meta e2))) "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + "]) 1)"
+					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + "]))"
 					+ "(catch velka.lang.types.TypesDoesNotUnifyException e "
 					+ LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
 

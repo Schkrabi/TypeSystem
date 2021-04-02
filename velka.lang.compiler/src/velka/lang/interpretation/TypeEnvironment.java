@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import velka.lang.abstraction.Abstraction;
 import velka.lang.abstraction.Lambda;
@@ -16,11 +17,14 @@ import velka.lang.exceptions.DuplicateConversionException;
 import velka.lang.exceptions.UnrecognizedConstructorException;
 import velka.lang.exceptions.DuplicateTypeConstructorException;
 import velka.lang.expression.Expression;
+import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
 import velka.lang.interpretation.Environment;
+import velka.lang.langbase.JavaArrayList;
 import velka.lang.langbase.ListNative;
 import velka.lang.literal.LitComposite;
 import velka.lang.exceptions.ConversionException;
+import velka.lang.types.Substitution;
 import velka.lang.types.Type;
 import velka.lang.types.TypeAtom;
 import velka.lang.types.TypeName;
@@ -30,6 +34,7 @@ import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.types.TypeArrow;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
+import velka.lang.util.Pair;
 
 /**
  * This class instance stores all information related to types not directly
@@ -40,7 +45,20 @@ import velka.lang.util.NameGenerator;
  *
  */
 public class TypeEnvironment {
+
+	/**
+	 * Environment associated with this type environment
+	 */
+	private final Environment environment;
+
+	/**
+	 * Type information table
+	 */
 	private Map<TypeAtom, TypeInformation> typeInfo = new HashMap<TypeAtom, TypeInformation>();
+
+	private TypeEnvironment(Environment env) {
+		this.environment = env;
+	}
 
 	/**
 	 * Gets TypeInformation for given TypeAtom
@@ -104,7 +122,8 @@ public class TypeEnvironment {
 	 * @throws AppendableException if type does not exists or constructor with same
 	 *                             argument types already exists
 	 */
-	public void addConstructor(TypeAtom typeAtom, Lambda constructorLambda, Environment env) throws AppendableException {
+	public void addConstructor(TypeAtom typeAtom, Abstraction constructorLambda, Environment env)
+			throws AppendableException {
 		TypeInformation info = this.getTypeInfo(typeAtom);
 		info.addConstructor(constructorLambda, env);
 	}
@@ -127,8 +146,23 @@ public class TypeEnvironment {
 	 * @param lambda   lambda used for construction of wrapped expression
 	 * @return construtor
 	 */
-	private static Lambda createConstructorFromLambda(TypeAtom typeAtom, Lambda lambda) {
-		return new Lambda(lambda.args, lambda.argsType, new LitComposite(lambda.body, typeAtom));
+	private Lambda createConstructorFromLambda(TypeAtom typeAtom, Abstraction abst) throws AppendableException {
+		Pair<Type, Substitution> infered = abst.infer(this.environment, this);
+		Type abstType = infered.first;
+		if (!(abstType instanceof TypeArrow)) {
+			throw new AppendableException("Contstructor " + abst + " infered " + abstType + " expected TypeArrow!");
+		}
+		TypeArrow applAbstType = (TypeArrow) abstType;
+		if (!(applAbstType.ltype instanceof TypeTuple)) {
+			throw new AppendableException(
+					"Constructor " + abst + " infered arguments " + applAbstType.ltype + " expected TypeTuple!");
+		}
+		TypeTuple abstArgType = (TypeTuple) applAbstType.ltype;
+
+		Tuple args = new Tuple(
+				abstArgType.stream().map(x -> new Symbol(NameGenerator.next())).collect(Collectors.toList()));
+
+		return new Lambda(args, abstArgType, new LitComposite(new AbstractionApplication(abst, args), typeAtom));
 	}
 
 	/**
@@ -226,7 +260,7 @@ public class TypeEnvironment {
 	public boolean existType(TypeName typeName) {
 		return this.typeInfo.containsKey(new TypeAtom(typeName, TypeRepresentation.WILDCARD));
 	}
-	
+
 	/**
 	 * Gets name of deconstruction function for given type
 	 * 
@@ -245,8 +279,8 @@ public class TypeEnvironment {
 	 * @throws AppendableException
 	 */
 	public static TypeEnvironment initBasicTypes(Environment env) throws AppendableException {
-		TypeEnvironment typeEnvitonment = new TypeEnvironment();
-		
+		TypeEnvironment typeEnvitonment = new TypeEnvironment(env);
+
 		// Int
 		typeEnvitonment.addType(TypeAtom.TypeInt.name);
 		typeEnvitonment.addRepresentation(TypeAtom.TypeIntNative);
@@ -254,8 +288,7 @@ public class TypeEnvironment {
 		typeEnvitonment.addRepresentation(TypeAtom.TypeIntRoman);
 		typeEnvitonment.addConstructor(TypeAtom.TypeIntRoman, Lambda.makeIdentity(TypeAtom.TypeStringNative), env);
 		typeEnvitonment.addRepresentation(TypeAtom.TypeIntString);
-		typeEnvitonment.addConstructor(TypeAtom.TypeIntString,
-				Lambda.makeIdentity(TypeAtom.TypeStringNative), env);
+		typeEnvitonment.addConstructor(TypeAtom.TypeIntString, Lambda.makeIdentity(TypeAtom.TypeStringNative), env);
 
 		// Bool
 		typeEnvitonment.addType(TypeAtom.TypeBool.name);
@@ -271,35 +304,33 @@ public class TypeEnvironment {
 		typeEnvitonment.addType(TypeAtom.TypeDouble.name);
 		typeEnvitonment.addRepresentation(TypeAtom.TypeDoubleNative);
 		typeEnvitonment.addPrimitiveConstructor(TypeAtom.TypeDoubleNative, env);
-		
+
 		// List
 		typeEnvitonment.addType(TypeAtom.TypeList.name);
 		typeEnvitonment.addRepresentation(TypeAtom.TypeListNative);
 		typeEnvitonment.addConstructor(TypeAtom.TypeListNative, ListNative.constructorEmpty, env);
 		typeEnvitonment.addConstructor(TypeAtom.TypeListNative, ListNative.constructor, env);
+		
+		// List Java Array
+		typeEnvitonment.addRepresentation(JavaArrayList.TypeListJavaArray);
+		typeEnvitonment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructor, env);
 
 		// Conversions
-		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman,
-				Operator.IntNativeToIntRoman);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString,
-				Operator.IntNativeToIntString);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative,
-				Operator.IntRomanToIntNative);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
-				Operator.IntRomanToIntString);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative,
-				Operator.IntStringToIntNative);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman,
-				Operator.IntStringToIntRoman);
-		
+		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, Operator.IntNativeToIntRoman);
+		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, Operator.IntNativeToIntString);
+		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative, Operator.IntRomanToIntNative);
+		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, Operator.IntRomanToIntString);
+		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative, Operator.IntStringToIntNative);
+		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, Operator.IntStringToIntRoman);
+
 		return typeEnvitonment;
 	}
 
-	//TODO Remove?
+	// TODO Remove?
 	/**
 	 * Creates name for conversion
 	 * 
-	 * @param from 
+	 * @param from
 	 * @param to
 	 * @return string with conversion name
 	 */
@@ -322,7 +353,7 @@ public class TypeEnvironment {
 		/**
 		 * Constructors of the type
 		 */
-		private Map<TypeTuple, Lambda> constructors;
+		private Map<TypeTuple, Abstraction> constructors;
 		/**
 		 * Conversions of the type
 		 */
@@ -331,7 +362,7 @@ public class TypeEnvironment {
 		 * Name of deconstruction function
 		 */
 		public final String deconstructionCheckFunctionName;
-		
+
 		/**
 		 * Type environment this typeinfomration belongs to
 		 */
@@ -340,7 +371,7 @@ public class TypeEnvironment {
 		public TypeInformation(TypeAtom type, String checkDeconstructionFunctionName, TypeEnvironment typeEnv) {
 			this.type = type;
 			this.deconstructionCheckFunctionName = checkDeconstructionFunctionName;
-			this.constructors = new TreeMap<TypeTuple, Lambda>();
+			this.constructors = new TreeMap<TypeTuple, Abstraction>();
 			this.conversions = new TreeMap<TypeAtom, Expression>();
 			this.typeEnvironment = typeEnv;
 		}
@@ -352,8 +383,8 @@ public class TypeEnvironment {
 		 * @return Optional of Lambda
 		 * @throws AppendableException if anything goes awry during unification
 		 */
-		private Optional<Lambda> findConstrutor(TypeTuple argsType) throws AppendableException {
-			for (java.util.Map.Entry<TypeTuple, Lambda> entry : this.constructors.entrySet()) {
+		private Optional<Abstraction> findConstrutor(TypeTuple argsType) throws AppendableException {
+			for (java.util.Map.Entry<TypeTuple, Abstraction> entry : this.constructors.entrySet()) {
 				TypeTuple type = entry.getKey();
 				try {
 					// Possible bottleneck?
@@ -381,8 +412,8 @@ public class TypeEnvironment {
 		 *         underlying data
 		 * @throws AppendableException if no such constructor exists
 		 */
-		public Lambda getRawConstructor(TypeTuple argsType) throws AppendableException {
-			Optional<Lambda> o = this.findConstrutor(argsType);
+		public Abstraction getRawConstructor(TypeTuple argsType) throws AppendableException {
+			Optional<Abstraction> o = this.findConstrutor(argsType);
 			if (!o.isPresent()) {
 				throw new UnrecognizedConstructorException(this.type, argsType);
 			}
@@ -397,8 +428,8 @@ public class TypeEnvironment {
 		 * @throws AppendableException if no such constructor exists
 		 */
 		public Lambda getConstructor(TypeTuple argsType) throws AppendableException {
-			Lambda rawConstructor = this.getRawConstructor(argsType);
-			return TypeEnvironment.createConstructorFromLambda(this.type, rawConstructor);
+			Abstraction rawConstructor = this.getRawConstructor(argsType);
+			return this.typeEnvironment.createConstructorFromLambda(this.type, rawConstructor);
 		}
 
 		/**
@@ -407,9 +438,9 @@ public class TypeEnvironment {
 		 * @param constructorLambda constructor lambda expression
 		 * @throws AppendableException
 		 */
-		public void addConstructor(Lambda constructorLambda, Environment env) throws AppendableException {
-			TypeTuple argsType = (TypeTuple) ((TypeArrow) (constructorLambda
-					.infer(env, this.typeEnvironment).first)).ltype;
+		public void addConstructor(Abstraction constructorLambda, Environment env) throws AppendableException {
+			TypeTuple argsType = (TypeTuple) ((TypeArrow) (constructorLambda.infer(env,
+					this.typeEnvironment).first)).ltype;
 
 			if (this.findConstrutor(argsType).isPresent()) {
 				throw new DuplicateTypeConstructorException(this.type, this.constructors.get(argsType),

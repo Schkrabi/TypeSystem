@@ -48,6 +48,7 @@ import velka.lang.parser.SchemeParser;
 import velka.lang.parser.SchemeParser.ExprsContext;
 import velka.lang.semantic.SemanticParser;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.langbase.JavaArrayList;
 import velka.lang.langbase.ListNative;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
@@ -1102,6 +1103,101 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (map2-list-native + (construct List Native 21 (construct List Native 21 (construct List Native))) (construct List Native 21 (construct List Native 21 (construct List Native)))))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (foldl-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native)))))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (foldr-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native)))))");
+	}
+	
+	@Test
+	@DisplayName("Test Java Array List Clojure")
+	void testJavaArrayListClojure() throws Exception {
+		TestComplex.assertIntprtAndCompPrintSameValues("(construct List JavaArray)");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToEndSymbol.toString() + " (construct List JavaArray) 42))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToIndexSymbol.toString() + " (construct List JavaArray) 0 42))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
+				+ "(println (" + JavaArrayList.addAllSymbol + " l1 l2))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
+				+ "(println (" + JavaArrayList.containsSymbol + " l1 42))"
+				+ "(println (" + JavaArrayList.containsSymbol + " l1 84))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
+				+ "(println (" + JavaArrayList.containsAllSymbol + " l1 l2))"
+				+ "(println (" + JavaArrayList.containsAllSymbol + " l2 l1))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(println (" + JavaArrayList.getSymbol + " l1 0))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(println (" + JavaArrayList.indexOfSymbol + " l1 1))"
+				+ "(println (" + JavaArrayList.indexOfSymbol + " l1 42))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(println (" + JavaArrayList.isEmptySymbol + " (construct List JavaArray)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(println (" + JavaArrayList.isEmptySymbol + " l1))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(println (" + JavaArrayList.lastIndexOfSymbol + " l1 1))"
+				+ "(println (" + JavaArrayList.lastIndexOfSymbol + " l1 42))");
+		/*
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(println (" + JavaArrayList.removeSymbol + " l1 0))");
+				*/
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(println (" + JavaArrayList.removeSymbol + " l1 2))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
+				+ "(println (" + JavaArrayList.removeAllSymbol + " l1 l2))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
+				+ "(println (" + JavaArrayList.retainAllSymbol + " l1 l2))"
+				+ "(println (" + JavaArrayList.retainAllSymbol + " l2 l1))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(println (" + JavaArrayList.setSymbol + " l1 0 2))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(println (" + JavaArrayList.sizeSymbol + " l1))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 84)" 
+				+ "(define l2 (" + JavaArrayList.sublistSymbol + " l1 0 1))"
+				+ "(println (" + JavaArrayList.getSymbol + " l2 0))");
 	}
 	
 	private static void assertClojureFunction(String definitions, String testCase, String expectedResult) throws IOException, InterruptedException {
