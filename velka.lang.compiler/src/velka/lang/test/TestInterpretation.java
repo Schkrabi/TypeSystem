@@ -61,6 +61,7 @@ import velka.lang.parser.SchemeParser.ExprsContext;
 import velka.lang.semantic.SemanticParser;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.langbase.JavaArrayList;
+import velka.lang.langbase.JavaLinkedList;
 import velka.lang.langbase.ListNative;
 import velka.lang.exceptions.UserException;
 import velka.lang.types.RepresentationOr;
@@ -1661,6 +1662,165 @@ class TestInterpretation {
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 84)" 
 				+ "(" + JavaArrayList.sublistSymbol + " l1 0 1)", 
 				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
+	}
+	
+	@Test
+	@DisplayName("Test Java Linked List")
+	void testJavaLinkedList() throws Exception {
+		TestInterpretation.testInterpretString("(construct List JavaLinked)",
+				new LitComposite(new LitInteropObject(new LinkedList<Object>()), JavaLinkedList.TypeListJavaLinked));
+
+		LinkedList<Object> l = new LinkedList<Object>();
+		l.add(new LitInteger(42));
+
+		TestInterpretation.testInterpretString(
+				"(" + JavaLinkedList.addToEndSymbol.toString() + " (construct List JavaLinked) 42)", LitBoolean.TRUE);
+		TestInterpretation.testInterpretString(
+				"(" + JavaLinkedList.addToIndexSymbol.toString() + " (construct List JavaLinked) 0 42)",
+				Expression.EMPTY_EXPRESSION);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+				+ "(define l2 (construct List JavaLinked))"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaLinkedList.addAllSymbol + " l1 l2)",
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaLinkedList.containsSymbol + " l1 42)",
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)"
+				+ "(" + JavaLinkedList.containsSymbol + " l1 84)",
+				LitBoolean.FALSE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+				+ "(define l2 (construct List JavaLinked))"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaLinkedList.containsAllSymbol + " l1 l2)",
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+				+ "(define l2 (construct List JavaLinked))"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 42)"
+				+ "(" + JavaLinkedList.containsAllSymbol + " l1 l2)",
+				LitBoolean.FALSE);
+		
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaLinkedList.getSymbol + " l1 0)",
+				new LitInteger(1));
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaLinkedList.indexOfSymbol + " l1 1)",
+				new LitInteger(0));
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaLinkedList.indexOfSymbol + " l1 42)",
+				new LitInteger(-1));
+		
+		TestInterpretation.testInterpretString(
+				"(" + JavaLinkedList.isEmptySymbol + " (construct List JavaLinked))", 
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaLinkedList.isEmptySymbol + " l1)", 
+				LitBoolean.FALSE);
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaLinkedList.lastIndexOfSymbol + " l1 1)",
+				new LitInteger(0));
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaLinkedList.lastIndexOfSymbol + " l1 42)",
+				new LitInteger(-1));
+
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaLinkedList.removeSymbol + " l1 2)", 
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+				+ "(define l2 (construct List JavaLinked))"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaLinkedList.removeAllSymbol + " l1 l2)",
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+				+ "(define l2 (construct List JavaLinked))"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 4)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 5)"
+				+ "(" + JavaLinkedList.removeAllSymbol + " l2 l1)",
+				LitBoolean.FALSE);
+		
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+				+ "(define l2 (construct List JavaLinked))"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaLinkedList.retainAllSymbol + " l1 l2)",
+				LitBoolean.TRUE);
+		
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+				+ "(define l2 (construct List JavaLinked))"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaLinkedList.retainAllSymbol + " l2 l1)",
+				LitBoolean.FALSE);
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaLinkedList.setSymbol + " l1 0 2)", 
+				new LitInteger(1));
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaLinkedList.sizeSymbol + " l1)", 
+				new LitInteger(2));
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 84)" 
+				+ "(" + JavaLinkedList.sublistSymbol + " l1 0 1)", 
+				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
 	}
 
 	private static Expression parseString(String s) throws AppendableException {

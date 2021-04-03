@@ -7,6 +7,7 @@ import velka.lang.abstraction.Operator;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Symbol;
 import velka.lang.langbase.JavaArrayList;
+import velka.lang.langbase.JavaLinkedList;
 import velka.lang.types.TypeAtom;
 import velka.lang.util.AppendableException;
 import velka.lang.exceptions.UnboundVariableException;
@@ -217,6 +218,7 @@ public class Environment implements Comparable<Environment> {
 				Operator.IntStringToIntRoman);
 		
 		JavaArrayList.initializeInEnvironment(env);
+		JavaLinkedList.initializeInEnvironment(env);
 		
 		return env;
 	}

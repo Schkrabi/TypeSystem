@@ -21,6 +21,7 @@ import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
 import velka.lang.interpretation.Environment;
 import velka.lang.langbase.JavaArrayList;
+import velka.lang.langbase.JavaLinkedList;
 import velka.lang.langbase.ListNative;
 import velka.lang.literal.LitComposite;
 import velka.lang.exceptions.ConversionException;
@@ -314,6 +315,10 @@ public class TypeEnvironment {
 		// List Java Array
 		typeEnvitonment.addRepresentation(JavaArrayList.TypeListJavaArray);
 		typeEnvitonment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructor, env);
+		
+		// List Java Linked
+		typeEnvitonment.addRepresentation(JavaLinkedList.TypeListJavaLinked);
+		typeEnvitonment.addConstructor(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.constructor, env);
 
 		// Conversions
 		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, Operator.IntNativeToIntRoman);

@@ -1,6 +1,6 @@
 package velka.lang.langbase;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Optional;
 
 import velka.lang.abstraction.Operator;
@@ -26,12 +26,13 @@ import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
 
 /**
- * This class contains utilities to work with ArrayList in velka
+ * 
+ * This class contains utilities to work with LinkedList in velka
  * 
  * @author Mgr. Radomir Skrabal
  *
  */
-public class JavaArrayList {
+public class JavaLinkedList {
 
 	/**
 	 * Type Variable used for list elements
@@ -39,9 +40,9 @@ public class JavaArrayList {
 	private static final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 	/**
-	 * Type of java array list in velka
+	 * Type of java linked list in velka
 	 */
-	public static final TypeAtom TypeListJavaArray = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaArray"));
+	public static final TypeAtom TypeListJavaLinked = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaLinked"));
 
 	/**
 	 * Constructor
@@ -50,28 +51,28 @@ public class JavaArrayList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [] (java.util.ArrayList.))";
+			String code = "(fn [] (java.util.LinkedList.))";
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
 				Optional<Expression> rankingFunction) throws AppendableException {
-			Expression e = new LitInteropObject(new ArrayList<Object>());
+			Expression e = new LitInteropObject(new LinkedList<Object>());
 			return e;
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(TypeTuple.EMPTY_TUPLE, JavaArrayList.TypeListJavaArray);
+			TypeArrow type = new TypeArrow(TypeTuple.EMPTY_TUPLE, JavaLinkedList.TypeListJavaLinked);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 	};
-
+	
 	/**
 	 * Symbol for boolean add(E e)
 	 */
-	public static final Symbol addToEndSymbol = new Symbol("java-array-list-add-to-end");
+	public static final Symbol addToEndSymbol = new Symbol("java-linked-list-add-to-end");
 
 	/**
 	 * Operator for boolean add(E e)
@@ -95,7 +96,7 @@ public class JavaArrayList {
 			Expression e = args.get(1);
 
 			@SuppressWarnings("unchecked")
-			ArrayList<Object> l = (ArrayList<Object>) list.javaObject;
+			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
 			l.add(e);
 
 			return LitBoolean.TRUE;
@@ -103,17 +104,17 @@ public class JavaArrayList {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, JavaArrayList.A),
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.A),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for void add(int index, E element)
 	 */
-	public static final Symbol addToIndexSymbol = new Symbol("java-array-list-add-to-index");
+	public static final Symbol addToIndexSymbol = new Symbol("java-linked-list-add-to-index");
 
 	/**
 	 * Operator for void add(int index, E element)
@@ -140,7 +141,7 @@ public class JavaArrayList {
 			Expression e = args.get(2);
 
 			@SuppressWarnings("unchecked")
-			ArrayList<Object> l = (ArrayList<Object>) list.javaObject;
+			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
 			l.add(index.value, e);
 
 			return Expression.EMPTY_EXPRESSION;
@@ -149,17 +150,17 @@ public class JavaArrayList {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative, JavaArrayList.A),
+					new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative, JavaLinkedList.A),
 					TypeTuple.EMPTY_TUPLE);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for boolean addAll(Collection<? extends E> c)
 	 */
-	public static final Symbol addAllSymbol = new Symbol("java-array-list-add-all");
+	public static final Symbol addAllSymbol = new Symbol("java-linked-list-add-all");
 
 	/**
 	 * operator for boolean addAll(Collection<? extends E> c)
@@ -186,9 +187,9 @@ public class JavaArrayList {
 			LitInteropObject collection = (LitInteropObject) lc2.value;
 
 			@SuppressWarnings("unchecked")
-			ArrayList<Object> l = (ArrayList<Object>) list.javaObject;
+			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
 			@SuppressWarnings("unchecked")
-			ArrayList<Object> c = (ArrayList<Object>) collection.javaObject;
+			LinkedList<Object> c = (LinkedList<Object>) collection.javaObject;
 
 			if (l.addAll(c)) {
 				return LitBoolean.TRUE;
@@ -200,17 +201,17 @@ public class JavaArrayList {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, JavaArrayList.TypeListJavaArray),
+					new TypeTuple(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for boolean contains(Object o)
 	 */
-	public static final Symbol containsSymbol = new Symbol("java-array-list-contains");
+	public static final Symbol containsSymbol = new Symbol("java-linked-list-contains");
 
 	/**
 	 * Operator for boolean contains(Object o)
@@ -233,7 +234,7 @@ public class JavaArrayList {
 			LitInteropObject list = (LitInteropObject) lc.value;
 
 			@SuppressWarnings("unchecked")
-			ArrayList<Object> l = (ArrayList<Object>) list.javaObject;
+			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
 
 			Expression e = args.get(1);
 
@@ -246,16 +247,16 @@ public class JavaArrayList {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeBoolNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for boolean containsAll(Collection<?> c)
 	 */
-	public static final Symbol containsAllSymbol = new Symbol("java-array-list-contains-all");
+	public static final Symbol containsAllSymbol = new Symbol("java-linked-list-contains-all");
 
 	/**
 	 * Operator for boolean containsAll(Collection<?> c)
@@ -282,9 +283,9 @@ public class JavaArrayList {
 			LitInteropObject collection = (LitInteropObject) lc2.value;
 
 			@SuppressWarnings("unchecked")
-			ArrayList<Object> l = (ArrayList<Object>) list.javaObject;
+			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
 			@SuppressWarnings("unchecked")
-			ArrayList<Object> c = (ArrayList<Object>) collection.javaObject;
+			LinkedList<Object> c = (LinkedList<Object>) collection.javaObject;
 
 			if (l.containsAll(c)) {
 				return LitBoolean.TRUE;
@@ -296,17 +297,17 @@ public class JavaArrayList {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, JavaArrayList.TypeListJavaArray),
+					new TypeTuple(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for E get(int index)
 	 */
-	public static final Symbol getSymbol = new Symbol("java-array-list-get");
+	public static final Symbol getSymbol = new Symbol("java-linked-list-get");
 
 	/**
 	 * Operator for E get(int index)
@@ -330,23 +331,23 @@ public class JavaArrayList {
 			LitInteger index = (LitInteger) args.get(1);
 
 			@SuppressWarnings("unchecked")
-			ArrayList<Expression> l = (ArrayList<Expression>) list.javaObject;
+			LinkedList<Expression> l = (LinkedList<Expression>) list.javaObject;
 
 			return l.get(index.value);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative), A);
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for int indexOf(Object o)
 	 */
-	public static final Symbol indexOfSymbol = new Symbol("java-array-list-index-of");
+	public static final Symbol indexOfSymbol = new Symbol("java-linked-list-index-of");
 
 	/**
 	 * Operator for int indexOf(Object o)
@@ -371,7 +372,7 @@ public class JavaArrayList {
 			Expression e = args.get(1);
 
 			@SuppressWarnings("unchecked")
-			ArrayList<Expression> l = (ArrayList<Expression>) list.javaObject;
+			LinkedList<Expression> l = (LinkedList<Expression>) list.javaObject;
 
 			int ret = l.indexOf(e);
 
@@ -380,16 +381,16 @@ public class JavaArrayList {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for boolean isEmpty()
 	 */
-	public static final Symbol isEmptySymbol = new Symbol("java-array-list-is-empty");
+	public static final Symbol isEmptySymbol = new Symbol("java-linked-list-is-empty");
 
 	/**
 	 * Operator for boolean isEmpty()
@@ -412,7 +413,7 @@ public class JavaArrayList {
 			LitInteropObject list = (LitInteropObject) lc.value;
 
 			@SuppressWarnings("unchecked")
-			ArrayList<Expression> l = (ArrayList<Expression>) list.javaObject;
+			LinkedList<Expression> l = (LinkedList<Expression>) list.javaObject;
 
 			if (l.isEmpty()) {
 				return LitBoolean.TRUE;
@@ -422,16 +423,16 @@ public class JavaArrayList {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray), TypeAtom.TypeBoolNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for int lastIndexOf(E e)
 	 */
-	public static final Symbol lastIndexOfSymbol = new Symbol("java-array-list-last-index-of");
+	public static final Symbol lastIndexOfSymbol = new Symbol("java-linked-list-last-index-of");
 
 	/**
 	 * Operator for int lastIndexOf(E e)
@@ -456,7 +457,7 @@ public class JavaArrayList {
 			Expression e = args.get(1);
 
 			@SuppressWarnings("unchecked")
-			ArrayList<Expression> l = (ArrayList<Expression>) list.javaObject;
+			LinkedList<Expression> l = (LinkedList<Expression>) list.javaObject;
 
 			int ret = l.lastIndexOf(e);
 
@@ -465,48 +466,16 @@ public class JavaArrayList {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
-	/*
-	 * //E remove(int index) public static final Symbol removeSymbol = new
-	 * Symbol("java-array-list-remove"); public static final Operator remove = new
-	 * Operator() {
-	 * 
-	 * @Override protected String toClojureOperator(Environment env, TypeEnvironment
-	 * typeEnv) throws AppendableException { String code =
-	 * "(fn [_list _index] (.remove (first _list) ^Integer (first _index)))"; return
-	 * code; }
-	 * 
-	 * @Override protected Expression doSubstituteAndEvaluate(Tuple args,
-	 * Environment env, TypeEnvironment typeEnv, Optional<Expression>
-	 * rankingFunction) throws AppendableException { // Need to extract LitComposite
-	 * carrying type info first LitComposite lc = (LitComposite) args.get(0); // Now
-	 * I can get to LitInteropObject carrying java.util.ArrayList LitInteropObject
-	 * list = (LitInteropObject) lc.value;
-	 * 
-	 * LitInteger index = (LitInteger) args.get(1);
-	 * 
-	 * @SuppressWarnings("rawtypes") ArrayList al = (ArrayList) list.javaObject;
-	 * 
-	 * Expression e = (Expression) al.remove(index.value); return e; }
-	 * 
-	 * @Override public Pair<Type, Substitution> infer(Environment env,
-	 * TypeEnvironment typeEnv) throws AppendableException { TypeArrow type = new
-	 * TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray,
-	 * TypeAtom.TypeIntNative), A); return new Pair<Type, Substitution>(type,
-	 * Substitution.EMPTY); }
-	 * 
-	 * };
-	 */
-
+	
 	/**
 	 * Symbol for boolean remove(Object o)
 	 */
-	public static final Symbol removeSymbol = new Symbol("java-array-list-remove");
+	public static final Symbol removeSymbol = new Symbol("java-linked-list-remove");
 
 	/**
 	 * Operator for boolean remove(Object o)
@@ -531,7 +500,7 @@ public class JavaArrayList {
 			Expression o = args.get(1);
 
 			@SuppressWarnings("rawtypes")
-			ArrayList al = (ArrayList) list.javaObject;
+			LinkedList al = (LinkedList) list.javaObject;
 
 			if (al.remove(o)) {
 				return LitBoolean.TRUE;
@@ -541,17 +510,17 @@ public class JavaArrayList {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeBoolNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A), TypeAtom.TypeBoolNative);
 			;
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * symbol for boolean removeAll(Collection<?> c)
 	 */
-	public static final Symbol removeAllSymbol = new Symbol("java-array-list-remove-all");
+	public static final Symbol removeAllSymbol = new Symbol("java-linked-list-remove-all");
 
 	/**
 	 * Operator for boolean removeAll(Collection<?> c)
@@ -580,9 +549,9 @@ public class JavaArrayList {
 			LitInteropObject ec = (LitInteropObject) lc2.value;
 
 			@SuppressWarnings("rawtypes")
-			ArrayList al = (ArrayList) list.javaObject;
+			LinkedList al = (LinkedList) list.javaObject;
 			@SuppressWarnings("rawtypes")
-			ArrayList c = (ArrayList) ec.javaObject;
+			LinkedList c = (LinkedList) ec.javaObject;
 
 			if (al.removeAll(c)) {
 				return LitBoolean.TRUE;
@@ -593,17 +562,17 @@ public class JavaArrayList {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, JavaArrayList.TypeListJavaArray),
+					new TypeTuple(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for boolean retainAll(Collection<?> c)
 	 */
-	public static final Symbol retainAllSymbol = new Symbol("java-array-list-retain-all");
+	public static final Symbol retainAllSymbol = new Symbol("java-linked-list-retain-all");
 	
 	/**
 	 * Operator for boolean retainAll(Collection<?> c)
@@ -632,9 +601,9 @@ public class JavaArrayList {
 			LitInteropObject ec = (LitInteropObject) lc2.value;
 
 			@SuppressWarnings("rawtypes")
-			ArrayList al = (ArrayList) list.javaObject;
+			LinkedList al = (LinkedList) list.javaObject;
 			@SuppressWarnings("rawtypes")
-			ArrayList c = (ArrayList) ec.javaObject;
+			LinkedList c = (LinkedList) ec.javaObject;
 
 			if (al.retainAll(c)) {
 				return LitBoolean.TRUE;
@@ -645,17 +614,17 @@ public class JavaArrayList {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, JavaArrayList.TypeListJavaArray),
+					new TypeTuple(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for E set(int index, E element)
 	 */
-	public static final Symbol setSymbol = new Symbol("java-array-list-set");
+	public static final Symbol setSymbol = new Symbol("java-linked-list-set");
 
 	/**
 	 * Operator for E set(int index, E element)
@@ -680,24 +649,24 @@ public class JavaArrayList {
 			LitInteger index = (LitInteger) args.get(1);
 			Expression element = args.get(2);
 
-			ArrayList<Expression> al = (ArrayList<Expression>) list.javaObject;
+			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
 
 			return al.set(index.value, element);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative, A),
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
 					A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for int size()
 	 */
-	public static final Symbol sizeSymbol = new Symbol("java-array-list-size");
+	public static final Symbol sizeSymbol = new Symbol("java-linked-list-size");
 
 	/**
 	 * Operator for int size()
@@ -719,7 +688,7 @@ public class JavaArrayList {
 			LitInteropObject list = (LitInteropObject) lc.value;
 
 			@SuppressWarnings("unchecked")
-			ArrayList<Expression> al = (ArrayList<Expression>) list.javaObject;
+			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
 
 			int size = al.size();
 
@@ -728,16 +697,16 @@ public class JavaArrayList {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
 	 * Symbol for List<E> subList(int fromIndex, int toIndex)
 	 */
-	public static final Symbol sublistSymbol = new Symbol("java-array-list-sublist");
+	public static final Symbol sublistSymbol = new Symbol("java-linked-list-sublist");
 
 	/**
 	 * Operator for List<E> subList(int fromIndex, int toIndex)
@@ -747,7 +716,7 @@ public class JavaArrayList {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_list _from _to] " + LitComposite.clojureValueToClojureLiteral(
-					"(java.util.ArrayList. (.subList (first _list) (first _from) (first _to)))", JavaArrayList.TypeListJavaArray) + ")";
+					"(java.util.LinkedList. (.subList (first _list) (first _from) (first _to)))", JavaLinkedList.TypeListJavaLinked) + ")";
 			return code;
 		}
 
@@ -763,25 +732,25 @@ public class JavaArrayList {
 			LitInteger to = (LitInteger) args.get(2);
 
 			@SuppressWarnings("unchecked")
-			ArrayList<Expression> al = (ArrayList<Expression>) list.javaObject;
+			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
 
-			ArrayList<Expression> sublist = new ArrayList<Expression>(al.subList(from.value, to.value));
+			LinkedList<Expression> sublist = new LinkedList<Expression>(al.subList(from.value, to.value));
 
-			return new LitComposite(new LitInteropObject(sublist), JavaArrayList.TypeListJavaArray);
+			return new LitComposite(new LitInteropObject(sublist), JavaLinkedList.TypeListJavaLinked);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					JavaArrayList.TypeListJavaArray);
+					new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					JavaLinkedList.TypeListJavaLinked);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
 	};
-
+	
 	/**
-	 * Initializes values for java array list in environment
+	 * Initializes values for java linked list in environment
 	 * @param env initialized environment
 	 */
 	public static void initializeInEnvironment(Environment env) {
