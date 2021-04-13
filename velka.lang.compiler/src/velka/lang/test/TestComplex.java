@@ -1199,6 +1199,33 @@ class TestComplex {
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 84)" 
 				+ "(define l2 (" + JavaArrayList.sublistSymbol + " l1 0 1))"
 				+ "(println (" + JavaArrayList.getSymbol + " l2 0))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 84)" 
+				+ "(define l2 (" + JavaArrayList.mapSymbol + " l1 (lambda (x) (* x 2))))"
+				+ "(println (" + JavaArrayList.getSymbol + " l2 0))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 3)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
+				+ "(define l3 (" + JavaArrayList.map2Symbol + " l1 l2 (lambda (x y) (+ x y))))"
+				+ "(println (" + JavaArrayList.getSymbol + " l3 0))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 21)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)" 
+				+ "(println (" + JavaArrayList.foldlSymbol + " + 0 l1))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 4)"
+				+ "(println (" + JavaArrayList.foldrSymbol + " / 16 l1))");
 	}
 	
 	@Test

@@ -1662,6 +1662,33 @@ class TestInterpretation {
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 84)" 
 				+ "(" + JavaArrayList.sublistSymbol + " l1 0 1)", 
 				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
+		
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 21)"  
+				+ "(" + JavaArrayList.mapSymbol + " l1 (lambda (x) (* 2 x)))", 
+				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
+		
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+				+ "(define l2 (construct List JavaArray))"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 21)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l2 21)"
+				+ "(" + JavaArrayList.map2Symbol + " l1 l2 (lambda (x y) (+ x y)))",
+				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 21)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)" 
+				+ "(" + JavaArrayList.foldlSymbol + " + 0 l1)", 
+				new LitInteger(63));
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaArray))\n" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol + " l1 4)"
+				+ "(" + JavaArrayList.foldrSymbol + " / 16 l1)", 
+				new LitInteger(2));
 	}
 	
 	@Test
