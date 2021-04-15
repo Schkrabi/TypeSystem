@@ -1,12 +1,20 @@
 package velka.lang.langbase;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import velka.lang.abstraction.Abstraction;
 import velka.lang.abstraction.Operator;
+import velka.lang.application.AbstractionApplication;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitBoolean;
@@ -24,6 +32,8 @@ import velka.lang.types.TypeVariable;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
+import velka.lang.util.ThrowingBinaryOperator;
+import velka.lang.util.ThrowingFunction;
 
 /**
  * 
@@ -38,6 +48,16 @@ public class JavaLinkedList {
 	 * Type Variable used for list elements
 	 */
 	private static final TypeVariable A = new TypeVariable(NameGenerator.next());
+	
+	/**
+	 * Type Variable used for list elements
+	 */
+	private static final TypeVariable B = new TypeVariable(NameGenerator.next());
+
+	/**
+	 * Type Variable used for list elements
+	 */
+	private static final TypeVariable C = new TypeVariable(NameGenerator.next());
 
 	/**
 	 * Type of java linked list in velka
@@ -750,6 +770,245 @@ public class JavaLinkedList {
 	};
 	
 	/**
+	 * Symbol for List<T> map(Function<T, E>)
+	 */
+	public static final Symbol mapSymbol = new Symbol("java-linked-list-map");
+
+	/**
+	 * Operator for List<T> map(Function<T, E>)
+	 */
+	public static final Operator map = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_list _abst] "
+					+ LitComposite
+							.clojureValueToClojureLiteral("(java.util.LinkedList. (map (fn [_e] ("
+									+ ClojureCodeGenerator.eapplyClojureSymbol + " _abst "
+									+ ClojureCodeGenerator.addTypeMetaInfo_str("[_e]",
+											"(velka.lang.types.TypeTuple. [("
+													+ ClojureCodeGenerator.getTypeClojureSymbol + " _e)])")
+									+ ")) (first _list)))", JavaArrayList.TypeListJavaArray)
+					+ ")";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			// Need to extract LitComposite carrying type info first
+			LitComposite lc = (LitComposite) args.get(0);
+			// Now I can get to LitInteropObject carrying java.util.ArrayList
+			LitInteropObject list = (LitInteropObject) lc.value;
+
+			Abstraction abst = (Abstraction) args.get(1);
+
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
+			LinkedList<Expression> rslt = null;
+			try {
+				rslt = new LinkedList<Expression>(al.stream().map(ThrowingFunction.wrapper(e -> {
+					AbstractionApplication appl = new AbstractionApplication(abst, new Tuple(e));
+					return appl.interpret(env, typeEnv);
+				})).collect(Collectors.toList()));
+			} catch (RuntimeException re) {
+				if (re.getCause() instanceof AppendableException) {
+					AppendableException e = (AppendableException) re.getCause();
+					throw e;
+				}
+				throw re;
+			}
+
+			return new LitComposite(new LitInteropObject(rslt), JavaLinkedList.TypeListJavaLinked);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(
+					new TypeTuple(JavaLinkedList.TypeListJavaLinked, new TypeArrow(new TypeTuple(A), B)),
+					JavaLinkedList.TypeListJavaLinked);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+	};
+	
+	/**
+	 * Symbol for List<T> map2(List<E2> other, Function<T, E1, E2>)
+	 */
+	public static final Symbol map2Symbol = new Symbol("java-linked-list-map2");
+
+	/**
+	 * Operator for List<T> map2(List<E2> other, Function<T, E1, E2>)
+	 */
+	public static final Operator map2 = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_list1 _list2 _abst] " + LitComposite.clojureValueToClojureLiteral(
+					"(java.util.LinkedList. (map (fn [_e1 _e2] (" + ClojureCodeGenerator.eapplyClojureSymbol + " _abst "
+							+ ClojureCodeGenerator.addTypeMetaInfo_str("[_e1 _e2]",
+									"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol
+											+ " _e1) (" + ClojureCodeGenerator.getTypeClojureSymbol + " _e2)])")
+							+ ")) (first _list1) (first _list2)))",
+					JavaLinkedList.TypeListJavaLinked) + ")";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			// Need to extract LitComposite carrying type info first
+			LitComposite lc = (LitComposite) args.get(0);
+			// Now I can get to LitInteropObject carrying java.util.ArrayList
+			LitInteropObject list = (LitInteropObject) lc.value;
+
+			LitComposite lc2 = (LitComposite) args.get(1);
+			LitInteropObject list2 = (LitInteropObject) lc2.value;
+
+			Abstraction abst = (Abstraction) args.get(2);
+
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> l1 = (LinkedList<Expression>) list.javaObject;
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> l2 = (LinkedList<Expression>) list2.javaObject;
+			LinkedList<Expression> rslt = new LinkedList<Expression>();
+
+			Iterator<Expression> i1 = l1.iterator();
+			Iterator<Expression> i2 = l2.iterator();
+
+			while (i1.hasNext() && i2.hasNext()) {
+				Expression e1 = i1.next();
+				Expression e2 = i2.next();
+
+				AbstractionApplication appl = new AbstractionApplication(abst, new Tuple(e1, e2));
+
+				rslt.add(appl.interpret(env, typeEnv));
+			}
+
+			return new LitComposite(new LitInteropObject(rslt), JavaLinkedList.TypeListJavaLinked);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked,
+					JavaLinkedList.TypeListJavaLinked, new TypeArrow(new TypeTuple(A, B), C)),
+					JavaLinkedList.TypeListJavaLinked);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+	};
+	
+	/**
+	 * Symbol for T foldl(Function<T, E, T>)
+	 */
+	public static final Symbol foldlSymbol = new Symbol("java-linked-list-foldl");
+	
+	/**
+	 * Operator for T foldl(Function<T, E, T>)
+	 */
+	public static final Operator foldl = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
+					+ ClojureCodeGenerator.eapplyClojureSymbol + " _abst "
+					+ ClojureCodeGenerator.addTypeMetaInfo_str("[_agg _element]",
+							"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol
+									+ " _agg) (" + ClojureCodeGenerator.getTypeClojureSymbol + " _element)])")
+					+ ")) _term (first _list)))";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			Abstraction abst = (Abstraction) args.get(0);
+			Expression terminator = args.get(1);
+			LitComposite lc = (LitComposite) args.get(2);
+			LitInteropObject io = (LitInteropObject) lc.value;
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> list = (LinkedList<Expression>) io.javaObject;
+
+			Expression rslt = Expression.EMPTY_EXPRESSION;
+			try {
+				rslt = list.stream().reduce(terminator, ThrowingBinaryOperator.wrapper((agg, element) -> {
+					AbstractionApplication app = new AbstractionApplication(abst, new Tuple(agg, element));
+					return app.interpret(env, typeEnv);
+				}));
+			} catch (RuntimeException re) {
+				if (re.getCause() instanceof AppendableException) {
+					AppendableException e = (AppendableException) re.getCause();
+					throw e;
+				}
+				throw re;
+			}
+
+			return rslt;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(Arrays
+					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, JavaLinkedList.TypeListJavaLinked)),
+					A);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+	};
+	
+	/**
+	 * Symbol for T foldr(Function<T, E, T>)
+	 */
+	public static final Symbol foldrSymbol = new Symbol("java-linked-list-foldr");
+	
+	/**
+	 * Operator for T foldr(Function<T, E, T>)
+	 */
+	public static final Operator foldr = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
+					+ ClojureCodeGenerator.eapplyClojureSymbol + " _abst "
+					+ ClojureCodeGenerator.addTypeMetaInfo_str("[_agg _element]",
+							"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol
+									+ " _agg) (" + ClojureCodeGenerator.getTypeClojureSymbol + " _element)])")
+					+ ")) _term (reverse (first _list))))";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			Abstraction abst = (Abstraction) args.get(0);
+			Expression terminator = args.get(1);
+			LitComposite lc = (LitComposite) args.get(2);
+			LitInteropObject io = (LitInteropObject) lc.value;
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> list = (LinkedList<Expression>) io.javaObject;
+
+			Expression agg = terminator;
+			ListIterator<Expression> i = list.listIterator(list.size());
+			while(i.hasPrevious()) {
+				Expression element = i.previous();
+				AbstractionApplication app = new AbstractionApplication(abst, new Tuple(agg, element));
+				agg = app.interpret(env, typeEnv);
+			}
+
+			return agg;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(Arrays
+					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, JavaLinkedList.TypeListJavaLinked)),
+					A);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
+	
+	/**
 	 * Initializes values for java linked list in environment
 	 * @param env initialized environment
 	 */
@@ -769,5 +1028,9 @@ public class JavaLinkedList {
 		env.put(setSymbol, set);
 		env.put(sizeSymbol, size);
 		env.put(sublistSymbol, sublist);
+		env.put(mapSymbol, map);
+		env.put(map2Symbol, map2);
+		env.put(foldlSymbol, foldl);
+		env.put(foldrSymbol, foldr);
 	}
 }

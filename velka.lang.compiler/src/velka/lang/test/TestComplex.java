@@ -1317,6 +1317,33 @@ class TestComplex {
 				+ "(" + JavaLinkedList.addToEndSymbol + " l1 84)" 
 				+ "(define l2 (" + JavaLinkedList.sublistSymbol + " l1 0 1))"
 				+ "(println (" + JavaLinkedList.getSymbol + " l2 0))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 84)" 
+				+ "(define l2 (" + JavaLinkedList.mapSymbol + " l1 (lambda (x) (* x 2))))"
+				+ "(println (" + JavaLinkedList.getSymbol + " l2 0))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
+				+ "(define l2 (construct List JavaLinked))"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
+				+ "(define l3 (" + JavaLinkedList.map2Symbol + " l1 l2 (lambda (x y) (+ x y))))"
+				+ "(println (" + JavaLinkedList.getSymbol + " l3 0))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 21)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)" 
+				+ "(println (" + JavaLinkedList.foldlSymbol + " + 0 l1))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 4)"
+				+ "(println (" + JavaLinkedList.foldrSymbol + " / 16 l1))");
 	}
 	
 	private static void assertClojureFunction(String definitions, String testCase, String expectedResult) throws IOException, InterruptedException {

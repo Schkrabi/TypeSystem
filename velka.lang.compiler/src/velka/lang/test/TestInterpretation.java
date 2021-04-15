@@ -1848,6 +1848,33 @@ class TestInterpretation {
 				+ "(" + JavaLinkedList.addToEndSymbol + " l1 84)" 
 				+ "(" + JavaLinkedList.sublistSymbol + " l1 0 1)", 
 				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
+		
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 21)"  
+				+ "(" + JavaLinkedList.mapSymbol + " l1 (lambda (x) (* 2 x)))", 
+				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
+		
+		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+				+ "(define l2 (construct List JavaLinked))"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 21)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l2 21)"
+				+ "(" + JavaLinkedList.map2Symbol + " l1 l2 (lambda (x y) (+ x y)))",
+				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 21)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)" 
+				+ "(" + JavaLinkedList.foldlSymbol + " + 0 l1)", 
+				new LitInteger(63));
+		
+		TestInterpretation.testInterpretString(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l1 4)"
+				+ "(" + JavaLinkedList.foldrSymbol + " / 16 l1)", 
+				new LitInteger(2));
 	}
 
 	private static Expression parseString(String s) throws AppendableException {
