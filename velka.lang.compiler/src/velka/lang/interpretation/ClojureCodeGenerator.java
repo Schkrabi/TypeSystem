@@ -3,7 +3,7 @@ package velka.lang.interpretation;
 import java.util.Iterator;
 import java.util.List;
 
-import velka.lang.abstraction.Operator;
+import velka.lang.abstraction.ConversionOperators;
 import velka.lang.expression.Expression;
 import velka.lang.langbase.ListNative;
 import velka.lang.types.Type;
@@ -118,17 +118,17 @@ public class ClojureCodeGenerator {
 			"(def ^:dynamic " + atomicConversionMapClojureSymbol + 
 				"{" + 
 					makeAtomicConversionRecord(TypeAtom.TypeIntNative, TypeAtom.TypeIntString,
-							Operator.IntNativeToIntString.clojureDef()) + "\n"
+							ConversionOperators.IntNativeToIntString.clojureDef()) + "\n"
 					+ makeAtomicConversionRecord(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman,
-							Operator.IntNativeToIntRoman.clojureDef()) + "\n"
+							ConversionOperators.IntNativeToIntRoman.clojureDef()) + "\n"
 					+ makeAtomicConversionRecord(TypeAtom.TypeIntString, TypeAtom.TypeIntNative,
-							Operator.IntStringToIntNative.clojureDef()) + "\n"
+							ConversionOperators.IntStringToIntNative.clojureDef()) + "\n"
 					+ makeAtomicConversionRecord(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman,
-							Operator.IntStringToIntRoman.clojureDef()) + "\n"
+							ConversionOperators.IntStringToIntRoman.clojureDef()) + "\n"
 					+ makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative,
-							Operator.IntRomanToIntNative.clojureDef()) + "\n"
+							ConversionOperators.IntRomanToIntNative.clojureDef()) + "\n"
 					+ makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
-							Operator.IntRomanToIntString.clojureDef())
+							ConversionOperators.IntRomanToIntString.clojureDef())
 					+
 				"})";
 	
@@ -144,6 +144,19 @@ public class ClojureCodeGenerator {
 	 * Symbol for convert-fn clojure function
 	 */
 	public static String convertFnClojureSymbol = "CONVERT-FN" + NameGenerator.next();
+	
+	/**
+	 * Symbol for convert-set clojure function
+	 */
+	public static String convertRepOrClojureSymbol = "CONVERT-SET" + NameGenerator.next();
+	/**
+	 * Symbol for convert-to-set clojure function
+	 */
+	public static String convertToRepOrClojureSymbol = "CONVERT-TO-SET" + NameGenerator.next();
+	/**
+	 * Symbol for convert-from-set clojure function
+	 */
+	public static String convertFromRepOrClojureSymbol = "CONVERT-FROM-SET" + NameGenerator.next();
 	/**
 	 * Symbol for convert clojure function
 	 */
@@ -177,10 +190,37 @@ public class ClojureCodeGenerator {
 			"(defn " + convertFnClojureSymbol + " [to arg]\n" +
 			"    (let [from (" + getTypeClojureSymbol + " arg)\n" +
 			"          impl " + addTypeMetaInfo_str("(fn [& a] (" + convertClojureSymbol + " (.rtype to)\n" +
-			"                                (apply (arg nil) (" + convertClojureSymbol + " (.ltype from) " + addTypeMetaInfo_str("a", "(.ltype to)") + "))))", "to") + "]\n" +
+			"                                (apply (arg nil) " + 
+			"										(" + convertClojureSymbol + 
+			" 											(.ltype from) " + 
+														addTypeMetaInfo_str("a", "(.ltype to)") + "))))", "to") + "]\n" +
 			addTypeMetaInfo_str(
 			"        (fn ([args] impl)\n" +
 			"            ([args ranking-fn] impl))", "to") + "))";
+	
+	/**
+	 * Definition for convert-set clojure function
+	 */
+	public static String convertRepOrClojureDef = 
+			"(defn " + convertRepOrClojureSymbol + " [to arg]\n" + 
+			"	(let [from (" + getTypeClojureSymbol + " arg)\n" +
+			"		  reps (.getRepresentations from)]\n" +
+			"		(if (some identity \n" + //~ (apply or...
+			"				(map (fn [t] (try (velka.lang.types.Type/unifyTypes t to) (catch velka.lang.types.TypesDoesNotUnifyException e false)))\n" +
+			"					reps))\n" +
+			"			arg (throw (Throwable. (str \"Conversion from \" from \" to \" to \" does not exists.\"))))))";
+	
+	/**
+	 * Definition for convert-to-set clojure function
+	 */
+	public static String convertToRepOrClojureDef = 
+			"(defn " + convertToRepOrClojureSymbol + " [to arg]\n" + 
+					"	(let [from (" + getTypeClojureSymbol + " arg)\n" +
+					"		  reps (.getRepresentations to)]\n" +
+					"		(if (some identity \n" + //~ (apply or...
+					"				(map (fn [t] (try (velka.lang.types.Type/unifyTypes t from) (catch velka.lang.types.TypesDoesNotUnifyException e false)))\n" +
+					"					reps))\n" +
+					"			arg (throw (Throwable. (str \"Conversion from \" from \" to \" to \" does not exists.\"))))))";
 	
 	/**
 	 * Definition for convert clojure function
@@ -190,10 +230,12 @@ public class ClojureCodeGenerator {
 			"    (let [from (" + getTypeClojureSymbol + " arg)]" +
 			"        (if (instance? velka.lang.types.TypeVariable to)\n" +
 			"            arg\n" +
-			"            (cond (instance? velka.lang.types.TypeAtom from) (" + convertAtomClojureSymbol + " to arg)\n" + 
-			"                  (instance? velka.lang.types.TypeTuple from) (" + convertTupleClojureSymbol + " to arg)\n" +
-			"                  (instance? velka.lang.types.TypeArrow from) (" + convertFnClojureSymbol + " to arg)\n" + 
-			"                  (instance? velka.lang.types.RepresentationOr from) (throw (Throwable. \"trying to convert representationor\"))))))";
+			"            (if (instance? velka.lang.types.RepresentationOr to)\n" +
+			"				(" + convertToRepOrClojureSymbol + " to arg)\n" + 
+			"            	(cond (instance? velka.lang.types.TypeAtom from) (" + convertAtomClojureSymbol + " to arg)\n" + 
+			"                 	  (instance? velka.lang.types.TypeTuple from) (" + convertTupleClojureSymbol + " to arg)\n" +
+			"                  	  (instance? velka.lang.types.TypeArrow from) (" + convertFnClojureSymbol + " to arg)\n" + 
+			"                  	  (instance? velka.lang.types.RepresentationOr from) (" + convertRepOrClojureSymbol + " to arg))))))";
 	
 	/**
 	 * Symbol for eapply function
@@ -275,6 +317,8 @@ public class ClojureCodeGenerator {
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.convertAtomClojureSymbol));
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.convertTupleClojureSymbol));
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.convertFnClojureSymbol));
+		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.convertRepOrClojureSymbol));
+		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.convertToRepOrClojureSymbol));
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.convertClojureSymbol));
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.selectImplementationClojureSymbol));
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.eapplyClojureSymbol));
@@ -292,6 +336,10 @@ public class ClojureCodeGenerator {
 		sb.append(convertTupleClojureDef);
 		sb.append("\n");
 		sb.append(convertFnClojureDef);
+		sb.append("\n");
+		sb.append(convertRepOrClojureDef);
+		sb.append("\n");
+		sb.append(convertToRepOrClojureDef);
 		sb.append("\n");
 		sb.append(convertClojureDef);
 		sb.append("\n");

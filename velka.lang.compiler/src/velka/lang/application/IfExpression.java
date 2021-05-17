@@ -66,6 +66,10 @@ public class IfExpression extends SpecialFormApplication {
 			iCond = Conversions.convert(inf.first, iCond, TypeAtom.TypeBoolNative, typeEnv);
 			iCond = iCond.interpret(env, typeEnv);
 		}
+		
+		if(!(iCond instanceof LitBoolean)) {
+			throw new AppendableException(iCond + " not a LitBoolean");
+		}
 		LitBoolean cond = (LitBoolean)iCond;
 		if(cond.value) {
 			return this.getTrueBranch().interpret(env, typeEnv);

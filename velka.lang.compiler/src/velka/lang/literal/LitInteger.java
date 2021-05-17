@@ -16,9 +16,9 @@ import velka.lang.interpretation.TypeEnvironment;
  */
 public class LitInteger extends Literal {
 
-	public final int value;
+	public final long value;
 
-	public LitInteger(int value) {
+	public LitInteger(long value) {
 		this.value = value;
 	}
 
@@ -29,12 +29,12 @@ public class LitInteger extends Literal {
 
 	@Override
 	public String valueToClojure(Environment env, TypeEnvironment typeEnv) {
-		return Integer.toString(this.value);
+		return Long.toString(this.value);
 	}
 
 	@Override
 	public String toString() {
-		return Integer.toString(this.value);
+		return Long.toString(this.value);
 	}
 
 	@Override
@@ -54,14 +54,14 @@ public class LitInteger extends Literal {
 	@Override
 	public int compareTo(Expression other) {
 		if (other instanceof LitInteger) {
-			return Integer.compare(this.value, ((LitInteger) other).value);
+			return Long.compare(this.value, ((LitInteger) other).value);
 		}
 		return super.compareTo(other);
 	}
 
 	@Override
 	public int hashCode() {
-		return ((Integer) this.value).hashCode();
+		return ((Long) this.value).hashCode();
 	}
 	
 	/**

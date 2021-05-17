@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.CharStream;
@@ -25,7 +26,9 @@ import velka.lang.abstraction.ExtendedLambda;
 import velka.lang.abstraction.Function;
 import velka.lang.abstraction.Lambda;
 import velka.lang.abstraction.Abstraction;
+import velka.lang.abstraction.ConversionOperators;
 import velka.lang.abstraction.Operator;
+import velka.lang.abstraction.Operators;
 import velka.lang.application.AndExpression;
 import velka.lang.application.CanDeconstructAs;
 import velka.lang.application.Construct;
@@ -577,11 +580,11 @@ class TestInterpretation {
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Symbol("x")),
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
-						new AbstractionApplication(Operator.IntRomanToIntNative,
+						new AbstractionApplication(ConversionOperators.IntRomanToIntNative,
 								new Tuple(Arrays.asList(new Symbol("x"))))),
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new AbstractionApplication(
-								Operator.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x")))))));
+								ConversionOperators.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x")))))));
 
 		TestInterpretation.testReflexivity(lambda);
 		TestInterpretation.testDifference(lambda,
@@ -590,22 +593,22 @@ class TestInterpretation {
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Symbol("x")),
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), new AbstractionApplication(
-										Operator.IntRomanToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))))));
+										ConversionOperators.IntRomanToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))))));
 		TestInterpretation.testDifference(lambda,
 				ExtendedLambda.makeExtendedLambda(Arrays.asList(
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Symbol("x")),
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)),
-								new AbstractionApplication(Operator.IntRomanToIntNative,
+								new AbstractionApplication(ConversionOperators.IntRomanToIntNative,
 										new Tuple(Arrays.asList(new Symbol("x"))))),
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
-								new AbstractionApplication(Operator.IntStringToIntNative,
+								new AbstractionApplication(ConversionOperators.IntStringToIntNative,
 										new Tuple(Arrays.asList(new Symbol("x"))))),
 						new Lambda(new Tuple(Arrays.asList(new Symbol("y"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new AbstractionApplication(
-										Operator.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))))));
+										ConversionOperators.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))))));
 		TestInterpretation.testDifference(lambda, Expression.EMPTY_EXPRESSION);
 
 		Environment top = Environment.initTopLevelEnvitonment();
@@ -866,126 +869,134 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test Operators")
 	void testOperators() throws AppendableException {
-		TestInterpretation.testOperator(Operator.Addition,
+		TestInterpretation.testOperator(Operators.Addition,
 				new Tuple(Arrays.asList(new LitInteger(21), new LitInteger(21))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operator.BitAnd, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
+		TestInterpretation.testOperator(Operators.BitAnd, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
 				new LitInteger(0), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operator.BitOr, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
+		TestInterpretation.testOperator(Operators.BitOr, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
 				new LitInteger(3), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operator.Car,
+		TestInterpretation.testOperator(Operators.Car,
 				new Tuple(Arrays.asList(new Tuple(Arrays.asList(new LitInteger(42), new LitString("foo"))))),
 				new LitInteger(42), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operator.Cdr,
+		TestInterpretation.testOperator(Operators.Cdr,
 				new Tuple(Arrays.asList(new Tuple(Arrays.asList(new LitInteger(42), new LitString("foo"))))),
 				new LitString("foo"), TypeAtom.TypeStringNative);
-		TestInterpretation.testOperator(Operator.Concantenation,
+		TestInterpretation.testOperator(Operators.Concantenation,
 				new Tuple(Arrays.asList(new LitString("foo"), new LitString("bar"))), new LitString("foobar"),
 				TypeAtom.TypeStringNative);
-		TestInterpretation.testOperator(Operator.Division,
+		TestInterpretation.testOperator(Operators.Division,
 				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(2))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operator.Equals,
+		TestInterpretation.testOperator(Operators.Equals,
 				new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION, LitBoolean.FALSE)), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.Equals,
+		TestInterpretation.testOperator(Operators.Equals,
 				new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION, Expression.EMPTY_EXPRESSION)), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.LesserThan,
+		TestInterpretation.testOperator(Operators.LesserThan,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(43))), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.LesserThan,
+		TestInterpretation.testOperator(Operators.LesserThan,
 				new Tuple(Arrays.asList(new LitInteger(43), new LitInteger(42))), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.Multiplication,
+		TestInterpretation.testOperator(Operators.Multiplication,
 				new Tuple(Arrays.asList(new LitInteger(21), new LitInteger(2))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operator.Not, new Tuple(Arrays.asList(LitBoolean.TRUE)), LitBoolean.FALSE,
+		TestInterpretation.testOperator(Operators.Not, new Tuple(Arrays.asList(LitBoolean.TRUE)), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.Not, new Tuple(Arrays.asList(LitBoolean.FALSE)), LitBoolean.TRUE,
+		TestInterpretation.testOperator(Operators.Not, new Tuple(Arrays.asList(LitBoolean.FALSE)), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.NumericEqual,
+		TestInterpretation.testOperator(Operators.NumericEqual,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(42))), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.NumericEqual,
+		TestInterpretation.testOperator(Operators.NumericEqual,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(43))), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.Subtraction,
+		TestInterpretation.testOperator(Operators.Subtraction,
 				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(42))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operator.CanUnifyRepresentations,
+		TestInterpretation.testOperator(Operators.CanUnifyRepresentations,
 				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
 						new TypeSymbol(new TypeVariable(NameGenerator.next())))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.CanUnifyRepresentations,
+		TestInterpretation.testOperator(Operators.CanUnifyRepresentations,
 				new Tuple(
 						Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.CanUnifyRepresentations,
+		TestInterpretation.testOperator(Operators.CanUnifyRepresentations,
 				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman))),
 				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.CanUnifyRepresentations, new Tuple(
+		TestInterpretation.testOperator(Operators.CanUnifyRepresentations, new Tuple(
 				Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeStringNative))),
 				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.CanUnifyTypes,
+		TestInterpretation.testOperator(Operators.CanUnifyTypes,
 				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
 						new TypeSymbol(new TypeVariable(NameGenerator.next())))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.CanUnifyTypes,
+		TestInterpretation.testOperator(Operators.CanUnifyTypes,
 				new Tuple(
 						Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.CanUnifyTypes,
+		TestInterpretation.testOperator(Operators.CanUnifyTypes,
 				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.CanUnifyTypes, new Tuple(
+		TestInterpretation.testOperator(Operators.CanUnifyTypes, new Tuple(
 				Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeStringNative))),
 				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
 
-		TestInterpretation.testOperator(Operator.IsSameType,
+		TestInterpretation.testOperator(Operators.IsSameType,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(21))), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.IsSameType,
+		TestInterpretation.testOperator(Operators.IsSameType,
 				new Tuple(Arrays.asList(new LitInteger(42),
 						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.IsSameType,
+		TestInterpretation.testOperator(Operators.IsSameType,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitString("42"))), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
 
-		TestInterpretation.testOperator(Operator.IsSameRepresentation,
+		TestInterpretation.testOperator(Operators.IsSameRepresentation,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(21))), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.IsSameRepresentation,
+		TestInterpretation.testOperator(Operators.IsSameRepresentation,
 				new Tuple(Arrays.asList(new LitInteger(42),
 						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
 				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operator.IsSameRepresentation,
+		TestInterpretation.testOperator(Operators.IsSameRepresentation,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitString("42"))), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
+		
+		TestInterpretation.testOperator(Operators.BitShiftRight, new Tuple(new LitInteger(2), new LitInteger(1)),
+				new LitInteger(1), TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operators.BitShiftLeft, new Tuple(new LitInteger(2), new LitInteger(1)),
+				new LitInteger(4), TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operators.BitNot, new Tuple(new LitInteger(6)), new LitInteger(-7), TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operators.BitXor, new Tuple(new LitInteger(5), new LitInteger(6)), new LitInteger(3), TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operators.ToStr, new Tuple(new LitInteger(42)), new LitString("42"), TypeAtom.TypeStringNative);
 	}
 
 	@Test
 	@DisplayName("Test Conversions")
 	void testConversions() throws AppendableException {
-		TestInterpretation.testConversion(Operator.IntRomanToIntString,
+		TestInterpretation.testConversion(ConversionOperators.IntRomanToIntString,
 				new LitComposite(new LitString("V"), TypeAtom.TypeIntRoman),
 				new LitComposite(new LitString("5"), TypeAtom.TypeIntString),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntString));
-		TestInterpretation.testConversion(Operator.IntRomanToIntNative,
+		TestInterpretation.testConversion(ConversionOperators.IntRomanToIntNative,
 				new LitComposite(new LitString("V"), TypeAtom.TypeIntRoman), new LitInteger(5),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntNative));
-		TestInterpretation.testConversion(Operator.IntStringToIntRoman,
+		TestInterpretation.testConversion(ConversionOperators.IntStringToIntRoman,
 				new LitComposite(new LitString("5"), TypeAtom.TypeIntString),
 				new LitComposite(new LitString("V"), TypeAtom.TypeIntRoman),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntRoman));
-		TestInterpretation.testConversion(Operator.IntStringToIntNative,
+		TestInterpretation.testConversion(ConversionOperators.IntStringToIntNative,
 				new LitComposite(new LitString("5"), TypeAtom.TypeIntString), new LitInteger(5),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntNative));
-		TestInterpretation.testConversion(Operator.IntNativeToIntString, new LitInteger(5),
+		TestInterpretation.testConversion(ConversionOperators.IntNativeToIntString, new LitInteger(5),
 				new LitComposite(new LitString("5"), TypeAtom.TypeIntString),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntString));
-		TestInterpretation.testConversion(Operator.IntNativeToIntRoman, new LitInteger(5),
+		TestInterpretation.testConversion(ConversionOperators.IntNativeToIntRoman, new LitInteger(5),
 				new LitComposite(new LitString("V"), TypeAtom.TypeIntRoman),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntRoman));
 	}
@@ -993,7 +1004,7 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test Automatic conversion")
 	void testAutoConversion() throws AppendableException {
-		Expression e = new AbstractionApplication(Operator.Addition,
+		Expression e = new AbstractionApplication(Operators.Addition,
 				new Tuple(Arrays.asList(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
 						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))));
 
@@ -1363,6 +1374,36 @@ class TestInterpretation {
 		TestInterpretation.testInterpretString(
 				"(foldr-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native))))",
 				new LitInteger(3), env, typeEnv);
+		
+		TestInterpretation.testInterpretString(
+				"(" + ListNative.addToEndSymbol + " (construct List Native 21 (construct List Native)) 42)",
+				new LitComposite(
+						new Tuple(
+								new LitInteger(21),
+								new LitComposite(
+										new Tuple(
+												new LitInteger(42),
+												ListNative.EMPTY_LIST_NATIVE
+												),
+										TypeAtom.TypeListNative
+										)
+								),
+						TypeAtom.TypeListNative
+						), env, typeEnv);
+		
+		ArrayList<Expression> al = new ArrayList<Expression>();
+		al.add(new LitInteger(42));
+		al.add(new LitInteger(21));
+		TestInterpretation.testInterpretString(
+				"(convert List:Native List:JavaArray (construct List Native 42 (construct List Native 21 (construct List Native))))",
+				new LitComposite(new LitInteropObject(al), JavaArrayList.TypeListJavaArray), env, typeEnv);
+		
+		LinkedList<Expression> ll = new LinkedList<Expression>();
+		ll.add(new LitInteger(42));
+		ll.add(new LitInteger(21));
+		TestInterpretation.testInterpretString(
+				"(convert List:Native List:JavaLinked (construct List Native 42 (construct List Native 21 (construct List Native))))",
+				new LitComposite(new LitInteropObject(ll), JavaLinkedList.TypeListJavaLinked), env, typeEnv);
 	}
 
 	@Test
@@ -1689,6 +1730,29 @@ class TestInterpretation {
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 4)"
 				+ "(" + JavaArrayList.foldrSymbol + " / 16 l1)", 
 				new LitInteger(2));
+		
+		LinkedList<Expression> converted = new LinkedList<Expression>();
+		converted.add(new LitInteger(42));
+		converted.add(new LitInteger(21));
+		TestInterpretation.testInterpretString("(define l (construct List JavaArray))\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l 42)\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l 21)\n"
+				+ "(convert List:JavaArray List:JavaLinked l)", 
+				new LitComposite(new LitInteropObject(converted), JavaLinkedList.TypeListJavaLinked));
+		
+		TestInterpretation.testInterpretString("(define l (construct List JavaArray))\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l 42)\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l 21)\n"
+				+ "(convert List:JavaArray List:Native l)", 
+				new LitComposite(
+						new Tuple(
+								new LitInteger(42),
+								new LitComposite(
+										new Tuple(
+												new LitInteger(21), 
+												ListNative.EMPTY_LIST_NATIVE), 
+										TypeAtom.TypeListNative)), 
+						TypeAtom.TypeListNative));
 	}
 	
 	@Test
@@ -1875,6 +1939,45 @@ class TestInterpretation {
 				+ "(" + JavaLinkedList.addToEndSymbol + " l1 4)"
 				+ "(" + JavaLinkedList.foldrSymbol + " / 16 l1)", 
 				new LitInteger(2));
+		
+		ArrayList<Expression> converted = new ArrayList<Expression>();
+		converted.add(new LitInteger(42));
+		converted.add(new LitInteger(21));
+		TestInterpretation.testInterpretString("(define l (construct List JavaLinked))\n"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l 42)\n"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l 21)\n"
+				+ "(convert List:JavaLinked List:JavaArray l)", 
+				new LitComposite(new LitInteropObject(converted), JavaArrayList.TypeListJavaArray));
+		
+		TestInterpretation.testInterpretString("(define l (construct List JavaLinked))\n"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l 42)\n"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l 21)\n"
+				+ "(convert List:JavaLinked List:Native l)", 
+				new LitComposite(
+						new Tuple(
+								new LitInteger(42),
+								new LitComposite(
+										new Tuple(
+												new LitInteger(21), 
+												ListNative.EMPTY_LIST_NATIVE), 
+										TypeAtom.TypeListNative)), 
+						TypeAtom.TypeListNative));
+	}
+	
+	@Test
+	@DisplayName("Test logging")
+	void testLogging() throws AppendableException {
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		
+		assertNotEquals(new LitInteger(0),
+				TestInterpretation.parseString("(timestamp)").interpret(env, typeEnv));
+		
+		TestInterpretation.testInterpretString("(init-logger \"test-log\")", Expression.EMPTY_EXPRESSION);
+		Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+		logger.info("test");
+		
+		TestInterpretation.testInterpretString("(log \"test-2\")", Expression.EMPTY_EXPRESSION);
 	}
 
 	private static Expression parseString(String s) throws AppendableException {

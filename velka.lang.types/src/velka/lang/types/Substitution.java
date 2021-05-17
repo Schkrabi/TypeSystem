@@ -2,6 +2,9 @@ package velka.lang.types;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -74,18 +77,39 @@ public class Substitution {
 		intersection.addAll(this.elements.keySet());
 		intersection.retainAll(other.elements.keySet());
 
-		Substitution composition = new Substitution();
-		composition.elements.putAll(this.elements);
-		composition.elements.putAll(other.elements);
-		for (TypeVariable v : intersection) {
-			composition.elements.remove(v);
-		}
+//		Substitution composition = new Substitution();
+//		composition.elements.putAll(this.elements);
+//		composition.elements.putAll(other.elements);
+//		for (TypeVariable v : intersection) {
+//			composition.elements.remove(v);
+//		}
+		
+		Substitution unifier = Substitution.EMPTY;
 
 		for (TypeVariable v : intersection) {
 			Substitution mgu = Type.unifyTypes(this.get(v).get(), other.get(v).get());
-			composition.elements.put(v, this.get(v).get().apply(mgu));
-			composition = composition.union(mgu);
+			unifier = unifier.union(mgu);
+			//composition.elements.put(v, this.get(v).get().apply(mgu));
+			//composition = composition.union(mgu);
 		}
+		
+		List<Pair<TypeVariable, Type>> l = new LinkedList<Pair<TypeVariable, Type>>();
+		
+		for(Map.Entry<TypeVariable, Type> e : this.elements.entrySet()){
+			TypeVariable var = e.getKey();
+			Type t = e.getValue().apply(unifier);
+			Pair<TypeVariable, Type> p = new Pair<TypeVariable, Type>(var, t);
+			l.add(p);
+		}
+		
+		for(Map.Entry<TypeVariable, Type> e : other.elements.entrySet()){
+			TypeVariable var = e.getKey();
+			Type t = e.getValue().apply(unifier);
+			Pair<TypeVariable, Type> p = new Pair<TypeVariable, Type>(var, t);
+			l.add(p);
+		}
+		
+		Substitution composition = new Substitution(l);
 
 		return composition;
 	}

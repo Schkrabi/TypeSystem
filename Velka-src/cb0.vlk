@@ -1,0 +1,830 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Bit Vector utility functions;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define element-to-bit-mask
+    (lambda ((Int:Native index))
+        (shl 1 index)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;List native utility functions;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Find list native
+(define find-list-native
+    (let-type (A)
+        (lambda ((List:Native list) (A element))
+            (if (is-list-native-empty list)
+                #f
+                (if (equals? (head-list-native list) element)
+                    #t
+                    (find-list-native (tail-list-native list) element))))))
+
+;;Filter list native
+(define filter-list-native
+    (let-type (A)
+        (lambda ((List:Native list) (((A)#>Bool:Native) cond))
+            (if (is-list-native-empty list)
+                list
+                (if (cond (head-list-native list))
+                    (construct List Native (head-list-native list) (filter-list-native (tail-list-native list) cond))
+                    (filter-list-native (tail-list-native list) cond))))))
+
+;;Gets element on specified index
+(define get-list-native
+    (lambda ((List:Native list) (Int:Native index))
+        (if (and (not (= index 0))
+                (is-list-native-empty list))
+            (error "Index out of range")
+            (if (= index 0)
+                (head-list-native list)
+                (get-list-native (tail-list-native list) (- index 1))))))
+
+(define build-list-native-aux
+    (let-type (A)
+        (lambda ((Int:Native n) (((Int:Native) #> A) f) (Int:Native i))
+            (if (< i n)
+                (construct List Native (f i) (build-list-native-aux n f (+ i 1)))
+                (construct List Native)))))
+
+(define build-list-native
+    (let-type (A)
+        (lambda ((Int:Native n) (((Int:Native) #> A) f))
+            (build-list-native-aux n f 0))))
+            
+(define remove-list-native
+    (let-type (A)
+        (lambda ((List:Native list) (A element))
+            (if (is-list-native-empty list)
+                list
+                (if (equals? (head-list-native list) element)
+                    (tail-list-native list)
+                    (construct List Native 
+                        (head-list-native list) 
+                        (remove-list-native (tail-list-native list) element)))))))
+
+;;Auxiliary function for to-str-list-native
+(define to-str-list-native-aux
+    (let-type (A)
+        (lambda ((List:Native l) (((A) #> String:Native) f-to-str))
+            (if (is-list-native-empty l)
+                ""
+                (concat 
+                    (f-to-str (head-list-native l))
+                    (concat " " (to-str-list-native-aux (tail-list-native l) f-to-str)))))))
+                
+;;Converts list native into printable string
+(define to-str-list-native
+    (lambda ((List:Native l))
+        (concat "(" (concat (to-str-list-native-aux l to-str) ")"))))
+                        
+;;Prints list native
+(define print-list-native
+    (lambda ((List:Native l))
+        (println (to-str-list-native l))))
+        
+;;Size of the list
+(define size-list-native
+    (lambda ((List:Native l))
+        (foldr-list-native (lambda (x y) (+ x 1)) 0 l)))
+        
+;;Appends two native lists
+(define append-list-native
+    (lambda ((List:Native first) (List:Native second))
+        (if (is-list-native-empty second)
+            first
+            (if (is-list-native-empty first)
+                second
+                (construct List Native 
+                    (head-list-native first) 
+                    (append-list-native (tail-list-native first) second))))))
+
+;;;;;;;
+;;SET;;
+;;;;;;;
+(type Set)
+
+;;;;;;;;;;;;;;;;;;
+;;Set:LinkedList;;
+;;;;;;;;;;;;;;;;;;
+(representation LinkedList Set)
+(constructor Set LinkedList () (construct List Native))
+(constructor Set LinkedList ((List:Native elements)) elements)
+
+(define llset-to-str
+    (lambda ((Set:LinkedList set))
+        (concat "{" (concat (to-str-list-native-aux (deconstruct set List:Native) to-str) "}"))))
+
+(define llset-print
+    (lambda ((Set:LinkedList set))
+        (println (llset-to-str set))))
+
+;;Adds element to set
+(define llset-add
+    (let-type (A)
+        (lambda ((Set:LinkedList set) (A element))
+            ((lambda ((List:Native list))
+                (if (find-list-native list element)
+                    set
+                    (construct Set LinkedList (construct List Native element list))))
+                (deconstruct set List:Native)))))
+
+;;Removes element from set
+(define llset-remove
+    (let-type (A)
+        (lambda ((Set:LinkedList set) (A element))
+            ((lambda ((List:Native list))
+                (construct Set LinkedList (remove-list-native list element)))
+                (deconstruct set List:Native)))))
+
+;;Returns #t if given element is member of set. #f otherwise
+(define llset-memberp
+    (let-type (A)
+        (lambda ((Set:LinkedList set) (A element))
+            (find-list-native (deconstruct set List:Native) element))))
+
+;;Intersection of two sets
+(define llset-intersect
+    (lambda ((Set:LinkedList set1) (Set:LinkedList set2))
+        ((lambda ((List:Native list1) (List:Native list2))
+            (construct Set LinkedList
+                (foldr-list-native
+                    (let-type (A) 
+                        (lambda ((List:Native agg) (A element))
+                            (if (find-list-native list2 element)
+                                (construct List Native element agg)
+                                agg)))
+                    (construct List Native)
+                    list1))) 
+            (deconstruct set1 List:Native) (deconstruct set2 List:Native))))
+            
+;;Union of two sets
+(define llset-union
+    (lambda ((Set:LinkedList set1) (Set:LinkedList set2))
+        (foldr-list-native
+            (let-type (A) 
+                (lambda ((Set:LinkedList agg) (A element))
+                    (llset-add agg element)))
+                set1
+                (deconstruct set2 List:Native))))
+
+(define llset-size
+    (lambda ((Set:LinkedList set))
+        (size-list-native (deconstruct set List:Native))))
+                
+(define llset-equalp-aux
+    (lambda ((Set:LinkedList set1) (Set:LinkedList set2))
+        (foldr-list-native
+            (lambda (x y) (and x y))
+            #t
+            (map2-list-native
+                (lambda (x y) (and x y))
+                (map-list-native
+                    (lambda (x) (llset-memberp set1 x))
+                    (deconstruct set2 List:Native))
+                (map-list-native
+                    (lambda (x) (llset-memberp set2 x))
+                    (deconstruct set1 List:Native))))))
+                    
+(define llset-equalp
+    (lambda ((Set:LinkedList set1) (Set:LinkedList set2))
+        (if (not (= (llset-size set1) (llset-size set2)))
+            #f
+            (llset-equalp-aux set1 set2))))
+                
+;;;;;;;;;;;;;;;;;
+;;Set:BitVector;;
+;;;;;;;;;;;;;;;;;
+(representation BitVector Set)
+(constructor Set BitVector () 0)
+(constructor Set BitVector ((Int:Native bits)) bits)
+;;Convenience constructor mostly for testing
+(constructor Set BitVector 
+    ((List:Native elements))
+    (foldl-list-native 
+        (lambda ((Int:Native agg) (Int:Native element)) 
+            (bit-or agg (element-to-bit-mask element)))
+        0 elements))
+        
+(define __BVSET_MAX_ELEMENT__ 64)
+            
+;;Adds element to set
+(define bvset-add
+    (lambda ((Set:BitVector set) (Int:Native element))
+        ((lambda ((Int:Native bits))
+            (construct Set BitVector (bit-or bits (element-to-bit-mask element))))
+            (deconstruct set Int:Native))))
+
+;;Remove element from set
+(define bvset-remove
+    (lambda ((Set:BitVector set) (Int:Native element))
+        ((lambda ((Int:Native bits))
+            (construct Set BitVector (bit-and bits (bit-not (element-to-bit-mask element)))))
+            (deconstruct set Int:Native))))
+
+;;Returns #t if given element is member of set. #f otherwise
+(define bvset-memberp
+    (lambda ((Set:BitVector set) (Int:Native element))
+        ((lambda ((Int:Native bits))
+            (not (= (bit-and bits (element-to-bit-mask element)) 0))) (deconstruct set Int:Native))))
+            
+(define bvset-to-str-aux
+    (lambda ((Set:BitVector set))
+        (foldl-list-native
+            concat
+            ""
+            (map-list-native
+                (lambda ((Int:Native element))
+                    (if (bvset-memberp set element)
+                        (concat (to-str element) " ")
+                        ""))
+                (build-list-native __BVSET_MAX_ELEMENT__ (lambda ((Int:Native x)) x))))))
+
+(define bvset-to-str
+    (lambda ((Set:BitVector set))
+        (concat "{" (concat (bvset-to-str-aux set) "}"))))
+        
+;;Print set
+(define bvset-print
+    (lambda ((Set:BitVector set))
+        (println (bvset-to-str set))))
+
+;;Intersection of two sets
+(define bvset-intersect
+    (lambda ((Set:BitVector set1) (Set:BitVector set2))
+        ((lambda ((Int:Native bits1) (Int:Native bits2))
+            (construct Set BitVector (bit-and bits1 bits2))) 
+        (deconstruct set1 Int:Native) 
+        (deconstruct set2 Int:Native))))
+        
+(define bvset-union
+    (lambda ((Set:BitVector set1) (Set:BitVector set2))
+        ((lambda ((Int:Native bits1) (Int:Native bits2))
+            (construct Set BitVector (bit-or bits1 bits2))) 
+            (deconstruct set1 Int:Native) 
+            (deconstruct set2 Int:Native))))
+            
+(define bvset-equalp
+    (lambda ((Set:BitVector set1) (Set:BitVector set2))
+        (= (deconstruct set1 Int:Native) (deconstruct set2 Int:Native))))
+            
+;;;;;;;;;;;;;;;
+;;conversions;;
+;;;;;;;;;;;;;;;
+;;Set:LinkedList -> Set:BitVector
+(conversion Set:LinkedList Set:BitVector
+    ((Set:LinkedList set))
+    (construct Set BitVector (deconstruct set List:Native)))
+(conversion Set:BitVector Set:LinkedList
+    ((Set:BitVector set))
+    (construct Set LinkedList
+        (foldr-list-native
+            (lambda ((List:Native agg) (Int:Native element))
+                (if (bvset-memberp set element)
+                    (construct List Native element agg)
+                    agg))
+            (construct List Native)
+            (build-list-native __BVSET_MAX_ELEMENT__ (lambda (x) x)))))
+            
+;;;;;;;;;;;;;;;;;;;;;;
+;;extended functions;;
+;;;;;;;;;;;;;;;;;;;;;;
+(define set-to-str
+    (extended-lambda ((Set set))
+        ((Set:LinkedList) (llset-to-str set))
+        ((Set:BitVector) (bvset-to-str set))))
+
+;;Prints set
+(define set-print
+    (extended-lambda ((Set set))
+        ((Set:LinkedList) (llset-print set))
+        ((Set:BitVector) (bvset-print set))))
+  
+;;Intersection of sets
+(define set-intersection
+    (extended-lambda ((Set set1) (Set set2))
+        ((Set:LinkedList Set:LinkedList) (llset-intersect set1 set2))
+        ((Set:BitVector Set:LinkedList) (bvset-intersect set1 set2))
+        ((Set:LinkedList Set:Bitvector) (bvset-intersect set1 set2))
+        ((Set:BitVector Set:BitVector) (bvset-intersect set1 set2))))
+
+;;Memberp predicate
+(define set-memberp
+    (extended-lambda ((Set set) (Int value))
+        ((Set:BitVector Int:Native) (bvset-memberp set value))
+        ((Set:LinkedList Int:Native) (llset-memberp set value))))
+
+;;Equality predicate
+(define set-equalp
+    (extended-lambda ((Set set1) (Set set2))
+        ((Set:LinkedList Set:LinkedList) (llset-equalp set1 set2))
+        ((Set:BitVector Set:LinkedList) (bvset-equalp set1 set2))
+        ((Set:LinkedList Set:Bitvector) (bvset-equalp set1 set2))
+        ((Set:BitVector Set:BitVector) (bvset-equalp set1 set2))))
+;;;;;;;;;;;
+;;CONTEXT;;
+;;;;;;;;;;;
+(type Context)
+(representation LinkedList Context)
+(constructor Context LinkedList () (construct List Native))
+(constructor Context LinkedList ((List:Native attSet)) attSet)
+
+;;to-str function
+(define context-to-str
+    (lambda ((Context:LinkedList context))
+        (concat "("
+            (concat
+                (to-str-list-native-aux 
+                    (deconstruct context List:Native)
+                    set-to-str) ")"))))
+
+;;Prints context
+(define context-print
+    (lambda ((Context:LinkedList context))
+        (println (context-to-str context))))
+        
+
+;;Adds line to context
+(define context-add
+    (lambda ((Context:LinkedList context) (Set line))
+        (construct Context LinkedList
+            (construct List Native line (deconstruct context List:Native)))))
+
+;;Associative list of index to attribute set mapping
+(define context-indexes
+    (lambda ((Context:LinkedList context))
+        ((lambda ((List:Native list))
+            (map2-list-native
+                (lambda ((Set s) (Int:Native i))
+                    (cons i s))
+                list
+                (build-list-native (size-list-native list) (lambda (x) x))))
+            (deconstruct context List:Native))))
+
+;;Gets line of a context
+(define context-get-line
+    (lambda ((Context:LinkedList context) (Int:Native index))
+        ((lambda ((List:Native l))
+            (get-list-native l index))
+            (deconstruct context List:Native))))
+
+;;Gets list of atrribute sets from list of indexes
+(define context-get-lines
+    (lambda ((Context:LinkedList context) (List:Native lines))
+        (map-list-native
+            (lambda (((Int:Native Set) pair)) (cdr pair))
+            (filter-list-native
+                (context-indexes context)
+                (lambda (((Int:Native Set) pair)) (find-list-native lines (car pair)))))))
+                
+(define context-get-lines-extent-bvset
+    (lambda ((Context:LinkedList context) (Set:BitVector extent))
+        (map-list-native
+            (lambda (((Int:Native Set) pair)) (cdr pair))
+            (filter-list-native
+                (context-indexes context)
+                (lambda (((Int:Native Set) pair)) (bvset-memberp extent (car pair)))))))
+                
+(define context-get-lines-extent-llset
+    (lambda ((Context:LinkedList context) (Set:LinkedList extent))
+        (map-list-native
+            (lambda (((Int:Native Set) pair)) (cdr pair))
+            (filter-list-native
+                (context-indexes context)
+                (lambda (((Int:Native Set) pair)) (llset-memberp extent (car pair)))))))
+                
+(define context-get-lines-extent
+    (extended-lambda ((Context context) (Set extent))
+        ((Context:LinkedList Set:BitVector) (context-get-lines-extent-bvset context extent))
+        ((Context:LinkedList Set:LinkedList) (context-get-lines-extent-llset context extent))))
+                
+(define context-extent
+    (lambda ((Context:LinkedList context))
+        (construct Set LinkedList (build-list-native (size-list-native (deconstruct context List:Native)) (lambda (x) x)))))
+            
+;;;;;;;;;;;;;
+;;OPERATORS;;
+;;;;;;;;;;;;;
+;(define _N_ __BVSET_MAX_ELEMENT__)
+(define _N_ 10)
+
+;;Uparrow operator 
+(define uparrow-ext
+    (lambda ((Set:LinkedList extent) (Context:LinkedList context))
+        ((lambda ((List:Native lines))
+                (if (is-list-native-empty lines)
+                    (construct Set LinkedList (build-list-native _N_ (lambda (x) x)))
+                    (foldr-list-native
+                        set-intersection
+                        (head-list-native lines)
+                        lines)))
+            (context-get-lines-extent context extent))))
+            
+;;Downarrow operator
+(define downarrow-ext
+    (lambda ((Int:Native i) (Context:LinkedList context))
+            (construct Set LinkedList
+                (map-list-native
+                    car
+                (filter-list-native
+                    (context-indexes context)
+                    (lambda (((Int:Native Set) pair))
+                        (set-memberp (cdr pair) i)))))))
+                        
+;;Cannonicity test
+(define canonicity-test
+    (lambda ((Set D) (Set B) (Int:Native i))
+        ((lambda ((Set I))
+            (set-equalp
+                (set-intersection D I)
+                (set-intersection B I)))
+            (construct Set LinkedList (build-list-native (- i 1) (lambda (x) (+ x 1)))))))
+
+;D = {1 2 3}
+;B = {3 4 5}
+;i = 2
+;I = {1}
+;D\capI = {1}
+;B\capI = {}
+;=> false
+
+;D = {1 2 3}
+;B = {1 2}
+;i = 2
+;I={1}
+;D\capI = {1}
+;B\capI = {1}
+;=> true
+
+(define print-closed-extent-intent
+    (lambda ((Set A) (Set B))
+        (println (concat "<" (concat (set-to-str A) (concat "," (concat (set-to-str B) ">")))))))
+                    
+(define close-by-one
+    (lambda ((Set A)
+             (Set B)
+             (Int:Native y)
+             (Context:LinkedList context))
+        (construct List Native
+            (cons A B)
+            (foldr-list-native
+                append-list-native
+                (construct List Native)
+                (map-list-native
+                    (lambda ((Int:Native i))
+                        (if (set-memberp B i)
+                            (construct List Native)
+                            ((lambda ((Set C))
+                                ((lambda ((Set D)) 
+                                        (if (canonicity-test D B i)
+                                            (close-by-one C D i context)
+                                            (construct List Native)))
+                                    (uparrow-ext C context)))
+                                (set-intersection A (downarrow-ext i context)))))                            
+                    (build-list-native (- _N_ y)
+                        (lambda (x) (+ (+ y 1) x))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;CLOSE-BY-ONE-BIT-VECTOR;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Uparrow operator 
+(define uparrow-bvset
+    (lambda ((Set:BitVector extent) (Context:LinkedList context))
+        ((lambda ((List:Native lines))
+                (if (is-list-native-empty lines)
+                    (construct Set BitVector (build-list-native _N_ (lambda (x) x)))
+                    (foldr-list-native
+                        bvset-intersect
+                        (head-list-native lines)
+                        lines)))
+            (context-get-lines-extent-bvset context extent))))
+            
+;;Downarrow operator
+(define downarrow-bvset
+    (lambda ((Int:Native i) (Context:LinkedList context))
+            (construct Set BitVector
+                (map-list-native
+                    car
+                (filter-list-native
+                    (context-indexes context)
+                    (lambda (((Int:Native Set:BitVector) pair))
+                        (bvset-memberp (cdr pair) i)))))))
+
+;;canonicity test BitVector set version
+(define canonicity-test-bvset
+    (lambda ((Set:BitVector D) (Set:BitVector B) (Int:Native i))
+        ((lambda ((Set:BitVector I))
+            (bvset-equalp
+                (bvset-intersect D I)
+                (bvset-intersect B I)))
+            (construct Set BitVector (build-list-native (- i 1) (lambda (x) (+ x 1)))))))
+                
+(define close-by-one-bvset
+    (lambda ((Set:BitVector A)
+             (Set:BitVector B)
+             (Int:Native y)
+             (Context:LinkedList context))
+        (construct List Native
+            (cons A B)
+            (foldr-list-native
+                append-list-native
+                (construct List Native)
+                (map-list-native
+                    (lambda ((Int:Native i))
+                        (if (bvset-memberp B i)
+                            (construct List Native)
+                            ((lambda ((Set:BitVector C))
+                                ((lambda ((Set:BitVector D)) 
+                                        (if (canonicity-test-bvset D B i)
+                                            (close-by-one-bvset C D i context)
+                                            (construct List Native)))
+                                    (uparrow-bvset C context)))
+                                (bvset-intersect A (downarrow-bvset i context)))))                            
+                    (build-list-native (- _N_ y)
+                        (lambda (x) (+ (+ y 1) x))))))))
+                        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;CLOSE-BY-ONE-LINKED-LIST;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Uparrow operator 
+(define uparrow-llset
+    (lambda ((Set:LinkedList extent) (Context:LinkedList context))
+        ((lambda ((List:Native lines))
+                (if (is-list-native-empty lines)
+                    (construct Set LinkedList (build-list-native _N_ (lambda (x) x)))
+                    (foldr-list-native
+                        llset-intersect
+                        (head-list-native lines)
+                        lines)))
+            (context-get-lines-extent-llset context extent))))
+            
+;;Downarrow operator
+(define downarrow-llset
+    (lambda ((Int:Native i) (Context:LinkedList context))
+            (construct Set LinkedList
+                (map-list-native
+                    car
+                (filter-list-native
+                    (context-indexes context)
+                    (lambda (((Int:Native Set:LinkedList) pair))
+                        (llset-memberp (cdr pair) i)))))))
+                        
+;;canonicity test LinkedList set version
+(define canonicity-test-llset
+    (lambda ((Set:LinkedList D) (Set:LinkedList B) (Int:Native i))
+        ((lambda ((Set:LinkedList I))
+            (llset-equalp
+                (llset-intersect D I)
+                (llset-intersect B I)))
+            (construct Set LinkedList (build-list-native (- i 1) (lambda (x) (+ x 1)))))))
+            
+(define close-by-one-llset
+    (lambda ((Set:LinkedList A)
+             (Set:LinkedList B)
+             (Int:Native y)
+             (Context:LinkedList context))
+        (construct List Native
+            (cons A B)
+            (foldr-list-native
+                append-list-native
+                (construct List Native)
+                (map-list-native
+                    (lambda ((Int:Native i))
+                        (if (llset-memberp B i)
+                            (construct List Native)
+                            ((lambda ((Set:LinkedList C))
+                                ((lambda ((Set:LinkedList D)) 
+                                        (if (canonicity-test-llset D B i)
+                                            (close-by-one-llset C D i context)
+                                            (construct List Native)))
+                                    (uparrow-llset C context)))
+                                (llset-intersect A (downarrow-llset i context)))))                            
+                    (build-list-native (- _N_ y)
+                        (lambda (x) (+ (+ y 1) x))))))))
+                        
+(define rslt-to-str
+    (lambda ((List:Native rslt))
+        (to-str-list-native-aux 
+            rslt
+            (lambda (((Set Set) pair))
+                (concat "<" (concat (set-to-str (car pair)) (concat "," (concat (set-to-str (cdr pair)) ">"))))))))
+                        
+;A={0}
+;B={1}
+;context= {{1}}
+;i=0
+
+;3 - 0 => 3 -> (1 2 3)
+;i=1:
+;   1\in B => ()
+;i=2:
+;   2\notin B
+;   C = {2}\downarrow = {}
+;   D = C\uparrow = {0 1 2}
+;i=3:
+;   2\notin B
+
+
+                    
+;; n = 3
+;; y = 1
+;; exp: (2 3)
+
+;; y + 1 = 2
+;; n - (y+1) = 1
+;; (0)
+;; (1)
+
+;; n - y = 2
+;; (0 1)
+;; (1 2) ;(+ y x)
+
+;; n-y = 2
+;; (0 1)
+;; (2 3) ;(+ (+ y 1) x)
+;;;;;;;;;;;;;;
+;;ALGORITHMS;;
+;;;;;;;;;;;;;;
+
+;TODO
+;downarrow-llset
+;downarrow-bvset
+;uparrow-llset
+;uparrow-bvset
+;CbO-llset
+;CbO-bvset
+;data loading
+
+;;;;;;;;;
+;;TESTS;;
+;;;;;;;;;
+;(println (element-to-bit-mask 3))
+;(println "LIST")
+;(println (find-list-native (construct List Native) 42))
+;(println (find-list-native (construct List Native 42 (construct List Native)) 42))
+;(print-list-native (construct List Native 42 (construct List Native 21 (construct List Native))))
+;(print-list-native (build-list-native 5 (lambda ((Int:Native x)) (* 2 x))))
+;(println "remove-list-native")
+;(print-list-native (remove-list-native (build-list-native 5 (lambda (x) x)) 3))
+;(println "size-list-native")
+;(println (size-list-native (build-list-native 5 (lambda (x) x))))
+;(println "filter-list-native")
+;(print-list-native (filter-list-native (build-list-native 5 (lambda (x) x)) (lambda ((Int:Native x)) (not (= x 3)))))
+;(println "get-list-native")
+;(println (to-str (get-list-native (build-list-native 5 (lambda (x) x)) 2)))
+;(println "append-list-native")
+;(print-list-native (append-list-native (build-list-native 5 (lambda (x) x)) (build-list-native 5 (lambda (x) (+ x 5)))))
+;(print-list-native (append-list-native (construct List Native) (build-list-native 5 (lambda (x) (+ x 5)))))
+;(print-list-native (append-list-native (build-list-native 5 (lambda (x) x)) (construct List Native)))
+;(print-list-native (foldr-list-native
+;                        append-list-native
+;                        (construct List Native)
+;                        (construct List Native
+;                            (build-list-native 3 (lambda (x) x))
+;                            (construct List Native
+;                                (build-list-native 3 (lambda (x) (+ x 1)))
+;                                (construct List Native
+;                                    (build-list-native 3 (lambda (x) (+ x 2)))
+;                                    (construct List Native))))))
+
+;(println "LLSET")
+;(llset-print (construct Set LinkedList))
+;(llset-print (construct Set LinkedList (construct List Native 1 (construct List Native))))
+;(llset-print (llset-add (construct Set LinkedList) 2))
+;(println "llset-remove")
+;(llset-print (llset-remove (construct Set LinkedList (build-list-native 5 (lambda (x) x))) 2))
+;(println "llset-memberp")
+;(println (llset-memberp (construct Set LinkedList (build-list-native 5 (lambda (x) x))) 1))
+;(println (llset-memberp (construct Set LinkedList (build-list-native 5 (lambda (x) x))) 42))
+;(println "llset-intersect")
+;(llset-print (llset-intersect 
+;    (construct Set LinkedList (build-list-native 5 (lambda (x) x)))
+;    (construct Set LinkedList (build-list-native 5 (lambda (x) (+ x 3))))))
+;(println "llset-union")
+;(llset-print (llset-union 
+;    (construct Set LinkedList (build-list-native 5 (lambda (x) x)))
+;    (construct Set LinkedList (build-list-native 5 (lambda (x) (+ x 3))))))
+;(println "bvset-2-llset")
+;;(llset-print (convert Set:BitVector Set:LinkedList (construct Set BitVector (build-list-native 5 (lambda (x) x)))))
+;(println "llset-equalp")
+;(println (llset-equalp (construct Set LinkedList (build-list-native 5 (lambda (x) x))) (construct Set LinkedList (build-list-native 5 (lambda (x) (* 2 x))))))
+;(println (llset-equalp (construct Set LinkedList (build-list-native 5 (lambda (x) x))) (construct Set LinkedList (build-list-native 5 (lambda (x) x)))))
+
+;(println "\nBVSET")
+;; List 0 1 2 3 4
+;; masks 1 10 100 1000 10000 => 11111
+;(println (deconstruct (construct Set BitVector (build-list-native 5 (lambda (x) x))) Int:Native))
+(define bvset-test (construct Set BitVector (build-list-native 5 (lambda (x) (+ x 1)))))
+;(println "bvset-to-str-aux")
+;(println (bvset-to-str-aux bvset-test))
+;(println "bvset-print")
+;(bvset-print (construct Set BitVector (build-list-native 5 (lambda (x) (+ x 1)))))
+;(println "bvset-add")
+;(bvset-print (bvset-add (bvset-add (construct Set BitVector) 42) 21))
+;(println "bvset-remove")
+;(println (deconstruct (bvset-remove (construct Set BitVector (build-list-native 5 (lambda (x) x))) 1) Int:Native))
+;(bvset-print (bvset-remove (construct Set BitVector (build-list-native 5 (lambda (x) x))) 1))
+;(println "bvset-memberp")
+;(println (bvset-memberp (construct Set BitVector (build-list-native 5 (lambda (x) x))) 1))
+;(println (bvset-memberp (construct Set BitVector (build-list-native 5 (lambda (x) x))) 42))
+;(println "bvset-intersect")
+;(bvset-print (bvset-intersect
+;    (construct Set BitVector (build-list-native 5 (lambda (x) x)))
+;    (construct Set BitVector (build-list-native 5 (lambda (x) (+ x 3))))))
+;(println "bvset-union")
+;(bvset-print (bvset-union
+;    (construct Set BitVector (build-list-native 5 (lambda (x) x)))
+;    (construct Set BitVector (build-list-native 5 (lambda (x) (+ x 3))))))
+;(println "llset-2-bvset")
+;(bvset-print (convert Set:LinkedList Set:BitVector (construct Set LinkedList (build-list-native 5 ;(lambda (x) x)))))
+;(println "bvset-equalp")
+;(println (bvset-equalp (construct Set BitVector (build-list-native 5 (lambda (x) x))) (construct Set BitVector (build-list-native 5 (lambda (x) (* 2 x))))))
+;(println (bvset-equalp (construct Set BitVector (build-list-native 5 (lambda (x) x))) (construct Set BitVector (build-list-native 5 (lambda (x) x)))))
+
+;(println "\nCONTEXT")
+(define context1 (construct Context LinkedList 
+    (construct List Native (construct Set LinkedList (build-list-native 5 (lambda (x) x)))
+        (construct List Native (construct Set LinkedList (build-list-native 3 (lambda (x) (+ x 1))))
+            (construct List Native (construct Set LinkedList (build-list-native 7 (lambda (x) (* x 2))))
+                (construct List Native))))))
+;(println "context-print")
+;(context-print context1)
+;(println "context-add")
+;(context-print (context-add (construct Context LinkedList) bvset-test))
+;(println "context-indexes")
+;(map-list-native
+;    (lambda (((Int:Native Set) pair))
+;        (println (concat (to-str (car pair)) (concat " " (set-to-str (cdr pair))))))
+;    (context-indexes context1))
+;(println "context-get-line")
+;(println (set-to-str (context-get-line context1 1)))
+;(println "context-get-lines")
+;(println (to-str-list-native-aux (context-get-lines context1 (build-list-native 2 (lambda (x) x))) set-to-str))
+;(define extent1 (construct Set LinkedList (build-list-native 2 (lambda (x) x))))
+;(println "uparrow-ext")
+;(println (set-to-str (uparrow-ext extent1 context1)))
+;(println "downarrow-ext")
+;(println (set-to-str (downarrow-ext 2 context1)))
+;(println "canonicity-test")
+;(define s1 (construct Set LinkedList (build-list-native 3 (lambda (x) (+ x 1)))))
+;(define s2 (construct Set LinkedList (build-list-native 3 (lambda (x) (+ x 3)))))
+;(define s3 (construct Set LinkedList (build-list-native 2 (lambda (x) (+ x 1)))))
+;(println (canonicity-test s1 s2 2))
+;(println (canonicity-test s1 s3 2))
+
+(println "close-by-one")
+;(println (set-to-str (uparrow-ext (construct Set LinkedList (build-list-native 3 (lambda (x) x))) context1)))
+
+;(define context2 (construct Context LinkedList
+;    (construct List Native (construct Set LinkedList (construct List Native 1 (construct List Native)))
+;        (construct List Native))))
+
+;A={0}
+;B={1}
+;context= {{1}}
+;i=0
+
+;(println (set-to-str (downarrow-ext 2 context2)))
+;(println (to-str-list-native-aux (context-get-lines context1 (construct List Native)) set-to-str))
+;(println (set-to-str (uparrow-ext (construct Set LinkedList) context2)))
+
+;(define rslt2
+;    (close-by-one 
+;            (construct Set LinkedList (construct List Native 0 (construct List Native)))
+;            (construct Set LinkedList (construct List Native 1 (construct List Native)))
+;            0
+;            context2))           
+
+;(println (rslt-to-str rslt2))
+
+;(define rslt3
+;    (close-by-one 
+;        (construct Set LinkedList (build-list-native 1 (lambda (x) x)))
+;        (uparrow-ext (construct Set LinkedList (build-list-native 1 (lambda (x) x))) context2)
+;        0
+;        context2))
+        
+;(println (rslt-to-str rslt3))
+
+    
+(define rslt1    
+    (close-by-one
+        (context-extent context1)
+        (uparrow-ext (construct Set LinkedList (build-list-native 3 (lambda (x) x))) context1)
+        0
+        context1))
+(println (rslt-to-str rslt1))
+
+(println (rslt-to-str
+            (close-by-one-bvset
+                (context-extent context1)
+                (uparrow-ext (construct Set BitVector (build-list-native 3 (lambda (x) x))) context1)
+                0
+                context1)))
+                
+(println (rslt-to-str
+            (close-by-one-llset
+                (context-extent context1)
+                (uparrow-ext (construct Set LinkedList (build-list-native 3 (lambda (x) x))) context1)
+                0
+                context1)))
+
+    

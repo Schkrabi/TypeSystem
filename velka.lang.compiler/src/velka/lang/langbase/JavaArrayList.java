@@ -3,6 +3,7 @@ package velka.lang.langbase;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -160,7 +161,7 @@ public class JavaArrayList {
 
 			@SuppressWarnings("unchecked")
 			ArrayList<Object> l = (ArrayList<Object>) list.javaObject;
-			l.add(index.value, e);
+			l.add((int)index.value, e);
 
 			return Expression.EMPTY_EXPRESSION;
 		}
@@ -351,7 +352,7 @@ public class JavaArrayList {
 			@SuppressWarnings("unchecked")
 			ArrayList<Expression> l = (ArrayList<Expression>) list.javaObject;
 
-			return l.get(index.value);
+			return l.get((int)index.value);
 		}
 
 		@Override
@@ -701,7 +702,7 @@ public class JavaArrayList {
 
 			ArrayList<Expression> al = (ArrayList<Expression>) list.javaObject;
 
-			return al.set(index.value, element);
+			return al.set((int)index.value, element);
 		}
 
 		@Override
@@ -785,7 +786,7 @@ public class JavaArrayList {
 			@SuppressWarnings("unchecked")
 			ArrayList<Expression> al = (ArrayList<Expression>) list.javaObject;
 
-			ArrayList<Expression> sublist = new ArrayList<Expression>(al.subList(from.value, to.value));
+			ArrayList<Expression> sublist = new ArrayList<Expression>(al.subList((int)from.value, (int)to.value));
 
 			return new LitComposite(new LitInteropObject(sublist), JavaArrayList.TypeListJavaArray);
 		}
@@ -933,7 +934,7 @@ public class JavaArrayList {
 	 * Symbol for T foldl(Function<T, E, T>)
 	 */
 	public static final Symbol foldlSymbol = new Symbol("java-array-list-foldl");
-	
+
 	/**
 	 * Operator for T foldl(Function<T, E, T>)
 	 */
@@ -944,8 +945,8 @@ public class JavaArrayList {
 			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
 					+ ClojureCodeGenerator.eapplyClojureSymbol + " _abst "
 					+ ClojureCodeGenerator.addTypeMetaInfo_str("[_agg _element]",
-							"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol
-									+ " _agg) (" + ClojureCodeGenerator.getTypeClojureSymbol + " _element)])")
+							"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol + " _agg) ("
+									+ ClojureCodeGenerator.getTypeClojureSymbol + " _element)])")
 					+ ")) _term (first _list)))";
 			return code;
 		}
@@ -991,7 +992,7 @@ public class JavaArrayList {
 	 * Symbol for T foldr(Function<T, E, T>)
 	 */
 	public static final Symbol foldrSymbol = new Symbol("java-array-list-foldr");
-	
+
 	/**
 	 * Operator for T foldr(Function<T, E, T>)
 	 */
@@ -1002,8 +1003,8 @@ public class JavaArrayList {
 			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
 					+ ClojureCodeGenerator.eapplyClojureSymbol + " _abst "
 					+ ClojureCodeGenerator.addTypeMetaInfo_str("[_agg _element]",
-							"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol
-									+ " _agg) (" + ClojureCodeGenerator.getTypeClojureSymbol + " _element)])")
+							"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol + " _agg) ("
+									+ ClojureCodeGenerator.getTypeClojureSymbol + " _element)])")
 					+ ")) _term (reverse (first _list))))";
 			return code;
 		}
@@ -1020,7 +1021,7 @@ public class JavaArrayList {
 
 			Expression agg = terminator;
 			ListIterator<Expression> i = list.listIterator(list.size());
-			while(i.hasPrevious()) {
+			while (i.hasPrevious()) {
 				Expression element = i.previous();
 				AbstractionApplication app = new AbstractionApplication(abst, new Tuple(agg, element));
 				agg = app.interpret(env, typeEnv);
@@ -1036,8 +1037,83 @@ public class JavaArrayList {
 					A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
-		
+
 	};
+
+	/**
+	 * Conversion ArrayList 2 LinkedList
+	 */
+	public static Operator ArrayListToLinkedList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_arrayList] " + LitComposite.clojureValueToClojureLiteral(
+					"(java.util.LinkedList. (first _arrayList))", JavaLinkedList.TypeListJavaLinked) + ")";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitComposite lc = (LitComposite) args.get(0);
+			LitInteropObject lio = (LitInteropObject) lc.value;
+			@SuppressWarnings("unchecked")
+			ArrayList<Expression> l = (ArrayList<Expression>) lio.javaObject;
+
+			return new LitComposite(new LitInteropObject(new LinkedList<Expression>(l)),
+					JavaLinkedList.TypeListJavaLinked);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray),
+					JavaLinkedList.TypeListJavaLinked);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+	};
+	
+	/**
+	 * Conversion ArrayList 2 NativeList
+	 */
+	public static Operator ArrayListToNativeList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_list] (reduce (fn [_l _e] " 
+							+ LitComposite.clojureValueToClojureLiteral(
+									ClojureCodeGenerator.addTypeMetaInfo_str("[_e, _l]", 
+											"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol  + " _e) " 
+									+ TypeAtom.TypeListNative.clojureTypeRepresentation() + "])")
+									, TypeAtom.TypeListNative) + ") " 
+							+ ListNative.EMPTY_LIST_NATIVE.toClojureCode(env, typeEnv) + " (reverse (first _list))))";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitComposite lc = (LitComposite) args.get(0);
+			LitInteropObject lio = (LitInteropObject) lc.value;
+			@SuppressWarnings("unchecked")
+			ArrayList<Expression> l = (ArrayList<Expression>) lio.javaObject;
+			
+			LitComposite converted = ListNative.EMPTY_LIST_NATIVE;
+			
+			ListIterator<Expression> i = l.listIterator(l.size());
+			while(i.hasPrevious()) {
+				Expression e = i.previous();
+				converted = new LitComposite(new Tuple(e, converted), TypeAtom.TypeListNative );
+			}
+			
+			return converted;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray), TypeAtom.TypeListNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}};
 
 	/**
 	 * Initializes values for java array list in environment

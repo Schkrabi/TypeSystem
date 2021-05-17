@@ -162,7 +162,7 @@ public class JavaLinkedList {
 
 			@SuppressWarnings("unchecked")
 			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
-			l.add(index.value, e);
+			l.add((int)index.value, e);
 
 			return Expression.EMPTY_EXPRESSION;
 		}
@@ -353,7 +353,7 @@ public class JavaLinkedList {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) list.javaObject;
 
-			return l.get(index.value);
+			return l.get((int)index.value);
 		}
 
 		@Override
@@ -671,7 +671,7 @@ public class JavaLinkedList {
 
 			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
 
-			return al.set(index.value, element);
+			return al.set((int)index.value, element);
 		}
 
 		@Override
@@ -754,7 +754,7 @@ public class JavaLinkedList {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
 
-			LinkedList<Expression> sublist = new LinkedList<Expression>(al.subList(from.value, to.value));
+			LinkedList<Expression> sublist = new LinkedList<Expression>(al.subList((int)from.value, (int)to.value));
 
 			return new LitComposite(new LitInteropObject(sublist), JavaLinkedList.TypeListJavaLinked);
 		}
@@ -788,7 +788,7 @@ public class JavaLinkedList {
 									+ ClojureCodeGenerator.addTypeMetaInfo_str("[_e]",
 											"(velka.lang.types.TypeTuple. [("
 													+ ClojureCodeGenerator.getTypeClojureSymbol + " _e)])")
-									+ ")) (first _list)))", JavaArrayList.TypeListJavaArray)
+									+ ")) (first _list)))", JavaLinkedList.TypeListJavaLinked)
 					+ ")";
 			return code;
 		}
@@ -1007,6 +1007,81 @@ public class JavaLinkedList {
 		}
 		
 	};
+	
+	/**
+	 * Conversion LinkedList 2 ArrayList
+	 */
+	public static Operator LinkedListToArrayList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_linkedList] " + LitComposite.clojureValueToClojureLiteral(
+					"(java.util.ArrayList. (first _linkedList))", JavaArrayList.TypeListJavaArray) + ")";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitComposite lc = (LitComposite) args.get(0);
+			LitInteropObject lio = (LitInteropObject) lc.value;
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> l = (LinkedList<Expression>) lio.javaObject;
+
+			return new LitComposite(new LitInteropObject(new ArrayList<Expression>(l)),
+					JavaArrayList.TypeListJavaArray);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked),
+					JavaArrayList.TypeListJavaArray);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+	};
+	
+	/**
+	 * Conversion LinkedList 2 NativeList
+	 */
+	public static Operator LinkedListToNativeList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_list] (reduce (fn [_l _e] " 
+							+ LitComposite.clojureValueToClojureLiteral(
+									ClojureCodeGenerator.addTypeMetaInfo_str("[_e, _l]", 
+											"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol  + " _e) " 
+									+ TypeAtom.TypeListNative.clojureTypeRepresentation() + "])")
+									, TypeAtom.TypeListNative) + ") " 
+							+ ListNative.EMPTY_LIST_NATIVE.toClojureCode(env, typeEnv) + " (reverse (first _list))))";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitComposite lc = (LitComposite) args.get(0);
+			LitInteropObject lio = (LitInteropObject) lc.value;
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> l = (LinkedList<Expression>) lio.javaObject;
+			
+			LitComposite converted = ListNative.EMPTY_LIST_NATIVE;
+			
+			ListIterator<Expression> i = l.listIterator(l.size());
+			while(i.hasPrevious()) {
+				Expression e = i.previous();
+				converted = new LitComposite(new Tuple(e, converted), TypeAtom.TypeListNative );
+			}
+			
+			return converted;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked), TypeAtom.TypeListNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}};
 	
 	/**
 	 * Initializes values for java linked list in environment

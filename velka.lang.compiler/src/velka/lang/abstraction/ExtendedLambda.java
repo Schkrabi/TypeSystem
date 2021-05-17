@@ -1,5 +1,6 @@
 package velka.lang.abstraction;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
@@ -145,6 +146,16 @@ public class ExtendedLambda extends Abstraction {
 		ExtendedFunction f = (ExtendedFunction) this.interpret(env, typeEnv);
 		return f.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
 	}
+	
+	/**
+	 * Convenience constructor for extended lambda
+	 * @param impls implementations
+	 * @return new extended lambda instance
+	 * @throws AppendableException if implementations arguments does not unify
+	 */
+	public static ExtendedLambda makeExtendedLambda(Lambda... impls) throws AppendableException {
+		return ExtendedLambda.makeExtendedLambda(Arrays.asList(impls));
+	}
 
 	/**
 	 * Creates new Extended lambda expression
@@ -217,9 +228,9 @@ public class ExtendedLambda extends Abstraction {
 				if (!(rankingResult instanceof LitInteger)) {
 					throw new AppendableException("Badly formed ranking function " + rankingFunction.toString());
 				}
-				int result = ((LitInteger) rankingResult).value;
-				return new Pair<Integer, Abstraction>(result, implementation);
-			})).reduce(new Pair<Integer, Abstraction>(Integer.MAX_VALUE, null), (p1, p2) -> {
+				long result = ((LitInteger) rankingResult).value;
+				return new Pair<Long, Abstraction>(result, implementation);
+			})).reduce(new Pair<Long, Abstraction>(Long.MAX_VALUE, null), (p1, p2) -> {
 				if (p1.first < p2.first) {
 					return p1;
 				} else {

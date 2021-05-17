@@ -8,8 +8,8 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import velka.lang.abstraction.Abstraction;
+import velka.lang.abstraction.ConversionOperators;
 import velka.lang.abstraction.Lambda;
-import velka.lang.abstraction.Operator;
 import velka.lang.application.AbstractionApplication;
 import velka.lang.exceptions.UndefinedTypeException;
 import velka.lang.exceptions.DuplicateTypeDefinitionException;
@@ -321,12 +321,19 @@ public class TypeEnvironment {
 		typeEnvitonment.addConstructor(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.constructor, env);
 
 		// Conversions
-		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, Operator.IntNativeToIntRoman);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, Operator.IntNativeToIntString);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative, Operator.IntRomanToIntNative);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, Operator.IntRomanToIntString);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative, Operator.IntStringToIntNative);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, Operator.IntStringToIntRoman);
+		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, ConversionOperators.IntNativeToIntRoman);
+		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, ConversionOperators.IntNativeToIntString);
+		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative, ConversionOperators.IntRomanToIntNative);
+		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, ConversionOperators.IntRomanToIntString);
+		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative, ConversionOperators.IntStringToIntNative);
+		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, ConversionOperators.IntStringToIntRoman);
+		
+		typeEnvitonment.addConversion(JavaArrayList.TypeListJavaArray, JavaLinkedList.TypeListJavaLinked, JavaArrayList.ArrayListToLinkedList);
+		typeEnvitonment.addConversion(JavaArrayList.TypeListJavaArray, TypeAtom.TypeListNative, JavaArrayList.ArrayListToNativeList);
+		typeEnvitonment.addConversion(JavaLinkedList.TypeListJavaLinked, JavaArrayList.TypeListJavaArray, JavaLinkedList.LinkedListToArrayList);
+		typeEnvitonment.addConversion(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeListNative, JavaLinkedList.LinkedListToNativeList);
+		typeEnvitonment.addConversion(TypeAtom.TypeListNative, JavaArrayList.TypeListJavaArray, ListNative.ListNativeToArrayList);
+		typeEnvitonment.addConversion(TypeAtom.TypeListNative, JavaLinkedList.TypeListJavaLinked, ListNative.ListNativeToLinkedList);
 
 		return typeEnvitonment;
 	}

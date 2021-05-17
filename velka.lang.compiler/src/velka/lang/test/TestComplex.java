@@ -28,7 +28,7 @@ import velka.lang.abstraction.ExtendedFunction;
 import velka.lang.abstraction.ExtendedLambda;
 import velka.lang.abstraction.Function;
 import velka.lang.abstraction.Lambda;
-import velka.lang.abstraction.Operator;
+import velka.lang.abstraction.Operators;
 import velka.lang.application.AbstractionApplication;
 import velka.lang.application.CanDeconstructAs;
 import velka.lang.application.Construct;
@@ -42,6 +42,7 @@ import velka.lang.interpretation.Environment;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitComposite;
 import velka.lang.literal.LitInteger;
+import velka.lang.literal.LitInteropObject;
 import velka.lang.literal.LitString;
 import velka.lang.parser.SchemeLexer;
 import velka.lang.parser.SchemeParser;
@@ -51,6 +52,7 @@ import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.langbase.JavaArrayList;
 import velka.lang.langbase.JavaLinkedList;
 import velka.lang.langbase.ListNative;
+import velka.lang.types.RepresentationOr;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
 import velka.lang.types.TypeArrow;
@@ -497,7 +499,12 @@ class TestComplex {
 						+ "(println (concat \"Hello \" \"World\"))\n" + "(println (equals? 42 \"42\"))\n"
 						+ "(println (< 42 42))\n" + "(println (not #t))\n" + "(println (= 42 42))\n"
 						+ "(println (or #t #f))\n" + "(println (cons 42 \"42\"))\n"
-						+ "(println (car (cons 42 \"42\")))\n" + "(println (cdr (cons 42 \"42\")))");
+						+ "(println (car (cons 42 \"42\")))\n" + "(println (cdr (cons 42 \"42\")))"
+						+ "(println (shr 2 1))"
+						+ "(println (shl 2 1))"
+						+ "(println (bit-not 6))"
+						+ "(println (bit-xor 6 5))"
+						+ "(println (to-str 42))");
 	}
 
 	@Test
@@ -678,46 +685,46 @@ class TestComplex {
 	void testClojureTypeSymbol() throws Exception {
 		// (println (let-type (A) (can-unify-representations Int:Native A)))
 		TestComplex
-				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operator.PrintlnOperator,
-						new Tuple(Arrays.asList(new AbstractionApplication(Operator.CanUnifyRepresentations,
+				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
+						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyRepresentations,
 								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
 										new TypeSymbol(new TypeVariable(NameGenerator.next()))))))))));
 		// (println (can-unify-representations Int:Native Int:Native))
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(
-				Operator.PrintlnOperator,
-				new Tuple(Arrays.asList(new AbstractionApplication(Operator.CanUnifyRepresentations, new Tuple(Arrays
+				Operators.PrintlnOperator,
+				new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyRepresentations, new Tuple(Arrays
 						.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative)))))))));
 		// (println (can-unify-representations Int:Native Int:Roman))
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(
-				Operator.PrintlnOperator,
-				new Tuple(Arrays.asList(new AbstractionApplication(Operator.CanUnifyRepresentations, new Tuple(Arrays
+				Operators.PrintlnOperator,
+				new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyRepresentations, new Tuple(Arrays
 						.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman)))))))));
 		// (println (can-unify-representations Int:Native String:Native))
 		TestComplex
-				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operator.PrintlnOperator,
-						new Tuple(Arrays.asList(new AbstractionApplication(Operator.CanUnifyRepresentations,
+				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
+						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyRepresentations,
 								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
 										new TypeSymbol(TypeAtom.TypeStringNative)))))))));
 		// (println (let-type (A) (can-unify-types Int:Native A)))
 		TestComplex
-				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operator.PrintlnOperator,
-						new Tuple(Arrays.asList(new AbstractionApplication(Operator.CanUnifyTypes,
+				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
+						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes,
 								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
 										new TypeSymbol(new TypeVariable(NameGenerator.next()))))))))));
 		// (println (can-unify-types Int:Native Int:Native))
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(
-				Operator.PrintlnOperator,
-				new Tuple(Arrays.asList(new AbstractionApplication(Operator.CanUnifyTypes, new Tuple(Arrays
+				Operators.PrintlnOperator,
+				new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes, new Tuple(Arrays
 						.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative)))))))));
 		// (println (can-unify-types Int:Native Int:Roman))
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(
-				Operator.PrintlnOperator,
-				new Tuple(Arrays.asList(new AbstractionApplication(Operator.CanUnifyTypes, new Tuple(Arrays
+				Operators.PrintlnOperator,
+				new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes, new Tuple(Arrays
 						.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman)))))))));
 		// (println (can-unify-types Int:Native String:Native))
 		TestComplex
-				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operator.PrintlnOperator,
-						new Tuple(Arrays.asList(new AbstractionApplication(Operator.CanUnifyTypes,
+				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
+						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes,
 								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
 										new TypeSymbol(TypeAtom.TypeStringNative)))))))));
 	}
@@ -809,9 +816,9 @@ class TestComplex {
 		assertEquals(new LitInteger(3), l.get(0));
 
 		TestComplex.assertIntprtAndCompPrintSameValues(
-				Arrays.asList(new AbstractionApplication(Operator.PrintlnOperator, new Tuple(Arrays.asList(e1))),
-						new AbstractionApplication(Operator.PrintlnOperator, new Tuple(Arrays.asList(e2))),
-						new AbstractionApplication(Operator.PrintlnOperator, new Tuple(Arrays.asList(e3)))));
+				Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator, new Tuple(Arrays.asList(e1))),
+						new AbstractionApplication(Operators.PrintlnOperator, new Tuple(Arrays.asList(e2))),
+						new AbstractionApplication(Operators.PrintlnOperator, new Tuple(Arrays.asList(e3)))));
 	}
 	
 	@Test
@@ -889,16 +896,16 @@ class TestComplex {
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		ListNative.initializeInEnvironment(env, typeEnv);
 		
-		AbstractionApplication app_defElambda_defRanking = new AbstractionApplication(Operator.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_defaultRanking, args)));
+		AbstractionApplication app_defElambda_defRanking = new AbstractionApplication(Operators.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_defaultRanking, args)));
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defElambda_defRanking));
 		
-		AbstractionApplication app_defElambda_cusRanking = new AbstractionApplication(Operator.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_defaultRanking, args, ranking)));
+		AbstractionApplication app_defElambda_cusRanking = new AbstractionApplication(Operators.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_defaultRanking, args, ranking)));
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defElambda_cusRanking));
 		
-		AbstractionApplication app_cusElambda_defRanking = new AbstractionApplication(Operator.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_customRanking, args)));
+		AbstractionApplication app_cusElambda_defRanking = new AbstractionApplication(Operators.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_customRanking, args)));
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_cusElambda_defRanking));
 		
-		AbstractionApplication app_cusElambda_cusRanking = new AbstractionApplication(Operator.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_customRanking, args, ranking2)));
+		AbstractionApplication app_cusElambda_cusRanking = new AbstractionApplication(Operators.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_customRanking, args, ranking2)));
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_cusElambda_cusRanking));
 	}
 	
@@ -974,6 +981,8 @@ class TestComplex {
 		definitions.append("(declare " + ClojureCodeGenerator.convertClojureSymbol + ")\n");
 		definitions.append("(declare " + ClojureCodeGenerator.convertTupleClojureSymbol + ")\n");
 		definitions.append("(declare " + ClojureCodeGenerator.convertFnClojureSymbol + ")\n");
+		definitions.append("(declare " + ClojureCodeGenerator.convertRepOrClojureSymbol + ")\n");
+		definitions.append("(declare " + ClojureCodeGenerator.convertToRepOrClojureSymbol + ")\n");
 		definitions.append(ClojureCodeGenerator.convertClojureDef + "\n");
 		TestComplex.clojureCodeResult(definitions.toString());
 		
@@ -981,6 +990,12 @@ class TestComplex {
 		TestComplex.clojureCodeResult(definitions.toString());
 		
 		definitions.append(ClojureCodeGenerator.convertFnClojureDef + "\n");
+		TestComplex.clojureCodeResult(definitions.toString());
+		
+		definitions.append(ClojureCodeGenerator.convertRepOrClojureDef + "\n");
+		TestComplex.clojureCodeResult(definitions.toString());
+		
+		definitions.append(ClojureCodeGenerator.convertToRepOrClojureDef + "\n");
 		TestComplex.clojureCodeResult(definitions.toString());
 		
 		Environment env = Environment.initTopLevelEnvitonment();
@@ -1087,6 +1102,27 @@ class TestComplex {
 						+ " nil)" + " (" + impl2.toClojureCode(env, typeEnv) + " nil)" + " ("
 						+ impl3.toClojureCode(env, typeEnv) + " nil)" + "}) nil nil))",
 				"[impl3]");
+		
+		ExtendedLambda elambda = ExtendedLambda.makeExtendedLambda(
+				new Lambda(
+						new Tuple(new Symbol("x")),
+						new TypeTuple(TypeAtom.TypeIntNative),
+						new LitString("a")),
+				new Lambda(
+						new Tuple(new Symbol("x")),
+						new TypeTuple(TypeAtom.TypeIntString),
+						new LitString("b")));
+		
+		TestComplex.clojureCodeResult(definitions.toString() + 
+				"(println (" + ClojureCodeGenerator.convertRepOrClojureSymbol + " "
+				+ new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeStringNative).clojureTypeRepresentation() + " "
+				+ elambda.toClojureCode(env, typeEnv) + "))");
+		
+		TestComplex.assertClojureFunction(definitions.toString(),
+				 	"(println (" + ClojureCodeGenerator.convertToRepOrClojureSymbol + " " + 
+				 			RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString).clojureTypeRepresentation() + " " +
+				 			new LitInteger(42).toClojureCode(env, typeEnv) + "))",
+				 	"[42]");
 	}
 	
 	@Test
@@ -1104,6 +1140,15 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (map2-list-native + (construct List Native 21 (construct List Native 21 (construct List Native))) (construct List Native 21 (construct List Native 21 (construct List Native)))))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (foldl-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native)))))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (foldr-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native)))))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + ListNative.headListNativeSymbol + "(" + ListNative.addToEndSymbol + " (construct List Native 21 (construct List Native)) 42)))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(define l (convert List:Native List:JavaArray (construct List Native 42 (construct List Native 21 (construct List Native)))))"
+				+ "(println (" + JavaArrayList.getSymbol + " l 0))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(define l (convert List:Native List:JavaLinked (construct List Native 42 (construct List Native 21 (construct List Native)))))"
+				+ "(println (" + JavaLinkedList.getSymbol + " l 0))");
 	}
 	
 	@Test
@@ -1226,6 +1271,16 @@ class TestComplex {
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 4)"
 				+ "(println (" + JavaArrayList.foldrSymbol + " / 16 l1))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l (construct List JavaArray))\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l 42)\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l 21)\n"
+				+ "(println (" + JavaLinkedList.getSymbol + " (convert List:JavaArray List:JavaLinked l) 0))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l (construct List JavaArray))\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l 42)\n"
+				+ "(" + JavaArrayList.addToEndSymbol + " l 21)\n"
+				+ "(println (car (let-type (A) (deconstruct (convert List:JavaArray List:Native l) (A List:Native)))))");
 	}
 	
 	@Test
@@ -1344,6 +1399,29 @@ class TestComplex {
 				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
 				+ "(" + JavaLinkedList.addToEndSymbol + " l1 4)"
 				+ "(println (" + JavaLinkedList.foldrSymbol + " / 16 l1))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l (construct List JavaLinked))\n"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l 42)\n"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l 21)\n"
+				+ "(println (" + JavaArrayList.getSymbol + " (convert List:JavaLinked List:JavaArray l) 0))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(define l (construct List JavaLinked))\n"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l 42)\n"
+				+ "(" + JavaLinkedList.addToEndSymbol + " l 21)\n"
+				+ "(println (car (let-type (A) (deconstruct (convert List:JavaLinked List:Native l) (A List:Native)))))");
+	}
+	
+	@Test
+	@DisplayName("Test logging")
+	void testLogging() throws Exception{
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		TestComplex.testClojureCompileNoCmp("(timestamp)", env, typeEnv);	
+		TestComplex.testClojureCompileNoCmp("(init-logger \"test-clj-log\")", env, typeEnv);
+		TestComplex.testClojureCompileNoCmp("(log \"test-clj\")", env, typeEnv);
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(init-logger \"test-clj-log\")\n" 
+				+ "(log \"test-clj\")");
 	}
 	
 	private static void assertClojureFunction(String definitions, String testCase, String expectedResult) throws IOException, InterruptedException {

@@ -3,7 +3,7 @@ package velka.lang.langbase;
 import java.util.Arrays;
 
 import velka.lang.abstraction.Lambda;
-import velka.lang.abstraction.Operator;
+import velka.lang.abstraction.Operators;
 import velka.lang.application.CanDeconstructAs;
 import velka.lang.application.Construct;
 import velka.lang.application.Deconstruct;
@@ -83,7 +83,7 @@ public class ListNative {
 					new AbstractionApplication(ListNative.isListNativeEmptySymbol,
 							new Tuple(Arrays.asList(new Symbol("l")))),
 					new ExceptionExpr(new LitString("Cannot take head of empty list.")),
-					new AbstractionApplication(Operator.Car,
+					new AbstractionApplication(Operators.Car,
 							new Tuple(new Deconstruct(new Symbol("l"), new TypeTuple(
 									new TypeVariable(NameGenerator.next()), TypeAtom.TypeListNative))))));
 
@@ -101,7 +101,7 @@ public class ListNative {
 					new AbstractionApplication(ListNative.isListNativeEmptySymbol,
 							new Tuple(Arrays.asList(new Symbol("l")))),
 					new ExceptionExpr(new LitString("Cannot take tail of empty list.")),
-					new AbstractionApplication(Operator.Cdr,
+					new AbstractionApplication(Operators.Cdr,
 							new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"), new TypeTuple(Arrays
 									.asList(new TypeVariable(NameGenerator.next()), TypeAtom.TypeListNative))))))));;
 
@@ -174,17 +174,17 @@ public class ListNative {
 	public static final Lambda foldlListNative = new Lambda(
 			new Tuple(Arrays.asList(new Symbol("f"), new Symbol("term"), new Symbol("l"))),
 			new TypeTuple(
-					Arrays.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, TypeAtom.TypeListNative)),
+					Arrays.asList(new TypeArrow(new TypeTuple(A, B), A), A, TypeAtom.TypeListNative)),
 			new IfExpression(
 					new AbstractionApplication(
 							ListNative.isListNativeEmptySymbol, new Tuple(Arrays.asList(new Symbol("l")))),
 					new Symbol("term"),
 					new AbstractionApplication(foldlListNativeSymbol,
 							new Tuple(Arrays.asList(new Symbol("f"), new AbstractionApplication(new Symbol("f"),
-									new Tuple(Arrays.asList(new Symbol("term"), new AbstractionApplication(Operator.Car,
+									new Tuple(Arrays.asList(new Symbol("term"), new AbstractionApplication(Operators.Car,
 											new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"),
 													new TypeTuple(Arrays.asList(A, TypeAtom.TypeListNative))))))))),
-									new AbstractionApplication(Operator.Cdr,
+									new AbstractionApplication(Operators.Cdr,
 											new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"),
 													new TypeTuple(Arrays.asList(A, TypeAtom.TypeListNative)))))))))));
 
@@ -198,7 +198,7 @@ public class ListNative {
 	 */
 	public static final Lambda foldrListNative = new Lambda(
 			new Tuple(Arrays.asList(new Symbol("f"), new Symbol("term"), new Symbol("l"))),
-			new TypeTuple(Arrays.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A,
+			new TypeTuple(Arrays.asList(new TypeArrow(new TypeTuple(A, B), A), A,
 					TypeAtom.TypeListNative)),
 			new IfExpression(
 					new AbstractionApplication(ListNative.isListNativeEmptySymbol, new Tuple(
@@ -209,14 +209,192 @@ public class ListNative {
 									Arrays.asList(
 											new AbstractionApplication(foldrListNativeSymbol, new Tuple(Arrays.asList(
 													new Symbol("f"), new Symbol("term"),
-													new AbstractionApplication(Operator.Cdr,
+													new AbstractionApplication(Operators.Cdr,
 															new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"),
 																	new TypeTuple(Arrays.asList(A,
 																			TypeAtom.TypeListNative))))))))),
-											new AbstractionApplication(Operator.Car,
+											new AbstractionApplication(Operators.Car,
 													new Tuple(Arrays
 															.asList(new Deconstruct(new Symbol("l"), new TypeTuple(
 																	Arrays.asList(A, TypeAtom.TypeListNative)))))))))));
+	
+//	(lambda (_list _e)
+//			(if (isEmpty _list)
+//				(construct List Native _e _list)
+//				(construct List Native
+//						(head _list)
+//						(add-to-end 
+//							(tail _list)
+//							_e
+//							))
+//				))
+	/**
+	 * Symbol for add-to-end function
+	 */
+	public static final Symbol addToEndSymbol = new Symbol("add-to-end-list-native");
+	
+	/**
+	 * add-to-end function definition
+	 */
+	public static final Lambda addToEnd = new Lambda(
+			new Tuple(new Symbol("_list"), new Symbol("_e")),
+			new TypeTuple(TypeAtom.TypeListNative, A),
+			new IfExpression(
+					new AbstractionApplication(ListNative.isListNativeEmptySymbol, new Tuple(new Symbol("_list"))),
+					new Construct(TypeAtom.TypeListNative, new Tuple(new Symbol("_e"), new Symbol("_list"))),
+					new Construct(
+							TypeAtom.TypeListNative,
+							new Tuple(
+									new AbstractionApplication(ListNative.headListNativeSymbol, new Tuple(new Symbol("_list"))),
+					new AbstractionApplication(ListNative.addToEndSymbol,
+							new Tuple(
+									new AbstractionApplication(
+											ListNative.tailListNativeSymbol,
+											new Tuple(
+													new Symbol("_list"))),
+									new Symbol("_e")))))));
+	
+//	(lambda (_list _index _e)
+//			(if (is-empty _list)
+//				(error "Index out of bounds exception")
+//				(if (= _index 0)
+//					(construct List Native)
+//						)
+//				)
+//			)
+	
+	
+//	(lambda (_list)
+//			(foldl-list-native
+//					java-array-list-add-to-end
+//					(construct List JavaArray)
+//					_list))
+	
+//	(lambda (_list)
+//			((lambda (_agg)
+//					(cdr
+//						(cons
+//							(foldl-list-native
+//									(lambda (_l _e)
+//										(cdr 
+//											(cons 
+//												(java-array-list-add-to-end _l _e)
+//												_l)))
+//									_agg
+//									_list)
+//							_agg)))
+//			(construt List JavaArray)
+//			))
+	
+	/**
+	 * Conversion lambda List:Native 2 List:JavaArray
+	 */
+	public static final Lambda ListNativeToArrayList = new Lambda(
+			new Tuple(new Symbol("_list")),
+			new TypeTuple(TypeAtom.TypeListNative),
+			new AbstractionApplication(
+					new Lambda(
+							new Tuple(new Symbol("_agg")),
+							new TypeTuple(JavaArrayList.TypeListJavaArray),
+							new AbstractionApplication(
+									Operators.Cdr,
+									new Tuple(
+											new Tuple(
+													new AbstractionApplication(
+															ListNative.foldlListNativeSymbol,
+															new Tuple(
+																	new Lambda(
+																			new Tuple(
+																					new Symbol("_l"),
+																					new Symbol("_e")
+																					),
+																			new TypeTuple(
+																					JavaArrayList.TypeListJavaArray,
+																					new TypeVariable(NameGenerator.next())
+																					),
+																			new AbstractionApplication(
+																					Operators.Cdr,
+																					new Tuple(
+																							new Tuple(
+																									new AbstractionApplication(
+																											JavaArrayList.addToEndSymbol,
+																											new Tuple(
+																													new Symbol("_l"),
+																													new Symbol("_e")
+																													)
+																											),
+																									new Symbol("_l")
+																									)
+																							)
+																					)
+																			),
+																	new Symbol("_agg"),
+																	new Symbol("_list")
+																	)
+															),
+													new Symbol("_agg")
+													)
+											)
+									)
+							),
+					new Tuple(new Construct(JavaArrayList.TypeListJavaArray, Tuple.EMPTY_TUPLE))
+					)
+			);
+	
+	/**
+	 * Conversion lambda List:Native 2 List:JavaArray
+	 */
+	public static final Lambda ListNativeToLinkedList = new Lambda(
+			new Tuple(new Symbol("_list")),
+			new TypeTuple(TypeAtom.TypeListNative),
+			new AbstractionApplication(
+					new Lambda(
+							new Tuple(new Symbol("_agg")),
+							new TypeTuple(JavaLinkedList.TypeListJavaLinked),
+							new AbstractionApplication(
+									Operators.Cdr,
+									new Tuple(
+											new Tuple(
+													new AbstractionApplication(
+															ListNative.foldlListNativeSymbol,
+															new Tuple(
+																	new Lambda(
+																			new Tuple(
+																					new Symbol("_l"),
+																					new Symbol("_e")
+																					),
+																			new TypeTuple(
+																					JavaLinkedList.TypeListJavaLinked,
+																					new TypeVariable(NameGenerator.next())
+																					),
+																			new AbstractionApplication(
+																					Operators.Cdr,
+																					new Tuple(
+																							new Tuple(
+																									new AbstractionApplication(
+																											JavaLinkedList.addToEndSymbol,
+																											new Tuple(
+																													new Symbol("_l"),
+																													new Symbol("_e")
+																													)
+																											),
+																									new Symbol("_l")
+																									)
+																							)
+																					)
+																			),
+																	new Symbol("_agg"),
+																	new Symbol("_list")
+																	)
+															),
+													new Symbol("_agg")
+													)
+											)
+									)
+							),
+					new Tuple(new Construct(JavaLinkedList.TypeListJavaLinked, Tuple.EMPTY_TUPLE))
+					)
+			);
 
 	/**
 	 * Generates code for clojure regarding Native List
@@ -241,6 +419,8 @@ public class ListNative {
 			s.append('\n');
 			s.append((new DefineSymbol(foldrListNativeSymbol, foldrListNative)).toClojureCode(env, typeEnv));
 			s.append('\n');
+			s.append((new DefineSymbol(addToEndSymbol, addToEnd)).toClojureCode(env, typeEnv));
+			s.append('\n');
 		} catch (AppendableException e) {
 			System.err.println("Compilation error " + e.getMessage() + " occured in " + ListNative.class.getName());
 		}
@@ -260,6 +440,7 @@ public class ListNative {
 			(new DefineSymbol(map2ListNativeSymbol, map2ListNative)).interpret(env, typeEnv);
 			(new DefineSymbol(foldlListNativeSymbol, foldlListNative)).interpret(env, typeEnv);
 			(new DefineSymbol(foldrListNativeSymbol, foldrListNative)).interpret(env, typeEnv);
+			(new DefineSymbol(addToEndSymbol, addToEnd)).interpret(env, typeEnv);
 		} catch (AppendableException e) {
 			System.err.println("Interpretation error " + e.getMessage() + " occured in " + ListNative.class.getName());
 		}

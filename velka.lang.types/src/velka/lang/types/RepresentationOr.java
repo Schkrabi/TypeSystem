@@ -2,7 +2,6 @@ package velka.lang.types;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -11,7 +10,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import velka.lang.util.AppendableException;
-import velka.lang.util.Pair;
+import velka.lang.util.ThrowingBinaryOperator;
 import velka.lang.util.ThrowingFunction;
 
 /**
@@ -53,17 +52,16 @@ public class RepresentationOr extends Type {
 
 		return new RepresentationOr(unifiedTypes);
 	}
-	
+
 	/**
-	 * Creates new RepresentationOr type.
-	 * Convenience constructor
+	 * Creates new RepresentationOr type. Convenience constructor
 	 * 
 	 * @param representations types in representation Or
 	 * @return new RepresentationOr type
 	 * @throws AppendableException thrown if representation is empty or if any of
 	 *                             the types in representation does not unify
 	 */
-	public static Type makeRepresentationOr(Type ...reps) throws AppendableException{
+	public static Type makeRepresentationOr(Type... reps) throws AppendableException {
 		return RepresentationOr.makeRepresentationOr(Arrays.asList(reps));
 	}
 
@@ -91,30 +89,19 @@ public class RepresentationOr extends Type {
 	public Type apply(Substitution s) {
 		return new RepresentationOr(this.representations.stream().map(x -> x.apply(s)).collect(Collectors.toList()));
 	}
-	
+
 	/**
 	 * Unites list of unifiers
+	 * 
 	 * @param unifiers list of unifiers
 	 * @return substitution uniting all the unifiers
 	 * @throws AppendableException if unifiers in list are not compatible
 	 */
 	private static Substitution uniteUnifiers(List<Substitution> unifiers) throws AppendableException {
-		final Set<TypeVariable> boundVariables = unifiers.stream()
-				.map(x -> x.variableStream().collect(Collectors.toSet()))
-				.reduce(unifiers.stream().findAny().get().variableStream().collect(Collectors.toSet()), (x, y) -> {
-					Set<TypeVariable> s = new TreeSet<TypeVariable>(x);
-					s.retainAll(y);
-					return s;
-				});
+		Substitution s = unifiers.stream().reduce(Substitution.EMPTY,
+				ThrowingBinaryOperator.wrapper((x, y) -> x.union(y)));
 
-		Set<Pair<TypeVariable, Type>> s = new HashSet<Pair<TypeVariable, Type>>();
-		for (TypeVariable v : boundVariables) {
-			Type t = RepresentationOr
-					.makeRepresentationOr(unifiers.stream().map(x -> x.get(v).get()).collect(Collectors.toSet()));
-			Pair<TypeVariable, Type> p = new Pair<TypeVariable, Type>(v, t);
-			s.add(p);
-		}
-		return new Substitution(s);
+		return s;
 	}
 
 	@Override
@@ -134,7 +121,7 @@ public class RepresentationOr extends Type {
 			throw ae;
 		}
 	}
-	
+
 	@Override
 	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
 		if (other instanceof TypeVariable) {
@@ -143,7 +130,8 @@ public class RepresentationOr extends Type {
 
 		try {
 			final List<Substitution> unifiers = this.representations.stream()
-					.map(ThrowingFunction.wrapper(x -> Type.unifyRepresentation(x, other))).collect(Collectors.toList());
+					.map(ThrowingFunction.wrapper(x -> Type.unifyRepresentation(x, other)))
+					.collect(Collectors.toList());
 
 			return RepresentationOr.uniteUnifiers(unifiers);
 
@@ -204,17 +192,17 @@ public class RepresentationOr extends Type {
 	public String clojureTypeRepresentation() throws AppendableException {
 		StringBuilder sb = new StringBuilder("(velka.lang.types.RepresentationOr/makeRepresentationOr #{");
 		Iterator<Type> i = this.representations.iterator();
-		while(i.hasNext()) {
+		while (i.hasNext()) {
 			Type t = i.next();
 			sb.append(t.clojureTypeRepresentation());
-			if(i.hasNext()) {
+			if (i.hasNext()) {
 				sb.append(" ");
 			}
 		}
 		sb.append("})");
 		return sb.toString();
 	}
-	
+
 	/**
 	 * Returns true if this type is representing expression that can be applicated
 	 * (function, lambda, extended function or lambda). Otherwise returns false.
@@ -227,16 +215,16 @@ public class RepresentationOr extends Type {
 
 	@Override
 	public Type uniteRepresentationsWith(Type other) throws AppendableException {
-		if(other instanceof TypeVariable) {
+		if (other instanceof TypeVariable) {
 			return other.uniteRepresentationsWith(this);
 		}
-		if(other instanceof RepresentationOr) {
+		if (other instanceof RepresentationOr) {
 			Set<Type> reps = this.getRepresentations();
 			reps.addAll(((RepresentationOr) other).getRepresentations());
 			return RepresentationOr.makeRepresentationOr(reps);
 		}
-		
-		if(this.representations.contains(other)) {
+
+		if (this.representations.contains(other)) {
 			return other;
 		}
 		throw new AppendableException("Cannot unite types " + this + " " + other);
@@ -244,6 +232,7 @@ public class RepresentationOr extends Type {
 
 	@Override
 	public Type map(Function<Type, Type> fun) throws AppendableException {
-		return RepresentationOr.makeRepresentationOr(this.representations.stream().map(fun).collect(Collectors.toList()));
+		return RepresentationOr
+				.makeRepresentationOr(this.representations.stream().map(fun).collect(Collectors.toList()));
 	}
 }

@@ -3,7 +3,8 @@ package velka.lang.interpretation;
 import java.util.HashMap;
 import java.util.Map;
 
-import velka.lang.abstraction.Operator;
+import velka.lang.abstraction.ConversionOperators;
+import velka.lang.abstraction.Operators;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Symbol;
 import velka.lang.langbase.JavaArrayList;
@@ -184,38 +185,46 @@ public class Environment implements Comparable<Environment> {
 
 	public static Environment initTopLevelEnvitonment() {
 		Environment env = new Environment();
-		env.put(new Symbol(Operator.Addition.toString()), Operator.Addition);
-		env.put(new Symbol(Operator.Subtraction.toString()), Operator.Subtraction);
-		env.put(new Symbol(Operator.Multiplication.toString()), Operator.Multiplication);
-		env.put(new Symbol(Operator.Division.toString()), Operator.Division);
-		env.put(new Symbol(Operator.NumericEqual.toString()), Operator.NumericEqual);
-		env.put(new Symbol(Operator.LesserThan.toString()), Operator.LesserThan);
-		env.put(new Symbol(Operator.Not.toString()), Operator.Not);
-		env.put(new Symbol(Operator.BitAnd.toString()), Operator.BitAnd);
-		env.put(new Symbol(Operator.BitOr.toString()), Operator.BitOr);
-		env.put(new Symbol(Operator.Concantenation.toString()), Operator.Concantenation);
-		env.put(new Symbol(Operator.Car.toString()), Operator.Car);
-		env.put(new Symbol(Operator.Cdr.toString()), Operator.Cdr);
+		env.put(new Symbol(Operators.Addition.toString()), Operators.Addition);
+		env.put(new Symbol(Operators.Subtraction.toString()), Operators.Subtraction);
+		env.put(new Symbol(Operators.Multiplication.toString()), Operators.Multiplication);
+		env.put(new Symbol(Operators.Division.toString()), Operators.Division);
+		env.put(new Symbol(Operators.NumericEqual.toString()), Operators.NumericEqual);
+		env.put(new Symbol(Operators.LesserThan.toString()), Operators.LesserThan);
+		env.put(new Symbol(Operators.Not.toString()), Operators.Not);
+		env.put(new Symbol(Operators.BitAnd.toString()), Operators.BitAnd);
+		env.put(new Symbol(Operators.BitOr.toString()), Operators.BitOr);
+		env.put(new Symbol(Operators.Concantenation.toString()), Operators.Concantenation);
+		env.put(new Symbol(Operators.Car.toString()), Operators.Car);
+		env.put(new Symbol(Operators.Cdr.toString()), Operators.Cdr);
 		env.put(new Symbol("nil"), Expression.EMPTY_EXPRESSION);
-		env.put(new Symbol(Operator.Equals.toString()), Operator.Equals);
-		env.put(new Symbol(Operator.PrintlnOperator.toString()), Operator.PrintlnOperator);
-		env.put(new Symbol(Operator.CanUnifyRepresentations.toString()), Operator.CanUnifyRepresentations);
-		env.put(new Symbol(Operator.CanUnifyTypes.toString()), Operator.CanUnifyTypes);
-		env.put(new Symbol(Operator.IsSameType.toString()), Operator.IsSameType);
-		env.put(new Symbol(Operator.IsSameRepresentation.toString()), Operator.IsSameRepresentation);
+		env.put(new Symbol(Operators.Equals.toString()), Operators.Equals);
+		env.put(new Symbol(Operators.PrintlnOperator.toString()), Operators.PrintlnOperator);
+		env.put(new Symbol(Operators.CanUnifyRepresentations.toString()), Operators.CanUnifyRepresentations);
+		env.put(new Symbol(Operators.CanUnifyTypes.toString()), Operators.CanUnifyTypes);
+		env.put(new Symbol(Operators.IsSameType.toString()), Operators.IsSameType);
+		env.put(new Symbol(Operators.IsSameRepresentation.toString()), Operators.IsSameRepresentation);
+		env.put(new Symbol(Operators.Timestamp.toString()), Operators.Timestamp);
+		env.put(new Symbol(Operators.InitLogger.toString()), Operators.InitLogger);
+		env.put(new Symbol(Operators.Log.toString()), Operators.Log);
+		env.put(new Symbol(Operators.BitShiftRight.toString()), Operators.BitShiftRight);
+		env.put(new Symbol(Operators.BitShiftLeft.toString()), Operators.BitShiftLeft);
+		env.put(new Symbol(Operators.BitNot.toString()), Operators.BitNot);
+		env.put(new Symbol(Operators.BitXor.toString()), Operators.BitXor);
+		env.put(new Symbol(Operators.ToStr.toString()), Operators.ToStr);
 		
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
-				Operator.IntNativeToIntRoman);
+				ConversionOperators.IntNativeToIntRoman);
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)),
-				Operator.IntNativeToIntString);
+				ConversionOperators.IntNativeToIntString);
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative)),
-				Operator.IntRomanToIntNative);
+				ConversionOperators.IntRomanToIntNative);
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString)),
-				Operator.IntRomanToIntString);
+				ConversionOperators.IntRomanToIntString);
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntNative)),
-				Operator.IntStringToIntNative);
+				ConversionOperators.IntStringToIntNative);
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)),
-				Operator.IntStringToIntRoman);
+				ConversionOperators.IntStringToIntRoman);
 		
 		JavaArrayList.initializeInEnvironment(env);
 		JavaLinkedList.initializeInEnvironment(env);
