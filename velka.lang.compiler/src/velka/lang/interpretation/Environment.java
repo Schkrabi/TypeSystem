@@ -212,6 +212,9 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Symbol(Operators.BitNot.toString()), Operators.BitNot);
 		env.put(new Symbol(Operators.BitXor.toString()), Operators.BitXor);
 		env.put(new Symbol(Operators.ToStr.toString()), Operators.ToStr);
+		env.put(new Symbol(Operators.ReadFile.toString()), Operators.ReadFile);
+		env.put(new Symbol(Operators.StrSplit.toString()), Operators.StrSplit);
+		env.put(new Symbol(Operators.parseInt.toString()), Operators.parseInt);
 		
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
 				ConversionOperators.IntNativeToIntRoman);

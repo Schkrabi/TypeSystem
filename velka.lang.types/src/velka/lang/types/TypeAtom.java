@@ -53,7 +53,7 @@ public class TypeAtom extends Type {
 	}
 
 	@Override
-	public Set<TypeVariable> getUnconstrainedVariables() {
+	public Set<TypeVariable> getVariables() {
 		return new TreeSet<TypeVariable>();
 	}
 
@@ -166,5 +166,10 @@ public class TypeAtom extends Type {
 	@Override
 	public Type map(Function<Type, Type> fun) throws AppendableException {
 		return fun.apply(this);
+	}
+
+	@Override
+	protected Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
+		return this;
 	}
 }

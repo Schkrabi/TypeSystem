@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -868,7 +871,7 @@ class TestInterpretation {
 
 	@Test
 	@DisplayName("Test Operators")
-	void testOperators() throws AppendableException {
+	void testOperators() throws AppendableException, IOException {
 		TestInterpretation.testOperator(Operators.Addition,
 				new Tuple(Arrays.asList(new LitInteger(21), new LitInteger(21))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
@@ -974,6 +977,39 @@ class TestInterpretation {
 		TestInterpretation.testOperator(Operators.BitNot, new Tuple(new LitInteger(6)), new LitInteger(-7), TypeAtom.TypeIntNative);
 		TestInterpretation.testOperator(Operators.BitXor, new Tuple(new LitInteger(5), new LitInteger(6)), new LitInteger(3), TypeAtom.TypeIntNative);
 		TestInterpretation.testOperator(Operators.ToStr, new Tuple(new LitInteger(42)), new LitString("42"), TypeAtom.TypeStringNative);
+		
+		File tempOut = File.createTempFile("velka_read_test", null);
+        String content  = "hello world !!";       
+        Files.writeString(tempOut.toPath(), content);
+        
+        TestInterpretation.testOperator(
+        		Operators.ReadFile, 
+        		new Tuple(new LitString(tempOut.toPath().toString())), 
+        		new LitString(content), 
+        		TypeAtom.TypeStringNative);
+        
+        tempOut.delete();
+        
+        TestInterpretation.testOperator(Operators.StrSplit, 
+        		new Tuple(new LitString("foo bar baz"), 
+        		new LitString(" ")), 
+        		new LitComposite(
+        				new Tuple(
+        						new LitString("foo"), 
+        						new LitComposite(
+        								new Tuple(
+        									new LitString("bar"), 
+        									new LitComposite(
+        											new Tuple(
+        													new LitString("baz"), 
+        													ListNative.EMPTY_LIST_NATIVE), 
+        											TypeAtom.TypeListNative)), 
+        								TypeAtom.TypeListNative)),
+        				TypeAtom.TypeListNative), 
+        		TypeAtom.TypeListNative);
+        
+        TestInterpretation.testOperator(Operators.parseInt, 
+        		new Tuple(new LitString("42")), new LitInteger(42), TypeAtom.TypeIntNative);
 	}
 
 	@Test
@@ -1979,6 +2015,33 @@ class TestInterpretation {
 		
 		TestInterpretation.testInterpretString("(log \"test-2\")", Expression.EMPTY_EXPRESSION);
 	}
+	
+	@Test
+	@DisplayName("Test deep inference")
+	void testDeepInference() throws AppendableException {
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		ListNative.initializeInEnvironment(env, typeEnv);
+		
+		String code = "(define build-list-native-aux\n" + 
+				"            (let-type (A)\n" + 
+				"                (lambda ((Int:Native n) (((Int:Native) #> A) f) (Int:Native i))\n" + 
+				"                    (if (< i n)\n" + 
+				"                        (construct List Native (f i) (build-list-native-aux n f (+ i 1)))\n" + 
+				"                        (construct List Native)))))\n" + 
+				"        (define build-list-native\n" + 
+				"            (let-type (A)\n" + 
+				"                (lambda ((Int:Native n) (((Int:Native) #> A) f))\n" + 
+				"                    (build-list-native-aux n f 0))))\n" + 
+				"        (build-list-native\n" + 
+				"            1 (lambda ((Int:Native x)) (build-list-native x (lambda ((Int:Native y)) y))))";
+		
+		List<Expression> exprs = TestInterpretation.parseString_multipleExpression(code);
+		for(Expression e : exprs) {
+			e.infer(env, typeEnv);
+			e.interpret(env, typeEnv);
+		}
+	}
 
 	private static Expression parseString(String s) throws AppendableException {
 		CharStream charStream = CharStreams.fromString(s);
@@ -2024,7 +2087,7 @@ class TestInterpretation {
 
 	private static void testInference(Pair<Type, Substitution> p, Type expected, Expression infered,
 			boolean shouldeBeSUbstEmpty) {
-		assertEquals(p.first, expected);
+		assertEquals(expected, p.first);
 		if (shouldeBeSUbstEmpty) {
 			assertEquals(Substitution.EMPTY, p.second);
 		}

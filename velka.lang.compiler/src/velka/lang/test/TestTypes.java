@@ -342,8 +342,7 @@ class TestTypes {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		assertThrows(AppendableException.class,
-				() -> Conversions.convert(ror, Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntRoman, typeEnv));
+		assertEquals(Expression.EMPTY_EXPRESSION, Conversions.convert(ror, Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntRoman, typeEnv));
 
 		TestTypes.testApply(
 				RepresentationOr.makeRepresentationOr(
@@ -405,8 +404,8 @@ class TestTypes {
 						Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), TypeAtom.TypeStringNative))));
 		TestTypes.testUnify(new TypeArrow(new TypeVariable("x"), TypeAtom.TypeStringNative),
 				RepresentationOr.makeRepresentationOr(
-						Arrays.asList(new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative),
-								new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeStringNative))),
+						new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative),
+								new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeStringNative)),
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), RepresentationOr
 						.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString))))));
 		TestTypes.testUnify(
@@ -441,7 +440,7 @@ class TestTypes {
 	static void testGetUnconstrainedVariables(Type type, Collection<TypeVariable> shouldContain) {
 		assertNotNull(type);
 		assertNotNull(shouldContain);
-		Set<TypeVariable> unconstrained = type.getUnconstrainedVariables();
+		Set<TypeVariable> unconstrained = type.getVariables();
 
 		if (!unconstrained.containsAll(shouldContain)) {
 			Set<TypeVariable> s = new TreeSet<TypeVariable>(shouldContain);
@@ -487,6 +486,6 @@ class TestTypes {
 		assertNotNull(second);
 		assertNotNull(expected);
 		Substitution s = Type.unifyTypes(first, second);
-		assertEquals(s, expected);
+		assertEquals(expected, s);
 	}
 }

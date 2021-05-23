@@ -48,7 +48,7 @@ public class TypeVariable extends Type {
 	}
 
 	@Override
-	public Set<TypeVariable> getUnconstrainedVariables() {
+	public Set<TypeVariable> getVariables() {
 		Set<TypeVariable> s = new TreeSet<TypeVariable>();
 		s.add(this);
 		return s;
@@ -103,5 +103,13 @@ public class TypeVariable extends Type {
 	@Override
 	public Type map(Function<Type, Type> fun) throws AppendableException {
 		return fun.apply(this);
+	}
+
+	@Override
+	protected Type replaceVariable(TypeVariable replaced, TypeVariable replacee) {
+		if(this.equals(replaced)) {
+			return replacee;
+		}
+		return this;
 	}
 }

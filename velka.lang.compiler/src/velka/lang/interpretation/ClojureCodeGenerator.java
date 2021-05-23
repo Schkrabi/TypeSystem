@@ -310,6 +310,8 @@ public class ClojureCodeGenerator {
 
 	public static String writeHeaders(Environment env, TypeEnvironment typeEnv) {
 		StringBuilder sb = new StringBuilder();
+		sb.append("(require '[clojure.string])\n");
+		sb.append("(ns clojure.examples.hello (:gen-class))");
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.type2typeSymbolSymbol));
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.tuple2velkaListSymbol));
 		sb.append(ClojureCodeGenerator.makeDeclaration(ClojureCodeGenerator.getTypeClojureSymbol));
@@ -364,5 +366,17 @@ public class ClojureCodeGenerator {
 		sb.append(ListNative.makeClojureCode(env, typeEnv));
 		sb.append("\n\n");
 		return sb.toString();
+	}
+	
+	/**
+	 * Writes footers
+	 * @remark  creates main entry point for clojure applictation calling function main with no arguments
+	 * @return string with code
+	 */
+	public static String writeFooters() {
+		//TODO add support of command line arguments!
+		return "(defn -main\n" + 
+				"  []\n" + 
+				"  (EAPPLYSYSGENNAMEgx main (with-meta [] {:lang-type (velka.lang.types.TypeTuple/EMPTY_TUPLE)})))";
 	}
 }

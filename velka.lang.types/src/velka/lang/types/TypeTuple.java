@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import velka.lang.util.AppendableException;
+import velka.lang.util.ThrowingFunction;
 
 /**
  * Tuple of types
@@ -111,11 +112,11 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	}
 
 	@Override
-	public Set<TypeVariable> getUnconstrainedVariables() {
+	public Set<TypeVariable> getVariables() {
 		Set<TypeVariable> s = new TreeSet<TypeVariable>();
 
 		for (Type t : this) {
-			s.addAll(t.getUnconstrainedVariables());
+			s.addAll(t.getVariables());
 		}
 		return s;
 	}
@@ -286,5 +287,18 @@ public class TypeTuple extends Type implements Iterable<Type> {
 			throw e;
 		}
 		return t;
+	}
+
+	@Override
+	protected Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
+		try {
+		return new TypeTuple(this.stream().map(ThrowingFunction.wrapper(x -> x.replaceVariable(replaced, replacee))).collect(Collectors.toList()));
+		}catch(RuntimeException re) {
+			if(re.getCause() instanceof AppendableException) {
+				AppendableException e = (AppendableException)re.getCause();
+				throw e;
+			}
+			throw re;
+		}
 	}
 }

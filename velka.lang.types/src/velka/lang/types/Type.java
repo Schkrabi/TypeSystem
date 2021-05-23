@@ -15,12 +15,11 @@ import velka.lang.util.NameGenerator;
 public abstract class Type implements Comparable<Type> {
 
 	/**
-	 * Returns set of all the variables in the type expression that are not
-	 * constrained by quantifier
+	 * Returns set of all the variables in the type 
 	 * 
 	 * @return
 	 */
-	public abstract Set<TypeVariable> getUnconstrainedVariables();
+	public abstract Set<TypeVariable> getVariables();
 
 	/**
 	 * Applies substitution to this type
@@ -55,6 +54,14 @@ public abstract class Type implements Comparable<Type> {
 	 * @throws AppendableException
 	 */
 	public abstract String clojureTypeRepresentation() throws AppendableException;
+	
+	/**
+	 * Replaces all occurences of variable replaced by variable replacee
+	 * @param replaced type variable to be replaced
+	 * @param replacee type variable that will be in place of replaced variable
+	 * @return type
+	 */
+	protected abstract Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException;
 
 	@Override
 	public int compareTo(Type other) {
@@ -121,4 +128,20 @@ public abstract class Type implements Comparable<Type> {
 	 * @return type with applied function
 	 */
 	public abstract Type map(java.util.function.Function<Type, Type> fun) throws AppendableException;
+	
+	/**
+	 * Replaces all type variables with new unused names
+	 * 
+	 * @param type type where type variable will be replaced
+	 * @return type with type variables replaced
+	 * @throws AppendableException 
+	 */
+	public static Type renameAllVariables(Type type) throws AppendableException {
+		Set<TypeVariable> vars = type.getVariables();
+		Type t = type;
+		for(TypeVariable v : vars) {
+			t = t.replaceVariable(v, new TypeVariable(NameGenerator.next()));
+		}
+		return t;
+	}
 }

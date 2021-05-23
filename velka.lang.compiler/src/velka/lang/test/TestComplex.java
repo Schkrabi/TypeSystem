@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -493,6 +494,8 @@ class TestComplex {
 	@Test
 	@DisplayName("Clojure Operators")
 	void testClojureOperators() throws Exception {
+		
+		
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(println (+ 21 21))\n" + "(println (* 1 42))\n" + "(println (/ 84 2))\n" + "(println (- 63 21))\n"
 						+ "(println (and #t #f))\n" + "(println (bit-and 42 1))\n" + "(println (bit-or 42 1))\n"
@@ -504,7 +507,15 @@ class TestComplex {
 						+ "(println (shl 2 1))"
 						+ "(println (bit-not 6))"
 						+ "(println (bit-xor 6 5))"
-						+ "(println (to-str 42))");
+						+ "(println (to-str 42))"
+						+ "(println (str-split \"foo bar baz\" \" \"))"
+						+ "(println (parse-int \"42\"))");
+		
+		File tempOut = File.createTempFile("velka_read_test", null);
+        String content  = "hello world !!";       
+        Files.writeString(tempOut.toPath(), content);
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (read-file \"" + tempOut.toPath().toString() + "\"))");
+		tempOut.delete();
 	}
 
 	@Test

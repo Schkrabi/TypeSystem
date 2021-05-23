@@ -1,3 +1,25 @@
+;;;;;;;;;;;;;
+;;CONSTANTS;;
+;;;;;;;;;;;;;
+;; Max element of bit vector set
+(define __BVSET_MAX_ELEMENT__ 8)
+
+;;Int value with all 1 bits
+(define _INT_MAX_ (bit-not 0))
+
+;;Number of attributes existing
+(define _N_ __BVSET_MAX_ELEMENT__)
+;(define _N_ 32)
+
+;;Path to files with data
+(define _DATA_PATH_BASE_ "./data/")
+
+;;Number of files with data
+(define _DATA_FILE_COUNT_ 1)
+
+;;Name of log file
+(define _LOG_NAME_ "log")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;Bit Vector utility functions;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -88,14 +110,14 @@
         
 ;;Appends two native lists
 (define append-list-native
-    (lambda ((List:Native first) (List:Native second))
-        (if (is-list-native-empty second)
-            first
-            (if (is-list-native-empty first)
-                second
+    (lambda ((List:Native l1) (List:Native l2))
+        (if (is-list-native-empty l2)
+            l1
+            (if (is-list-native-empty l1)
+                l2
                 (construct List Native 
-                    (head-list-native first) 
-                    (append-list-native (tail-list-native first) second))))))
+                    (head-list-native l1) 
+                    (append-list-native (tail-list-native l1) l2))))))
 
 ;;;;;;;
 ;;SET;;
@@ -203,8 +225,6 @@
         (lambda ((Int:Native agg) (Int:Native element)) 
             (bit-or agg (element-to-bit-mask element)))
         0 elements))
-        
-(define __BVSET_MAX_ELEMENT__ 64)
             
 ;;Adds element to set
 (define bvset-add
@@ -265,6 +285,10 @@
 (define bvset-equalp
     (lambda ((Set:BitVector set1) (Set:BitVector set2))
         (= (deconstruct set1 Int:Native) (deconstruct set2 Int:Native))))
+    
+(define bvset-build
+    (lambda ((Int:Native n))
+        (construct Set BitVector (bit-not (shl _INT_MAX_ n)))))
             
 ;;;;;;;;;;;;;;;
 ;;conversions;;
@@ -399,19 +423,71 @@
 (define context-extent
     (lambda ((Context:LinkedList context))
         (construct Set LinkedList (build-list-native (size-list-native (deconstruct context List:Native)) (lambda (x) x)))))
+ 
+(define context-extent-bvset
+    (lambda ((Context:LinkedList context))
+        (bvset-build (size-list-native (deconstruct context List:Native)))))
+        
+;;;;;;;;;;;;;;;;
+;;DATA LOADING;;
+;;;;;;;;;;;;;;;;
+(define load-row-llset
+    (lambda ((String:Native row))
+        (construct Set LinkedList
+            (map-list-native
+                parse-int
+                (str-split row " ")))))
+                
+(define load-row-bvset
+    (lambda ((String:Native row))
+        (construct Set BitVector
+            (map-list-native
+                parse-int
+                (str-split row " ")))))
+
+(define load-data-llset-aux
+    (lambda ((List:Native rows))
+        (if (is-list-native-empty rows)
+            rows
+            (construct List Native
+                (load-row-llset (head-list-native rows))
+                (load-data-llset-aux (tail-list-native rows))))))
+                
+(define load-data-bvset-aux
+    (lambda ((List:Native rows))
+        (if (is-list-native-empty rows)
+            rows
+            (construct List Native
+                (load-row-bvset (head-list-native rows))
+                (load-data-bvset-aux (tail-list-native rows))))))
+                
+(define load-data-llset
+    (lambda ((String:Native data))
+        (construct Context LinkedList
+            (load-data-llset-aux (str-split data "\n")))))
+            
+(define load-data-bvset
+    (lambda ((String:Native data))
+        (construct Context LinkedList
+            (load-data-bvset-aux (str-split data "\n")))))
+            
+(define load-file-llset
+    (lambda ((String:Native path))
+        (load-data-llset (read-file path))))
+        
+(define load-file-bvset
+    (lambda ((String:Native path))
+        (load-data-bvset (read-file path))))
             
 ;;;;;;;;;;;;;
 ;;OPERATORS;;
 ;;;;;;;;;;;;;
-;(define _N_ __BVSET_MAX_ELEMENT__)
-(define _N_ 10)
-
 ;;Uparrow operator 
 (define uparrow-ext
-    (lambda ((Set:LinkedList extent) (Context:LinkedList context))
+    (lambda ((Set extent) (Context:LinkedList context))
         ((lambda ((List:Native lines))
                 (if (is-list-native-empty lines)
-                    (construct Set LinkedList (build-list-native _N_ (lambda (x) x)))
+                    (bvset-build _N_)
                     (foldr-list-native
                         set-intersection
                         (head-list-native lines)
@@ -481,7 +557,14 @@
                                 (set-intersection A (downarrow-ext i context)))))                            
                     (build-list-native (- _N_ y)
                         (lambda (x) (+ (+ y 1) x))))))))
-
+                        
+(define CbO-ext
+    (lambda ((Context:LinkedList context))
+        (close-by-one 
+            (context-extent context)
+            (uparrow-ext (context-extent context) context)
+            0
+            context)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;CLOSE-BY-ONE-BIT-VECTOR;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -490,7 +573,7 @@
     (lambda ((Set:BitVector extent) (Context:LinkedList context))
         ((lambda ((List:Native lines))
                 (if (is-list-native-empty lines)
-                    (construct Set BitVector (build-list-native _N_ (lambda (x) x)))
+                    (bvset-build _N_)
                     (foldr-list-native
                         bvset-intersect
                         (head-list-native lines)
@@ -540,6 +623,14 @@
                                 (bvset-intersect A (downarrow-bvset i context)))))                            
                     (build-list-native (- _N_ y)
                         (lambda (x) (+ (+ y 1) x))))))))
+                        
+(define CbO-bvset
+    (lambda ((Context:LinkedList context))
+        (close-by-one-bvset 
+            (context-extent-bvset context)
+            (uparrow-bvset (context-extent-bvset context) context)
+            0
+            context)))
                         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;CLOSE-BY-ONE-LINKED-LIST;;
@@ -600,12 +691,79 @@
                     (build-list-native (- _N_ y)
                         (lambda (x) (+ (+ y 1) x))))))))
                         
+(define CbO-llset
+    (lambda ((Context:LinkedList context))
+        (close-by-one-llset 
+            (context-extent context)
+            (uparrow-llset (context-extent context) context)
+            0
+            context)))
+                        
 (define rslt-to-str
     (lambda ((List:Native rslt))
         (to-str-list-native-aux 
             rslt
             (lambda (((Set Set) pair))
                 (concat "<" (concat (set-to-str (car pair)) (concat "," (concat (set-to-str (cdr pair)) ">"))))))))
+                
+;;;;;;;;;;;;;;;;;;;;;;;;
+;;EXPERIMENT FRAMEWORK;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+(define run-experiment
+    (lambda ((Context data) (((Context) #> List) alg) (String:Native id))
+        (cons
+            (log (concat id "-start"))
+            (cons 
+                (alg data)
+                (log (concat id "-end"))))))
+                
+(define run-experiment-from-filename-ext
+    (lambda ((String:Native file-name))
+        (run-experiment 
+            (load-file-bvset file-name)
+            CbO-ext
+            (concat file-name "-ext"))))
+            
+(define run-experiment-from-filename-bvset
+    (lambda ((String:Native file-name))
+        (run-experiment
+            (load-file-bvset file-name)
+            CbO-bvset
+            (concat file-name "-bvset"))))
+            
+(define run-experiment-from-filename-llset
+    (lambda ((String:Native file-name))
+        (run-experiment
+            (load-file-llset file-name)
+            CbO-llset
+            (concat file-name "-llset"))))
+            
+(define run-experiment-from-filename
+    (lambda ((String:Native file-name))
+        (cons (run-experiment-from-filename-ext file-name)
+            (cons (run-experiment-from-filename-bvset file-name)
+                (run-experiment-from-filename-llset file-name)))))
+                
+(define generate-file-names
+    (lambda ((Int:Native num))
+        (map-list-native
+            (lambda ((Int:Native i)) (concat _DATA_PATH_BASE_ (concat "data" (to-str i))))
+            (build-list-native num (lambda (x) x)))))
+
+(define main-aux
+    (lambda ((List:Native file-names))
+        (if (is-list-native-empty file-names)
+            ()
+            (cdr 
+                (cons
+                    (run-experiment-from-filename (head-list-native file-names))
+                    (main-aux (tail-list-native file-names)))))))
+                    
+(define main
+    (lambda ()
+        (cons
+            (init-logger _LOG_NAME_)
+            (main-aux (generate-file-names _DATA_FILE_COUNT_)))))
                         
 ;A={0}
 ;B={1}
@@ -640,18 +798,9 @@
 ;; n-y = 2
 ;; (0 1)
 ;; (2 3) ;(+ (+ y 1) x)
-;;;;;;;;;;;;;;
-;;ALGORITHMS;;
-;;;;;;;;;;;;;;
 
 ;TODO
-;downarrow-llset
-;downarrow-bvset
-;uparrow-llset
-;uparrow-bvset
-;CbO-llset
-;CbO-bvset
-;data loading
+;experiment framework
 
 ;;;;;;;;;
 ;;TESTS;;
@@ -770,12 +919,18 @@
 ;(println (canonicity-test s1 s2 2))
 ;(println (canonicity-test s1 s3 2))
 
-(println "close-by-one")
+;(println "close-by-one")
 ;(println (set-to-str (uparrow-ext (construct Set LinkedList (build-list-native 3 (lambda (x) x))) context1)))
 
-;(define context2 (construct Context LinkedList
-;    (construct List Native (construct Set LinkedList (construct List Native 1 (construct List Native)))
-;        (construct List Native))))
+(define context2 (construct Context LinkedList
+    (construct List Native (construct Set LinkedList (construct List Native 1 (construct List Native)))
+        (construct List Native))))
+        
+;(println (set-to-str (context-extent context2)))
+;(println (set-to-str (context-extent-bvset context2)))
+
+;(println (set-to-str (context-extent context1)))
+;(println (set-to-str (context-extent-bvset context1)))
 
 ;A={0}
 ;B={1}
@@ -791,9 +946,12 @@
 ;            (construct Set LinkedList (construct List Native 0 (construct List Native)))
 ;            (construct Set LinkedList (construct List Native 1 (construct List Native)))
 ;            0
-;            context2))           
+;            context2))  
 
 ;(println (rslt-to-str rslt2))
+;(println (rslt-to-str (CbO-ext context1)))
+;(println (rslt-to-str (CbO-bvset context1)))
+;(println (rslt-to-str (CbO-llset context1)))
 
 ;(define rslt3
 ;    (close-by-one 
@@ -805,26 +963,57 @@
 ;(println (rslt-to-str rslt3))
 
     
-(define rslt1    
-    (close-by-one
-        (context-extent context1)
-        (uparrow-ext (construct Set LinkedList (build-list-native 3 (lambda (x) x))) context1)
-        0
-        context1))
-(println (rslt-to-str rslt1))
+;(define rslt1    
+;    (close-by-one
+;        (context-extent context1)
+;        (uparrow-ext (construct Set LinkedList (build-list-native 3 (lambda (x) x))) context1)
+;        0
+;        context1))
+;(println (rslt-to-str rslt1))
 
-(println (rslt-to-str
-            (close-by-one-bvset
-                (context-extent context1)
-                (uparrow-ext (construct Set BitVector (build-list-native 3 (lambda (x) x))) context1)
-                0
-                context1)))
+;(println (rslt-to-str
+;            (close-by-one-bvset
+;                (context-extent context1)
+;                (uparrow-ext (construct Set BitVector (build-list-native 3 (lambda (x) x))) context1)
+;                0
+;                context1)))
                 
-(println (rslt-to-str
-            (close-by-one-llset
-                (context-extent context1)
-                (uparrow-ext (construct Set LinkedList (build-list-native 3 (lambda (x) x))) context1)
-                0
-                context1)))
+;(println (rslt-to-str
+;            (close-by-one-llset
+;                (context-extent context1)
+;                (uparrow-ext (construct Set LinkedList (build-list-native 3 (lambda (x) x))) context1)
+;                0
+;                context1)))
 
-    
+;(println "DATA LOADING")
+;(println "load-row-llset")
+;(println (set-to-str (load-row-llset "1 3 42")))
+;(println "load-data-llset")
+;(context-print (load-data-llset "1 3 42\n8 21 5\n2 4 6"))
+;(println "load-file-llset")
+;(context-print (load-file-llset "data1"))
+
+;(println "load-row-bvset")
+;(println (set-to-str (load-row-bvset "1 3 42")))
+;(println "load-data-bvset")
+;(context-print (load-data-bvset "1 3 42\n8 21 5\n2 4 6"))
+;(println "load-file-bvset")
+;(context-print (load-file-bvset "data1"))
+
+;(init-logger "test1-log")
+;(run-experiment context2 CbO-ext "test")
+;(run-experiment-from-filename-ext "data1")
+;(run-experiment-from-filename-llset "data1")
+;(run-experiment-from-filename-bvset "data1")
+;(run-experiment-from-filename "data1")
+;(println (to-str-list-native (generate-file-names 3)))
+;(main)
+
+;(define main
+;    (lambda ()
+;        (run-experiment context2 CbO-ext "test")))
+
+;(println (to-str-list-native
+    (build-list-native
+        1 (lambda ((Int:Native x)) (build-list-native x (lambda ((Int:Native y)) y))))
+;))

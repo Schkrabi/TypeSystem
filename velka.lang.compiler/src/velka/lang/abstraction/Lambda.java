@@ -115,7 +115,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			argsType = argsType.apply(bodyInfered.second);
 
 			return new Pair<Type, Substitution>(new TypeArrow(argsType, bodyInfered.first.apply(bodyInfered.second)),
-					bodyInfered.second);
+					Substitution.EMPTY);
 
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);

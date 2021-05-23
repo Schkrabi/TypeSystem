@@ -8,14 +8,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.XMLFormatter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Optional;
 
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.expression.TypeSymbol;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.langbase.ListNative;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitComposite;
 import velka.lang.literal.LitDouble;
@@ -134,7 +138,7 @@ public final class Operators {
 			return "(fn [_x _y] " + LitInteger.clojureIntToClojureLitInteger("(bit-or (get _x 0) (get _y 0))") + ")";
 		}
 	};
-	
+
 	/**
 	 * Bit shift right (shr) operator
 	 */
@@ -142,34 +146,36 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_num _n] " + LitInteger.clojureIntToClojureLitInteger("(bit-shift-right (first _num) (first _n))") + ")";
+			String code = "(fn [_num _n] "
+					+ LitInteger.clojureIntToClojureLitInteger("(bit-shift-right (first _num) (first _n))") + ")";
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
 				Optional<Expression> rankingFunction) throws AppendableException {
-			LitInteger num = (LitInteger)args.get(0);
-			LitInteger n = (LitInteger)args.get(1);
-			
+			LitInteger num = (LitInteger) args.get(0);
+			LitInteger n = (LitInteger) args.get(1);
+
 			long res = num.value >> n.value;
-			
+
 			return new LitInteger(res);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
-		
+
 		@Override
 		public String toString() {
 			return "shr";
 		}
-		
+
 	};
-	
+
 	/**
 	 * Bit shift left (shl) operator
 	 */
@@ -177,34 +183,43 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_num _n] " + LitInteger.clojureIntToClojureLitInteger("(bit-shift-left (first _num) (first _n))") + ")";
+			String code = "(fn [_num _n] "
+					+ LitInteger.clojureIntToClojureLitInteger("(bit-shift-left (first _num) (first _n))") + ")";
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
 				Optional<Expression> rankingFunction) throws AppendableException {
-			LitInteger num = (LitInteger)args.get(0);
-			LitInteger n = (LitInteger)args.get(1);
-			
+			LitInteger num = (LitInteger) args.get(0);
+
+			LitInteger n;
+
+			if (!(args.get(1) instanceof LitInteger)) {
+				n = new LitInteger(1);
+			} else {
+				n = (LitInteger) args.get(1);
+			}
+
 			long res = num.value << n.value;
-			
+
 			return new LitInteger(res);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
-		
+
 		@Override
 		public String toString() {
 			return "shl";
 		}
-		
+
 	};
-	
+
 	/**
 	 * Bit Not operator
 	 */
@@ -219,8 +234,8 @@ public final class Operators {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
 				Optional<Expression> rankingFunction) throws AppendableException {
-			LitInteger l = (LitInteger)args.get(0);
-			
+			LitInteger l = (LitInteger) args.get(0);
+
 			long ret = ~l.value;
 			return new LitInteger(ret);
 		}
@@ -230,14 +245,14 @@ public final class Operators {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
-		
+
 		@Override
 		public String toString() {
 			return "bit-not";
 		}
-		
+
 	};
-	
+
 	/**
 	 * Bit XOR operator
 	 */
@@ -245,33 +260,35 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_val1 _val2] " + LitInteger.clojureIntToClojureLitInteger("(bit-xor (first _val1) (first _val2))") + ")";
+			String code = "(fn [_val1 _val2] "
+					+ LitInteger.clojureIntToClojureLitInteger("(bit-xor (first _val1) (first _val2))") + ")";
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
 				Optional<Expression> rankingFunction) throws AppendableException {
-			LitInteger val1 = (LitInteger)args.get(0);
-			LitInteger val2 = (LitInteger)args.get(1);
-			
+			LitInteger val1 = (LitInteger) args.get(0);
+			LitInteger val2 = (LitInteger) args.get(1);
+
 			long ret = val1.value ^ val2.value;
-			
+
 			return new LitInteger(ret);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
-		
+
 		@Override
 		public String toString() {
 			return "bit-xor";
 		}
 	};
-	
+
 	/**
 	 * car operator
 	 */
@@ -1138,21 +1155,18 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = 	"(fn [_name] " 
-							+ "(let [logger (java.util.logging.Logger/getLogger java.util.logging.Logger/GLOBAL_LOGGER_NAME) "
-									+ "rootLogger (java.util.logging.Logger/getLogger \"\") "
-									+ "consoleHandler (first (.getHandlers rootLogger))] "
-										+ "(first (doall ["
-											+ Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv) + " "
-											+ "(if (instance? java.util.logging.ConsoleHandler consoleHandler) "
-												+ "(.removeHandler rootLogger consoleHandler) "
-												+ "nil) "
-											+ "(.setLevel logger java.util.logging.Level/INFO) "
-											+ "(let [file (java.util.logging.FileHandler. (first _name)) "
-												+ "formatter (java.util.logging.XMLFormatter.)] "
-													+ "(doall [(.setFormatter file formatter) "
-													+ "(.addHandler logger file)]))]))))";
-							
+			String code = "(fn [_name] "
+					+ "(let [logger (java.util.logging.Logger/getLogger java.util.logging.Logger/GLOBAL_LOGGER_NAME) "
+					+ "rootLogger (java.util.logging.Logger/getLogger \"\") "
+					+ "consoleHandler (first (.getHandlers rootLogger))] " + "(first (doall ["
+					+ Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv) + " "
+					+ "(if (instance? java.util.logging.ConsoleHandler consoleHandler) "
+					+ "(.removeHandler rootLogger consoleHandler) " + "nil) "
+					+ "(.setLevel logger java.util.logging.Level/INFO) "
+					+ "(let [file (java.util.logging.FileHandler. (first _name)) "
+					+ "formatter (java.util.logging.XMLFormatter.)] " + "(doall [(.setFormatter file formatter) "
+					+ "(.addHandler logger file)]))]))))";
+
 			return code;
 		}
 
@@ -1164,7 +1178,7 @@ public final class Operators {
 			// suppress the logging output to the console
 			Logger rootLogger = Logger.getLogger("");
 			Handler[] handlers = rootLogger.getHandlers();
-			if (handlers[0] instanceof ConsoleHandler) {
+			if (handlers.length > 0 && handlers[0] instanceof ConsoleHandler) {
 				rootLogger.removeHandler(handlers[0]);
 			}
 
@@ -1200,7 +1214,7 @@ public final class Operators {
 		}
 
 	};
-	
+
 	/**
 	 * Log operator
 	 */
@@ -1208,16 +1222,15 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_msg] (first (doall [" 
-							+ Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv) + " "
-							+ "(.info (java.util.logging.Logger/getLogger java.util.logging.Logger/GLOBAL_LOGGER_NAME) (first _msg))])))";
+			String code = "(fn [_msg] (first (doall [" + Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv) + " "
+					+ "(.info (java.util.logging.Logger/getLogger java.util.logging.Logger/GLOBAL_LOGGER_NAME) (first _msg))])))";
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
 				Optional<Expression> rankingFunction) throws AppendableException {
-			LitString s = (LitString)args.get(0);
+			LitString s = (LitString) args.get(0);
 			Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 			logger.info(s.value);
 			return Expression.EMPTY_EXPRESSION;
@@ -1228,14 +1241,14 @@ public final class Operators {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeStringNative), TypeTuple.EMPTY_TUPLE);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
-		
+
 		@Override
 		public String toString() {
 			return "log";
 		}
-		
+
 	};
-	
+
 	/**
 	 * to-str operator
 	 */
@@ -1256,15 +1269,137 @@ public final class Operators {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(new TypeVariable(NameGenerator.next())), TypeAtom.TypeStringNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(new TypeVariable(NameGenerator.next())),
+					TypeAtom.TypeStringNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
-		
+
 		@Override
 		public String toString() {
 			return "to-str";
 		}
-		
+
+	};
+
+	/**
+	 * Operator read-file
+	 */
+	public static final Operator ReadFile = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_path] " + LitString.clojureStringToClojureLitString("(slurp (first _path))") + ")";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitString arg = (LitString) args.get(0);
+
+			String content = "";
+			try {
+				content = Files.readString(Path.of(arg.value));
+			} catch (IOException ioe) {
+				AppendableException e = new AppendableException(ioe.getMessage());
+				e.initCause(ioe);
+				throw e;
+			}
+
+			return new LitString(content);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeStringNative), TypeAtom.TypeStringNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+		@Override
+		public String toString() {
+			return "read-file";
+		}
+
+	};
+
+	/**
+	 * str-split operator
+	 */
+	public static final Operator StrSplit = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_str _by] (" + ClojureCodeGenerator.tuple2velkaListSymbol + " (map (fn [_s] "
+					+ LitString.clojureStringToClojureLitString("_s") + ") "
+					+ "(clojure.string/split (first _str) (re-pattern (first _by))))))";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitString lsStr = (LitString) args.get(0);
+			LitString lsBy = (LitString) args.get(1);
+
+			String[] splitted = lsStr.value.split(lsBy.value);
+
+			LitComposite agg = ListNative.EMPTY_LIST_NATIVE;
+			for (int i = splitted.length - 1; i >= 0; i--) {
+				String s = splitted[i];
+				LitString lsStep = new LitString(s);
+				agg = new LitComposite(new Tuple(lsStep, agg), TypeAtom.TypeListNative);
+			}
+
+			return agg;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeStringNative, TypeAtom.TypeStringNative),
+					TypeAtom.TypeListNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+		@Override
+		public String toString() {
+			return "str-split";
+		}
+
+	};
+
+	/**
+	 * parse-int operator
+	 */
+	public static final Operator parseInt = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_str] " + LitInteger.clojureIntToClojureLitInteger("(Integer/parseInt (first _str))")
+					+ ")";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitString arg = (LitString) args.get(0);
+
+			int i = Integer.parseInt(arg.value);
+
+			return new LitInteger(i);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeStringNative), TypeAtom.TypeIntNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+		@Override
+		public String toString() {
+			return "parse-int";
+		}
+
 	};
 
 }

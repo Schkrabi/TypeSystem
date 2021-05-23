@@ -167,6 +167,7 @@ public class Compiler {
 		try {
 			out.print(ClojureCodeGenerator.writeHeaders(topLevel, typeEnv));
 			out.print(Compiler.compile(read(in), topLevel, typeEnv));
+			out.print(ClojureCodeGenerator.writeFooters());
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

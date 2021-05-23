@@ -42,10 +42,10 @@ public class TypeArrow extends Type {
 	}
 
 	@Override
-	public Set<TypeVariable> getUnconstrainedVariables() {
+	public Set<TypeVariable> getVariables() {
 		Set<TypeVariable> s = new TreeSet<TypeVariable>();
-		s.addAll(this.ltype.getUnconstrainedVariables());
-		s.addAll(this.rtype.getUnconstrainedVariables());
+		s.addAll(this.ltype.getVariables());
+		s.addAll(this.rtype.getVariables());
 		return s;
 	}
 
@@ -136,5 +136,10 @@ public class TypeArrow extends Type {
 	@Override
 	public Type map(Function<Type, Type> fun) throws AppendableException {
 		return new TypeArrow(this.ltype.map(fun), this.rtype.map(fun));
+	}
+
+	@Override
+	protected Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
+		return new TypeArrow(this.ltype.replaceVariable(replaced, replacee), this.rtype.replaceVariable(replaced, replacee));
 	}
 }

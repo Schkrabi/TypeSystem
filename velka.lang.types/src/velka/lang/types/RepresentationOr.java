@@ -2,6 +2,7 @@ package velka.lang.types;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -10,7 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import velka.lang.util.AppendableException;
-import velka.lang.util.ThrowingBinaryOperator;
+import velka.lang.util.Pair;
 import velka.lang.util.ThrowingFunction;
 
 /**
@@ -79,9 +80,9 @@ public class RepresentationOr extends Type {
 	}
 
 	@Override
-	public Set<TypeVariable> getUnconstrainedVariables() {
+	public Set<TypeVariable> getVariables() {
 		final Set<TypeVariable> s = new TreeSet<TypeVariable>();
-		representations.stream().forEach(x -> s.addAll(x.getUnconstrainedVariables()));
+		representations.stream().forEach(x -> s.addAll(x.getVariables()));
 		return s;
 	}
 
@@ -98,10 +99,26 @@ public class RepresentationOr extends Type {
 	 * @throws AppendableException if unifiers in list are not compatible
 	 */
 	private static Substitution uniteUnifiers(List<Substitution> unifiers) throws AppendableException {
-		Substitution s = unifiers.stream().reduce(Substitution.EMPTY,
-				ThrowingBinaryOperator.wrapper((x, y) -> x.union(y)));
-
-		return s;
+		//In case there are variables substituted in multiple unifiers
+		// the substituted reprs must unify on type level
+		// then we want to create representationOr from them and use it as substituted representatiation
+		// e.g. uniteUnifiers({s\Int:Native}, {s\Int:String}) we want {s\{Int:Native, Int:String}} as a result
+		// therefore we cannot use siple reduce
+		final Set<TypeVariable> boundVariables = unifiers.stream()
+				.map(x -> x.variableStream().collect(Collectors.toSet()))
+				.reduce(unifiers.stream().findAny().get().variableStream().collect(Collectors.toSet()), (x, y) -> {
+					Set<TypeVariable> s = new TreeSet<TypeVariable>(x);
+					s.retainAll(y);
+					return s;
+				});
+		Set<Pair<TypeVariable, Type>> s = new HashSet<Pair<TypeVariable, Type>>();
+		for (TypeVariable v : boundVariables) {
+			Type t = RepresentationOr
+					.makeRepresentationOr(unifiers.stream().map(x -> x.get(v).get()).collect(Collectors.toSet()));
+			Pair<TypeVariable, Type> p = new Pair<TypeVariable, Type>(v, t);
+			s.add(p);
+		}
+		return new Substitution(s);
 	}
 
 	@Override
@@ -234,5 +251,20 @@ public class RepresentationOr extends Type {
 	public Type map(Function<Type, Type> fun) throws AppendableException {
 		return RepresentationOr
 				.makeRepresentationOr(this.representations.stream().map(fun).collect(Collectors.toList()));
+	}
+
+	@Override
+	protected Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
+		try {
+			return RepresentationOr.makeRepresentationOr(this.representations.stream()
+					.map(ThrowingFunction.wrapper(r -> r.replaceVariable(replaced, replacee)))
+					.collect(Collectors.toSet()));
+		} catch (RuntimeException re) {
+			if (re.getCause() instanceof AppendableException) {
+				AppendableException e = (AppendableException) re.getCause();
+				throw e;
+			}
+			throw re;
+		}
 	}
 }
