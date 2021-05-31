@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -24,6 +25,7 @@ import velka.lang.application.DefineRepresentation;
 import velka.lang.application.DefineSymbol;
 import velka.lang.application.DefineType;
 import velka.lang.application.ExceptionExpr;
+import velka.lang.application.Get;
 import velka.lang.application.IfExpression;
 import velka.lang.application.InstanceOf;
 import velka.lang.application.InstanceOfRepresentation;
@@ -263,6 +265,18 @@ public class SemanticParser {
 			break;
 		case SemanticParserStatic.EXTENDED_LAMBDA_RANKING:
 			e = SemanticParser.parseExtendedLambdaRanking(specialFormList, typeLet);
+			break;
+		case SemanticParserStatic.GET:
+			e = SemanticParser.parseGet(specialFormList, typeLet);
+			break;
+		case SemanticParserStatic.TUPLE:
+			e = SemanticParser.parseTuple(specialFormList, typeLet);
+			break;
+		case SemanticParserStatic.LET:
+			e = SemanticParser.parseLet(specialFormList, typeLet);
+			break;
+		case SemanticParserStatic.LET_AST:
+			e = SemanticParser.parseLetAst(specialFormList, typeLet);
 			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
@@ -1027,5 +1041,166 @@ public class SemanticParser {
 		Set<Lambda> implementations = SemanticParser.parseImplementations(argsTuple, impls, typeLet);
 
 		return ExtendedLambda.makeExtendedLambda(implementations, ranking);
+	}
+	
+	/**
+	 * Parses Get special form
+	 * @param specialFormList parsed token list
+	 * @param typeLet used type let
+	 * @return Get expression
+	 * @throws AppendableException if validation fails
+	 */
+	private static Get parseGet(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet) throws AppendableException {
+		try {
+			Validations.validateGetList(specialFormList, typeLet);
+		}catch(AppendableException e) {
+			e.appendMessage("in " + specialFormList.toString());
+			throw e;
+		}
+		
+		Expression tuple = SemanticParser.parseNode(specialFormList.get(1), typeLet);
+		Expression index = SemanticParser.parseNode(specialFormList.get(2), typeLet);
+		
+		return Get.makeGet(tuple, index);
+	}
+	
+	/**
+	 * Parses Tuple special form
+	 * @param specialFormList parsed token list
+	 * @param typeLet used type let
+	 * @return parsed tuple
+	 * @throws AppendableException if validation fails
+	 */
+	private static Tuple parseTuple(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		try {
+			Validations.validateTupleList(specialFormList, typeLet);
+		}catch(AppendableException e) {
+			e.appendMessage("in " + specialFormList.toString());
+			throw e;
+		}
+		
+		List<Expression> l = new LinkedList<Expression>();
+		try {
+			l = specialFormList.subList(1, specialFormList.size()).stream()
+					.map(ThrowingFunction.wrapper(node -> SemanticParser.parseNode(node, typeLet)))
+					.collect(Collectors.toList());
+		}catch(RuntimeException re) {
+			if(re.getCause() instanceof AppendableException) {
+				AppendableException e = (AppendableException)re.getCause();
+				e.appendMessage(" in " + specialFormList);
+				throw e;
+			}
+			throw re;
+		}
+		
+		return new Tuple(l);
+	}
+	
+	/**
+	 * Parses single let like binding
+	 * @param bindingList parsed list
+	 * @param typeLet used type let
+	 * @return pair with parsed symbol and binded expression
+	 * @throws AppendableException if validation fails
+	 */
+	private static Pair<Symbol, Expression> parseLetBinding(List<SemanticNode> bindingList, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		Validations.validateLetBinding(bindingList, typeLet);
+		
+		Symbol symbol = (Symbol) SemanticParser.parseNode(bindingList.get(0), typeLet);
+		Expression binded = SemanticParser.parseNode(bindingList.get(1), typeLet);
+		
+		return new Pair<Symbol, Expression>(symbol, binded);
+	}
+	
+	/**
+	 * Parses bindings of let like special form
+	 * @param bindingsList list of bindings
+	 * @param typeLet used type let
+	 * @return list of Symbol - Expression pairs
+	 * @throws AppendableException if validation fails
+	 */
+	private static List<Pair<Symbol, Expression>> parseLetBindings(List<SemanticNode> bindingsList, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		List<Pair<Symbol, Expression>> bindings = null;
+		try {
+			bindings = bindingsList.stream()
+					.map(ThrowingFunction.wrapper(binding -> SemanticParser.parseLetBinding(binding.asList(), typeLet))).collect(Collectors.toList());
+		}catch(RuntimeException re) {
+			if(re.getCause() instanceof AppendableException) {
+				AppendableException e = (AppendableException)re.getCause();
+				e.appendMessage(" in " + bindingsList + "\n");
+				throw e;
+			}
+		}
+		return bindings;
+	}
+	
+	/**
+	 * Parses let special form list
+	 * @param specialFormList parsed special form list
+	 * @param typeLet used typelet
+	 * @return application representing let
+	 * @throws AppendableException if validation fails
+	 */
+	private static Expression parseLet(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		try {
+			Validations.validateLetList(specialFormList, typeLet);;
+		}catch(AppendableException e) {
+			e.appendMessage(" in " + specialFormList);
+			throw e;
+		}
+		
+		SemanticNode bindingNode = specialFormList.get(1);
+		List<Pair<Symbol, Expression>> bindings = SemanticParser.parseLetBindings(bindingNode.asList(), typeLet);
+		
+		Expression body = SemanticParser.parseNode(specialFormList.get(2), typeLet);
+		
+		Lambda l = new Lambda(new Tuple(bindings.stream().map(p -> p.first).collect(Collectors.toList())),
+				new TypeTuple(bindings.stream().map(p -> new TypeVariable(NameGenerator.next()))
+						.collect(Collectors.toList())),
+				body);
+		
+		AbstractionApplication apl = new AbstractionApplication(l,
+					new Tuple(bindings.stream().map(p -> p.second).collect(Collectors.toList())));
+		
+		return apl;
+	}
+	
+	/**
+	 * Parses let* special form
+	 * @param specialFormList parsed list
+	 * @param typeLet used type let
+	 * @return expression representing let*
+	 * @throws AppendableException if validation fails
+	 */
+	private static Expression parseLetAst(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		try {
+			Validations.validateLetAstList(specialFormList, typeLet);;
+		}catch(AppendableException e) {
+			e.appendMessage(" in " + specialFormList);
+			throw e;
+		}
+		
+		SemanticNode bindingNode = specialFormList.get(1);
+		List<Pair<Symbol, Expression>> bindings = SemanticParser.parseLetBindings(bindingNode.asList(), typeLet);
+		
+		Expression body = SemanticParser.parseNode(specialFormList.get(2), typeLet);
+		
+		ListIterator<Pair<Symbol, Expression>> i = bindings.listIterator(bindings.size());
+		
+		while(i.hasPrevious()) {
+			Pair<Symbol, Expression> p = i.previous();
+			Lambda l = new Lambda(
+						new Tuple(p.first),
+						new TypeTuple(new TypeVariable(NameGenerator.next())),
+						body);
+			body = new AbstractionApplication(l, new Tuple(p.second));
+		}
+		
+		return body;
 	}
 }

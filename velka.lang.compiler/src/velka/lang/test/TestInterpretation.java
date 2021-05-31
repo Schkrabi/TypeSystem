@@ -43,6 +43,7 @@ import velka.lang.application.DefineConversion;
 import velka.lang.application.DefineSymbol;
 import velka.lang.application.DefineType;
 import velka.lang.application.ExceptionExpr;
+import velka.lang.application.Get;
 import velka.lang.application.IfExpression;
 import velka.lang.application.InstanceOf;
 import velka.lang.application.InstanceOfRepresentation;
@@ -1548,10 +1549,10 @@ class TestInterpretation {
 
 		ExtendedLambda elambda_defaultRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3));
 
-		Lambda ranking = (Lambda) TestInterpretation.parseString("(lambda (formalArgList realArgList) "
+		Lambda ranking = (Lambda) TestInterpretation.parseString("(lambda (formalArgList realArgList args) "
 				+ "(if (instance-of-representation (head-list-native formalArgList) Int:Roman) 0 999))");
 
-		Lambda ranking2 = (Lambda) TestInterpretation.parseString("(lambda (formalArgList realArgList) "
+		Lambda ranking2 = (Lambda) TestInterpretation.parseString("(lambda (formalArgList realArgList args) "
 				+ "(if (instance-of-representation (head-list-native formalArgList) Int:String) 0 999))");
 
 		ExtendedLambda elambda_customRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3),
@@ -2041,6 +2042,33 @@ class TestInterpretation {
 			e.infer(env, typeEnv);
 			e.interpret(env, typeEnv);
 		}
+	}
+	
+	@Test
+	@DisplayName("Test Get")
+	void testGet() throws AppendableException {
+		Tuple t = new Tuple(new LitInteger(42), new LitString("foo"));
+		Get get = Get.makeGet(t, new LitInteger(0));
+		Get get2 = Get.makeGet(t, new LitInteger(1));
+		Get get3 = Get.makeGet(t, new LitComposite(new LitString("0"), TypeAtom.TypeIntString));
+		
+		TestInterpretation.testReflexivity(get);
+		TestInterpretation.testDifference(get, get2);
+		TestInterpretation.testDifference(get, Expression.EMPTY_EXPRESSION);
+		
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		
+		assertAll(() -> {
+			get.toString();
+			get.toClojureCode(env, typeEnv);
+			get.hashCode();
+			get.infer(env, typeEnv);
+		});
+		
+		TestInterpretation.testInterpretation(get, new LitInteger(42), env, typeEnv);
+		TestInterpretation.testInterpretation(get2, new LitString("foo"), env, typeEnv);
+		TestInterpretation.testInterpretation(get3, new LitInteger(42), env, typeEnv);
 	}
 
 	private static Expression parseString(String s) throws AppendableException {

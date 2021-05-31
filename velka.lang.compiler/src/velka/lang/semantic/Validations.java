@@ -9,6 +9,7 @@ import velka.lang.parser.SemanticNode;
 import velka.lang.types.TypeVariable;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
+import velka.lang.util.ThrowingConsumer;
 import velka.lang.util.ThrowingFunction;
 
 /**
@@ -646,5 +647,126 @@ public class Validations {
 			e.appendMessage(" in " + l);
 			throw e;
 		}
+	}
+
+	/**
+	 * Validates get special form list
+	 * @param l validated list
+	 * @param typeLet used typelet
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateGetList(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+			throws AppendableException {
+		if (l.size() != 3) {
+			throw new InvalidNumberOfArgsException(2, l.size() - 1);
+		}
+		
+		SemanticNode get = l.get(0);
+		if(get.type != SemanticNode.NodeType.SYMBOL
+				|| !get.asSymbol().contentEquals(SemanticParserStatic.GET)) {
+			throw new UnexpectedExpressionException(get);
+		}
+	}
+	
+	/**
+	 * Validates tuple special form list
+	 * @param l validated list
+	 * @param typeLet used typelet
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateTupleList(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		if(l.size() < 1) {
+			throw new AppendableException("Badly formed tuple: " + l);
+		}
+		
+		SemanticNode tuple = l.get(0);
+		if(tuple.type != SemanticNode.NodeType.SYMBOL
+				|| !tuple.asSymbol().contentEquals(SemanticParserStatic.TUPLE)) {
+			throw new UnexpectedExpressionException(tuple);
+		}
+	}
+	
+	/**
+	 * Validates let binding pair
+	 * @param l let binding pair list
+	 * @param typeLet used typelet 
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateLetBinding(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet) 
+		throws AppendableException {
+		if(l.size() != 2) {
+			throw new AppendableException("Invalid let binding got " + l);
+		}
+		
+		SemanticNode symbol = l.get(0);
+		if(symbol.type != SemanticNode.NodeType.SYMBOL) {
+			throw new AppendableException("First part of let binding must be symbol, got " + symbol);
+		}
+	}
+	
+	/**
+	 * Validates let special form list
+	 * @param l validated list
+	 * @param typeLet used typelet
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateLetList(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		Validations.validateLetLike(SemanticParserStatic.LET, l, typeLet);
+	}
+	
+	/**
+	 * Validates let* special form list
+	 * @param l validated list
+	 * @param typeLet used typelet
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateLetAstList(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		Validations.validateLetLike(SemanticParserStatic.LET_AST, l, typeLet);
+	}
+	
+	/**
+	 * Validates special form list with let structure
+	 * @param firstSymbol fist symbol that should be at list head
+	 * @param l validated list
+	 * @param typeLet used typeLet
+	 * @throws AppendableException if validation fails
+	 */
+	private static void validateLetLike(String firstSymbol, List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		if(l.size() != 3) {
+			throw new InvalidNumberOfArgsException(2, l.size() - 1);
+		}
+		
+		SemanticNode let = l.get(0);
+		if(let.type != SemanticNode.NodeType.SYMBOL
+				|| !let.asSymbol().contentEquals(firstSymbol)) {
+			throw new UnexpectedExpressionException(let);
+		}
+		
+		SemanticNode bindings = l.get(1);
+		if(bindings.type != SemanticNode.NodeType.LIST) {
+			throw new UnexpectedExpressionException(bindings);
+		}
+		
+		List<SemanticNode> bList = bindings.asList();
+		
+		if(!bList.stream().allMatch(node -> node.type == SemanticNode.NodeType.LIST)) {
+			throw new AppendableException("Badly formed bindings expected ((symbol expr)*) got " + bList);
+		}
+		
+		try {
+		bList.stream()
+			.forEach(ThrowingConsumer.wrapper(
+					node -> Validations.validateLetBinding(node.asList(), typeLet)));
+		}catch(RuntimeException re) {
+			if(re.getCause() instanceof AppendableException) {
+				AppendableException e = (AppendableException)re.getCause();
+				throw e;
+			}
+			throw re;
+		}		
 	}
 }

@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -43,7 +42,6 @@ import velka.lang.interpretation.Environment;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitComposite;
 import velka.lang.literal.LitInteger;
-import velka.lang.literal.LitInteropObject;
 import velka.lang.literal.LitString;
 import velka.lang.parser.SchemeLexer;
 import velka.lang.parser.SchemeParser;
@@ -853,8 +851,8 @@ class TestComplex {
 		
 		ExtendedLambda elambda_defaultRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3));
 		
-		Lambda ranking = (Lambda)TestComplex.parseString("(lambda ((List:Native formalArgList) (List:Native realArgList)) "
-																		+ "(if (instance-of-representation (head-list-native formalArgList) Int:Roman) 0 999))").get(0);
+		Lambda ranking = (Lambda)TestComplex.parseString("(let-type (A) (lambda ((List:Native formalArgList) (List:Native realArgList) (A args)) "
+																		+ "(if (instance-of-representation (head-list-native formalArgList) Int:Roman) 0 999)))").get(0);
 		
 		Expression rnkAppl = new AbstractionApplication(
 				ranking,
@@ -869,8 +867,8 @@ class TestComplex {
 										new TypeSymbol(TypeAtom.TypeIntNative),
 										new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative)
 										), 
-								TypeAtom.TypeListNative
-								)
+								TypeAtom.TypeListNative),
+						Expression.EMPTY_EXPRESSION
 						)
 				);
 		
@@ -889,15 +887,15 @@ class TestComplex {
 										new TypeSymbol(TypeAtom.TypeIntNative),
 										new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative)
 										), 
-								TypeAtom.TypeListNative
-								)
+								TypeAtom.TypeListNative),
+						Expression.EMPTY_EXPRESSION
 						)
 				); 
 		
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(rnkAppl2));		 
 		
-		Lambda ranking2 = (Lambda)TestComplex.parseString("(lambda ((List:Native formalArgList) (List:Native realArgList)) "
-																		+ "(if (instance-of-representation (head-list-native formalArgList) Int:String) 0 999))").get(0);
+		Lambda ranking2 = (Lambda)TestComplex.parseString("(let-type (A) (lambda ((List:Native formalArgList) (List:Native realArgList) (A args)) "
+																		+ "(if (instance-of-representation (head-list-native formalArgList) Int:String) 0 999)))").get(0);
 		
 		ExtendedLambda elambda_customRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3), ranking);
 		
@@ -1053,7 +1051,7 @@ class TestComplex {
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
 						+ ClojureCodeGenerator.tuple2velkaListSymbol + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
 						+ ") (" + ClojureCodeGenerator.tuple2velkaListSymbol + " "
-						+ typeSymbolTuple.toClojureCode(env, typeEnv) + ")))",
+						+ typeSymbolTuple.toClojureCode(env, typeEnv) + ") nil))",
 				"[0]");
 		
 		assertClojureFunction(
@@ -1061,7 +1059,7 @@ class TestComplex {
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
 						+ ClojureCodeGenerator.tuple2velkaListSymbol + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
 						+ ") (" + ClojureCodeGenerator.tuple2velkaListSymbol + " "
-						+ typeSymbolTuple_diff1.toClojureCode(env, typeEnv) + ")))",
+						+ typeSymbolTuple_diff1.toClojureCode(env, typeEnv) + ") nil))",
 				"[1]");
 		
 		assertClojureFunction(
@@ -1069,7 +1067,7 @@ class TestComplex {
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
 						+ ClojureCodeGenerator.tuple2velkaListSymbol + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
 						+ ") (" + ClojureCodeGenerator.tuple2velkaListSymbol + " "
-						+ typeSymbolTuple_diff2.toClojureCode(env, typeEnv) + ")))",
+						+ typeSymbolTuple_diff2.toClojureCode(env, typeEnv) + ") nil))",
 				"[2]");
 		
 		assertClojureFunction(
@@ -1424,15 +1422,19 @@ class TestComplex {
 	
 	@Test
 	@DisplayName("Test logging")
-	void testLogging() throws Exception{
+	void testLogging() throws Exception {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		TestComplex.testClojureCompileNoCmp("(timestamp)", env, typeEnv);	
+		TestComplex.testClojureCompileNoCmp("(timestamp)", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(init-logger \"test-clj-log\")", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(log \"test-clj\")", env, typeEnv);
-		TestComplex.assertIntprtAndCompPrintSameValues(
-				"(init-logger \"test-clj-log\")\n" 
-				+ "(log \"test-clj\")");
+		TestComplex.assertIntprtAndCompPrintSameValues("(init-logger \"test-clj-log\")\n" + "(log \"test-clj\")");
+	}
+	
+	@Test
+	@DisplayName("Test Get")
+	void testGet() throws Exception {
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (get (cons 42 \"foo\") 0))");
 	}
 	
 	private static void assertClojureFunction(String definitions, String testCase, String expectedResult) throws IOException, InterruptedException {

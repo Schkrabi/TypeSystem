@@ -284,7 +284,8 @@ public class ClojureCodeGenerator {
 			"                                  [(" + tuple2velkaListSymbol + "\n" + 
 			"                                       (map " + type2typeSymbolSymbol + 
 			"                                                (.ltype (" + getTypeClojureSymbol + " impl)))) \n" + 
-			"                                   args-type]", new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeListNative)) + "))\n"+
+			"                                   args-type\n" +
+			"                                   args]", new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeListNative)) + "))\n"+
 			"                        impl])\n" + 
 			"                    impls))\n" +
 			"        1)))";

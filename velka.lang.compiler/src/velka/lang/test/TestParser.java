@@ -16,6 +16,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +35,7 @@ import velka.lang.application.DefineRepresentation;
 import velka.lang.application.DefineSymbol;
 import velka.lang.application.DefineType;
 import velka.lang.application.ExceptionExpr;
+import velka.lang.application.Get;
 import velka.lang.application.IfExpression;
 import velka.lang.application.InstanceOf;
 import velka.lang.application.InstanceOfRepresentation;
@@ -64,15 +66,29 @@ import velka.lang.semantic.Validations;
 import velka.lang.semantic.TypeVariablePair;
 import velka.lang.exceptions.UndefinedTypeException;
 import velka.lang.exceptions.ConversionException;
+import velka.lang.types.Type;
 import velka.lang.types.TypeArrow;
 import velka.lang.types.TypeAtom;
 import velka.lang.types.TypeName;
 import velka.lang.types.TypeRepresentation;
 import velka.lang.types.TypeTuple;
 import velka.lang.types.TypeVariable;
+import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 
 class TestParser {
+	
+	private static boolean equalsLambdaUpToTypeVariables(Lambda l1, Lambda l2) throws AppendableException {
+		try {
+			Type.unifyTypes(l1.argsType, l2.argsType);
+		}catch(TypesDoesNotUnifyException e) {
+			return false;
+		}
+		
+		return l1.args.equals(l2.args)
+				&& l1.body.equals(l2.body);
+		
+	}
 
 	@Test
 	@DisplayName("Test Semantic Simple")
@@ -145,6 +161,9 @@ class TestParser {
 		this.testParse("(instance-of 42 Int:Native)", new InstanceOf(new LitInteger(42), TypeAtom.TypeIntNative));
 		this.testParse("(instance-of-representation 42 Int:Native)",
 				new InstanceOfRepresentation(new LitInteger(42), TypeAtom.TypeIntNative));
+		this.testParse("(get (cons 42 \"foo\") 0)",
+				Get.makeGet(new Tuple(new LitInteger(42), new LitString("foo")), new LitInteger(0)));
+		this.testParse("(tuple 42 \"foo\" #t)", new Tuple(new LitInteger(42), new LitString("foo"), LitBoolean.TRUE));		
 
 		/*
 		 * this.testParse("(let-type (A) (lambda ((String:Native x) (A y)) y))", new
@@ -589,6 +608,55 @@ class TestParser {
 		// by substitution
 		assertNotEquals(((TypeVariable) l1.argsType.get(0)).name, ((TypeVariable) l2.argsType.get(0)).name);
 	}
+	
+	@Test
+	@DisplayName("Test let")
+	void testLet () throws AppendableException {
+		String letCode = "(let ((a 21) (b 21)) a)";
+		
+		Expression e = this.parseString(letCode);
+		if(e instanceof AbstractionApplication) {
+			AbstractionApplication apl = (AbstractionApplication)e;
+			Lambda l = (Lambda)apl.fun;
+			if(!TestParser.equalsLambdaUpToTypeVariables(l, new Lambda(new Tuple(new Symbol("a"), new Symbol("b")),
+					new TypeTuple(new TypeVariable("A"), new TypeVariable("B")), new Symbol("a")))) {
+				Assertions.fail("Fail on " + letCode + " got " + e.toString());
+			}
+			
+			Tuple args = (Tuple)apl.args;
+			Assertions.assertEquals(new Tuple(new LitInteger(21), new LitInteger(21)), args);
+		}
+		else {
+			Assertions.fail("Fail on " + letCode + " got " + e.toString());
+		}
+		
+		String letAstCode = "(let* ((a 30) (b 12)) a)";
+		
+		e = this.parseString(letAstCode);
+		if(e instanceof AbstractionApplication) {
+			AbstractionApplication apl = (AbstractionApplication)e;
+			Lambda l = (Lambda)apl.fun;
+			
+			if(l.body instanceof AbstractionApplication) {
+				AbstractionApplication apl2 = (AbstractionApplication)l.body;
+				Lambda l2 = (Lambda)apl2.fun;
+				if(!TestParser.equalsLambdaUpToTypeVariables(l2, new Lambda(new Tuple(new Symbol("b")), new TypeTuple(new TypeVariable("B")), new Symbol("a")))) {
+					Assertions.fail("Fail on " + letAstCode + " got " + e.toString());
+				}
+				
+				Tuple args2 = (Tuple)apl2.args;
+				Assertions.assertEquals(new Tuple(new LitInteger(12)), args2);
+				
+			} else {
+				Assertions.fail("Fail on " + letAstCode + " got " + l.body.toString());
+			}
+			
+			Assertions.assertEquals(new Tuple(new Symbol("a")), l.args);
+			Assertions.assertEquals(new Tuple(new LitInteger(30)), apl.args);
+		} else {
+			Assertions.fail("Fail on " + letAstCode + " got " + e.toString());
+		}
+	}
 
 	private Expression parseString(String s) throws AppendableException {
 		CharStream charStream = CharStreams.fromString(s);
@@ -601,7 +669,7 @@ class TestParser {
 
 	private void testParse(String parsedString, Expression expected) throws AppendableException {
 		Expression parsed = this.parseString(parsedString);
-		assertEquals(parsed, expected);
+		assertEquals(expected, parsed);
 	}
 
 }

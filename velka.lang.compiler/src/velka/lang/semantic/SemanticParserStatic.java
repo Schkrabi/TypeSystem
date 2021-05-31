@@ -43,6 +43,11 @@ public final class SemanticParserStatic {
 	public static final String INSTANCE_OF_REPRESENTATION = "instance-of-representation";
 	public static final String EAPPLY = "eapply";
 	public static final String EXTENDED_LAMBDA_RANKING = "extended-lambda-ranking";
+	public static final String GET = "get";
+	public static final String TUPLE = "tuple";
+	public static final String LET = "let";
+	public static final String LET_AST = "let*";
+	
 	/**
 	 * Unused special form. For testing purposes only!
 	 */
@@ -74,6 +79,10 @@ public final class SemanticParserStatic {
 		specialForms.add(INSTANCE_OF_REPRESENTATION);
 		specialForms.add(EAPPLY);
 		specialForms.add(EXTENDED_LAMBDA_RANKING);
+		specialForms.add(GET);
+		specialForms.add(TUPLE);
+		specialForms.add(LET);
+		specialForms.add(LET_AST);
 	}
 
 	/**

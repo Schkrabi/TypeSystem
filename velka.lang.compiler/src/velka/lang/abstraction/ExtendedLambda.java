@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import velka.lang.application.AbstractionApplication;
 import velka.lang.expression.Expression;
@@ -208,29 +209,49 @@ public class ExtendedLambda extends Abstraction {
 
 		return sb.toString();
 	}
+	
+	/**
+	 * Ranks implementation
+	 * @param impl ranked implementation
+	 * @param args arguments with implementation would be applied
+	 * @return implementation score
+	 * @throws AppendableException 
+	 */
+	private static Long rankImplementation(Lambda impl, Tuple args, Expression rankingFunction, Environment env, TypeEnvironment typeEnv) throws AppendableException{
+		TypeTuple argsType = (TypeTuple) args.infer(env, typeEnv).first;
+		final Expression argsList = ListNative.tupleToListNative(
+				new Tuple(argsType.stream().map(t -> new TypeSymbol(t)).collect(Collectors.toList())));
+		
+		Expression formalArgsList = ListNative.tupleToListNative(new Tuple(impl.argsType.stream().map(t -> new TypeSymbol(t)).collect(Collectors.toList())));
+		
+		AbstractionApplication appl = new AbstractionApplication(
+				rankingFunction,
+				new Tuple(formalArgsList, argsList, args));
+		
+		Expression rankingResult = appl.interpret(env, typeEnv);
+		if (!(rankingResult instanceof LitInteger)) {
+			throw new AppendableException("Badly formed ranking function " + rankingFunction.toString());
+		}
+		long result = ((LitInteger) rankingResult).value;
+		return result;
+	}
 
 	@Override
 	public Abstraction selectImplementation(Tuple args, Optional<Expression> rankingFunction, Environment env,
 			TypeEnvironment typeEnv) throws AppendableException {
-		TypeTuple argsType = (TypeTuple) args.infer(env, typeEnv).first;
-		final Expression realArgsList = ListNative.tupleToListNative(
-				new Tuple(argsType.stream().map(t -> new TypeSymbol(t)).collect(Collectors.toList())));
-
 		try {
-			Abstraction abst = this.implementations.stream().map(ThrowingFunction.wrapper(implementation -> {
-				Expression formalArgsList = ListNative.tupleToListNative(new Tuple(
-						implementation.argsType.stream().map(t -> new TypeSymbol(t)).collect(Collectors.toList())));
+			Stream<Pair<Long, Abstraction>> rankedImpls = this.implementations
+					.stream().map(
+							ThrowingFunction
+									.wrapper(
+											implementation -> new Pair<Long, Abstraction>(
+													rankImplementation(implementation, args,
+															rankingFunction.isPresent() ? rankingFunction.get()
+																	: this.rankingFunction,
+															env, typeEnv),
+													implementation)));
 
-				AbstractionApplication appl = new AbstractionApplication(
-						rankingFunction.isPresent() ? rankingFunction.get() : this.rankingFunction,
-						new Tuple(formalArgsList, realArgsList));
-				Expression rankingResult = appl.interpret(env, typeEnv);
-				if (!(rankingResult instanceof LitInteger)) {
-					throw new AppendableException("Badly formed ranking function " + rankingFunction.toString());
-				}
-				long result = ((LitInteger) rankingResult).value;
-				return new Pair<Long, Abstraction>(result, implementation);
-			})).reduce(new Pair<Long, Abstraction>(Long.MAX_VALUE, null), (p1, p2) -> {
+			Abstraction abst = rankedImpls.reduce(new Pair<Long, Abstraction>(Long.MAX_VALUE, null), (p1, p2) -> {
 				if (p1.first < p2.first) {
 					return p1;
 				} else {

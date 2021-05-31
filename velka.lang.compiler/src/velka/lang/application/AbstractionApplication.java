@@ -267,8 +267,8 @@ public class AbstractionApplication extends Application {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type t = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeListNative, TypeAtom.TypeListNative)),
-					TypeAtom.TypeIntNative);
+			Type t = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeListNative, TypeAtom.TypeListNative,
+					new TypeVariable(NameGenerator.next()))), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(t, Substitution.EMPTY);
 		}
 
@@ -280,7 +280,7 @@ public class AbstractionApplication extends Application {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return 
-					"(fn [formalArgList realArgList]\n" + 
+					"(fn [formalArgList realArgList args]\n" + 
 					"    (letfn [\n" + 
 					"        (is-list-empty [l] (= [] (first l)))\n" + 
 					"        (list-head [l] (first (first l)))\n" + 
