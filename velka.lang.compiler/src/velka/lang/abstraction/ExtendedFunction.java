@@ -16,6 +16,7 @@ import velka.lang.expression.Tuple;
 import velka.lang.types.RepresentationOr;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
+import velka.lang.types.TypeSetDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
 import velka.lang.util.ThrowingBinaryOperator;
@@ -48,7 +49,13 @@ public class ExtendedFunction extends ExtendedLambda {
 			return new Pair<Type, Substitution>(
 					RepresentationOr.makeRepresentationOr(s.stream().map(x -> x.first).collect(Collectors.toSet())),
 					s.stream().map(x -> x.second).reduce(Substitution.EMPTY,
-							ThrowingBinaryOperator.wrapper((x, y) -> x.union(y))));
+							ThrowingBinaryOperator.wrapper((x, y) -> {
+								Optional<Substitution> unifier = x.union(y);
+								if(unifier.isEmpty()) {
+									throw new TypeSetDoesNotUnifyException(s.stream().map(p -> p.first).collect(Collectors.toSet()));
+								}
+								return unifier.get();
+							})));
 
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);

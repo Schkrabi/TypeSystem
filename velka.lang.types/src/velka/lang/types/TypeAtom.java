@@ -1,5 +1,6 @@
 package velka.lang.types;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
@@ -83,29 +84,29 @@ public class TypeAtom extends Type {
 	}
 
 	@Override
-	public Substitution unifyTypeWith(Type other) throws AppendableException {
+	public Optional<Substitution> unifyTypeWith(Type other) {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
 			return other.unifyTypeWith(this);
 		}
 		if (other instanceof TypeAtom) {
 			if (TypeAtom.isSameBasicType(this, (TypeAtom) other)) {
-				return Substitution.EMPTY;
+				return Optional.of(Substitution.EMPTY);
 			}
 		}
-		throw new TypesDoesNotUnifyException(this, other);
+		return Optional.empty();
 	}
 
 	@Override
-	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
+	public Optional<Substitution> unifyRepresentationWith(Type other) {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
 			return other.unifyRepresentationWith(this);
 		}
 		if (other instanceof TypeAtom) {
 			if (this.equals(other)) {
-				return Substitution.EMPTY;
+				return Optional.of(Substitution.EMPTY);
 			}
 		}
-		throw new TypesDoesNotUnifyException(this, other);
+		return Optional.empty();
 	}
 
 	@Override

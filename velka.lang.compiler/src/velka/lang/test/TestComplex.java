@@ -657,9 +657,9 @@ class TestComplex {
 				+ "(println (is-list-empty (let-type (A) (cdr (deconstruct x (A List:Linked))))))\n"
 				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct y ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
 				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct (construct List Functional 42 (construct List Functional)) ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
-				+ "\n" + "(define head-list (let-type (A)\n" + "                    (extended-lambda ((List l))\n"
+				+ "\n" + "(define head-list (let-type (A B)\n" + "                    (extended-lambda ((List l))\n"
 				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List:Linked)))))\n"
-				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))\n"
+				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List:Functional) #> B)) #> B))))))))\n"
 				+ "(println (head-list x))\n" + "(println (head-list y))\n" + "\n" + "(define tail-list (let-type (A)\n"
 				+ "                    (extended-lambda ((List l)) \n"
 				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List:Linked)))))\n"
@@ -777,12 +777,13 @@ class TestComplex {
 		l = velka.lang.interpretation.Compiler.read(new ByteArrayInputStream(realArgs.getBytes()));
 		Expression realArgsExpr = l.get(0);
 
-		Expression formalArgs1 = new LitComposite(new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), // TypeSymbol
-				new LitComposite(new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeStringNative), // TypeSymbol
-						new LitComposite(new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeBoolNative), // TypeSymbol
-								new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative))),
-								TypeAtom.TypeListNative))),
-						TypeAtom.TypeListNative))),
+		// (Int:Native String:Native Bool:Native)
+		Expression formalArgs1 = new LitComposite(new Tuple(new TypeSymbol(TypeAtom.TypeIntNative), // TypeSymbol
+				new LitComposite(new Tuple(new TypeSymbol(TypeAtom.TypeStringNative), // TypeSymbol
+						new LitComposite(new Tuple(new TypeSymbol(TypeAtom.TypeBoolNative), // TypeSymbol
+								new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative)),
+								TypeAtom.TypeListNative)),
+						TypeAtom.TypeListNative)),
 				TypeAtom.TypeListNative);
 
 		Expression formalArgs2 = new LitComposite(new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntString), // TypeSymbol

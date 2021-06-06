@@ -1,6 +1,7 @@
 package velka.lang.types;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
@@ -78,15 +79,15 @@ public class TypeVariable extends Type {
 	}
 
 	@Override
-	public Substitution unifyTypeWith(Type other) {
+	public Optional<Substitution> unifyTypeWith(Type other) {
 		if (this.equals(other)) {
-			return Substitution.EMPTY;
+			return Optional.of(Substitution.EMPTY);
 		}
-		return new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(this, other)));
+		return Optional.of(new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(this, other))));
 	}
 	
 	@Override
-	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
+	public Optional<Substitution> unifyRepresentationWith(Type other) {
 		return this.unifyTypeWith(other);
 	}
 

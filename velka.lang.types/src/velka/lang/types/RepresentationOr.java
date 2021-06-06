@@ -4,7 +4,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
@@ -44,7 +46,12 @@ public class RepresentationOr extends Type {
 			return representations.stream().findAny().get();
 		}
 
-		final Substitution fagg = Type.unifyMany(representations);
+		Optional<Substitution> opt = Type.unifyMany(representations);
+		if(opt.isEmpty()) {
+			throw new TypeSetDoesNotUnifyException(representations);
+		}
+		
+		final Substitution fagg = opt.get();
 
 		Set<Type> unifiedTypes = representations.stream().map(x -> x.apply(fagg)).collect(Collectors.toSet());
 		if (unifiedTypes.size() == 1) {
@@ -98,7 +105,7 @@ public class RepresentationOr extends Type {
 	 * @return substitution uniting all the unifiers
 	 * @throws AppendableException if unifiers in list are not compatible
 	 */
-	private static Substitution uniteUnifiers(List<Substitution> unifiers) throws AppendableException {
+	private static Optional<Substitution> uniteUnifiers(List<Substitution> unifiers) {
 		//In case there are variables substituted in multiple unifiers
 		// the substituted reprs must unify on type level
 		// then we want to create representationOr from them and use it as substituted representatiation
@@ -113,49 +120,64 @@ public class RepresentationOr extends Type {
 				});
 		Set<Pair<TypeVariable, Type>> s = new HashSet<Pair<TypeVariable, Type>>();
 		for (TypeVariable v : boundVariables) {
-			Type t = RepresentationOr
-					.makeRepresentationOr(unifiers.stream().map(x -> x.get(v).get()).collect(Collectors.toSet()));
+			Set<Type> substituted = unifiers.stream().map(x -> x.get(v).get()).collect(Collectors.toSet());
+			Optional<Substitution> varUnifier = Type.unifyMany(substituted);
+			
+			if(varUnifier.isEmpty()) {
+				return Optional.empty();
+			}
+			
+			Set<Type> reps = substituted.stream().map(r -> r.apply(varUnifier.get())).collect(Collectors.toSet());
+						
+			Type t;
+			if(reps.size() == 1) {
+				t = reps.stream().findAny().get();
+			} else {
+				t = new RepresentationOr(reps);
+			}
+						
 			Pair<TypeVariable, Type> p = new Pair<TypeVariable, Type>(v, t);
 			s.add(p);
 		}
-		return new Substitution(s);
+		return Optional.of(new Substitution(s));
 	}
 
 	@Override
-	public Substitution unifyTypeWith(Type other) throws AppendableException {
+	public Optional<Substitution> unifyTypeWith(Type other) {
 		if (other instanceof TypeVariable) {
 			return other.unifyTypeWith(this);
 		}
 
-		try {
-			final List<Substitution> unifiers = this.representations.stream()
-					.map(ThrowingFunction.wrapper(x -> Type.unifyTypes(x, other))).collect(Collectors.toList());
-
-			return RepresentationOr.uniteUnifiers(unifiers);
-
-		} catch (RuntimeException e) {
-			AppendableException ae = (AppendableException) e.getCause();
-			throw ae;
+		List<Substitution> l = new LinkedList<Substitution>();
+		for(Type t : this.representations) {
+			Optional<Substitution> opt = Type.unifyTypes(t, other);
+			if(opt.isEmpty()) {
+				return Optional.empty();
+			}
+			l.add(opt.get());
 		}
+		
+		Optional<Substitution> united = RepresentationOr.uniteUnifiers(l);  
+		return united;
 	}
 
 	@Override
-	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
+	public Optional<Substitution> unifyRepresentationWith(Type other) {
 		if (other instanceof TypeVariable) {
 			return other.unifyRepresentationWith(this);
 		}
 
-		try {
-			final List<Substitution> unifiers = this.representations.stream()
-					.map(ThrowingFunction.wrapper(x -> Type.unifyRepresentation(x, other)))
-					.collect(Collectors.toList());
-
-			return RepresentationOr.uniteUnifiers(unifiers);
-
-		} catch (RuntimeException e) {
-			AppendableException ae = (AppendableException) e.getCause();
-			throw ae;
+		List<Substitution> l = new LinkedList<Substitution>();
+		for(Type t : this.representations) {
+			Optional<Substitution> opt = Type.unifyRepresentation(t, other);
+			if(opt.isEmpty()) {
+				return Optional.empty();
+			}
+			l.add(opt.get());
 		}
+		
+		Optional<Substitution> united = RepresentationOr.uniteUnifiers(l);  
+		return united;
 	}
 
 	@Override

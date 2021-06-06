@@ -1,6 +1,7 @@
 package velka.lang.application;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
@@ -10,10 +11,12 @@ import velka.lang.abstraction.Lambda;
 import velka.lang.semantic.SemanticParserStatic;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.Substitution;
+import velka.lang.types.SubstitutionsCannotBeMergedException;
 import velka.lang.types.Type;
 import velka.lang.types.TypeArrow;
 import velka.lang.types.TypeAtom;
 import velka.lang.types.TypeTuple;
+import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
 
@@ -63,10 +66,28 @@ public class DefineConversion extends Expression {
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Pair<Type, Substitution> p = this.makeConversionLambda(env).infer(env, typeEnv);
 		TypeArrow type = (TypeArrow) p.first;
-		Substitution s = Type.unifyTypes(type.ltype, new TypeTuple(Arrays.asList(this.from)));
-		s = s.union(Type.unifyTypes(type.rtype, this.to));
-		s = s.union(p.second);
-		return new Pair<Type, Substitution>(Expression.EMPTY_EXPRESSION.infer(env, typeEnv).first, s);
+		TypeTuple ttuple = new TypeTuple(Arrays.asList(this.from));
+		Optional<Substitution> left = Type.unifyTypes(type.ltype, ttuple);
+		if(left.isEmpty()) {
+			throw new TypesDoesNotUnifyException(type.ltype, ttuple);
+		}
+		
+		Optional<Substitution> right = Type.unifyTypes(type.rtype, this.to);
+		if(right.isEmpty()) {
+			throw new TypesDoesNotUnifyException(type.rtype, this.to);
+		}
+		
+		Optional<Substitution> opt = left.get().union(right.get());
+		if(opt.isEmpty()) {
+			throw new SubstitutionsCannotBeMergedException(left.get(), right.get());
+		}
+		
+		Optional<Substitution> tmp =  opt.get().union(p.second);
+		if(tmp.isEmpty()) {
+			throw new SubstitutionsCannotBeMergedException(opt.get(), p.second);
+		}
+		
+		return new Pair<Type, Substitution>(Expression.EMPTY_EXPRESSION.infer(env, typeEnv).first, Substitution.EMPTY);
 	}
 
 	@Override

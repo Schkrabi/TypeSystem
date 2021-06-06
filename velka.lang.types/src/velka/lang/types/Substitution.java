@@ -13,7 +13,6 @@ import java.util.stream.Stream;
 
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
-import velka.lang.util.ThrowingBinaryOperator;
 
 /**
  * Substituion used for type inference
@@ -67,30 +66,28 @@ public class Substitution {
 
 	/**
 	 * Composes this substitution with another to new substitution
-	 * 
 	 * @param other substitution
-	 * @return new substitution object
-	 * @throws AppendableException
+	 * @return Optinal.Empty if substitutions cannot be merged. Otherwise Optional with merged substitution
 	 */
-	public Substitution union(Substitution other) throws AppendableException {
+	public Optional<Substitution> union(Substitution other){
 		Set<TypeVariable> intersection = new TreeSet<TypeVariable>();
 		intersection.addAll(this.elements.keySet());
 		intersection.retainAll(other.elements.keySet());
-
-//		Substitution composition = new Substitution();
-//		composition.elements.putAll(this.elements);
-//		composition.elements.putAll(other.elements);
-//		for (TypeVariable v : intersection) {
-//			composition.elements.remove(v);
-//		}
 		
 		Substitution unifier = Substitution.EMPTY;
 
 		for (TypeVariable v : intersection) {
-			Substitution mgu = Type.unifyTypes(this.get(v).get(), other.get(v).get());
-			unifier = unifier.union(mgu);
-			//composition.elements.put(v, this.get(v).get().apply(mgu));
-			//composition = composition.union(mgu);
+			Optional<Substitution> mgu = Type.unifyTypes(this.get(v).get(), other.get(v).get());
+			if(mgu.isEmpty()) {
+				return Optional.empty();
+			}
+			
+			Optional<Substitution> optUnifier = unifier.union(mgu.get()); 
+			if(optUnifier.isEmpty()) {
+				return Optional.empty();
+			}
+			
+			unifier = optUnifier.get();
 		}
 		
 		List<Pair<TypeVariable, Type>> l = new LinkedList<Pair<TypeVariable, Type>>();
@@ -111,7 +108,7 @@ public class Substitution {
 		
 		Substitution composition = new Substitution(l);
 
-		return composition;
+		return Optional.of(composition);
 	}
 
 	@Override
@@ -141,16 +138,18 @@ public class Substitution {
 		return this.elements.hashCode();
 	}
 
-	public static Substitution unionMany(Collection<Substitution> substitutions) throws AppendableException {
-		try {
-			return substitutions.stream().reduce(Substitution.EMPTY,
-					ThrowingBinaryOperator.wrapper((x, y) -> x.union(y)));
-		} catch (RuntimeException re) {
-			if (re.getCause() instanceof AppendableException) {
-				throw (AppendableException) re.getCause();
+	public static Optional<Substitution> unionMany(Collection<Substitution> substitutions) throws AppendableException {
+		Substitution agg = Substitution.EMPTY;
+		
+		for(Substitution s : substitutions) {
+			Optional<Substitution> opt = agg.union(s);
+			if(opt.isEmpty()) {
+				return Optional.empty();
 			}
-			throw re;
+			agg = opt.get();
 		}
+		
+		return Optional.of(agg);
 	}
 
 	/**

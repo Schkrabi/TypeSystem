@@ -1,6 +1,7 @@
 package velka.lang.types;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 
 import velka.lang.util.AppendableException;
@@ -34,19 +35,17 @@ public abstract class Type implements Comparable<Type> {
 	/**
 	 * Tries to unify two types treating different type representation as the same type.
 	 * 
-	 * @param other other type to unify with
-	 * @return substitution unifying the types
-	 * @throws AppenableException is thrown if types cannot be unified
+	 * @param other other other type to unify with
+	 * @return Optional.Empty if types cannot be unified. Otherwise Optional containing unifier
 	 */
-	public abstract Substitution unifyTypeWith(Type other) throws AppendableException;
+	public abstract Optional<Substitution> unifyTypeWith(Type other);
 	
 	/**
 	 * Tries to unify with other type treating different type representation as different types.
-	 * @param other other other type to unify with
-	 * @return substitution unifying the types
-	 * @throws AppendableException is thrown if types cannot be unified
+	 * @param other other other other type to unify with
+	 * @return Optional.Empty if types cannot be unified. Otherwise Optional containing unifier
 	 */
-	public abstract Substitution unifyRepresentationWith(Type other) throws AppendableException;
+	public abstract Optional<Substitution> unifyRepresentationWith(Type other);
 
 	/**
 	 * Creates representing type as Clojure key
@@ -70,44 +69,55 @@ public abstract class Type implements Comparable<Type> {
 
 	/**
 	 * Tries to unify two types treating different type representation as the same type.
-	 * 
 	 * @param m first unified type
 	 * @param n second unified type
-	 * @return Most General Unifier of given types
-	 * @throws AppendableException if types are not unifiable
+	 * @return Optional.Empty if types cannot be unified. Otherwise Optional containing unifier
 	 */
-	public static Substitution unifyTypes(Type m, Type n) throws AppendableException {
+	public static Optional<Substitution> unifyTypes(Type m, Type n){
 		return m.unifyTypeWith(n);
 	}
 	
 	/**
 	 * Tries to unify two types treating different type representation as different types.
-	 * 
-	 * @param m Type
-	 * @param n Type
-	 * @return Most General Unifier of given types
-	 * @throws AppendableException if types are not unifiable
+	 * @param m first unified type
+	 * @param n second unified type
+	 * @return Optional.Empty if types cannot be unified. Otherwise Optional containing unifier
 	 */
-	public static Substitution unifyRepresentation(Type m, Type n) throws AppendableException {
+	public static Optional<Substitution> unifyRepresentation(Type m, Type n){
 		return m.unifyRepresentationWith(n);
 	}
 
 	/**
-	 * Unifies set of types
 	 * 
-	 * @param types set to be unified
+	 * 
+	 * @param 
 	 * @return subtitution unifiing the set
 	 * @throws AppendableException thrown if any types does not unify
 	 */
-	public static Substitution unifyMany(Collection<? extends Type> types) throws AppendableException {
+	/**
+	 * Unifies set of types
+	 * @param types types set to be unified
+	 * @return
+	 * @throws AppendableException
+	 */
+	public static Optional<Substitution> unifyMany(Collection<? extends Type> types) {
 		Type base = new TypeVariable(NameGenerator.next());
 		Substitution agg = Substitution.EMPTY;
 		for (Type t : types) {
-			Substitution s = Type.unifyTypes(base, t);
-			agg = agg.union(s);
+			Optional<Substitution> s = Type.unifyTypes(base, t);
+			if(s.isEmpty()) {
+				return Optional.empty();
+			}
+			Optional<Substitution> opt = agg.union(s.get()); 
+			
+			if(opt.isEmpty()) {
+				return Optional.empty();
+			}
+			
+			agg = opt.get();
 			base = base.apply(agg);
 		}
-		return agg;
+		return Optional.of(agg);
 	}
 
 	/**

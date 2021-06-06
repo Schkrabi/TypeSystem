@@ -1,15 +1,18 @@
 package velka.lang.application;
 
 import velka.lang.types.Substitution;
+import velka.lang.types.SubstitutionsCannotBeMergedException;
 import velka.lang.types.Type;
 import velka.lang.types.TypeAtom;
 import velka.lang.types.TypeTuple;
 import velka.lang.types.TypeVariable;
+import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
@@ -90,10 +93,17 @@ public class IfExpression extends SpecialFormApplication {
 		TypeVariable tv = new TypeVariable(NameGenerator.next());
 		Type argsExpected = new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, tv, tv));
 		
-		Substitution s = Type.unifyTypes(argsInfered.first, argsExpected); 
-		s = s.union(argsInfered.second);
+		Optional<Substitution> s = Type.unifyTypes(argsInfered.first, argsExpected);
+		if(s.isEmpty()) {
+			throw new TypesDoesNotUnifyException(argsInfered.first, argsExpected);
+		}
 		
-		return new Pair<Type, Substitution>(tv.apply(s), s);
+		Optional<Substitution> opt = s.get().union(argsInfered.second);
+		if(opt.isEmpty()) {
+			throw new SubstitutionsCannotBeMergedException(s.get(), argsInfered.second);
+		}
+		
+		return new Pair<Type, Substitution>(tv.apply(opt.get()), opt.get());
 	}
 	
 	@Override

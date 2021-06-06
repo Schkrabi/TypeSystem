@@ -1,6 +1,7 @@
 package velka.lang.application;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import velka.lang.expression.Expression;
 import velka.lang.expression.TypeHolder;
@@ -9,9 +10,11 @@ import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.semantic.SemanticParserStatic;
 import velka.lang.types.Substitution;
+import velka.lang.types.SubstitutionsCannotBeMergedException;
 import velka.lang.types.Type;
 import velka.lang.types.TypeTuple;
 import velka.lang.types.TypeVariable;
+import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
@@ -61,11 +64,19 @@ public class DefineSymbol extends Expression {
 		if (!s.containsVariable(tv)) {
 			tmp = new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(tv, infered.first)));
 		} else {
-			tmp = Type.unifyTypes(s.get(tv).get(), infered.first);
+			Optional<Substitution> opt = Type.unifyTypes(s.get(tv).get(), infered.first);
+			if(opt.isEmpty()) {
+				throw new TypesDoesNotUnifyException(s.get(tv).get(), infered.first);
+			}
+			
+			tmp = opt.get();
 		}
-		s = s.union(tmp);
+		Optional<Substitution> opt = s.union(tmp);
+		if(opt.isEmpty()) {
+			throw new SubstitutionsCannotBeMergedException(s, tmp);
+		}
 
-		return new Pair<Type, Substitution>(infered.first, s);
+		return new Pair<Type, Substitution>(infered.first, opt.get());
 	}
 
 	@Override

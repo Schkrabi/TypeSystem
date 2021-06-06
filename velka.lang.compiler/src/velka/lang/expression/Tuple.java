@@ -5,10 +5,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Vector;
 import java.util.stream.Stream;
 
 import velka.lang.types.Substitution;
+import velka.lang.types.SubstitutionsCannotBeMergedException;
 import velka.lang.types.Type;
 import velka.lang.types.TypeTuple;
 import velka.lang.util.AppendableException;
@@ -111,7 +113,13 @@ public class Tuple extends Expression implements Iterable<Expression> {
 			for (Expression e : this) {
 				Pair<Type, Substitution> infered = e.infer(env, typeEnv);
 				types.add(infered.first);
-				s = s.union(infered.second);
+				
+				Optional<Substitution> opt = s.union(infered.second);
+				if(opt.isEmpty()) {
+					throw new SubstitutionsCannotBeMergedException(s, infered.second);
+				}
+				
+				s = opt.get();
 			}
 			return new Pair<Type, Substitution>(new TypeTuple(types), s);
 

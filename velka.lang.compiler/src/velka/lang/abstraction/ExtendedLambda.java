@@ -21,6 +21,7 @@ import velka.lang.literal.LitInteger;
 import velka.lang.types.RepresentationOr;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
+import velka.lang.types.TypeSetDoesNotUnifyException;
 import velka.lang.types.TypeTuple;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
@@ -76,11 +77,19 @@ public class ExtendedLambda extends Abstraction {
 				AppendableException e = (AppendableException) re.getCause();
 				throw e;
 			}
+			
+			final Set<Type> types = s.stream().map(x -> x.first).collect(Collectors.toSet());
+			final Set<Substitution> substs = s.stream().map(x -> x.second).collect(Collectors.toSet());
 
 			return new Pair<Type, Substitution>(
-					RepresentationOr.makeRepresentationOr(s.stream().map(x -> x.first).collect(Collectors.toSet())),
-					s.stream().map(x -> x.second).reduce(Substitution.EMPTY,
-							ThrowingBinaryOperator.wrapper((x, y) -> x.union(y))));
+					RepresentationOr.makeRepresentationOr(types),
+					substs.stream().reduce(Substitution.EMPTY, ThrowingBinaryOperator.wrapper((x, y) -> {
+						Optional<Substitution> subst = x.union(y);
+						if (subst.isEmpty()) {
+							throw new TypeSetDoesNotUnifyException(types);
+						}
+						return subst.get();
+					})));
 
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);

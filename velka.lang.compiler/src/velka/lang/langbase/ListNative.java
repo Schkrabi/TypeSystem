@@ -139,32 +139,31 @@ public class ListNative {
 	 * map2-list-native function
 	 */
 	public static final Lambda map2ListNative = new Lambda(
-			new Tuple(Arrays.asList(new Symbol("f"), new Symbol("l1"), new Symbol("l2"))),
-			new TypeTuple(Arrays.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), C), TypeAtom.TypeListNative,
-					TypeAtom.TypeListNative)),
+			new Tuple(new Symbol("f"), new Symbol("l1"), new Symbol("l2")),
+			new TypeTuple(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), C), TypeAtom.TypeListNative,
+					TypeAtom.TypeListNative),
 			new IfExpression(
 					new OrExpression(
 							new Tuple(
-									Arrays.asList(
-											new AbstractionApplication(isListNativeEmptySymbol,
-													new Tuple(Arrays.asList(new Symbol("l1")))),
-											new AbstractionApplication(isListNativeEmptySymbol,
-													new Tuple(Arrays.asList(new Symbol("l2"))))))),
+								new AbstractionApplication(isListNativeEmptySymbol,
+										new Tuple(new Symbol("l1"))),
+								new AbstractionApplication(isListNativeEmptySymbol,
+										new Tuple(new Symbol("l2"))))),
 					new Construct(TypeAtom.TypeListNative, Tuple.EMPTY_TUPLE),
 					new Construct(TypeAtom.TypeListNative,
-							new Tuple(Arrays.asList(
-									new AbstractionApplication(new Symbol("f"),
-											new Tuple(Arrays.asList(
-													new AbstractionApplication(ListNative.headListNativeSymbol,
-															new Tuple(Arrays.asList(new Symbol("l1")))),
-													new AbstractionApplication(ListNative.headListNativeSymbol,
-															new Tuple(Arrays.asList(new Symbol("l2"))))))),
-									new AbstractionApplication(ListNative.map2ListNativeSymbol,
-											new Tuple(Arrays.asList(new Symbol("f"),
-													new AbstractionApplication(ListNative.tailListNativeSymbol,
-															new Tuple(Arrays.asList(new Symbol("l1")))),
-													new AbstractionApplication(ListNative.tailListNativeSymbol,
-															new Tuple(Arrays.asList(new Symbol("l2"))))))))))));
+							new Tuple(
+								new AbstractionApplication(new Symbol("f"),
+										new Tuple(
+											new AbstractionApplication(ListNative.headListNativeSymbol,
+												new Tuple(new Symbol("l1"))),
+											new AbstractionApplication(ListNative.headListNativeSymbol,
+												new Tuple(new Symbol("l2"))))),
+								new AbstractionApplication(ListNative.map2ListNativeSymbol,
+										new Tuple(new Symbol("f"),
+											new AbstractionApplication(ListNative.tailListNativeSymbol,
+												new Tuple(new Symbol("l1"))),
+											new AbstractionApplication(ListNative.tailListNativeSymbol,
+												new Tuple(new Symbol("l2")))))))));
 
 	/**
 	 * Symbol for foldl-list-native
@@ -172,21 +171,23 @@ public class ListNative {
 	public static final Symbol foldlListNativeSymbol = new Symbol("foldl-list-native");
 
 	public static final Lambda foldlListNative = new Lambda(
-			new Tuple(Arrays.asList(new Symbol("f"), new Symbol("term"), new Symbol("l"))),
+			new Tuple(new Symbol("f"), new Symbol("term"), new Symbol("l")),
 			new TypeTuple(
-					Arrays.asList(new TypeArrow(new TypeTuple(A, B), A), A, TypeAtom.TypeListNative)),
+					new TypeArrow(new TypeTuple(A, B), A), A, TypeAtom.TypeListNative),
 			new IfExpression(
 					new AbstractionApplication(
-							ListNative.isListNativeEmptySymbol, new Tuple(Arrays.asList(new Symbol("l")))),
+							ListNative.isListNativeEmptySymbol, new Tuple(new Symbol("l"))),
 					new Symbol("term"),
 					new AbstractionApplication(foldlListNativeSymbol,
-							new Tuple(Arrays.asList(new Symbol("f"), new AbstractionApplication(new Symbol("f"),
-									new Tuple(Arrays.asList(new Symbol("term"), new AbstractionApplication(Operators.Car,
-											new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"),
-													new TypeTuple(Arrays.asList(A, TypeAtom.TypeListNative))))))))),
-									new AbstractionApplication(Operators.Cdr,
-											new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"),
-													new TypeTuple(Arrays.asList(A, TypeAtom.TypeListNative)))))))))));
+							new Tuple(
+									new Symbol("f"),
+									new AbstractionApplication(new Symbol("f"),
+											new Tuple(	
+													new Symbol("term"), 
+													new AbstractionApplication(ListNative.headListNativeSymbol, 
+															new Tuple(new Symbol("l"))))),
+									new AbstractionApplication(ListNative.tailListNativeSymbol,
+											new Tuple(new Symbol("l")))))));
 
 	/**
 	 * Symbol for foldr-list-native
@@ -197,26 +198,23 @@ public class ListNative {
 	 * foldr-list-native function
 	 */
 	public static final Lambda foldrListNative = new Lambda(
-			new Tuple(Arrays.asList(new Symbol("f"), new Symbol("term"), new Symbol("l"))),
-			new TypeTuple(Arrays.asList(new TypeArrow(new TypeTuple(A, B), A), A,
-					TypeAtom.TypeListNative)),
+			new Tuple(new Symbol("f"), new Symbol("term"), new Symbol("l")),
+			new TypeTuple(new TypeArrow(new TypeTuple(A, B), A), A,
+					TypeAtom.TypeListNative),
 			new IfExpression(
 					new AbstractionApplication(ListNative.isListNativeEmptySymbol, new Tuple(
-							Arrays.asList(new Symbol("l")))),
+							new Symbol("l"))),
 					new Symbol("term"),
 					new AbstractionApplication(new Symbol("f"),
 							new Tuple(
-									Arrays.asList(
-											new AbstractionApplication(foldrListNativeSymbol, new Tuple(Arrays.asList(
-													new Symbol("f"), new Symbol("term"),
-													new AbstractionApplication(Operators.Cdr,
-															new Tuple(Arrays.asList(new Deconstruct(new Symbol("l"),
-																	new TypeTuple(Arrays.asList(A,
-																			TypeAtom.TypeListNative))))))))),
-											new AbstractionApplication(Operators.Car,
-													new Tuple(Arrays
-															.asList(new Deconstruct(new Symbol("l"), new TypeTuple(
-																	Arrays.asList(A, TypeAtom.TypeListNative)))))))))));
+									new AbstractionApplication(foldrListNativeSymbol, new Tuple(
+											new Symbol("f"), new Symbol("term"),
+											new AbstractionApplication(
+													ListNative.tailListNativeSymbol,
+													new Tuple(new Symbol("l"))))),
+									new AbstractionApplication(
+											ListNative.headListNative,
+											new Tuple(new Symbol("l")))))));
 	
 //	(lambda (_list _e)
 //			(if (isEmpty _list)

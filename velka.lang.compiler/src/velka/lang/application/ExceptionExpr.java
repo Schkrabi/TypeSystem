@@ -1,6 +1,7 @@
 package velka.lang.application;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
@@ -11,9 +12,11 @@ import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitString;
 import velka.lang.exceptions.UserException;
 import velka.lang.types.Substitution;
+import velka.lang.types.SubstitutionsCannotBeMergedException;
 import velka.lang.types.Type;
 import velka.lang.types.TypeAtom;
 import velka.lang.types.TypeVariable;
+import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
@@ -53,9 +56,17 @@ public class ExceptionExpr extends SpecialFormApplication {
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
 			Pair<Type, Substitution> infered = this.getMessage().infer(env, typeEnv);
-			Substitution s = Type.unifyTypes(infered.first, TypeAtom.TypeStringNative);
-			s = s.union(infered.second);
-			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), s);
+			Optional<Substitution> s = Type.unifyTypes(infered.first, TypeAtom.TypeStringNative);
+			if(s.isEmpty()) {
+				throw new TypesDoesNotUnifyException(infered.first, TypeAtom.TypeStringNative);
+			}
+			
+			Optional<Substitution> opt = s.get().union(infered.second);
+			if(opt.isEmpty()) {
+				throw new SubstitutionsCannotBeMergedException(s.get(), infered.second);
+			}
+			
+			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), opt.get());
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;

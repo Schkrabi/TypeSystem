@@ -99,11 +99,10 @@ class TestTypes {
 									new Pair<TypeVariable, Type>(new TypeVariable("b"), TypeAtom.TypeInt))));
 		});
 
-		assertThrows(TypesDoesNotUnifyException.class,
-				() -> (new Substitution(
-						Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))))
-								.union(new Substitution(Arrays.asList(
-										new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeBool)))));
+		assertEquals(Optional.empty(),
+				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt)))
+						.union(new Substitution(Arrays
+								.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeBool)))));
 	}
 
 	@Test
@@ -192,7 +191,8 @@ class TestTypes {
 	@Test
 	@DisplayName("Test Type Arrow")
 	void testTypeArrow() throws AppendableException {
-		TypeArrow typeArrow = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntString);
+		TypeArrow typeArrow = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
+				TypeAtom.TypeIntString);
 		assertAll(() -> {
 			typeArrow.toString();
 		});
@@ -310,22 +310,22 @@ class TestTypes {
 	void testRepresentationOr() throws AppendableException {
 		// Test construction
 		assertEquals(RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt)), TypeAtom.TypeInt);
-		
+
 		assertAll(() -> {
 			RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString));
 		});
-		
+
 		RepresentationOr ror = (RepresentationOr) RepresentationOr
 				.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString));
 		assertAll(() -> {
 			ror.toString();
 			ror.getRepresentations();
 		});
-		
+
 		assertTrue(ror instanceof RepresentationOr);
 
 		assertThrows(AppendableException.class, () -> RepresentationOr.makeRepresentationOr(Arrays.asList()));
-		assertThrows(TypesDoesNotUnifyException.class,
+		assertThrows(TypeSetDoesNotUnifyException.class,
 				() -> RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeBool)));
 
 		// Equals & CompareTo
@@ -342,7 +342,8 @@ class TestTypes {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		assertEquals(Expression.EMPTY_EXPRESSION, Conversions.convert(ror, Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntRoman, typeEnv));
+		assertEquals(Expression.EMPTY_EXPRESSION,
+				Conversions.convert(ror, Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntRoman, typeEnv));
 
 		TestTypes.testApply(
 				RepresentationOr.makeRepresentationOr(
@@ -377,15 +378,13 @@ class TestTypes {
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeDouble),
 						new Pair<TypeVariable, Type>(new TypeVariable("b"), TypeAtom.TypeBoolNative))));
 
-		assertThrows(TypesDoesNotUnifyException.class,
-				() -> Type.unifyTypes(TypeAtom.TypeBool, TypeAtom.TypeInt));
-		assertThrows(TypesDoesNotUnifyException.class,
-				() -> Type.unifyTypes(new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt), TypeAtom.TypeInt));
-		assertThrows(TypesDoesNotUnifyException.class, () -> Type
-				.unifyTypes(new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt)), TypeAtom.TypeInt));
-		assertThrows(TypesDoesNotUnifyException.class,
-				() -> Type.unifyTypes(new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt)),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt, TypeAtom.TypeInt))));
+		assertEquals(Optional.empty(), Type.unifyTypes(TypeAtom.TypeBool, TypeAtom.TypeInt));
+		assertEquals(Optional.empty(),
+				Type.unifyTypes(new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt), TypeAtom.TypeInt));
+		assertEquals(Optional.empty(),
+				Type.unifyTypes(new TypeTuple(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeInt)), TypeAtom.TypeInt));
+		assertEquals(Optional.empty(), Type.unifyTypes(new TypeTuple(TypeAtom.TypeInt, TypeAtom.TypeInt),
+				new TypeTuple(TypeAtom.TypeInt, TypeAtom.TypeInt, TypeAtom.TypeInt)));
 
 		TestTypes.testUnify(new TypeVariable("x"),
 				RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
@@ -403,9 +402,8 @@ class TestTypes {
 				new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative), new Substitution(
 						Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), TypeAtom.TypeStringNative))));
 		TestTypes.testUnify(new TypeArrow(new TypeVariable("x"), TypeAtom.TypeStringNative),
-				RepresentationOr.makeRepresentationOr(
-						new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative),
-								new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeStringNative)),
+				RepresentationOr.makeRepresentationOr(new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative),
+						new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeStringNative)),
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), RepresentationOr
 						.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString))))));
 		TestTypes.testUnify(
@@ -455,10 +453,10 @@ class TestTypes {
 		assertNotNull(from);
 		assertNotNull(to);
 		assertNotNull(expected);
-		
+
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
+
 		Expression converted = Conversions.convert(type, from, to, typeEnv).interpret(env, typeEnv);
 
 		assertEquals(converted, expected);
@@ -477,15 +475,23 @@ class TestTypes {
 		assertNotNull(subst1);
 		assertNotNull(subst2);
 		assertNotNull(expected);
-		Substitution composed = subst1.union(subst2);
-		assertEquals(composed, expected);
+		Optional<Substitution> composed = subst1.union(subst2);
+		if (composed.isEmpty()) {
+			throw new SubstitutionsCannotBeMergedException(subst1, subst2);
+		}
+
+		assertEquals(expected, composed.get());
 	}
 
 	static void testUnify(Type first, Type second, Substitution expected) throws AppendableException {
 		assertNotNull(first);
 		assertNotNull(second);
 		assertNotNull(expected);
-		Substitution s = Type.unifyTypes(first, second);
-		assertEquals(expected, s);
+		Optional<Substitution> s = Type.unifyTypes(first, second);
+		if (s.isEmpty()) {
+			throw new TypesDoesNotUnifyException(first, second);
+		}
+
+		assertEquals(expected, s.get());
 	}
 }

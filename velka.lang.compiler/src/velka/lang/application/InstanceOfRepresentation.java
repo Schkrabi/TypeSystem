@@ -1,13 +1,13 @@
 package velka.lang.application;
 
 import velka.lang.expression.Expression;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitBoolean;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
 import velka.lang.types.TypeAtom;
-import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
 
@@ -36,12 +36,10 @@ public class InstanceOfRepresentation extends Expression {
 	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Pair<Type, Substitution> infered = this.expression.interpret(env, typeEnv).infer(env, typeEnv);
 		
-		try {
-			Type.unifyRepresentation(infered.first, this.type);
+		if(Type.unifyRepresentation(infered.first, this.type).isPresent()) {
 			return LitBoolean.TRUE;
-		}catch(TypesDoesNotUnifyException e) {
-			return LitBoolean.FALSE;
 		}
+		return LitBoolean.FALSE;
 	}
 
 	@Override
@@ -52,15 +50,12 @@ public class InstanceOfRepresentation extends Expression {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		String code = "(try " 
-				+ "(if (= (velka.lang.types.Type/unifyRepresentation " 
-						+ "(:lang-type (meta " + this.expression.toClojureCode(env, typeEnv) + ")) " 
-						+ this.type.clojureTypeRepresentation()
-						+ ") velka.lang.types.Substitution/EMPTY) "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + " "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + ")"
-				+ "(catch velka.lang.types.TypesDoesNotUnifyException e " + LitBoolean.FALSE.toClojureCode(env, typeEnv) + "))";
-		return "(with-meta " + code + " {:lang-type " + TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})";
+		String code = LitBoolean.clojureBooleanToClojureLitBoolean(
+				"(.isPresent (velka.lang.types.Type/unifyRepresentation "
+				+ "(" + ClojureCodeGenerator.getTypeClojureSymbol + " " + this.expression.toClojureCode(env, typeEnv) + ") "
+				+ this.type.clojureTypeRepresentation() + "))"); 
+				
+				return code;
 	}
 	
 	@Override

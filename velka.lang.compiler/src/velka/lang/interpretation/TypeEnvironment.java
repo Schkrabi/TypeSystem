@@ -31,7 +31,6 @@ import velka.lang.types.TypeAtom;
 import velka.lang.types.TypeName;
 import velka.lang.types.TypeRepresentation;
 import velka.lang.types.TypeTuple;
-import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.types.TypeArrow;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
@@ -398,19 +397,10 @@ public class TypeEnvironment {
 		private Optional<Abstraction> findConstrutor(TypeTuple argsType) throws AppendableException {
 			for (java.util.Map.Entry<TypeTuple, Abstraction> entry : this.constructors.entrySet()) {
 				TypeTuple type = entry.getKey();
-				try {
-					// Possible bottleneck?
-					Type.unifyTypes(type, argsType);
-				} catch (TypesDoesNotUnifyException e) {
-					continue;
-				} catch (RuntimeException re) {
-					if (re.getCause() instanceof AppendableException) {
-						continue;
-					}
-				}
-
-				// If unification exists, return the constructor
-				return Optional.of(entry.getValue());
+				if(Type.unifyTypes(type, argsType).isPresent()) {
+					// If unification exists, return the constructor
+					return Optional.of(entry.getValue());
+				}				
 			}
 			return Optional.empty();
 		}

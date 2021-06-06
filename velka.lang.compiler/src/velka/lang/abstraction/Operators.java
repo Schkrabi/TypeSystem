@@ -656,21 +656,19 @@ public final class Operators {
 			TypeSymbol t1 = (TypeSymbol) args.get(0);
 			TypeSymbol t2 = (TypeSymbol) args.get(1);
 
-			try {
-				Type.unifyTypes(t1.type, t2.type);
+			if(Type.unifyTypes(t1.type, t2.type).isPresent()) {
 				return LitBoolean.TRUE;
-			} catch (velka.lang.types.TypesDoesNotUnifyException tdnue) {
-				return LitBoolean.FALSE;
 			}
+			return LitBoolean.FALSE;
 		}
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [t1 t2] (try (if (= (velka.lang.types.Type/unifyTypes (get t1 0) (get t2 0)) velka.lang.types.Substitution/EMPTY) "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + " " + LitBoolean.TRUE.toClojureCode(env, typeEnv)
-					+ ") (catch velka.lang.types.TypesDoesNotUnifyException e "
-					+ LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
+			String fn = "(fn [t1 t2] (let [opt (velka.lang.types.Type/unifyTypes (first t1) (first t2))] "
+					+ "(if (.isPresent opt) "
+					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + " " + LitBoolean.FALSE.toClojureCode(env, typeEnv)
+					+ ")))";
 
 			return fn;
 		}
@@ -697,21 +695,19 @@ public final class Operators {
 			TypeSymbol t1 = (TypeSymbol) args.get(0);
 			TypeSymbol t2 = (TypeSymbol) args.get(1);
 
-			try {
-				Type.unifyRepresentation(t1.type, t2.type);
+			if(Type.unifyRepresentation(t1.type, t2.type).isPresent()) {
 				return LitBoolean.TRUE;
-			} catch (velka.lang.types.TypesDoesNotUnifyException tdnue) {
-				return LitBoolean.FALSE;
 			}
+			return LitBoolean.FALSE;
 		}
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [t1 t2] (try (if (= (velka.lang.types.Type/unifyRepresentation (get t1 0) (get t2 0)) velka.lang.types.Substitution/EMPTY) "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + " " + LitBoolean.TRUE.toClojureCode(env, typeEnv)
-					+ ") (catch velka.lang.types.TypesDoesNotUnifyException e "
-					+ LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
+			String fn = "(fn [t1 t2] (let [opt (velka.lang.types.Type/unifyRepresentation (first t1) (first t2))] "
+					+ "(if (.isPresent opt) "
+					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + " " + LitBoolean.FALSE.toClojureCode(env, typeEnv)
+					+ ")))";
 
 			return fn;
 		}
@@ -742,23 +738,21 @@ public final class Operators {
 			Pair<Type, Substitution> p1 = e1.infer(env, typeEnv);
 			Pair<Type, Substitution> p2 = e2.infer(env, typeEnv);
 
-			try {
-				Type.unifyTypes(p1.first, p2.first);
-				// p1.second.union(p2.second);
+			if(Type.unifyTypes(p1.first, p2.first).isPresent()) {
 				return LitBoolean.TRUE;
-			} catch (velka.lang.types.TypesDoesNotUnifyException tdnue) {
-				return LitBoolean.FALSE;
 			}
+			return LitBoolean.FALSE;
 		}
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [e1 e2] " + "(try " + "(second (doall ["
-					+ "(velka.lang.types.Type/unifyTypes (:lang-type (meta e1)) (:lang-type (meta e2))) "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + "]))"
-					+ "(catch velka.lang.types.TypesDoesNotUnifyException e "
-					+ LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
+			String fn = "(fn [e1 e2] (let [opt (velka.lang.types.Type/unifyTypes " + 
+							"(" + ClojureCodeGenerator.getTypeClojureSymbol + " e1) " +
+							"(" + ClojureCodeGenerator.getTypeClojureSymbol + " e2))] " +
+								"(if (.isPresent opt) " + 
+									LitBoolean.TRUE.toClojureCode(env, typeEnv) +
+									LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
 
 			return fn;
 		}
@@ -792,23 +786,21 @@ public final class Operators {
 			Pair<Type, Substitution> p1 = e1.infer(env, typeEnv);
 			Pair<Type, Substitution> p2 = e2.infer(env, typeEnv);
 
-			try {
-				Type.unifyRepresentation(p1.first, p2.first);
-				// p1.second.union(p2.second);
+			if(Type.unifyRepresentation(p1.first, p2.first).isPresent()) {
 				return LitBoolean.TRUE;
-			} catch (velka.lang.types.TypesDoesNotUnifyException tdnue) {
-				return LitBoolean.FALSE;
 			}
+			return LitBoolean.FALSE;
 		}
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [e1 e2] " + "(try " + "(second (doall ["
-					+ "(velka.lang.types.Type/unifyRepresentation (:lang-type (meta e1)) (:lang-type (meta e2))) "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + "]))"
-					+ "(catch velka.lang.types.TypesDoesNotUnifyException e "
-					+ LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
+			String fn = "(fn [e1 e2] (let [opt (velka.lang.types.Type/unifyRepresentation " + 
+							"(" + ClojureCodeGenerator.getTypeClojureSymbol + " e1) " +
+							"(" + ClojureCodeGenerator.getTypeClojureSymbol + " e2))] " +
+								"(if (.isPresent opt) " + 
+									LitBoolean.TRUE.toClojureCode(env, typeEnv) +
+									LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))"; 
 
 			return fn;
 		}

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
@@ -178,9 +179,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 			Type ti = i.next();
 			Type tj = j.next();
 
-			try {
-				Type.unifyRepresentation(ti, tj);
-			} catch (AppendableException e) {
+			if(Type.unifyRepresentation(ti, tj).isEmpty()) {
 				sum++;
 			}
 		}
@@ -189,7 +188,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	}
 
 	@Override
-	public Substitution unifyTypeWith(Type other) throws AppendableException {
+	public Optional<Substitution> unifyTypeWith(Type other) {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
 			return other.unifyTypeWith(this);
 		}
@@ -204,18 +203,25 @@ public class TypeTuple extends Type implements Iterable<Type> {
 					Type t = i.next();
 					Type u = j.next();
 
-					Substitution ot = Type.unifyTypes(t, u);
+					Optional<Substitution> ot = Type.unifyTypes(t, u);
+					if(ot.isEmpty()) {
+						return Optional.empty();
+					}
 
-					s = s.union(ot);
+					Optional<Substitution> tmp = s.union(ot.get());
+					if(tmp.isEmpty()) {
+						return Optional.empty();
+					}
+					s = tmp.get();
 				}
-				return s;
+				return Optional.of(s);
 			}
 		}
-		throw new TypesDoesNotUnifyException(this, other);
+		return Optional.empty();
 	}
 
 	@Override
-	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
+	public Optional<Substitution> unifyRepresentationWith(Type other) {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
 			return other.unifyRepresentationWith(this);
 		}
@@ -230,14 +236,22 @@ public class TypeTuple extends Type implements Iterable<Type> {
 					Type t = i.next();
 					Type u = j.next();
 
-					Substitution ot = Type.unifyRepresentation(t, u);
-
-					s = s.union(ot);
+					Optional<Substitution> ot = Type.unifyRepresentation(t, u);
+					if(ot.isEmpty()) {
+						return Optional.empty();
+					}
+					
+					Optional<Substitution> tmp = s.union(ot.get()); 
+					if(tmp.isEmpty()) {
+						return Optional.empty();
+					}
+					
+					s = tmp.get();
 				}
-				return s;
+				return Optional.of(s);
 			}
 		}
-		throw new TypesDoesNotUnifyException(this, other);
+		return Optional.empty();
 	}
 
 	@Override

@@ -4,11 +4,16 @@ import velka.lang.expression.Expression;
 import velka.lang.interpretation.Environment;
 import velka.lang.semantic.SemanticParserStatic;
 import velka.lang.interpretation.TypeEnvironment;
+
+import java.util.Optional;
+
 import velka.lang.conversions.Conversions;
 import velka.lang.exceptions.ConversionException;
 import velka.lang.types.Substitution;
+import velka.lang.types.SubstitutionsCannotBeMergedException;
 import velka.lang.types.Type;
 import velka.lang.types.TypeAtom;
+import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
 
@@ -47,13 +52,21 @@ public class Convert extends Expression {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Pair<Type, Substitution> p = this.expression.infer(env, typeEnv);
-		Substitution s = Type.unifyTypes(this.from, p.first);
+		Optional<Substitution> s = Type.unifyTypes(this.from, p.first);
+		if(s.isEmpty()) {
+			throw new TypesDoesNotUnifyException(this.from, p.first);
+		}
+		
 		if (!typeEnv.canConvert(this.from, this.to)) {
 			throw new ConversionException(this.from, this.to, this.expression);
 		}
 
-		s.union(p.second);
-		return new Pair<Type, Substitution>(this.to, s);
+		Optional<Substitution> opt = s.get().union(p.second);
+		if(opt.isEmpty()) {
+			throw new SubstitutionsCannotBeMergedException(s.get(), p.second);
+		}
+		
+		return new Pair<Type, Substitution>(this.to, opt.get());
 	}
 
 	@Override

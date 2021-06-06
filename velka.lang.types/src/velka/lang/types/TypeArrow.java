@@ -1,5 +1,6 @@
 package velka.lang.types;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
@@ -72,35 +73,43 @@ public class TypeArrow extends Type {
 	}
 
 	@Override
-	public Substitution unifyTypeWith(Type other) throws AppendableException {
+	public Optional<Substitution> unifyTypeWith(Type other) {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
 			return other.unifyTypeWith(this);
 		}
 		if (other instanceof TypeArrow) {
 			TypeArrow o = (TypeArrow) other;
 
-			Substitution left = this.ltype.unifyTypeWith(o.ltype);
-			Substitution right = this.rtype.unifyTypeWith(o.rtype);
+			Optional<Substitution> left = this.ltype.unifyTypeWith(o.ltype);
+			Optional<Substitution> right = this.rtype.unifyTypeWith(o.rtype);
+			
+			if(left.isEmpty() || right.isEmpty()) {
+				return Optional.empty();
+			}
 
-			return left.union(right);
+			return left.get().union(right.get());
 		}
-		throw new TypesDoesNotUnifyException(this, other);
+		return Optional.empty();
 	}
 	
 	@Override
-	public Substitution unifyRepresentationWith(Type other) throws AppendableException {
+	public Optional<Substitution> unifyRepresentationWith(Type other) {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
 			return other.unifyRepresentationWith(this);
 		}
 		if (other instanceof TypeArrow) {
 			TypeArrow o = (TypeArrow) other;
 
-			Substitution left = this.ltype.unifyRepresentationWith(o.ltype);
-			Substitution right = this.rtype.unifyRepresentationWith(o.rtype);
+			Optional<Substitution> left = this.ltype.unifyRepresentationWith(o.ltype);
+			Optional<Substitution> right = this.rtype.unifyRepresentationWith(o.rtype);
+			
+			if(left.isEmpty() || right.isEmpty()) {
+				return Optional.empty();
+			}
 
-			return left.union(right);
+			return left.get().union(right.get());
 		}
-		throw new TypesDoesNotUnifyException(this, other);
+		return Optional.empty();
 	}
 
 	@Override

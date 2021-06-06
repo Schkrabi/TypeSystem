@@ -13,6 +13,8 @@ import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.types.RepresentationOr;
 import velka.lang.types.Substitution;
+import velka.lang.types.SubstitutionCollectionCannotBeMerged;
+import velka.lang.types.SubstitutionsCannotBeMergedException;
 import velka.lang.types.Type;
 import velka.lang.types.TypeArrow;
 import velka.lang.types.TypeAtom;
@@ -112,12 +114,26 @@ public class AbstractionApplication extends Application {
 	 */
 	private static Pair<Type, Substitution> inferResultType(TypeTuple argsType, Substitution argsSubst,
 			TypeArrow abstType, Substitution abstSubst) throws AppendableException {
-		Substitution s = Type.unifyTypes(argsType, abstType.ltype);
-		s.union(argsSubst);
-		s.union(abstSubst);
+		Optional<Substitution> s = Type.unifyTypes(argsType, abstType.ltype);
+		if(s.isEmpty()) {
+			throw new TypesDoesNotUnifyException(argsType, abstType.ltype);
+		}
+		
+		//Why this was not assigned?, check during testing
+		Optional<Substitution> tmp = s.get().union(argsSubst);
+		if(tmp.isEmpty()) {
+			throw new SubstitutionsCannotBeMergedException(s.get(), argsSubst);
+		}
+		s = tmp;
+		
+		tmp = s.get().union(abstSubst);
+		if(tmp.isEmpty()) {
+			throw new SubstitutionsCannotBeMergedException(s.get(), abstSubst);
+		}
+		s = tmp;
 
-		TypeArrow finalFnType = (TypeArrow) abstType.apply(s);
-		return new Pair<Type, Substitution>(finalFnType.rtype, s);
+		TypeArrow finalFnType = (TypeArrow) abstType.apply(s.get());
+		return new Pair<Type, Substitution>(finalFnType.rtype, s.get());
 	}
 
 	@Override
@@ -135,9 +151,13 @@ public class AbstractionApplication extends Application {
 						new TypeVariable(NameGenerator.next()));
 				Substitution s = new Substitution(
 						new Pair<TypeVariable, Type>((TypeVariable) funInfered.first, abstArrowType));
-				s = s.union(funInfered.second);
+				Optional<Substitution> tmp = s.union(funInfered.second);
+				if(tmp.isEmpty()) {
+					throw new SubstitutionsCannotBeMergedException(s, funInfered.second);
+				}
+				
 				return AbstractionApplication.inferResultType((TypeTuple) argsInfered.first, argsInfered.second,
-						abstArrowType, s);
+						abstArrowType, tmp.get());
 			}
 			if (funInfered.first instanceof RepresentationOr && ((RepresentationOr) funInfered.first)
 					.getRepresentations().stream().allMatch(x -> x instanceof TypeArrow)) {
@@ -155,11 +175,17 @@ public class AbstractionApplication extends Application {
 					throw re;
 				}
 
-				Substitution finalSubst = Substitution
-						.unionMany(l.stream().map(x -> x.second).collect(Collectors.toList()));
+				List<Substitution> substs = l.stream().map(x -> x.second).collect(Collectors.toList()); 
+				Optional<Substitution> finalSubst = Substitution
+						.unionMany(substs);
+				
+				if(finalSubst.isEmpty()) {
+					throw new SubstitutionCollectionCannotBeMerged(substs);
+				}
+				
 				Type finalType = RepresentationOr
 						.makeRepresentationOr(l.stream().map(x -> x.first).collect(Collectors.toList()));
-				return new Pair<Type, Substitution>(finalType, finalSubst);
+				return new Pair<Type, Substitution>(finalType, finalSubst.get());
 			}
 
 			throw new AppendableException(funInfered.first.toString() + " is not applicable type!");
@@ -252,9 +278,8 @@ public class AbstractionApplication extends Application {
 				Expression realArg = realArgCons.get(0);
 				Type formalArgType = formalArg.infer(env, typeEnv).first;
 				Type realArgType = realArg.infer(env, typeEnv).first;
-				try {
-					Type.unifyRepresentation(formalArgType, realArgType);
-				} catch (TypesDoesNotUnifyException e) {
+				
+				if(Type.unifyRepresentation(formalArgType, realArgType).isEmpty()) {
 					acc++;
 				}
 
@@ -286,12 +311,10 @@ public class AbstractionApplication extends Application {
 					"        (list-head [l] (first (first l)))\n" + 
 					"        (list-tail [l] (second (first l)))\n" + 
 					"        (equal-heads [formalArgList realArgList]\n" + 
-					"            (try (second \n" + 
-					"                    (doall [\n" + 
+					"            (if (.isPresent \n" +  
 					"                        (velka.lang.types.Type/unifyRepresentation\n" + 
 					"                            (" + ClojureCodeGenerator.getTypeClojureSymbol + " (list-head formalArgList))\n" + 
-					"                            (" + ClojureCodeGenerator.getTypeClojureSymbol + " (list-head realArgList))) 0]))\n" + 
-					"                 (catch velka.lang.types.TypesDoesNotUnifyException e 1)))\n" + 
+					"                            (" + ClojureCodeGenerator.getTypeClojureSymbol + " (list-head realArgList)))) 0 1))\n" +  
 					"        (aggregate [formalArgList realArgList]\n" + 
 					"            (if (or (is-list-empty formalArgList) (is-list-empty realArgList))\n" + 
 					"                0\n" + 

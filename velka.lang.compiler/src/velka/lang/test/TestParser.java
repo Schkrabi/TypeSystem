@@ -73,19 +73,13 @@ import velka.lang.types.TypeName;
 import velka.lang.types.TypeRepresentation;
 import velka.lang.types.TypeTuple;
 import velka.lang.types.TypeVariable;
-import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 
 class TestParser {
 	
-	private static boolean equalsLambdaUpToTypeVariables(Lambda l1, Lambda l2) throws AppendableException {
-		try {
-			Type.unifyTypes(l1.argsType, l2.argsType);
-		}catch(TypesDoesNotUnifyException e) {
-			return false;
-		}
-		
-		return l1.args.equals(l2.args)
+	private static boolean equalsLambdaUpToTypeVariables(Lambda l1, Lambda l2) throws AppendableException {		
+		return Type.unifyTypes(l1.argsType, l2.argsType).isPresent()
+				&& l1.args.equals(l2.args)
 				&& l1.body.equals(l2.body);
 		
 	}

@@ -19,7 +19,6 @@ import velka.lang.types.TypeAtom;
 import velka.lang.types.TypeRepresentation;
 import velka.lang.types.TypeTuple;
 import velka.lang.types.TypeVariable;
-import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 
@@ -53,11 +52,8 @@ public class Conversions {
 	
 	private static Expression convertToRepresentationOr(Type from, Expression converted, RepresentationOr to, TypeEnvironment typeEnv) throws AppendableException{
 		for(Type t : to.getRepresentations()) {
-			try {
-				Type.unifyTypes(from, t);
+			if(Type.unifyTypes(from, t).isPresent()) {
 				return converted;
-			}catch(TypesDoesNotUnifyException e) {
-				continue;
 			}
 		}
 		
@@ -66,11 +62,8 @@ public class Conversions {
 
 	private static Expression convertRepresentationOr(RepresentationOr from, Expression converted, Type to, TypeEnvironment typeEnv) throws AppendableException{
 		for(Type t : from.getRepresentations()) {
-			try {
-				Type.unifyTypes(t, to);
+			if(Type.unifyTypes(t, to).isPresent()) {
 				return converted;
-			}catch(TypesDoesNotUnifyException e) {
-				continue;
 			}
 		}
 		

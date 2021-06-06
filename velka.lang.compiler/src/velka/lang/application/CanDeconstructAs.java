@@ -1,6 +1,7 @@
 package velka.lang.application;
 
 import velka.lang.expression.Expression;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitBoolean;
@@ -43,9 +44,7 @@ public class CanDeconstructAs extends Expression {
 		LitComposite lc = (LitComposite) e;
 		Pair<Type, Substitution> p = lc.value.infer(env, typeEnv);
 
-		try {
-			Type.unifyTypes(p.first, this.as);
-		} catch (AppendableException ae) {
+		if(Type.unifyTypes(p.first, this.as).isEmpty()) {
 			return LitBoolean.FALSE;
 		}
 
@@ -60,11 +59,13 @@ public class CanDeconstructAs extends Expression {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		//TODO uživatel může v can-deconstruct-as specifikovat typové proměnné a tedy jednoduché srovnání v clojure nebude fungovat
+		String code = LitBoolean.clojureBooleanToClojureLitBoolean(
+				"(.isPresent (velka.lang.types.Type/unifyRepresentation " 
+						+ this.as.clojureTypeRepresentation() 
+						+ " (" + ClojureCodeGenerator.getTypeClojureSymbol + " (first " + this.expression.toClojureCode(env, typeEnv)
+						+ "))))");
 		
-		return "(with-meta [(= " + this.as.clojureTypeRepresentation() + " (:lang-type (meta (get "
-				+ this.expression.toClojureCode(env, typeEnv) + " 0))))] {:lang-type "
-				+ TypeAtom.TypeBoolNative.clojureTypeRepresentation() + "})";
+		return code;
 	}
 
 	@Override

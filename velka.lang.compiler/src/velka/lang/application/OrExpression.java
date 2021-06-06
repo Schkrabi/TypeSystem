@@ -1,6 +1,7 @@
 package velka.lang.application;
 
 import java.util.Iterator;
+import java.util.Optional;
 
 import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
@@ -10,8 +11,10 @@ import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitBoolean;
 import velka.lang.types.Substitution;
+import velka.lang.types.SubstitutionsCannotBeMergedException;
 import velka.lang.types.Type;
 import velka.lang.types.TypeAtom;
+import velka.lang.types.TypesDoesNotUnifyException;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
 
@@ -49,8 +52,22 @@ public class OrExpression extends SpecialFormApplication {
 		Substitution agg = Substitution.EMPTY;
 		for (Expression e : ((Tuple)this.args)) {
 			Pair<Type, Substitution> p = e.infer(env, typeEnv);
-			Substitution s = Type.unifyTypes(p.first, TypeAtom.TypeBoolNative);
-			agg = agg.union(p.second).union(s);
+			Optional<Substitution> s = Type.unifyTypes(p.first, TypeAtom.TypeBoolNative);
+			if(s.isEmpty()) {
+				throw new TypesDoesNotUnifyException(p.first, TypeAtom.TypeBoolNative);
+			}
+			
+			Optional<Substitution> opt = agg.union(p.second);
+			if(opt.isEmpty()) {
+				throw new SubstitutionsCannotBeMergedException(agg, p.second);
+			}
+			
+			Optional<Substitution> tmp = opt.get().union(s.get());
+			if(tmp.isEmpty()) {
+				throw new SubstitutionsCannotBeMergedException(opt.get(), s.get());
+			}
+			
+			agg = tmp.get();
 		}
 
 		return new Pair<Type, Substitution>(TypeAtom.TypeBoolNative, agg);
