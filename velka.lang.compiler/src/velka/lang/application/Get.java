@@ -3,9 +3,9 @@ package velka.lang.application;
 import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
-import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureCore;
 import velka.lang.literal.LitInteger;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
@@ -86,7 +86,7 @@ public class Get extends SpecialFormApplication {
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		String code = "(get " + this.getTuple().toClojureCode(env, typeEnv) + " (first ("
-				+ ClojureCodeGenerator.convertClojureSymbol + " " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
+				+ VelkaClojureCore.convertClojureSymbol_full + " " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
 				+ " " + this.getIndex().toClojureCode(env, typeEnv) + ")))";
 		return code;
 	}

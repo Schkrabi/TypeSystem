@@ -14,9 +14,11 @@ import velka.lang.application.AbstractionApplication;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
-import velka.lang.interpretation.ClojureCodeGenerator;
+import velka.lang.interpretation.ClojureHelper;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureArrayList;
+import velka.lang.interpretation.VelkaClojureCore;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitComposite;
 import velka.lang.literal.LitInteger;
@@ -63,6 +65,8 @@ public class JavaArrayList {
 	 */
 	public static final TypeAtom TypeListJavaArray = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaArray"));
 
+	public static final Symbol constructorSymbol = new Symbol("velka-construct", VelkaClojureArrayList.NAMESPACE);
+	
 	/**
 	 * Constructor
 	 */
@@ -86,12 +90,18 @@ public class JavaArrayList {
 			TypeArrow type = new TypeArrow(TypeTuple.EMPTY_TUPLE, JavaArrayList.TypeListJavaArray);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return constructorSymbol;
+		}
 	};
 
 	/**
 	 * Symbol for boolean add(E e)
 	 */
-	public static final Symbol addToEndSymbol = new Symbol("java-array-list-add-to-end");
+	private static final Symbol addToEndSymbol = new Symbol("add-to-end", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol addToEndSymbol_out = new Symbol("java-array-list-add-to-end");
 
 	/**
 	 * Operator for boolean add(E e)
@@ -128,12 +138,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return addToEndSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for void add(int index, E element)
 	 */
-	public static final Symbol addToIndexSymbol = new Symbol("java-array-list-add-to-index");
+	private static final Symbol addToIndexSymbol = new Symbol("add-to-index", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol addToIndexSymbol_out = new Symbol("java-array-list-add-to-index");
 
 	/**
 	 * Operator for void add(int index, E element)
@@ -174,12 +190,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return addToIndexSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for boolean addAll(Collection<? extends E> c)
 	 */
-	public static final Symbol addAllSymbol = new Symbol("java-array-list-add-all");
+	private static final Symbol addAllSymbol = new Symbol("add-all", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol addAllSymbol_out = new Symbol("java-array-list-add-all");
 
 	/**
 	 * operator for boolean addAll(Collection<? extends E> c)
@@ -225,12 +247,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return addAllSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for boolean contains(Object o)
 	 */
-	public static final Symbol containsSymbol = new Symbol("java-array-list-contains");
+	private static final Symbol containsSymbol = new Symbol("velka-contains", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol containsSymbol_out = new Symbol("java-array-list-contains");
 
 	/**
 	 * Operator for boolean contains(Object o)
@@ -270,12 +298,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return containsSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for boolean containsAll(Collection<?> c)
 	 */
-	public static final Symbol containsAllSymbol = new Symbol("java-array-list-contains-all");
+	private static final Symbol containsAllSymbol = new Symbol("contains-all", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol containsAllSymbol_out = new Symbol("java-array-list-contains-all");
 
 	/**
 	 * Operator for boolean containsAll(Collection<?> c)
@@ -321,12 +355,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return containsAllSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for E get(int index)
 	 */
-	public static final Symbol getSymbol = new Symbol("java-array-list-get");
+	private static final Symbol getSymbol = new Symbol("velka-get", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol getSymbol_out = new Symbol("java-array-list-get");
 
 	/**
 	 * Operator for E get(int index)
@@ -361,12 +401,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return getSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for int indexOf(Object o)
 	 */
-	public static final Symbol indexOfSymbol = new Symbol("java-array-list-index-of");
+	private static final Symbol indexOfSymbol = new Symbol("index-of", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol indexOfSymbol_out = new Symbol("java-array-list-index-of");
 
 	/**
 	 * Operator for int indexOf(Object o)
@@ -404,12 +450,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return indexOfSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for boolean isEmpty()
 	 */
-	public static final Symbol isEmptySymbol = new Symbol("java-array-list-is-empty");
+	private static final Symbol isEmptySymbol = new Symbol("is-empty", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol isEmptySymbol_out = new Symbol("java-array-list-is-empty");
 
 	/**
 	 * Operator for boolean isEmpty()
@@ -446,12 +498,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return isEmptySymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for int lastIndexOf(E e)
 	 */
-	public static final Symbol lastIndexOfSymbol = new Symbol("java-array-list-last-index-of");
+	private static final Symbol lastIndexOfSymbol = new Symbol("last-index-of", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol lastIndexOfSymbol_out = new Symbol("java-array-list-last-index-of");
 
 	/**
 	 * Operator for int lastIndexOf(E e)
@@ -487,6 +545,11 @@ public class JavaArrayList {
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return lastIndexOfSymbol;
 		}
 
 	};
@@ -526,7 +589,8 @@ public class JavaArrayList {
 	/**
 	 * Symbol for boolean remove(Object o)
 	 */
-	public static final Symbol removeSymbol = new Symbol("java-array-list-remove");
+	private static final Symbol removeSymbol = new Symbol("velka-remove", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol removeSymbol_out = new Symbol("java-array-list-remove");
 
 	/**
 	 * Operator for boolean remove(Object o)
@@ -566,12 +630,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return removeSymbol;
+		}
+
 	};
 
 	/**
 	 * symbol for boolean removeAll(Collection<?> c)
 	 */
-	public static final Symbol removeAllSymbol = new Symbol("java-array-list-remove-all");
+	private static final Symbol removeAllSymbol = new Symbol("remove-all", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol removeAllSymbol_out = new Symbol("java-array-list-remove-all");
 
 	/**
 	 * Operator for boolean removeAll(Collection<?> c)
@@ -618,12 +688,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return removeAllSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for boolean retainAll(Collection<?> c)
 	 */
-	public static final Symbol retainAllSymbol = new Symbol("java-array-list-retain-all");
+	private static final Symbol retainAllSymbol = new Symbol("retain-all", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol retainAllSymbol_out = new Symbol("java-array-list-retain-all");
 
 	/**
 	 * Operator for boolean retainAll(Collection<?> c)
@@ -670,12 +746,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return retainAllSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for E set(int index, E element)
 	 */
-	public static final Symbol setSymbol = new Symbol("java-array-list-set");
+	private static final Symbol setSymbol = new Symbol("velka-set", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol setSymbol_out = new Symbol("java-array-list-set");  
 
 	/**
 	 * Operator for E set(int index, E element)
@@ -712,12 +794,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return setSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for int size()
 	 */
-	public static final Symbol sizeSymbol = new Symbol("java-array-list-size");
+	private static final Symbol sizeSymbol = new Symbol("velka-size", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol sizeSymbol_out = new Symbol("java-array-list-size");
 
 	/**
 	 * Operator for int size()
@@ -752,12 +840,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return sizeSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for List<E> subList(int fromIndex, int toIndex)
 	 */
-	public static final Symbol sublistSymbol = new Symbol("java-array-list-sublist");
+	private static final Symbol sublistSymbol = new Symbol("sublist", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol sublistSymbol_out = new Symbol("java-array-list-sublist");
 
 	/**
 	 * Operator for List<E> subList(int fromIndex, int toIndex)
@@ -799,12 +893,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return sublistSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for List<T> map(Function<T, E>)
 	 */
-	public static final Symbol mapSymbol = new Symbol("java-array-list-map");
+	private static final Symbol mapSymbol = new Symbol("velka-map", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol mapSymbol_out = new Symbol("java-array-list-map");
 
 	/**
 	 * Operator for List<T> map(Function<T, E>)
@@ -816,10 +916,10 @@ public class JavaArrayList {
 			String code = "(fn [_list _abst] "
 					+ LitComposite
 							.clojureValueToClojureLiteral("(java.util.ArrayList. (map (fn [_e] ("
-									+ ClojureCodeGenerator.eapplyClojureSymbol + " _abst "
-									+ ClojureCodeGenerator.addTypeMetaInfo_str("[_e]",
+									+ VelkaClojureCore.eapplyClojureSymbol_full + " _abst "
+									+ ClojureHelper.addTypeMetaInfo_str("[_e]",
 											"(velka.lang.types.TypeTuple. [("
-													+ ClojureCodeGenerator.getTypeClojureSymbol + " _e)])")
+													+ VelkaClojureCore.getTypeClojureSymbol_full + " _e)])")
 									+ ")) (first _list)))", JavaArrayList.TypeListJavaArray)
 					+ ")";
 			return code;
@@ -862,12 +962,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return mapSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for List<T> map2(List<E2> other, Function<T, E1, E2>)
 	 */
-	public static final Symbol map2Symbol = new Symbol("java-array-list-map2");
+	private static final Symbol map2Symbol = new Symbol("velka-map2", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol map2Symbol_out = new Symbol("java-array-list-map2"); 
 
 	/**
 	 * Operator for List<T> map2(List<E2> other, Function<T, E1, E2>)
@@ -877,10 +983,10 @@ public class JavaArrayList {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_list1 _list2 _abst] " + LitComposite.clojureValueToClojureLiteral(
-					"(java.util.ArrayList. (map (fn [_e1 _e2] (" + ClojureCodeGenerator.eapplyClojureSymbol + " _abst "
-							+ ClojureCodeGenerator.addTypeMetaInfo_str("[_e1 _e2]",
-									"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol
-											+ " _e1) (" + ClojureCodeGenerator.getTypeClojureSymbol + " _e2)])")
+					"(java.util.ArrayList. (map (fn [_e1 _e2] (" + VelkaClojureCore.eapplyClojureSymbol_full + " _abst "
+							+ ClojureHelper.addTypeMetaInfo_str("[_e1 _e2]",
+									"(velka.lang.types.TypeTuple. [(" + VelkaClojureCore.getTypeClojureSymbol_full
+											+ " _e1) (" + VelkaClojureCore.getTypeClojureSymbol_full + " _e2)])")
 							+ ")) (first _list1) (first _list2)))",
 					JavaArrayList.TypeListJavaArray) + ")";
 			return code;
@@ -928,12 +1034,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return map2Symbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for T foldl(Function<T, E, T>)
 	 */
-	public static final Symbol foldlSymbol = new Symbol("java-array-list-foldl");
+	private static final Symbol foldlSymbol = new Symbol("foldl", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol foldlSymbol_out = new Symbol("java-array-list-foldl");
 
 	/**
 	 * Operator for T foldl(Function<T, E, T>)
@@ -943,10 +1055,10 @@ public class JavaArrayList {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
-					+ ClojureCodeGenerator.eapplyClojureSymbol + " _abst "
-					+ ClojureCodeGenerator.addTypeMetaInfo_str("[_agg _element]",
-							"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol + " _agg) ("
-									+ ClojureCodeGenerator.getTypeClojureSymbol + " _element)])")
+					+ VelkaClojureCore.eapplyClojureSymbol_full + " _abst "
+					+ ClojureHelper.addTypeMetaInfo_str("[_agg _element]",
+							"(velka.lang.types.TypeTuple. [(" + VelkaClojureCore.getTypeClojureSymbol_full + " _agg) ("
+									+ VelkaClojureCore.getTypeClojureSymbol_full + " _element)])")
 					+ ")) _term (first _list)))";
 			return code;
 		}
@@ -986,12 +1098,18 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return foldlSymbol;
+		}
+
 	};
 
 	/**
 	 * Symbol for T foldr(Function<T, E, T>)
 	 */
-	public static final Symbol foldrSymbol = new Symbol("java-array-list-foldr");
+	private static final Symbol foldrSymbol = new Symbol("foldr", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol foldrSymbol_out = new Symbol("java-array-list-foldr");
 
 	/**
 	 * Operator for T foldr(Function<T, E, T>)
@@ -1001,10 +1119,10 @@ public class JavaArrayList {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
-					+ ClojureCodeGenerator.eapplyClojureSymbol + " _abst "
-					+ ClojureCodeGenerator.addTypeMetaInfo_str("[_agg _element]",
-							"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol + " _agg) ("
-									+ ClojureCodeGenerator.getTypeClojureSymbol + " _element)])")
+					+ VelkaClojureCore.eapplyClojureSymbol_full + " _abst "
+					+ ClojureHelper.addTypeMetaInfo_str("[_agg _element]",
+							"(velka.lang.types.TypeTuple. [(" + VelkaClojureCore.getTypeClojureSymbol_full + " _agg) ("
+									+ VelkaClojureCore.getTypeClojureSymbol_full + " _element)])")
 					+ ")) _term (reverse (first _list))))";
 			return code;
 		}
@@ -1038,7 +1156,15 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return foldrSymbol;
+		}
+
 	};
+	
+	private static final Symbol ArrayListToLinkedListSymbol = new Symbol("to-linked-list", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol ArrayListToLinkedListSymbol_out = new Symbol("array-list-2-linked-list");
 
 	/**
 	 * Conversion ArrayList 2 LinkedList
@@ -1071,7 +1197,15 @@ public class JavaArrayList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return ArrayListToLinkedListSymbol;
+		}
+
 	};
+	
+	private static final Symbol ArrayListToNativeListSymbol = new Symbol("to-velka-list", VelkaClojureArrayList.NAMESPACE);
+	public static final Symbol ArrayListToNativeListSymbol_out = new Symbol("array-list-2-native-list");
 	
 	/**
 	 * Conversion ArrayList 2 NativeList
@@ -1082,8 +1216,8 @@ public class JavaArrayList {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_list] (reduce (fn [_l _e] " 
 							+ LitComposite.clojureValueToClojureLiteral(
-									ClojureCodeGenerator.addTypeMetaInfo_str("[_e, _l]", 
-											"(velka.lang.types.TypeTuple. [(" + ClojureCodeGenerator.getTypeClojureSymbol  + " _e) " 
+									ClojureHelper.addTypeMetaInfo_str("[_e, _l]", 
+											"(velka.lang.types.TypeTuple. [(" + VelkaClojureCore.getTypeClojureSymbol_full  + " _e) " 
 									+ TypeAtom.TypeListNative.clojureTypeRepresentation() + "])")
 									, TypeAtom.TypeListNative) + ") " 
 							+ ListNative.EMPTY_LIST_NATIVE.toClojureCode(env, typeEnv) + " (reverse (first _list))))";
@@ -1113,6 +1247,11 @@ public class JavaArrayList {
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray), TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return ArrayListToNativeListSymbol;
 		}};
 
 	/**
@@ -1121,24 +1260,24 @@ public class JavaArrayList {
 	 * @param env initialized environment
 	 */
 	public static void initializeInEnvironment(Environment env) {
-		env.put(addToEndSymbol, addToEnd);
-		env.put(addToIndexSymbol, addToIndex);
-		env.put(addAllSymbol, addAll);
-		env.put(containsSymbol, contains);
-		env.put(containsAllSymbol, containsAll);
-		env.put(getSymbol, get);
-		env.put(indexOfSymbol, indexOf);
-		env.put(isEmptySymbol, isEmpty);
-		env.put(lastIndexOfSymbol, lastIndexOf);
-		env.put(removeSymbol, remove);
-		env.put(removeAllSymbol, removeAll);
-		env.put(retainAllSymbol, retainAll);
-		env.put(setSymbol, set);
-		env.put(sizeSymbol, size);
-		env.put(sublistSymbol, sublist);
-		env.put(mapSymbol, map);
-		env.put(map2Symbol, map2);
-		env.put(foldlSymbol, foldl);
-		env.put(foldrSymbol, foldr);
+		env.put(addToEndSymbol_out, addToEnd);
+		env.put(addToIndexSymbol_out, addToIndex);
+		env.put(addAllSymbol_out, addAll);
+		env.put(containsSymbol_out, contains);
+		env.put(containsAllSymbol_out, containsAll);
+		env.put(getSymbol_out, get);
+		env.put(indexOfSymbol_out, indexOf);
+		env.put(isEmptySymbol_out, isEmpty);
+		env.put(lastIndexOfSymbol_out, lastIndexOf);
+		env.put(removeSymbol_out, remove);
+		env.put(removeAllSymbol_out, removeAll);
+		env.put(retainAllSymbol_out, retainAll);
+		env.put(setSymbol_out, set);
+		env.put(sizeSymbol_out, size);
+		env.put(sublistSymbol_out, sublist);
+		env.put(mapSymbol_out, map);
+		env.put(map2Symbol_out, map2);
+		env.put(foldlSymbol_out, foldl);
+		env.put(foldrSymbol_out, foldr);
 	}
 }

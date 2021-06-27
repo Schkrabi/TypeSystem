@@ -6,8 +6,11 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -74,12 +77,15 @@ public class Compiler {
 	 * @param env     environment for evaluation
 	 * @param typeEnv type environment for evaluation
 	 * @return list of evaluated expressions
+	 * @throws AppendableException 
 	 */
-	public static List<Expression> eval(List<Expression> in, Environment env, TypeEnvironment typeEnv) {
-		return in.stream().map(ThrowingFunction.wrapper(e -> {
-			e.infer(env, typeEnv);
-			return e.interpret(env, typeEnv);
-		})).collect(Collectors.toList());
+	public static List<Expression> eval(List<Expression> in, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		List<Expression> out = new LinkedList<Expression>();
+		for(Expression e : in) {
+			Expression intp = e.interpret(env, typeEnv);
+			out.add(intp);
+		}
+		return out;
 	}
 
 	/**
@@ -98,7 +104,10 @@ public class Compiler {
 	 * @throws Exception
 	 */
 	public static String compile(List<Expression> in, Environment env, TypeEnvironment typeEnv) throws Exception {
-		return ClojureCodeGenerator.toClojureCode(in, env, typeEnv);
+		StringBuilder sb = new StringBuilder();
+		sb.append(ClojureCodeGenerator.ExpressionListToClojureCode(in, env, typeEnv));
+		sb.append(ClojureCodeGenerator.writeMain());
+		return sb.toString();
 	}
 
 	/**
@@ -150,6 +159,20 @@ public class Compiler {
 			input.close();
 		}
 	}
+	
+	public static void clojureCompile(Path in, Path out) {
+		Environment env = Environment.initTopLevelEnvitonment();
+		try {
+			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+			Compiler.clojure(Files.newInputStream(in), new PrintStream(Files.newOutputStream(out)), env, typeEnv);
+		} catch (AppendableException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Compiles contents of in stream into a clojure code and prints it to out stream
@@ -165,9 +188,7 @@ public class Compiler {
 		Writer output = null;
 	
 		try {
-			out.print(ClojureCodeGenerator.writeHeaders(topLevel, typeEnv));
 			out.print(Compiler.compile(read(in), topLevel, typeEnv));
-			out.print(ClojureCodeGenerator.writeFooters());
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

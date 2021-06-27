@@ -10,6 +10,7 @@ import velka.lang.abstraction.Operator;
 import velka.lang.conversions.Conversions;
 import velka.lang.exceptions.InvalidNumberOfArgumentsException;
 import velka.lang.expression.Expression;
+import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
 import velka.lang.types.RepresentationOr;
 import velka.lang.types.Substitution;
@@ -25,9 +26,10 @@ import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
 import velka.lang.util.ThrowingFunction;
-import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureCore;
+import velka.lang.interpretation.VelkaClojureOperators;
 import velka.lang.literal.LitComposite;
 import velka.lang.literal.LitInteger;
 
@@ -200,7 +202,7 @@ public class AbstractionApplication extends Application {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append("(");
-		sb.append(ClojureCodeGenerator.eapplyClojureSymbol);
+		sb.append(VelkaClojureCore.eapplyClojureSymbol_full);
 		sb.append(" \n");
 		sb.append(this.fun.toClojureCode(env, typeEnv));
 		sb.append(" \n");
@@ -313,8 +315,8 @@ public class AbstractionApplication extends Application {
 					"        (equal-heads [formalArgList realArgList]\n" + 
 					"            (if (.isPresent \n" +  
 					"                        (velka.lang.types.Type/unifyRepresentation\n" + 
-					"                            (" + ClojureCodeGenerator.getTypeClojureSymbol + " (list-head formalArgList))\n" + 
-					"                            (" + ClojureCodeGenerator.getTypeClojureSymbol + " (list-head realArgList)))) 0 1))\n" +  
+					"                            (" + VelkaClojureCore.getTypeClojureSymbol_full + " (list-head formalArgList))\n" + 
+					"                            (" + VelkaClojureCore.getTypeClojureSymbol_full + " (list-head realArgList)))) 0 1))\n" +  
 					"        (aggregate [formalArgList realArgList]\n" + 
 					"            (if (or (is-list-empty formalArgList) (is-list-empty realArgList))\n" + 
 					"                0\n" + 
@@ -322,6 +324,11 @@ public class AbstractionApplication extends Application {
 					"                    (equal-heads formalArgList realArgList)\n" + 
 					"                    (aggregate (list-tail formalArgList) (list-tail realArgList)))))]\n" + 
 					LitInteger.clojureIntToClojureLitInteger("(aggregate formalArgList realArgList)") + "))";	
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-default-ranking", VelkaClojureOperators.NAMESPACE);
 		}
 
 	};

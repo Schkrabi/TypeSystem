@@ -7,6 +7,7 @@ import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
 import velka.lang.abstraction.Operator;
+import velka.lang.interpretation.ClojureHelper;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 
@@ -22,16 +23,32 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	 * Name of the variable
 	 */
 	public final String name;
+	
+	/**
+	 * Namespace of the symbol
+	 */
+	public final String namespace;
 
 	public Symbol(String name) {
 		this.name = name;
+		this.namespace = "";
+	}
+	
+	public Symbol(String name, String namespace) {
+		this.name = name;
+		this.namespace = namespace;
 	}
 
 	@Override
 	public int compareTo(Expression o) {
 		if (o instanceof Symbol) {
 			Symbol other = (Symbol) o;
-			return this.name.compareTo(other.name);
+			int c = this.name.compareTo(other.name);
+//			if(c != 0) {
+//				return c;
+//			}
+//			c = this.namespace.compareTo(other.namespace);
+			return c;
 		}
 		return super.compareTo(o);
 	}
@@ -67,23 +84,27 @@ public class Symbol extends Expression implements Comparable<Expression> {
 		if (env.containsVariable(this)) {
 			Expression e = env.getVariableValue(this);
 			if (e instanceof Operator) {
-				return e.toClojureCode(env, typeEnv);
+				return ((Operator) e).getClojureSymbol().toClojureCode(env, typeEnv);
 			}
 		}
 
+		if(!this.namespace.isEmpty()) {
+			return ClojureHelper.fullyQualifySymbol(this.namespace, this.name);
+		}
 		return this.name;
 	}
 
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Symbol) {
-			return this.name.equals(((Symbol) other).name);
+			return this.name.equals(((Symbol) other).name);// &&
+					//this.namespace.equals(((Symbol) other).namespace);
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return this.name.hashCode();
+		return this.name.hashCode();// * this.namespace.hashCode();
 	}
 }

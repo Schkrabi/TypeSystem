@@ -4,9 +4,11 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import velka.lang.expression.Expression;
+import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureConversions;
 import velka.lang.literal.LitComposite;
 import velka.lang.literal.LitInteger;
 import velka.lang.literal.LitString;
@@ -58,6 +60,11 @@ public final class ConversionOperators {
 					LitString.clojureStringToClojureLitString("(" + RomanNumbers.int2RomanClojure + " (get _x 0))"),
 					TypeAtom.TypeIntRoman) + ")";
 		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("int-native-2-int-roman", VelkaClojureConversions.NAMESPACE);
+		}
 	
 	};
 	/**
@@ -89,6 +96,11 @@ public final class ConversionOperators {
 					LitString.clojureStringToClojureLitString("(Integer/toString (get _x 0))"), TypeAtom.TypeIntString)
 					+ ")";
 		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("int-native-2-int-string", VelkaClojureConversions.NAMESPACE);
+		}
 	
 	};
 	/**
@@ -119,6 +131,11 @@ public final class ConversionOperators {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] " + LitInteger
 					.clojureIntToClojureLitInteger("(" + RomanNumbers.roman2intClojure + " (get (get _x 0) 0))") + ")";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("int-roman-2-int-native", VelkaClojureConversions.NAMESPACE);
 		}
 	};
 	/**
@@ -155,6 +172,11 @@ public final class ConversionOperators {
 							TypeAtom.TypeIntString)
 					+ ")";
 		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("int-roman-2-int-string", VelkaClojureConversions.NAMESPACE);
+		}
 	
 	};
 	/**
@@ -186,6 +208,11 @@ public final class ConversionOperators {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] " + LitInteger.clojureIntToClojureLitInteger("(Integer/parseInt (get (get _x 0) 0))")
 					+ ")";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("int-string-2-int-native", VelkaClojureConversions.NAMESPACE);
 		}
 	};
 	/**
@@ -219,6 +246,11 @@ public final class ConversionOperators {
 					LitString.clojureStringToClojureLitString(
 							"(" + RomanNumbers.int2RomanClojure + " (Integer/parseInt (get (get _x 0) 0)))"),
 					TypeAtom.TypeIntRoman) + ")";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("int-string-2-int-roman", VelkaClojureConversions.NAMESPACE);
 		}
 	};
 

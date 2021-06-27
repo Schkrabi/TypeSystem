@@ -6,12 +6,15 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,6 +24,8 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +43,7 @@ import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
 import velka.lang.expression.TypeSymbol;
 import velka.lang.interpretation.ClojureCodeGenerator;
+import velka.lang.interpretation.ClojureHelper;
 import velka.lang.interpretation.Environment;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitComposite;
@@ -48,6 +54,13 @@ import velka.lang.parser.SchemeParser;
 import velka.lang.parser.SchemeParser.ExprsContext;
 import velka.lang.semantic.SemanticParser;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureArrayList;
+import velka.lang.interpretation.VelkaClojureConstructors;
+import velka.lang.interpretation.VelkaClojureConversions;
+import velka.lang.interpretation.VelkaClojureCore;
+import velka.lang.interpretation.VelkaClojureLinkedList;
+import velka.lang.interpretation.VelkaClojureList;
+import velka.lang.interpretation.VelkaClojureOperators;
 import velka.lang.langbase.JavaArrayList;
 import velka.lang.langbase.JavaLinkedList;
 import velka.lang.langbase.ListNative;
@@ -66,6 +79,26 @@ import velka.lang.util.Pair;
 import velka.lang.util.ThrowingFunction;
 
 class TestComplex {
+	
+	static Path tmpDir;
+	
+	@BeforeAll
+	static void setupTest() throws IOException {
+		TestComplex.tmpDir = Files.createTempDirectory("cljTest");
+		
+		ClojureCodeGenerator.generateClojureProject(tmpDir);
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.util.jar"), tmpDir.resolve(Paths.get("velka.lang.util.jar")), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.types.jar"), tmpDir.resolve(Paths.get("velka.lang.types.jar")), StandardCopyOption.REPLACE_EXISTING);
+	}
+	
+	@AfterAll
+	static void breakDownTest() throws IOException {
+		//Deletes the tmp dir recursively
+		Files.walk(tmpDir)
+	      .sorted(Comparator.reverseOrder())
+	      .map(Path::toFile)
+	      .forEach(File::delete);
+	}
 
 	@Test
 	@DisplayName("Test Recursion")
@@ -767,10 +800,11 @@ class TestComplex {
 	@Test
 	@DisplayName("Test user defined ranking function")
 	void testUserDefRanking() throws Exception {
-		String ranking = "(lambda ((List:Native formalArgTypes) (List:Native realArgs))" + "(foldr-list-native + 0 (map2-list-native "
-				+ "(lambda (x y) (if (is-same-representation x y) 0 1)) " + "formalArgTypes " + "realArgs)))";
+		String ranking = "(let-type (A) (lambda ((List:Native formalArgTypes) (List:Native realArgs) (A args))" + "(foldr-list-native + 0 (map2-list-native "
+				+ "(lambda (x y) (if (is-same-representation x y) 0 1)) " + "formalArgTypes " + "realArgs))))";
 
 		String realArgs = "(construct List Native 42 (construct List Native \"42\" (construct List Native #t (construct List Native))))";
+		Expression args = new Tuple(new LitInteger(42), new LitString("42"), LitBoolean.TRUE);
 
 		List<Expression> l = velka.lang.interpretation.Compiler.read(new ByteArrayInputStream(ranking.getBytes()));
 		Lambda rankingLambda = (Lambda) l.get(0);
@@ -807,11 +841,11 @@ class TestComplex {
 						TypeAtom.TypeListNative))),
 				TypeAtom.TypeListNative);
 
-		Expression e1 = new AbstractionApplication(rankingLambda, new Tuple(Arrays.asList(formalArgs1, realArgsExpr)));
+		Expression e1 = new AbstractionApplication(rankingLambda, new Tuple(formalArgs1, realArgsExpr, args));
 
-		Expression e2 = new AbstractionApplication(rankingLambda, new Tuple(Arrays.asList(formalArgs2, realArgsExpr)));
+		Expression e2 = new AbstractionApplication(rankingLambda, new Tuple(formalArgs2, realArgsExpr, args));
 
-		Expression e3 = new AbstractionApplication(rankingLambda, new Tuple(Arrays.asList(formalArgs3, realArgsExpr)));
+		Expression e3 = new AbstractionApplication(rankingLambda, new Tuple(formalArgs3, realArgsExpr, args));
 
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
@@ -826,9 +860,9 @@ class TestComplex {
 		assertEquals(new LitInteger(3), l.get(0));
 
 		TestComplex.assertIntprtAndCompPrintSameValues(
-				Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator, new Tuple(Arrays.asList(e1))),
-						new AbstractionApplication(Operators.PrintlnOperator, new Tuple(Arrays.asList(e2))),
-						new AbstractionApplication(Operators.PrintlnOperator, new Tuple(Arrays.asList(e3)))));
+				Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator, new Tuple(e1)),
+						new AbstractionApplication(Operators.PrintlnOperator, new Tuple(e2)),
+						new AbstractionApplication(Operators.PrintlnOperator, new Tuple(e3))));
 	}
 	
 	@Test
@@ -923,89 +957,91 @@ class TestComplex {
 	@DisplayName("Test Clojure Headers")
 	void testClojureHeaders() throws Exception {
 		StringBuilder definitions = new StringBuilder();
-		definitions.append(ClojureCodeGenerator.type2typeSymbolDef + "\n");
+		definitions.append("(ns " + VelkaClojureCore.NAMESPACE + " (:gen-class))\n");
+		
+		definitions.append(VelkaClojureCore.type2typeSymbolDef + "\n");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (.toString (:lang-type (meta (" + ClojureCodeGenerator.type2typeSymbolSymbol + " "
+				"(println (.toString (:lang-type (meta (" + VelkaClojureCore.type2typeSymbolSymbol_full + " "
 						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + ")))))", 
 				"Int:Native");
 		
-		definitions.append(ClojureCodeGenerator.getTypeClojureDef + "\n");
+		definitions.append(VelkaClojureCore.getTypeClojureDef + "\n");
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (.toString (" + ClojureCodeGenerator.getTypeClojureSymbol + " " + LitInteger.clojureIntToClojureLitInteger("1") + ")))",
+				"(println (.toString (" + VelkaClojureCore.getTypeClojureSymbol_full + " " + LitInteger.clojureIntToClojureLitInteger("1") + ")))",
 				TypeAtom.TypeIntNative.toString());
 		
-		definitions.append(ClojureCodeGenerator.tuple2velkaListDef + "\n");
+		definitions.append(VelkaClojureCore.tuple2velkaListDef + "\n");
 		
 		assertClojureFunction(
 				definitions.toString(), 
-				"(println (" + ClojureCodeGenerator.tuple2velkaListSymbol + " [1 2 3]))",
+				"(println (" + VelkaClojureCore.tuple2velkaListSymbol_full + " [1 2 3]))",
 				"[[1 [[2 [[3 [[]]]]]]]]");
 		
-		definitions.append(ClojureCodeGenerator.atomicConversionMapClojureDef + "\n");
-		definitions.append(ClojureCodeGenerator.convertAtomClojureDef + "\n");
+		definitions.append(VelkaClojureCore.atomicConversionMapClojureDef + "\n");
+		definitions.append(VelkaClojureCore.convertAtomClojureDef + "\n");
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " +  
+				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntRoman.clojureTypeRepresentation() + 
 						LitInteger.clojureIntToClojureLitInteger("1") + "))",
 				"[[I]]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " +  
+				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntString.clojureTypeRepresentation() + 
 						LitInteger.clojureIntToClojureLitInteger("1") + "))",
 				"[[1]]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " +  
+				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntNative.clojureTypeRepresentation() + 
 						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"1\""), TypeAtom.TypeIntString) + "))",
 				"[1]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " +  
+				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntRoman.clojureTypeRepresentation() + 
 						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"1\""), TypeAtom.TypeIntString) + "))",
 				"[[I]]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " +  
+				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntNative.clojureTypeRepresentation() + 
 						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"I\""), TypeAtom.TypeIntRoman) + "))",
 				"[1]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCodeGenerator.convertAtomClojureSymbol + " " +  
+				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntString.clojureTypeRepresentation() + 
 						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"I\""), TypeAtom.TypeIntRoman) + "))",
 				"[[1]]");
 		
-		definitions.append("(declare " + ClojureCodeGenerator.convertClojureSymbol + ")\n");
-		definitions.append("(declare " + ClojureCodeGenerator.convertTupleClojureSymbol + ")\n");
-		definitions.append("(declare " + ClojureCodeGenerator.convertFnClojureSymbol + ")\n");
-		definitions.append("(declare " + ClojureCodeGenerator.convertRepOrClojureSymbol + ")\n");
-		definitions.append("(declare " + ClojureCodeGenerator.convertToRepOrClojureSymbol + ")\n");
-		definitions.append(ClojureCodeGenerator.convertClojureDef + "\n");
+		definitions.append("(declare " + VelkaClojureCore.convertClojureSymbol_full + ")\n");
+		definitions.append("(declare " + VelkaClojureCore.convertTupleClojureSymbol_full + ")\n");
+		definitions.append("(declare " + VelkaClojureCore.convertFnClojureSymbol_full + ")\n");
+		definitions.append("(declare " + VelkaClojureCore.convertRepOrClojureSymbol_full + ")\n");
+		definitions.append("(declare " + VelkaClojureCore.convertToRepOrClojureSymbol_full + ")\n");
+		definitions.append(VelkaClojureCore.convertClojureDef + "\n");
 		TestComplex.clojureCodeResult(definitions.toString());
 		
-		definitions.append(ClojureCodeGenerator.convertTupleClojureDef + "\n");
+		definitions.append(VelkaClojureCore.convertTupleClojureDef + "\n");
 		TestComplex.clojureCodeResult(definitions.toString());
 		
-		definitions.append(ClojureCodeGenerator.convertFnClojureDef + "\n");
+		definitions.append(VelkaClojureCore.convertFnClojureDef + "\n");
 		TestComplex.clojureCodeResult(definitions.toString());
 		
-		definitions.append(ClojureCodeGenerator.convertRepOrClojureDef + "\n");
+		definitions.append(VelkaClojureCore.convertRepOrClojureDef + "\n");
 		TestComplex.clojureCodeResult(definitions.toString());
 		
-		definitions.append(ClojureCodeGenerator.convertToRepOrClojureDef + "\n");
+		definitions.append(VelkaClojureCore.convertToRepOrClojureDef + "\n");
 		TestComplex.clojureCodeResult(definitions.toString());
 		
 		Environment env = Environment.initTopLevelEnvitonment();
@@ -1015,7 +1051,7 @@ class TestComplex {
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCodeGenerator.convertTupleClojureSymbol + " " +
+				"(println (" + VelkaClojureCore.convertTupleClojureSymbol_full + " " +
 						new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman).clojureTypeRepresentation() + " " +
 						t.toClojureCode(env, typeEnv) + "))",
 				"[[1] [[I]]]");
@@ -1026,20 +1062,20 @@ class TestComplex {
 		Expression arg = new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman);
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (((" + ClojureCodeGenerator.convertFnClojureSymbol + " " +  
+				"(println (((" + VelkaClojureCore.convertFnClojureSymbol_full + " " +  
 				lambda_to.clojureTypeRepresentation() + " " + l.toClojureCode(env, typeEnv) + ") nil) " + arg.toClojureCode(env, typeEnv) + "))",
 				"[[1]]");
 		
-		definitions.append(ClojureCodeGenerator.eapplyClojureDef + "\n");
+		definitions.append(VelkaClojureCore.eapplyClojureDef + "\n");
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCodeGenerator.eapplyClojureSymbol + " " + l.toClojureCode(env, typeEnv) + " "
+				"(println (" + VelkaClojureCore.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
 						+ (new Tuple(arg)).toClojureCode(env, typeEnv) + "))",
 				"[1]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCodeGenerator.eapplyClojureSymbol + " " + l.toClojureCode(env, typeEnv) + " "
+				"(println (" + VelkaClojureCore.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
 						+ (new Tuple(arg)).toClojureCode(env, typeEnv) + "))",
 				"[1]");
 		
@@ -1050,34 +1086,34 @@ class TestComplex {
 		assertClojureFunction(
 				definitions.toString(),
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
-						+ ClojureCodeGenerator.tuple2velkaListSymbol + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
-						+ ") (" + ClojureCodeGenerator.tuple2velkaListSymbol + " "
+						+ VelkaClojureCore.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
+						+ ") (" + VelkaClojureCore.tuple2velkaListSymbol_full + " "
 						+ typeSymbolTuple.toClojureCode(env, typeEnv) + ") nil))",
 				"[0]");
 		
 		assertClojureFunction(
 				definitions.toString(),
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
-						+ ClojureCodeGenerator.tuple2velkaListSymbol + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
-						+ ") (" + ClojureCodeGenerator.tuple2velkaListSymbol + " "
+						+ VelkaClojureCore.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
+						+ ") (" + VelkaClojureCore.tuple2velkaListSymbol_full + " "
 						+ typeSymbolTuple_diff1.toClojureCode(env, typeEnv) + ") nil))",
 				"[1]");
 		
 		assertClojureFunction(
 				definitions.toString(),
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
-						+ ClojureCodeGenerator.tuple2velkaListSymbol + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
-						+ ") (" + ClojureCodeGenerator.tuple2velkaListSymbol + " "
+						+ VelkaClojureCore.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
+						+ ") (" + VelkaClojureCore.tuple2velkaListSymbol_full + " "
 						+ typeSymbolTuple_diff2.toClojureCode(env, typeEnv) + ") nil))",
 				"[2]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCodeGenerator.eapplyClojureSymbol + " " + l.toClojureCode(env, typeEnv) + " "
+				"(println (" + VelkaClojureCore.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
 						+ (new Tuple(arg)).toClojureCode(env, typeEnv) + " " + AbstractionApplication.defaultRanking.toClojureCode(env, typeEnv) + "))",
 				"[1]");
 		
-		definitions.append(ClojureCodeGenerator.selectImplementationClojureDef);
+		definitions.append(VelkaClojureCore.selectImplementationClojureDef);
 		
 		Tuple selectArgs1 = new Tuple(new LitInteger(1), new LitInteger(2));
 		Expression impl1 = TestComplex.parseString("(lambda ((Int:Native x) (Int:Native y)) \"impl1\")").get(0);
@@ -1088,7 +1124,7 @@ class TestComplex {
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println ((" + ClojureCodeGenerator.selectImplementationClojureSymbol + " "
+				"(println ((" + VelkaClojureCore.selectImplementationClojureSymbol_full + " "
 						+ AbstractionApplication.defaultRanking.toClojureCode(env, typeEnv) + " "
 						+ selectArgs1.toClojureCode(env, typeEnv) + " " + "#{" + "(" + impl1.toClojureCode(env, typeEnv)
 						+ " nil)" + " (" + impl2.toClojureCode(env, typeEnv) + " nil)" + " ("
@@ -1097,7 +1133,7 @@ class TestComplex {
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println ((" + ClojureCodeGenerator.selectImplementationClojureSymbol + " "
+				"(println ((" + VelkaClojureCore.selectImplementationClojureSymbol_full + " "
 						+ AbstractionApplication.defaultRanking.toClojureCode(env, typeEnv) + " "
 						+ selectArgs2.toClojureCode(env, typeEnv) + " " + "#{" + "(" + impl1.toClojureCode(env, typeEnv)
 						+ " nil)" + " (" + impl2.toClojureCode(env, typeEnv) + " nil)" + " ("
@@ -1106,7 +1142,7 @@ class TestComplex {
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println ((" + ClojureCodeGenerator.selectImplementationClojureSymbol + " "
+				"(println ((" + VelkaClojureCore.selectImplementationClojureSymbol_full + " "
 						+ AbstractionApplication.defaultRanking.toClojureCode(env, typeEnv) + " "
 						+ selectArgs3.toClojureCode(env, typeEnv) + " " + "#{" + "(" + impl1.toClojureCode(env, typeEnv)
 						+ " nil)" + " (" + impl2.toClojureCode(env, typeEnv) + " nil)" + " ("
@@ -1124,12 +1160,12 @@ class TestComplex {
 						new LitString("b")));
 		
 		TestComplex.clojureCodeResult(definitions.toString() + 
-				"(println (" + ClojureCodeGenerator.convertRepOrClojureSymbol + " "
+				"(println (" + VelkaClojureCore.convertRepOrClojureSymbol_full + " "
 				+ new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeStringNative).clojureTypeRepresentation() + " "
 				+ elambda.toClojureCode(env, typeEnv) + "))");
 		
 		TestComplex.assertClojureFunction(definitions.toString(),
-				 	"(println (" + ClojureCodeGenerator.convertToRepOrClojureSymbol + " " + 
+				 	"(println (" + VelkaClojureCore.convertToRepOrClojureSymbol_full + " " + 
 				 			RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString).clojureTypeRepresentation() + " " +
 				 			new LitInteger(42).toClojureCode(env, typeEnv) + "))",
 				 	"[42]");
@@ -1151,69 +1187,69 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (foldl-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native)))))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (foldr-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native)))))");
 		
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + ListNative.headListNativeSymbol + "(" + ListNative.addToEndSymbol + " (construct List Native 21 (construct List Native)) 42)))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + ListNative.headSymbol_out + "(" + ListNative.addToEndSymbol_out + " (construct List Native 21 (construct List Native)) 42)))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(define l (convert List:Native List:JavaArray (construct List Native 42 (construct List Native 21 (construct List Native)))))"
-				+ "(println (" + JavaArrayList.getSymbol + " l 0))");
+				+ "(println (" + JavaArrayList.getSymbol_out + " l 0))");
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(define l (convert List:Native List:JavaLinked (construct List Native 42 (construct List Native 21 (construct List Native)))))"
-				+ "(println (" + JavaLinkedList.getSymbol + " l 0))");
+				+ "(println (" + JavaLinkedList.getSymbol_out + " l 0))");
 	}
 	
 	@Test
 	@DisplayName("Test Java Array List Clojure")
 	void testJavaArrayListClojure() throws Exception {
 		TestComplex.assertIntprtAndCompPrintSameValues("(construct List JavaArray)");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToEndSymbol.toString() + " (construct List JavaArray) 42))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToIndexSymbol.toString() + " (construct List JavaArray) 0 42))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToEndSymbol_out.toString() + " (construct List JavaArray) 42))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToIndexSymbol_out.toString() + " (construct List JavaArray) 0 42))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
-				+ "(println (" + JavaArrayList.addAllSymbol + " l1 l2))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
+				+ "(println (" + JavaArrayList.addAllSymbol_out + " l1 l2))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)"
-				+ "(println (" + JavaArrayList.containsSymbol + " l1 42))"
-				+ "(println (" + JavaArrayList.containsSymbol + " l1 84))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
+				+ "(println (" + JavaArrayList.containsSymbol_out + " l1 42))"
+				+ "(println (" + JavaArrayList.containsSymbol_out + " l1 84))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
-				+ "(println (" + JavaArrayList.containsAllSymbol + " l1 l2))"
-				+ "(println (" + JavaArrayList.containsAllSymbol + " l2 l1))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
+				+ "(println (" + JavaArrayList.containsAllSymbol_out + " l1 l2))"
+				+ "(println (" + JavaArrayList.containsAllSymbol_out + " l2 l1))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
-				+ "(println (" + JavaArrayList.getSymbol + " l1 0))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
+				+ "(println (" + JavaArrayList.getSymbol_out + " l1 0))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(define l1 (construct List JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaArrayList.indexOfSymbol + " l1 1))"
-				+ "(println (" + JavaArrayList.indexOfSymbol + " l1 42))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaArrayList.indexOfSymbol_out + " l1 1))"
+				+ "(println (" + JavaArrayList.indexOfSymbol_out + " l1 42))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues(
-				"(println (" + JavaArrayList.isEmptySymbol + " (construct List JavaArray)))");
+				"(println (" + JavaArrayList.isEmptySymbol_out + " (construct List JavaArray)))");
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(define l1 (construct List JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaArrayList.isEmptySymbol + " l1))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaArrayList.isEmptySymbol_out + " l1))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(define l1 (construct List JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaArrayList.lastIndexOfSymbol + " l1 1))"
-				+ "(println (" + JavaArrayList.lastIndexOfSymbol + " l1 42))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaArrayList.lastIndexOfSymbol_out + " l1 1))"
+				+ "(println (" + JavaArrayList.lastIndexOfSymbol_out + " l1 42))");
 		/*
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
@@ -1221,75 +1257,75 @@ class TestComplex {
 				+ "(println (" + JavaArrayList.removeSymbol + " l1 0))");
 				*/
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaArrayList.removeSymbol + " l1 2))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaArrayList.removeSymbol_out + " l1 2))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
-				+ "(println (" + JavaArrayList.removeAllSymbol + " l1 l2))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
+				+ "(println (" + JavaArrayList.removeAllSymbol_out + " l1 l2))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
-				+ "(println (" + JavaArrayList.retainAllSymbol + " l1 l2))"
-				+ "(println (" + JavaArrayList.retainAllSymbol + " l2 l1))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
+				+ "(println (" + JavaArrayList.retainAllSymbol_out + " l1 l2))"
+				+ "(println (" + JavaArrayList.retainAllSymbol_out + " l2 l1))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaArrayList.setSymbol + " l1 0 2))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaArrayList.setSymbol_out + " l1 0 2))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaArrayList.sizeSymbol + " l1))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaArrayList.sizeSymbol_out + " l1))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 84)" 
-				+ "(define l2 (" + JavaArrayList.sublistSymbol + " l1 0 1))"
-				+ "(println (" + JavaArrayList.getSymbol + " l2 0))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 84)" 
+				+ "(define l2 (" + JavaArrayList.sublistSymbol_out + " l1 0 1))"
+				+ "(println (" + JavaArrayList.getSymbol_out + " l2 0))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 84)" 
-				+ "(define l2 (" + JavaArrayList.mapSymbol + " l1 (lambda (x) (* x 2))))"
-				+ "(println (" + JavaArrayList.getSymbol + " l2 0))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 84)" 
+				+ "(define l2 (" + JavaArrayList.mapSymbol_out + " l1 (lambda (x) (* x 2))))"
+				+ "(println (" + JavaArrayList.getSymbol_out + " l2 0))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l2 3)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l2 2)"
-				+ "(" + JavaArrayList.addToEndSymbol + " l2 1)"
-				+ "(define l3 (" + JavaArrayList.map2Symbol + " l1 l2 (lambda (x y) (+ x y))))"
-				+ "(println (" + JavaArrayList.getSymbol + " l3 0))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 3)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
+				+ "(define l3 (" + JavaArrayList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y))))"
+				+ "(println (" + JavaArrayList.getSymbol_out + " l3 0))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 21)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 42)" 
-				+ "(println (" + JavaArrayList.foldlSymbol + " + 0 l1))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)" 
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
+				+ "(println (" + JavaArrayList.foldlSymbol_out + " + 0 l1))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 4)"
-				+ "(println (" + JavaArrayList.foldrSymbol + " / 16 l1))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 4)"
+				+ "(println (" + JavaArrayList.foldrSymbol_out + " / 16 l1))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l (construct List JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol + " l 42)\n"
-				+ "(" + JavaArrayList.addToEndSymbol + " l 21)\n"
-				+ "(println (" + JavaLinkedList.getSymbol + " (convert List:JavaArray List:JavaLinked l) 0))");
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
+				+ "(println (" + JavaLinkedList.getSymbol_out + " (convert List:JavaArray List:JavaLinked l) 0))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l (construct List JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol + " l 42)\n"
-				+ "(" + JavaArrayList.addToEndSymbol + " l 21)\n"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
+				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
 				+ "(println (car (let-type (A) (deconstruct (convert List:JavaArray List:Native l) (A List:Native)))))");
 	}
 	
@@ -1297,127 +1333,127 @@ class TestComplex {
 	@DisplayName("Test Java Linked List Clojure")
 	void testJavaLinkedListClojure() throws Exception {
 		TestComplex.assertIntprtAndCompPrintSameValues("(construct List JavaLinked)");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToEndSymbol.toString() + " (construct List JavaLinked) 42))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToIndexSymbol.toString() + " (construct List JavaLinked) 0 42))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToEndSymbol_out.toString() + " (construct List JavaLinked) 42))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToIndexSymbol_out.toString() + " (construct List JavaLinked) 0 42))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l2 2)"
-				+ "(println (" + JavaLinkedList.addAllSymbol + " l1 l2))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
+				+ "(println (" + JavaLinkedList.addAllSymbol_out + " l1 l2))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)"
-				+ "(println (" + JavaLinkedList.containsSymbol + " l1 42))"
-				+ "(println (" + JavaLinkedList.containsSymbol + " l1 84))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
+				+ "(println (" + JavaLinkedList.containsSymbol_out + " l1 42))"
+				+ "(println (" + JavaLinkedList.containsSymbol_out + " l1 84))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l2 2)"
-				+ "(println (" + JavaLinkedList.containsAllSymbol + " l1 l2))"
-				+ "(println (" + JavaLinkedList.containsAllSymbol + " l2 l1))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
+				+ "(println (" + JavaLinkedList.containsAllSymbol_out + " l1 l2))"
+				+ "(println (" + JavaLinkedList.containsAllSymbol_out + " l2 l1))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
-				+ "(println (" + JavaLinkedList.getSymbol + " l1 0))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
+				+ "(println (" + JavaLinkedList.getSymbol_out + " l1 0))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(define l1 (construct List JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaLinkedList.indexOfSymbol + " l1 1))"
-				+ "(println (" + JavaLinkedList.indexOfSymbol + " l1 42))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaLinkedList.indexOfSymbol_out + " l1 1))"
+				+ "(println (" + JavaLinkedList.indexOfSymbol_out + " l1 42))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues(
-				"(println (" + JavaLinkedList.isEmptySymbol + " (construct List JavaLinked)))");
-		TestComplex.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaLinkedList.isEmptySymbol + " l1))");
-		
+				"(println (" + JavaLinkedList.isEmptySymbol_out + " (construct List JavaLinked)))");
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(define l1 (construct List JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaLinkedList.lastIndexOfSymbol + " l1 1))"
-				+ "(println (" + JavaLinkedList.lastIndexOfSymbol + " l1 42))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaLinkedList.isEmptySymbol_out + " l1))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(define l1 (construct List JavaLinked))\n" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaLinkedList.lastIndexOfSymbol_out + " l1 1))"
+				+ "(println (" + JavaLinkedList.lastIndexOfSymbol_out + " l1 42))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaLinkedList.removeSymbol + " l1 2))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaLinkedList.removeSymbol_out + " l1 2))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l2 2)"
-				+ "(println (" + JavaLinkedList.removeAllSymbol + " l1 l2))"
-				+ "(println (" + JavaLinkedList.removeAllSymbol + " l2 l1))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
+				+ "(println (" + JavaLinkedList.removeAllSymbol_out + " l1 l2))"
+				+ "(println (" + JavaLinkedList.removeAllSymbol_out + " l2 l1))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l2 2)"
-				+ "(println (" + JavaLinkedList.retainAllSymbol + " l1 l2))"
-				+ "(println (" + JavaLinkedList.retainAllSymbol + " l2 l1))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
+				+ "(println (" + JavaLinkedList.retainAllSymbol_out + " l1 l2))"
+				+ "(println (" + JavaLinkedList.retainAllSymbol_out + " l2 l1))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaLinkedList.setSymbol + " l1 0 2))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaLinkedList.setSymbol_out + " l1 0 2))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaLinkedList.sizeSymbol + " l1))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
+				+ "(println (" + JavaLinkedList.sizeSymbol_out + " l1))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 84)" 
-				+ "(define l2 (" + JavaLinkedList.sublistSymbol + " l1 0 1))"
-				+ "(println (" + JavaLinkedList.getSymbol + " l2 0))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 84)" 
+				+ "(define l2 (" + JavaLinkedList.sublistSymbol_out + " l1 0 1))"
+				+ "(println (" + JavaLinkedList.getSymbol_out + " l2 0))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 84)" 
-				+ "(define l2 (" + JavaLinkedList.mapSymbol + " l1 (lambda (x) (* x 2))))"
-				+ "(println (" + JavaLinkedList.getSymbol + " l2 0))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 84)" 
+				+ "(define l2 (" + JavaLinkedList.mapSymbol_out + " l1 (lambda (x) (* x 2))))"
+				+ "(println (" + JavaLinkedList.getSymbol_out + " l2 0))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l2 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l2 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l2 1)"
-				+ "(define l3 (" + JavaLinkedList.map2Symbol + " l1 l2 (lambda (x y) (+ x y))))"
-				+ "(println (" + JavaLinkedList.getSymbol + " l3 0))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 3)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
+				+ "(define l3 (" + JavaLinkedList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y))))"
+				+ "(println (" + JavaLinkedList.getSymbol_out + " l3 0))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 21)" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 42)" 
-				+ "(println (" + JavaLinkedList.foldlSymbol + " + 0 l1))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
+				+ "(println (" + JavaLinkedList.foldlSymbol_out + " + 0 l1))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 2)" 
-				+ "(" + JavaLinkedList.addToEndSymbol + " l1 4)"
-				+ "(println (" + JavaLinkedList.foldrSymbol + " / 16 l1))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 4)"
+				+ "(println (" + JavaLinkedList.foldrSymbol_out + " / 16 l1))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l (construct List JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l 42)\n"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l 21)\n"
-				+ "(println (" + JavaArrayList.getSymbol + " (convert List:JavaLinked List:JavaArray l) 0))");
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
+				+ "(println (" + JavaArrayList.getSymbol_out + " (convert List:JavaLinked List:JavaArray l) 0))");
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l (construct List JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l 42)\n"
-				+ "(" + JavaLinkedList.addToEndSymbol + " l 21)\n"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
 				+ "(println (car (let-type (A) (deconstruct (convert List:JavaLinked List:Native l) (A List:Native)))))");
 	}
 	
@@ -1438,11 +1474,60 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (get (cons 42 \"foo\") 0))");
 	}
 	
+	@Test
+	@DisplayName("Test clojure files")
+	void testClojureFiles() throws Exception {		
+		Path tmpDir = Files.createTempDirectory("cljTest");
+		/*Path depsEdn = ClojureCodeGenerator.createDepsEdn(tmpDir);
+		
+		Path velkaClojureCore = VelkaClojureCore.generateFile(Files.createTempFile("velka.clojure.core", ""));
+		Path velkaClojureOperators = VelkaClojureOperators.generateFile(Files.createTempFile("velka.clojure.operators", ""));
+		Path velkaClojureList = VelkaClojureList.generateFile(Files.createTempFile("velka.clojure.list", ""));
+		
+		Files.delete(velkaClojureCore);
+		Files.delete(velkaClojureOperators);
+		Files.delete(velkaClojureList);
+		Files.delete(depsEdn);*/
+		
+		ClojureCodeGenerator.generateClojureProject(tmpDir);
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.util.jar"), tmpDir.resolve(Paths.get("velka.lang.util.jar")), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.types.jar"), tmpDir.resolve(Paths.get("velka.lang.types.jar")), StandardCopyOption.REPLACE_EXISTING);		
+		
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		
+		ClojureCodeGenerator.ExpressionListToCljFile(
+				tmpDir, 
+				TestComplex.parseString("(println (+ 21 21))"), 
+				env, 
+				typeEnv);
+		
+		//Deletes the tmp dir recursively
+		Files.walk(tmpDir)
+	      .sorted(Comparator.reverseOrder())
+	      .map(Path::toFile)
+	      .forEach(File::delete);
+	}
+	
 	private static void assertClojureFunction(String definitions, String testCase, String expectedResult) throws IOException, InterruptedException {
 		//Test that definitions are sound
-		TestComplex.clojureCodeResult(definitions);
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(ClojureHelper.declareNamespace(ClojureCodeGenerator.DEFAULT_NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(VelkaClojureCore.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(VelkaClojureOperators.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(VelkaClojureList.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(VelkaClojureConstructors.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(VelkaClojureConversions.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(VelkaClojureArrayList.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(VelkaClojureLinkedList.NAMESPACE));
+		sb.append(definitions);
+		
+		TestComplex.clojureCodeResult(sb.toString());
 		//Test the testcase
-		String result = TestComplex.clojureCodeResult(definitions + "\n" + testCase);
+		sb.append("\n");
+		sb.append(testCase);
+		String result = TestComplex.clojureCodeResult(sb.toString());
 		assertEquals(expectedResult + "\n", result);
 	}
 
@@ -1562,37 +1647,37 @@ class TestComplex {
 	}
 	
 	private static String clojureCodeResult(String code) throws IOException, InterruptedException {
-		File tempFile = File.createTempFile("velka_clojure_test", null);
-		FileOutputStream ofs = new FileOutputStream(tempFile);
-		ofs.write(code.getBytes());
-		ofs.close();
-
-		ProcessBuilder pb = new ProcessBuilder("clj", tempFile.getAbsolutePath());
+		/*Path tmpDir = Files.createTempDirectory("cljTest");
+		
+		ClojureCodeGenerator.generateClojureProject(tmpDir);
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.util.jar"), tmpDir.resolve(Paths.get("velka.lang.util.jar")), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.types.jar"), tmpDir.resolve(Paths.get("velka.lang.types.jar")), StandardCopyOption.REPLACE_EXISTING);*/		
+				
+		Path codeFile = Files.writeString(tmpDir.resolve(Paths.get("velka", "clojure", "user.clj")), code);
+		
+		ProcessBuilder pb = new ProcessBuilder("clj", codeFile.toAbsolutePath().toString());
 		pb.inheritIO();
-		pb.directory(new File("/home/schkabi/Documents/Java/TypeSystem/lib"));
-
+		pb.directory(tmpDir.toFile());
+		
 		File tempOut = File.createTempFile("velka_clojure_test_out", null);
-
+		
 		pb.redirectOutput(tempOut);
 
 		Process p = pb.start();
 		p.waitFor();
-
+		
 		String result = Files.readString(tempOut.toPath());
-		tempFile.delete();
-		tempOut.delete();
-
+		tempOut.delete();	
+		Files.delete(codeFile);
+		
 		return result;
 	}
 
 	private static String clojureCompilationResult(List<Expression> l, Environment env, TypeEnvironment typeEnv)
 			throws Exception {
-
-		StringBuilder code = new StringBuilder();
-		code.append(ClojureCodeGenerator.writeHeaders(env, typeEnv));
-		code.append(velka.lang.interpretation.Compiler.compile(l, env, typeEnv));
+		String code = ClojureCodeGenerator.ExpressionListToClojureCode(l, env, typeEnv);
 		
-		String result = TestComplex.clojureCodeResult(code.toString());
+		String result = TestComplex.clojureCodeResult(code);
 		return result;
 	}
 

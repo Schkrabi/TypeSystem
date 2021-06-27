@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import velka.lang.types.Substitution;
@@ -15,7 +16,8 @@ import velka.lang.types.Type;
 import velka.lang.types.TypeTuple;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;
-import velka.lang.interpretation.ClojureCodeGenerator;
+import velka.lang.util.ThrowingFunction;
+import velka.lang.interpretation.ClojureHelper;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 
@@ -136,28 +138,19 @@ public class Tuple extends Expression implements Iterable<Expression> {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		StringBuilder s = new StringBuilder();
-
-		s.append("(let [tuple ");
-
-		s.append("[");
-
-		Iterator<Expression> i = this.iterator();
-		while (i.hasNext()) {
-			Expression e = i.next();
-			s.append(e.toClojureCode(env, typeEnv));
-			if (i.hasNext()) {
-				s.append(' ');
+		List<String> members = null;
+		try {
+			members = this.stream().map(ThrowingFunction.wrapper(e -> e.toClojureCode(env, typeEnv))).collect(Collectors.toList());
+		}catch(RuntimeException re) {
+			if(re.getCause() instanceof AppendableException) {
+				AppendableException ae = (AppendableException)re.getCause();
+				ae.appendMessage(" in " + this.toString());
+				throw ae;
 			}
+			throw re;
 		}
-		s.append("]] ");
 		
-		s.append(ClojureCodeGenerator.addTypeMetaInfo_str("tuple", 
-				"(velka.lang.types.TypeTuple. (map " + ClojureCodeGenerator.getTypeClojureSymbol + " tuple))"));
-		s.append(")");
-		
-
-		return s.toString();
+		return ClojureHelper.tupleHelper(members);	
 	}
 
 	@Override

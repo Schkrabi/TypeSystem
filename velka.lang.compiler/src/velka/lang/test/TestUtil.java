@@ -60,7 +60,7 @@ class TestUtil {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		assertAll(() -> new ClojureCodeGenerator(),
-				() -> ClojureCodeGenerator.toClojureCode(
+				() -> ClojureCodeGenerator.ExpressionListToClojureCode(
 						Arrays.asList(new LitInteger(128), Expression.EMPTY_EXPRESSION, LitBoolean.TRUE), env, typeEnv));
 	}
 

@@ -5,9 +5,9 @@ import java.util.Iterator;
 import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
-import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureCore;
 import velka.lang.literal.LitBoolean;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
@@ -61,7 +61,7 @@ public class AndExpression extends SpecialFormApplication {
 		while (i.hasNext()) {
 			Expression e = i.next();
 			sb.append("(first (");
-			sb.append(ClojureCodeGenerator.convertClojureSymbol);
+			sb.append(VelkaClojureCore.convertClojureSymbol_full);
 			sb.append(" \n");
 			sb.append(TypeAtom.TypeBoolNative.clojureTypeRepresentation());
 			sb.append(" ");

@@ -107,7 +107,7 @@ public class DefineSymbol extends Expression {
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder s = new StringBuilder("(def ");
-		s.append(this.name.toClojureCode(env, typeEnv));
+		s.append(this.name.name);
 		s.append(" ");
 		Environment inferenceEnvironment = Environment.create(env);
 		inferenceEnvironment.put(this.name, new TypeHolder(new TypeVariable(NameGenerator.next())));

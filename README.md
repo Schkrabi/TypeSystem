@@ -39,28 +39,107 @@ Script will build all three velka jars and copy them to _lib_ folder in reposito
 
 ### <a name="usage">Usage</a>
 
-Program can be used in 3 general modes: as interpreter, as interpreter with preloaded definitions and as compiler to clojure code. Used mode is dependent on number of arguments provided.
+Program can be used in following modes:
 
-#### Interpreter
+* **compile** compiles file into clojure code (compilation only, for runnable clojure code use build)
+* **prepare** prepares current folder for clojure project
+* **build** prepares current folder for clojure project and compiles code to clojure
+* **interpret** interprets file
+* **repl** runs repl
+* **help** prints usage information
+
+#### REPL
 To use interpreter simply start program without arguments:
 
     >java -jar velka.lang.compiler.jar
     
 In interpreter mode you can evaluate expressions and modify top level environment and type environment (see [define](#define), [type](#type), [representation](#representation), [constructor](#constructor), [conversion](#conversion)).
 
-#### Interpretr with loaded definitions
-To use interpreter with loaded definitions supply file with code as first argument.
-
-    >java -jar velka.lang.compiler.jar definitions.vel
-    
-This mode works in the same way as interpreter. Only difference is that expressions from supplied file is evaluated before running interpretter loop.
-
 #### Compiler
-To use compiler to clojure code, supply two arguments. First argument is input file with code, second file is output file with compiled clojure code.
+Currently only single code file is supported for compilation in velka.
 
-    >java -jar velka.lang.compiler.jar input.vel output.clj
-    
-Output file requires _velka.lang.util_ and _velka.lang.types_ libraries on classpath to run and is ready to be compiled by clojure compilator.
+Compilation to clojure consists of three modes *compile*, *prepare* and *build*. First one only compiles given velka code into equvalent clojure code in user.clj file in current directory.
+
+*prepare* option prepares current directory as clojure project for running/compiling compiled velka code. Please note that velka binaries (*velka.lang.util.jar* and *velka.lang.types.jar*) are assumed to be in current folder for running compiled code via clojure or compilation to java bytecode. If they are located in different location, you will have to modify generated *deps.edn* file replacing lines:
+
+~~~
+"./velka.lang.util.jar"
+"./velka.lang.types.jar"
+~~~
+
+with appropriate path.
+
+*build* is most convenient way of compiling velka code into clojure, it combines functionality of *prepare* and *compile* and will move all .clj files correctly with regard to namespaces. For example, see section [first program](#firstProgram).
+
+## <a name="firstProgram">First program</a>
+To create a first velka program you will have to have all three velka binaries: *velka.lang.util.jar*, *velka.lang.types.jar* and *velka.lang.compiler.jar* compiled and ready. If you do not have builded velka yet see section [manual](#Manual). Also antlr library must be on a classpath (simplest way is just to put it into folder alongside velka binaries).
+
+For simplicity move all the binaries to empty folder, this will be the folder where you velka project will be housed. Create a new text file there and name it *program.vlk*. Open the file and put following code there:
+
+~~~
+(define main 
+    (lambda () 
+        (println "Hello World!")))
+~~~
+
+This is a classical introductory program, that will print *Hello World!* to output and ends.
+
+### Interpretation
+Simplest and fastest way to test velka code is to interpret it. To do so, invoke compiler by following command:
+
+~~~
+>java -jar velka.lang.compiler.jar interpret program.vlk
+"Hello World!"
+~~~
+
+Note however, that interpreter is not very efficient and program will definitelly be slower than compiled clojure code or compiled java bytecode.
+
+### Clojure and JIT compilation
+To generate runnable clojure code from your velka source use compiler *build* command in following way.
+
+~~~
+>java -jar velka.lang.compiler.jar build program.vlk
+~~~
+
+This will create directories *velka* and *classes* in your current folder as well as *deps.edn* file. These are files required for correctly running velka-generated clojure source. You can see your source compiled to clojure in *velka/clojure/user.clj* file.
+
+To run the code (just-in-time clojure compilation) using following command:
+
+~~~
+>clj -m velka.clojure.user
+"Hello World!"
+~~~
+
+This will run clojure, compile your code and runs it one time on JVM.
+
+Names of the code files and namespaces are fixed, velka currently does not support custom namespaces.
+
+### Ahead of time compilation
+If you have compiled clojure code, you can generate java bytecode from it, to avoid furher just-in-time compilation later, or to generate jar file. To do so, first run *clj* without arguments.
+
+~~~
+>clj
+Clojure 1.10.1
+user=>
+~~~
+
+Now you are in clojure REPL. To compile your velka project use following expression:
+
+~~~
+user=>(compile 'velka.clojure.user)
+velka.clojure.user
+~~~
+
+This will generate *.class* files in classes directory. You can press Ctrl+D to exit clojure repl. To run java bytecode use following command:
+
+~~~
+>java -cp `clj -Spath` velka.clojure.user
+"Hello World!"
+~~~
+
+The *clj -Spath* clause is using clojure to generate classpath for the binaries. You want to take it into account if you are generating .jar file.
+
+Leinigen is currently not supported.
 
 ## Language Velka
 Language is similar to Scheme, (so far) without macro support and with limited set of build-in functions and operators. 
@@ -83,13 +162,17 @@ Here is reference to all special form present in language.
 * [error](#error)
 * [extended-lambda](#extendedLambda)
 * [extended-lambda-ranking](#extendedLambdaRanking)
+* [get](#get)
 * [if](#if)
 * [instance-of](#instanceOf)
 * [instance-of-representation](#instanceOfRepresentation)
 * [lambda](#lambda)
+* [let](#let)
+* [let*](#let-ast)
 * [let-type](#letType)
 * [or](#or)
 * [representation](#representation)
+* [tuple](#tuple)
 * [type](#type)
 
 #### <a name="and">and</a>
@@ -388,6 +471,26 @@ Example:
     ((Int:Roman Int:Roman) "roman))
 ~~~
 
+#### <a name="get">get</a>
+Syntax:
+
+~~~
+(get <tuple> <index>)
+~~~
+Where:
+
+* _tuple_ is expression that evaluates to tuple
+* _index_ is expression that evaluates to Int:Native
+
+Gets _index_'th value from a tuple. Indexes are zero based, causes error if index is out of bounds.
+
+Example:
+
+~~~
+>(get (tuple 42 "a" #t) 1)
+"a"
+~~~
+
 #### <a name="if">if</a>
 Sytax:
 
@@ -484,6 +587,55 @@ Examples:
 (lambda (value (List l)) (append-list value l))
 ~~~
 
+#### <a name="let">let</a>
+Syntax:
+
+~~~
+(let ((<var1> <exp1>)...) <body>)
+~~~
+Where:
+
+* _var_ is variable name
+* _exp_ is an arbitrary expression
+* _body_ is and arbitrary expression
+
+Special form for binding values in scope of _body_. Values are bound all at once and cannot reference previously bound values in the same let (see [let*](#let-ast)).
+
+Example:
+
+~~~
+>(let
+    ((x 10)
+     (y 5))
+    (+ x y))
+15
+~~~
+
+#### <a name="let-ast">let*</a>
+Syntax:
+
+~~~
+(let* ((<var1> <exp1>)...) <body>)
+~~~
+Where:
+
+* _var_ is variable name
+* _exp_ is an arbitrary expression
+* _body_ is and arbitrary expression
+
+Special form for binding values in scope of _body_. Values are bound one after another and later bound variables can refer to previously bounded ones. Also see [let](#let).
+
+Example:
+
+~~~
+>(let
+    ((x 10)
+     (y (* x 2)))
+    (+ x y))
+30
+~~~
+
+
 #### <a name="letType">let-type</a>
 Syntax:
 
@@ -543,6 +695,22 @@ Example:
 (representation Structured Name)
 ~~~
 
+#### <a name="tuple">tuple</a>
+Syntax:
+
+~~~
+(tuple <arg1>...)
+~~~
+
+Creates tuple from given arguments.
+
+Example:
+
+~~~
+>(tuple 42 "a" #t)
+[42 "a" #t]
+~~~
+
 #### <a name="type">type</a>
 Syntax:
 
@@ -569,12 +737,15 @@ Operators are build in functions in the language. Following opertaors are availa
 * [- (subtraction)](#subtraction)
 * [bit-and](#bitAnd)
 * [bit-or](#bitOr)
+* [bit-not](#bitNot)
+* [bit-xor](#bitXor)
 * [car](#car)
 * [can-unify-representations](#canUnifyRepresentations)
 * [can-unify-types](#canUnifyTypes)
 * [cdr](#cdr)
 * [concat](#concat)
 * [equals?](#equals)
+* [init-logger](#init-logger)
 * [IntNative2IntString](#intnative2intstring)
 * [IntNative2IntRoman](#intnative2introman)
 * [IntRoman2IntNative](#introman2intnative)
@@ -583,9 +754,16 @@ Operators are build in functions in the language. Following opertaors are availa
 * [IntString2IntRoman](#intstring2introman)
 * [is-same-type](#isSameType)
 * [is-same-representation](#isSameRepresentation)
+* [log](#log)
 * [not](#not)
+* [parse-int](#parseInt)
 * [println](#println)
-
+* [read-file](#readFile)
+* [shl](#shl)
+* [shr](#shr)
+* [str-split](#strSplit)
+* [timestamp](#timestamp)
+* [to-str](#toStr)
 
 #### <a name="addition">+ (addition)</a>
 Syntax:
@@ -1154,6 +1332,276 @@ Example:
 
 ~~~
 (IntRoman2IntString (construct Int Roman "XLII")) ; = "42"
+~~~
+
+#### <a name="bitNot">bit-not</a>
+Syntax:
+
+~~~
+(bit-not <arg>)
+~~~
+Where:
+
+* _arg_ evaluates to integer
+
+Type Signature:
+
+~~~
+(Int:Native) #> Int:Native
+~~~
+
+Negates all bits in binary representation of the argument.
+
+Example:
+
+~~~
+>(bit-not 42)
+-43
+~~~
+
+#### <a name="bitXor">bit-xor</a>
+Syntax:
+
+~~~
+(bit-xor <arg1> <arg2>)
+~~~
+Where:
+
+* _arg1_ evaluates to integer
+* _arg2_ evaluates to integer
+
+Type Signature:
+
+~~~
+(Int:Native Int:Native) #> Int:Native
+~~~
+
+Computes xor of binary representations of integer arguments.
+
+Example:
+
+~~~
+>(bit-xor 6 3)
+5
+~~~
+
+#### <a name="shl">shl</a>
+Syntax:
+
+~~~
+(shl <bits> <n>)
+~~~
+Where:
+
+* _bits_ evaluates to integer
+* _n_ evaluates to integer
+
+Type Signature:
+
+~~~
+(Int:Native Int:Native) #> Int:Native
+~~~
+
+Shifts bits of binary representation_bits_ left by _n_ positions.
+
+Example:
+
+~~~
+>(shl 1 4)
+16
+~~~
+
+#### <a name="shr">shr</a>
+Syntax:
+
+~~~
+(shr <bits> <n>)
+~~~
+Where:
+
+* _bits_ evaluates to integer
+* _n_ evaluates to integer
+
+Type Signature:
+
+~~~
+(Int:Native Int:Native) #> Int:Native
+~~~
+
+Shifts bits of binary representation_bits_ right by _n_ positions.
+
+Example:
+
+~~~
+>(shr 16 4)
+1
+~~~
+
+#### <a name="timestamp">timestamp</a>
+Syntax:
+
+~~~
+(timestamp)
+~~~
+
+Type Signature:
+
+~~~
+() #> Int:Native
+~~~
+
+Returns current System/nanoTime wrapped from java.
+
+#### <a name="initLogger">init-logger</a>
+Syntax:
+
+~~~
+(init-logger <name>)
+~~~
+Where:
+
+* _name_ evaluates to string
+
+Type Signature:
+
+~~~
+(String:Native) #> ()
+~~~
+
+Initializes logger, which will write to file specified by _name_. For logging messages see [log](#log).
+
+Example:
+
+~~~
+>(init-logger "test-log.log")
+[]
+~~~
+
+#### <a name="log">log</a>
+Syntax:
+
+~~~
+(log <message>)
+~~~
+Where:
+
+* _message_ evaluates to string
+
+Type Signature:
+
+~~~
+(String:Native) #> ()
+~~~
+
+Logs a message. [init-logger](#initLogger) must be called before use of _log_.
+
+Example:
+
+~~~
+>(init-logger "test-log.log")
+[]
+>(log "test message")
+[]
+~~~
+
+#### <a name="toStr">to-str</a>
+Syntax:
+
+~~~
+(to-str <expr>)
+~~~
+
+Type Signature:
+
+~~~
+(A) #> String:Native
+~~~
+
+Returns readable representation of its argument.
+
+Example:
+
+~~~
+>(to-str 42)
+"42"
+>(to-str (construct List Native))
+"[]"
+~~~
+
+#### <a name="readFile">read-file</a>
+Syntax:
+
+~~~
+(read-file <filename>)
+~~~
+Where:
+
+* _filename_ evaluates to string with path to file
+
+Type Signature:
+
+~~~
+(String:Native) #> String:Native
+~~~
+
+Reads contents of file specified by _filename_ and returns it as string.
+
+Example:
+
+~~~
+>(read-file "foo.txt")
+"foo bar baz"
+~~~
+
+#### <a name="strSplit">str-split</a>
+Syntax:
+
+~~~
+(str-split <string> <by>)
+~~~
+Where:
+
+* _string_ evaluates to string
+* _by_ evaluates to string
+
+Type Signature:
+
+~~~
+(String:Native String:Native) #> List:Native
+~~~
+
+Splits _string_ by _by_ into a List:Native.
+
+Example:
+
+~~~
+>(str-split "foo;bar;baz" ";")
+["foo" ["bar" ["baz" []]]]
+~~~
+
+#### <a name=parseInt>parse-int</a>
+Syntax:
+
+~~~
+(parse-int <string>)
+~~~
+Where:
+
+* _string_ evaluates to string
+
+Type Signature:
+
+~~~
+(String:Native) #> Int:Native
+~~~
+
+Tries to parse string into integer. Throws error if string cannot be parsed.
+
+Example:
+
+~~~
+>(parse-int "42")
+42
 ~~~
 
 ### Language base

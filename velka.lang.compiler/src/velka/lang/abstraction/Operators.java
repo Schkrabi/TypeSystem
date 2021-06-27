@@ -14,11 +14,13 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import velka.lang.expression.Expression;
+import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
 import velka.lang.expression.TypeSymbol;
-import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureCore;
+import velka.lang.interpretation.VelkaClojureOperators;
 import velka.lang.langbase.ListNative;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitComposite;
@@ -75,6 +77,11 @@ public final class Operators {
 			return "(fn [_x _y] " + LitInteger.clojureIntToClojureLitInteger("(+ (get _x 0) (get _y 0))") + ")";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-addition", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 	/**
 	 * Bit and (&) operator
@@ -106,6 +113,11 @@ public final class Operators {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x _y] " + LitInteger.clojureIntToClojureLitInteger("(bit-and (get _x 0) (get _y 0))") + ")";
 		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-bit-and", VelkaClojureOperators.NAMESPACE);
+		}
 	};
 	/**
 	 * Bit or (|) operator
@@ -136,6 +148,11 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x _y] " + LitInteger.clojureIntToClojureLitInteger("(bit-or (get _x 0) (get _y 0))") + ")";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-bit-or", VelkaClojureOperators.NAMESPACE);
 		}
 	};
 
@@ -172,6 +189,11 @@ public final class Operators {
 		@Override
 		public String toString() {
 			return "shr";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-bit-shr", VelkaClojureOperators.NAMESPACE);
 		}
 
 	};
@@ -218,6 +240,11 @@ public final class Operators {
 			return "shl";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-shr", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 
 	/**
@@ -249,6 +276,11 @@ public final class Operators {
 		@Override
 		public String toString() {
 			return "bit-not";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-bit-not", VelkaClojureOperators.NAMESPACE);
 		}
 
 	};
@@ -287,6 +319,11 @@ public final class Operators {
 		public String toString() {
 			return "bit-xor";
 		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-bit-xor", VelkaClojureOperators.NAMESPACE);
+		}
 	};
 
 	/**
@@ -320,7 +357,12 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] (get _x 0))";
+			return "(fn [_x] (first _x))";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-car", VelkaClojureOperators.NAMESPACE);
 		}
 	};
 	/**
@@ -354,7 +396,12 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] (get _x 1))";
+			return "(fn [_x] (second _x))";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-cdr", VelkaClojureOperators.NAMESPACE);
 		}
 	};
 	/**
@@ -389,6 +436,11 @@ public final class Operators {
 			return "(fn [_x _y] " + LitString.clojureStringToClojureLitString("(str (get _x 0) (get _y 0))") + ")";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-concat", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 	/**
 	 * Division (/) operator
@@ -419,6 +471,11 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x _y] " + LitInteger.clojureIntToClojureLitInteger("(/ (get _x 0) (get _y 0))") + ")";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-division", VelkaClojureOperators.NAMESPACE);
 		}
 
 	};
@@ -456,6 +513,11 @@ public final class Operators {
 			return "(fn [_x _y] " + LitBoolean.clojureBooleanToClojureLitBoolean("(= (get _x 0) (get _y 0))") + ")";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-equals", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 	/**
 	 * Lesser than (<) operator
@@ -486,6 +548,11 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x _y] " + LitBoolean.clojureBooleanToClojureLitBoolean("(< (get _x 0) (get _y 0))") + ")";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-lesser-than", VelkaClojureOperators.NAMESPACE);
 		}
 	};
 	/**
@@ -518,6 +585,11 @@ public final class Operators {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x _y] " + LitInteger.clojureIntToClojureLitInteger("(* (get _x 0) (get _y 0))") + ")";
 		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-multiplication", VelkaClojureOperators.NAMESPACE);
+		}
 	};
 	/**
 	 * Not operator
@@ -545,6 +617,11 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] " + LitBoolean.clojureBooleanToClojureLitBoolean("(not (get _x 0))") + ")";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-not", VelkaClojureOperators.NAMESPACE);
 		}
 	};
 	/**
@@ -576,6 +653,11 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x _y] " + LitBoolean.clojureBooleanToClojureLitBoolean("(= (get _x 0) (get _y 0))") + ")";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-numeric-equals", VelkaClojureOperators.NAMESPACE);
 		}
 
 	};
@@ -610,6 +692,11 @@ public final class Operators {
 			return "(fn [_x _y] " + LitInteger.clojureIntToClojureLitInteger("(- (get _x 0) (get _y 0))") + ")";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-subtraction", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 	/**
 	 * Println operator
@@ -642,7 +729,12 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] " + LitInteger.clojureIntToClojureLitInteger("(println (lang-pstr _x))") + ")";
+			return "(fn [_x] " + LitInteger.clojureIntToClojureLitInteger("(println (velka.clojure.core/lang-pstr _x))") + ")";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-println", VelkaClojureOperators.NAMESPACE);
 		}
 	};
 	/**
@@ -684,6 +776,11 @@ public final class Operators {
 		public String toString() {
 			return "can-unify-types";
 		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-can-unify-types", VelkaClojureOperators.NAMESPACE);
+		}
 	};
 	/**
 	 * can-unify-representations operator
@@ -723,6 +820,11 @@ public final class Operators {
 		public String toString() {
 			return "can-unify-representations";
 		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-can-unify-representations", VelkaClojureOperators.NAMESPACE);
+		}
 	};
 	/**
 	 * is-same-type operator
@@ -748,8 +850,8 @@ public final class Operators {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
 			String fn = "(fn [e1 e2] (let [opt (velka.lang.types.Type/unifyTypes " + 
-							"(" + ClojureCodeGenerator.getTypeClojureSymbol + " e1) " +
-							"(" + ClojureCodeGenerator.getTypeClojureSymbol + " e2))] " +
+							"(" + VelkaClojureCore.getTypeClojureSymbol_full + " e1) " +
+							"(" + VelkaClojureCore.getTypeClojureSymbol_full + " e2))] " +
 								"(if (.isPresent opt) " + 
 									LitBoolean.TRUE.toClojureCode(env, typeEnv) +
 									LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
@@ -769,6 +871,11 @@ public final class Operators {
 		@Override
 		public String toString() {
 			return "is-same-type";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-is-same-type", VelkaClojureOperators.NAMESPACE);
 		}
 
 	};
@@ -796,8 +903,8 @@ public final class Operators {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
 			String fn = "(fn [e1 e2] (let [opt (velka.lang.types.Type/unifyRepresentation " + 
-							"(" + ClojureCodeGenerator.getTypeClojureSymbol + " e1) " +
-							"(" + ClojureCodeGenerator.getTypeClojureSymbol + " e2))] " +
+							"(" + VelkaClojureCore.getTypeClojureSymbol_full + " e1) " +
+							"(" + VelkaClojureCore.getTypeClojureSymbol_full + " e2))] " +
 								"(if (.isPresent opt) " + 
 									LitBoolean.TRUE.toClojureCode(env, typeEnv) +
 									LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))"; 
@@ -817,6 +924,11 @@ public final class Operators {
 		@Override
 		public String toString() {
 			return "is-same-representation";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-is-same-representation", VelkaClojureOperators.NAMESPACE);
 		}
 
 	};
@@ -848,6 +960,11 @@ public final class Operators {
 			return "(fn [_x] (identity _x))";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-int-native", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 	/**
 	 * Int constructor (really constructs Int:Native)
@@ -875,6 +992,11 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] (identity _x))";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-int", VelkaClojureOperators.NAMESPACE);
 		}
 	};
 	/**
@@ -904,6 +1026,11 @@ public final class Operators {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] " + Literal.clojureValueToClojureLiteral("_x", TypeAtom.TypeIntString) + ")";
 		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-int-string", VelkaClojureOperators.NAMESPACE);
+		}
 	};
 	/**
 	 * Int:Roman constructor
@@ -931,6 +1058,11 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] " + Literal.clojureValueToClojureLiteral("_x", TypeAtom.TypeIntRoman) + ")";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-int-roman", VelkaClojureOperators.NAMESPACE);
 		}
 
 	};
@@ -963,6 +1095,11 @@ public final class Operators {
 			return "(fn [_x] (identity _x))";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-string-native", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 	/**
 	 * String constructor (really constructs String:Native)
@@ -992,6 +1129,11 @@ public final class Operators {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] (identity _x))";
 		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-string", VelkaClojureOperators.NAMESPACE);
+		}
 	};
 	/**
 	 * Double:Native constructor
@@ -1020,6 +1162,11 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] (identity _x))";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-double-native", VelkaClojureOperators.NAMESPACE);
 		}
 	};
 	/**
@@ -1051,6 +1198,11 @@ public final class Operators {
 			return "(fn [_x] (identity _x))";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-double", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 	/**
 	 * Bool:Native constructor
@@ -1078,6 +1230,11 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] (identity _x))";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-bool-native", VelkaClojureOperators.NAMESPACE);
 		}
 	};
 	/**
@@ -1108,6 +1265,11 @@ public final class Operators {
 			return "(fn [_x] (identity _x))";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-bool", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 
 	/**
@@ -1136,6 +1298,11 @@ public final class Operators {
 		@Override
 		public String toString() {
 			return "timestamp";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-timestamp", VelkaClojureOperators.NAMESPACE);
 		}
 
 	};
@@ -1205,6 +1372,11 @@ public final class Operators {
 			return "init-logger";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-init-logger", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 
 	/**
@@ -1239,6 +1411,11 @@ public final class Operators {
 			return "log";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-log", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 
 	/**
@@ -1248,7 +1425,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_arg] " + LitString.clojureStringToClojureLitString("(lang-pstr _arg)") + ")";
+			String code = "(fn [_arg] " + LitString.clojureStringToClojureLitString("(velka.clojure.core/lang-pstr _arg)") + ")";
 			return code;
 		}
 
@@ -1269,6 +1446,11 @@ public final class Operators {
 		@Override
 		public String toString() {
 			return "to-str";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-to-str", VelkaClojureOperators.NAMESPACE);
 		}
 
 	};
@@ -1312,6 +1494,11 @@ public final class Operators {
 			return "read-file";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-read-file", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 
 	/**
@@ -1321,7 +1508,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_str _by] (" + ClojureCodeGenerator.tuple2velkaListSymbol + " (map (fn [_s] "
+			String code = "(fn [_str _by] (" + VelkaClojureCore.tuple2velkaListSymbol_full + " (map (fn [_s] "
 					+ LitString.clojureStringToClojureLitString("_s") + ") "
 					+ "(clojure.string/split (first _str) (re-pattern (first _by))))))";
 			return code;
@@ -1357,6 +1544,11 @@ public final class Operators {
 			return "str-split";
 		}
 
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-str-split", VelkaClojureOperators.NAMESPACE);
+		}
+
 	};
 
 	/**
@@ -1390,6 +1582,11 @@ public final class Operators {
 		@Override
 		public String toString() {
 			return "parse-int";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-parse-int", VelkaClojureOperators.NAMESPACE);
 		}
 
 	};

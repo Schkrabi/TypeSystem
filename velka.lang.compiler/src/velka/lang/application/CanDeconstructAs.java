@@ -1,9 +1,9 @@
 package velka.lang.application;
 
 import velka.lang.expression.Expression;
-import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureCore;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitComposite;
 import velka.lang.types.Substitution;
@@ -62,7 +62,7 @@ public class CanDeconstructAs extends Expression {
 		String code = LitBoolean.clojureBooleanToClojureLitBoolean(
 				"(.isPresent (velka.lang.types.Type/unifyRepresentation " 
 						+ this.as.clojureTypeRepresentation() 
-						+ " (" + ClojureCodeGenerator.getTypeClojureSymbol + " (first " + this.expression.toClojureCode(env, typeEnv)
+						+ " (" + VelkaClojureCore.getTypeClojureSymbol_full + " (first " + this.expression.toClojureCode(env, typeEnv)
 						+ "))))");
 		
 		return code;

@@ -13,9 +13,9 @@ import velka.lang.application.AbstractionApplication;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.expression.TypeSymbol;
-import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureCore;
 import velka.lang.langbase.ListNative;
 import velka.lang.literal.LitInteger;
 import velka.lang.types.RepresentationOr;
@@ -207,13 +207,13 @@ public class ExtendedLambda extends Abstraction {
 		sb.append("(fn ");
 
 		sb.append("([args] (");
-		sb.append(ClojureCodeGenerator.selectImplementationClojureSymbol);
+		sb.append(VelkaClojureCore.selectImplementationClojureSymbol_full);
 		sb.append(" ");
 		sb.append(this.rankingFunction.toClojureCode(env, typeEnv));
 		sb.append(" args impls))\n");
 
 		sb.append("([args ranking-fn] (");
-		sb.append(ClojureCodeGenerator.selectImplementationClojureSymbol);
+		sb.append(VelkaClojureCore.selectImplementationClojureSymbol_full);
 		sb.append(" ranking-fn args impls))))");
 
 		return sb.toString();

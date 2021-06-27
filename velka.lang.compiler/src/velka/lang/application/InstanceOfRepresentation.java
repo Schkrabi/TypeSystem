@@ -1,9 +1,9 @@
 package velka.lang.application;
 
 import velka.lang.expression.Expression;
-import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureCore;
 import velka.lang.literal.LitBoolean;
 import velka.lang.types.Substitution;
 import velka.lang.types.Type;
@@ -52,7 +52,7 @@ public class InstanceOfRepresentation extends Expression {
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		String code = LitBoolean.clojureBooleanToClojureLitBoolean(
 				"(.isPresent (velka.lang.types.Type/unifyRepresentation "
-				+ "(" + ClojureCodeGenerator.getTypeClojureSymbol + " " + this.expression.toClojureCode(env, typeEnv) + ") "
+				+ "(" + VelkaClojureCore.getTypeClojureSymbol_full + " " + this.expression.toClojureCode(env, typeEnv) + ") "
 				+ this.type.clojureTypeRepresentation() + "))"); 
 				
 				return code;

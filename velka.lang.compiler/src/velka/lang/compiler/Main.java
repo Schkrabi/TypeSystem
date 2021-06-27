@@ -3,11 +3,12 @@ package velka.lang.compiler;
 import velka.lang.interpretation.Environment;
 
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Compiler;
 
 /**
@@ -17,61 +18,86 @@ import velka.lang.interpretation.Compiler;
  * 
  */
 public class Main {
+	
+	public static final String COMPILE = "compile";
+	public static final String BUILD = "build";
+	public static final String INTERPRET = "interpret";
+	public static final String REPL = "repl";
+	public static final String PREPARE = "prepare";
+	public static final String HELP = "help";
+	
+	public static final String USAGE = 
+			"Usage:\n" 
+			+ "    java -jar velka.clojure.compiler.jar OPTION args\n"
+			+ "    Options:\n"
+			+ "        " + COMPILE + " <file> - compiles file into clojure code\n"
+			+ "        " + PREPARE + " - prepares current folder for clojure project\n"
+			+ "        " + BUILD + " <file> - prepares current folder for clojure project and compiles code to clojure\n"
+			+ "        " + INTERPRET + " <file> - interprets file\n"
+			+ "        " + REPL + " - runs repl\n"
+			+ "        " + HELP + " - prints this help\n";
+	
+	private static void printHelp() {
+		System.out.println(USAGE);
+	}
 
+	private static void runMode(String mode, Path currentFolder) throws Exception {
+		runMode(mode, currentFolder, "");
+	}
+	
+	private static void runMode(String mode, Path currentFolder, String fileArg) throws Exception {
+		Environment topLevel = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(topLevel);
+		switch(mode) {
+		
+		case COMPILE:
+			Compiler.clojureCompile(Paths.get(fileArg), currentFolder.resolve(ClojureCodeGenerator.DEFAULT_FILENAME));
+			break;
+		case PREPARE:
+			ClojureCodeGenerator.generateClojureProject(currentFolder);
+			break;
+		case BUILD:
+			ClojureCodeGenerator.generateClojureProject(currentFolder);
+			Compiler.clojureCompile(Paths.get(fileArg), currentFolder.resolve(ClojureCodeGenerator.DEFAULT_FILE_PROJECT_PATH));
+			break;
+		case INTERPRET:
+			InputStream inStream = Files.newInputStream(Paths.get(fileArg));
+			Compiler.interpret(inStream, topLevel, typeEnv);
+			break;
+		case REPL:
+			Compiler.repl(System.in, System.out, topLevel, typeEnv, true);
+			break;
+		case HELP:
+		default:
+			printHelp();
+			break;
+		}
+	}
+	
 	/**
 	 * Main entrypoint
 	 * 
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		try {
-			Environment topLevel = Environment.initTopLevelEnvitonment();
-			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(topLevel);
-
-			Compiler.init(topLevel, typeEnv);
-			// Very basic options, didn't wanted to add more external libraries etc...
-			if (args.length == 0) {
-				// Interactive parser mode
-				Compiler.repl(System.in, System.out, topLevel, typeEnv, true);
-			} else if (args.length == 1) {
-				// Load code and interpret
-				InputStream inStream = null;
-				try {
-					inStream = Files.newInputStream(Paths.get(args[0]));
-					Compiler.interpret(inStream, topLevel, typeEnv);
-				}catch(Exception e) {
-					e.printStackTrace();
-				}finally {
-					if(inStream != null) {
-						inStream.close();
-					}
-				}
-			} else if (args.length == 2) {
-				// Compiler mode
-				InputStream inStream = null;
-				PrintStream outStream = null;
-				
-				try {
-					inStream = Files.newInputStream(Paths.get(args[0]));
-					outStream = new PrintStream(Files.newOutputStream(Paths.get(args[1])));
-					Compiler.clojure(inStream, outStream, topLevel, typeEnv);
-				} catch(Exception e) {
-					e.printStackTrace();
-				}finally {
-					if(inStream != null) {
-						inStream.close();
-					}
-					if(outStream != null) {
-						outStream.close();
-					}
-				}
-			} else {
-				System.out.println("Wrong number of arguments specified.");
-				return;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		if(args.length < 1) {
+			Main.printHelp();
 			return;
 		}
+		if(args.length < 2) {
+			try {
+				Main.runMode(args[0], Paths.get(System.getProperty("user.dir")));
+				return;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		try {
+			Main.runMode(args[0], Paths.get(System.getProperty("user.dir")), args[1]);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return;
 	}
 }

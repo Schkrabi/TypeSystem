@@ -6,7 +6,7 @@ import java.util.Optional;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
-import velka.lang.interpretation.ClojureCodeGenerator;
+import velka.lang.interpretation.ClojureHelper;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.Substitution;
@@ -67,7 +67,7 @@ public abstract class Abstraction extends Expression {
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException{
 		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		String code = ClojureCodeGenerator.addTypeMetaInfo(this.implementationsToClojure(env, typeEnv), p.first);
+		String code = ClojureHelper.addTypeMetaInfo(this.implementationsToClojure(env, typeEnv), p.first);
 		
 		return code;
 	}

@@ -18,7 +18,7 @@ import velka.lang.types.TypeVariable;
 import velka.lang.util.AppendableException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
-import velka.lang.interpretation.ClojureCodeGenerator;
+import velka.lang.interpretation.ClojureHelper;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 
@@ -162,7 +162,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 		
 		Pair<Type, Substitution> p = this.infer(env, typeEnv);
 		
-		return ClojureCodeGenerator.addTypeMetaInfo(s.toString(), p.first);
+		return ClojureHelper.addTypeMetaInfo(s.toString(), p.first);
 	}
 
 	@Override

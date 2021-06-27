@@ -5,11 +5,11 @@ import java.util.Optional;
 
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
-import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.abstraction.Lambda;
 import velka.lang.semantic.SemanticParserStatic;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureCore;
 import velka.lang.types.Substitution;
 import velka.lang.types.SubstitutionsCannotBeMergedException;
 import velka.lang.types.Type;
@@ -95,17 +95,18 @@ public class DefineConversion extends Expression {
 		Lambda conversionLambda = this.makeConversionLambda(env);
 		typeEnv.addConversion(this.from, this.to, conversionLambda);
 		StringBuilder s = new StringBuilder();
-		s.append("(def ^:dynamic ");
-		s.append(ClojureCodeGenerator.atomicConversionMapClojureSymbol);
+		s.append("(alter-var-root #'");
+		s.append(VelkaClojureCore.atomicConversionMapClojureSymbol_full);
+		s.append("(constantly ");
 		s.append(" (assoc ");
-		s.append(ClojureCodeGenerator.atomicConversionMapClojureSymbol);
+		s.append(VelkaClojureCore.atomicConversionMapClojureSymbol_full);
 		s.append(" [");
 		s.append(this.from.clojureTypeRepresentation());
 		s.append(" ");
 		s.append(this.to.clojureTypeRepresentation());
 		s.append("] ");
 		s.append(conversionLambda.toClojureCode(env, typeEnv));
-		s.append("))");
+		s.append(")))");
 		
 		return s.toString();
 	}

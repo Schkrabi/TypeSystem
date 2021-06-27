@@ -17,9 +17,9 @@ import java.util.Optional;
 import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
-import velka.lang.interpretation.ClojureCodeGenerator;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.interpretation.VelkaClojureCore;
 import velka.lang.literal.LitBoolean;
 
 /**
@@ -112,7 +112,7 @@ public class IfExpression extends SpecialFormApplication {
 		sb.append("(if ");
 		sb.append("(first ");
 		sb.append("(");
-		sb.append(ClojureCodeGenerator.convertClojureSymbol);
+		sb.append(VelkaClojureCore.convertClojureSymbol_full);
 		sb.append(" \n");
 		sb.append(TypeAtom.TypeBoolNative.clojureTypeRepresentation());
 		sb.append(" \n");

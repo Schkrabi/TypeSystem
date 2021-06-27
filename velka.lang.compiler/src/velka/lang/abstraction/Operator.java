@@ -3,8 +3,9 @@ package velka.lang.abstraction;
 import java.util.Optional;
 
 import velka.lang.expression.Expression;
+import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
-import velka.lang.interpretation.ClojureCodeGenerator;
+import velka.lang.interpretation.ClojureHelper;
 import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.types.Substitution;
@@ -28,6 +29,12 @@ public abstract class Operator extends Abstraction {
 	 * @throws AppendableException
 	 */
 	protected abstract String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	
+	/**
+	 * Symbol used for operator in clojure
+	 * @return fully qualified symbol
+	 */
+	public abstract Symbol getClojureSymbol();
 	
 	/**
 	 * Makes code for defining conversion in clojure header
@@ -62,12 +69,12 @@ public abstract class Operator extends Abstraction {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("(let [impl ");
-		sb.append(ClojureCodeGenerator.addTypeMetaInfo(this.toClojureOperator(env, typeEnv), p.first));
+		sb.append(ClojureHelper.addTypeMetaInfo(this.toClojureOperator(env, typeEnv), p.first));
 		sb.append("] \n");
 		sb.append("(fn ");
 		sb.append("([args] impl) \n");
 		sb.append("([args ranking-fn] impl)))");
 
-		return ClojureCodeGenerator.addTypeMetaInfo(sb.toString(), p.first);
+		return ClojureHelper.addTypeMetaInfo(sb.toString(), p.first);
 	}
 }
