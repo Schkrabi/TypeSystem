@@ -1928,7 +1928,7 @@ Following types and their representations are build-in to compiler:
 | String | Native         |                                                 |
 | Double | Native         |                                                 |
 | Bool   | Native         |                                                 |
-| List   | Native         | Native lists used in ranking functions.         |
+| List   | Native         | Native lists used in cost functions.            |
     
 ### Types, Representations and Constructors
 To define a new type use _type_ special form. For example to define a type called Name:
@@ -1986,7 +1986,7 @@ Extended-lambda is special form, allowing us to create functions which can behav
 #### <a name="typeSymbol">Type symbols</a>
 **THIS IS SUBJECT TO CHANGE AND MIGHT BE RENDERED OBSOLETE IN FUTURE RELEASES**
 
-Some build in operators are working with so called type symbols. Type symbol is a special value, that is of given _type_ and also holds that type as a value. Its usage is currently only in [ranking functions](#rankingFunction). They cannot be explicitely created, nor should be used outside of ranking functions.
+Some build in operators are working with so called type symbols. Type symbol is a special value, that is of given _type_ and also holds that type as a value. Its usage is currently only in [cost functions](#rankingFunction). They cannot be explicitely created, nor should be used outside of cost functions.
 
 ### Equality
 When using _equals?_ operator, equality is checked in following way:
@@ -2080,18 +2080,18 @@ Extended function can have multiple different implementations depending on repre
 Extended functions are usefull when dealing with data that can come in various different implementation. Extended functions allow us to use specific algorithms for specific representations of data. For example binary matrix can be represented by two dimensional array, bit array or incidence list. Extended functions allow us to tranparently implement functions using efficient algorithms based on representations of arguments.
 
 ##### Implementation selection
-When extended function is applied, it is using auxiliary *ranking function* to rank and select implementation that will be used. Ranking function maps each implementation along with arguments of application to integer. Then implementation with least rank is selected and applied.
+When extended function is applied, it is using auxiliary *cost function* to rank and select implementation that will be used. Ranking function maps each implementation along with arguments of application to integer. Then implementation with least rank is selected and applied.
 
-If no ranking function is specified, default ranking function is used. Default ranking function compares representations of supplied arguments and formal arguments of implementations and increases rank by _1_ for each representation that is different. Therefore if supplied arguments have exactly same representation as formal arguments of implementations default ranking function will return _0_. On the other hand if representation of each supplied argument and formal argument of implementation is different, default ranking function will return number equal to number of arguments.
+If no cost function is specified, default cost function is used. Default cost function compares representations of supplied arguments and formal arguments of implementations and increases cost by _1_ for each representation that is different. Therefore if supplied arguments have exactly same representation as formal arguments of implementations default cost function will return _0_. On the other hand if representation of each supplied argument and formal argument of implementation is different, default cost function will return number equal to number of arguments.
 
-##### <a name="rankingFunction">Ranking function</a>
-Ranking function is any function or extended-function with following type signature:
+##### <a name="rankingFunction">Cost function</a>
+Cost function is any function or extended-function with following type signature:
 
 ~~~
-(List:Native List:Native) #> Int:Native
+(List:Native List:Native A) #> Int:Native
 ~~~
 
-During each application of extended function ranking function is called for each implementation of that extended function. First argument passed to ranking function is _List:Native_ of [type symbols](#typeSymbol) containing types of arguments implementation is expecting, second argument is list of [type symbols](#typeSymbol) containing types of arguments that extended function is applied to. For example following expression:
+During each application of extended function cost function is called for each implementation of that extended function. First argument passed to cost function is _List:Native_ of [type symbols](#typeSymbol) containing types of arguments implementation is expecting, second argument is list of [type symbols](#typeSymbol) containing types of arguments that extended function is applied to and final argumet is tuple of evaluated arguments of the application. For example following expression:
 
 ~~~
 ((extended-lambda 
@@ -2100,76 +2100,77 @@ During each application of extended function ranking function is called for each
     (construct Int Roman "XLII"))
 ~~~
 
-Will result in application of ranking function roughly equivalent to following pseudo-expression:
+Will result in application of cost function roughly equivalent to following pseudo-expression:
 
 ~~~
 (ranking-function
     ((type-symbol Int:Native))
-    ((type-symbol Int:Roman)))
+    ((type-symbol Int:Roman))
+    (tuple <"XLII" Int:Roman>))
 ~~~
 
 Such application would be evaluated for each implementation of applied extended function (above example has only one implementation).
 
-Default ranking funtion has roughly following implementation:
+Default cost funtion has roughly following implementation:
 
 ~~~
-(lambda ((List:Native formalArgTypes) (List:Native realArgs))
+(lambda ((List:Native formalArgTypes) (List:Native realArgs) (A args))
     (foldr-list-native + 0 (map2-list-native 
                             (lambda (x y) (if (is-same-representation x y) 0 1)) 
                             formalArgTypes
                             realArgs)))
 ~~~
 
-##### Specifing ranking function
-To specify ranking function we are using special forms [_extended-lambda-ranking_](#extendedLambdaRanking) and [_eapply_](#eapply). Latter allows us to specify ranking function for specific application of any extended function (or even function but for them ranking function would be ignored).
+##### Specifing cost function
+To specify cost function we are using special forms [_extended-lambda-ranking_](#extendedLambdaRanking) and [_eapply_](#eapply). Latter allows us to specify ranking function for specific application of any extended function (or even function but for them cost function would be ignored).
 
-Special form [_extended-lambda-ranking_](#extendedLambdaRanking) allows us to associate specific ranking function with defined extended function. Then, any time this extended function is applied, its associated ranking function is used for implementation selection, unless [_eapply_](#eapply) with different ranking function is used.
+Special form [_extended-lambda-ranking_](#extendedLambdaRanking) allows us to associate specific cost function with defined extended function. Then, any time this extended function is applied, its associated cost function is used for implementation selection, unless [_eapply_](#eapply) with different ranking function is used.
 
-Therefore priority in which specific ranking functions are used is following:
+Therefore priority in which specific cost functions are used is following:
 
-1. ranking function used with [_eapply_](#eapply) special form
-2. ranking function associated with extended function by [_extended-lambda-ranking_](#extendedLambdaRanking) special form
-3. default ranking function
+1. cost function used with [_eapply_](#eapply) special form
+2. cost function associated with extended function by [_extended-lambda-ranking_](#extendedLambdaRanking) special form
+3. default cost function
 
-Following example, shows usage of both ways to specify ranking function:
+Following example, shows usage of both ways to specify cost function:
 
 ~~~
-(def rank-prefer-int-roman
-    (lambda ((List:Native formal-arg-types) (List:Native real-arg-types))
+(def cost-prefer-int-roman
+    (lambda ((List:Native formal-arg-types) (List:Native real-arg-types) (A args))
                 (if (instance-of-representation 
                         (head-list formal-arg-types) 
                         Int:Roman)
                     0
                     999)))
                     
-(def rank-prefer-int-string 
-    (lambda ((List:Native formal-arg-types) (List:Native real-arg-types))
+(def cost-prefer-int-string 
+    (lambda ((List:Native formal-arg-types) (List:Native real-arg-types) (A args))
                 (if (instance-of-representation 
                         (head-list formal-arg-types) 
                         Int:String)
                     0
                     999)))
 
-(def no-ranking-fn (extended-lambda ((Int x) (Int y)) 
+(def no-cost-fn (extended-lambda ((Int x) (Int y)) 
                     ((Int:Native Int:Native) "Int:Native")
                     ((Int:Roman Int:Native) "Int:Roman")
                     ((Int:String Int:Native) "Int:String"))
 
-(def ranking-fn (extended-lambda-ranking 
+(def cost-fn (extended-lambda-ranking 
                     ((Int x) (Int y))  
-                    rank-prefer-int-roman
+                    cost-prefer-int-roman
                     ((Int:Native Int:Native) "Int:Native")
                     ((Int:Roman Int:Native) "Int:Roman")
                     ((Int:String Int:Native) "Int:String"))
 
 ;; Use default ranking
-(no-ranking-fn 42 42)                                   ; = "Int:Native"
+(no-cost-fn 42 42)                                   ; = "Int:Native"
 
 ;; Use ranking specified in function
-(ranking-fn 42 42)                                      ; = "Int:Roman"
+(cost-fn 42 42)                                      ; = "Int:Roman"
 
 ;; Use ranking specified by eapply
-(eapply ranking-fn (cons 42 42) rank-prefer-int-string) ; = "Int:String"
+(eapply cost-fn (cons 42 42) cost-prefer-int-string) ; = "Int:String"
 ~~~
     
 [antlr4]: https://www.antlr.org/download.html
