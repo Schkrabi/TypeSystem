@@ -1,15 +1,14 @@
 package velka.lang.compiler;
 
-import velka.lang.interpretation.Environment;
-
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import velka.lang.clojure.ClojureCodeGenerator;
+import velka.lang.clojure.Compiler;
+import velka.lang.interpretation.Environment;
 import velka.lang.interpretation.TypeEnvironment;
-import velka.lang.interpretation.ClojureCodeGenerator;
-import velka.lang.interpretation.Compiler;
 
 /**
  * Main entry point for testing

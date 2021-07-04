@@ -3,9 +3,9 @@ package velka.lang.semantic;
 import java.util.List;
 import java.util.Map;
 
-import velka.lang.exceptions.InvalidNumberOfArgsException;
-import velka.lang.exceptions.UnexpectedExpressionException;
 import velka.lang.parser.SemanticNode;
+import velka.lang.parserExceptions.InvalidNumberOfArgsException;
+import velka.lang.parserExceptions.UnexpectedExpressionException;
 import velka.lang.types.TypeVariable;
 import velka.lang.util.AppendableException;
 import velka.lang.util.Pair;

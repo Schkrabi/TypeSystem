@@ -40,10 +40,15 @@ import velka.lang.application.IfExpression;
 import velka.lang.application.InstanceOf;
 import velka.lang.application.InstanceOfRepresentation;
 import velka.lang.application.OrExpression;
+import velka.lang.coreExceptions.ConversionException;
+import velka.lang.coreExceptions.DuplicateConversionException;
+import velka.lang.coreExceptions.UndefinedTypeException;
+import velka.lang.coreExceptions.UserException;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
-import velka.lang.expression.Symbol;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
+import velka.lang.expression.Symbol;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitComposite;
 import velka.lang.literal.LitDouble;
@@ -54,18 +59,13 @@ import velka.lang.parser.SchemeParser;
 import velka.lang.parser.SchemeParser.ExprsContext;
 import velka.lang.parser.SemanticNode;
 import velka.lang.parser.SemanticNode.NodeType;
+import velka.lang.parserExceptions.InvalidNumberOfArgsException;
+import velka.lang.parserExceptions.UnexpectedExpressionException;
 import velka.lang.parser.SemanticPair;
-import velka.lang.exceptions.DuplicateConversionException;
-import velka.lang.exceptions.InvalidNumberOfArgsException;
 import velka.lang.semantic.SemanticParser;
 import velka.lang.semantic.SemanticParserStatic;
-import velka.lang.interpretation.TypeEnvironment;
-import velka.lang.exceptions.UnexpectedExpressionException;
-import velka.lang.exceptions.UserException;
 import velka.lang.semantic.Validations;
 import velka.lang.semantic.TypeVariablePair;
-import velka.lang.exceptions.UndefinedTypeException;
-import velka.lang.exceptions.ConversionException;
 import velka.lang.types.Type;
 import velka.lang.types.TypeArrow;
 import velka.lang.types.TypeAtom;
@@ -183,7 +183,7 @@ class TestParser {
 		List<Lambda> impls = new ArrayList<Lambda>();
 		impls.add(impl);
 		this.testParse(
-				"(extended-lambda-ranking ((Int x)) (lambda ((List:Native x) (List:Native y)) 1) ((Int:Native) x))",
+				"(extended-lambda-cost ((Int x)) (lambda ((List:Native x) (List:Native y)) 1) ((Int:Native) x))",
 				ExtendedLambda.makeExtendedLambda(impls, ranking));
 
 		// Dummy object tests

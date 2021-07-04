@@ -29,7 +29,7 @@ import velka.lang.application.Get;
 import velka.lang.application.IfExpression;
 import velka.lang.application.InstanceOf;
 import velka.lang.application.InstanceOfRepresentation;
-import velka.lang.exceptions.UndefinedTypeException;
+import velka.lang.coreExceptions.UndefinedTypeException;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
 import velka.lang.expression.Symbol;

@@ -21,24 +21,24 @@ import org.junit.jupiter.api.DisplayName;
 
 import velka.lang.abstraction.Lambda;
 import velka.lang.application.AbstractionApplication;
+import velka.lang.clojure.ClojureCodeGenerator;
+import velka.lang.coreExceptions.InvalidNumberOfArgumentsException;
+import velka.lang.coreExceptions.UnboundVariableException;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Tuple;
+import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.expression.Symbol;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitInteger;
 import velka.lang.types.TypeTuple;
 import velka.lang.util.AppendableException;
-import velka.lang.interpretation.ClojureCodeGenerator;
-import velka.lang.interpretation.Environment;
-import velka.lang.interpretation.TypeEnvironment;
-import velka.lang.exceptions.InvalidNumberOfArgumentsException;
 import velka.lang.util.NameGenerator;
 import velka.lang.util.Pair;
 import velka.lang.util.RomanNumbers;
 import velka.lang.util.ThrowingBinaryOperator;
 import velka.lang.util.ThrowingConsumer;
 import velka.lang.util.ThrowingFunction;
-import velka.lang.exceptions.UnboundVariableException;
 
 class TestUtil {
 

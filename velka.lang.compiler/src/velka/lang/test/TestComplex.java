@@ -38,13 +38,19 @@ import velka.lang.application.AbstractionApplication;
 import velka.lang.application.CanDeconstructAs;
 import velka.lang.application.Construct;
 import velka.lang.application.IfExpression;
+import velka.lang.clojure.ClojureCodeGenerator;
+import velka.lang.clojure.VelkaClojureConstructors;
+import velka.lang.clojure.VelkaClojureCore;
+import velka.lang.clojure.VelkaClojureOperators;
+import velka.lang.conversions.Conversions;
 import velka.lang.expression.Expression;
 import velka.lang.expression.Symbol;
 import velka.lang.expression.Tuple;
 import velka.lang.expression.TypeSymbol;
-import velka.lang.interpretation.ClojureCodeGenerator;
+import velka.lang.interpretation.ClojureCoreSymbols;
 import velka.lang.interpretation.ClojureHelper;
 import velka.lang.interpretation.Environment;
+import velka.lang.interpretation.TypeEnvironment;
 import velka.lang.literal.LitBoolean;
 import velka.lang.literal.LitComposite;
 import velka.lang.literal.LitInteger;
@@ -53,14 +59,6 @@ import velka.lang.parser.SchemeLexer;
 import velka.lang.parser.SchemeParser;
 import velka.lang.parser.SchemeParser.ExprsContext;
 import velka.lang.semantic.SemanticParser;
-import velka.lang.interpretation.TypeEnvironment;
-import velka.lang.interpretation.VelkaClojureArrayList;
-import velka.lang.interpretation.VelkaClojureConstructors;
-import velka.lang.interpretation.VelkaClojureConversions;
-import velka.lang.interpretation.VelkaClojureCore;
-import velka.lang.interpretation.VelkaClojureLinkedList;
-import velka.lang.interpretation.VelkaClojureList;
-import velka.lang.interpretation.VelkaClojureOperators;
 import velka.lang.langbase.JavaArrayList;
 import velka.lang.langbase.JavaLinkedList;
 import velka.lang.langbase.ListNative;
@@ -806,9 +804,9 @@ class TestComplex {
 		String realArgs = "(construct List Native 42 (construct List Native \"42\" (construct List Native #t (construct List Native))))";
 		Expression args = new Tuple(new LitInteger(42), new LitString("42"), LitBoolean.TRUE);
 
-		List<Expression> l = velka.lang.interpretation.Compiler.read(new ByteArrayInputStream(ranking.getBytes()));
+		List<Expression> l = velka.lang.clojure.Compiler.read(new ByteArrayInputStream(ranking.getBytes()));
 		Lambda rankingLambda = (Lambda) l.get(0);
-		l = velka.lang.interpretation.Compiler.read(new ByteArrayInputStream(realArgs.getBytes()));
+		l = velka.lang.clojure.Compiler.read(new ByteArrayInputStream(realArgs.getBytes()));
 		Expression realArgsExpr = l.get(0);
 
 		// (Int:Native String:Native Bool:Native)
@@ -850,13 +848,13 @@ class TestComplex {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		ListNative.initializeInEnvironment(env, typeEnv);
-		l = velka.lang.interpretation.Compiler.eval(Arrays.asList(e1), env, typeEnv);
+		l = velka.lang.clojure.Compiler.eval(Arrays.asList(e1), env, typeEnv);
 		assertEquals(new LitInteger(0), l.get(0));
 
-		l = velka.lang.interpretation.Compiler.eval(Arrays.asList(e2), env, typeEnv);
+		l = velka.lang.clojure.Compiler.eval(Arrays.asList(e2), env, typeEnv);
 		assertEquals(new LitInteger(1), l.get(0));
 
-		l = velka.lang.interpretation.Compiler.eval(Arrays.asList(e3), env, typeEnv);
+		l = velka.lang.clojure.Compiler.eval(Arrays.asList(e3), env, typeEnv);
 		assertEquals(new LitInteger(3), l.get(0));
 
 		TestComplex.assertIntprtAndCompPrintSameValues(
@@ -957,78 +955,78 @@ class TestComplex {
 	@DisplayName("Test Clojure Headers")
 	void testClojureHeaders() throws Exception {
 		StringBuilder definitions = new StringBuilder();
-		definitions.append("(ns " + VelkaClojureCore.NAMESPACE + " (:gen-class))\n");
+		definitions.append("(ns " + ClojureCoreSymbols.NAMESPACE + " (:gen-class))\n");
 		
 		definitions.append(VelkaClojureCore.type2typeSymbolDef + "\n");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (.toString (:lang-type (meta (" + VelkaClojureCore.type2typeSymbolSymbol_full + " "
+				"(println (.toString (:lang-type (meta (" + ClojureCoreSymbols.type2typeSymbolSymbol_full + " "
 						+ TypeAtom.TypeIntNative.clojureTypeRepresentation() + ")))))", 
 				"Int:Native");
 		
 		definitions.append(VelkaClojureCore.getTypeClojureDef + "\n");
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (.toString (" + VelkaClojureCore.getTypeClojureSymbol_full + " " + LitInteger.clojureIntToClojureLitInteger("1") + ")))",
+				"(println (.toString (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " " + LitInteger.clojureIntToClojureLitInteger("1") + ")))",
 				TypeAtom.TypeIntNative.toString());
 		
 		definitions.append(VelkaClojureCore.tuple2velkaListDef + "\n");
 		
 		assertClojureFunction(
 				definitions.toString(), 
-				"(println (" + VelkaClojureCore.tuple2velkaListSymbol_full + " [1 2 3]))",
+				"(println (" + ClojureCoreSymbols.tuple2velkaListSymbol_full + " [1 2 3]))",
 				"[[1 [[2 [[3 [[]]]]]]]]");
 		
 		definitions.append(VelkaClojureCore.atomicConversionMapClojureDef + "\n");
 		definitions.append(VelkaClojureCore.convertAtomClojureDef + "\n");
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
+				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntRoman.clojureTypeRepresentation() + 
 						LitInteger.clojureIntToClojureLitInteger("1") + "))",
 				"[[I]]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
+				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntString.clojureTypeRepresentation() + 
 						LitInteger.clojureIntToClojureLitInteger("1") + "))",
 				"[[1]]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
+				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntNative.clojureTypeRepresentation() + 
 						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"1\""), TypeAtom.TypeIntString) + "))",
 				"[1]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
+				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntRoman.clojureTypeRepresentation() + 
 						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"1\""), TypeAtom.TypeIntString) + "))",
 				"[[I]]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
+				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntNative.clojureTypeRepresentation() + 
 						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"I\""), TypeAtom.TypeIntRoman) + "))",
 				"[1]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + VelkaClojureCore.convertAtomClojureSymbol_full + " " +  
+				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntString.clojureTypeRepresentation() + 
 						LitComposite.clojureValueToClojureLiteral(LitString.clojureStringToClojureLitString("\"I\""), TypeAtom.TypeIntRoman) + "))",
 				"[[1]]");
 		
-		definitions.append("(declare " + VelkaClojureCore.convertClojureSymbol_full + ")\n");
-		definitions.append("(declare " + VelkaClojureCore.convertTupleClojureSymbol_full + ")\n");
-		definitions.append("(declare " + VelkaClojureCore.convertFnClojureSymbol_full + ")\n");
-		definitions.append("(declare " + VelkaClojureCore.convertRepOrClojureSymbol_full + ")\n");
-		definitions.append("(declare " + VelkaClojureCore.convertToRepOrClojureSymbol_full + ")\n");
+		definitions.append("(declare " + ClojureCoreSymbols.convertClojureSymbol_full + ")\n");
+		definitions.append("(declare " + ClojureCoreSymbols.convertTupleClojureSymbol_full + ")\n");
+		definitions.append("(declare " + ClojureCoreSymbols.convertFnClojureSymbol_full + ")\n");
+		definitions.append("(declare " + ClojureCoreSymbols.convertRepOrClojureSymbol_full + ")\n");
+		definitions.append("(declare " + ClojureCoreSymbols.convertToRepOrClojureSymbol_full + ")\n");
 		definitions.append(VelkaClojureCore.convertClojureDef + "\n");
 		TestComplex.clojureCodeResult(definitions.toString());
 		
@@ -1051,7 +1049,7 @@ class TestComplex {
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + VelkaClojureCore.convertTupleClojureSymbol_full + " " +
+				"(println (" + ClojureCoreSymbols.convertTupleClojureSymbol_full + " " +
 						new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman).clojureTypeRepresentation() + " " +
 						t.toClojureCode(env, typeEnv) + "))",
 				"[[1] [[I]]]");
@@ -1062,20 +1060,20 @@ class TestComplex {
 		Expression arg = new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman);
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (((" + VelkaClojureCore.convertFnClojureSymbol_full + " " +  
+				"(println (((" + ClojureCoreSymbols.convertFnClojureSymbol_full + " " +  
 				lambda_to.clojureTypeRepresentation() + " " + l.toClojureCode(env, typeEnv) + ") nil) " + arg.toClojureCode(env, typeEnv) + "))",
 				"[[1]]");
 		
 		definitions.append(VelkaClojureCore.eapplyClojureDef + "\n");
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + VelkaClojureCore.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
+				"(println (" + ClojureCoreSymbols.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
 						+ (new Tuple(arg)).toClojureCode(env, typeEnv) + "))",
 				"[1]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + VelkaClojureCore.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
+				"(println (" + ClojureCoreSymbols.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
 						+ (new Tuple(arg)).toClojureCode(env, typeEnv) + "))",
 				"[1]");
 		
@@ -1086,30 +1084,30 @@ class TestComplex {
 		assertClojureFunction(
 				definitions.toString(),
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
-						+ VelkaClojureCore.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
-						+ ") (" + VelkaClojureCore.tuple2velkaListSymbol_full + " "
+						+ ClojureCoreSymbols.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
+						+ ") (" + ClojureCoreSymbols.tuple2velkaListSymbol_full + " "
 						+ typeSymbolTuple.toClojureCode(env, typeEnv) + ") nil))",
 				"[0]");
 		
 		assertClojureFunction(
 				definitions.toString(),
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
-						+ VelkaClojureCore.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
-						+ ") (" + VelkaClojureCore.tuple2velkaListSymbol_full + " "
+						+ ClojureCoreSymbols.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
+						+ ") (" + ClojureCoreSymbols.tuple2velkaListSymbol_full + " "
 						+ typeSymbolTuple_diff1.toClojureCode(env, typeEnv) + ") nil))",
 				"[1]");
 		
 		assertClojureFunction(
 				definitions.toString(),
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
-						+ VelkaClojureCore.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
-						+ ") (" + VelkaClojureCore.tuple2velkaListSymbol_full + " "
+						+ ClojureCoreSymbols.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
+						+ ") (" + ClojureCoreSymbols.tuple2velkaListSymbol_full + " "
 						+ typeSymbolTuple_diff2.toClojureCode(env, typeEnv) + ") nil))",
 				"[2]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + VelkaClojureCore.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
+				"(println (" + ClojureCoreSymbols.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
 						+ (new Tuple(arg)).toClojureCode(env, typeEnv) + " " + AbstractionApplication.defaultRanking.toClojureCode(env, typeEnv) + "))",
 				"[1]");
 		
@@ -1124,7 +1122,7 @@ class TestComplex {
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println ((" + VelkaClojureCore.selectImplementationClojureSymbol_full + " "
+				"(println ((" + ClojureCoreSymbols.selectImplementationClojureSymbol_full + " "
 						+ AbstractionApplication.defaultRanking.toClojureCode(env, typeEnv) + " "
 						+ selectArgs1.toClojureCode(env, typeEnv) + " " + "#{" + "(" + impl1.toClojureCode(env, typeEnv)
 						+ " nil)" + " (" + impl2.toClojureCode(env, typeEnv) + " nil)" + " ("
@@ -1133,7 +1131,7 @@ class TestComplex {
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println ((" + VelkaClojureCore.selectImplementationClojureSymbol_full + " "
+				"(println ((" + ClojureCoreSymbols.selectImplementationClojureSymbol_full + " "
 						+ AbstractionApplication.defaultRanking.toClojureCode(env, typeEnv) + " "
 						+ selectArgs2.toClojureCode(env, typeEnv) + " " + "#{" + "(" + impl1.toClojureCode(env, typeEnv)
 						+ " nil)" + " (" + impl2.toClojureCode(env, typeEnv) + " nil)" + " ("
@@ -1142,7 +1140,7 @@ class TestComplex {
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println ((" + VelkaClojureCore.selectImplementationClojureSymbol_full + " "
+				"(println ((" + ClojureCoreSymbols.selectImplementationClojureSymbol_full + " "
 						+ AbstractionApplication.defaultRanking.toClojureCode(env, typeEnv) + " "
 						+ selectArgs3.toClojureCode(env, typeEnv) + " " + "#{" + "(" + impl1.toClojureCode(env, typeEnv)
 						+ " nil)" + " (" + impl2.toClojureCode(env, typeEnv) + " nil)" + " ("
@@ -1160,12 +1158,12 @@ class TestComplex {
 						new LitString("b")));
 		
 		TestComplex.clojureCodeResult(definitions.toString() + 
-				"(println (" + VelkaClojureCore.convertRepOrClojureSymbol_full + " "
+				"(println (" + ClojureCoreSymbols.convertRepOrClojureSymbol_full + " "
 				+ new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeStringNative).clojureTypeRepresentation() + " "
 				+ elambda.toClojureCode(env, typeEnv) + "))");
 		
 		TestComplex.assertClojureFunction(definitions.toString(),
-				 	"(println (" + VelkaClojureCore.convertToRepOrClojureSymbol_full + " " + 
+				 	"(println (" + ClojureCoreSymbols.convertToRepOrClojureSymbol_full + " " + 
 				 			RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString).clojureTypeRepresentation() + " " +
 				 			new LitInteger(42).toClojureCode(env, typeEnv) + "))",
 				 	"[42]");
@@ -1514,13 +1512,13 @@ class TestComplex {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append(ClojureHelper.declareNamespace(ClojureCodeGenerator.DEFAULT_NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(VelkaClojureCore.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(ClojureCoreSymbols.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(VelkaClojureOperators.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(VelkaClojureList.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(ListNative.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(VelkaClojureConstructors.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(VelkaClojureConversions.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(VelkaClojureArrayList.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(VelkaClojureLinkedList.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(Conversions.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(JavaArrayList.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(JavaLinkedList.NAMESPACE));
 		sb.append(definitions);
 		
 		TestComplex.clojureCodeResult(sb.toString());
@@ -1611,7 +1609,7 @@ class TestComplex {
 
 	private static void assertIntprtAndCompPrintSameValues(String code) throws Exception {
 		InputStream in = new ByteArrayInputStream(code.getBytes());
-		List<Expression> exprs = velka.lang.interpretation.Compiler.read(in);
+		List<Expression> exprs = velka.lang.clojure.Compiler.read(in);
 
 		TestComplex.assertIntprtAndCompPrintSameValues(exprs);
 	}
@@ -1638,7 +1636,7 @@ class TestComplex {
 		ByteArrayOutputStream tmp = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(tmp));
 
-		velka.lang.interpretation.Compiler.eval(in, env, typeEnv);
+		velka.lang.clojure.Compiler.eval(in, env, typeEnv);
 
 		String result = tmp.toString();
 		System.setOut(stdOut);
@@ -1686,7 +1684,7 @@ class TestComplex {
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		InputStream inStream = new ByteArrayInputStream(code.getBytes());
-		String result = TestComplex.clojureCompilationResult(velka.lang.interpretation.Compiler.read(inStream), env,
+		String result = TestComplex.clojureCompilationResult(velka.lang.clojure.Compiler.read(inStream), env,
 				typeEnv);
 
 		assertEquals(expected, result);
