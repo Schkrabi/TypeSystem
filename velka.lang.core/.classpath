@@ -6,12 +6,12 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/velka.lang.types">
+	<classpathentry combineaccessrules="false" kind="src" path="/velka.types">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/velka.lang.util">
+	<classpathentry combineaccessrules="false" kind="src" path="/velka.util">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>

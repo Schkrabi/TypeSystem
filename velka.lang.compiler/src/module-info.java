@@ -1,9 +1,10 @@
-module velka.lang.compiler {
-	requires velka.lang.util;
-	requires velka.lang.types;
-	requires velka.lang.core;
+module velka.compiler {
+	requires transitive velka.util;
+	requires transitive velka.types;
+	requires transitive velka.core;
+	requires transitive velka.parser;
+	requires transitive velka.clojure;
 	requires java.logging;
-	requires antlr;
  	requires static org.junit.jupiter.api;
-	exports velka.lang.compiler;
+	exports velka.compiler;
 }

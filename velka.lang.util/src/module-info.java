@@ -1,3 +1,3 @@
-module velka.lang.util {
-	exports velka.lang.util;
+module velka.util {
+	exports velka.util;
 }

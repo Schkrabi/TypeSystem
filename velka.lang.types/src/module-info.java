@@ -1,4 +1,4 @@
-module velka.lang.types {
-	requires velka.lang.util;
-	exports velka.lang.types;
+module velka.types {
+	requires velka.util;
+	exports velka.types;
 }

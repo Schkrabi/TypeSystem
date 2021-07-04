@@ -1,0 +1,82 @@
+/**
+ * 
+ */
+package velka.core.literal;
+
+import velka.core.expression.Expression;
+import velka.core.interpretation.Environment;
+import velka.core.interpretation.TypeEnvironment;
+import velka.types.Substitution;
+import velka.types.Type;
+import velka.types.TypeAtom;
+import velka.util.AppendableException;
+import velka.util.Pair;
+
+/**
+ * Class for representing literals of enumerated values
+ * 
+ * @author Mgr. Radomir Skrabal
+ *
+ */
+public class LitEnum extends Literal {
+
+	/**
+	 * Name/value of this enumerated type
+	 */
+	public final String value;
+	/**
+	 * Type of this enumerated value
+	 */
+	public final TypeAtom enumType;
+
+	public LitEnum(String value, TypeAtom enumType) {
+		super();
+		this.value = value;
+		this.enumType = enumType;
+	}
+
+	@Override
+	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
+		return this;
+	}
+
+	@Override
+	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
+		return new Pair<Type, Substitution>(this.enumType, Substitution.EMPTY);
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof LitEnum) {
+			return this.enumType.equals(((LitEnum) other).enumType) && this.value.equals(((LitEnum) other).value);
+		}
+		return false;
+	}
+
+	@Override
+	public int compareTo(Expression other) {
+		if (other instanceof LitEnum) {
+			int cmp = this.enumType.compareTo(((LitEnum) other).enumType);
+			if (cmp != 0)
+				return cmp;
+			return this.value.compareTo(((LitEnum) other).value);
+		}
+		return super.compareTo(other);
+	}
+
+	@Override
+	public int hashCode() {
+		return this.value.hashCode() * this.enumType.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return this.value;
+	}
+
+	@Override
+	public String valueToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		throw new AppendableException("Not Implemented");
+	}
+
+}
