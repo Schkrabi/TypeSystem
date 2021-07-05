@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project name="velka.lang.util" basedir="." default="velka.lang.util">
+<project name="velka.util" basedir="." default="main">
 
     <property name="src.dir" value="src" />
     <property name="build.dir" value="." />
     <property name="classes.dir" value="${build.dir}/classes" />
     <property name="jar.dir" value="${build.dir}/jar" />
 
-    <property name="velka.lang.util.jar" value="${jar.dir}/${ant.project.name}.jar"/>
+    <property name="jar.name" value="${jar.dir}/${ant.project.name}.jar"/>
 
     <target name="clean">
         <delete dir="${classes.dir}" />
@@ -20,9 +20,9 @@
     
     <target name="jar" depends="compile">
         <mkdir dir="${jar.dir}" />
-        <jar destfile="${velka.lang.util.jar}" basedir="${classes.dir}" />
+        <jar destfile="${jar.name}" basedir="${classes.dir}" />
     </target>
 
-    <target name="velka.lang.util" depends="clean,jar" />
+    <target name="main" depends="clean,jar" />
     
 </project>

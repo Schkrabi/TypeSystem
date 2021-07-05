@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project name="velka.lang.compiler" basedir="." default="main">
 <!-- SETUP -->
-    <property name="is.debug" value="true" />
+    <property name="is.debug" value="false" />
 
 <!-- DEPENDECY -->
-    <!-- Other parts of the language -->
-    <property name="velka.lang.util.lib" value="../lib/velka.lang.util.jar" />
-    <property name="velka.lang.types.lib" value="../lib/velka.lang.types.jar" />
+    <property name="velka.util.lib" value="../lib/velka.util.jar" />
+    <property name="velka.types.lib" value="../lib/velka.types.jar" />
+    <property name="velka.core.lib" value="../lib/velka.core.jar" />
+    <property name="velka.clojure.lib" value="../lib/velka.clojure.jar" />
+    <property name="velka.parser.lib" value="../lib/velka.parser.jar" />
+    <property name="velka.compiler.lib" value="../lib/velka.compiler.jar" />
     
     <!-- Required for compilation and run -->
     <property name="antlr.lib" value="../lib/antlr-4.7.2-complete.jar" />    
@@ -23,26 +26,12 @@
     <property name="src.dir" value="src" />
     <property name="build.dir" value="." />
     <property name="classes.dir" value="${build.dir}/classes" />
-    <property name="jar.dir" value="${build.dir}/jar" />
     <property name="test.dir" value="${build.dir}/test" />
     <property name="test.report.dir" value="${build.dir}/test-report" />
-
-    <property name="main-class" value="velka.lang.compiler.Main" />
-    <property name="velka.lang.compiler.jar" value="${jar.dir}/${ant.project.name}.jar"/>
     
 <!-- CLASS-PATHS -->
-    <path id="modulepath">
-        <pathelement location="${antlr.lib}" />
-        <pathelement location="${apiguardian.api}" />
-        <pathelement location="${junit.jupiter.api}" />
-        <pathelement location="${junit.platform.commons}" />
-        <pathelement location="${opentest4j}" />
-        
-        <pathelement location="${velka.lang.util.lib}" />
-        <pathelement location="${velka.lang.types.lib}" />
-    </path>
     
-    <path id="test.modulepath">
+    <path id="modulepath">
         <pathelement location="${antlr.lib}" />
         <pathelement location="${apiguardian.api}" />
         <pathelement location="${junit.jupiter.api}" />
@@ -51,24 +40,24 @@
         <pathelement location="${classes.dir}" />
         <pathelement location="${junit.platform.console}" />
         
-        <pathelement location="${velka.lang.util.lib}" />
-        <pathelement location="${velka.lang.types.lib}" />
+        <pathelement location="${velka.util.lib}" />
+        <pathelement location="${velka.types.lib}" />
+        <pathelement location="${velka.core.lib}" />
+        <pathelement location="${velka.clojure.lib}" />
+        <pathelement location="${velka.parser.lib}" />
+        <pathelement location="${velka.compiler.lib}" />
     </path>
-    
-<property name="jar.classpath" value=". ./antlr-4.7.2-complete.jar ./velka.lang.util.jar ./velka.lang.types.jar" />
 
 <!-- TARGETS -->
 
     <target name="clean">
         <delete dir="${classes.dir}" />
-        <delete dir="${jar.dir}" />
         <delete dir="${test.dir}" />
         <delete dir="${test.report.dir}" />
     </target>
     
     <target name="init">
         <mkdir dir="${classes.dir}" />
-        <mkdir dir="${jar.dir}" />
         <mkdir dir="${test.dir}" />
         <mkdir dir="${test.report.dir}" />
     </target>
@@ -84,23 +73,12 @@
         </javac>
     </target>
     
-    <target name="jar" depends="init,compile">
-        <jar 
-            destfile="${velka.lang.compiler.jar}" 
-            basedir="${classes.dir}">
-            <manifest>
-                <attribute name="Main-Class" value="${main-class}"/>
-                <attribute name="Class-Path" value="${jar.classpath}" />
-            </manifest>
-        </jar>
-    </target>
-    
     <target name="test" depends="init,compile">
         <junitlauncher haltOnFailure="true" printSummary="true">
-            <classpath refid="test.modulepath" />
+            <classpath refid="modulepath" />
             <testclasses outputdir="${test.dir}" >
                 <fileset dir="${classes.dir}">
-                    <include name="velka/lang/test/*.class"/>
+                    <include name="velka/test/*.class"/>
                 </fileset>
                 <listener type="legacy-xml" sendSysOut="true" sendSysErr="true"/>
                 <listener type="legacy-plain" sendSysOut="true" />
@@ -109,7 +87,7 @@
     </target>
     
     <target name="test.console" depends="init,compile">
-        <java classpathref="test.modulepath" classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
+        <java classpathref="modulepath" classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
             <arg value="--scan-classpath"/>
             <arg line="--reports-dir build/test-report"/>
         </java>
@@ -121,7 +99,6 @@
         </junitreport>
     </target>
 
-    <target name="main" depends="clean,jar" />
-    <target name="main.test" depends="clean, test, test.console" />
+    <target name="main" depends="clean, test, test.console" />
     
 </project>

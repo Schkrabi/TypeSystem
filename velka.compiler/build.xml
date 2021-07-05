@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="velka.compiler" basedir="." default="main">
+<!-- SETUP -->
+    <property name="is.debug" value="false" />
+
+<!-- DEPENDECY -->
+    <!-- Other parts of the language -->
+    <property name="velka.util.lib" value="../lib/velka.util.jar" />
+    <property name="velka.types.lib" value="../lib/velka.types.jar" />
+    <property name="velka.core.lib" value="../lib/velka.core.jar" />
+    <property name="velka.clojure.lib" value="../lib/velka.clojure.jar" />
+    <property name="velka.parser.lib" value="../lib/velka.parser.jar" />
+    
+    <!-- Required for compilation and run -->
+    <property name="antlr.lib" value="../lib/antlr-4.7.2-complete.jar" />    
+
+<!-- FOLDER NAMES -->
+    <property name="src.dir" value="src" />
+    <property name="build.dir" value="." />
+    <property name="classes.dir" value="${build.dir}/classes" />
+    <property name="jar.dir" value="${build.dir}/jar" />
+
+    <property name="main-class" value="velka.compiler.Main" />
+    <property name="jar.name" value="${jar.dir}/${ant.project.name}.jar"/>
+    
+<!-- CLASS-PATHS -->
+    <path id="modulepath">
+        <pathelement location="${antlr.lib}" />
+        
+        <pathelement location="${velka.util.lib}" />
+        <pathelement location="${velka.types.lib}" />
+        <pathelement location="${velka.core.lib}" />
+        <pathelement location="${velka.clojure.lib}" />
+        <pathelement location="${velka.parser.lib}" />
+    </path>
+    
+<property name="jar.classpath" value=". ./antlr-4.7.2-complete.jar ./velka.util.jar ./velka.types.jar ./velka.core.jar ./velka.clojure.jar ./velka.parser.jar" />
+
+<!-- TARGETS -->
+
+    <target name="clean">
+        <delete dir="${classes.dir}" />
+        <delete dir="${jar.dir}" />
+    </target>
+    
+    <target name="init">
+        <mkdir dir="${classes.dir}" />
+        <mkdir dir="${jar.dir}" />
+    </target>
+    
+    <target name="compile" depends="init">
+        <javac 
+            srcdir="${src.dir}" 
+            destdir="${classes.dir}"
+            modulepathref="modulepath" 
+            includeantruntime="false" 
+            debug="${is.debug}">
+             <!--<compilerarg value="-Xlint:deprecation" /> -->
+        </javac>
+    </target>
+    
+    <target name="jar" depends="init,compile">
+        <jar 
+            destfile="${jar.name}" 
+            basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main-class}"/>
+                <attribute name="Class-Path" value="${jar.classpath}" />
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="main" depends="clean,jar" />
+    
+</project>

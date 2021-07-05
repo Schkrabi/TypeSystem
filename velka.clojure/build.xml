@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="velka.clojure" basedir="." default="main">
+
+    <property name="src.dir" value="src" />
+    <property name="build.dir" value="." />
+    <property name="classes.dir" value="${build.dir}/classes" />
+    <property name="jar.dir" value="${build.dir}/jar" />
+    
+    <property name="jar.name" value="${jar.dir}/${ant.project.name}.jar" />
+
+    <property name="velka.util.lib" value="../lib/velka.util.jar" />
+    <property name="velka.types.lib" value="../lib/velka.types.jar" />
+    <property name="velka.core.lib" value="../lib/velka.core.jar" />
+    
+    <path id="modulepath">
+        <pathelement location="${velka.util.lib}" />
+        <pathelement location="${velka.types.lib}" />
+        <pathelement location="${velka.core.lib}" />
+    </path>
+
+    <target name="clean">
+        <delete dir="${classes.dir}" />
+        <delete dir="${jar.dir}" />
+    </target>
+    
+    <target name="compile">
+        <mkdir dir="${classes.dir}" />
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" modulepathref="modulepath" />
+    </target>
+    
+    <target name="jar" depends="compile">
+        <mkdir dir="${jar.dir}" />
+        <jar destfile="${jar.name}" basedir="${classes.dir}" />
+    </target>
+
+    <target name="main" depends="clean,jar" />
+    
+</project>
