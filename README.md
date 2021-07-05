@@ -4,38 +4,32 @@ Version 0.1.0
 
 ## Manual
 ### Compilation
-Project is formed from three sub-projects:
+Project is formed from several sub-projects:
 
-* **velka.lang.util**
-* **velka.lang.types**
-* **velka.lang.compiler**
+* **velka.util**
+* **velka.types**
+* **velka.core**
+* **velka.clojure**
+* **velka.parser**
+* **velka.compiler**
+* **velka.test**
 
-_velka.lang.util_ and _velka.lang.types_ are libraries used for _velka.lang.compiler_ as well as any clojure code generated with compiler. _velka.lang.compiler_ is an executable jar, for more details see [usage](#usage).
+_velka.compiler_ is frontend for the functionality implemented in libraries. _velka.util_ and _velka.types_ are required by generated clojure code. _velka.test_ is suite for unit test of the compiler, however it is not currently supported from ant.
 
 #### Prerequisities
-Library _velka.lang.util_ does not have any prerequisities (other that core java). _velka.lang.types_ requires _velka.lang.util_. 
-
-As for _velka.lang.compiler_ it requires two beforementioned velka libraries as well as following external libraries:
+Library _velka.parser_ requires _antlr4_ to compile and run. Used version is:
 
 * **antlr4**
  Used version 4.7.2-complete.
-* **apiguardian.api** 
- Used version 1.7.0. 
-* **junit.jupiter.api**
- Used version 5.7.0. 
-* **junit.platform.commons**
- Used version 1.7.0. 
-* **opentest4j**
- Used version 1.2.0. 
-* **junit.platform.console**
- Used version 1.7.0.
  
 All external libraries should be placed into _lib_ folder in repository root where ant script should be able to find them during build.
+
+_velka.test_ has some other dependant libraries (JUnit5), however, since its build and testing via ant is not yet supported I won't list them here. If you want to run testing suite I suggest to use some IDE that should be able to link you all requirements.
     
 #### Build script
-A build script _build-velka.sh_ is provided in repository root. You might need to give it executable privilege with _chmod_ first. Build on not-bash platforms is currently not supported.
+A build script _build-velka.sh_ is provided in repository root. You might need to give it executable privilege with _chmod_ first. Build on not-bash platforms is currently not supported, however if you will use ant scripts provided for each projects, you should be just fine.
 
-Script will build all three velka jars and copy them to _lib_ folder in repository root.
+Script will build all velka jars and copy them to _lib_ folder in repository root.
 
 ### <a name="usage">Usage</a>
 
@@ -2174,5 +2168,3 @@ Following example, shows usage of both ways to specify cost function:
 ~~~
     
 [antlr4]: https://www.antlr.org/download.html
-[junit5]: https://search.maven.org/search?q=g:org.junit.jupiter%20AND%20v:5.6.1;
-[apiguardian]: https://github.com/apiguardian-team/apiguardian;
