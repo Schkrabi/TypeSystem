@@ -118,7 +118,7 @@ public class TypeAtom extends Type {
 
 	@Override
 	public String clojureTypeRepresentation() {
-		return "(new velka.lang.types.TypeAtom " + this.name.toClojureRepresentation() + " "
+		return "(new velka.types.TypeAtom " + this.name.toClojureRepresentation() + " "
 				+ this.representation.toClojureRepresentation() + ")";
 	}
 

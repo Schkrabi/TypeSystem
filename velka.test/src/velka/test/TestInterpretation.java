@@ -1431,6 +1431,13 @@ class TestInterpretation {
 		TestInterpretation.testInterpretString(
 				"(convert List:Native List:JavaLinked (construct List Native 42 (construct List Native 21 (construct List Native))))",
 				new LitComposite(new LitInteropObject(ll), JavaLinkedList.TypeListJavaLinked), env, typeEnv);
+				
+		TestInterpretation.testInterpretString("(contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 42)", LitBoolean.TRUE, env, typeEnv);
+		TestInterpretation.testInterpretString("(contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 84)", LitBoolean.FALSE, env, typeEnv);
+		
+		TestInterpretation.testInterpretString("(filter-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))", 
+				new LitComposite(new Tuple(LitBoolean.TRUE, ListNative.EMPTY_LIST_NATIVE), TypeAtom.TypeListNative), 
+				env, typeEnv);
 	}
 
 	@Test

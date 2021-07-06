@@ -47,7 +47,7 @@ public class TypeRepresentation implements Comparable<TypeRepresentation> {
 	 * @return string with code
 	 */
 	public String toClojureRepresentation() {
-		return "(new velka.lang.types.TypeRepresentation \"" + this.name + "\")";
+		return "(new velka.types.TypeRepresentation \"" + this.name + "\")";
 	}
 
 	/**

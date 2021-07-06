@@ -46,7 +46,7 @@ public class TypeName implements Comparable<TypeName> {
 	 * @return string with code
 	 */
 	public String toClojureRepresentation() {
-		return "(new velka.lang.types.TypeName \"" + this.name + "\")";
+		return "(new velka.types.TypeName \"" + this.name + "\")";
 	}
 
 	public static final TypeName INT = new TypeName("Int");

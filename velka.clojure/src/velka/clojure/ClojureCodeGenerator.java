@@ -201,8 +201,8 @@ public class ClojureCodeGenerator {
 		//Main source file
 		sb.append("\"./" + ClojureCodeGenerator.DEFAULT_FILE_PROJECT_PATH.toString() + "\"\n");
 		//Velka libs
-		sb.append("\"./velka.lang.util.jar\"\n");
-		sb.append("\"./velka.lang.types.jar\"\n");
+		sb.append("\"./velka.util.jar\"\n");
+		sb.append("\"./velka.types.jar\"\n");
 		//Path for ahead of time clojure compilation
 		sb.append("\"classes\"");
 		

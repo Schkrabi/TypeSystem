@@ -891,7 +891,7 @@ public class JavaLinkedList {
 							.clojureValueToClojureLiteral("(java.util.LinkedList. (map (fn [_e] ("
 									+ ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
 									+ ClojureHelper.addTypeMetaInfo_str("[_e]",
-											"(velka.lang.types.TypeTuple. [("
+											"(velka.types.TypeTuple. [("
 													+ ClojureCoreSymbols.getTypeClojureSymbol_full + " _e)])")
 									+ ")) (first _list)))", JavaLinkedList.TypeListJavaLinked)
 					+ ")";
@@ -958,7 +958,7 @@ public class JavaLinkedList {
 			String code = "(fn [_list1 _list2 _abst] " + LitComposite.clojureValueToClojureLiteral(
 					"(java.util.LinkedList. (map (fn [_e1 _e2] (" + ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
 							+ ClojureHelper.addTypeMetaInfo_str("[_e1 _e2]",
-									"(velka.lang.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
+									"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
 											+ " _e1) (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " _e2)])")
 							+ ")) (first _list1) (first _list2)))",
 					JavaLinkedList.TypeListJavaLinked) + ")";
@@ -1030,7 +1030,7 @@ public class JavaLinkedList {
 			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
 					+ ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
 					+ ClojureHelper.addTypeMetaInfo_str("[_agg _element]",
-							"(velka.lang.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
+							"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
 									+ " _agg) (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " _element)])")
 					+ ")) _term (first _list)))";
 			return code;
@@ -1094,7 +1094,7 @@ public class JavaLinkedList {
 			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
 					+ ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
 					+ ClojureHelper.addTypeMetaInfo_str("[_agg _element]",
-							"(velka.lang.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
+							"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
 									+ " _agg) (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " _element)])")
 					+ ")) _term (reverse (first _list))))";
 			return code;
@@ -1190,7 +1190,7 @@ public class JavaLinkedList {
 			String code = "(fn [_list] (reduce (fn [_l _e] " 
 							+ LitComposite.clojureValueToClojureLiteral(
 									ClojureHelper.addTypeMetaInfo_str("[_e, _l]", 
-											"(velka.lang.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full  + " _e) " 
+											"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full  + " _e) " 
 									+ TypeAtom.TypeListNative.clojureTypeRepresentation() + "])")
 									, TypeAtom.TypeListNative) + ") " 
 							+ ListNative.EMPTY_LIST_NATIVE.toClojureCode(env, typeEnv) + " (reverse (first _list))))";

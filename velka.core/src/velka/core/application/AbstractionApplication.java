@@ -319,7 +319,7 @@ public class AbstractionApplication extends Application {
 					"        (list-tail [l] (second (first l)))\n" + 
 					"        (equal-heads [formalArgList realArgList]\n" + 
 					"            (if (.isPresent \n" +  
-					"                        (velka.lang.types.Type/unifyRepresentation\n" + 
+					"                        (velka.types.Type/unifyRepresentation\n" + 
 					"                            (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " (list-head formalArgList))\n" + 
 					"                            (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " (list-head realArgList)))) 0 1))\n" +  
 					"        (aggregate [formalArgList realArgList]\n" + 

@@ -3,6 +3,7 @@ package velka.core.interpretation;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Operator;
@@ -157,7 +158,7 @@ public class ClojureHelper {
 		}
 		
 		sb.append("]] ");
-		sb.append(ClojureHelper.addTypeMetaInfo_str("tuple", "(velka.lang.types.TypeTuple. (map " + ClojureCoreSymbols.getTypeClojureSymbol_full + " tuple))"));
+		sb.append(ClojureHelper.addTypeMetaInfo_str("tuple", "(velka.types.TypeTuple. (map " + ClojureCoreSymbols.getTypeClojureSymbol_full + " tuple))"));
 		sb.append(")");
 		
 		return sb.toString();
@@ -176,5 +177,35 @@ public class ClojureHelper {
 		sb.append(")");
 		
 		return sb.toString();
+	}
+	
+	public static String ifHelper(String conditionCode, String trueCode, String falseCode) {
+		return "(if (first " + conditionCode + ") " + trueCode + " " + falseCode + ")";
+	}
+	
+	public static String fnHelper(List<String> args, String body) {
+		StringBuilder sb = new StringBuilder("(fn [");
+		
+		Iterator<String> i = args.iterator();
+		while(i.hasNext()) {
+			String arg = i.next();
+			sb.append(arg);
+			if(i.hasNext()) {
+				sb.append(" ");
+			}
+		}
+		sb.append("] ");
+		sb.append(body);
+		sb.append(")");
+		
+		return sb.toString();
+	}
+	
+	public static String litCompositeHelper_str(String type, String value) {
+		return addTypeMetaInfo_str("[" + value + "]", type);
+	}
+	
+	public static String litCompositeHelper(Type type, String value) throws AppendableException {
+		return litCompositeHelper_str(type.clojureTypeRepresentation(), value);
 	}
 }

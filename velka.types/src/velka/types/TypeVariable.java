@@ -96,7 +96,7 @@ public class TypeVariable extends Type {
 
 	@Override
 	public String clojureTypeRepresentation() throws AppendableException {
-		return "(new velka.lang.types.TypeVariable \"" + this.name + "\")";
+		return "(new velka.types.TypeVariable \"" + this.name + "\")";
 	}
 
 	@Override

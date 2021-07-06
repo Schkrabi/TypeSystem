@@ -759,7 +759,7 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [t1 t2] (let [opt (velka.lang.types.Type/unifyTypes (first t1) (first t2))] "
+			String fn = "(fn [t1 t2] (let [opt (velka.types.Type/unifyTypes (first t1) (first t2))] "
 					+ "(if (.isPresent opt) "
 					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + " " + LitBoolean.FALSE.toClojureCode(env, typeEnv)
 					+ ")))";
@@ -803,7 +803,7 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [t1 t2] (let [opt (velka.lang.types.Type/unifyRepresentation (first t1) (first t2))] "
+			String fn = "(fn [t1 t2] (let [opt (velka.types.Type/unifyRepresentation (first t1) (first t2))] "
 					+ "(if (.isPresent opt) "
 					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + " " + LitBoolean.FALSE.toClojureCode(env, typeEnv)
 					+ ")))";
@@ -851,7 +851,7 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [e1 e2] (let [opt (velka.lang.types.Type/unifyTypes " + 
+			String fn = "(fn [e1 e2] (let [opt (velka.types.Type/unifyTypes " + 
 							"(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " e1) " +
 							"(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " e2))] " +
 								"(if (.isPresent opt) " + 
@@ -904,7 +904,7 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [e1 e2] (let [opt (velka.lang.types.Type/unifyRepresentation " + 
+			String fn = "(fn [e1 e2] (let [opt (velka.types.Type/unifyRepresentation " + 
 							"(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " e1) " +
 							"(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " e2))] " +
 								"(if (.isPresent opt) " + 

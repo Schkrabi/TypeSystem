@@ -119,7 +119,7 @@ public class RomanNumbers {
 	/**
 	 * Clojure code of roman to int function
 	 */
-	public static final String roman2intClojure = "velka.lang.util.RomanNumbers/roman2int";/*"roman2int";*/ 
+	public static final String roman2intClojure = "velka.util.RomanNumbers/roman2int";/*"roman2int";*/ 
 			  /*"(fn [arg]"
 			  + "(letfn [(romanCheck [arg] (re-matches #\"(^(?=[MDCLXVI])M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$)\" arg))] "
 			  	+ "(when-not (romanCheck arg) (throw (Exception. (str \"Invalid roman number \" arg)))) "
@@ -141,7 +141,7 @@ public class RomanNumbers {
 	/**
 	 * Clojure code if int to roman function
 	 */
-	public static final String int2RomanClojure = "velka.lang.util.RomanNumbers/int2roman";/*"int2roman";*/ 
+	public static final String int2RomanClojure = "velka.util.RomanNumbers/int2roman";/*"int2roman";*/ 
 			 /* "(fn [n] "
 			  + "(let [  hundreds    [\"\" \"C\" \"CC\" \"CCC\" \"CD\" \"D\" \"DC\" \"DCC\" \"DCCC\" \"CM\"] "
 			  		  + "tens        [\"\" \"X\" \"XX\" \"XXX\" \"XL\" \"L\" \"LX\" \"LXX\" \"LXXX\" \"XC\"] "

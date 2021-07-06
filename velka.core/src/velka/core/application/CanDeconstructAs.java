@@ -65,7 +65,7 @@ public class CanDeconstructAs extends Expression {
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		String code = LitBoolean.clojureBooleanToClojureLitBoolean(
-				"(.isPresent (velka.lang.types.Type/unifyRepresentation " 
+				"(.isPresent (velka.types.Type/unifyRepresentation " 
 						+ this.as.clojureTypeRepresentation() 
 						+ " (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " (first " + this.expression.toClojureCode(env, typeEnv)
 						+ "))))");

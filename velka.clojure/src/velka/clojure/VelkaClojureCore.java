@@ -34,7 +34,7 @@ public class VelkaClojureCore {
 			+ "        (fn [rest x] "
 			+ ClojureHelper.addTypeMetaInfo(
 					"[" + ClojureHelper.addTypeMetaInfo_str("[x rest]",
-							"(velka.lang.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol + " x) "
+							"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol + " x) "
 									+ TypeAtom.TypeListNative.clojureTypeRepresentation() + "])")
 							+ "]",
 					TypeAtom.TypeListNative)
@@ -67,7 +67,7 @@ public class VelkaClojureCore {
 	 */
 	public static String convertAtomClojureDef = "(defn " + ClojureCoreSymbols.convertAtomClojureSymbol + " [to arg]\n"
 			+ "    (let [from (" + ClojureCoreSymbols.getTypeClojureSymbol + " arg)]\n" + "        (cond (= from to) arg\n"
-			+ "              (and (instance? velka.lang.types.TypeAtom to) (= (.representation to) velka.lang.types.TypeRepresentation/WILDCARD)) arg\n"
+			+ "              (and (instance? velka.types.TypeAtom to) (= (.representation to) velka.types.TypeRepresentation/WILDCARD)) arg\n"
 			+ "              (contains? " + ClojureCoreSymbols.atomicConversionMapClojureSymbol + " [from to])\n"
 			+ "                  (((get " + ClojureCoreSymbols.atomicConversionMapClojureSymbol + " [from to]) nil) arg)\n"
 			+ "              :else (throw (Throwable. (str \"Conversion from \" from \" to \" to \" does not exists.\"))))))";
@@ -93,7 +93,7 @@ public class VelkaClojureCore {
 	public static String convertRepOrClojureDef = "(defn " + ClojureCoreSymbols.convertRepOrClojureSymbol + " [to arg]\n"
 			+ "	(let [from (" + ClojureCoreSymbols.getTypeClojureSymbol + " arg)\n" + "		  reps (.getRepresentations from)]\n"
 			+ "		(if (some identity \n" + // ~ (apply or...
-			"				(map (fn [t] (try (velka.lang.types.Type/unifyTypes t to) (catch velka.lang.types.TypesDoesNotUnifyException e false)))\n"
+			"				(map (fn [t] (try (velka.types.Type/unifyTypes t to) (catch velka.types.TypesDoesNotUnifyException e false)))\n"
 			+ "					reps))\n"
 			+ "			arg (throw (Throwable. (str \"Conversion from \" from \" to \" to \" does not exists.\"))))))";
 	/**
@@ -102,21 +102,21 @@ public class VelkaClojureCore {
 	public static String convertToRepOrClojureDef = "(defn " + ClojureCoreSymbols.convertToRepOrClojureSymbol + " [to arg]\n"
 			+ "	(let [from (" + ClojureCoreSymbols.getTypeClojureSymbol + " arg)\n" + "		  reps (.getRepresentations to)]\n"
 			+ "		(if (some identity \n" + // ~ (apply or...
-			"				(map (fn [t] (try (velka.lang.types.Type/unifyTypes t from) (catch velka.lang.types.TypesDoesNotUnifyException e false)))\n"
+			"				(map (fn [t] (try (velka.types.Type/unifyTypes t from) (catch velka.types.TypesDoesNotUnifyException e false)))\n"
 			+ "					reps))\n"
 			+ "			arg (throw (Throwable. (str \"Conversion from \" from \" to \" to \" does not exists.\"))))))";
 	/**
 	 * Definition for convert clojure function
 	 */
 	public static String convertClojureDef = "(defn " + ClojureCoreSymbols.convertClojureSymbol + " [to arg]\n" + "    (let [from ("
-			+ ClojureCoreSymbols.getTypeClojureSymbol + " arg)]" + "        (if (instance? velka.lang.types.TypeVariable to)\n"
-			+ "            arg\n" + "            (if (instance? velka.lang.types.RepresentationOr to)\n"
+			+ ClojureCoreSymbols.getTypeClojureSymbol + " arg)]" + "        (if (instance? velka.types.TypeVariable to)\n"
+			+ "            arg\n" + "            (if (instance? velka.types.RepresentationOr to)\n"
 			+ "				(" + ClojureCoreSymbols.convertToRepOrClojureSymbol + " to arg)\n"
-			+ "            	(cond (instance? velka.lang.types.TypeAtom from) (" + ClojureCoreSymbols.convertAtomClojureSymbol
-			+ " to arg)\n" + "                 	  (instance? velka.lang.types.TypeTuple from) ("
+			+ "            	(cond (instance? velka.types.TypeAtom from) (" + ClojureCoreSymbols.convertAtomClojureSymbol
+			+ " to arg)\n" + "                 	  (instance? velka.types.TypeTuple from) ("
 			+ ClojureCoreSymbols.convertTupleClojureSymbol + " to arg)\n"
-			+ "                  	  (instance? velka.lang.types.TypeArrow from) (" + ClojureCoreSymbols.convertFnClojureSymbol
-			+ " to arg)\n" + "                  	  (instance? velka.lang.types.RepresentationOr from) ("
+			+ "                  	  (instance? velka.types.TypeArrow from) (" + ClojureCoreSymbols.convertFnClojureSymbol
+			+ " to arg)\n" + "                  	  (instance? velka.types.RepresentationOr from) ("
 			+ ClojureCoreSymbols.convertRepOrClojureSymbol + " to arg))))))";
 	/**
 	 * Definition for eapply function
@@ -221,13 +221,13 @@ public class VelkaClojureCore {
 		sb.append("\n");
 		sb.append("(def lang-pstr" + "(fn [exp]" + "(letfn [(lang-pstr-aux [exp level]"
 				+ "(let [type (:lang-type (meta exp))]" + "(cond" + "(or"
-				+ "(= type velka.lang.types.TypeAtom/TypeIntNative)"
-				+ "(= type velka.lang.types.TypeAtom/TypeStringNative)"
-				+ "(= type velka.lang.types.TypeAtom/TypeDoubleNative)"
-				+ "(= type velka.lang.types.TypeAtom/TypeBoolNative))" + "(if (= level 0)" + "(pr-str (get exp 0))"
-				+ "(get exp 0))" + "(= type velka.lang.types.TypeTuple/EMPTY_TUPLE) []"
-				+ "(instance? velka.lang.types.TypeAtom type) (lang-pstr-aux (get exp 0) level)"
-				+ "(instance? velka.lang.types.TypeTuple type) " + "(if" + "(= level 0)"
+				+ "(= type velka.types.TypeAtom/TypeIntNative)"
+				+ "(= type velka.types.TypeAtom/TypeStringNative)"
+				+ "(= type velka.types.TypeAtom/TypeDoubleNative)"
+				+ "(= type velka.types.TypeAtom/TypeBoolNative))" + "(if (= level 0)" + "(pr-str (get exp 0))"
+				+ "(get exp 0))" + "(= type velka.types.TypeTuple/EMPTY_TUPLE) []"
+				+ "(instance? velka.types.TypeAtom type) (lang-pstr-aux (get exp 0) level)"
+				+ "(instance? velka.types.TypeTuple type) " + "(if" + "(= level 0)"
 				+ "(pr-str (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))"
 				+ "(vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))"
 				+ ":else (throw (Throwable. (str exp \" is not a printable expression\"))))))]"

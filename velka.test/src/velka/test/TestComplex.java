@@ -72,8 +72,8 @@ class TestComplex {
 		TestComplex.tmpDir = Files.createTempDirectory("cljTest");
 		
 		ClojureCodeGenerator.generateClojureProject(tmpDir);
-		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.util.jar"), tmpDir.resolve(Paths.get("velka.lang.util.jar")), StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.types.jar"), tmpDir.resolve(Paths.get("velka.lang.types.jar")), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.util.jar"), tmpDir.resolve(Paths.get("velka.util.jar")), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.types.jar"), tmpDir.resolve(Paths.get("velka.types.jar")), StandardCopyOption.REPLACE_EXISTING);
 	}
 	
 	@AfterAll
@@ -460,22 +460,22 @@ class TestComplex {
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestComplex.testClojureCompile("0",
-				"(with-meta [0] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"Int\") (new velka.lang.types.TypeRepresentation \"Native\"))})",
+				"(with-meta [0] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"Int\") (new velka.types.TypeRepresentation \"Native\"))})",
 				env, typeEnv);
 		TestComplex.testClojureCompile("3.141521",
-				"(with-meta [3.141521] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"Double\") (new velka.lang.types.TypeRepresentation \"Native\"))})",
+				"(with-meta [3.141521] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"Double\") (new velka.types.TypeRepresentation \"Native\"))})",
 				env, typeEnv);
 		TestComplex.testClojureCompile("#t",
-				"(with-meta [true] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"Bool\") (new velka.lang.types.TypeRepresentation \"Native\"))})",
+				"(with-meta [true] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"Bool\") (new velka.types.TypeRepresentation \"Native\"))})",
 				env, typeEnv);
 		TestComplex.testClojureCompile("#f",
-				"(with-meta [false] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"Bool\") (new velka.lang.types.TypeRepresentation \"Native\"))})",
+				"(with-meta [false] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"Bool\") (new velka.types.TypeRepresentation \"Native\"))})",
 				env, typeEnv);
 		TestComplex.testClojureCompile("\"Hello World\"",
-				"(with-meta [\"Hello World\"] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"String\") (new velka.lang.types.TypeRepresentation \"Native\"))})",
+				"(with-meta [\"Hello World\"] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"String\") (new velka.types.TypeRepresentation \"Native\"))})",
 				env, typeEnv);
 		TestComplex.testClojureCompileExpression(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
-				"(with-meta [(with-meta [\"XLII\"] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"String\") (new velka.lang.types.TypeRepresentation \"Native\"))})] {:lang-type (new velka.lang.types.TypeAtom (new velka.lang.types.TypeName \"Int\") (new velka.lang.types.TypeRepresentation \"Roman\"))})",
+				"(with-meta [(with-meta [\"XLII\"] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"String\") (new velka.types.TypeRepresentation \"Native\"))})] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"Int\") (new velka.types.TypeRepresentation \"Roman\"))})",
 				env, typeEnv);
 
 		TestComplex.testClojureCompile("variable", "variable", env, typeEnv);
@@ -1180,6 +1180,10 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(define l (convert List:Native List:JavaLinked (construct List Native 42 (construct List Native 21 (construct List Native)))))"
 				+ "(println (" + JavaLinkedList.getSymbol_out + " l 0))");
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 42))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 84))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (filter-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x)))");
 	}
 	
 	@Test
@@ -1475,8 +1479,8 @@ class TestComplex {
 		Files.delete(depsEdn);*/
 		
 		ClojureCodeGenerator.generateClojureProject(tmpDir);
-		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.util.jar"), tmpDir.resolve(Paths.get("velka.lang.util.jar")), StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.types.jar"), tmpDir.resolve(Paths.get("velka.lang.types.jar")), StandardCopyOption.REPLACE_EXISTING);		
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.util.jar"), tmpDir.resolve(Paths.get("velka.util.jar")), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.types.jar"), tmpDir.resolve(Paths.get("velka.types.jar")), StandardCopyOption.REPLACE_EXISTING);		
 		
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
@@ -1626,8 +1630,8 @@ class TestComplex {
 		/*Path tmpDir = Files.createTempDirectory("cljTest");
 		
 		ClojureCodeGenerator.generateClojureProject(tmpDir);
-		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.util.jar"), tmpDir.resolve(Paths.get("velka.lang.util.jar")), StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.lang.types.jar"), tmpDir.resolve(Paths.get("velka.lang.types.jar")), StandardCopyOption.REPLACE_EXISTING);*/		
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.util.jar"), tmpDir.resolve(Paths.get("velka.util.jar")), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.types.jar"), tmpDir.resolve(Paths.get("velka.types.jar")), StandardCopyOption.REPLACE_EXISTING);*/		
 				
 		Path codeFile = Files.writeString(tmpDir.resolve(Paths.get("velka", "clojure", "user.clj")), code);
 		

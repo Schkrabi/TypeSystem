@@ -59,6 +59,8 @@ public class VelkaClojureList {
 		sb.append(ClojureHelper.makeDeclaration(ListNative.map2ListNativeOperator.getClojureSymbol().name));
 		sb.append(ClojureHelper.makeDeclaration(ListNative.mapListNativeOperator.getClojureSymbol().name));
 		sb.append(ClojureHelper.makeDeclaration(ListNative.tailListNativeOperator.getClojureSymbol().name));
+		sb.append(ClojureHelper.makeDeclaration(ListNative.contains.getClojureSymbol().name));
+		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.filter));
 		
 		sb.append(ClojureHelper.makeDeclaration(ListNative.constructorSymbol.name));
 		sb.append(ClojureHelper.makeDeclaration(ListNative.constructorEmptySymbol.name));
@@ -78,6 +80,8 @@ public class VelkaClojureList {
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.map2ListNativeOperator, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.mapListNativeOperator, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.tailListNativeOperator, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(ListNative.contains, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(ListNative.filter, env, typeEnv));
 			
 			//sb.append(ClojureHelper.makeOperatorDef(ListNative.ListNativeToLinkedListOperator, env, typeEnv));
 			//sb.append(ClojureHelper.makeOperatorDef(ListNative.ListNativeToArrayListOperator, env, typeEnv));

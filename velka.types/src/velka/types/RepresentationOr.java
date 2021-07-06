@@ -234,7 +234,7 @@ public class RepresentationOr extends Type {
 
 	@Override
 	public String clojureTypeRepresentation() throws AppendableException {
-		StringBuilder sb = new StringBuilder("(velka.lang.types.RepresentationOr/makeRepresentationOr #{");
+		StringBuilder sb = new StringBuilder("(velka.types.RepresentationOr/makeRepresentationOr #{");
 		Iterator<Type> i = this.representations.iterator();
 		while (i.hasNext()) {
 			Type t = i.next();
