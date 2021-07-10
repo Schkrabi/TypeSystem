@@ -28,6 +28,7 @@ import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
+import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
 import velka.util.AppendableException;
@@ -1123,6 +1124,379 @@ public class ListNative {
 		}
 		
 	};
+	
+	/**
+	 * Symbol for get operator
+	 */
+	public static final Symbol getSymbol = new Symbol("velka-get", NAMESPACE);
+	/**
+	 * Public symbol for get operator
+	 */
+	public static final Symbol getSymbol_out = new Symbol("get-list-native");
+	
+	/**
+	 * Get operator
+	 */
+	public static final Operator get = new Operator() {
+		
+		private static final String errorMsg = "Index out of range";
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String list = "_list";
+			String index = "_index";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, index), 
+					ClojureHelper.ifHelper(
+							ClojureHelper.applyVelkaFunction(isEmptySymbol.toClojureCode(env, typeEnv), list), 
+							ClojureHelper.errorHelper(ClojureHelper.stringHelper(errorMsg)), 
+							ClojureHelper.ifHelper(
+									ClojureHelper.applyVelkaFunction(
+											Operators.NumericEqual.toClojureCode(env, typeEnv), 
+											index,
+											new LitInteger(0).toClojureCode(env, typeEnv)), 
+									ClojureHelper.applyVelkaFunction(headSymbol.toClojureCode(env, typeEnv), list), 
+									ClojureHelper.applyVelkaFunction(
+											getSymbol.toClojureCode(env, typeEnv), 
+											ClojureHelper.applyVelkaFunction(tailSymbol.toClojureCode(env, typeEnv), list),
+											ClojureHelper.applyVelkaFunction(Operators.Subtraction.toClojureCode(env, typeEnv), index, new LitInteger(1).toClojureCode(env, typeEnv))))));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return getSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitComposite l = (LitComposite)args.get(0);
+			LitInteger index = (LitInteger)args.get(1);
+			
+			long i = index.value;
+			
+			while(!(l.equals(EMPTY_LIST_NATIVE))) {
+				Tuple pair = (Tuple)l.value;
+				if(i == 0) {
+					return pair.get(0);
+				}
+				i--;
+				l = (LitComposite)pair.get(1);
+			}
+			
+			throw new UserException(errorMsg);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeIntNative), A);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
+	
+	public static final Symbol buildListAuxSymbol = new Symbol("build-list-aux", NAMESPACE);
+	public static final Operator buildListAux = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String n = "_n";
+			String fn = "_fn";
+			String i = "_i";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(n, fn, i),
+					ClojureHelper.ifHelper(
+							ClojureHelper.applyVelkaFunction(Operators.LesserThan.toClojureCode(env, typeEnv), i, n), 
+							ClojureHelper.litCompositeHelper(
+									TypeAtom.TypeListNative, 
+									ClojureHelper.tupleHelper(
+											ClojureHelper.applyVelkaFunction(fn, i),
+											ClojureHelper.applyVelkaFunction(
+													buildListAuxSymbol.toClojureCode(env, typeEnv), 
+													n, 
+													fn,
+													ClojureHelper.applyVelkaFunction(
+															Operators.Addition.toClojureCode(env, typeEnv), 
+															i, 
+															LitInteger.clojureIntToClojureLitInteger("1"))))), 
+							EMPTY_LIST_NATIVE.toClojureCode(env, typeEnv)));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return buildListAuxSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			throw new AppendableException("Helper operator " + this.getClass().getCanonicalName() + " is not supported for interpretation");
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(
+					new TypeTuple(
+							TypeAtom.TypeIntNative, 
+							new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), A),
+							TypeAtom.TypeIntNative), 
+		TypeAtom.TypeListNative);
+return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
+	
+	public static final Symbol buildListSymbol = new Symbol("build-list", NAMESPACE);
+	public static final Symbol buildListSymbol_out = new Symbol("build-list-native");
+	
+	public static final Operator buildList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String n = "_n";
+			String fn = "_fn";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(n, fn), 
+					ClojureHelper.applyVelkaFunction(
+							buildListAuxSymbol.toClojureCode(env, typeEnv), 
+							n,
+							fn,
+							LitInteger.clojureIntToClojureLitInteger("0")));
+					
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return buildListSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitInteger n = (LitInteger)args.get(0);
+			Expression fn = args.get(1);
+			
+			LitComposite l = ListNative.EMPTY_LIST_NATIVE;
+			
+			for(long i = n.value - 1; i >= 0 ; i--) {
+				AbstractionApplication appl = new AbstractionApplication(fn, new Tuple(new LitInteger(i)));
+				
+				Expression expr = appl.interpret(env, typeEnv);
+				
+				l = new LitComposite(new Tuple(expr, l), TypeAtom.TypeListNative);
+			}
+			
+			return l;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(
+								new TypeTuple(
+										TypeAtom.TypeIntNative, 
+										new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), A)), 
+					TypeAtom.TypeListNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
+	
+	public static final Symbol removeSymbol = new Symbol("velka-remove", NAMESPACE);
+	public static final Symbol removeSymbol_out = new Symbol("remove-list-native");
+	
+	public static final Operator remove = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String list = "_list";
+			String element = "_element";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, element),
+					ClojureHelper.ifHelper(
+							ClojureHelper.applyVelkaFunction(isEmptySymbol.toClojureCode(env, typeEnv), list), 
+							list, 
+							ClojureHelper.ifHelper(
+									ClojureHelper.applyVelkaFunction(
+											Operators.Equals.getClojureSymbol().toClojureCode(env, typeEnv),
+											ClojureHelper.applyVelkaFunction(headSymbol.toClojureCode(env, typeEnv), list),
+											element), 
+									ClojureHelper.applyVelkaFunction(tailSymbol.toClojureCode(env, typeEnv), list), 
+									ClojureHelper.litCompositeHelper(
+											TypeAtom.TypeListNative, 
+											ClojureHelper.tupleHelper(
+													ClojureHelper.applyVelkaFunction(headSymbol.toClojureCode(env, typeEnv), list),
+													ClojureHelper.applyVelkaFunction(
+															removeSymbol.toClojureCode(env, typeEnv), 
+															ClojureHelper.applyVelkaFunction(tailSymbol.toClojureCode(env, typeEnv), list),
+															element))))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return removeSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitComposite l = (LitComposite)args.get(0);
+			Expression e = args.get(1);
+			
+			LinkedList<Expression> aux = new LinkedList<Expression>();
+			while(!l.equals(EMPTY_LIST_NATIVE)) {
+				Tuple pair = (Tuple)l.value;
+				Expression current = pair.get(0);
+				
+				if(!current.equals(e)) {
+					aux.add(current);
+				}
+				l = (LitComposite)pair.get(1);
+			}
+			
+			LitComposite term = ListNative.EMPTY_LIST_NATIVE;
+			
+			ListIterator<Expression> i = aux.listIterator(aux.size());
+			while(i.hasPrevious()) {
+				term = new LitComposite(new Tuple(i.previous(), term), TypeAtom.TypeListNative);
+			}
+			
+			return term;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, A), TypeAtom.TypeListNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
+	
+	public static final Symbol sizeSymbol = new Symbol("velka-size", NAMESPACE);
+	public static final Symbol sizeSymbol_out = new Symbol("size-list-native");
+	
+	public static final Operator size = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String list = "_list";
+			String x = "_x";
+			String y = "_y";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list), 
+					ClojureHelper.applyVelkaFunction(
+							foldrSymbol.toClojureCode(env, typeEnv), 
+							ClojureHelper.addTypeMetaInfo(
+							ClojureHelper.lambdaHelper(ClojureHelper.addTypeMetaInfo(
+									ClojureHelper.fnHelper(
+										Arrays.asList(x, y), 
+										ClojureHelper.applyVelkaFunction(
+												Operators.Addition.getClojureSymbol().toClojureCode(env, typeEnv), 
+												x, 
+												LitInteger.clojureIntToClojureLitInteger("1"))), 
+									new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative, A), TypeAtom.TypeIntNative))),
+							new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative, A), TypeAtom.TypeIntNative)),
+							LitInteger.clojureIntToClojureLitInteger("0"),
+							list));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return sizeSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitComposite l = (LitComposite)args.get(0);
+			long n = 0;
+			while(!l.equals(EMPTY_LIST_NATIVE)) {
+				n++;
+				Tuple pair = (Tuple)l.value;
+				l = (LitComposite)pair.get(1);
+			}
+			
+			return new LitInteger(n);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeIntNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
+	
+	public static final Symbol appendSymbol = new Symbol("append", NAMESPACE);
+	public static final Symbol appendSymbol_out = new Symbol("append-list-native");
+	
+	public static final Operator append = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String list1 = "_list1";
+			String list2 = "_list2";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list1, list2), 
+					ClojureHelper.ifHelper(
+							ClojureHelper.applyVelkaFunction(isEmptySymbol.toClojureCode(env, typeEnv), list2), 
+							list1, 
+							ClojureHelper.ifHelper(
+									ClojureHelper.applyVelkaFunction(isEmptySymbol.toClojureCode(env, typeEnv), list1), 
+									list2, 
+									ClojureHelper.litCompositeHelper(
+											TypeAtom.TypeListNative, 
+											ClojureHelper.tupleHelper(
+													ClojureHelper.applyVelkaFunction(headSymbol.toClojureCode(env, typeEnv), list1),
+													ClojureHelper.applyVelkaFunction(
+															appendSymbol.toClojureCode(env, typeEnv), 
+															ClojureHelper.applyVelkaFunction(tailSymbol.toClojureCode(env, typeEnv), list1),
+															list2))))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return appendSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitComposite l1 = (LitComposite)args.get(0);
+			LitComposite l2 = (LitComposite)args.get(1);
+			
+			LinkedList<Expression> aux = new LinkedList<Expression>();
+			while(!l1.equals(EMPTY_LIST_NATIVE)) {
+				Tuple pair = (Tuple)l1.value;
+				Expression current = pair.get(0);
+				aux.add(current);
+				l1 = (LitComposite)pair.get(1);
+			}
+			
+			LitComposite term = l2;
+			
+			ListIterator<Expression> i = aux.listIterator(aux.size());
+			while(i.hasPrevious()) {
+				term = new LitComposite(new Tuple(i.previous(), term), TypeAtom.TypeListNative);
+			}
+			
+			return term;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeListNative), TypeAtom.TypeListNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
 
 	/**
 	 * Initializes list functions in environment
@@ -1139,6 +1513,11 @@ public class ListNative {
 		env.put(addToEndSymbol_out, addToEndOperator);
 		env.put(containsSymbol_out, contains);
 		env.put(filterSymbol_out, filter);
+		env.put(getSymbol_out, get);
+		env.put(buildListSymbol_out, buildList);
+		env.put(removeSymbol_out, remove);
+		env.put(sizeSymbol_out, size);
+		env.put(appendSymbol_out, append);
 	}
 	
 	/**

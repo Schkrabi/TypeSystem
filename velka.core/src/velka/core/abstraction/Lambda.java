@@ -230,16 +230,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 
 	@Override
 	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append("(let [impl ");
-		sb.append(this.toClojureFn(env, typeEnv));
-		sb.append("] \n");
-		sb.append("(fn ");
-		sb.append("([args] impl) \n");
-		sb.append("([args ranking-fn] impl)))");
-		
-		return sb.toString();
+		return ClojureHelper.lambdaHelper(this.toClojureFn(env, typeEnv));
 	}
 
 	@Override

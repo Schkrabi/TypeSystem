@@ -1184,6 +1184,11 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 42))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 84))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (filter-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x)))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (get-list-native (construct List Native 42 (construct List Native)) 0))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (build-list-native 2 (lambda (x) x)))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (remove-list-native (build-list-native 2 (lambda (x) x)) 1))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (size-list-native (build-list-native 42 (lambda (x) x))))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (append-list-native (build-list-native 1 (lambda (x) 21)) (build-list-native 1 (lambda (x) 42))))");
 	}
 	
 	@Test

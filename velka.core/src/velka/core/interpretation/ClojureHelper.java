@@ -9,6 +9,7 @@ import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Operator;
 import velka.types.Type;
 import velka.util.AppendableException;
+import velka.util.Pair;
 
 /**
  * Class containing static utilities used to help with generating clojure code
@@ -207,5 +208,106 @@ public class ClojureHelper {
 	
 	public static String litCompositeHelper(Type type, String value) throws AppendableException {
 		return litCompositeHelper_str(type.clojureTypeRepresentation(), value);
+	}
+	
+	public static String errorHelper(String code) {
+		return "(throw (Throwable. " + code + "))";
+	}
+	
+	public static String stringHelper(String str) {
+		return "\"" + str + "\"";
+	}
+	
+	public static class LetfnTriplet {
+		public final String name;
+		public final List<String> args;
+		public final String body;
+		
+		public LetfnTriplet(String name, List<String> args, String body) {
+			this.name = name;
+			this.args = args;
+			this.body = body;
+		}
+		
+		public String toFnspec() {
+			StringBuilder sb = new StringBuilder("(");
+			sb.append(this.name);
+			sb.append(" [");
+			
+			Iterator<String> i = this.args.iterator();
+			while(i.hasNext()) {
+				String arg = i.next();
+				sb.append(arg);
+				if(i.hasNext()) {
+					sb.append(" ");
+				}
+			}
+			sb.append("] ");
+			sb.append(this.body);
+			sb.append(")");
+			return sb.toString();
+		}
+	}
+	
+	public static LetfnTriplet makeLetfnTriplet(String name, List<String> args, String body) {
+		return new LetfnTriplet(name, args, body);
+	}
+	
+	public static String letfnHelper(List<LetfnTriplet> fnspecs, String body) {
+		StringBuilder sb = new StringBuilder("(letfn [");
+		
+		Iterator<LetfnTriplet> i = fnspecs.iterator();
+		while(i.hasNext()) {
+			LetfnTriplet fnspec = i.next();
+			sb.append(fnspec.toFnspec());
+			if(i.hasNext()) {
+				sb.append("\n");
+			}
+		}
+		sb.append("] ");
+		sb.append(body);
+		sb.append(")");
+		return sb.toString();
+	}
+	
+	public static String letfnHelper(String body, LetfnTriplet ...fnspecs) {
+		return letfnHelper(Arrays.asList(fnspecs), body);
+	}
+	
+	public static String letHelper(String body, List<Pair<String, String>> defs) {
+		StringBuilder sb = new StringBuilder("(let [");
+		
+		Iterator<Pair<String, String>> i = defs.iterator();
+		while(i.hasNext()) {
+			Pair<String, String> def = i.next();
+			sb.append(def.first);
+			sb.append(" ");
+			sb.append(def.second);
+			if(i.hasNext()) {
+				sb.append("\n");
+			}
+		}
+		sb.append("] ");
+		sb.append(body);
+		sb.append(")");
+		return sb.toString();
+	}
+	
+	@SafeVarargs
+	public static String letHelper(String body, Pair<String, String> ...defs) {
+		return letHelper(body, Arrays.asList(defs));
+	}
+	
+	public static String lambdaHelper(String clojureFn) {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("(let [impl ");
+		sb.append(clojureFn);
+		sb.append("] ");
+		sb.append("(fn ");
+		sb.append("([args] impl) ");
+		sb.append("([args ranking-fn] impl)))");
+		
+		return sb.toString();
 	}
 }

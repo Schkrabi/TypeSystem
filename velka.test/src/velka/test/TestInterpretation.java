@@ -1438,6 +1438,12 @@ class TestInterpretation {
 		TestInterpretation.testInterpretString("(filter-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))", 
 				new LitComposite(new Tuple(LitBoolean.TRUE, ListNative.EMPTY_LIST_NATIVE), TypeAtom.TypeListNative), 
 				env, typeEnv);
+		TestInterpretation.testInterpretString("(get-list-native (construct List Native 42 (construct List Native)) 0)", new LitInteger(42), env, typeEnv);
+		TestInterpretation.testInterpretString("(build-list-native 2 (lambda (x) x))", new LitComposite(new Tuple(new LitInteger(0), new LitComposite(new Tuple(new LitInteger(1), ListNative.EMPTY_LIST_NATIVE), TypeAtom.TypeListNative)), TypeAtom.TypeListNative), env, typeEnv);
+		
+		TestInterpretation.testInterpretString("(remove-list-native (build-list-native 2 (lambda (x) x)) 1)", new LitComposite(new Tuple(new LitInteger(0), ListNative.EMPTY_LIST_NATIVE), TypeAtom.TypeListNative), env, typeEnv);
+		TestInterpretation.testInterpretString("(size-list-native (build-list-native 42 (lambda (x) x)))", new LitInteger(42), env, typeEnv);
+		TestInterpretation.testInterpretString("(append-list-native (build-list-native 1 (lambda (x) 21)) (build-list-native 1 (lambda (x) 42)))", new LitComposite(new Tuple(new LitInteger(21), new LitComposite(new Tuple(new LitInteger(42), ListNative.EMPTY_LIST_NATIVE), TypeAtom.TypeListNative)), TypeAtom.TypeListNative), env, typeEnv);
 	}
 
 	@Test

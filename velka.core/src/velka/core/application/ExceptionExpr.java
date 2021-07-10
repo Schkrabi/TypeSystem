@@ -8,6 +8,7 @@ import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.ClojureCoreSymbols;
+import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitString;
@@ -81,13 +82,13 @@ public class ExceptionExpr extends SpecialFormApplication {
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		StringBuilder sb = new StringBuilder();
-		sb.append("(throw (Throwable.");
 		sb.append("(first (");
 		sb.append(ClojureCoreSymbols.convertClojureSymbol_full);
 		sb.append(" ");
 		sb.append(this.getMessage().toClojureCode(env, typeEnv));
-		sb.append("))))");
-		return sb.toString();
+		sb.append("))");		
+		
+		return ClojureHelper.errorHelper(sb.toString());
 	}
 
 	@Override
