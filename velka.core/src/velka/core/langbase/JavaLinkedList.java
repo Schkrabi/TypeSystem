@@ -51,24 +51,9 @@ public class JavaLinkedList {
 	public static final String NAMESPACE = "velka.clojure.linkedList";
 
 	/**
-	 * Type Variable used for list elements
-	 */
-	private static final TypeVariable A = new TypeVariable(NameGenerator.next());
-	
-	/**
-	 * Type Variable used for list elements
-	 */
-	private static final TypeVariable B = new TypeVariable(NameGenerator.next());
-
-	/**
-	 * Type Variable used for list elements
-	 */
-	private static final TypeVariable C = new TypeVariable(NameGenerator.next());
-
-	/**
 	 * Type of java linked list in velka
 	 */
-	public static final TypeAtom TypeListJavaLinked = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaLinked"));
+	public final static TypeAtom TypeListJavaLinked = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaLinked"));
 	
 	private static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
 	public static final Symbol constructorSymbol_out = new Symbol("construct-linked-list");
@@ -136,10 +121,15 @@ public class JavaLinkedList {
 
 			return LitBoolean.TRUE;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.A),
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -187,11 +177,16 @@ public class JavaLinkedList {
 
 			return Expression.EMPTY_EXPRESSION;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative, JavaLinkedList.A),
+					new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
 					TypeTuple.EMPTY_TUPLE);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -297,6 +292,11 @@ public class JavaLinkedList {
 
 			return LitBoolean.FALSE;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -400,6 +400,11 @@ public class JavaLinkedList {
 
 			return l.get((int)index.value);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -449,6 +454,11 @@ public class JavaLinkedList {
 
 			return new LitInteger(ret);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -546,6 +556,11 @@ public class JavaLinkedList {
 
 			return new LitInteger(ret);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -596,6 +611,11 @@ public class JavaLinkedList {
 			}
 			return LitBoolean.FALSE;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -760,6 +780,11 @@ public class JavaLinkedList {
 
 			return al.set((int)index.value, element);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -926,6 +951,16 @@ public class JavaLinkedList {
 
 			return new LitComposite(new LitInteropObject(rslt), JavaLinkedList.TypeListJavaLinked);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -998,6 +1033,21 @@ public class JavaLinkedList {
 
 			return new LitComposite(new LitInteropObject(rslt), JavaLinkedList.TypeListJavaLinked);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable B = new TypeVariable(NameGenerator.next());
+
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable C = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1062,6 +1112,11 @@ public class JavaLinkedList {
 
 			return rslt;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1120,6 +1175,11 @@ public class JavaLinkedList {
 
 			return agg;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {

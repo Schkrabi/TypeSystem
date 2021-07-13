@@ -61,19 +61,6 @@ public class ListNative {
 	public static final Lambda constructor = new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("l"))),
 			new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()), TypeAtom.TypeListNative)),
 			new Tuple(Arrays.asList(new Symbol("x"), new Symbol("l"))));
-
-	/**
-	 * Type variable for use in lambda
-	 */
-	private static TypeVariable A = new TypeVariable(NameGenerator.next());
-	/**
-	 * Type variable for use in lambda
-	 */
-	private static TypeVariable B = new TypeVariable(NameGenerator.next());
-	/**
-	 * Type variable for use in lambda
-	 */
-	private static TypeVariable C = new TypeVariable(NameGenerator.next());
 	
 	/**
 	 * Empty list native
@@ -195,6 +182,11 @@ public class ListNative {
 			Tuple t = (Tuple)l.value;
 			return t.get(0);
 		}
+		
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -475,6 +467,19 @@ public class ListNative {
 			
 			return res;
 		}
+		
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable B = new TypeVariable(NameGenerator.next());
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable C = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -560,6 +565,15 @@ public class ListNative {
 			
 			return term;
 		}
+		
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -654,6 +668,15 @@ public class ListNative {
 			
 			return term;
 		}
+		
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -755,6 +778,11 @@ public class ListNative {
 			
 			return term;
 		}
+		
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1033,6 +1061,11 @@ public class ListNative {
 			
 			return LitBoolean.FALSE;
 		}
+		
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1111,6 +1144,11 @@ public class ListNative {
 			
 			return term;
 		}
+		
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1188,6 +1226,11 @@ public class ListNative {
 			
 			throw new UserException(errorMsg);
 		}
+		
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1235,16 +1278,18 @@ public class ListNative {
 				Optional<Expression> rankingFunction) throws AppendableException {
 			throw new AppendableException("Helper operator " + this.getClass().getCanonicalName() + " is not supported for interpretation");
 		}
+		
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(
-					new TypeTuple(
-							TypeAtom.TypeIntNative, 
-							new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), A),
-							TypeAtom.TypeIntNative), 
-		TypeAtom.TypeListNative);
-return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative,
+					new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), A), TypeAtom.TypeIntNative),
+					TypeAtom.TypeListNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 		
 	};
@@ -1292,13 +1337,15 @@ return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 			
 			return l;
 		}
+		
+		private final TypeVariable buildListNative_A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
 								new TypeTuple(
 										TypeAtom.TypeIntNative, 
-										new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), A)), 
+										new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), buildListNative_A)), 
 					TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -1367,6 +1414,11 @@ return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 			
 			return term;
 		}
+		
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1380,6 +1432,11 @@ return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 	public static final Symbol sizeSymbol_out = new Symbol("size-list-native");
 	
 	public static final Operator size = new Operator() {
+		
+		/**
+		 * Type variable for use in lambda
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {

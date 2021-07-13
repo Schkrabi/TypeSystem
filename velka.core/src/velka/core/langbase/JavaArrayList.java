@@ -50,21 +50,6 @@ public class JavaArrayList {
 	public static final String NAMESPACE = "velka.clojure.arrayList";
 
 	/**
-	 * Type Variable used for list elements
-	 */
-	private static final TypeVariable A = new TypeVariable(NameGenerator.next());
-
-	/**
-	 * Type Variable used for list elements
-	 */
-	private static final TypeVariable B = new TypeVariable(NameGenerator.next());
-
-	/**
-	 * Type Variable used for list elements
-	 */
-	private static final TypeVariable C = new TypeVariable(NameGenerator.next());
-
-	/**
 	 * Type of java array list in velka
 	 */
 	public static final TypeAtom TypeListJavaArray = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaArray"));
@@ -134,10 +119,15 @@ public class JavaArrayList {
 
 			return LitBoolean.TRUE;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, JavaArrayList.A),
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -185,11 +175,16 @@ public class JavaArrayList {
 
 			return Expression.EMPTY_EXPRESSION;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative, JavaArrayList.A),
+					new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative, A),
 					TypeTuple.EMPTY_TUPLE);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -295,6 +290,11 @@ public class JavaArrayList {
 
 			return LitBoolean.FALSE;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -398,6 +398,11 @@ public class JavaArrayList {
 
 			return l.get((int)index.value);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -447,6 +452,11 @@ public class JavaArrayList {
 
 			return new LitInteger(ret);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -544,6 +554,11 @@ public class JavaArrayList {
 
 			return new LitInteger(ret);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -626,6 +641,11 @@ public class JavaArrayList {
 			}
 			return LitBoolean.FALSE;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -790,6 +810,11 @@ public class JavaArrayList {
 
 			return al.set((int)index.value, element);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -957,6 +982,16 @@ public class JavaArrayList {
 
 			return new LitComposite(new LitInteropObject(rslt), JavaArrayList.TypeListJavaArray);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
+
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1029,6 +1064,20 @@ public class JavaArrayList {
 
 			return new LitComposite(new LitInteropObject(rslt), JavaArrayList.TypeListJavaArray);
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
+
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable B = new TypeVariable(NameGenerator.next());
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable C = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1093,6 +1142,11 @@ public class JavaArrayList {
 
 			return rslt;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1151,6 +1205,11 @@ public class JavaArrayList {
 
 			return agg;
 		}
+		
+		/**
+		 * Type Variable used for list elements
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
