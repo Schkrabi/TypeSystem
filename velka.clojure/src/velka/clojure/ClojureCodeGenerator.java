@@ -25,6 +25,8 @@ import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
+import velka.types.TypeTuple;
+import velka.util.AppendableException;
 
 /**
  * Class generating files and project structure for runnable and compilable
@@ -177,11 +179,12 @@ public class ClojureCodeGenerator {
 	 * @remark creates main entry point for clojure applictation calling function
 	 *         main with no arguments
 	 * @return string with code
+	 * @throws AppendableException 
 	 */
-	public static String writeMain() {
+	public static String writeMain() throws AppendableException {
 		// TODO add support of command line arguments!
-		return "(defn -main\n" + "  []\n"
-				+ "(" + ClojureCoreSymbols.eapplyClojureSymbol_full + " main (with-meta [] {:lang-type (velka.lang.types.TypeTuple/EMPTY_TUPLE)})))";
+		return "(defn -main []\n"
+				+ ClojureHelper.applyVelkaFunction("main", ClojureHelper.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)) + ")";
 	}
 	
 	public static Path createDepsEdn(Path directory) throws IOException {

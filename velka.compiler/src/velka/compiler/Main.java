@@ -46,17 +46,18 @@ public class Main {
 	private static void runMode(String mode, Path currentFolder, String fileArg) throws Exception {
 		Environment topLevel = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(topLevel);
+		Compiler.init(topLevel, typeEnv);
 		switch(mode) {
 		
 		case COMPILE:
-			Compiler.clojureCompile(Paths.get(fileArg), currentFolder.resolve(ClojureCodeGenerator.DEFAULT_FILENAME));
+			Compiler.clojureCompile(Paths.get(fileArg), currentFolder.resolve(ClojureCodeGenerator.DEFAULT_FILENAME), topLevel, typeEnv);
 			break;
 		case PREPARE:
 			ClojureCodeGenerator.generateClojureProject(currentFolder);
 			break;
 		case BUILD:
 			ClojureCodeGenerator.generateClojureProject(currentFolder);
-			Compiler.clojureCompile(Paths.get(fileArg), currentFolder.resolve(ClojureCodeGenerator.DEFAULT_FILE_PROJECT_PATH));
+			Compiler.clojureCompile(Paths.get(fileArg), currentFolder.resolve(ClojureCodeGenerator.DEFAULT_FILE_PROJECT_PATH), topLevel, typeEnv);
 			break;
 		case INTERPRET:
 			InputStream inStream = Files.newInputStream(Paths.get(fileArg));

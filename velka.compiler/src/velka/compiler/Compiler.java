@@ -126,10 +126,8 @@ public class Compiler {
 		}
 	}
 	
-	public static void clojureCompile(Path in, Path out) {
-		Environment env = Environment.initTopLevelEnvitonment();
+	public static void clojureCompile(Path in, Path out, Environment env, TypeEnvironment typeEnv) {
 		try {
-			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 			Compiler.clojure(Files.newInputStream(in), new PrintStream(Files.newOutputStream(out)), env, typeEnv);
 		} catch (AppendableException e) {
 			e.printStackTrace();

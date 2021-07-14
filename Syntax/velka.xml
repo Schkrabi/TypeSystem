@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language name="Velka" section="Sources" extensions="*.vlk" version="1" kateversion="17.12" casesensitive="1" author="Radomir Skrabal;skrabal.radomir91@gmail.com" license="" indenter="lisp" hidden="0">
+    <highlighting>
+        <list name="special-form-define">
+            <item>define</item>
+            <item>type</item>
+            <item>representation</item>
+            <item>conversion</item>
+            <item>constructor</item>
+        </list>
+        <list name="special-forms">
+            <item>construct</item>
+            <item>convert</item>
+            <item>lambda</item>
+            <item>extended-lambda</item>
+            <item>if</item>
+            <item>cons</item>
+            <item>error</item>
+            <item>and</item>
+            <item>or</item>
+            <item>deconstruct</item>
+            <item>can-deconstruct-as</item>
+            <item>let-type</item>
+            <item>instance-of</item>
+            <item>instance-of-representation</item>
+            <item>eapply</item>
+            <item>extended-lambda-cost</item>
+            <item>get</item>
+            <item>tuple</item>
+            <item>let</item>
+            <item>let*</item>
+        </list>
+        <contexts>
+            <context attribute="Normal Text" lineEndContext="#pop" name="Normal Text" >
+                <keyword attribute="Keyword" context="#stay" String="special-forms" />
+                <keyword attribute="Def-Keyword" context="#stay" String="special-form-define" />
+                <DetectChar attribute="String" context="string" char="&quot;" />
+            </context>
+            <context attribute="String" lineEndContext="#stay" name="string" >
+                <DetectChar attribute="String" context="#pop" char="&quot;" />
+            </context>
+        </contexts>
+        <itemDatas>
+            <itemData name="Normal Text" defStyleNum="dsNormal" />
+            <itemData name="Def-Keyword" defStyleNum="dsPreprocessor" />
+            <itemData name="Keyword" defStyleNum="dsKeyword" />
+            <itemData name="String" defStyleNum="dsString" />
+        </itemDatas>
+    </highlighting>
+    <general>
+        <comments>
+            <comment name="singleLine" start=";"/>
+        </comments>
+        <keywords casesensitive="1"/>
+    </general>
+</language>
