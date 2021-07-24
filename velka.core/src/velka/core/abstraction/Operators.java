@@ -18,11 +18,13 @@ import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeSymbol;
 import velka.core.interpretation.ClojureCoreSymbols;
+import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.ListNative;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
+import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
 import velka.types.Substitution;
@@ -1251,6 +1253,222 @@ public final class Operators {
 			return new Symbol("velka-parse-int", NAMESPACE);
 		}
 
+	};
+	
+	/**
+	 * Floating point division operator
+	 */
+	public static final Operator DivisionFloatingPoint = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String x = "_x";
+			String y = "_y";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(x, y), 
+					LitDouble.clojureDoubleToClojureLitDouble("(/ (first " + x + ") (first " + y + "))"));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-double-div", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitDouble d1 = (LitDouble)args.get(0);
+			LitDouble d2 = (LitDouble)args.get(1);
+			
+			double rslt = d1.value / d2.value;
+			
+			return new LitDouble(rslt);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative, TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "ddiv";
+		}
+		
+	};
+	
+	/**
+	 * Operator for coercing int to double
+	 */
+	public static final Operator intToDouble = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String i = "_i";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(i), 
+					LitDouble.clojureDoubleToClojureLitDouble("(double (first " + i + "))"));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("int-to-double-clj", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitInteger i = (LitInteger)args.get(0);
+			return new LitDouble((double)i.value);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeDoubleNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "int-to-double";
+		}
+		
+	};
+	
+	/**
+	 * Floor operator
+	 */
+	public static final Operator floor = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String d = "_d";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(d), 
+					LitInteger.clojureIntToClojureLitInteger("(int (Math/floor (first " + d + ")))"));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-floor", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitDouble d = (LitDouble)args.get(0);
+			
+			double floored = Math.floor(d.value);
+			
+			return new LitInteger((long)floored);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeIntNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "floor";
+		}
+		
+	};
+	
+	/**
+	 * Operator for addition of double values
+	 */
+	public static final Operator dadd = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String d1 = "_d1";
+			String d2 = "_d2";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(d1, d2), 
+					LitDouble.clojureDoubleToClojureLitDouble("(+ (first " + d1 + ") (first " + d2 + "))"));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-double-add", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitDouble d1 = (LitDouble)args.get(0);
+			LitDouble d2 = (LitDouble)args.get(1);
+			
+			double sum = d1.value + d2.value;
+			
+			return new LitDouble(sum);
+		}
+		
+		@Override
+		public String toString() {
+			return "dadd";
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative, TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
+	
+	/**
+	 * Operator for Double lesser than
+	 */
+	public static final Operator doubleLesserThan = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String d1 = "_d1";
+			String d2 = "_d2";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(d1, d2), 
+					LitBoolean.clojureBooleanToClojureLitBoolean("(< (first " + d1 + ") (first " + d2 + "))"));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("double-lesser-than", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitDouble d1 = (LitDouble)args.get(0);
+			LitDouble d2 = (LitDouble)args.get(1);
+			
+			if(d1.value < d2.value) {
+				return LitBoolean.TRUE;
+			}
+			
+			return LitBoolean.FALSE;
+		}
+		
+		@Override
+		public String toString() {
+			return "dlt";
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative, TypeAtom.TypeDoubleNative), TypeAtom.TypeBoolNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
 	};
 
 }

@@ -79,6 +79,11 @@ public class VelkaClojureOperators {
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.Timestamp));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.ToStr));
 		sb.append(ClojureHelper.makeOperatorDeclaration(AbstractionApplication.defaultRanking));
+		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.DivisionFloatingPoint));
+		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.intToDouble));
+		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.floor));
+		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.dadd));
+		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.doubleLesserThan));
 
 		Environment env = Environment.initTopLevelEnvitonment();
 		try {
@@ -116,6 +121,12 @@ public class VelkaClojureOperators {
 			sb.append(ClojureHelper.makeOperatorDef(Operators.Timestamp, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.ToStr, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(AbstractionApplication.defaultRanking, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(Operators.DivisionFloatingPoint, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(Operators.intToDouble, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(Operators.floor, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(Operators.dadd, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(Operators.doubleLesserThan, env, typeEnv));
+			
 		} catch (AppendableException e) {
 			System.err.println("Error generating velka.clojure.operaotrs: " + e.getMessage());
 			return "";

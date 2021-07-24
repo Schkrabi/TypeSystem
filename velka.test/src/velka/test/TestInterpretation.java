@@ -1001,6 +1001,16 @@ class TestInterpretation {
         
         TestInterpretation.testOperator(Operators.parseInt, 
         		new Tuple(new LitString("42")), new LitInteger(42), TypeAtom.TypeIntNative);
+        
+		TestInterpretation.testOperator(Operators.intToDouble, new Tuple(new LitInteger(42)), new LitDouble(42.0f),
+				TypeAtom.TypeDoubleNative);
+		
+		TestInterpretation.testOperator(Operators.floor, new Tuple(new LitDouble(3.14f)), new LitInteger(3),
+				TypeAtom.TypeIntNative);
+		
+		TestInterpretation.testOperator(Operators.dadd, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), new LitDouble(6.28), TypeAtom.TypeDoubleNative);
+		TestInterpretation.testOperator(Operators.doubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(6.28)), LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operators.doubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), LitBoolean.FALSE, TypeAtom.TypeBoolNative);
 	}
 
 	@Test

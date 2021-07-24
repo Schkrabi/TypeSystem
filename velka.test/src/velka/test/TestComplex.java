@@ -525,7 +525,13 @@ class TestComplex {
 						+ "(println (bit-xor 6 5))"
 						+ "(println (to-str 42))"
 						+ "(println (str-split \"foo bar baz\" \" \"))"
-						+ "(println (parse-int \"42\"))");
+						+ "(println (parse-int \"42\"))"
+						+ "(println (ddiv 1.5 0.5))"
+						+ "(println (floor 3.141521))"
+						+ "(println (int-to-double 42))"
+						+ "(println (dadd 3.14 3.14))"
+						+ "(println (dlt 3.14 6.28))"
+						+ "(println (dlt 3.14 3.14))");
 		
 		File tempOut = File.createTempFile("velka_read_test", null);
         String content  = "hello world !!";       
