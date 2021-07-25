@@ -237,15 +237,13 @@ public class ExtendedLambda extends Abstraction {
 	 * @throws AppendableException 
 	 */
 	private static Long rankImplementation(Lambda impl, Tuple args, Expression rankingFunction, Environment env, TypeEnvironment typeEnv) throws AppendableException{
-		TypeTuple argsType = (TypeTuple) args.infer(env, typeEnv).first;
-		final Expression argsList = ListNative.tupleToListNative(
-				new Tuple(argsType.stream().map(t -> new TypeSymbol(t)).collect(Collectors.toList())));
+		final Expression argsList = ListNative.tupleToListNative(args);
 		
 		Expression formalArgsList = ListNative.tupleToListNative(new Tuple(impl.argsType.stream().map(t -> new TypeSymbol(t)).collect(Collectors.toList())));
 		
 		AbstractionApplication appl = new AbstractionApplication(
 				rankingFunction,
-				new Tuple(formalArgsList, argsList, args));
+				new Tuple(formalArgsList, argsList));
 		
 		Expression rankingResult = appl.interpret(env, typeEnv);
 		if (!(rankingResult instanceof LitInteger)) {

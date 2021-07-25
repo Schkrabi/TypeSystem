@@ -877,50 +877,26 @@ class TestComplex {
 		
 		ExtendedLambda elambda_defaultRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3));
 		
-		Lambda ranking = (Lambda)TestComplex.parseString("(let-type (A) (lambda ((List:Native formalArgList) (List:Native realArgList) (A args)) "
+		Lambda ranking = (Lambda)TestComplex.parseString("(let-type (A) (lambda ((List:Native formalArgList) (List:Native realArgList)) "
 																		+ "(if (instance-of-representation (head-list-native formalArgList) Int:Roman) 0 999)))").get(0);
 		
 		Expression rnkAppl = new AbstractionApplication(
 				ranking,
 				new Tuple(
-						new LitComposite(
-								new Tuple(
-										new TypeSymbol(TypeAtom.TypeIntRoman), 
-										new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative)), 
-								TypeAtom.TypeListNative),
-						new LitComposite(
-								new Tuple(
-										new TypeSymbol(TypeAtom.TypeIntNative),
-										new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative)
-										), 
-								TypeAtom.TypeListNative),
-						Expression.EMPTY_EXPRESSION
-						)
-				);
+						ListNative.makeListNativeExpression(new TypeSymbol(TypeAtom.TypeIntRoman)),
+						ListNative.makeListNativeExpression(new LitInteger(42))));
 		
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(rnkAppl));
 		
 		Expression rnkAppl2 = new AbstractionApplication(
 				ranking,
 				new Tuple(
-						new LitComposite(
-								new Tuple(
-										new TypeSymbol(TypeAtom.TypeIntString), 
-										new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative)), 
-								TypeAtom.TypeListNative),
-						new LitComposite(
-								new Tuple(
-										new TypeSymbol(TypeAtom.TypeIntNative),
-										new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative)
-										), 
-								TypeAtom.TypeListNative),
-						Expression.EMPTY_EXPRESSION
-						)
-				); 
+						ListNative.makeListNativeExpression(new TypeSymbol(TypeAtom.TypeIntString)),
+						ListNative.makeListNativeExpression(new LitInteger(42)))); 
 		
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(rnkAppl2));		 
 		
-		Lambda ranking2 = (Lambda)TestComplex.parseString("(let-type (A) (lambda ((List:Native formalArgList) (List:Native realArgList) (A args)) "
+		Lambda ranking2 = (Lambda)TestComplex.parseString("(let-type (A) (lambda ((List:Native formalArgList) (List:Native realArgList)) "
 																		+ "(if (instance-of-representation (head-list-native formalArgList) Int:String) 0 999)))").get(0);
 		
 		ExtendedLambda elambda_customRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3), ranking);
@@ -1079,7 +1055,7 @@ class TestComplex {
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
 						+ ClojureCoreSymbols.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
 						+ ") (" + ClojureCoreSymbols.tuple2velkaListSymbol_full + " "
-						+ typeSymbolTuple.toClojureCode(env, typeEnv) + ") nil))",
+						+ typeSymbolTuple.toClojureCode(env, typeEnv) + ")))",
 				"[0]");
 		
 		assertClojureFunction(
@@ -1087,7 +1063,7 @@ class TestComplex {
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
 						+ ClojureCoreSymbols.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
 						+ ") (" + ClojureCoreSymbols.tuple2velkaListSymbol_full + " "
-						+ typeSymbolTuple_diff1.toClojureCode(env, typeEnv) + ") nil))",
+						+ typeSymbolTuple_diff1.toClojureCode(env, typeEnv) + ")))",
 				"[1]");
 		
 		assertClojureFunction(
@@ -1095,7 +1071,7 @@ class TestComplex {
 				"(println ((" + AbstractionApplication.defaultRanking.clojureDef() + " nil) ("
 						+ ClojureCoreSymbols.tuple2velkaListSymbol_full + " " + typeSymbolTuple.toClojureCode(env, typeEnv)
 						+ ") (" + ClojureCoreSymbols.tuple2velkaListSymbol_full + " "
-						+ typeSymbolTuple_diff2.toClojureCode(env, typeEnv) + ") nil))",
+						+ typeSymbolTuple_diff2.toClojureCode(env, typeEnv) + ")))",
 				"[2]");
 		
 		assertClojureFunction(

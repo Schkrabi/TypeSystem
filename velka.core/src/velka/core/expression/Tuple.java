@@ -194,6 +194,14 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	public int hashCode() {
 		return this.values.hashCode();
 	}
+	
+	/**
+	 * Converts tuple into list
+	 * @return list
+	 */
+	public List<Expression> toList(){
+		return this.stream().collect(Collectors.toList());
+	}
 
 	/**
 	 * Empty tuple expression

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Operator;
@@ -135,22 +136,11 @@ public class ClojureHelper {
 		return makeLambdaDef(operator.getClojureSymbol().name, operator, env, typeEnv);
 	}
 	
-	public static String tupleHelper(String ...args) {
-		return tupleHelper_array(args);
-	}
-	
-	public static String tupleHelper_array(String[] members) {
-		return tupleHelper(Arrays.asList(members));
-	}
-	
-	public static String tupleHelper(Collection<String> members) {
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append("(let [tuple [");
+	public static String clojureVectorHelper(Collection<String> members) {
+		StringBuilder sb = new StringBuilder("[");
 		
 		Iterator<String> i = members.iterator();
-		while(i.hasNext())
-		{
+		while(i.hasNext()) {
 			String member = i.next();
 			sb.append(member);
 			if(i.hasNext()) {
@@ -158,14 +148,57 @@ public class ClojureHelper {
 			}
 		}
 		
-		sb.append("]] ");
-		sb.append(ClojureHelper.addTypeMetaInfo_str("tuple", "(velka.types.TypeTuple. (map " + ClojureCoreSymbols.getTypeClojureSymbol_full + " tuple))"));
-		sb.append(")");
-		
+		sb.append("]");
 		return sb.toString();
 	}
 	
-	public static String applyVelkaFunction(String funCode, String ...args) throws AppendableException {
+	/**
+	 * Creates clojure PersistentVector from arguments
+	 * @param members vector members
+	 * @return string with code
+	 */
+	public static String clojureVectorHelper(String ...members) {
+		return ClojureHelper.clojureVectorHelper(Arrays.asList(members));
+	}
+	
+	/**
+	 * Creates velka tuple from arguments
+	 * @param args tuple members
+	 * @return string with code
+	 */
+	public static String tupleHelper(String ...args) {
+		return tupleHelper_array(args);
+	}
+	
+	/**
+	 * Creates velka tuple from arguments
+	 * @param members tuple members
+	 * @return string with code
+	 */
+	public static String tupleHelper_array(String[] members) {
+		return tupleHelper(Arrays.asList(members));
+	}
+	
+	/**
+	 * Creates velka tuple from arguments
+	 * @param members tuple members
+	 * @return string with code
+	 */
+	public static String tupleHelper(Collection<String> members) {
+		final String tuple = "_tuple";
+		
+		return ClojureHelper.letHelper(
+				ClojureHelper.addTypeMetaInfo_str(tuple, "(velka.types.TypeTuple. (map " + ClojureCoreSymbols.getTypeClojureSymbol_full + " " + tuple + "))"), 
+				new Pair<String, String>(tuple, ClojureHelper.clojureVectorHelper(members)));
+	}
+	
+	/**
+	 * Applies velka function in clojure code
+	 * @param funCode velka function code
+	 * @param args arguments to apply with
+	 * @return string with code
+	 */
+	public static String applyVelkaFunction(String funCode, String ...args)  {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append("(");
@@ -180,47 +213,121 @@ public class ClojureHelper {
 		return sb.toString();
 	}
 	
+	/**
+	 * Creates clojure if expression from arguments
+	 * @param conditionCode condition
+	 * @param trueCode true branch
+	 * @param falseCode false branch
+	 * @return string with code
+	 */
 	public static String ifHelper(String conditionCode, String trueCode, String falseCode) {
 		return "(if (first " + conditionCode + ") " + trueCode + " " + falseCode + ")";
 	}
 	
-	public static String fnHelper(List<String> args, String body) {
-		StringBuilder sb = new StringBuilder("(fn [");
+	/**
+	 * Creates clojure fn expression from arguments
+	 * @param fnspecs specification of all arguments-body pairs for fn
+	 * @return string with code
+	 */
+	public static String fnHelper(List<Pair<List<String>, String>> fnspecs) {
+		StringBuilder sb = new StringBuilder("(fn ");
 		
-		Iterator<String> i = args.iterator();
+		Iterator<Pair<List<String>, String>> i = fnspecs.iterator();
 		while(i.hasNext()) {
-			String arg = i.next();
-			sb.append(arg);
+			Pair<List<String>, String> p = i.next();
+			List<String> args = p.first;
+			String body = p.second;
+			
+			sb.append("(");
+			sb.append(ClojureHelper.clojureVectorHelper(args));
+			sb.append(" ");
+			sb.append(body);
+			sb.append(")");
 			if(i.hasNext()) {
 				sb.append(" ");
 			}
 		}
-		sb.append("] ");
-		sb.append(body);
-		sb.append(")");
 		
+		sb.append(")");
 		return sb.toString();
 	}
 	
+	/**
+	 * Creates clojure fn expression from arguments
+	 * @param fnspecs specification of all arguments-body pairs for fn
+	 * @return string with code
+	 */
+	@SafeVarargs
+	public static String fnHelper(Pair<List<String>, String> ...fnspecs) {
+		return ClojureHelper.fnHelper(Arrays.asList(fnspecs));
+	}
+	
+	/**
+	 * Creates clojure fn expression from arguments
+	 * @param args arguments of the fn
+	 * @param body body of the fn expression
+	 * @return string with code
+	 */
+	public static String fnHelper(List<String> args, String body) {
+		return ClojureHelper.fnHelper(new Pair<List<String>, String>(args, body));
+	}
+
+	/**
+	 * Creates code for composite literal (LitComposite) in clojure. Allows type to be arbitrary code.
+	 * @param type code returning type of the literal
+	 * @param value value of the composite literal
+	 * @return string with code
+	 */
 	public static String litCompositeHelper_str(String type, String value) {
 		return addTypeMetaInfo_str("[" + value + "]", type);
 	}
 	
+	/**
+	 * Creates code for composite literal (LitComposite) in clojure.
+	 * @param type type of composite literal
+	 * @param value value of the composite literal
+	 * @return string with code
+	 * @throws AppendableException if there is issue with compiling type into clojure
+	 */
 	public static String litCompositeHelper(Type type, String value) throws AppendableException {
 		return litCompositeHelper_str(type.clojureTypeRepresentation(), value);
 	}
 	
+	/**
+	 * Creates throw statement in clojure
+	 * @param code code returning object to be thrown, probably string
+	 * @return string with code
+	 */
 	public static String errorHelper(String code) {
 		return "(throw (Throwable. " + code + "))";
 	}
 	
+	/**
+	 * Creates code for string in clojure
+	 * @param str string 
+	 * @return string with code
+	 */
 	public static String stringHelper(String str) {
 		return "\"" + str + "\"";
 	}
 	
+	/**
+	 * Triplet for letfnHelper method
+	 * @author Mgr. Radomir Skrabal
+	 *
+	 */
 	public static class LetfnTriplet {
+		/**
+		 * Name of the function
+		 */
 		public final String name;
+		/**
+		 * arguments of the function
+		 */
 		public final List<String> args;
+		/**
+		 * body of the function
+		 */
 		public final String body;
 		
 		public LetfnTriplet(String name, List<String> args, String body) {
@@ -229,84 +336,131 @@ public class ClojureHelper {
 			this.body = body;
 		}
 		
+		/**
+		 * Creates letfn binding code
+		 * @return string with code
+		 */
 		public String toFnspec() {
 			StringBuilder sb = new StringBuilder("(");
 			sb.append(this.name);
-			sb.append(" [");
+			sb.append(" ");
 			
-			Iterator<String> i = this.args.iterator();
-			while(i.hasNext()) {
-				String arg = i.next();
-				sb.append(arg);
-				if(i.hasNext()) {
-					sb.append(" ");
-				}
-			}
-			sb.append("] ");
+			sb.append(ClojureHelper.clojureVectorHelper(this.args));
+			
+			sb.append(" ");
 			sb.append(this.body);
 			sb.append(")");
 			return sb.toString();
 		}
 	}
 	
+	/**
+	 * Creates LetfnTriplet for letfnHelper method
+	 * @param name name of defined function
+	 * @param args arguments of defined function
+	 * @param body body of defined function
+	 * @return LetfnTriplet
+	 */
 	public static LetfnTriplet makeLetfnTriplet(String name, List<String> args, String body) {
 		return new LetfnTriplet(name, args, body);
 	}
 	
+	/**
+	 * Creates clojure letfn expression
+	 * @param body body of letfn
+	 * @param fnspecs specifications of inner functions
+	 * @see LetfnTriplet
+	 * @see makeLetfnTriplet
+	 * @return string with code
+	 */
 	public static String letfnHelper(List<LetfnTriplet> fnspecs, String body) {
-		StringBuilder sb = new StringBuilder("(letfn [");
+		StringBuilder sb = new StringBuilder("(letfn ");
 		
-		Iterator<LetfnTriplet> i = fnspecs.iterator();
-		while(i.hasNext()) {
-			LetfnTriplet fnspec = i.next();
-			sb.append(fnspec.toFnspec());
-			if(i.hasNext()) {
-				sb.append("\n");
-			}
-		}
-		sb.append("] ");
+		sb.append(ClojureHelper
+				.clojureVectorHelper(fnspecs.stream().map(x -> x.toFnspec()).collect(Collectors.toList())));
+		
+		sb.append(" ");
 		sb.append(body);
 		sb.append(")");
 		return sb.toString();
 	}
 	
+	/**
+	 * Creates clojure letfn expression
+	 * @param body body of letfn
+	 * @param fnspecs specifications of inner functions
+	 * @see LetfnTriplet
+	 * @see makeLetfnTriplet
+	 * @return string with code
+	 */
 	public static String letfnHelper(String body, LetfnTriplet ...fnspecs) {
 		return letfnHelper(Arrays.asList(fnspecs), body);
 	}
 	
+	/**
+	 * Creates clojure let expression
+	 * @param body body of the let expression
+	 * @param defs bindings of the let, in form [variable, value]
+	 * @return string with code
+	 */
 	public static String letHelper(String body, List<Pair<String, String>> defs) {
-		StringBuilder sb = new StringBuilder("(let [");
+		StringBuilder sb = new StringBuilder("(let ");
 		
-		Iterator<Pair<String, String>> i = defs.iterator();
-		while(i.hasNext()) {
-			Pair<String, String> def = i.next();
-			sb.append(def.first);
-			sb.append(" ");
-			sb.append(def.second);
-			if(i.hasNext()) {
-				sb.append("\n");
-			}
-		}
-		sb.append("] ");
+		sb.append(ClojureHelper
+				.clojureVectorHelper(defs.stream().map(p -> p.first + " " + p.second).collect(Collectors.toList())));
+		
+		sb.append(" ");
 		sb.append(body);
 		sb.append(")");
 		return sb.toString();
 	}
 	
+	/**
+	 * Creates clojure let expression
+	 * @param body body of the let expression
+	 * @param defs bindings of the let, in form [variable, value]
+	 * @return string with code
+	 */
 	@SafeVarargs
 	public static String letHelper(String body, Pair<String, String> ...defs) {
 		return letHelper(body, Arrays.asList(defs));
 	}
 	
+	/**
+	 * Creates a velka lambda expression in clojure from clojure fn expression
+	 * @param clojureFn clojure function
+	 * @return string with code
+	 */
 	public static String lambdaHelper(String clojureFn) {
-		StringBuilder sb = new StringBuilder();
+		String impl = "_impl";
+		String args = "_args";
+		String cost = "_cost";
+		String code = ClojureHelper.letHelper(
+				ClojureHelper.fnHelper(
+						new Pair<List<String>, String>(Arrays.asList(args), impl),
+						new Pair<List<String>, String>(Arrays.asList(args, cost), impl)), 
+				new Pair<String, String>(impl, clojureFn));
 		
-		sb.append("(let [impl ");
-		sb.append(clojureFn);
-		sb.append("] ");
-		sb.append("(fn ");
-		sb.append("([args] impl) ");
-		sb.append("([args ranking-fn] impl)))");
+		return code;
+	}
+	
+	/**
+	 * Creates clojure defn expression from arguments
+	 * @param name name of defined function
+	 * @param args arguments of defined function
+	 * @param body body of defined function
+	 * @return string with code
+	 */
+	public static String clojureDefnHelper(String name, List<String> args, String body) {
+		StringBuilder sb = new StringBuilder("(defn ");
+		sb.append(name);
+		sb.append(" ");
+		
+		sb.append(ClojureHelper.clojureVectorHelper(args));
+		
+		sb.append(" ");
+		sb.append(body);
+		sb.append(")");
 		
 		return sb.toString();
 	}

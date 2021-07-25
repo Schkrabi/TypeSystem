@@ -1588,4 +1588,30 @@ public class ListNative {
 				(x, y) -> new LitComposite(new Tuple(Arrays.asList(y, x)), TypeAtom.TypeListNative), 
 				(x, y) -> y);
 	}
+	
+	/**
+	 * Converts java list into list native expression
+	 * @param l converted list
+	 * @return list native literal (LitComposite instance)
+	 */
+	public static LitComposite makeListNativeExpression(List<Expression> l) {
+		LitComposite res = ListNative.EMPTY_LIST_NATIVE;
+		
+		ListIterator<Expression> i = l.listIterator(l.size());
+		while(i.hasPrevious()) {
+			Expression e = i.previous();
+			res = new LitComposite(new Tuple(e, res), TypeAtom.TypeListNative);
+		}
+		
+		return res;
+	}
+	
+	/**
+	 * Converts exprssion into List Native expression
+	 * @param exprs expression
+	 * @return list native literal (LitComposite instance)
+	 */
+	public static LitComposite makeListNativeExpression(Expression ...exprs) {
+		return makeListNativeExpression(Arrays.asList(exprs));
+	}
 }
