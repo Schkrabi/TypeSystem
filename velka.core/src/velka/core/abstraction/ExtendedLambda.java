@@ -22,7 +22,6 @@ import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeSetDoesNotUnifyException;
-import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.Pair;
 import velka.util.ThrowingBinaryOperator;
