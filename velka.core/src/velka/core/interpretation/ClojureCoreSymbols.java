@@ -6,6 +6,15 @@ public class ClojureCoreSymbols {
 	 * Namespace for velka.clojure.core
 	 */
 	public static String NAMESPACE = "velka.clojure.core";
+	
+	/**
+	 * Symbol for list-native-to-tuple
+	 */
+	public static final String listNativeToTuple = "list-native-to-tuple";
+	/**
+	 * Fully qualified symbol for list-native-to-tuple
+	 */
+	public static final String listNativeToTuple_full = ClojureHelper.fullyQualifySymbol(ClojureCoreSymbols.NAMESPACE, listNativeToTuple);
 	/**
 	 * Symbol for type-2-type-symbol function
 	 */

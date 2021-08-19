@@ -19,7 +19,6 @@ import velka.util.Pair;
  *
  */
 public class VelkaClojureCore {
-
 	/**
 	 * Definition for type-2-type-symbol function
 	 */
@@ -29,6 +28,38 @@ public class VelkaClojureCore {
 	 * Definition for get-type clojure symbol
 	 */
 	public static String getTypeClojureDef = "(defn " + ClojureCoreSymbols.getTypeClojureSymbol + " [expr] (:lang-type (meta expr)))";
+	private static final String ListNativeToTuple_list = "_list";
+	private static final String ListNativeToTuple_value = "_value";
+	private static final String ListNativeToTuple_rec = "_list-native-to-tuple-rec";
+	private static final String ListNativeToTuple_recList = "_rec-list";
+	/**
+	 * Definition of list-native-to-tuple function
+	 */
+	public static String listNativeToTuple =	
+			ClojureHelper
+					.clojureDefnHelper(ClojureCoreSymbols.listNativeToTuple, Arrays.asList(ListNativeToTuple_list),
+							ClojureHelper
+									.letfnHelper(
+											ClojureHelper
+													.tupleHelper_str(ClojureHelper.applyClojureFunction("vec",
+															ClojureHelper.applyClojureFunction(ListNativeToTuple_rec,
+																	ListNativeToTuple_list))),
+											ClojureHelper.makeLetfnTriplet(ListNativeToTuple_rec,
+													Arrays.asList(ListNativeToTuple_recList),
+													ClojureHelper.letHelper(ClojureHelper.clojureIfHelper(ClojureHelper
+															.applyClojureFunction("empty?", ListNativeToTuple_value),
+															"[]",
+															ClojureHelper.applyClojureFunction("cons",
+																	ClojureHelper.applyClojureFunction("first",
+																			ListNativeToTuple_value),
+																	ClojureHelper.applyClojureFunction(
+																			ClojureCoreSymbols.listNativeToTuple_full,
+																			ClojureHelper.applyClojureFunction("second",
+																					ListNativeToTuple_value)))),
+															new Pair<String, String>(ListNativeToTuple_value,
+																	ClojureHelper.applyClojureFunction("first",
+																			ListNativeToTuple_recList))))));
+	
 	/**
 	 * Definition for tuple-2-velka-list function
 	 */
@@ -130,63 +161,6 @@ public class VelkaClojureCore {
 			+ "    ([abstraction args]\n" + "        (let [impl (abstraction args)\n" + "              converted-args ("
 			+ ClojureCoreSymbols.convertClojureSymbol + "\n" + "                                 (.ltype (" + ClojureCoreSymbols.getTypeClojureSymbol
 			+ " impl))\n" + "                                 args)]\n" + "            (apply impl converted-args))))";
-	
-	private static String selectImplRankingFn = "_ranking-fn";
-	private static String selectImplArgs = "_args";
-	private static String selectImplImpls = "_impls";
-	private static String selectImplArgsType = "_args-type";
-	private static String selectImplArgsList = "_args-list";
-	private static String impl = "_impl";
-	private static String x = "_x";
-	private static String y = "_y";
-	
-	/**
-	 * Definition for select-implementation-clojure function
-	 */
-	public static String selectImplementationClojureDef = ClojureHelper
-			.clojureDefnHelper(ClojureCoreSymbols.selectImplementationClojureSymbol,
-					Arrays.asList(selectImplRankingFn, selectImplArgs, selectImplImpls),
-					ClojureHelper.letHelper(
-							"(second (reduce "
-									+ ClojureHelper.fnHelper(
-											Arrays.asList(x, y), "(if (< (first " + x + ") (first " + y + ")) " + x + " " + y + ")")
-									+ " (map "
-									+ ClojureHelper.fnHelper(
-											Arrays.asList(impl), 
-											ClojureHelper.letHelper(
-												ClojureHelper.clojureVectorHelper(
-														"(first " + ClojureHelper.applyVelkaFunction(selectImplRankingFn, selectImplArgsType, selectImplArgsList) + ")", 
-														impl),
-												new Pair<String, String>(selectImplArgsType,
-														"(" + ClojureCoreSymbols.tuple2velkaListSymbol + "\n" + "(map "
-																+ ClojureCoreSymbols.type2typeSymbolSymbol + "(.ltype ("
-																+ ClojureCoreSymbols.getTypeClojureSymbol + " " + impl + "))))")))
-									+ " " + selectImplImpls + ")))",
-							new Pair<String, String>(selectImplArgsList,
-									"(" + ClojureCoreSymbols.tuple2velkaListSymbol + " " + selectImplArgs + ")")));
-	
-//	/**
-//	 * Definition for select-implementation-clojure function
-//	 */
-//	public static String selectImplementationClojureDef = 
-//			  "(defn " + ClojureCoreSymbols.selectImplementationClojureSymbol + "\n"
-//			+ "    [ranking-fn args impls] \n" 
-//		    + "    (let [args-type (" + ClojureCoreSymbols.tuple2velkaListSymbol + " args)]\n"
-//			+ "        (get \n" 
-//			+ "            (reduce \n"
-//			+ "                (fn [x y] (if (< (get x 0) (get y 0)) x y))\n" 
-//			+ "                (map \n"
-//			+ "                    (fn [impl] [\n" 
-//			+ "                        (first (" + ClojureCoreSymbols.eapplyClojureSymbol + "\n"
-//			+ "                                  ranking-fn\n" + ClojureHelper.addTypeMetaInfo(
-//	          "                                  [(" + ClojureCoreSymbols.tuple2velkaListSymbol + "\n"
-//			+ "                                       (map " + ClojureCoreSymbols.type2typeSymbolSymbol
-//			+ "                                                (.ltype (" + ClojureCoreSymbols.getTypeClojureSymbol + " impl)))) \n" 
-//			+ "                                   args-type\n"
-//			+ "                                   args]", new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeListNative)) + "))\n" 
-//			+ "                        impl])\n" 
-//			+ "                    impls))\n" 
-//			+ "        1)))";
 
 	/**
 	 * Creates record for atomic conversion map
@@ -225,6 +199,7 @@ public class VelkaClojureCore {
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.type2typeSymbolSymbol));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.tuple2velkaListSymbol));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.getTypeClojureSymbol));
+		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.listNativeToTuple));
 		sb.append(ClojureHelper.makeDynamicDeclaration(ClojureCoreSymbols.atomicConversionMapClojureSymbol));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.convertAtomClojureSymbol));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.convertTupleClojureSymbol));
@@ -242,6 +217,8 @@ public class VelkaClojureCore {
 		sb.append("\n");
 		sb.append(getTypeClojureDef);
 		sb.append("\n");
+		sb.append(listNativeToTuple);
+		sb.append("\n");
 		sb.append(atomicConversionMapClojureDef);
 		sb.append("\n");
 		sb.append(convertAtomClojureDef);
@@ -255,8 +232,6 @@ public class VelkaClojureCore {
 		sb.append(convertToRepOrClojureDef);
 		sb.append("\n");
 		sb.append(convertClojureDef);
-		sb.append("\n");
-		sb.append(selectImplementationClojureDef);
 		sb.append("\n");
 		sb.append(eapplyClojureDef);
 		sb.append("\n");

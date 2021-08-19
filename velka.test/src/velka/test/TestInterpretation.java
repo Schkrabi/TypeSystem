@@ -1545,16 +1545,16 @@ class TestInterpretation {
 		Lambda impl3 = new Lambda(new Tuple(new Symbol("a")), new TypeTuple(TypeAtom.TypeIntRoman),
 				new LitString("Int Roman"));
 
-		ExtendedLambda elambda_defaultRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3));
+		ExtendedLambda elambda_defaultSelectionFunction = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3));
 
-		Lambda ranking = (Lambda) TestInterpretation.parseString("(lambda (formalArgList realArgList) "
-				+ "(if (instance-of-representation (head-list-native formalArgList) Int:Roman) 0 999))");
+		Lambda selectionFunction = (Lambda) TestInterpretation.parseString("(lambda (impls args) "
+				+ "(head-list-native (filter-list-native impls (lambda (x) (instance-of-representation x ((Int:Roman) #> String:Native))))))");
 
-		Lambda ranking2 = (Lambda) TestInterpretation.parseString("(lambda (formalArgList realArgList) "
-				+ "(if (instance-of-representation (head-list-native formalArgList) Int:String) 0 999))");
+		Lambda selectionFunction2 = (Lambda) TestInterpretation.parseString("(lambda (impls args) "
+				+ "(head-list-native (filter-list-native impls (lambda (x) (instance-of-representation x ((Int:String) #> String:Native))))))");
 
-		ExtendedLambda elambda_customRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3),
-				ranking);
+		ExtendedLambda elambda_customSelectionFunction = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3),
+				selectionFunction);
 
 		Tuple args = new Tuple(new LitInteger(42));
 
@@ -1562,19 +1562,19 @@ class TestInterpretation {
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		ListNative.initializeInEnvironment(env, typeEnv);
 
-		AbstractionApplication app_defElambda_defRanking = new AbstractionApplication(elambda_defaultRanking, args);
-		TestInterpretation.testInterpretation(app_defElambda_defRanking, new LitString("Int Native"), env, typeEnv);
+		AbstractionApplication app_defElambda_defSelectionFunction = new AbstractionApplication(elambda_defaultSelectionFunction, args);
+		TestInterpretation.testInterpretation(app_defElambda_defSelectionFunction, new LitString("Int Native"), env, typeEnv);
 
-		AbstractionApplication app_defElambda_cusRanking = new AbstractionApplication(elambda_defaultRanking, args,
-				ranking);
-		TestInterpretation.testInterpretation(app_defElambda_cusRanking, new LitString("Int Roman"), env, typeEnv);
+		AbstractionApplication app_defElambda_cusSelectionFunction = new AbstractionApplication(elambda_defaultSelectionFunction, args,
+				selectionFunction);
+		TestInterpretation.testInterpretation(app_defElambda_cusSelectionFunction, new LitString("Int Roman"), env, typeEnv);
 
-		AbstractionApplication app_cusElambda_defRanking = new AbstractionApplication(elambda_customRanking, args);
-		TestInterpretation.testInterpretation(app_cusElambda_defRanking, new LitString("Int Roman"), env, typeEnv);
+		AbstractionApplication app_cusElambda_defSelectionFunction = new AbstractionApplication(elambda_customSelectionFunction, args);
+		TestInterpretation.testInterpretation(app_cusElambda_defSelectionFunction, new LitString("Int Roman"), env, typeEnv);
 
-		AbstractionApplication app_cusElambda_cusRanking = new AbstractionApplication(elambda_customRanking, args,
-				ranking2);
-		TestInterpretation.testInterpretation(app_cusElambda_cusRanking, new LitString("Int String"), env, typeEnv);
+		AbstractionApplication app_cusElambda_cusSelectionFunction = new AbstractionApplication(elambda_customSelectionFunction, args,
+				selectionFunction2);
+		TestInterpretation.testInterpretation(app_cusElambda_cusSelectionFunction, new LitString("Int String"), env, typeEnv);
 	}
 
 	@Test

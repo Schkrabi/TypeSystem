@@ -4,11 +4,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.stream.Collectors;
 
 import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Operator;
+import velka.core.langbase.ListNative;
+import velka.core.literal.LitComposite;
 import velka.types.Type;
+import velka.types.TypeAtom;
 import velka.util.AppendableException;
 import velka.util.Pair;
 
@@ -185,11 +189,20 @@ public class ClojureHelper {
 	 * @return string with code
 	 */
 	public static String tupleHelper(Collection<String> members) {
+		return ClojureHelper.tupleHelper_str(ClojureHelper.clojureVectorHelper(members));
+	}
+	
+	/**
+	 * Creates a velka tuple from code returning clojure vector
+	 * @param tupleCode code evaluated to clojure vector or sequence
+	 * @return tuple code
+	 */
+	public static String tupleHelper_str(String tupleCode) {
 		final String tuple = "_tuple";
 		
 		return ClojureHelper.letHelper(
 				ClojureHelper.addTypeMetaInfo_str(tuple, "(velka.types.TypeTuple. (map " + ClojureCoreSymbols.getTypeClojureSymbol_full + " " + tuple + "))"), 
-				new Pair<String, String>(tuple, ClojureHelper.clojureVectorHelper(members)));
+				new Pair<String, String>(tuple, tupleCode));
 	}
 	
 	/**
@@ -214,14 +227,25 @@ public class ClojureHelper {
 	}
 	
 	/**
-	 * Creates clojure if expression from arguments
+	 * Creates velka if expression from arguments in clojure code
 	 * @param conditionCode condition
 	 * @param trueCode true branch
 	 * @param falseCode false branch
 	 * @return string with code
 	 */
-	public static String ifHelper(String conditionCode, String trueCode, String falseCode) {
-		return "(if (first " + conditionCode + ") " + trueCode + " " + falseCode + ")";
+	public static String velkaIfHelper(String conditionCode, String trueCode, String falseCode) {
+		return clojureIfHelper(applyClojureFunction("first", conditionCode), trueCode, falseCode);
+	}
+	
+	/**
+	 * Creates if expression
+	 * @param conditionCode
+	 * @param trueCode
+	 * @param falseCode
+	 * @return
+	 */
+	public static String clojureIfHelper(String conditionCode, String trueCode, String falseCode) {
+		return "(if " + conditionCode + " " + trueCode + " " + falseCode + ")";
 	}
 	
 	/**
@@ -463,5 +487,72 @@ public class ClojureHelper {
 		sb.append(")");
 		
 		return sb.toString();
+	}
+	
+	/**
+	 * Creates code for clojure function application
+	 * @param clojureFunction clojure function or its symbol
+	 * @param args arguments
+	 * @return code for application
+	 */
+	public static String applyClojureFunction(String clojureFunction, Collection<String> args) {
+		StringBuilder sb = new StringBuilder("(");
+		sb.append(clojureFunction);
+		sb.append(" ");
+		Iterator<String> i = args.iterator();
+		while(i.hasNext()) {
+			String a = i.next();
+			sb.append(a);
+			if(i.hasNext()) {
+				sb.append(" ");
+			}
+		}
+		sb.append(")");
+		return sb.toString();
+	}
+	
+	/**
+	 * Creates code for clojure function application
+	 * @param clojureFunction clojure function or its symbol
+	 * @param args arguments
+	 * @return code for application
+	 */
+	public static String applyClojureFunction(String clojureFunction, String ...args) {
+		return ClojureHelper.applyClojureFunction(clojureFunction, Arrays.asList(args));
+	}
+	
+	/**
+	 * Creates code for ListNative value in clojure
+	 * @param members code for members of list
+	 * @return code for list native
+	 */
+	public static String listNativeClojure(List<String> members) {
+		String s = ListNative.EMPTY_LIST_NATIVE_CLOJURE;
+		ListIterator<String> i = members.listIterator(members.size());
+		
+		while(i.hasPrevious()) {
+			String current = i.previous();
+			s = LitComposite.clojureValueToClojureLiteral(ClojureHelper.tupleHelper(current, s), TypeAtom.TypeListNative);
+		}
+		
+		return s;
+	}
+	
+	/**
+	 * Creates code for ListNative value in clojure
+	 * @param members code for members of list
+	 * @return code for list native
+	 */
+	public static String listNativeClojure(Collection<String> members) {
+		return ClojureHelper.listNativeClojure(members.stream().collect(Collectors.toList()));
+	}
+	
+	/**
+	 * Creates code for ListNative value in clojure
+	 * @param members members of the list
+	 * @return code for list
+	 */
+	public static String listNativeClojure(String ...members) {
+		return ClojureHelper.listNativeClojure(Arrays.asList(members));
 	}
 }

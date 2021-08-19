@@ -5,8 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import velka.core.abstraction.ExtendedLambda;
 import velka.core.abstraction.Operators;
-import velka.core.application.AbstractionApplication;
 import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
@@ -78,7 +78,7 @@ public class VelkaClojureOperators {
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.Subtraction));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.Timestamp));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.ToStr));
-		sb.append(ClojureHelper.makeOperatorDeclaration(AbstractionApplication.defaultRanking));
+		sb.append(ClojureHelper.makeOperatorDeclaration(ExtendedLambda.defaultSelectionFunction));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.DivisionFloatingPoint));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.intToDouble));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.floor));
@@ -120,7 +120,7 @@ public class VelkaClojureOperators {
 			sb.append(ClojureHelper.makeOperatorDef(Operators.Subtraction, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.Timestamp, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.ToStr, env, typeEnv));
-			sb.append(ClojureHelper.makeOperatorDef(AbstractionApplication.defaultRanking, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(ExtendedLambda.defaultSelectionFunction, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.DivisionFloatingPoint, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.intToDouble, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.floor, env, typeEnv));

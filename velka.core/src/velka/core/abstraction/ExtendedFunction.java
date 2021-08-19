@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import velka.core.application.AbstractionApplication;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
@@ -155,7 +154,7 @@ public class ExtendedFunction extends ExtendedLambda {
 	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
 			Environment createdEnvironment) throws AppendableException {
 		return ExtendedFunction.makeExtendedFunction(implementations, createdEnvironment,
-				AbstractionApplication.defaultRanking);
+				ExtendedLambda.defaultSelectionFunction);
 	}
 
 	/**

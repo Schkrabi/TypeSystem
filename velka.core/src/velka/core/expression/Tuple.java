@@ -207,4 +207,9 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	 * Empty tuple expression
 	 */
 	public static final Tuple EMPTY_TUPLE = new Tuple();
+	
+	/**
+	 * Clojure code for empty tuple
+	 */
+	public static final String EMPTY_TUPLE_CLOJURE = ClojureHelper.tupleHelper();
 }

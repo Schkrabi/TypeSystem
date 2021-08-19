@@ -2,10 +2,12 @@ package velka.core.langbase;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import velka.types.Substitution;
 import velka.types.Type;
@@ -36,7 +38,7 @@ import velka.util.NameGenerator;
 import velka.util.Pair;
 
 public class ListNative {
-	
+
 	/**
 	 * Name of velka.clojure.list namespace
 	 */
@@ -66,6 +68,11 @@ public class ListNative {
 	 * Empty list native
 	 */
 	public static final LitComposite EMPTY_LIST_NATIVE = new LitComposite(Tuple.EMPTY_TUPLE, TypeAtom.TypeListNative);
+	
+	/**
+	 * Clojure code for empty list
+	 */
+	public static final String EMPTY_LIST_NATIVE_CLOJURE = LitComposite.clojureValueToClojureLiteral(Tuple.EMPTY_TUPLE_CLOJURE, TypeAtom.TypeListNative);
 
 	/**
 	 * is-list-native-empty symbol
@@ -1017,12 +1024,12 @@ public class ListNative {
 			final String element = "_element";
 			final String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, element), 
-					ClojureHelper.ifHelper(
+					ClojureHelper.velkaIfHelper(
 							ClojureHelper.applyVelkaFunction(
 									isEmptySymbol.toClojureCode(env, typeEnv), 
 									list), 
 							LitBoolean.FALSE.toClojureCode(env, typeEnv), 
-							ClojureHelper.ifHelper(
+							ClojureHelper.velkaIfHelper(
 									ClojureHelper.applyVelkaFunction(
 											Operators.Equals.toClojureCode(env, typeEnv), 
 											ClojureHelper.applyVelkaFunction(
@@ -1086,12 +1093,12 @@ public class ListNative {
 			String pred = "_pred";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, pred), 
-					ClojureHelper.ifHelper(
+					ClojureHelper.velkaIfHelper(
 							ClojureHelper.applyVelkaFunction(
 									isEmptySymbol.toClojureCode(env, typeEnv), 
 									list), 
 							list, 
-							ClojureHelper.ifHelper(
+							ClojureHelper.velkaIfHelper(
 									ClojureHelper.applyVelkaFunction(
 											pred, 
 											ClojureHelper.applyVelkaFunction(
@@ -1185,10 +1192,10 @@ public class ListNative {
 			String index = "_index";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, index), 
-					ClojureHelper.ifHelper(
+					ClojureHelper.velkaIfHelper(
 							ClojureHelper.applyVelkaFunction(isEmptySymbol.toClojureCode(env, typeEnv), list), 
 							ClojureHelper.errorHelper(ClojureHelper.stringHelper(errorMsg)), 
-							ClojureHelper.ifHelper(
+							ClojureHelper.velkaIfHelper(
 									ClojureHelper.applyVelkaFunction(
 											Operators.NumericEqual.toClojureCode(env, typeEnv), 
 											index,
@@ -1250,7 +1257,7 @@ public class ListNative {
 			String i = "_i";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(n, fn, i),
-					ClojureHelper.ifHelper(
+					ClojureHelper.velkaIfHelper(
 							ClojureHelper.applyVelkaFunction(Operators.LesserThan.toClojureCode(env, typeEnv), i, n), 
 							ClojureHelper.litCompositeHelper(
 									TypeAtom.TypeListNative, 
@@ -1363,10 +1370,10 @@ public class ListNative {
 			String element = "_element";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, element),
-					ClojureHelper.ifHelper(
+					ClojureHelper.velkaIfHelper(
 							ClojureHelper.applyVelkaFunction(isEmptySymbol.toClojureCode(env, typeEnv), list), 
 							list, 
-							ClojureHelper.ifHelper(
+							ClojureHelper.velkaIfHelper(
 									ClojureHelper.applyVelkaFunction(
 											Operators.Equals.getClojureSymbol().toClojureCode(env, typeEnv),
 											ClojureHelper.applyVelkaFunction(headSymbol.toClojureCode(env, typeEnv), list),
@@ -1501,10 +1508,10 @@ public class ListNative {
 			String list2 = "_list2";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list1, list2), 
-					ClojureHelper.ifHelper(
+					ClojureHelper.velkaIfHelper(
 							ClojureHelper.applyVelkaFunction(isEmptySymbol.toClojureCode(env, typeEnv), list2), 
 							list1, 
-							ClojureHelper.ifHelper(
+							ClojureHelper.velkaIfHelper(
 									ClojureHelper.applyVelkaFunction(isEmptySymbol.toClojureCode(env, typeEnv), list1), 
 									list2, 
 									ClojureHelper.litCompositeHelper(
@@ -1578,6 +1585,16 @@ public class ListNative {
 	}
 	
 	/**
+	 * Creates a native list from collection
+	 * @param col collection
+	 * @return LitComposite with native list
+	 */
+	public static LitComposite collectionToListNative(Collection<? extends Expression> col) {
+		List<Expression> l = col.stream().collect(Collectors.toList());
+		return ListNative.makeListNativeExpression(l);
+	}
+	
+	/**
 	 * Converts tuple into equvivalent list
 	 * @param t converted tuple
 	 * @return LitComposite object containing native list
@@ -1613,5 +1630,26 @@ public class ListNative {
 	 */
 	public static LitComposite makeListNativeExpression(Expression ...exprs) {
 		return makeListNativeExpression(Arrays.asList(exprs));
+	}
+	
+	/**
+	 * Converts (at interpretation runtime) list into tuple
+	 * @param list converted list
+	 * @return tuple
+	 */
+	public static Tuple listNativeToTuple(LitComposite list) {
+		List<Expression> l = new LinkedList<Expression>();
+		
+		LitComposite it = list;
+		
+		while(!it.equals(ListNative.EMPTY_LIST_NATIVE)) {
+			Tuple pair = (Tuple)it.value;
+			Expression current = pair.get(0);
+			l.add(current);
+			
+			it = (LitComposite)pair.get(1);
+		}
+		
+		return new Tuple(l);
 	}
 }

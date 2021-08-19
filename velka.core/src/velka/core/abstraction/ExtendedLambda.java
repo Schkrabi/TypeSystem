@@ -3,26 +3,32 @@ package velka.core.abstraction;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import velka.core.application.AbstractionApplication;
+import velka.core.exceptions.MalformedSelectionFunctionException;
 import velka.core.expression.Expression;
+import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
-import velka.core.expression.TypeSymbol;
 import velka.core.interpretation.ClojureCoreSymbols;
+import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.ListNative;
-import velka.core.literal.LitInteger;
+import velka.core.literal.LitComposite;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
+import velka.types.TypeArrow;
+import velka.types.TypeAtom;
 import velka.types.TypeSetDoesNotUnifyException;
+import velka.types.TypeTuple;
+import velka.types.TypeVariable;
 import velka.util.AppendableException;
+import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ThrowingBinaryOperator;
 import velka.util.ThrowingFunction;
@@ -54,11 +60,11 @@ public class ExtendedLambda extends Abstraction {
 	/**
 	 * Ranking function for this extended lambda
 	 */
-	public final Expression rankingFunction;
+	public final Expression selectionFunction;
 
-	protected ExtendedLambda(Collection<? extends Lambda> implementations, Expression rankingFunction) {
+	protected ExtendedLambda(Collection<? extends Lambda> implementations, Expression selectionFunction) {
 		this.implementations = new TreeSet<Lambda>(implementations);
-		this.rankingFunction = rankingFunction;
+		this.selectionFunction = selectionFunction;
 	}
 
 	@Override
@@ -72,7 +78,7 @@ public class ExtendedLambda extends Abstraction {
 			throw e;
 		}
 
-		return ExtendedFunction.makeExtendedFunction(fs, env, this.rankingFunction);
+		return ExtendedFunction.makeExtendedFunction(fs, env, this.selectionFunction);
 	}
 
 	@Override
@@ -185,7 +191,7 @@ public class ExtendedLambda extends Abstraction {
 	 *                             unify
 	 */
 	public static ExtendedLambda makeExtendedLambda(Collection<Lambda> implementations) throws AppendableException {
-		return ExtendedLambda.makeExtendedLambda(implementations, AbstractionApplication.defaultRanking);
+		return ExtendedLambda.makeExtendedLambda(implementations, ExtendedLambda.defaultSelectionFunction);
 	}
 
 	/**
@@ -205,83 +211,177 @@ public class ExtendedLambda extends Abstraction {
 
 	@Override
 	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("(let [impls #{");
-		for (Lambda l : this.implementations) {
-			sb.append(l.toClojureFn(env, typeEnv));
-			sb.append("\n");
-		}
-		sb.append("}]");
-		sb.append("(fn ");
-
-		sb.append("([args] (");
-		sb.append(ClojureCoreSymbols.selectImplementationClojureSymbol_full);
-		sb.append(" ");
-		sb.append(this.rankingFunction.toClojureCode(env, typeEnv));
-		sb.append(" args impls))\n");
-
-		sb.append("([args ranking-fn] (");
-		sb.append(ClojureCoreSymbols.selectImplementationClojureSymbol_full);
-		sb.append(" ranking-fn args impls))))");
-
-		return sb.toString();
-	}
-	
-	/**
-	 * Ranks implementation
-	 * @param impl ranked implementation
-	 * @param args arguments with implementation would be applied
-	 * @return implementation score
-	 * @throws AppendableException 
-	 */
-	private static Long rankImplementation(Lambda impl, Tuple args, Expression rankingFunction, Environment env, TypeEnvironment typeEnv) throws AppendableException{
-		final Expression argsList = ListNative.tupleToListNative(args);
+		//(let [impls (ListNative.collectioToListNative(this.implementations).toClojureCode())]
+		//	(fn ([args] (EAPPLY this.selectionFunction.toClojureCode() [args impls]))
+		//		([args selection-function] (EAPPLY selection-function [args impls]))))
 		
-		Expression formalArgsList = ListNative.tupleToListNative(new Tuple(impl.argsType.stream().map(t -> new TypeSymbol(t)).collect(Collectors.toList())));
+		String implsValue = "";
 		
-		AbstractionApplication appl = new AbstractionApplication(
-				rankingFunction,
-				new Tuple(formalArgsList, argsList));
-		
-		Expression rankingResult = appl.interpret(env, typeEnv);
-		if (!(rankingResult instanceof LitInteger)) {
-			throw new AppendableException("Badly formed ranking function " + rankingFunction.toString());
-		}
-		long result = ((LitInteger) rankingResult).value;
-		return result;
-	}
-
-	@Override
-	public Abstraction selectImplementation(Tuple args, Optional<Expression> rankingFunction, Environment env,
-			TypeEnvironment typeEnv) throws AppendableException {
 		try {
-			Stream<Pair<Long, Abstraction>> rankedImpls = this.implementations
-					.stream().map(
-							ThrowingFunction
-									.wrapper(
-											implementation -> new Pair<Long, Abstraction>(
-													rankImplementation(implementation, args,
-															rankingFunction.isPresent() ? rankingFunction.get()
-																	: this.rankingFunction,
-															env, typeEnv),
-													implementation)));
-
-			Abstraction abst = rankedImpls.reduce(new Pair<Long, Abstraction>(Long.MAX_VALUE, null), (p1, p2) -> {
-				if (p1.first < p2.first) {
-					return p1;
-				} else {
-					return p2;
-				}
-			}).second;
-
-			return abst;
+			implsValue = ClojureHelper.listNativeClojure(this.implementations.stream()
+					.map(ThrowingFunction.wrapper(x -> x.toClojureFn(env, typeEnv))).collect(Collectors.toList()));
 		} catch (RuntimeException re) {
 			if (re.getCause() instanceof AppendableException) {
-				AppendableException e = (AppendableException) re.getCause();
-				throw e;
+				throw (AppendableException) re.getCause();
 			}
 			throw re;
 		}
+		
+		String selectionFunCode = "";
+		if(this.selectionFunction instanceof Operator) {
+			selectionFunCode = ((Operator)this.selectionFunction).getClojureSymbol().toClojureCode(env, typeEnv);
+		}
+		else{
+			selectionFunCode = this.selectionFunction.toClojureCode(env, typeEnv);
+		}
+		
+		final String impls = "_impls";
+		final String args = "_args";
+		final String selectionFn = "_selection-function";
+		
+		String code = ClojureHelper.letHelper(
+				ClojureHelper.fnHelper(
+						new Pair<List<String>, String>(Arrays.asList(args),
+								ClojureHelper.applyVelkaFunction(selectionFunCode,
+										impls,
+										ClojureHelper.applyClojureFunction(
+												ClojureCoreSymbols.tuple2velkaListSymbol_full, args))),
+						new Pair<List<String>, String>(Arrays.asList(args, selectionFn),
+								ClojureHelper.applyVelkaFunction(selectionFn,
+										impls,
+										ClojureHelper.applyClojureFunction(
+												ClojureCoreSymbols.tuple2velkaListSymbol_full, args)))),
+				new Pair<String, String>(impls, implsValue));
+		
+		return code;
 	}
+
+	@Override
+	public Abstraction selectImplementation(Tuple args, Optional<Expression> selectionFunction, Environment env,
+			TypeEnvironment typeEnv) throws AppendableException {
+		AbstractionApplication selectionApplication = 
+				new AbstractionApplication(
+						selectionFunction.isPresent() ? selectionFunction.get() : this.selectionFunction,
+						new Tuple(
+								ListNative.collectionToListNative(this.implementations),
+								ListNative.tupleToListNative(args)
+								));
+		
+		Expression impl = selectionApplication.interpret(env, typeEnv);
+		if(!(impl instanceof Abstraction)) {
+			throw new MalformedSelectionFunctionException(this, selectionApplication.fun, args, impl);
+		}
+		return (Abstraction)impl;
+	}
+	
+	/**
+	 * Default selection function
+	 */
+	public static final Operator defaultSelectionFunction = new Operator() {
+		
+		/**
+		 * Type Variable for return type of the operator
+		 */
+		private final TypeVariable A = new TypeVariable(NameGenerator.next());
+		/**
+		 * Type Variable for return type of the operator
+		 */
+		private final TypeVariable B = new TypeVariable(NameGenerator.next());
+		
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			final String implList = "_impl-list";
+			final String argList = "_arg-list";
+			final String argType = "_arg-type";
+			
+			final String pair1 = "_pair1";
+			final String pair2 = "_pair2";
+			
+			final String impl = "_impl";
+			
+			//(fn [impl-list arg-list]
+			//	(let [argType (GET-TYPE (LIST-NATIVE-2-VECTOR arg-list))]
+			//		(second (reduce (fn [pair1 pair2] (if (< (first pair1) (first pair2)) pair1 pair2))
+			//						(map (fn [impl] [(.tupleDistance (.ltype (GET-TYPE impl)) argsType)]) impl-list)))))
+			final String code = ClojureHelper.fnHelper(Arrays.asList(implList, argList),
+					ClojureHelper.letHelper(
+							ClojureHelper.applyClojureFunction("second",
+									ClojureHelper.applyClojureFunction("reduce",
+											ClojureHelper.fnHelper(Arrays.asList(pair1, pair2),
+													ClojureHelper.clojureIfHelper(
+															ClojureHelper.applyClojureFunction("<",
+																	ClojureHelper.applyClojureFunction(
+																			"first", pair1),
+																	ClojureHelper.applyClojureFunction("first", pair2)),
+															pair1, pair2)),
+											ClojureHelper.applyClojureFunction("map", 
+													ClojureHelper.fnHelper(Arrays.asList(impl),
+														ClojureHelper.clojureVectorHelper(
+																ClojureHelper.applyClojureFunction(".tupleDistance",
+																		ClojureHelper.applyClojureFunction(".ltype",
+																				ClojureHelper.applyClojureFunction(
+																						ClojureCoreSymbols.getTypeClojureSymbol_full,
+																						impl)),
+																		argType),
+																impl)),
+													ClojureHelper.applyClojureFunction(
+															ClojureCoreSymbols.listNativeToTuple_full, implList)))),
+							new Pair<String, String>(argType,
+									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full,
+											ClojureHelper.applyClojureFunction(
+													ClojureCoreSymbols.listNativeToTuple_full, argList)))));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("default-selection-function", Operators.NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitComposite implList = (LitComposite)args.get(0);
+			LitComposite argList = (LitComposite)args.get(1);
+			
+			TypeTuple argsTuple = null;
+			
+			try {
+				argsTuple = new TypeTuple(ListNative.listNativeToTuple(argList).stream().map(ThrowingFunction.wrapper(e -> e.infer(env, typeEnv).first)).collect(Collectors.toList()));
+			}catch(RuntimeException re) {
+				if(re.getCause() instanceof AppendableException) {
+					throw (AppendableException)re.getCause();
+				}
+				throw re;
+			}
+			
+			int bestCost = Integer.MAX_VALUE;
+			Lambda bestImplementation = null; 
+			while(!implList.equals(ListNative.EMPTY_LIST_NATIVE)) {
+				Tuple pair = (Tuple)implList.value;
+				Lambda current = (Lambda)pair.get(0);
+				
+				int currentCost = argsTuple.tupleDistance(current.argsType);
+				
+				if(currentCost < bestCost || bestImplementation == null) {
+					bestCost = currentCost;
+					bestImplementation = current;
+				}
+				
+				implList = (LitComposite)pair.get(1);
+			}
+			
+			return bestImplementation;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(
+					new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeListNative),
+					new TypeArrow(A, B));
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
 }

@@ -5,18 +5,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import velka.core.abstraction.Abstraction;
-import velka.core.abstraction.Operator;
-import velka.core.abstraction.Operators;
 import velka.core.conversions.Conversions;
 import velka.core.exceptions.InvalidNumberOfArgumentsException;
 import velka.core.expression.Expression;
-import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.ClojureCoreSymbols;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
-import velka.core.literal.LitComposite;
-import velka.core.literal.LitInteger;
 import velka.util.AppendableException;
 import velka.util.NameGenerator;
 import velka.util.Pair;
@@ -27,7 +22,6 @@ import velka.types.SubstitutionCollectionCannotBeMerged;
 import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
-import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.types.TypesDoesNotUnifyException;
@@ -53,18 +47,18 @@ public class AbstractionApplication extends Application {
 	/**
 	 * Ranking function for this abstraction application
 	 */
-	public final Optional<Expression> rankingFunction;
+	public final Optional<Expression> selectionFunction;
 
 	public AbstractionApplication(Expression fun, Expression args) {
 		super(args);
 		this.fun = fun;
-		this.rankingFunction = Optional.empty();
+		this.selectionFunction = Optional.empty();
 	}
 
-	public AbstractionApplication(Expression fun, Expression args, Expression rankingFunction) {
+	public AbstractionApplication(Expression fun, Expression args, Expression selectionFunction) {
 		super(args);
 		this.fun = fun;
-		this.rankingFunction = Optional.of(rankingFunction);
+		this.selectionFunction = Optional.of(selectionFunction);
 	}
 
 	@Override
@@ -87,7 +81,7 @@ public class AbstractionApplication extends Application {
 		Pair<Type, Substitution> iArgsInfered = iArgs.infer(env, typeEnv);
 
 		// Select implementation to use (if applicable)
-		abst = abst.selectImplementation(iArgs, this.rankingFunction, env, typeEnv);
+		abst = abst.selectImplementation(iArgs, this.selectionFunction, env, typeEnv);
 
 		// Convert arguments to specific representations
 		Pair<Type, Substitution> abstInfered = abst.infer(env, typeEnv);
@@ -104,7 +98,7 @@ public class AbstractionApplication extends Application {
 		Tuple cArgsTuple = (Tuple) cArgs.interpret(env, typeEnv);
 
 		// Finally evaluate application
-		return abst.substituteAndEvaluate(cArgsTuple, env, typeEnv, this.rankingFunction);
+		return abst.substituteAndEvaluate(cArgsTuple, env, typeEnv, this.selectionFunction);
 	}
 
 	/**
@@ -207,14 +201,14 @@ public class AbstractionApplication extends Application {
 		
 		sb.append("(");
 		sb.append(ClojureCoreSymbols.eapplyClojureSymbol_full);
-		sb.append(" \n");
+		sb.append(" ");
 		sb.append(this.fun.toClojureCode(env, typeEnv));
-		sb.append(" \n");
+		sb.append(" ");
 		sb.append(this.args.toClojureCode(env, typeEnv));
 		
-		if(this.rankingFunction.isPresent()) {
-			sb.append(" \n");
-			sb.append(this.rankingFunction.get().toClojureCode(env, typeEnv));
+		if(this.selectionFunction.isPresent()) {
+			sb.append(" ");
+			sb.append(this.selectionFunction.get().toClojureCode(env, typeEnv));
 		}
 		
 		sb.append(")");
@@ -232,13 +226,13 @@ public class AbstractionApplication extends Application {
 			c = this.args.compareTo(o.args);
 			if (c != 0)
 				return c;
-			if (this.rankingFunction.isEmpty() && o.rankingFunction.isEmpty())
+			if (this.selectionFunction.isEmpty() && o.selectionFunction.isEmpty())
 				return 0;
-			if (this.rankingFunction.isEmpty() && o.rankingFunction.isPresent())
+			if (this.selectionFunction.isEmpty() && o.selectionFunction.isPresent())
 				return -1;
-			if (this.rankingFunction.isPresent() && o.rankingFunction.isEmpty())
+			if (this.selectionFunction.isPresent() && o.selectionFunction.isEmpty())
 				return 1;
-			c = this.rankingFunction.get().compareTo(o.rankingFunction.get());
+			c = this.selectionFunction.get().compareTo(o.selectionFunction.get());
 			return c;
 		}
 		return super.compareTo(other);
@@ -249,91 +243,18 @@ public class AbstractionApplication extends Application {
 		if (other instanceof AbstractionApplication) {
 			return this.fun.equals(((AbstractionApplication) other).fun)
 					&& this.args.equals(((AbstractionApplication) other).args)
-					&& this.rankingFunction.equals(((AbstractionApplication) other).rankingFunction);
+					&& this.selectionFunction.equals(((AbstractionApplication) other).selectionFunction);
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return this.fun.hashCode() * this.args.hashCode() * this.rankingFunction.hashCode();
+		return this.fun.hashCode() * this.args.hashCode() * this.selectionFunction.hashCode();
 	}
 
 	@Override
 	protected String applicatedToString() {
 		return this.fun.toString();
 	}
-
-	/**
-	 * default ranking function
-	 */
-	public static final Operator defaultRanking = new Operator() {
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
-			LitComposite formalArgList = (LitComposite) args.get(0);
-			LitComposite realArgList = (LitComposite) args.get(1);
-
-			int acc = 0;
-			Tuple formalArgCons = (Tuple) formalArgList.value;
-			Tuple realArgCons = (Tuple) realArgList.value;
-
-			while (!formalArgCons.equals(Tuple.EMPTY_TUPLE) && !realArgCons.equals(Tuple.EMPTY_TUPLE)) {
-				Expression formalArg = formalArgCons.get(0);
-				Expression realArg = realArgCons.get(0);
-				Type formalArgType = formalArg.infer(env, typeEnv).first;
-				Type realArgType = realArg.infer(env, typeEnv).first;
-				
-				if(Type.unifyRepresentation(formalArgType, realArgType).isEmpty()) {
-					acc++;
-				}
-
-				formalArgCons = (Tuple) ((LitComposite) formalArgCons.get(1)).value;
-				realArgCons = (Tuple) ((LitComposite) realArgCons.get(1)).value;
-			}
-
-			return new LitInteger(acc);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type t = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeListNative),
-					TypeAtom.TypeIntNative);
-			return new Pair<Type, Substitution>(t, Substitution.EMPTY);
-		}
-
-		@Override
-		public String toString() {
-			return "defaultRankingFunction";
-		}
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return 
-					"(fn [formalArgList realArgList]\n" + 
-					"    (letfn [\n" + 
-					"        (is-list-empty [l] (= [] (first l)))\n" + 
-					"        (list-head [l] (first (first l)))\n" + 
-					"        (list-tail [l] (second (first l)))\n" + 
-					"        (equal-heads [formalArgList realArgList]\n" + 
-					"            (if (.isPresent \n" +  
-					"                        (velka.types.Type/unifyRepresentation\n" + 
-					"                            (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " (list-head formalArgList))\n" + 
-					"                            (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " (list-head realArgList)))) 0 1))\n" +  
-					"        (aggregate [formalArgList realArgList]\n" + 
-					"            (if (or (is-list-empty formalArgList) (is-list-empty realArgList))\n" + 
-					"                0\n" + 
-					"                (+\n"+ 
-					"                    (equal-heads formalArgList realArgList)\n" + 
-					"                    (aggregate (list-tail formalArgList) (list-tail realArgList)))))]\n" + 
-					LitInteger.clojureIntToClojureLitInteger("(aggregate formalArgList realArgList)") + "))";	
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-default-ranking", Operators.NAMESPACE);
-		}
-
-	};
 }
