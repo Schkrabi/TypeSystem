@@ -4,12 +4,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.stream.Collectors;
 
 import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Operator;
-import velka.core.langbase.ListNative;
 import velka.core.literal.LitComposite;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -526,25 +524,23 @@ public class ClojureHelper {
 	 * @param members code for members of list
 	 * @return code for list native
 	 */
-	public static String listNativeClojure(List<String> members) {
-		String s = ListNative.EMPTY_LIST_NATIVE_CLOJURE;
-		ListIterator<String> i = members.listIterator(members.size());
+	public static String listNativeClojure(Collection<String> members) {
+		StringBuilder sb = new StringBuilder("(lazy-seq ");
 		
-		while(i.hasPrevious()) {
-			String current = i.previous();
-			s = LitComposite.clojureValueToClojureLiteral(ClojureHelper.tupleHelper(current, s), TypeAtom.TypeListNative);
+		sb.append("(list ");
+		
+		Iterator<String> i = members.iterator();
+		while(i.hasNext()) {
+			String element = i.next();
+			sb.append(element);
+			if(i.hasNext()) {
+				sb.append(" ");
+			}
 		}
 		
-		return s;
-	}
-	
-	/**
-	 * Creates code for ListNative value in clojure
-	 * @param members code for members of list
-	 * @return code for list native
-	 */
-	public static String listNativeClojure(Collection<String> members) {
-		return ClojureHelper.listNativeClojure(members.stream().collect(Collectors.toList()));
+		sb.append("))");
+		
+		return LitComposite.clojureValueToClojureLiteral(sb.toString(), TypeAtom.TypeListNative);
 	}
 	
 	/**
@@ -554,5 +550,94 @@ public class ClojureHelper {
 	 */
 	public static String listNativeClojure(String ...members) {
 		return ClojureHelper.listNativeClojure(Arrays.asList(members));
+	}
+	
+	/**
+	 * Gets inner value of literal
+	 * @param literalCode
+	 * @return
+	 */
+	public static String getLiteralInnerValue(String literalCode) {
+		return ClojureHelper.applyClojureFunction("first", literalCode);
+	}
+	
+	/**
+	 * Creates clojure cond expression
+	 * @param clauses pairs in from test - expression
+	 * @return string with code
+	 */
+	public static String condHelper(Collection<Pair<String, String>> clauses) {
+		StringBuilder sb = new StringBuilder("(cond ");
+		
+		Iterator<Pair<String, String>> i = clauses.iterator();
+		while(i.hasNext()) {
+			Pair<String, String> pair = i.next();
+			String test = pair.first;
+			String expr = pair.second;
+			sb.append(test);
+			sb.append(" ");
+			sb.append(expr);
+			if(i.hasNext()) {
+				sb.append(" ");
+			}
+		}
+		
+		sb.append(")");
+		return sb.toString();
+	}
+	
+	/**
+	 * Creates clojure cond expression
+	 * @param clauses pairs in from test - expression
+	 * @return string with code
+	 */
+	@SafeVarargs
+	public static String condHelper(Pair<String, String> ...clauses) {
+		return ClojureHelper.condHelper(Arrays.asList(clauses));
+	}
+	
+	/**
+	 * Creates code that redefines globally defined ^:dynamic variable
+	 * 
+	 * @param symbol redefined symbol
+	 * @param value  new value
+	 * @return string with code
+	 */
+	public static String rebindGlobalVariable(String symbol, String value) {
+		return ClojureHelper.applyClojureFunction("alter-var-root", "#'" + symbol,
+				ClojureHelper.applyClojureFunction("constantly", value));
+	}
+	
+	/**
+	 * Creates record for atomic conversion map
+	 * 
+	 * @param fromType from type of conversion
+	 * @param toType to type of conversion
+	 * @param conversionCode code for conversion
+	 * @return String with code
+	 */
+	public static String makeAtomicConversionRecord(TypeAtom fromType, TypeAtom toType, String conversionCode) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(ClojureHelper.clojureVectorHelper(fromType.clojureTypeRepresentation(), toType.clojureTypeRepresentation()));
+		sb.append(" ");
+		sb.append(conversionCode);
+		return sb.toString();
+	}
+	
+	/**
+	 * Creates code to add conversion to global variable
+	 * 
+	 * @param fromType from type of conversion
+	 * @param toType to type of conversion
+	 * @param conversionCode code for conversion
+	 * @return String with code
+	 */
+	public static String addConversionToGlobalTable(TypeAtom fromType, TypeAtom toType, String conversionCode) {
+		String code = ClojureHelper.rebindGlobalVariable(ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
+				ClojureHelper.applyClojureFunction("assoc",
+						ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
+						ClojureHelper.makeAtomicConversionRecord(fromType, toType, conversionCode)));
+		
+		return code;
 	}
 }

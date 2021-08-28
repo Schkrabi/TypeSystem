@@ -9,6 +9,7 @@ import java.util.Arrays;
 import velka.core.abstraction.ConversionOperators;
 import velka.core.interpretation.ClojureCoreSymbols;
 import velka.core.interpretation.ClojureHelper;
+import velka.core.literal.LitComposite;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.util.Pair;
@@ -24,75 +25,56 @@ public class VelkaClojureCore {
 	 */
 	public static String type2typeSymbolDef = "(defn " + ClojureCoreSymbols.type2typeSymbolSymbol + " [type] \n"
 			+ ClojureHelper.addTypeMetaInfo_str("[type]", "type") + ")";
+	
+	private static final String getTypeClojure_expr = "_expr";
 	/**
 	 * Definition for get-type clojure symbol
 	 */
-	public static String getTypeClojureDef = "(defn " + ClojureCoreSymbols.getTypeClojureSymbol + " [expr] (:lang-type (meta expr)))";
+	public static String getTypeClojureDef = 
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.getTypeClojureSymbol, Arrays.asList(getTypeClojure_expr), 
+					ClojureHelper.applyClojureFunction(":lang-type", 
+							ClojureHelper.applyClojureFunction("meta", getTypeClojure_expr)));
+	
 	private static final String ListNativeToTuple_list = "_list";
-	private static final String ListNativeToTuple_value = "_value";
-	private static final String ListNativeToTuple_rec = "_list-native-to-tuple-rec";
-	private static final String ListNativeToTuple_recList = "_rec-list";
 	/**
 	 * Definition of list-native-to-tuple function
 	 */
 	public static String listNativeToTuple =	
 			ClojureHelper
 					.clojureDefnHelper(ClojureCoreSymbols.listNativeToTuple, Arrays.asList(ListNativeToTuple_list),
-							ClojureHelper
-									.letfnHelper(
-											ClojureHelper
-													.tupleHelper_str(ClojureHelper.applyClojureFunction("vec",
-															ClojureHelper.applyClojureFunction(ListNativeToTuple_rec,
-																	ListNativeToTuple_list))),
-											ClojureHelper.makeLetfnTriplet(ListNativeToTuple_rec,
-													Arrays.asList(ListNativeToTuple_recList),
-													ClojureHelper.letHelper(ClojureHelper.clojureIfHelper(ClojureHelper
-															.applyClojureFunction("empty?", ListNativeToTuple_value),
-															"[]",
-															ClojureHelper.applyClojureFunction("cons",
-																	ClojureHelper.applyClojureFunction("first",
-																			ListNativeToTuple_value),
-																	ClojureHelper.applyClojureFunction(
-																			ClojureCoreSymbols.listNativeToTuple_full,
-																			ClojureHelper.applyClojureFunction("second",
-																					ListNativeToTuple_value)))),
-															new Pair<String, String>(ListNativeToTuple_value,
-																	ClojureHelper.applyClojureFunction("first",
-																			ListNativeToTuple_recList))))));
+							ClojureHelper.tupleHelper_str(ClojureHelper.getLiteralInnerValue(ListNativeToTuple_list)));
 	
+	
+	private static final String tuple2velkaList_tuple = "_tuple";
 	/**
 	 * Definition for tuple-2-velka-list function
 	 */
-	public static String tuple2velkaListDef = "(defn " + ClojureCoreSymbols.tuple2velkaListSymbol + " [tuple] \n" + "    (reduce \n"
-			+ "        (fn [rest x] "
-			+ ClojureHelper.addTypeMetaInfo(
-					"[" + ClojureHelper.addTypeMetaInfo_str("[x rest]",
-							"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol + " x) "
-									+ TypeAtom.TypeListNative.clojureTypeRepresentation() + "])")
-							+ "]",
-					TypeAtom.TypeListNative)
-			+ ") \n" + "        " + ClojureHelper
-					.addTypeMetaInfo("[" + ClojureHelper.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE) + "]", TypeAtom.TypeListNative)
-			+ " (reverse tuple)))";
+	public static String tuple2velkaListDef = 
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.tuple2velkaListSymbol, 
+					Arrays.asList(tuple2velkaList_tuple), 
+					LitComposite.clojureValueToClojureLiteral(
+							ClojureHelper.applyClojureFunction("lazy-seq", 
+									ClojureHelper.applyClojureFunction("seq", tuple2velkaList_tuple)), 
+							TypeAtom.TypeListNative));
 	/**
 	 * Definition for map of atomic type conversion
 	 */
 	public static String atomicConversionMapClojureDef = "(def ^:dynamic " + ClojureCoreSymbols.atomicConversionMapClojureSymbol + "{"
-			+ makeAtomicConversionRecord(TypeAtom.TypeIntNative, TypeAtom.TypeIntString,
+			+ ClojureHelper.makeAtomicConversionRecord(TypeAtom.TypeIntNative, TypeAtom.TypeIntString,
 					ConversionOperators.IntNativeToIntString.clojureDef())
 			+ "\n"
-			+ makeAtomicConversionRecord(
+			+ ClojureHelper.makeAtomicConversionRecord(
 					TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, ConversionOperators.IntNativeToIntRoman.clojureDef())
 			+ "\n"
-			+ makeAtomicConversionRecord(TypeAtom.TypeIntString, TypeAtom.TypeIntNative,
+			+ ClojureHelper.makeAtomicConversionRecord(TypeAtom.TypeIntString, TypeAtom.TypeIntNative,
 					ConversionOperators.IntStringToIntNative.clojureDef())
 			+ "\n"
-			+ makeAtomicConversionRecord(
+			+ ClojureHelper.makeAtomicConversionRecord(
 					TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, ConversionOperators.IntStringToIntRoman.clojureDef())
 			+ "\n"
-			+ makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative,
+			+ ClojureHelper.makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative,
 					ConversionOperators.IntRomanToIntNative.clojureDef())
-			+ "\n" + makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
+			+ "\n" + ClojureHelper.makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
 					ConversionOperators.IntRomanToIntString.clojureDef())
 			+ "})";
 	/**
@@ -161,26 +143,81 @@ public class VelkaClojureCore {
 			+ "    ([abstraction args]\n" + "        (let [impl (abstraction args)\n" + "              converted-args ("
 			+ ClojureCoreSymbols.convertClojureSymbol + "\n" + "                                 (.ltype (" + ClojureCoreSymbols.getTypeClojureSymbol
 			+ " impl))\n" + "                                 args)]\n" + "            (apply impl converted-args))))";
-
-	/**
-	 * Creates record for atomic conversion map
-	 * 
-	 * @param fromType
-	 * @param toType
-	 * @param conversionCode
-	 * @return
-	 */
-	public static String makeAtomicConversionRecord(TypeAtom fromType, TypeAtom toType, String conversionCode) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("[");
-		sb.append(fromType.clojureTypeRepresentation());
-		sb.append(" ");
-		sb.append(toType.clojureTypeRepresentation());
-		sb.append("]");
-		sb.append(" ");
-		sb.append(conversionCode);
-		return sb.toString();
-	}
+	
+	
+	private static final String langPstrClojureDef_expr = "_expr";
+	private static final String langPstrClojureDef_level = "_level";
+	private static final String langPstrClojureDef_aux = "_aux";
+	private static final String langPstrClojureDef_type = "_type";
+	private static final String langPstrClojureDef_vec = "_vec";
+	private static final String langPstrClojureDef_x = "_x";
+	public static final String langPstrClojureDef = 
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.langPstrClojure, 
+					Arrays.asList(langPstrClojureDef_expr), 
+					ClojureHelper.letfnHelper(
+							ClojureHelper.applyClojureFunction(langPstrClojureDef_aux, langPstrClojureDef_expr, "0"), 
+							ClojureHelper.makeLetfnTriplet(langPstrClojureDef_aux, 
+									Arrays.asList(langPstrClojureDef_expr, langPstrClojureDef_level), 
+									ClojureHelper.letHelper(
+											ClojureHelper.condHelper(
+													new Pair<String, String>(
+															ClojureHelper.applyClojureFunction("or", 
+																	ClojureHelper.applyClojureFunction("=", 
+																			langPstrClojureDef_type, 
+																			"velka.types.TypeAtom/TypeIntNative"),
+																	ClojureHelper.applyClojureFunction("=", 
+																			langPstrClojureDef_type, 
+																			"velka.types.TypeAtom/TypeStringNative"),
+																	ClojureHelper.applyClojureFunction("=", 
+																			langPstrClojureDef_type, 
+																			"velka.types.TypeAtom/TypeDoubleNative"),
+																	ClojureHelper.applyClojureFunction("=", 
+																			langPstrClojureDef_type, 
+																			"velka.types.TypeAtom/TypeIntNative")), 
+															ClojureHelper.clojureIfHelper(
+																	ClojureHelper.applyClojureFunction("=", langPstrClojureDef_level, "0"), 
+																	ClojureHelper.applyClojureFunction("pr-str", ClojureHelper.getLiteralInnerValue(langPstrClojureDef_expr)), 
+																	ClojureHelper.getLiteralInnerValue(langPstrClojureDef_expr))),
+													new Pair<String, String>(
+															ClojureHelper.applyClojureFunction("=", 
+																	langPstrClojureDef_type, "velka.types.TypeTuple/EMPTY_TUPLE"), 
+															"[]"),
+													new Pair<String, String>(
+															ClojureHelper.applyClojureFunction("or",
+																ClojureHelper.applyClojureFunction("instance?", 
+																		langPstrClojureDef_type,
+																		TypeTuple.class.getCanonicalName()),
+																ClojureHelper.applyClojureFunction("=", 
+																		langPstrClojureDef_type,
+																		"velka.types.TypeAtom/TypeListNative")), 
+															ClojureHelper.letHelper(
+																ClojureHelper.clojureIfHelper(
+																		ClojureHelper.applyClojureFunction("=", langPstrClojureDef_level, "0"), 
+																		ClojureHelper.applyClojureFunction("pr-str", langPstrClojureDef_vec), 
+																		langPstrClojureDef_vec),
+																new Pair<String, String>(langPstrClojureDef_vec, 
+																		ClojureHelper.applyClojureFunction("vec", 
+																			ClojureHelper.applyClojureFunction("map", 
+																					ClojureHelper.fnHelper(Arrays.asList(langPstrClojureDef_x), 
+																							ClojureHelper.applyClojureFunction(langPstrClojureDef_aux, 
+																									langPstrClojureDef_x,
+																									ClojureHelper.applyClojureFunction("+", langPstrClojureDef_level, "1"))),
+																					langPstrClojureDef_expr))))),
+													new Pair<String, String>(
+															ClojureHelper.applyClojureFunction("instance?", 
+																	langPstrClojureDef_type,
+																	TypeAtom.class.getCanonicalName()), 
+															ClojureHelper.applyClojureFunction(langPstrClojureDef_aux, 
+																	ClojureHelper.getLiteralInnerValue(langPstrClojureDef_expr),
+																	langPstrClojureDef_level)),
+													new Pair<String, String>(
+															":else",
+															ClojureHelper.errorHelper(ClojureHelper.applyClojureFunction("str", 
+																	langPstrClojureDef_expr,
+																	ClojureHelper.stringHelper("is not a printable expression"))))), 
+											new Pair<String, String>(langPstrClojureDef_type, 
+													ClojureHelper.applyClojureFunction(
+															ClojureCoreSymbols.getTypeClojureSymbol_full, langPstrClojureDef_expr))))));
 
 	/**
 	 * Generates clojure code for definitions of velka.clojure.core namespace
@@ -235,19 +272,20 @@ public class VelkaClojureCore {
 		sb.append("\n");
 		sb.append(eapplyClojureDef);
 		sb.append("\n");
-		sb.append("(def lang-pstr" + "(fn [exp]" + "(letfn [(lang-pstr-aux [exp level]"
-				+ "(let [type (:lang-type (meta exp))]" + "(cond" + "(or"
-				+ "(= type velka.types.TypeAtom/TypeIntNative)"
-				+ "(= type velka.types.TypeAtom/TypeStringNative)"
-				+ "(= type velka.types.TypeAtom/TypeDoubleNative)"
-				+ "(= type velka.types.TypeAtom/TypeBoolNative))" + "(if (= level 0)" + "(pr-str (get exp 0))"
-				+ "(get exp 0))" + "(= type velka.types.TypeTuple/EMPTY_TUPLE) []"
-				+ "(instance? velka.types.TypeAtom type) (lang-pstr-aux (get exp 0) level)"
-				+ "(instance? velka.types.TypeTuple type) " + "(if" + "(= level 0)"
-				+ "(pr-str (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))"
-				+ "(vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))"
-				+ ":else (throw (Throwable. (str exp \" is not a printable expression\"))))))]"
-				+ "(lang-pstr-aux exp 0))))");
+//		sb.append("(def lang-pstr" + "(fn [exp]" + "(letfn [(lang-pstr-aux [exp level]"
+//				+ "(let [type (:lang-type (meta exp))]" + "(cond" + "(or"
+//				+ "(= type velka.types.TypeAtom/TypeIntNative)"
+//				+ "(= type velka.types.TypeAtom/TypeStringNative)"
+//				+ "(= type velka.types.TypeAtom/TypeDoubleNative)"
+//				+ "(= type velka.types.TypeAtom/TypeBoolNative))" + "(if (= level 0)" + "(pr-str (get exp 0))"
+//				+ "(get exp 0))" + "(= type velka.types.TypeTuple/EMPTY_TUPLE) []"
+//				+ "(instance? velka.types.TypeAtom type) (lang-pstr-aux (get exp 0) level)"
+//				+ "(instance? velka.types.TypeTuple type) " + "(if" + "(= level 0)"
+//				+ "(pr-str (vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))"
+//				+ "(vec (map (fn [x] (lang-pstr-aux x (+ level 1))) exp)))"
+//				+ ":else (throw (Throwable. (str exp \" is not a printable expression\"))))))]"
+//				+ "(lang-pstr-aux exp 0))))");
+		sb.append(langPstrClojureDef);
 	
 		return sb.toString();
 	}

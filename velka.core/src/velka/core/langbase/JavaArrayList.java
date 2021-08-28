@@ -1226,7 +1226,7 @@ public class JavaArrayList {
 
 	};
 	
-	private static final Symbol ArrayListToLinkedListSymbol = new Symbol("to-linked-list", NAMESPACE);
+	public static final Symbol ArrayListToLinkedListSymbol = new Symbol("to-linked-list", NAMESPACE);
 	public static final Symbol ArrayListToLinkedListSymbol_out = new Symbol("array-list-2-linked-list");
 
 	/**
@@ -1267,7 +1267,7 @@ public class JavaArrayList {
 
 	};
 	
-	private static final Symbol ArrayListToNativeListSymbol = new Symbol("to-velka-list", NAMESPACE);
+	public static final Symbol ArrayListToNativeListSymbol = new Symbol("to-velka-list", NAMESPACE);
 	public static final Symbol ArrayListToNativeListSymbol_out = new Symbol("array-list-2-native-list");
 	
 	/**
@@ -1277,13 +1277,15 @@ public class JavaArrayList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list] (reduce (fn [_l _e] " 
-							+ LitComposite.clojureValueToClojureLiteral(
-									ClojureHelper.addTypeMetaInfo_str("[_e, _l]", 
-											"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full  + " _e) " 
-									+ TypeAtom.TypeListNative.clojureTypeRepresentation() + "])")
-									, TypeAtom.TypeListNative) + ") " 
-							+ ListNative.EMPTY_LIST_NATIVE.toClojureCode(env, typeEnv) + " (reverse (first _list))))";
+			String list = "_list";
+			
+			String code = ClojureHelper
+					.fnHelper(Arrays.asList(list),
+							LitComposite.clojureValueToClojureLiteral(
+									ClojureHelper.applyClojureFunction("lazy-seq",
+											ClojureHelper.applyClojureFunction("seq",
+													ClojureHelper.getLiteralInnerValue(list))),
+									TypeAtom.TypeListNative));
 			return code;
 		}
 
@@ -1295,15 +1297,9 @@ public class JavaArrayList {
 			@SuppressWarnings("unchecked")
 			ArrayList<Expression> l = (ArrayList<Expression>) lio.javaObject;
 			
-			LitComposite converted = ListNative.EMPTY_LIST_NATIVE;
+			LinkedList<Expression> ll = new LinkedList<Expression>(l);
 			
-			ListIterator<Expression> i = l.listIterator(l.size());
-			while(i.hasPrevious()) {
-				Expression e = i.previous();
-				converted = new LitComposite(new Tuple(e, converted), TypeAtom.TypeListNative );
-			}
-			
-			return converted;
+			return new LitComposite(new LitInteropObject(ll), TypeAtom.TypeListNative);
 		}
 
 		@Override

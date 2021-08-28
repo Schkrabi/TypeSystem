@@ -8,7 +8,9 @@ import java.nio.file.Paths;
 import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaLinkedList;
+import velka.types.TypeAtom;
 import velka.util.AppendableException;
 
 public class VelkaClojureLinkedList {
@@ -20,8 +22,6 @@ public class VelkaClojureLinkedList {
 		
 		// Require namespace
 		sb.append(ClojureHelper.requireNamespace("clojure.string"));
-		//sb.append(ClojureHelper.requireNamespace(VelkaClojureList.NAMESPACE));
-		//sb.append(ClojureHelper.requireNamespace(VelkaClojureArrayList.NAMESPACE));
 
 		// Declare namespace
 		sb.append(ClojureHelper.declareNamespace(JavaLinkedList.NAMESPACE));
@@ -29,8 +29,8 @@ public class VelkaClojureLinkedList {
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.addAll));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.addToEnd));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.addToIndex));
-		//sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.LinkedListToArrayList));
-		//sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.LinkedListToNativeList));
+		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.LinkedListToArrayList));
+		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.LinkedListToNativeList));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.constructor));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.contains));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.containsAll));
@@ -58,8 +58,8 @@ public class VelkaClojureLinkedList {
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.addAll, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.addToEnd, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.addToIndex, env, typeEnv));
-			//sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.LinkedListToArrayList, env, typeEnv));
-			//sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.LinkedListToNativeList, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.LinkedListToArrayList, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.LinkedListToNativeList, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.constructor, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.contains, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.containsAll, env, typeEnv));
@@ -78,6 +78,9 @@ public class VelkaClojureLinkedList {
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.size, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.sublist, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.sublist, env, typeEnv));
+			
+			sb.append(ClojureHelper.addConversionToGlobalTable(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeListNative, JavaLinkedList.LinkedListToNativeListSymbol.toClojureCode(env, typeEnv)));
+			sb.append(ClojureHelper.addConversionToGlobalTable(JavaLinkedList.TypeListJavaLinked, JavaArrayList.TypeListJavaArray, JavaLinkedList.LinkedListToArrayListSymbol.toClojureCode(env, typeEnv)));
 		} catch (AppendableException e) {
 			System.err.println("Error generating " + RELATIVE_PATH.toString() + " :" + e.getMessage());
 			return "";

@@ -981,22 +981,13 @@ class TestInterpretation {
         
         tempOut.delete();
         
+        Environment env = Environment.initTopLevelEnvitonment();
+        TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+        
         TestInterpretation.testOperator(Operators.StrSplit, 
         		new Tuple(new LitString("foo bar baz"), 
-        		new LitString(" ")), 
-        		new LitComposite(
-        				new Tuple(
-        						new LitString("foo"), 
-        						new LitComposite(
-        								new Tuple(
-        									new LitString("bar"), 
-        									new LitComposite(
-        											new Tuple(
-        													new LitString("baz"), 
-        													ListNative.EMPTY_LIST_NATIVE), 
-        											TypeAtom.TypeListNative)), 
-        								TypeAtom.TypeListNative)),
-        				TypeAtom.TypeListNative), 
+        		new LitString(" ")),
+        		ListNative.makeListNativeExpression(new LitString("foo"), new LitString("bar"), new LitString("baz")).interpret(env, typeEnv), 
         		TypeAtom.TypeListNative);
         
         TestInterpretation.testOperator(Operators.parseInt, 
@@ -1361,19 +1352,17 @@ class TestInterpretation {
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		ListNative.initializeInEnvironment(env, typeEnv);
 		
-		assertEquals(ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21), new LitInteger(2)),
+		assertEquals(
 				new LitComposite(
-						new Tuple(new LitInteger(42),
-								new LitComposite(new Tuple(new LitInteger(21),
-										new LitComposite(new Tuple(new LitInteger(2), ListNative.EMPTY_LIST_NATIVE),
-												TypeAtom.TypeListNative)),
-										TypeAtom.TypeListNative)),
-						TypeAtom.TypeListNative));
+						new LitInteropObject(new LinkedList<Expression>(
+								Arrays.asList(new LitInteger(42), new LitInteger(21), new LitInteger(2)))),
+						TypeAtom.TypeListNative),
+				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21), new LitInteger(2)).interpret(env, typeEnv));
 
 		TestInterpretation.testInterpretString("(construct List Native)",
 				ListNative.EMPTY_LIST_NATIVE, env, typeEnv);
 		TestInterpretation.testInterpretString("(construct List Native 42 (construct List Native))",
-				ListNative.makeListNativeExpression(new LitInteger(42)), env, typeEnv);
+				ListNative.makeListNativeExpression(new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
 
 		TestInterpretation.testInterpretString("(is-list-native-empty (construct List Native))", LitBoolean.TRUE, env,
 				typeEnv);
@@ -1395,23 +1384,20 @@ class TestInterpretation {
 
 		TestInterpretation.testInterpretString(
 				"(map-list-native (lambda (x) (+ x 1)) (construct List Native 42 (construct List Native)))",
-				ListNative.makeListNativeExpression(new LitInteger(43)), env, typeEnv);
+				ListNative.makeListNativeExpression(new LitInteger(43)).interpret(env, typeEnv), env, typeEnv);
 
 		TestInterpretation.testInterpretString(
 				"(map2-list-native + (construct List Native 21 (construct List Native 21 (construct List Native))) (construct List Native 21 (construct List Native 21 (construct List Native))))",
-				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(42)),
+				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(42)).interpret(env, typeEnv),
 				env, typeEnv);
 
 		TestInterpretation.testInterpretString(
 				"(foldl-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native))))",
 				new LitInteger(3), env, typeEnv);
-		TestInterpretation.testInterpretString(
-				"(foldr-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native))))",
-				new LitInteger(3), env, typeEnv);
 		
 		TestInterpretation.testInterpretString(
 				"(" + ListNative.addToEndSymbol_out + " (construct List Native 21 (construct List Native)) 42)",
-				ListNative.makeListNativeExpression(new LitInteger(21), new LitInteger(42)), env, typeEnv);
+				ListNative.makeListNativeExpression(new LitInteger(21), new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
 		
 		ArrayList<Expression> al = new ArrayList<Expression>();
 		al.add(new LitInteger(42));
@@ -1431,14 +1417,14 @@ class TestInterpretation {
 		TestInterpretation.testInterpretString("(contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 84)", LitBoolean.FALSE, env, typeEnv);
 		
 		TestInterpretation.testInterpretString("(filter-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
-				ListNative.makeListNativeExpression(LitBoolean.TRUE), env, typeEnv);
+				ListNative.makeListNativeExpression(LitBoolean.TRUE).interpret(env, typeEnv), env, typeEnv);
 		TestInterpretation.testInterpretString("(get-list-native (construct List Native 42 (construct List Native)) 0)", new LitInteger(42), env, typeEnv);
-		TestInterpretation.testInterpretString("(build-list-native 2 (lambda (x) x))", ListNative.makeListNativeExpression(new LitInteger(0), new LitInteger(1)), env, typeEnv);
+		TestInterpretation.testInterpretString("(build-list-native 2 (lambda (x) x))", ListNative.makeListNativeExpression(new LitInteger(0), new LitInteger(1)).interpret(env, typeEnv), env, typeEnv);
 		
-		TestInterpretation.testInterpretString("(remove-list-native (build-list-native 2 (lambda (x) x)) 1)", ListNative.makeListNativeExpression(new LitInteger(0)), env, typeEnv);
+		TestInterpretation.testInterpretString("(remove-list-native (build-list-native 2 (lambda (x) x)) 1)", ListNative.makeListNativeExpression(new LitInteger(0)).interpret(env, typeEnv), env, typeEnv);
 		TestInterpretation.testInterpretString("(size-list-native (build-list-native 42 (lambda (x) x)))", new LitInteger(42), env, typeEnv);
 		TestInterpretation.testInterpretString("(append-list-native (build-list-native 1 (lambda (x) 21)) (build-list-native 1 (lambda (x) 42)))", 
-				ListNative.makeListNativeExpression(new LitInteger(21), new LitInteger(42)), env, typeEnv);
+				ListNative.makeListNativeExpression(new LitInteger(21), new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
 	}
 
 	@Test
@@ -1775,19 +1761,13 @@ class TestInterpretation {
 				+ "(convert List:JavaArray List:JavaLinked l)", 
 				new LitComposite(new LitInteropObject(converted), JavaLinkedList.TypeListJavaLinked));
 		
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		TestInterpretation.testInterpretString("(define l (construct List JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
 				+ "(convert List:JavaArray List:Native l)", 
-				new LitComposite(
-						new Tuple(
-								new LitInteger(42),
-								new LitComposite(
-										new Tuple(
-												new LitInteger(21), 
-												ListNative.EMPTY_LIST_NATIVE), 
-										TypeAtom.TypeListNative)), 
-						TypeAtom.TypeListNative));
+				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21)).interpret(env, typeEnv));
 	}
 	
 	@Test

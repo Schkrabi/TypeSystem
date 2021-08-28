@@ -74,7 +74,7 @@ public class LitComposite extends Literal {
 
 	@Override
 	public String toString() {
-		return this.value.toString();
+		return "[" + this.value.toString() + "]";
 
 		// return "<" + this.composedType.toString() + " "
 		// + this.value.stream().map(x -> x.toString() + ",").reduce("", (x, y) -> x +

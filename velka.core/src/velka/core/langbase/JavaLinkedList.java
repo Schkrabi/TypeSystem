@@ -1196,7 +1196,7 @@ public class JavaLinkedList {
 		
 	};
 	
-	private static final Symbol LinkedListToArrayListSymbol = new Symbol("to-array-list", NAMESPACE);
+	public static final Symbol LinkedListToArrayListSymbol = new Symbol("to-array-list", NAMESPACE);
 	public static final Symbol LinkedListToArrayListSymbol_out = new Symbol("linked-list-2-array-list");
 	
 	/**
@@ -1237,7 +1237,7 @@ public class JavaLinkedList {
 
 	};
 	
-	private static final Symbol LinkedListToNativeListSymbol = new Symbol("to-list-native", NAMESPACE);
+	public static final Symbol LinkedListToNativeListSymbol = new Symbol("to-list-native", NAMESPACE);
 	public static final Symbol LinkedListToNativeListSymbol_out = new Symbol("linked-list-2-native-list");
 	
 	/**
@@ -1247,13 +1247,13 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list] (reduce (fn [_l _e] " 
-							+ LitComposite.clojureValueToClojureLiteral(
-									ClojureHelper.addTypeMetaInfo_str("[_e, _l]", 
-											"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full  + " _e) " 
-									+ TypeAtom.TypeListNative.clojureTypeRepresentation() + "])")
-									, TypeAtom.TypeListNative) + ") " 
-							+ ListNative.EMPTY_LIST_NATIVE.toClojureCode(env, typeEnv) + " (reverse (first _list))))";
+			String list = "_list";
+			String code = ClojureHelper.fnHelper(Arrays.asList(list), 
+					ClojureHelper.applyClojureFunction("lazy-seq", 
+							ClojureHelper.addTypeMetaInfo(
+									ClojureHelper.applyClojureFunction("seq", 
+											ClojureHelper.getLiteralInnerValue(list)), 
+									TypeAtom.TypeListNative)));
 			return code;
 		}
 

@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Optional;
 
 import velka.core.expression.Expression;
@@ -21,11 +22,11 @@ import velka.core.interpretation.ClojureCoreSymbols;
 import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
-import velka.core.langbase.ListNative;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
+import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -733,7 +734,18 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] " + LitInteger.clojureIntToClojureLitInteger("(println (velka.clojure.core/lang-pstr _x))") + ")";
+			String expr = "_expr";
+			String str = "_str";
+			return ClojureHelper.fnHelper(Arrays.asList(expr), 
+					ClojureHelper.letHelper(
+							LitInteger.clojureIntToClojureLitInteger(
+								ClojureHelper.applyClojureFunction("second",
+										ClojureHelper.applyClojureFunction("doall",
+												ClojureHelper.clojureVectorHelper(
+														ClojureHelper.applyClojureFunction("clojure.core/println", str),
+														ClojureHelper.applyClojureFunction("count", str))))), 
+							new Pair<String, String>(str, ClojureHelper.applyClojureFunction("pr-str", expr)))
+					);
 		}
 
 		@Override
@@ -761,10 +773,15 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [t1 t2] (let [opt (velka.types.Type/unifyTypes (first t1) (first t2))] "
-					+ "(if (.isPresent opt) "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + " " + LitBoolean.FALSE.toClojureCode(env, typeEnv)
-					+ ")))";
+			String t1 = "_t1";
+			String t2 = "_t2";
+			String opt = "_opt";
+			String fn = ClojureHelper.fnHelper(Arrays.asList(t1, t2), ClojureHelper.letHelper(
+					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction(".isPresent", opt)),
+					new Pair<String, String>(opt, ClojureHelper.applyClojureFunction(
+							"velka.types.Type/unifyTypes",
+							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t1),
+							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t2)))));
 
 			return fn;
 		}
@@ -805,10 +822,15 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 
-			String fn = "(fn [t1 t2] (let [opt (velka.types.Type/unifyRepresentation (first t1) (first t2))] "
-					+ "(if (.isPresent opt) "
-					+ LitBoolean.TRUE.toClojureCode(env, typeEnv) + " " + LitBoolean.FALSE.toClojureCode(env, typeEnv)
-					+ ")))";
+			String t1 = "_t1";
+			String t2 = "_t2";
+			String opt = "_opt";
+			String fn = ClojureHelper.fnHelper(Arrays.asList(t1, t2), ClojureHelper.letHelper(
+					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction(".isPresent", opt)),
+					new Pair<String, String>(opt, ClojureHelper.applyClojureFunction(
+							"velka.types.Type/unifyRepresentation",
+							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t1),
+							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t2)))));
 
 			return fn;
 		}
@@ -1097,7 +1119,25 @@ public final class Operators {
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
 				Optional<Expression> rankingFunction) throws AppendableException {
 			Expression e = args.get(0);
-			return new LitString(e.toString());
+			String s;
+			
+			if(e instanceof LitInteger) {
+				s = Long.toString(((LitInteger)e).value);
+			}
+			else if(e instanceof LitDouble) {
+				s = Double.toString(((LitDouble)e).value);
+			}
+			else if(e instanceof LitBoolean) {
+				s = Boolean.toString(((LitBoolean)e).value);
+			}
+			else if(e instanceof LitString) {
+				s = ((LitString)e).value;
+			}
+			else {
+				s = e.toString();
+			}
+			
+			return new LitString(s);
 		}
 
 		@Override
@@ -1185,15 +1225,13 @@ public final class Operators {
 			LitString lsBy = (LitString) args.get(1);
 
 			String[] splitted = lsStr.value.split(lsBy.value);
-
-			LitComposite agg = ListNative.EMPTY_LIST_NATIVE;
-			for (int i = splitted.length - 1; i >= 0; i--) {
-				String s = splitted[i];
-				LitString lsStep = new LitString(s);
-				agg = new LitComposite(new Tuple(lsStep, agg), TypeAtom.TypeListNative);
+			LinkedList<Expression> l = new LinkedList<Expression>();
+			for(String s : splitted) {
+				LitString ls = new LitString(s);
+				l.add(ls);
 			}
 
-			return agg;
+			return new LitComposite(new LitInteropObject(l), TypeAtom.TypeListNative);
 		}
 
 		@Override

@@ -119,5 +119,13 @@ public class ClojureCoreSymbols {
 	 * Fully qualify select-implementation-clojure symbol
 	 */
 	public static String selectImplementationClojureSymbol_full = ClojureHelper.fullyQualifySymbol(ClojureCoreSymbols.NAMESPACE, selectImplementationClojureSymbol);
+	/**
+	 * Symbol for lang-pstr clojure function
+	 */
+	public static final String langPstrClojure = "lang-pstr";
+	/**
+	 * Fully qualified symbol form lang-pstr clojure function
+	 */
+	public static final String langPstrClojure_full = ClojureHelper.fullyQualifySymbol(ClojureCoreSymbols.NAMESPACE, langPstrClojure);
 
 }

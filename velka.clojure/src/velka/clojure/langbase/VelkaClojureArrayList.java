@@ -9,6 +9,8 @@ import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.JavaArrayList;
+import velka.core.langbase.JavaLinkedList;
+import velka.types.TypeAtom;
 import velka.util.AppendableException;
 
 public class VelkaClojureArrayList {
@@ -20,8 +22,6 @@ public class VelkaClojureArrayList {
 		
 		// Require namespace
 		sb.append(ClojureHelper.requireNamespace("clojure.string"));
-		//sb.append(ClojureHelper.requireNamespace(VelkaClojureList.NAMESPACE));
-		//sb.append(ClojureHelper.requireNamespace(VelkaClojureLinkedList.NAMESPACE));
 
 		// Declare namespace
 		sb.append(ClojureHelper.declareNamespace(JavaArrayList.NAMESPACE));
@@ -29,8 +29,8 @@ public class VelkaClojureArrayList {
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.addAll));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.addToEnd));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.addToIndex));
-		//sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.ArrayListToLinkedList));
-		//sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.ArrayListToNativeList));
+		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.ArrayListToLinkedList));
+		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.ArrayListToNativeList));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.constructor));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.contains));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.containsAll));
@@ -58,8 +58,8 @@ public class VelkaClojureArrayList {
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.addAll, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.addToEnd, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.addToIndex, env, typeEnv));
-			//sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.ArrayListToLinkedList, env, typeEnv));
-			//sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.ArrayListToNativeList, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.ArrayListToLinkedList, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.ArrayListToNativeList, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.constructor, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.contains, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.containsAll, env, typeEnv));
@@ -78,6 +78,9 @@ public class VelkaClojureArrayList {
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.size, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.sublist, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.sublist, env, typeEnv));
+			
+			sb.append(ClojureHelper.addConversionToGlobalTable(JavaArrayList.TypeListJavaArray, TypeAtom.TypeListNative, JavaArrayList.ArrayListToNativeListSymbol.toClojureCode(env, typeEnv)));
+			sb.append(ClojureHelper.addConversionToGlobalTable(JavaArrayList.TypeListJavaArray, JavaLinkedList.TypeListJavaLinked, JavaArrayList.ArrayListToLinkedListSymbol.toClojureCode(env, typeEnv)));
 		} catch (AppendableException e) {
 			System.err.println("Error generating " + RELATIVE_PATH.toString() + " :" + e.getMessage());
 			return "";

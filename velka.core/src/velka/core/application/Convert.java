@@ -11,6 +11,8 @@ import java.util.Optional;
 import velka.core.conversions.Conversions;
 import velka.core.exceptions.ConversionException;
 import velka.core.expression.Expression;
+import velka.core.interpretation.ClojureCoreSymbols;
+import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
@@ -75,7 +77,8 @@ public class Convert extends Expression {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return Conversions.convert(this.from, this.expression, to, typeEnv).toClojureCode(env, typeEnv);
+		return ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol_full,
+				this.to.clojureTypeRepresentation(), this.expression.toClojureCode(env, typeEnv));
 	}
 
 	@Override

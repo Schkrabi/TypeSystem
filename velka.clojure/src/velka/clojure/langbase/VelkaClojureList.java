@@ -8,7 +8,10 @@ import java.nio.file.Paths;
 import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.langbase.JavaArrayList;
+import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
+import velka.types.TypeAtom;
 import velka.util.AppendableException;
 
 /**
@@ -44,8 +47,6 @@ public class VelkaClojureList {
 
 		// Require namespace
 		sb.append(ClojureHelper.requireNamespace("clojure.string"));
-		//sb.append(ClojureHelper.requireNamespace(VelkaClojureLinkedList.NAMESPACE));
-		//sb.append(ClojureHelper.requireNamespace(VelkaClojureArrayList.NAMESPACE));
 
 		// Declare namespace
 		sb.append(ClojureHelper.declareNamespace(ListNative.NAMESPACE));
@@ -53,7 +54,6 @@ public class VelkaClojureList {
 		// Declarations
 		sb.append(ClojureHelper.makeDeclaration(ListNative.addToEndOperator.getClojureSymbol().name));
 		sb.append(ClojureHelper.makeDeclaration(ListNative.foldlListNativeOperator.getClojureSymbol().name));
-		sb.append(ClojureHelper.makeDeclaration(ListNative.foldrListNativeOperator.getClojureSymbol().name));
 		sb.append(ClojureHelper.makeDeclaration(ListNative.headListNativeOperator.getClojureSymbol().name));
 		sb.append(ClojureHelper.makeDeclaration(ListNative.isEmpty.getClojureSymbol().name));
 		sb.append(ClojureHelper.makeDeclaration(ListNative.map2ListNativeOperator.getClojureSymbol().name));
@@ -62,7 +62,6 @@ public class VelkaClojureList {
 		sb.append(ClojureHelper.makeDeclaration(ListNative.contains.getClojureSymbol().name));
 		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.filter));
 		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.get));
-		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.buildListAux));
 		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.buildList));
 		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.remove));
 		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.size));
@@ -71,8 +70,8 @@ public class VelkaClojureList {
 		sb.append(ClojureHelper.makeDeclaration(ListNative.constructorSymbol.name));
 		sb.append(ClojureHelper.makeDeclaration(ListNative.constructorEmptySymbol.name));
 		
-		sb.append(ClojureHelper.makeDeclaration(ListNative.ListNativeToLinkedListOperator.getClojureSymbol().name));
-		sb.append(ClojureHelper.makeDeclaration(ListNative.ListNativeToArrayListOperator.getClojureSymbol().name));
+		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.ListNativeToLinkedListOperator));
+		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.ListNativeToArrayListOperator));
 
 		Environment env = Environment.initTopLevelEnvitonment();
 		try {
@@ -80,7 +79,6 @@ public class VelkaClojureList {
 
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.addToEndOperator, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.foldlListNativeOperator, env, typeEnv));
-			sb.append(ClojureHelper.makeOperatorDef(ListNative.foldrListNativeOperator, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.headListNativeOperator, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.isEmpty, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.map2ListNativeOperator, env, typeEnv));
@@ -89,17 +87,17 @@ public class VelkaClojureList {
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.contains, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.filter, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.get, env, typeEnv));
-			sb.append(ClojureHelper.makeOperatorDef(ListNative.buildListAux, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.buildList, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.remove, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.size, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.append, env, typeEnv));
 			
-			//sb.append(ClojureHelper.makeOperatorDef(ListNative.ListNativeToLinkedListOperator, env, typeEnv));
-			//sb.append(ClojureHelper.makeOperatorDef(ListNative.ListNativeToArrayListOperator, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(ListNative.ListNativeToLinkedListOperator, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(ListNative.ListNativeToArrayListOperator, env, typeEnv));
+
+			sb.append(ClojureHelper.addConversionToGlobalTable(TypeAtom.TypeListNative, JavaArrayList.TypeListJavaArray, ListNative.listNativeToArrayListSymbol.toClojureCode(env, typeEnv)));
+			sb.append(ClojureHelper.addConversionToGlobalTable(TypeAtom.TypeListNative, JavaLinkedList.TypeListJavaLinked, ListNative.ListNativeToLinkedListSymbol.toClojureCode(env, typeEnv)));
 			
-			sb.append(ClojureHelper.makeLambdaDef(ListNative.constructorSymbol.name, ListNative.constructor, env, typeEnv));
-			sb.append(ClojureHelper.makeLambdaDef(ListNative.constructorEmptySymbol.name, ListNative.constructorEmpty, env, typeEnv));
 		} catch (AppendableException e) {
 			System.err.println("Error generating velka.clojure.list file: " + e.getMessage());
 			return "";

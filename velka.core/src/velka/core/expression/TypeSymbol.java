@@ -1,7 +1,9 @@
 package velka.core.expression;
 
+import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.literal.LitComposite;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.util.AppendableException;
@@ -36,7 +38,7 @@ public class TypeSymbol extends Expression {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return "(with-meta [" + this.type.clojureTypeRepresentation() + "] {:lang-type " + this.type.clojureTypeRepresentation() + "})";
+		return LitComposite.clojureValueToClojureLiteral(ClojureHelper.stringHelper(this.type.toString()), this.type);
 	}
 	
 	@Override
@@ -58,6 +60,11 @@ public class TypeSymbol extends Expression {
 			return this.type.compareTo(((TypeSymbol) other).type);
 		}
 		return super.compareTo(other);
+	}
+	
+	@Override
+	public String toString() {
+		return "[\"" + this.type.toString() + "\"]";
 	}
 
 }

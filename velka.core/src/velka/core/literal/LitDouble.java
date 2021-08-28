@@ -33,7 +33,7 @@ public class LitDouble extends Literal {
 
 	@Override
 	public String toString() {
-		return Double.toString(this.value);
+		return "[" + Double.toString(this.value) + "]";
 	}
 
 	@Override

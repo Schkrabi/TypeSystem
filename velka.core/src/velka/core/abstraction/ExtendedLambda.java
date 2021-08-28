@@ -3,6 +3,7 @@ package velka.core.abstraction;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -19,6 +20,7 @@ import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.ListNative;
 import velka.core.literal.LitComposite;
+import velka.core.literal.LitInteropObject;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -210,11 +212,7 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		//(let [impls (ListNative.collectioToListNative(this.implementations).toClojureCode())]
-		//	(fn ([args] (EAPPLY this.selectionFunction.toClojureCode() [args impls]))
-		//		([args selection-function] (EAPPLY selection-function [args impls]))))
-		
+	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {		
 		String implsValue = "";
 		
 		try {
@@ -324,8 +322,7 @@ public class ExtendedLambda extends Abstraction {
 																						impl)),
 																		argType),
 																impl)),
-													ClojureHelper.applyClojureFunction(
-															ClojureCoreSymbols.listNativeToTuple_full, implList)))),
+													ClojureHelper.getLiteralInnerValue(implList)))),
 							new Pair<String, String>(argType,
 									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full,
 											ClojureHelper.applyClojureFunction(
@@ -358,9 +355,11 @@ public class ExtendedLambda extends Abstraction {
 			
 			int bestCost = Integer.MAX_VALUE;
 			Lambda bestImplementation = null; 
-			while(!implList.equals(ListNative.EMPTY_LIST_NATIVE)) {
-				Tuple pair = (Tuple)implList.value;
-				Lambda current = (Lambda)pair.get(0);
+			
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> l = (LinkedList<Expression>)((LitInteropObject)implList.value).javaObject;
+			for(Expression e : l) {
+				Lambda current = (Lambda)e;
 				
 				int currentCost = argsTuple.tupleDistance(current.argsType);
 				
@@ -368,8 +367,6 @@ public class ExtendedLambda extends Abstraction {
 					bestCost = currentCost;
 					bestImplementation = current;
 				}
-				
-				implList = (LitComposite)pair.get(1);
 			}
 			
 			return bestImplementation;

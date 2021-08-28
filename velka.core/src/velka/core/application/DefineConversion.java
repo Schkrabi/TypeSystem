@@ -6,7 +6,7 @@ import java.util.Optional;
 import velka.core.abstraction.Lambda;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
-import velka.core.interpretation.ClojureCoreSymbols;
+import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
@@ -98,21 +98,11 @@ public class DefineConversion extends Expression {
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Lambda conversionLambda = this.makeConversionLambda(env);
 		typeEnv.addConversion(this.from, this.to, conversionLambda);
-		StringBuilder s = new StringBuilder();
-		s.append("(alter-var-root #'");
-		s.append(ClojureCoreSymbols.atomicConversionMapClojureSymbol_full);
-		s.append("(constantly ");
-		s.append(" (assoc ");
-		s.append(ClojureCoreSymbols.atomicConversionMapClojureSymbol_full);
-		s.append(" [");
-		s.append(this.from.clojureTypeRepresentation());
-		s.append(" ");
-		s.append(this.to.clojureTypeRepresentation());
-		s.append("] ");
-		s.append(conversionLambda.toClojureCode(env, typeEnv));
-		s.append(")))");
 		
-		return s.toString();
+		String code = ClojureHelper.addConversionToGlobalTable(this.from, this.to,
+				conversionLambda.toClojureCode(env, typeEnv));
+
+		return code;
 	}
 
 	@Override
