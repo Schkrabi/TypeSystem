@@ -17,14 +17,13 @@ import velka.clojure.ClojureCodeGenerator;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
-import velka.core.langbase.ListNative;
 import velka.parser.Parser;
 import velka.util.AppendableException;
 
 public class Compiler {
 
 	public static void initTopLevelEnvironment(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		ListNative.initializeInEnvironment(env, typeEnv);
+		
 	}
 
 	public static void initTypesConversions(Environment env) throws Exception {

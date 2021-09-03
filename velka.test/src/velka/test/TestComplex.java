@@ -134,7 +134,6 @@ class TestComplex {
 	void testComplexList() throws AppendableException {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		ListNative.initializeInEnvironment(env, typeEnv);
 
 		TypeName listTypeName = new TypeName("List");
 
@@ -818,7 +817,7 @@ class TestComplex {
 
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		ListNative.initializeInEnvironment(env, typeEnv);
+		
 		l = velka.compiler.Compiler.eval(Arrays.asList(e1), env, typeEnv);
 		assertEquals(new LitInteger(0), l.get(0));
 
@@ -875,7 +874,6 @@ class TestComplex {
 		
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		ListNative.initializeInEnvironment(env, typeEnv);
 		
 		AbstractionApplication app_defElambda_defRanking = new AbstractionApplication(Operators.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_defaultRanking, args)));
 		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defElambda_defRanking));
@@ -1141,6 +1139,7 @@ class TestComplex {
 	@DisplayName("Test Java Array List Clojure")
 	void testJavaArrayListClojure() throws Exception {
 		TestComplex.assertIntprtAndCompPrintSameValues("(construct List JavaArray)");
+		TestComplex.assertIntprtAndCompPrintSameValues("(construct List JavaArray (build-list-native 2 (lambda (x) x)))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToEndSymbol_out.toString() + " (construct List JavaArray) 42))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToIndexSymbol_out.toString() + " (construct List JavaArray) 0 42))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
@@ -1550,13 +1549,11 @@ class TestComplex {
 	private static void assertIntprtAndCompPrintSameValues(List<Expression> in) throws Exception {
 		Environment intpEnv = Environment.initTopLevelEnvitonment();
 		TypeEnvironment intpTypeEnv = TypeEnvironment.initBasicTypes(intpEnv);
-		ListNative.initializeInEnvironment(intpEnv, intpTypeEnv);
 
 		String interpretationPrintOut = TestComplex.interpretationPrint(in, intpEnv, intpTypeEnv);
 
 		Environment cmplEnv = Environment.initTopLevelEnvitonment();
 		TypeEnvironment cmplTypeEnv = TypeEnvironment.initBasicTypes(cmplEnv);
-		ListNative.initializeInEnvironment(cmplEnv, cmplTypeEnv);
 
 		String compilationPrintOut = TestComplex.clojureCompilationResult(in, cmplEnv, cmplTypeEnv);
 

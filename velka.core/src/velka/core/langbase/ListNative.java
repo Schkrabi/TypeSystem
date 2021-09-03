@@ -1086,7 +1086,7 @@ public class ListNative {
 	/**
 	 * Initializes list functions in environment
 	 */
-	public static void initializeInEnvironment(Environment env, TypeEnvironment typeEnv) {
+	public static void initializeInEnvironment(Environment env) {
 
 		env.put(isEmptySymbol_out, isEmpty);
 		env.put(headSymbol_out, headListNativeOperator);

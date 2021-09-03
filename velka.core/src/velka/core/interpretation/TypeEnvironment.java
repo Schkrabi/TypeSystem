@@ -314,6 +314,7 @@ public class TypeEnvironment {
 		// List Java Array
 		typeEnvitonment.addRepresentation(JavaArrayList.TypeListJavaArray);
 		typeEnvitonment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructor, env);
+		typeEnvitonment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructorFromList, env);
 		
 		// List Java Linked
 		typeEnvitonment.addRepresentation(JavaLinkedList.TypeListJavaLinked);

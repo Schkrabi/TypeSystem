@@ -1350,7 +1350,6 @@ class TestInterpretation {
 	void testListNative() throws AppendableException {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		ListNative.initializeInEnvironment(env, typeEnv);
 		
 		assertEquals(
 				new LitComposite(
@@ -1546,7 +1545,6 @@ class TestInterpretation {
 
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		ListNative.initializeInEnvironment(env, typeEnv);
 
 		AbstractionApplication app_defElambda_defSelectionFunction = new AbstractionApplication(elambda_defaultSelectionFunction, args);
 		TestInterpretation.testInterpretation(app_defElambda_defSelectionFunction, new LitString("Int Native"), env, typeEnv);
@@ -1568,6 +1566,12 @@ class TestInterpretation {
 	void testJavaArrayList() throws Exception {
 		TestInterpretation.testInterpretString("(construct List JavaArray)",
 				new LitComposite(new LitInteropObject(new ArrayList<Object>()), JavaArrayList.TypeListJavaArray));
+		
+		TestInterpretation.testInterpretString(
+				"(construct List JavaArray (build-list-native 2 (lambda (x) x)))", 
+				new LitComposite(
+						new LitInteropObject(new ArrayList<Object>(Arrays.asList(new LitInteger(0), new LitInteger(1)))), 
+						JavaArrayList.TypeListJavaArray));
 
 		ArrayList<Object> l = new ArrayList<Object>();
 		l.add(new LitInteger(42));
@@ -2000,7 +2004,6 @@ class TestInterpretation {
 	void testDeepInference() throws AppendableException {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		ListNative.initializeInEnvironment(env, typeEnv);
 		
 		String code = "(define build-list-native-aux\n" + 
 				"            (let-type (A)\n" + 

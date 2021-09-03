@@ -85,6 +85,53 @@ public class JavaArrayList {
 			return constructorSymbol;
 		}
 	};
+	
+	/**
+	 * Symbol for constructor from list
+	 */
+	public static Symbol constructorFromListSymbol = new Symbol("velka-construct-from-list", NAMESPACE);
+	
+	/**
+	 * Operator for contructor from list
+	 */
+	public static Operator constructorFromList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			final String list = "_list";
+			final String code = ClojureHelper.fnHelper(Arrays.asList(list), 
+					ClojureHelper.applyClojureFunction("java.util.ArrayList.", 
+							ClojureHelper.getLiteralInnerValue(list)));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return constructorFromListSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitComposite lit = (LitComposite)args.get(0);
+			LitInteropObject interop = (LitInteropObject)lit.value;
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> l = (LinkedList<Expression>)interop.javaObject;
+			
+			ArrayList<Expression> al = new ArrayList<Expression>(l);
+			
+			return new LitInteropObject(al);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), JavaArrayList.TypeListJavaArray);
+			
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
 
 	/**
 	 * Symbol for boolean add(E e)

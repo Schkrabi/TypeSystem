@@ -10,6 +10,7 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaLinkedList;
+import velka.core.langbase.ListNative;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
 
@@ -234,6 +235,7 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)),
 				ConversionOperators.IntStringToIntRoman);
 		
+		ListNative.initializeInEnvironment(env);
 		JavaArrayList.initializeInEnvironment(env);
 		JavaLinkedList.initializeInEnvironment(env);
 		

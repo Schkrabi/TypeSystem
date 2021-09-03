@@ -1111,7 +1111,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_arg] " + LitString.clojureStringToClojureLitString("(velka.clojure.core/lang-pstr _arg)") + ")";
+			String code = "(fn [_arg] " + LitString.clojureStringToClojureLitString("(str _arg)") + ")";
 			return code;
 		}
 
