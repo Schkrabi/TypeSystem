@@ -84,6 +84,7 @@ public class VelkaClojureOperators {
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.floor));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.dadd));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.doubleLesserThan));
+		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.modulo));
 
 		Environment env = Environment.initTopLevelEnvitonment();
 		try {
@@ -126,6 +127,7 @@ public class VelkaClojureOperators {
 			sb.append(ClojureHelper.makeOperatorDef(Operators.floor, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.dadd, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.doubleLesserThan, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(Operators.modulo, env, typeEnv));
 			
 		} catch (AppendableException e) {
 			System.err.println("Error generating velka.clojure.operaotrs: " + e.getMessage());

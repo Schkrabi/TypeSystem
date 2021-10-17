@@ -33,7 +33,9 @@ import velka.core.application.Get;
 import velka.core.application.IfExpression;
 import velka.core.application.InstanceOf;
 import velka.core.application.InstanceOfRepresentation;
+import velka.core.application.Loop;
 import velka.core.application.OrExpression;
+import velka.core.application.Recur;
 import velka.core.exceptions.ConversionException;
 import velka.core.exceptions.DuplicateConversionException;
 import velka.core.exceptions.UndefinedTypeException;
@@ -631,6 +633,27 @@ class TestParser {
 		} else {
 			Assertions.fail("Fail on " + letAstCode + " got " + e.toString());
 		}
+	}
+	
+	@Test
+	@DisplayName("Test Loop Recur")
+	void testLoopRecur() throws AppendableException {
+		Expression e = this.parseString("(loop ((x 10)) 42)");
+		
+		Assertions.assertTrue(e instanceof Loop);
+		
+		Loop l = (Loop)e;
+		
+		Assertions.assertEquals(l,
+				new Loop(new Tuple(new Symbol("x")), new LitInteger(42), new Tuple(new LitInteger(10))));
+		
+		Expression f = this.parseString("(recur 42)");
+		
+		Assertions.assertTrue(f instanceof Recur);
+		
+		Recur r = (Recur)f;
+		
+		Assertions.assertEquals(r, new Recur(new Tuple(new LitInteger(42))));
 	}
 
 	private Expression parseString(String s) throws AppendableException {

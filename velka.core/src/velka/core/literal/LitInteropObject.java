@@ -52,9 +52,9 @@ public class LitInteropObject extends Literal {
 	@SuppressWarnings("unchecked")
 	@Override
 	public String toString() {
-		if(this.javaObject instanceof List) {
-			return ListNative.toStringListNative((List<Expression>)this.javaObject);
-		}
+//		if(this.javaObject instanceof List) {
+//			return ListNative.toStringListNative((List<Expression>)this.javaObject);
+//		}
 		
 		return this.javaObject.toString();
 	}

@@ -221,6 +221,7 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Symbol(Operators.floor.toString()), Operators.floor);
 		env.put(new Symbol(Operators.dadd.toString()), Operators.dadd);
 		env.put(new Symbol(Operators.doubleLesserThan.toString()), Operators.doubleLesserThan);
+		env.put(new Symbol(Operators.modulo.toString()), Operators.modulo);
 		
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
 				ConversionOperators.IntNativeToIntRoman);

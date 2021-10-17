@@ -965,7 +965,8 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = LitInteger.clojureIntToClojureLitInteger("(System/nanoTime)");
+			String code = ClojureHelper.fnHelper(Arrays.asList(),
+					LitInteger.clojureIntToClojureLitInteger("(System/nanoTime)"));
 			return code;
 		}
 
@@ -1121,21 +1122,21 @@ public final class Operators {
 			Expression e = args.get(0);
 			String s;
 			
-			if(e instanceof LitInteger) {
-				s = Long.toString(((LitInteger)e).value);
-			}
-			else if(e instanceof LitDouble) {
-				s = Double.toString(((LitDouble)e).value);
-			}
-			else if(e instanceof LitBoolean) {
-				s = Boolean.toString(((LitBoolean)e).value);
-			}
-			else if(e instanceof LitString) {
-				s = ((LitString)e).value;
-			}
-			else {
+//			if(e instanceof LitInteger) {
+//				s = Long.toString(((LitInteger)e).value);
+//			}
+//			else if(e instanceof LitDouble) {
+//				s = Double.toString(((LitDouble)e).value);
+//			}
+//			else if(e instanceof LitBoolean) {
+//				s = Boolean.toString(((LitBoolean)e).value);
+//			}
+//			else if(e instanceof LitString) {
+//				s = ((LitString)e).value;
+//			}
+//			else {
 				s = e.toString();
-			}
+//			}
 			
 			return new LitString(s);
 		}
@@ -1507,6 +1508,50 @@ public final class Operators {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 		
+	};
+	
+	public static final Operator modulo = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String i = "_i";
+			String j = "_j";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(i, j), 
+					LitInteger.clojureIntToClojureLitInteger(ClojureHelper.applyClojureFunction("mod", 
+							ClojureHelper.getLiteralInnerValue(i),
+							ClojureHelper.getLiteralInnerValue(j))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("integer-modulo", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitInteger i = (LitInteger)args.get(0);
+			LitInteger j = (LitInteger)args.get(1);
+			
+			long res = i.value % j.value;
+						
+			return new LitInteger(res);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(
+					new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeIntNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "mod";
+		}
 	};
 
 }

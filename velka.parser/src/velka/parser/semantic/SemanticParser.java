@@ -29,6 +29,8 @@ import velka.core.application.Get;
 import velka.core.application.IfExpression;
 import velka.core.application.InstanceOf;
 import velka.core.application.InstanceOfRepresentation;
+import velka.core.application.Loop;
+import velka.core.application.Recur;
 import velka.core.exceptions.UndefinedTypeException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -277,6 +279,12 @@ public class SemanticParser {
 			break;
 		case SemanticParserStatic.LET_AST:
 			e = SemanticParser.parseLetAst(specialFormList, typeLet);
+			break;
+		case SemanticParserStatic.RECUR:
+			e = SemanticParser.parseRecur(specialFormList, typeLet);
+			break;
+		case SemanticParserStatic.LOOP:
+			e = SemanticParser.parseLoop(specialFormList, typeLet);
 			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
@@ -1202,5 +1210,61 @@ public class SemanticParser {
 		}
 		
 		return body;
+	}
+	
+	/**
+	 * Parses Loop special forms
+	 * 
+	 * @param specialFormList parsed list
+	 * @param typeLet used typelet
+	 * @return parsed Loop expression
+	 * @throws AppendableException if parsing is not succesfull
+	 */
+	private static Expression parseLoop(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		try {
+			Validations.validateLoop(specialFormList, typeLet);
+		} catch (AppendableException e) {
+			e.appendMessage(" in " + specialFormList);
+			throw e;
+		}
+
+		SemanticNode bindingNode = specialFormList.get(1);
+		List<Pair<Symbol, Expression>> bindings = SemanticParser.parseLetBindings(bindingNode.asList(), typeLet);
+
+		Expression body = SemanticParser.parseNode(specialFormList.get(2), typeLet);
+
+		Tuple argSymbols = new Tuple(bindings.stream().map(x -> x.first).collect(Collectors.toList()));
+		Tuple args = new Tuple(bindings.stream().map(x -> x.second).collect(Collectors.toList()));
+
+		return new Loop(argSymbols, body, args);
+	}
+	
+	/**
+	 * Parses recur special form
+	 * @param specialFormList parsed special form list
+	 * @param typeLet used typelet
+	 * @return parsed Recur expression
+	 * @throws AppendableException if parsing fails
+	 */
+	private static Expression parseRecur(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet)
+			throws AppendableException {
+		try {
+			Validations.validateRecur(specialFormList, typeLet);
+		}catch(AppendableException e) {
+			e.appendMessage(" in " + specialFormList);
+			throw e;
+		}
+		
+		List<SemanticNode> argsList = specialFormList.subList(1, specialFormList.size());
+		List<Expression> l = new LinkedList<Expression>();
+		
+		for(SemanticNode n : argsList) {
+			l.add(SemanticParser.parseNode(n));
+		}		
+		
+		Tuple args = new Tuple(l);
+		
+		return new Recur(args);
 	}
 }

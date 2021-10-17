@@ -967,7 +967,7 @@ class TestInterpretation {
 				new LitInteger(4), TypeAtom.TypeIntNative);
 		TestInterpretation.testOperator(Operators.BitNot, new Tuple(new LitInteger(6)), new LitInteger(-7), TypeAtom.TypeIntNative);
 		TestInterpretation.testOperator(Operators.BitXor, new Tuple(new LitInteger(5), new LitInteger(6)), new LitInteger(3), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.ToStr, new Tuple(new LitInteger(42)), new LitString("42"), TypeAtom.TypeStringNative);
+		TestInterpretation.testOperator(Operators.ToStr, new Tuple(new LitInteger(42)), new LitString("[42]"), TypeAtom.TypeStringNative);
 		
 		File tempOut = File.createTempFile("velka_read_test", null);
         String content  = "hello world !!";       
@@ -1002,6 +1002,7 @@ class TestInterpretation {
 		TestInterpretation.testOperator(Operators.dadd, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), new LitDouble(6.28), TypeAtom.TypeDoubleNative);
 		TestInterpretation.testOperator(Operators.doubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(6.28)), LitBoolean.TRUE, TypeAtom.TypeBoolNative);
 		TestInterpretation.testOperator(Operators.doubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operators.modulo, new Tuple(new LitInteger(5), new LitInteger(3)), new LitInteger(2), TypeAtom.TypeIntNative);
 	}
 
 	@Test
@@ -2050,6 +2051,33 @@ class TestInterpretation {
 		TestInterpretation.testInterpretation(get, new LitInteger(42), env, typeEnv);
 		TestInterpretation.testInterpretation(get2, new LitString("foo"), env, typeEnv);
 		TestInterpretation.testInterpretation(get3, new LitInteger(42), env, typeEnv);
+	}
+	
+	@Test
+	@DisplayName("Test Loop Recur")
+	void testLoopRecur() throws Exception {
+		Expression e = TestInterpretation.parseString("(loop ((x 1)) (if (= x 2) x (recur (+ x 1))))");
+		
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		
+		Pair<Type, Substitution> p = e.infer(env, typeEnv);
+		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, e);
+		
+		TestInterpretation.testInterpretation(e, new LitInteger(2), env, typeEnv);
+		
+		//Testing side effects
+		TestInterpretation.testInterpretString(
+				"(loop ((x 1) (a (construct List JavaArray))) (if (= x 2) a (let ((z (java-array-list-add-to-end a x))) (recur (+ x 1) a))))",
+				new LitComposite(
+						new LitInteropObject(
+								new ArrayList<Expression>(Arrays.asList(new LitInteger(1)))),
+						JavaArrayList.TypeListJavaArray));
+		
+		//Testing nested loops
+		TestInterpretation.testInterpretString(
+				"(loop ((x 0) (s \"\")) (if (= x 3) s (recur (+ x 1) (loop ((y 0) (z s)) (if (= y 2) z (recur (+ y 1) (concat z \"a\")))))))",
+				new LitString("aaaaaa"));
 	}
 
 	private static Expression parseString(String s) throws AppendableException {

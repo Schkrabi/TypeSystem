@@ -1,8 +1,11 @@
 package velka.core.literal;
 
+import java.util.List;
+
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.langbase.ListNative;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -72,8 +75,14 @@ public class LitComposite extends Literal {
 		return this.value.hashCode() * this.composedType.hashCode();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public String toString() {
+		if(this.composedType == TypeAtom.TypeListNative) {
+			LitInteropObject intObj = (LitInteropObject)this.value;
+			return "[" + ListNative.toStringListNative((List<Expression>)intObj.javaObject) + "]";
+		}
+		
 		return "[" + this.value.toString() + "]";
 
 		// return "<" + this.composedType.toString() + " "

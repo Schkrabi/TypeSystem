@@ -23,7 +23,9 @@ import velka.core.application.Get;
 import velka.core.application.IfExpression;
 import velka.core.application.InstanceOf;
 import velka.core.application.InstanceOfRepresentation;
+import velka.core.application.Loop;
 import velka.core.application.OrExpression;
+import velka.core.application.Recur;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.parser.antlr.SemanticNode;
@@ -65,6 +67,8 @@ public final class SemanticParserStatic {
 	public static final String TUPLE = "tuple";
 	public static final String LET = "let";
 	public static final String LET_AST = "let*";
+	public static final String LOOP = Loop.LOOP;
+	public static final String RECUR = Recur.RECUR;
 	
 	/**
 	 * Unused special form. For testing purposes only!
@@ -101,6 +105,8 @@ public final class SemanticParserStatic {
 		specialForms.add(TUPLE);
 		specialForms.add(LET);
 		specialForms.add(LET_AST);
+		specialForms.add(LOOP);
+		specialForms.add(RECUR);
 	}
 
 	/**

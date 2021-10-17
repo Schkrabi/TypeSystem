@@ -769,4 +769,65 @@ public class Validations {
 			throw re;
 		}		
 	}
+	
+	/**
+	 * Validates loop special form
+	 * 
+	 * @param l special form list
+	 * @param typeLet used type let
+	 * @throws AppendableException if anything goes awry
+	 */
+	public static void validateLoop(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+			throws AppendableException {
+		if (l.size() != 3) {
+			throw new InvalidNumberOfArgsException(2, l.size() - 1);
+		}
+
+		SemanticNode loop = l.get(0);
+		if (loop.type != SemanticNode.NodeType.SYMBOL || !loop.asSymbol().equals(SemanticParserStatic.LOOP)) {
+			throw new UnexpectedExpressionException(loop.asSymbol());
+		}
+
+		SemanticNode bindings = l.get(1);
+		if (bindings.type != SemanticNode.NodeType.LIST) {
+			throw new UnexpectedExpressionException(bindings.toString());
+		}
+
+		List<SemanticNode> bList = bindings.asList();
+
+		if (!bList.stream().allMatch(node -> node.type == SemanticNode.NodeType.LIST)) {
+			throw new AppendableException("Badly formed bindings expected ((symbol expr)*) got " + bList);
+		}
+
+		try {
+			bList.stream()
+					.forEach(ThrowingConsumer.wrapper(node -> Validations.validateLetBinding(node.asList(), typeLet)));
+		} catch (RuntimeException re) {
+			if (re.getCause() instanceof AppendableException) {
+				AppendableException e = (AppendableException) re.getCause();
+				throw e;
+			}
+			throw re;
+		}
+	}
+	
+	/**
+	 * Validates Recur special form
+	 * 
+	 * @param l validated list
+	 * @param typeLet used typelet
+	 * @throws AppendableException if validation fails
+	 */
+	public static void validateRecur(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+			throws AppendableException {
+		if(l.size() < 1) {
+			throw new InvalidNumberOfArgsException(1, l.size() - 1);
+		}
+		
+		SemanticNode recur = l.get(0);
+		if(recur.type != SemanticNode.NodeType.SYMBOL
+				|| !recur.asSymbol().equals(SemanticParserStatic.RECUR)) {
+			throw new UnexpectedExpressionException(recur.asSymbol());
+		}
+	}
 }

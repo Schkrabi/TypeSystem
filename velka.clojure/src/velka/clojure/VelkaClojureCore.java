@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
 
 import velka.core.abstraction.ConversionOperators;
 import velka.core.interpretation.ClojureCoreSymbols;
@@ -91,17 +92,51 @@ public class VelkaClojureCore {
 	 */
 	public static String convertTupleClojureDef = "(defn " + ClojureCoreSymbols.convertTupleClojureSymbol + " [to arg]\n"
 			+ ClojureHelper.addTypeMetaInfo_str("    (vec (map " + ClojureCoreSymbols.convertClojureSymbol + " to arg))", "to") + ")";
+	
+	private static String convertFn_to = "_to";
+	private static String convertFn_arg = "_arg";
+	private static String convertFn_from = "_from";
+	private static String convertFn_impl = "_impl";
+	private static String convertFn_fn_args = "_args";
+	private static String convertFn_fn_ranking = "ranking";
+	private static String convertFn_fn_arg = "_a";
 	/**
 	 * Definition for convert-fn clojure function
 	 */
-	public static String convertFnClojureDef = "(defn " + ClojureCoreSymbols.convertFnClojureSymbol + " [to arg]\n" + "    (let [from ("
-			+ ClojureCoreSymbols.getTypeClojureSymbol + " arg)\n" + "          impl "
-			+ ClojureHelper.addTypeMetaInfo_str("(fn [& a] (" + ClojureCoreSymbols.convertClojureSymbol + " (.rtype to)\n"
-					+ "                                (apply (arg nil) " + "										("
-					+ ClojureCoreSymbols.convertClojureSymbol + " 											(.ltype from) "
-					+ ClojureHelper.addTypeMetaInfo_str("a", "(.ltype to)") + "))))", "to")
-			+ "]\n" + ClojureHelper.addTypeMetaInfo_str("        (fn ([args] impl)\n" + "            ([args ranking-fn] impl))", "to")
-			+ "))";
+	public static String convertFnClojureDef = ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.convertFnClojureSymbol, 
+			Arrays.asList(convertFn_to, convertFn_arg), 
+			ClojureHelper.letHelper(
+						ClojureHelper.addTypeMetaInfo_str(
+								ClojureHelper.fnHelper(
+										new Pair<List<String>, String>(Arrays.asList(convertFn_fn_args), convertFn_impl),
+										new Pair<List<String>, String>(Arrays.asList(convertFn_fn_args, convertFn_fn_ranking), convertFn_impl)), 
+								convertFn_to), 
+					new Pair<String, String>(convertFn_from, ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol, convertFn_arg)),
+					new Pair<String, String>(convertFn_impl, 
+							ClojureHelper.clojureIfHelper(
+									ClojureHelper.applyClojureFunction("=", 
+											ClojureHelper.applyClojureFunction(".ltype", convertFn_from),
+											"velka.types.TypeTuple/EMPTY_TUPLE"), 
+									ClojureHelper.addTypeMetaInfo_str(
+											ClojureHelper.fnHelper(Arrays.asList(), 
+													ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
+															ClojureHelper.applyClojureFunction(".rtype", convertFn_to),
+															ClojureHelper.applyClojureFunction("apply",
+																	ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
+																	ClojureHelper.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)))), 
+											convertFn_to), 
+									ClojureHelper.addTypeMetaInfo_str(
+											ClojureHelper.fnHelper(
+													Arrays.asList("& " + convertFn_fn_arg), 
+													ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
+															ClojureHelper.applyClojureFunction(".rtype", convertFn_to),
+															ClojureHelper.applyClojureFunction("apply", 
+																	ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
+																	ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol,
+																			ClojureHelper.applyClojureFunction(".ltype", convertFn_from),
+																			ClojureHelper.addTypeMetaInfo_str(convertFn_fn_arg, 
+																					ClojureHelper.applyClojureFunction(".ltype", convertFn_to)))))), 
+											convertFn_to)))));
 	/**
 	 * Definition for convert-set clojure function
 	 */

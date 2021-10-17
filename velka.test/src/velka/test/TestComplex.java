@@ -508,32 +508,44 @@ class TestComplex {
 	void testClojureOperators() throws Exception {
 		
 		
-		TestComplex.assertIntprtAndCompPrintSameValues(
-				"(println (+ 21 21))\n" + "(println (* 1 42))\n" + "(println (/ 84 2))\n" + "(println (- 63 21))\n"
-						+ "(println (and #t #f))\n" + "(println (bit-and 42 1))\n" + "(println (bit-or 42 1))\n"
-						+ "(println (concat \"Hello \" \"World\"))\n" + "(println (equals? 42 \"42\"))\n"
-						+ "(println (< 42 42))\n" + "(println (not #t))\n" + "(println (= 42 42))\n"
-						+ "(println (or #t #f))\n" + "(println (cons 42 \"42\"))\n"
-						+ "(println (car (cons 42 \"42\")))\n" + "(println (cdr (cons 42 \"42\")))"
-						+ "(println (shr 2 1))"
-						+ "(println (shl 2 1))"
-						+ "(println (bit-not 6))"
-						+ "(println (bit-xor 6 5))"
-						+ "(println (to-str 42))"
-						+ "(println (str-split \"foo bar baz\" \" \"))"
-						+ "(println (parse-int \"42\"))"
-						+ "(println (ddiv 1.5 0.5))"
-						+ "(println (floor 3.141521))"
-						+ "(println (int-to-double 42))"
-						+ "(println (dadd 3.14 3.14))"
-						+ "(println (dlt 3.14 6.28))"
-						+ "(println (dlt 3.14 3.14))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (+ 21 21))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (* 1 42))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (/ 84 2))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (- 63 21))\n");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (and #t #f))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-and 42 1))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-or 42 1))\n");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (concat \"Hello \" \"World\"))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (equals? 42 \"42\"))\n");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (< 42 42))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (not #t))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (= 42 42))\n");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (or #t #f))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (cons 42 \"42\"))\n");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (car (cons 42 \"42\")))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (cdr (cons 42 \"42\")))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (shr 2 1))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (shl 2 1))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-not 6))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-xor 6 5))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (to-str 42))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (str-split \"foo bar baz\" \" \"))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (parse-int \"42\"))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (ddiv 1.5 0.5))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (floor 3.141521))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (int-to-double 42))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (dadd 3.14 3.14))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (dlt 3.14 6.28))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (dlt 3.14 3.14))");
 		
 		File tempOut = File.createTempFile("velka_read_test", null);
         String content  = "hello world !!";       
         Files.writeString(tempOut.toPath(), content);
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (read-file \"" + tempOut.toPath().toString() + "\"))");
 		tempOut.delete();
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (mod 5 3))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (= (timestamp) 0))");
 	}
 
 	@Test
@@ -982,6 +994,20 @@ class TestComplex {
 				definitions.toString(),
 				"(println (((" + ClojureCoreSymbols.convertFnClojureSymbol_full + " " +  
 				lambda_to.clojureTypeRepresentation() + " " + l.toClojureCode(env, typeEnv) + ") nil) " + arg.toClojureCode(env, typeEnv) + "))",
+				"[[1]]");
+		
+		Lambda l2 = (Lambda)(TestComplex.parseString("(lambda () 1)")).get(0);
+		TypeArrow l2_to = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeIntString);
+		assertClojureFunction(
+				definitions.toString(),
+				ClojureHelper.applyClojureFunction("println", 
+						ClojureHelper.applyClojureFunction(
+								ClojureHelper.applyClojureFunction(
+										ClojureHelper.applyClojureFunction(
+												ClojureCoreSymbols.convertFnClojureSymbol_full, 
+												l2_to.clojureTypeRepresentation(),
+												l2.toClojureCode(env, typeEnv)), 
+										"nil"))),
 				"[[1]]");
 		
 		assertClojureFunction(
@@ -1446,6 +1472,14 @@ class TestComplex {
 	      .sorted(Comparator.reverseOrder())
 	      .map(Path::toFile)
 	      .forEach(File::delete);
+	}
+	
+	@Test
+	@DisplayName("Test Loop Recur")
+	void testLoopRecur() throws Exception {
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (loop ((x 1)) (if (= x 2) x (recur (+ x 1)))))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (loop ((x 1) (a (construct List JavaArray))) (if (= x 2) a (recur (+ x 1) (cdr (tuple (java-array-list-add-to-end a x) a))))))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (loop ((x 0) (s \"\")) (if (= x 3) s (recur (+ x 1) (loop ((y 0) (z s)) (if (= y 2) z (recur (+ y 1) (concat z \"a\"))))))))");
 	}
 	
 	private static void assertClojureFunction(String definitions, String testCase, String expectedResult) throws IOException, InterruptedException, AppendableException {
