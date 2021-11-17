@@ -129,6 +129,10 @@ public class ClojureCodeGenerator {
 	public static Path generateClojureProject(Path directory) throws IOException {
 		ClojureCodeGenerator.createDepsEdn(directory);
 		
+		Files.createDirectories(directory.resolve(VelkaClojureDev.VELKA_CLOJURE_DEV_PATH));
+		Path velkaClojureDev = directory.resolve(VelkaClojureDev.VELKA_CLOJURE_DEV_PATH).resolve(VelkaClojureDev.VELKA_CLOJURE_DEV_NAME);
+		VelkaClojureDev.generateFile(velkaClojureDev);
+		
 		Files.createDirectories(directory.resolve(VelkaClojureCore.VELKA_CLOJURE_CORE_PATH));
 		Path velkaClojureCore = directory.resolve(VelkaClojureCore.VELKA_CLOJURE_CORE_PATH).resolve(VelkaClojureCore.VELKA_CLOJURE_CORE_NAME);
 		VelkaClojureCore.generateFile(velkaClojureCore);

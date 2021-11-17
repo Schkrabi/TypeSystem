@@ -206,22 +206,32 @@ public class ClojureHelper {
 	/**
 	 * Applies velka function in clojure code
 	 * @param funCode velka function code
-	 * @param args arguments to apply with
+	 * @param argsTuple tuple of applied arguments
 	 * @return string with code
 	 */
-	public static String applyVelkaFunction(String funCode, String ...args)  {
+	public static String applyVelkaFunction_argsTuple(String funCode, String argsTuple) {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append("(");
 		sb.append(ClojureCoreSymbols.eapplyClojureSymbol_full);
-		sb.append(" \n");
+		sb.append(" ");
 		sb.append(funCode);
-		sb.append(" \n");
-		sb.append(ClojureHelper.tupleHelper(args));
+		sb.append(" ");
+		sb.append(argsTuple);
 		
 		sb.append(")");
 		
 		return sb.toString();
+	}
+	
+	/**
+	 * Applies velka function in clojure code
+	 * @param funCode velka function code
+	 * @param args arguments to apply with
+	 * @return string with code
+	 */
+	public static String applyVelkaFunction(String funCode, String ...args)  {
+		return applyVelkaFunction_argsTuple(funCode, ClojureHelper.tupleHelper(args));
 	}
 	
 	/**
