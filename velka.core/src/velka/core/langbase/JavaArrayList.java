@@ -99,9 +99,9 @@ public class JavaArrayList {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			final String list = "_list";
-			final String code = ClojureHelper.fnHelper(Arrays.asList(list), 
-					ClojureHelper.applyClojureFunction("java.util.ArrayList.", 
-							ClojureHelper.getLiteralInnerValue(list)));
+			final String code = ClojureHelper.fnHelper(Arrays.asList(list),
+					ClojureHelper.applyClojureFunction("java.util.ArrayList.",
+							ClojureHelper.applyClojureFunction("doall", ClojureHelper.getLiteralInnerValue(list))));
 			
 			return code;
 		}
@@ -256,8 +256,15 @@ public class JavaArrayList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _collection] "
-					+ LitBoolean.clojureBooleanToClojureLitBoolean("(.add (first _list) (first _collection))") + ")";
+			String list = "_list";
+			String collection = "_collection";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, collection), 
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(".addAll", 
+									ClojureHelper.getLiteralInnerValue(list),
+									ClojureHelper.getLiteralInnerValue(collection))
+							));
 
 			return code;
 		}
@@ -1194,11 +1201,12 @@ public class JavaArrayList {
 		 * Type Variable used for list elements
 		 */
 		private final TypeVariable A = new TypeVariable(NameGenerator.next());
+		private final TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays
-					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, JavaArrayList.TypeListJavaArray)),
+					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, JavaArrayList.TypeListJavaArray)),
 					A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}

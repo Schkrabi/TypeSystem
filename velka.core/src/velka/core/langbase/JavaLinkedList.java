@@ -211,8 +211,14 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _collection] "
-					+ LitBoolean.clojureBooleanToClojureLitBoolean("(.add (first _list) (first _collection))") + ")";
+			String list = "_list";
+			String collection = "_collection";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, collection), 
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(".addAll", 
+									ClojureHelper.getLiteralInnerValue(list),
+									ClojureHelper.getLiteralInnerValue(collection))));
 
 			return code;
 		}
