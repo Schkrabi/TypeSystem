@@ -966,14 +966,14 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = ClojureHelper.fnHelper(Arrays.asList(),
-					LitInteger.clojureIntToClojureLitInteger("(System/nanoTime)"));
+					LitInteger.clojureIntToClojureLitInteger("(System/currentTimeMillis)"));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
 				Optional<Expression> rankingFunction) throws AppendableException {
-			return new LitInteger(System.nanoTime());
+			return new LitInteger(System.currentTimeMillis());
 		}
 
 		@Override
