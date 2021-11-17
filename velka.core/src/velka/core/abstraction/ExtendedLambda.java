@@ -52,7 +52,7 @@ public class ExtendedLambda extends Abstraction {
 	/**
 	 * Symbol for extended-lambda-cost special form
 	 */
-	public static final String EXTENDED_LAMBDA_COST = "extended-lambda-cost";
+	public static final String EXTENDED_LAMBDA_COST = "extended-lambda-selection";
 
 	/**
 	 * Various implementations of this function
