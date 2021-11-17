@@ -51,7 +51,7 @@ seq returns [SemanticNode val]
 	;
 
 atom returns [SemanticNode val]
-	: INT 		{ $val = SemanticNode.make(SemanticNode.NodeType.INT, Integer.parseInt($INT.text)); }
+	: INT 		{ $val = SemanticNode.make(SemanticNode.NodeType.INT, Long.parseLong($INT.text)); }
 	| FLOAT		{ $val = SemanticNode.make(SemanticNode.NodeType.DOUBLE, Double.parseDouble($FLOAT.text)); }
 	| SYMBOL 	{ $val = SemanticNode.make(SemanticNode.NodeType.SYMBOL, $SYMBOL.text); }
 	| TRUE 		{ $val = SemanticNode.make(SemanticNode.NodeType.BOOL, true); }

@@ -36,7 +36,7 @@ public class SemanticNode {
 		case PAIR:
 			return value instanceof SemanticPair;
 		case INT:
-			return value instanceof Integer;
+			return value instanceof Long;
 		case DOUBLE:
 			return value instanceof Double;
 		case STRING:
@@ -72,11 +72,11 @@ public class SemanticNode {
 		return (SemanticPair) this.value;
 	}
 
-	public Integer asInt() throws AppendableException {
+	public Long asInt() throws AppendableException {
 		if (this.type != NodeType.INT) {
 			throw new AppendableException("" + this + " is not an integer");
 		}
-		return (Integer) this.value;
+		return (Long) this.value;
 	}
 
 	public Double asDouble() throws AppendableException {

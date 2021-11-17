@@ -360,7 +360,7 @@ public class VelkaParser extends Parser {
 				{
 				setState(50);
 				((AtomContext)_localctx).INT = match(INT);
-				 ((AtomContext)_localctx).val =  SemanticNode.make(SemanticNode.NodeType.INT, Integer.parseInt((((AtomContext)_localctx).INT!=null?((AtomContext)_localctx).INT.getText():null))); 
+				 ((AtomContext)_localctx).val =  SemanticNode.make(SemanticNode.NodeType.INT, Long.parseLong((((AtomContext)_localctx).INT!=null?((AtomContext)_localctx).INT.getText():null))); 
 				}
 				break;
 			case FLOAT:
