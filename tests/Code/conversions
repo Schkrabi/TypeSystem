@@ -1,6 +1,0 @@
-(println (convert Int:Native Int:String 42))
-(println (convert Int:Native Int:Roman 42))
-(println (convert Int:String Int:Native (construct Int String "42")))
-(println (convert Int:String Int:Roman (construct Int String "42")))
-(println (convert Int:Roman Int:Native (construct Int Roman "XLII")))
-(println (convert Int:Roman Int:String (construct Int Roman "XLII")))
