@@ -1,11 +1,8 @@
 package velka.core.literal;
 
-import java.util.List;
-
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
-import velka.core.langbase.ListNative;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -49,13 +46,8 @@ public class LitInteropObject extends Literal {
 		return new Pair<Type, Substitution>(TypeJavaObject, Substitution.EMPTY);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public String toString() {
-//		if(this.javaObject instanceof List) {
-//			return ListNative.toStringListNative((List<Expression>)this.javaObject);
-//		}
-		
+	public String toString() {		
 		return this.javaObject.toString();
 	}
 

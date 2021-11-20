@@ -885,6 +885,7 @@ class TestComplex {
 		Tuple args = new Tuple(new LitInteger(42));
 		
 		Environment env = Environment.initTopLevelEnvitonment();
+		@SuppressWarnings("unused")
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		AbstractionApplication app_defElambda_defRanking = new AbstractionApplication(Operators.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_defaultRanking, args)));
@@ -1646,6 +1647,7 @@ class TestComplex {
 		return result;
 	}
 
+	@SuppressWarnings("unused")
 	private static void testClojureCompileClj(String code, String expected) throws Exception {
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
