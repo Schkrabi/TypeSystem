@@ -28,3 +28,12 @@ lib/*
 tests/*
 notes/*
 Velka-src/*
+
+#IDE settings preferences, etc.
+velka.clojure/.settings/*
+velka.compiler/.settings/*
+velka.core/.settings/*
+velka.parser/.settings/*
+velka.test/.settings/*
+velka.types/.settings/*
+velka.util/.settings/*
