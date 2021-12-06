@@ -1,19 +1,14 @@
 package velka.core.abstraction;
 
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 
 import velka.core.expression.Expression;
-import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
-import velka.core.expression.TypeHolder;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
-import velka.types.TypeArrow;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
@@ -33,39 +28,11 @@ public class Function extends Lambda implements Comparable<Expression> {
 		super(args, argsType, body);
 		this.creationEnvironment = createdEnvironment;
 	}
-
+	
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		try {
-			// First infer types in body, use typeholders for argument variables
-			Environment childEnv = Environment.create(this.creationEnvironment);
-
-			List<Type> l = new LinkedList<Type>();
-
-			Iterator<Type> i = this.argsType.iterator();
-			for (Expression e : this.args) {
-				if (!(e instanceof Symbol)) {
-					throw new AppendableException(e + " is not instance of " + Symbol.class.getName());
-				}
-				Type t = i.next();
-				childEnv.put((Symbol) e, new TypeHolder(t));
-				l.add(t);
-			}
-
-			Type argsType = new TypeTuple(l);
-
-			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv, typeEnv);
-
-			// Update argument type with found bindings
-			argsType = argsType.apply(bodyInfered.second);
-
-			return new Pair<Type, Substitution>(new TypeArrow(argsType, bodyInfered.first.apply(bodyInfered.second)),
-					Substitution.EMPTY);
-
-		} catch (AppendableException e) {
-			e.appendMessage("in " + this);
-			throw e;
-		}
+	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		return this.doInferWithArgs(args, this.creationEnvironment, env, typeEnv);
 	}
 
 	@Override

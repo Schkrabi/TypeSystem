@@ -84,7 +84,7 @@ public class AbstractionApplication extends Application {
 		abst = abst.selectImplementation(iArgs, this.selectionFunction, env, typeEnv);
 
 		// Convert arguments to specific representations
-		Pair<Type, Substitution> abstInfered = abst.infer(env, typeEnv);
+		Pair<Type, Substitution> abstInfered = abst.inferWithArgs(iArgs, env, typeEnv);
 		Type abstArgsType = ((TypeArrow) abstInfered.first).ltype;
 
 		int expectedNumberOfArgs = ((TypeTuple) abstArgsType).size();

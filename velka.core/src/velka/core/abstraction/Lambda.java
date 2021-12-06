@@ -2,13 +2,13 @@ package velka.core.abstraction;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import velka.util.AppendableException;
 import velka.util.NameGenerator;
 import velka.util.Pair;
+import velka.core.exceptions.InvalidArgumentsException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -17,10 +17,12 @@ import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
+import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
+import velka.types.TypesDoesNotUnifyException;
 
 /**
  * Simple lambda expression
@@ -30,6 +32,8 @@ import velka.types.TypeVariable;
  */
 public class Lambda extends Abstraction implements Comparable<Expression> {
 	
+	private Object object;
+
 	/**
 	 * Symbol for lambda special form
 	 */
@@ -96,34 +100,83 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Tuple typeHolderArgs = new Tuple(this.argsType.stream().map(x -> new TypeHolder(x)).collect(Collectors.toList()));
+		return this.inferWithArgs(typeHolderArgs, env, typeEnv);
+	}
+	
+	@Override
+	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		return this.doInferWithArgs(args, env, env, typeEnv);
+	}
+	
+	/**
+	 * Does the actual logic for inferWithArgs, since for functions creation and interpretation environment might differ.
+	 * @param args arguments applied with
+	 * @param creationEnv environment where abstraction was created
+	 * @param applicationEnvironment environment where abstraction was applied
+	 * @param typeEnv type environment
+	 * @return pair of inferred type and substitution
+	 * @throws AppendableException
+	 */
+	public Pair<Type, Substitution> doInferWithArgs(Tuple args, Environment creationEnv, Environment applicationEnvironment, TypeEnvironment typeEnv) throws AppendableException {
 		try {
-			// First infer types in body, use typeholders for argument variables
-			Environment childEnv = Environment.create(env);
-			List<Type> argsTypeArr = new LinkedList<Type>();
-
-			Iterator<Type> i = this.argsType.iterator();
-			for (Expression e : this.args) {
-				if (!(e instanceof Symbol)) {
-					// TODO change throwable
-					throw new AppendableException(e + " is not instance of " + Symbol.class.getName());
-				}
-				Type t = i.next();
-				childEnv.put((Symbol) e, new TypeHolder(t));
-				argsTypeArr.add(t);
+			Pair<Type, Substitution> argsInfered = args.infer(applicationEnvironment, typeEnv);
+			
+			//First check if arguments are of valid types
+			if(!Type.unifyTypes(argsInfered.first, this.argsType).isPresent()) {
+				throw new InvalidArgumentsException(this, args);
 			}
+			
+			//Now try to infer each argument and put it into environment that will be used to infer body
+			Environment childEnv = Environment.create(creationEnv);
+			Substitution argsSubst = Substitution.EMPTY;
 
-			Type argsType = new TypeTuple(argsTypeArr);
+			Iterator<Expression> itFormalArg = this.args.iterator();
+			Iterator<Type> itFormalArgType = this.argsType.iterator();
+			Iterator<Type> itArgType = ((TypeTuple)argsInfered.first).iterator();
 
+			//Since types unified, all iterators will be of the same length
+			while (itFormalArg.hasNext()) {
+				Expression sym = itFormalArg.next();
+				Type fArgType = itFormalArgType.next();
+				Type argType = itArgType.next();
+				Type holderType;
+				
+				//If representation of this argument can be unified with representation of 
+				//formal argument then use it.
+				Optional<Substitution> uni = Type.unifyRepresentation(fArgType, argType);
+				if(uni.isPresent()) {
+					holderType = fArgType.apply(uni.get());
+					Optional<Substitution> o = argsSubst.union(uni.get());
+					if(!o.isPresent()) {
+						throw new SubstitutionsCannotBeMergedException(argsSubst, uni.get());
+					}
+					argsSubst = o.get();
+				}
+				//Otherwise use representation of formal argument, since it will be converted
+				else{
+					holderType = fArgType;
+				}
+
+				if (!(sym instanceof Symbol)) {
+					throw new AppendableException(sym + " is not instance of " + Symbol.class.getName());
+				}
+				childEnv.put((Symbol) sym, new TypeHolder(holderType));
+			}			
+			
 			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv, typeEnv);
+			Optional<Substitution> o = argsSubst.union(bodyInfered.second);
+			if(!o.isPresent()) {
+				throw new SubstitutionsCannotBeMergedException(argsSubst, bodyInfered.second);
+			}			
+			
+			Type argsType = this.argsType.apply(o.get());
+			Type bodyType = bodyInfered.first.apply(o.get());
 
-			// Update argument type with found bindings
-			argsType = argsType.apply(bodyInfered.second);
-
-			return new Pair<Type, Substitution>(new TypeArrow(argsType, bodyInfered.first.apply(bodyInfered.second)),
-					Substitution.EMPTY);
-
+			return new Pair<Type, Substitution>(new TypeArrow(argsType, bodyType), Substitution.EMPTY);
 		} catch (AppendableException e) {
-			e.appendMessage("in " + this);
+			e.appendMessage("\nin " + this.toString());
 			throw e;
 		}
 	}

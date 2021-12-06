@@ -43,6 +43,7 @@ import velka.core.application.IfExpression;
 import velka.core.application.InstanceOf;
 import velka.core.application.InstanceOfRepresentation;
 import velka.core.application.OrExpression;
+import velka.core.exceptions.InvalidArgumentsException;
 import velka.core.exceptions.InvalidNumberOfArgumentsException;
 import velka.core.exceptions.UnboundVariableException;
 import velka.core.exceptions.UserException;
@@ -716,7 +717,7 @@ class TestInterpretation {
 			application.hashCode();
 		});
 
-		assertThrows(InvalidNumberOfArgumentsException.class,
+		assertThrows(InvalidArgumentsException.class,
 				() -> new AbstractionApplication(new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
 						new TypeTuple(Arrays.asList(new TypeVariable("_x"), new TypeVariable("y"))), new Symbol("x")),
 						new Tuple(Arrays.asList(new LitInteger(42)))).interpret(top, typeEnv));
@@ -2078,6 +2079,37 @@ class TestInterpretation {
 		TestInterpretation.testInterpretString(
 				"(loop ((x 0) (s \"\")) (if (= x 3) s (recur (+ x 1) (loop ((y 0) (z s)) (if (= y 2) z (recur (+ y 1) (concat z \"a\")))))))",
 				new LitString("aaaaaa"));
+	}
+	
+	@Test
+	@DisplayName("Test let")
+	void testLet() throws Exception {
+		TestInterpretation.testInterpretString(
+				"(define screw-inference\r\n"
+				+ "	(extended-lambda\r\n"
+				+ "		((Int i))\r\n"
+				+ "		((Int:Native) \"foo\")\r\n"
+				+ "		((Int:String) \"bar\")))\r\n"
+				+ "\r\n"
+				+ "(define selection-fail\r\n"
+				+ "        (lambda ((List:Native impls) (List:Native args))\r\n"
+				+ "            (let ((i (get-list-native args 0)))\r\n"
+				+ "                 (if (equals? \"foo\" (screw-inference i))\r\n"
+				+ "                     (head-list-native (filter-list-native \r\n"
+				+ "						impls \r\n"
+				+ "						(lambda (x) (instance-of-representation x ((Int:Native) #> String:Native)))))\r\n"
+				+ "                     (head-list-native (filter-list-native \r\n"
+				+ "						impls \r\n"
+				+ "						(lambda (x) (instance-of-representation x ((Int:String) #> String:Native)))))))))\r\n"
+				+ "\r\n"
+				+ "(define let-issue-test\r\n"
+				+ "	(extended-lambda-selection\r\n"
+				+ "		((Int i))\r\n"
+				+ "		selection-fail\r\n"
+				+ "		((Int:Native) \"Int:Native\")\r\n"
+				+ "		((Int:String) \"Int:String\")))\n"
+				+ "(let-issue-test 42)",
+				new LitString("Int:Native"));
 	}
 
 	private static Expression parseString(String s) throws AppendableException {

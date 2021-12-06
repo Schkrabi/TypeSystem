@@ -77,4 +77,9 @@ public abstract class Operator extends Abstraction {
 
 		return ClojureHelper.addTypeMetaInfo(sb.toString(), p.first);
 	}
+	
+	@Override
+	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException{
+		return this.infer(env, typeEnv);
+	}
 }

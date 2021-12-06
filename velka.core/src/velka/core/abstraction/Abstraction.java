@@ -83,4 +83,15 @@ public abstract class Abstraction extends Expression {
 	 */
 	public abstract Abstraction selectImplementation(Tuple args, Optional<Expression> rankingFunction, Environment env,
 			TypeEnvironment typeEnv) throws AppendableException;
+	
+	/**
+	 * Does the inference with specified arguments
+	 * Arguments must not be evaluated, only infered. Typeholders should be possible.
+	 * @param args arguments with which abstraction is applied
+	 * @param env environment
+	 * @param typeEnv type environment
+	 * @return pair of infered type and used substitution
+	 * @throws AppendableException 
+	 */
+	public abstract Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException;
 }

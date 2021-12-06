@@ -14,6 +14,7 @@ import velka.core.exceptions.MalformedSelectionFunctionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
+import velka.core.expression.TypeHolder;
 import velka.core.interpretation.ClojureCoreSymbols;
 import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
@@ -23,17 +24,17 @@ import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteropObject;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
+import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
-import velka.types.TypeSetDoesNotUnifyException;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.NameGenerator;
 import velka.util.Pair;
-import velka.util.ThrowingBinaryOperator;
 import velka.util.ThrowingFunction;
+import velka.types.TypeRepresentation;
 
 /**
  * Extended lambda expression allowing for the different implementation of body
@@ -85,31 +86,70 @@ public class ExtendedLambda extends Abstraction {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		Lambda sample = this.implementations.stream().findAny().get();
+		
+		List<Set<Type>> argsTypeSets = sample.argsType.stream().map(x -> new TreeSet<Type>()).collect(Collectors.toList());
+		
+		for(Lambda l : this.implementations) {
+			Iterator<Set<Type>> iSets = argsTypeSets.iterator();
+			Iterator<Type> iArgsType = l.argsType.iterator();
+			while(iSets.hasNext()) {
+				Set<Type> set = iSets.next();
+				Type argType = iArgsType.next();
+				set.add(argType);
+			}
+		}
+				
+		Tuple typeHolderArgs = null;
+		
 		try {
-			Set<Pair<Type, Substitution>> s = null;
-			try {
-				s = this.implementations.stream().map(ThrowingFunction.wrapper(x -> x.infer(env, typeEnv)))
-						.collect(Collectors.toSet());
-			} catch (RuntimeException re) {
+			typeHolderArgs = new Tuple(
+					argsTypeSets.stream().map(ThrowingFunction.wrapper(x -> RepresentationOr.makeRepresentationOr(x)))
+							.map(x -> new TypeHolder(x)).collect(Collectors.toList()));
+		} catch (RuntimeException re) {
+			if (re.getCause() instanceof AppendableException) {
 				AppendableException e = (AppendableException) re.getCause();
 				throw e;
 			}
-			
-			final Set<Type> types = s.stream().map(x -> x.first).collect(Collectors.toSet());
-			final Set<Substitution> substs = s.stream().map(x -> x.second).collect(Collectors.toSet());
+			throw re;
+		}	
+		
+		return this.inferWithArgs(typeHolderArgs, env, typeEnv);
+	}
+	
+	@Override
+	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		return this.doInferWithArgs(args, env, env, typeEnv);
+	}
+	
+	/**
+	 * Does the actual logic for inferWithArgs, since for functions creation and interpretation environment might differ.
+	 * @param args arguments applied with
+	 * @param creationEnv environment where abstraction was created
+	 * @param applicationEnvironment environment where abstraction was applied
+	 * @param typeEnv type environment
+	 * @return pair of inferred type and substitution
+	 * @throws AppendableException
+	 */
+	protected Pair<Type, Substitution> doInferWithArgs(Tuple args, Environment creationEnv,
+			Environment applicationEnvironment, TypeEnvironment typeEnv) throws AppendableException {
+		try {
+			Set<Type> types = new TreeSet<Type>();
+			Substitution s = Substitution.EMPTY;
+			for (Lambda l : this.implementations) {
+				Pair<Type, Substitution> p = l.doInferWithArgs(args, creationEnv, applicationEnvironment, typeEnv);
+				types.add(p.first);
+				Optional<Substitution> o = s.union(p.second);
+				if (!o.isPresent()) {
+					throw new SubstitutionsCannotBeMergedException(s, p.second);
+				}
+			}
 
-			return new Pair<Type, Substitution>(
-					RepresentationOr.makeRepresentationOr(types),
-					substs.stream().reduce(Substitution.EMPTY, ThrowingBinaryOperator.wrapper((x, y) -> {
-						Optional<Substitution> subst = x.union(y);
-						if (subst.isEmpty()) {
-							throw new TypeSetDoesNotUnifyException(types);
-						}
-						return subst.get();
-					})));
-
+			Type type = RepresentationOr.makeRepresentationOr(types);
+			return new Pair<Type, Substitution>(type, s);
 		} catch (AppendableException e) {
-			e.appendMessage("in " + this);
+			e.appendMessage("\nin " + this.toString());
 			throw e;
 		}
 	}

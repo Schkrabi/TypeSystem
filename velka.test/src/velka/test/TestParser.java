@@ -170,7 +170,7 @@ class TestParser {
 		List<Lambda> impls = new ArrayList<Lambda>();
 		impls.add(impl);
 		this.testParse(
-				"(extended-lambda-cost ((Int x)) (lambda ((List:Native x) (List:Native y)) 1) ((Int:Native) x))",
+				"(extended-lambda-selection ((Int x)) (lambda ((List:Native x) (List:Native y)) 1) ((Int:Native) x))",
 				ExtendedLambda.makeExtendedLambda(impls, ranking));
 	}
 
