@@ -16,6 +16,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -65,14 +67,20 @@ import velka.util.Pair;
 class TestComplex {
 	
 	static Path tmpDir;
+	private static String os = System.getProperty("os.name").toLowerCase();
+	public static boolean IS_WINDOWS = (os.indexOf("win") >= 0);
+	public static boolean IS_UNIX = (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") > 0);
+	
+	private static final Path velkaUtilJar = Paths.get("C:", "Users", "r.skrabal", "Documents", "Mine", "Java", "TypeSystem", "lib", "velka.util.jar");
+	private static final Path velkaTypesJar = Paths.get("C:", "Users", "r.skrabal", "Documents", "Mine", "Java", "TypeSystem", "lib", "velka.types.jar");
 	
 	@BeforeAll
 	static void setupTest() throws IOException {
 		TestComplex.tmpDir = Files.createTempDirectory("cljTest");
 		
 		ClojureCodeGenerator.generateClojureProject(tmpDir);
-		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.util.jar"), tmpDir.resolve(Paths.get("velka.util.jar")), StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.types.jar"), tmpDir.resolve(Paths.get("velka.types.jar")), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(velkaUtilJar, tmpDir.resolve(Paths.get("velka.util.jar")), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(velkaTypesJar, tmpDir.resolve(Paths.get("velka.types.jar")), StandardCopyOption.REPLACE_EXISTING);
 	}
 	
 	@AfterAll
@@ -541,7 +549,7 @@ class TestComplex {
 		File tempOut = File.createTempFile("velka_read_test", null);
         String content  = "hello world !!";       
         Files.writeString(tempOut.toPath(), content);
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (read-file \"" + tempOut.toPath().toString() + "\"))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (read-file \"" + tempOut.toPath().toString().replace("\\", "/") + "\"))");
 		tempOut.delete();
 		
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (mod 5 3))");
@@ -1456,8 +1464,8 @@ class TestComplex {
 		Files.delete(depsEdn);*/
 		
 		ClojureCodeGenerator.generateClojureProject(tmpDir);
-		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.util.jar"), tmpDir.resolve(Paths.get("velka.util.jar")), StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(Paths.get("/", "home", "schkabi", "Documents", "Java", "TypeSystem", "lib", "velka.types.jar"), tmpDir.resolve(Paths.get("velka.types.jar")), StandardCopyOption.REPLACE_EXISTING);		
+		Files.copy(velkaUtilJar, tmpDir.resolve(Paths.get("velka.util.jar")), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(velkaTypesJar, tmpDir.resolve(Paths.get("velka.types.jar")), StandardCopyOption.REPLACE_EXISTING);		
 		
 		Environment env = Environment.initTopLevelEnvitonment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
@@ -1483,6 +1491,20 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (loop ((x 0) (s \"\")) (if (= x 3) s (recur (+ x 1) (loop ((y 0) (z s)) (if (= y 2) z (recur (+ y 1) (concat z \"a\"))))))))");
 	}
 	
+	@Test
+	@DisplayName("Test Sandbox")
+	void testSandbox() throws Exception{
+//		ProcessBuilder pb = new ProcessBuilder("echo", "%JAVA_HOME%");
+//		pb.inheritIO();
+//		Map<String, String> env = pb.environment();
+//		String path = env.get("PATH");
+//		env.put("PATH", "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\windows\\system32;C:\\windows;C:\\windows\\System32\\Wbem;C:\\windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\windows\\System32\\OpenSSH\\;C:\\Program Files\\dotnet\\;C:\\Program Files\\Git\\cmd;C:\\Program Files (x86)\\dotnet\\;C:\\Java\\jdk-17.0.1\\bin;C:\\Java\\apache-ant-1.10.12\\bin;C:\\Users\\r.skrabal\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\r.skrabal\\.dotnet\\tools;C:\\windows\\System32;");
+//		//pb.redirectOutput(System.out);
+//		//pb.redirectError(System.err);		
+//		Process p = pb.start();
+//		p.waitFor();
+	}
+	
 	private static void assertClojureFunction(String definitions, String testCase, String expectedResult) throws IOException, InterruptedException, AppendableException {
 		//Test that definitions are sound
 		StringBuilder sb = new StringBuilder();
@@ -1502,7 +1524,11 @@ class TestComplex {
 		sb.append("\n");
 		sb.append(testCase);
 		String result = TestComplex.clojureCodeResult(sb.toString());
-		assertEquals(expectedResult + "\n", result);
+		if(IS_UNIX) {
+			assertEquals(expectedResult + "\n", result);
+		}else if (IS_WINDOWS) {
+			assertEquals(expectedResult + "\r\n", result);
+		}
 	}
 
 	private static List<Expression> parseString(String s) throws AppendableException {
@@ -1610,12 +1636,53 @@ class TestComplex {
 		return result;
 	}
 	
-	private static String clojureCodeResult(String code) throws IOException, InterruptedException, AppendableException {				
+	private static String clojureCodeResult(String code) throws IOException, InterruptedException, AppendableException {
+		if(IS_UNIX) {
+			return clojureCodeResult_unix(code);
+		}else if(IS_WINDOWS) {
+			return clojureCodeResult_windows(code);
+		}else {
+			throw new AppendableException("Unsupported OS for testing!");
+		}
+	}
+	
+	private static String clojureCodeResult_unix(String code) throws IOException, InterruptedException, AppendableException {				
 		Path codeFile = Files.writeString(tmpDir.resolve(Paths.get("velka", "clojure", "user.clj")), code);
 		
 		ProcessBuilder pb = new ProcessBuilder("clj", codeFile.toAbsolutePath().toString());
 		pb.inheritIO();
 		pb.directory(tmpDir.toFile());
+		
+		File tempOut = File.createTempFile("velka_clojure_test_out", null);
+		File tempErr = File.createTempFile("velka_clojure_test_err", null);
+		
+		pb.redirectOutput(tempOut);
+		pb.redirectError(tempErr);
+
+		Process p = pb.start();
+		p.waitFor();
+		
+		String result = Files.readString(tempOut.toPath());
+		String err = Files.readString(tempErr.toPath());
+		tempOut.delete();	
+		tempErr.delete();
+		Files.delete(codeFile);
+		
+		if(!err.isEmpty()) {
+			throw new AppendableException(err);
+		}
+		
+		return result;
+	}
+	
+	private static String clojureCodeResult_windows(String code) throws IOException, InterruptedException, AppendableException {
+		Path codeFile = Files.writeString(tmpDir.resolve(Paths.get("velka", "clojure", "user.clj")), code);
+		
+		ProcessBuilder pb = new ProcessBuilder("powershell", "-command", "clj",	"-M", codeFile.toAbsolutePath().toString());
+		pb.inheritIO();
+		pb.directory(tmpDir.toFile());
+		
+		pb.environment().put("PATH", "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\windows\\system32;C:\\windows;C:\\windows\\System32\\Wbem;C:\\windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\windows\\System32\\OpenSSH\\;C:\\Program Files\\dotnet\\;C:\\Program Files\\Git\\cmd;C:\\Program Files (x86)\\dotnet\\;C:\\Java\\jdk-17.0.1\\bin;C:\\Java\\apache-ant-1.10.12\\bin;C:\\Users\\r.skrabal\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\r.skrabal\\.dotnet\\tools;C:\\windows\\System32;");
 		
 		File tempOut = File.createTempFile("velka_clojure_test_out", null);
 		File tempErr = File.createTempFile("velka_clojure_test_err", null);

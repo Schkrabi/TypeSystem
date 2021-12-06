@@ -199,14 +199,14 @@ public class ClojureCodeGenerator {
 		
 		//Default clojure dependencies
 		sb.append("\".\"\n");
-		sb.append("\"./" + VelkaClojureCore.RELATIVE_PATH.toString() + "\"\n");
-		sb.append("\"./" + VelkaClojureOperators.RELATIVE_PATH.toString() + "\"\n");
-		sb.append("\"./" + VelkaClojureList.RELATIVE_PATH.toString() + "\"\n");
-		sb.append("\"./" + VelkaClojureConversions.RELATIVE_PATH.toString() + "\"\n");
-		sb.append("\"./" + VelkaClojureArrayList.RELATIVE_PATH.toString() + "\"\n");
-		sb.append("\"./" + VelkaClojureLinkedList.RELATIVE_PATH.toString() + "\"\n");
+		sb.append("\"./" + VelkaClojureCore.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
+		sb.append("\"./" + VelkaClojureOperators.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
+		sb.append("\"./" + VelkaClojureList.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
+		sb.append("\"./" + VelkaClojureConversions.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
+		sb.append("\"./" + VelkaClojureArrayList.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
+		sb.append("\"./" + VelkaClojureLinkedList.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
 		//Main source file
-		sb.append("\"./" + ClojureCodeGenerator.DEFAULT_FILE_PROJECT_PATH.toString() + "\"\n");
+		sb.append("\"./" + ClojureCodeGenerator.DEFAULT_FILE_PROJECT_PATH.toString().replace('\\', '/') + "\"\n");
 		//Velka libs
 		sb.append("\"./velka.util.jar\"\n");
 		sb.append("\"./velka.types.jar\"\n");
