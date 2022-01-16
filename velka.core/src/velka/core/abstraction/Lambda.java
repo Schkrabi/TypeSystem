@@ -2,6 +2,8 @@ package velka.core.abstraction;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -22,7 +24,6 @@ import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
-import velka.types.TypesDoesNotUnifyException;
 
 /**
  * Simple lambda expression
@@ -192,10 +193,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	 *                             is not a variable
 	 */
 	protected String toClojureFn(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		StringBuilder s = new StringBuilder();
-		
-		s.append("(fn [");
-
+		List<String> fnArgs = new LinkedList<String>();
 		Iterator<Expression> i = this.args.iterator();
 		Iterator<Type> j = this.argsType.iterator();
 		Environment child = Environment.create(env);
@@ -208,19 +206,15 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			}
 			Symbol v = (Symbol) e;
 			child.put(v, new TypeHolder(t));
-			s.append(v.toClojureCode(env, typeEnv));
-			if (i.hasNext()) {
-				s.append(' ');
-			}
+			
+			fnArgs.add(v.toClojureCode(env, typeEnv));
 		}
-		s.append("] \n");
-
-		s.append(this.body.toClojureCode(child, typeEnv));
-		s.append(")");
+		
+		String fn = ClojureHelper.fnHelper(fnArgs, this.body.toClojureCode(child, typeEnv));
 		
 		Pair<Type, Substitution> p = this.infer(env, typeEnv);
 		
-		return ClojureHelper.addTypeMetaInfo(s.toString(), p.first);
+		return ClojureHelper.addTypeMetaInfo(fn, p.first);
 	}
 
 	@Override

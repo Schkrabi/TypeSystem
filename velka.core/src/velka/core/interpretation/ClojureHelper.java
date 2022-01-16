@@ -12,6 +12,7 @@ import velka.core.literal.LitComposite;
 import velka.types.Type;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
+import velka.util.NameGenerator;
 import velka.util.Pair;
 
 /**
@@ -263,6 +264,9 @@ public class ClojureHelper {
 	 */
 	public static String fnHelper(List<Pair<List<String>, String>> fnspecs) {
 		StringBuilder sb = new StringBuilder("(fn ");
+		
+		sb.append(NameGenerator.next());
+		sb.append(" ");
 		
 		Iterator<Pair<List<String>, String>> i = fnspecs.iterator();
 		while(i.hasNext()) {
