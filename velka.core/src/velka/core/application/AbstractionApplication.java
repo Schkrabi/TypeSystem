@@ -112,7 +112,7 @@ public class AbstractionApplication extends Application {
 	 * @return Pair of type and substitution
 	 * @throws AppendableException
 	 */
-	private static Pair<Type, Substitution> inferResultType(TypeTuple argsType, Substitution argsSubst,
+	private static Pair<Type, Substitution> inferResultType(Type argsType, Substitution argsSubst,
 			TypeArrow abstType, Substitution abstSubst) throws AppendableException {
 		Optional<Substitution> s = Type.unifyTypes(argsType, abstType.ltype);
 		if(s.isEmpty()) {
@@ -142,8 +142,8 @@ public class AbstractionApplication extends Application {
 			Pair<Type, Substitution> funInfered = this.fun.infer(env, typeEnv);
 			Pair<Type, Substitution> argsInfered = this.args.infer(env, typeEnv);
 
-			if (funInfered.first instanceof TypeArrow) {
-				return AbstractionApplication.inferResultType((TypeTuple) argsInfered.first, argsInfered.second,
+			if (funInfered.first instanceof TypeArrow) {				
+				return AbstractionApplication.inferResultType(argsInfered.first, argsInfered.second,
 						(TypeArrow) funInfered.first, funInfered.second);
 			}
 			if (funInfered.first instanceof TypeVariable) {
@@ -156,7 +156,7 @@ public class AbstractionApplication extends Application {
 					throw new SubstitutionsCannotBeMergedException(s, funInfered.second);
 				}
 				
-				return AbstractionApplication.inferResultType((TypeTuple) argsInfered.first, argsInfered.second,
+				return AbstractionApplication.inferResultType(argsInfered.first, argsInfered.second,
 						abstArrowType, tmp.get());
 			}
 			if (funInfered.first instanceof RepresentationOr && ((RepresentationOr) funInfered.first)
@@ -165,7 +165,7 @@ public class AbstractionApplication extends Application {
 				List<Pair<Type, Substitution>> l = null;
 				try {
 					l = abstRepOr.getRepresentations().stream().map(ThrowingFunction.wrapper(x -> {
-						return AbstractionApplication.inferResultType((TypeTuple) argsInfered.first, argsInfered.second,
+						return AbstractionApplication.inferResultType(argsInfered.first, argsInfered.second,
 								(TypeArrow) x, funInfered.second);
 					})).collect(Collectors.toList());
 				} catch (RuntimeException re) {
