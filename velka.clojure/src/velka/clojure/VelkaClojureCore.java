@@ -113,30 +113,45 @@ public class VelkaClojureCore {
 								convertFn_to), 
 					new Pair<String, String>(convertFn_from, ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol, convertFn_arg)),
 					new Pair<String, String>(convertFn_impl, 
-							ClojureHelper.clojureIfHelper(
-									ClojureHelper.applyClojureFunction("=", 
-											ClojureHelper.applyClojureFunction(".ltype", convertFn_from),
-											"velka.types.TypeTuple/EMPTY_TUPLE"), 
-									ClojureHelper.addTypeMetaInfo_str(
-											ClojureHelper.fnHelper(Arrays.asList(), 
-													ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
-															ClojureHelper.applyClojureFunction(".rtype", convertFn_to),
-															ClojureHelper.applyClojureFunction("apply",
-																	ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
-																	ClojureHelper.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)))), 
-											convertFn_to), 
-									ClojureHelper.addTypeMetaInfo_str(
-											ClojureHelper.fnHelper(
-													Arrays.asList("& " + convertFn_fn_arg), 
-													ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
-															ClojureHelper.applyClojureFunction(".rtype", convertFn_to),
-															ClojureHelper.applyClojureFunction("apply", 
-																	ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
-																	ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol,
-																			ClojureHelper.applyClojureFunction(".ltype", convertFn_from),
-																			ClojureHelper.addTypeMetaInfo_str(convertFn_fn_arg, 
-																					ClojureHelper.applyClojureFunction(".ltype", convertFn_to)))))), 
-											convertFn_to)))));
+							ClojureHelper.condHelper(
+									new Pair<String, String>(
+											ClojureHelper.applyClojureFunction("=", 
+													ClojureHelper.applyClojureFunction(".ltype", convertFn_from),
+													"velka.types.TypeTuple/EMPTY_TUPLE"),
+											ClojureHelper.addTypeMetaInfo_str(
+													ClojureHelper.fnHelper(Arrays.asList(), 
+															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
+																	ClojureHelper.applyClojureFunction(".rtype", convertFn_to),
+																	ClojureHelper.applyClojureFunction("apply",
+																			ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
+																			ClojureHelper.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)))), 
+													convertFn_to)),
+									new Pair<String, String>(
+											ClojureHelper.applyClojureFunction("instance?",
+													"velka.types.TypeVariable",
+													ClojureHelper.applyClojureFunction(".ltype", convertFn_to)),
+											ClojureHelper.addTypeMetaInfo_str(
+													ClojureHelper.fnHelper(
+															Arrays.asList("& " + convertFn_fn_arg), 
+															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
+																	ClojureHelper.applyClojureFunction(".rtype", convertFn_to),
+																	ClojureHelper.applyClojureFunction("apply", 
+																			ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
+																			"_a"))), convertFn_to)),
+									new Pair<String, String>(
+											":else",
+											ClojureHelper.addTypeMetaInfo_str(
+													ClojureHelper.fnHelper(
+															Arrays.asList("& " + convertFn_fn_arg), 
+															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
+																	ClojureHelper.applyClojureFunction(".rtype", convertFn_to),
+																	ClojureHelper.applyClojureFunction("apply", 
+																			ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
+																			ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol,
+																					ClojureHelper.applyClojureFunction(".ltype", convertFn_from),
+																					ClojureHelper.addTypeMetaInfo_str(convertFn_fn_arg, 
+																							ClojureHelper.applyClojureFunction(".ltype", convertFn_to)))))), 
+													convertFn_to))))));
 	/**
 	 * Definition for convert-set clojure function
 	 */
