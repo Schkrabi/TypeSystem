@@ -41,7 +41,7 @@ public class VelkaClojureDev {
 	private static final String velkaLiteral = ClojureHelper.clojureDefnHelper(
 			velkaLiteralSymbol, 
 			Arrays.asList(velkaLiteral_val, velkaLiteral_type), 
-			ClojureHelper.litCompositeHelper_str(velkaLiteral_val, velkaLiteral_type));
+			ClojureHelper.litCompositeHelper_str(velkaLiteral_type, velkaLiteral_val));
 	
 	private static final String velkaIntSymbol = "velka-int";
 	private static final String velkaInt_val = "_val";
