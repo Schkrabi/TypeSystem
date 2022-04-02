@@ -188,10 +188,10 @@ public class VelkaClojureCore {
 	 */
 	public static String eapplyClojureDef = "(defn " + ClojureCoreSymbols.eapplyClojureSymbol + "\n" + "    ([abstraction args ranking]\n"
 			+ "        (let [impl (abstraction args ranking)\n" + "              converted-args ("
-			+ ClojureCoreSymbols.convertClojureSymbol + "\n" + "                                 (.ltype (" + ClojureCoreSymbols.getTypeClojureSymbol
+			+ ClojureCoreSymbols.convertClojureSymbol + "                                 (.ltype (" + ClojureCoreSymbols.getTypeClojureSymbol
 			+ " impl))\n" + "                                 args)]\n" + "            (apply impl converted-args)))\n"
 			+ "    ([abstraction args]\n" + "        (let [impl (abstraction args)\n" + "              converted-args ("
-			+ ClojureCoreSymbols.convertClojureSymbol + "\n" + "                                 (.ltype (" + ClojureCoreSymbols.getTypeClojureSymbol
+			+ ClojureCoreSymbols.convertClojureSymbol  + "                                 (.ltype (" + ClojureCoreSymbols.getTypeClojureSymbol
 			+ " impl))\n" + "                                 args)]\n" + "            (apply impl converted-args))))";
 	
 	
