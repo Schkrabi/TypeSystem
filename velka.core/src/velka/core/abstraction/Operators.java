@@ -475,7 +475,17 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitInteger.clojureIntToClojureLitInteger("(/ (get _x 0) (get _y 0))") + ")";
+			String x = "_x";
+			String y = "_y";
+			String code = ClojureHelper.fnHelper(
+							Arrays.asList(x, y),
+							LitInteger.clojureIntToClojureLitInteger(
+								ClojureHelper.applyClojureFunction("int",
+										ClojureHelper.applyClojureFunction("/",
+												ClojureHelper.getLiteralInnerValue(x),
+												ClojureHelper.getLiteralInnerValue(y)))));
+			
+			return code;
 		}
 
 		@Override
