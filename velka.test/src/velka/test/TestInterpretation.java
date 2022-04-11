@@ -966,6 +966,10 @@ class TestInterpretation {
 				new LitInteger(1), TypeAtom.TypeIntNative);
 		TestInterpretation.testOperator(Operators.BitShiftLeft, new Tuple(new LitInteger(2), new LitInteger(1)),
 				new LitInteger(4), TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operators.UnsignedBitShiftRight, new Tuple(new LitInteger(2), new LitInteger(1)),
+				new LitInteger(1), TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operators.UnsignedBitShiftRight, new Tuple(new LitInteger(-1), new LitInteger(10)), 
+				new LitInteger(18014398509481983l), TypeAtom.TypeIntNative);
 		TestInterpretation.testOperator(Operators.BitNot, new Tuple(new LitInteger(6)), new LitInteger(-7), TypeAtom.TypeIntNative);
 		TestInterpretation.testOperator(Operators.BitXor, new Tuple(new LitInteger(5), new LitInteger(6)), new LitInteger(3), TypeAtom.TypeIntNative);
 		TestInterpretation.testOperator(Operators.ToStr, new Tuple(new LitInteger(42)), new LitString("[42]"), TypeAtom.TypeStringNative);

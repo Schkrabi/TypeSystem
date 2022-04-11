@@ -202,6 +202,48 @@ public final class Operators {
 		}
 
 	};
+	
+	/**
+	 * Unsigned bit shift right (ushr) operator
+	 */
+	public static final Operator UnsignedBitShiftRight = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String code = "(fn [_num _n] "
+					+ LitInteger.clojureIntToClojureLitInteger("(unsigned-bit-shift-right (first _num) (first _n))") + ")";
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitInteger num = (LitInteger) args.get(0);
+			LitInteger n = (LitInteger) args.get(1);
+
+			long res = num.value >>> n.value;
+
+			return new LitInteger(res);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeIntNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+		@Override
+		public String toString() {
+			return "ushr";
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-unsigned-bit-shr", NAMESPACE);
+		}
+
+	};
 
 	/**
 	 * Bit shift left (shl) operator

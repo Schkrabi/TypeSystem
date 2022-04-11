@@ -534,6 +534,8 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (cdr (cons 42 \"42\")))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (shr 2 1))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (shl 2 1))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (ushr 2 1))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (ushr -1 10))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-not 6))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-xor 6 5))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (to-str 42))");

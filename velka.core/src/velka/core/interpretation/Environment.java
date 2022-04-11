@@ -209,6 +209,7 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Symbol(Operators.InitLogger.toString()), Operators.InitLogger);
 		env.put(new Symbol(Operators.Log.toString()), Operators.Log);
 		env.put(new Symbol(Operators.BitShiftRight.toString()), Operators.BitShiftRight);
+		env.put(new Symbol(Operators.UnsignedBitShiftRight.toString()), Operators.UnsignedBitShiftRight);
 		env.put(new Symbol(Operators.BitShiftLeft.toString()), Operators.BitShiftLeft);
 		env.put(new Symbol(Operators.BitNot.toString()), Operators.BitNot);
 		env.put(new Symbol(Operators.BitXor.toString()), Operators.BitXor);

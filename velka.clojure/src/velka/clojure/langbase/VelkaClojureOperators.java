@@ -55,6 +55,7 @@ public class VelkaClojureOperators {
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.BitOr));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.BitShiftLeft));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.BitShiftRight));
+		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.UnsignedBitShiftRight));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.BitXor));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.CanUnifyRepresentations));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.CanUnifyTypes));
@@ -98,6 +99,7 @@ public class VelkaClojureOperators {
 			sb.append(ClojureHelper.makeOperatorDef(Operators.BitShiftLeft, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.BitShiftRight, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.BitShiftRight, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(Operators.UnsignedBitShiftRight, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.BitXor, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.CanUnifyRepresentations, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.CanUnifyTypes, env, typeEnv));
