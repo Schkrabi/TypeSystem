@@ -132,6 +132,49 @@ public class JavaArrayList {
 		}
 		
 	};
+	
+	/**
+	 * Symbol for Capacity Constructor
+	 */
+	public static final Symbol constructorCapacitySymbol = new Symbol("velka-contruct-capacity", NAMESPACE);
+	
+	/**
+	 * Operator for capacity constructor
+	 */
+	public static Operator constructorCapacity = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			final String capacity = "_capacity";
+			final String code = ClojureHelper.fnHelper(Arrays.asList(capacity),
+					ClojureHelper.applyClojureFunction("java.util.ArrayList.", capacity));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return constructorCapacitySymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			LitInteger lit = (LitInteger)args.get(0);
+			
+			ArrayList<Expression> al = new ArrayList<Expression>((int) lit.value);
+			
+			return new LitInteropObject(al);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), JavaArrayList.TypeListJavaArray);
+			
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
 
 	/**
 	 * Symbol for boolean add(E e)

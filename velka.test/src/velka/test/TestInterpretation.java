@@ -1578,6 +1578,11 @@ class TestInterpretation {
 				new LitComposite(
 						new LitInteropObject(new ArrayList<Object>(Arrays.asList(new LitInteger(0), new LitInteger(1)))), 
 						JavaArrayList.TypeListJavaArray));
+		
+		TestInterpretation.testInterpretString(
+				"(construct List JavaArray 42)",
+				new LitComposite(
+						new LitInteropObject(new ArrayList<Object>(42)), JavaArrayList.TypeListJavaArray));
 
 		ArrayList<Object> l = new ArrayList<Object>();
 		l.add(new LitInteger(42));

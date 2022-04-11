@@ -1177,6 +1177,7 @@ class TestComplex {
 	void testJavaArrayListClojure() throws Exception {
 		TestComplex.assertIntprtAndCompPrintSameValues("(construct List JavaArray)");
 		TestComplex.assertIntprtAndCompPrintSameValues("(construct List JavaArray (build-list-native 2 (lambda (x) x)))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(construct List JavaArray 42)");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToEndSymbol_out.toString() + " (construct List JavaArray) 42))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToIndexSymbol_out.toString() + " (construct List JavaArray) 0 42))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"

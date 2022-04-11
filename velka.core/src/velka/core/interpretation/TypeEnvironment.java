@@ -20,7 +20,6 @@ import velka.core.exceptions.UnrecognizedConstructorException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
-import velka.core.interpretation.Environment;
 import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
@@ -279,63 +278,64 @@ public class TypeEnvironment {
 	 * @throws AppendableException
 	 */
 	public static TypeEnvironment initBasicTypes(Environment env) throws AppendableException {
-		TypeEnvironment typeEnvitonment = new TypeEnvironment(env);
+		TypeEnvironment typeEnvironment = new TypeEnvironment(env);
 
 		// Int
-		typeEnvitonment.addType(TypeAtom.TypeInt.name);
-		typeEnvitonment.addRepresentation(TypeAtom.TypeIntNative);
-		typeEnvitonment.addPrimitiveConstructor(TypeAtom.TypeIntNative, env);
-		typeEnvitonment.addRepresentation(TypeAtom.TypeIntRoman);
-		typeEnvitonment.addConstructor(TypeAtom.TypeIntRoman, Lambda.makeIdentity(TypeAtom.TypeStringNative), env);
-		typeEnvitonment.addRepresentation(TypeAtom.TypeIntString);
-		typeEnvitonment.addConstructor(TypeAtom.TypeIntString, Lambda.makeIdentity(TypeAtom.TypeStringNative), env);
+		typeEnvironment.addType(TypeAtom.TypeInt.name);
+		typeEnvironment.addRepresentation(TypeAtom.TypeIntNative);
+		typeEnvironment.addPrimitiveConstructor(TypeAtom.TypeIntNative, env);
+		typeEnvironment.addRepresentation(TypeAtom.TypeIntRoman);
+		typeEnvironment.addConstructor(TypeAtom.TypeIntRoman, Lambda.makeIdentity(TypeAtom.TypeStringNative), env);
+		typeEnvironment.addRepresentation(TypeAtom.TypeIntString);
+		typeEnvironment.addConstructor(TypeAtom.TypeIntString, Lambda.makeIdentity(TypeAtom.TypeStringNative), env);
 
 		// Bool
-		typeEnvitonment.addType(TypeAtom.TypeBool.name);
-		typeEnvitonment.addRepresentation(TypeAtom.TypeBoolNative);
-		typeEnvitonment.addPrimitiveConstructor(TypeAtom.TypeBoolNative, env);
+		typeEnvironment.addType(TypeAtom.TypeBool.name);
+		typeEnvironment.addRepresentation(TypeAtom.TypeBoolNative);
+		typeEnvironment.addPrimitiveConstructor(TypeAtom.TypeBoolNative, env);
 
 		// String
-		typeEnvitonment.addType(TypeAtom.TypeString.name);
-		typeEnvitonment.addRepresentation(TypeAtom.TypeStringNative);
-		typeEnvitonment.addPrimitiveConstructor(TypeAtom.TypeStringNative, env);
+		typeEnvironment.addType(TypeAtom.TypeString.name);
+		typeEnvironment.addRepresentation(TypeAtom.TypeStringNative);
+		typeEnvironment.addPrimitiveConstructor(TypeAtom.TypeStringNative, env);
 
 		// Double
-		typeEnvitonment.addType(TypeAtom.TypeDouble.name);
-		typeEnvitonment.addRepresentation(TypeAtom.TypeDoubleNative);
-		typeEnvitonment.addPrimitiveConstructor(TypeAtom.TypeDoubleNative, env);
+		typeEnvironment.addType(TypeAtom.TypeDouble.name);
+		typeEnvironment.addRepresentation(TypeAtom.TypeDoubleNative);
+		typeEnvironment.addPrimitiveConstructor(TypeAtom.TypeDoubleNative, env);
 
 		// List
-		typeEnvitonment.addType(TypeAtom.TypeList.name);
-		typeEnvitonment.addRepresentation(TypeAtom.TypeListNative);
-		typeEnvitonment.addConstructor(TypeAtom.TypeListNative, ListNative.constructorEmpty, env);
-		typeEnvitonment.addConstructor(TypeAtom.TypeListNative, ListNative.constructor, env);
+		typeEnvironment.addType(TypeAtom.TypeList.name);
+		typeEnvironment.addRepresentation(TypeAtom.TypeListNative);
+		typeEnvironment.addConstructor(TypeAtom.TypeListNative, ListNative.constructorEmpty, env);
+		typeEnvironment.addConstructor(TypeAtom.TypeListNative, ListNative.constructor, env);
 		
 		// List Java Array
-		typeEnvitonment.addRepresentation(JavaArrayList.TypeListJavaArray);
-		typeEnvitonment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructor, env);
-		typeEnvitonment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructorFromList, env);
+		typeEnvironment.addRepresentation(JavaArrayList.TypeListJavaArray);
+		typeEnvironment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructor, env);
+		typeEnvironment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructorFromList, env);
+		typeEnvironment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructorCapacity, env);
 		
 		// List Java Linked
-		typeEnvitonment.addRepresentation(JavaLinkedList.TypeListJavaLinked);
-		typeEnvitonment.addConstructor(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.constructor, env);
+		typeEnvironment.addRepresentation(JavaLinkedList.TypeListJavaLinked);
+		typeEnvironment.addConstructor(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.constructor, env);
 
 		// Conversions
-		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, ConversionOperators.IntNativeToIntRoman);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, ConversionOperators.IntNativeToIntString);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative, ConversionOperators.IntRomanToIntNative);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, ConversionOperators.IntRomanToIntString);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative, ConversionOperators.IntStringToIntNative);
-		typeEnvitonment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, ConversionOperators.IntStringToIntRoman);
+		typeEnvironment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, ConversionOperators.IntNativeToIntRoman);
+		typeEnvironment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, ConversionOperators.IntNativeToIntString);
+		typeEnvironment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative, ConversionOperators.IntRomanToIntNative);
+		typeEnvironment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, ConversionOperators.IntRomanToIntString);
+		typeEnvironment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative, ConversionOperators.IntStringToIntNative);
+		typeEnvironment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, ConversionOperators.IntStringToIntRoman);
 		
-		typeEnvitonment.addConversion(JavaArrayList.TypeListJavaArray, JavaLinkedList.TypeListJavaLinked, JavaArrayList.ArrayListToLinkedList);
-		typeEnvitonment.addConversion(JavaArrayList.TypeListJavaArray, TypeAtom.TypeListNative, JavaArrayList.ArrayListToNativeList);
-		typeEnvitonment.addConversion(JavaLinkedList.TypeListJavaLinked, JavaArrayList.TypeListJavaArray, JavaLinkedList.LinkedListToArrayList);
-		typeEnvitonment.addConversion(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeListNative, JavaLinkedList.LinkedListToNativeList);
-		typeEnvitonment.addConversion(TypeAtom.TypeListNative, JavaArrayList.TypeListJavaArray, ListNative.ListNativeToArrayListOperator);
-		typeEnvitonment.addConversion(TypeAtom.TypeListNative, JavaLinkedList.TypeListJavaLinked, ListNative.ListNativeToLinkedListOperator);
+		typeEnvironment.addConversion(JavaArrayList.TypeListJavaArray, JavaLinkedList.TypeListJavaLinked, JavaArrayList.ArrayListToLinkedList);
+		typeEnvironment.addConversion(JavaArrayList.TypeListJavaArray, TypeAtom.TypeListNative, JavaArrayList.ArrayListToNativeList);
+		typeEnvironment.addConversion(JavaLinkedList.TypeListJavaLinked, JavaArrayList.TypeListJavaArray, JavaLinkedList.LinkedListToArrayList);
+		typeEnvironment.addConversion(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeListNative, JavaLinkedList.LinkedListToNativeList);
+		typeEnvironment.addConversion(TypeAtom.TypeListNative, JavaArrayList.TypeListJavaArray, ListNative.ListNativeToArrayListOperator);
+		typeEnvironment.addConversion(TypeAtom.TypeListNative, JavaLinkedList.TypeListJavaLinked, ListNative.ListNativeToLinkedListOperator);
 
-		return typeEnvitonment;
+		return typeEnvironment;
 	}
 
 	// TODO Remove?
