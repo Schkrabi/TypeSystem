@@ -147,7 +147,7 @@ public class JavaArrayList {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			final String capacity = "_capacity";
 			final String code = ClojureHelper.fnHelper(Arrays.asList(capacity),
-					ClojureHelper.applyClojureFunction("java.util.ArrayList.", capacity));
+					ClojureHelper.applyClojureFunction("java.util.ArrayList.", ClojureHelper.applyClojureFunction("first", capacity)));
 			
 			return code;
 		}
