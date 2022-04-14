@@ -377,15 +377,11 @@ public final class Operators {
 	 * car operator
 	 */
 	public static final Operator Car = new Operator() {
-
-		private final TypeVariable carType = new TypeVariable(NameGenerator.next());
-		private final TypeArrow type = new TypeArrow(
-				new TypeTuple(
-						Arrays.asList(new TypeTuple(Arrays.asList(carType, new TypeVariable(NameGenerator.next()))))),
-				carType);
-
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
+			TypeVariable left = new TypeVariable(NameGenerator.next());
+			TypeVariable right = new TypeVariable(NameGenerator.next());
+			TypeArrow type = new TypeArrow(new TypeTuple(new TypeTuple(left, right)), left);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -417,14 +413,11 @@ public final class Operators {
 	 */
 	public static final Operator Cdr = new Operator() {
 
-		private final TypeVariable cdrType = new TypeVariable(NameGenerator.next());
-		private final TypeArrow type = new TypeArrow(
-				new TypeTuple(
-						Arrays.asList(new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()), cdrType)))),
-				cdrType);
-
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
+			TypeVariable left = new TypeVariable(NameGenerator.next());
+			TypeVariable right = new TypeVariable(NameGenerator.next());
+			TypeArrow type = new TypeArrow(new TypeTuple(new TypeTuple(left, right)), right);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1323,7 +1316,13 @@ public final class Operators {
 				Optional<Expression> rankingFunction) throws AppendableException {
 			LitString arg = (LitString) args.get(0);
 
-			int i = Integer.parseInt(arg.value);
+			int i;
+			try {
+				i = Integer.parseInt(arg.value);
+			}
+			catch(java.lang.NumberFormatException e) {
+				throw e;
+			}
 
 			return new LitInteger(i);
 		}
