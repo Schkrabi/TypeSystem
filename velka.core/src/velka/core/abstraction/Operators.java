@@ -84,7 +84,7 @@ public final class Operators {
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(x, y),
 					LitInteger.clojureIntToClojureLitInteger(
-							ClojureHelper.applyClojureFunction("+'",
+							ClojureHelper.applyClojureFunction("unchecked-add",
 									ClojureHelper.getLiteralInnerValue(x),
 									ClojureHelper.getLiteralInnerValue(y))));
 			
@@ -647,7 +647,7 @@ public final class Operators {
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(x, y),
 					LitInteger.clojureIntToClojureLitInteger(
-							ClojureHelper.applyClojureFunction("*'",
+							ClojureHelper.applyClojureFunction("unchecked-multiply",
 									ClojureHelper.getLiteralInnerValue(x),
 									ClojureHelper.getLiteralInnerValue(y))));
 			
@@ -762,7 +762,7 @@ public final class Operators {
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(x, y),
 					LitInteger.clojureIntToClojureLitInteger(
-							ClojureHelper.applyClojureFunction("-'",
+							ClojureHelper.applyClojureFunction("unchecked-subtract",
 									ClojureHelper.getLiteralInnerValue(x),
 									ClojureHelper.getLiteralInnerValue(y))));
 			
