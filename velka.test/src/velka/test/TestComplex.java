@@ -1170,6 +1170,7 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (remove-list-native (build-list-native 2 (lambda (x) x)) 1))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (size-list-native (build-list-native 42 (lambda (x) x))))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (append-list-native (build-list-native 1 (lambda (x) 21)) (build-list-native 1 (lambda (x) 42))))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (reverse-list-native (build-list-native 3 (lambda (x) x))))");
 	}
 	
 	@Test

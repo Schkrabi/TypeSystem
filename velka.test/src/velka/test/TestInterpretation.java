@@ -1430,6 +1430,11 @@ class TestInterpretation {
 		TestInterpretation.testInterpretString("(size-list-native (build-list-native 42 (lambda (x) x)))", new LitInteger(42), env, typeEnv);
 		TestInterpretation.testInterpretString("(append-list-native (build-list-native 1 (lambda (x) 21)) (build-list-native 1 (lambda (x) 42)))", 
 				ListNative.makeListNativeExpression(new LitInteger(21), new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
+		
+		TestInterpretation.testInterpretString("(reverse-list-native (build-list-native 3 (lambda (x) x)))",
+				ListNative.makeListNativeExpression(new LitInteger(2), new LitInteger(1), new LitInteger(0))
+						.interpret(env, typeEnv),
+				env, typeEnv);
 	}
 
 	@Test

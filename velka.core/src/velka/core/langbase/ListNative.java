@@ -1082,6 +1082,51 @@ public class ListNative {
 		}
 
 	};
+	
+	public static final Symbol reverseSymbol = new Symbol("velka-reverse", NAMESPACE);
+	public static final Symbol reverseSymbol_out = new Symbol("reverse-list-native");
+	
+	public static final Operator reverse = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String list = "list";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list),
+					LitComposite.clojureValueToClojureLiteral(
+							ClojureHelper.applyClojureFunction("reverse",
+									ClojureHelper.getLiteralInnerValue(list)),
+							TypeAtom.TypeListNative));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return reverseSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
+					.get(0)).value).javaObject);
+			ListIterator<Expression> li = l.listIterator(l.size());
+			List<Expression> r = new LinkedList<Expression>();
+			while(li.hasPrevious()) {
+				r.add(li.previous());
+			}
+			
+			return new LitComposite(new LitInteropObject(r), TypeAtom.TypeListNative);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeListNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+	};
 
 	/**
 	 * Initializes list functions in environment
@@ -1102,6 +1147,7 @@ public class ListNative {
 		env.put(removeSymbol_out, remove);
 		env.put(sizeSymbol_out, size);
 		env.put(appendSymbol_out, append);
+		env.put(reverseSymbol_out, reverse);
 	}
 
 	/**

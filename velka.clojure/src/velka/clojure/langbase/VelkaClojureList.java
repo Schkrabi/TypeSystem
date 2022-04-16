@@ -66,6 +66,7 @@ public class VelkaClojureList {
 		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.remove));
 		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.size));
 		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.append));
+		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.reverse));
 		
 		sb.append(ClojureHelper.makeDeclaration(ListNative.constructorSymbol.name));
 		sb.append(ClojureHelper.makeDeclaration(ListNative.constructorEmptySymbol.name));
@@ -91,6 +92,7 @@ public class VelkaClojureList {
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.remove, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.size, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.append, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(ListNative.reverse, env, typeEnv));
 			
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.ListNativeToLinkedListOperator, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(ListNative.ListNativeToArrayListOperator, env, typeEnv));
