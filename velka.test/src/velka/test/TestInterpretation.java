@@ -44,7 +44,6 @@ import velka.core.application.InstanceOf;
 import velka.core.application.InstanceOfRepresentation;
 import velka.core.application.OrExpression;
 import velka.core.exceptions.InvalidArgumentsException;
-import velka.core.exceptions.InvalidNumberOfArgumentsException;
 import velka.core.exceptions.UnboundVariableException;
 import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
@@ -1435,6 +1434,11 @@ class TestInterpretation {
 				ListNative.makeListNativeExpression(new LitInteger(2), new LitInteger(1), new LitInteger(0))
 						.interpret(env, typeEnv),
 				env, typeEnv);
+		
+		TestInterpretation.testInterpretString("(everyp-list-native (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
+				LitBoolean.TRUE, env, typeEnv);
+		TestInterpretation.testInterpretString("(everyp-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
+				LitBoolean.FALSE, env, typeEnv);
 	}
 
 	@Test
@@ -1788,6 +1792,12 @@ class TestInterpretation {
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
 				+ "(convert List:JavaArray List:Native l)", 
 				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21)).interpret(env, typeEnv));
+		TestInterpretation.testInterpretString(
+				"(java-array-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
+				LitBoolean.TRUE);
+		TestInterpretation.testInterpretString(
+				"(java-array-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
+				LitBoolean.FALSE);
 	}
 	
 	@Test
@@ -1997,6 +2007,13 @@ class TestInterpretation {
 												ListNative.EMPTY_LIST_NATIVE), 
 										TypeAtom.TypeListNative)), 
 						TypeAtom.TypeListNative));
+		
+		TestInterpretation.testInterpretString(
+				"(java-linked-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
+				LitBoolean.FALSE);
+		TestInterpretation.testInterpretString(
+				"(java-linked-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
+				LitBoolean.TRUE);
 	}
 	
 	@Test

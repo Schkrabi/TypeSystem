@@ -48,6 +48,7 @@ public class VelkaClojureArrayList {
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.set));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.size));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.sublist));
+		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.everyp));
 		
 		Environment env = Environment.initTopLevelEnvitonment();
 		
@@ -76,6 +77,7 @@ public class VelkaClojureArrayList {
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.set, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.size, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.sublist, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(JavaArrayList.everyp, env, typeEnv));
 			
 			sb.append(ClojureHelper.addConversionToGlobalTable(JavaArrayList.TypeListJavaArray, TypeAtom.TypeListNative, JavaArrayList.ArrayListToNativeListSymbol.toClojureCode(env, typeEnv)));
 			sb.append(ClojureHelper.addConversionToGlobalTable(JavaArrayList.TypeListJavaArray, JavaLinkedList.TypeListJavaLinked, JavaArrayList.ArrayListToLinkedListSymbol.toClojureCode(env, typeEnv)));

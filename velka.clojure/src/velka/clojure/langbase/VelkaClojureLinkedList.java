@@ -49,6 +49,7 @@ public class VelkaClojureLinkedList {
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.size));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.sublist));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.sublist));
+		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.everyp));
 		
 		Environment env = Environment.initTopLevelEnvitonment();
 		
@@ -78,6 +79,7 @@ public class VelkaClojureLinkedList {
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.size, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.sublist, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.sublist, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(JavaLinkedList.everyp, env, typeEnv));
 			
 			sb.append(ClojureHelper.addConversionToGlobalTable(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeListNative, JavaLinkedList.LinkedListToNativeListSymbol.toClojureCode(env, typeEnv)));
 			sb.append(ClojureHelper.addConversionToGlobalTable(JavaLinkedList.TypeListJavaLinked, JavaArrayList.TypeListJavaArray, JavaLinkedList.LinkedListToArrayListSymbol.toClojureCode(env, typeEnv)));

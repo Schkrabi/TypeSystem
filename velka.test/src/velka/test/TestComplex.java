@@ -1171,6 +1171,8 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (size-list-native (build-list-native 42 (lambda (x) x))))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (append-list-native (build-list-native 1 (lambda (x) 21)) (build-list-native 1 (lambda (x) 42))))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (reverse-list-native (build-list-native 3 (lambda (x) x))))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(everyp-list-native (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(everyp-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))");
 	}
 	
 	@Test
@@ -1305,6 +1307,8 @@ class TestComplex {
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
 				+ "(println (head-list-native (convert List:JavaArray List:Native l)))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(java-array-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(java-array-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))");
 	}
 	
 	@Test
@@ -1433,6 +1437,8 @@ class TestComplex {
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
 				+ "(println (" + JavaLinkedList.getSymbol_out + " l 0))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))");
 	}
 	
 	@Test

@@ -33,6 +33,7 @@ import velka.core.literal.LitInteropObject;
 import velka.util.AppendableException;
 import velka.util.NameGenerator;
 import velka.util.Pair;
+import velka.util.ThrowingPredicate;
 
 public class ListNative {
 
@@ -1127,6 +1128,61 @@ public class ListNative {
 		}
 		
 	};
+	
+	public static final Symbol everypSymbol = new Symbol("velka-everyp", NAMESPACE);
+	public static final Symbol everypSymbol_out = new Symbol("everyp-list-native");
+	
+	public static final Operator everyp = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String list = "_list";
+			String pred = "_pred";
+			String pred_arg = "_arg";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, pred),
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(
+									"every?",
+									ClojureHelper.fnHelper(
+											Arrays.asList(pred_arg),
+											ClojureHelper.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
+									ClojureHelper.getLiteralInnerValue(list))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return everypSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
+					.get(0)).value).javaObject);
+			Expression pred = args.get(1);
+			
+			Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(
+					expr -> {
+						AbstractionApplication appl = new AbstractionApplication(pred, new Tuple((Expression)expr));
+						Expression rslt = appl.interpret(env, typeEnv);
+						return rslt.equals(LitBoolean.TRUE);
+					}
+					));
+			
+			return ret ? LitBoolean.TRUE : LitBoolean.FALSE;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(
+					new TypeTuple(TypeAtom.TypeListNative, new TypeArrow(
+							new TypeTuple(new TypeVariable(NameGenerator.next())), TypeAtom.TypeBoolNative)),
+					TypeAtom.TypeBoolNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}};
 
 	/**
 	 * Initializes list functions in environment
@@ -1148,6 +1204,7 @@ public class ListNative {
 		env.put(sizeSymbol_out, size);
 		env.put(appendSymbol_out, append);
 		env.put(reverseSymbol_out, reverse);
+		env.put(everypSymbol_out, everyp);
 	}
 
 	/**
