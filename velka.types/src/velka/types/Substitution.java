@@ -12,8 +12,6 @@ import java.util.TreeSet;
 import java.util.stream.Stream;
 
 import velka.types.Substitution;
-import velka.types.Type;
-import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.Pair;
 
@@ -126,6 +124,15 @@ public class Substitution {
 	 */
 	public Stream<TypeVariable> variableStream() {
 		return this.elements.keySet().stream();
+	}
+	
+	/**
+	 * Get stream of TypeVariable - Type pair
+	 * 
+	 * @return stream of pairs
+	 */
+	public Stream<Pair<TypeVariable, Type>> stream(){
+		return this.elements.entrySet().stream().map(e -> new Pair<TypeVariable, Type>(e.getKey(), e.getValue()));
 	}
 
 	@Override

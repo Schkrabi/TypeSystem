@@ -2142,6 +2142,22 @@ class TestInterpretation {
 				+ "(let-issue-test 42)",
 				new LitString("Int:Native"));
 	}
+	
+	@Test
+	@DisplayName("let-type inference")
+	void letTypeInference() throws AppendableException {
+		String code = "(define foo (let-type (A) (lambda ((A a)) a)))" + "(tuple (foo 42) (foo \"bar\"))";
+		List<Expression> l = TestInterpretation.parseString_multipleExpression(code);
+		Environment env = Environment.initTopLevelEnvitonment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+
+		//Pair<Type, Substitution> p1 = l.get(0).infer(env, typeEnv);
+		l.get(0).interpret(env, typeEnv);
+		Pair<Type, Substitution> p2 = l.get(1).infer(env, typeEnv);
+
+		TestInterpretation.testInference(p2, new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative),
+				l.get(1));
+	}
 
 	private static Expression parseString(String s) throws AppendableException {
 		List<Expression> l = Parser.read(s); 

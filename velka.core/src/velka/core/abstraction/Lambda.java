@@ -174,8 +174,10 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			
 			Type argsType = this.argsType.apply(o.get());
 			Type bodyType = bodyInfered.first.apply(o.get());
+			
+			TypeArrow finalType = (TypeArrow) Type.renameAllVariables(new TypeArrow(argsType, bodyType));
 
-			return new Pair<Type, Substitution>(new TypeArrow(argsType, bodyType), Substitution.EMPTY);
+			return new Pair<Type, Substitution>(finalType, Substitution.EMPTY);
 		} catch (AppendableException e) {
 			e.appendMessage("\nin " + this.toString());
 			throw e;
