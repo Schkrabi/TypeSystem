@@ -5,11 +5,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 
-import velka.types.RepresentationOr;
-import velka.types.Substitution;
-import velka.types.Type;
 import velka.types.TypeArrow;
-import velka.types.TypeVariable;
 import velka.util.AppendableException;
 
 /**
@@ -153,7 +149,7 @@ public class TypeArrow extends Type {
 	}
 
 	@Override
-	protected Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
+	public Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
 		return new TypeArrow(this.ltype.replaceVariable(replaced, replacee), this.rtype.replaceVariable(replaced, replacee));
 	}
 }

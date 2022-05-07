@@ -5,13 +5,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 
-import velka.types.RepresentationOr;
-import velka.types.Substitution;
-import velka.types.Type;
 import velka.types.TypeAtom;
-import velka.types.TypeName;
-import velka.types.TypeRepresentation;
-import velka.types.TypeVariable;
 import velka.util.AppendableException;
 
 /**
@@ -177,7 +171,7 @@ public class TypeAtom extends Type {
 	}
 
 	@Override
-	protected Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
+	public Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
 		return this;
 	}
 }

@@ -1,15 +1,17 @@
 package velka.types;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Function;
 
-import velka.types.Substitution;
-import velka.types.Type;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
+import velka.util.NameGenerator;
 import velka.util.Pair;
 
 /**
@@ -110,10 +112,25 @@ public class TypeVariable extends Type {
 	}
 
 	@Override
-	protected Type replaceVariable(TypeVariable replaced, TypeVariable replacee) {
+	public Type replaceVariable(TypeVariable replaced, TypeVariable replacee) {
 		if(this.equals(replaced)) {
 			return replacee;
 		}
 		return this;
+	}
+	
+	/**
+	 * Creates a map that has a new unique typevariable mapped to every type
+	 * variable in variables
+	 * 
+	 * @param variables mapped variables
+	 * @return new TreeMap instance
+	 */
+	public static Map<TypeVariable, TypeVariable> makeRenameMap(Collection<TypeVariable> variables) {
+		Map<TypeVariable, TypeVariable> m = new TreeMap<TypeVariable, TypeVariable>();
+		for (TypeVariable tv : variables) {
+			m.put(tv, new TypeVariable(NameGenerator.next()));
+		}
+		return m;
 	}
 }

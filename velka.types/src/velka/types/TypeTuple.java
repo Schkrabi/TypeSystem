@@ -13,11 +13,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import velka.types.RepresentationOr;
-import velka.types.Substitution;
-import velka.types.Type;
 import velka.types.TypeTuple;
-import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.ThrowingFunction;
 
@@ -309,7 +305,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	}
 
 	@Override
-	protected Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
+	public Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
 		try {
 		return new TypeTuple(this.stream().map(ThrowingFunction.wrapper(x -> x.replaceVariable(replaced, replacee))).collect(Collectors.toList()));
 		}catch(RuntimeException re) {

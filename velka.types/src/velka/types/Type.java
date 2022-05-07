@@ -1,12 +1,11 @@
 package velka.types;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import velka.types.Substitution;
 import velka.types.Type;
-import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.NameGenerator;
 
@@ -63,7 +62,37 @@ public abstract class Type implements Comparable<Type> {
 	 * @param replacee type variable that will be in place of replaced variable
 	 * @return type
 	 */
-	protected abstract Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException;
+	public abstract Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException;
+	
+	/**
+	 * Replaces all occurences of any type variable from key set of replacement map with mapped type variable
+	 * 
+	 * @param replacementMap map of replaced type variables and by what type variables are they replaced
+	 * @return new Type instance
+	 * @throws AppendableException
+	 */
+	public Type replaceVariables(Map<TypeVariable, TypeVariable> replacementMap) throws AppendableException{
+		Type t = this;
+		for(Map.Entry<TypeVariable, TypeVariable> e : replacementMap.entrySet()) {
+			t = t.replaceVariable(e.getKey(), e.getValue());
+		}
+		return t;
+	}
+	
+	/**
+	 * Replaces all occurences of any type variable from key set of replacement map with new unique type variables
+	 * 
+	 * @param typeVariables set of replace type variables
+	 * @return new Type instance
+	 * @throws AppendableException
+	 */
+	public Type replaceVariables(Set<TypeVariable> typeVariables) throws AppendableException {
+		Type t = this;
+		for(TypeVariable tv : typeVariables) {
+			t = t.replaceVariable(tv, new TypeVariable(NameGenerator.next()));
+		}
+		return t;
+	}
 
 	@Override
 	public int compareTo(Type other) {

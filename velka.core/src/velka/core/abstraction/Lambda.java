@@ -4,7 +4,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import velka.util.AppendableException;
@@ -32,8 +34,6 @@ import velka.types.TypeVariable;
  *
  */
 public class Lambda extends Abstraction implements Comparable<Expression> {
-	
-	private Object object;
 
 	/**
 	 * Symbol for lambda special form
@@ -112,6 +112,52 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 	
 	/**
+	 * Creates new environment, where each argument is binded to typeholder with its infered type and returns this environemnts along with substitution, which is union of all argument inference substitutions
+	 * @param creationEnv environment where abstraction was created
+	 * @param argsInfered Infered type of applied arguments
+	 * @return pair of environment and substitution
+	 * @throws AppendableException
+	 */
+	private Pair<Environment, Substitution> prepareInferenceEnvironment(Environment creationEnv, TypeTuple argsInfered) throws AppendableException{
+		Environment childEnv = Environment.create(creationEnv);
+		Substitution argsSubst = Substitution.EMPTY;
+		
+		Iterator<Expression> itFormalArg = this.args.iterator();
+		Iterator<Type> itFormalArgType = this.argsType.iterator();
+		Iterator<Type> itArgType = argsInfered.iterator();
+		
+		while (itFormalArg.hasNext()) {
+			Expression sym = itFormalArg.next();
+			Type fArgType = itFormalArgType.next();
+			Type argType = itArgType.next();
+			Type holderType;
+			
+			//If representation of this argument can be unified with representation of 
+			//formal argument then use it.
+			Optional<Substitution> uni = Type.unifyRepresentation(fArgType, argType);
+			if(uni.isPresent()) {
+				holderType = fArgType.apply(uni.get());
+				Optional<Substitution> o = argsSubst.union(uni.get());
+				if(!o.isPresent()) {
+					throw new SubstitutionsCannotBeMergedException(argsSubst, uni.get());
+				}
+				argsSubst = o.get();
+			}
+			//Otherwise use representation of formal argument, since it will be converted
+			else{
+				holderType = fArgType;
+			}
+
+			if (!(sym instanceof Symbol)) {
+				throw new AppendableException(sym + " is not instance of " + Symbol.class.getName());
+			}
+			childEnv.put((Symbol) sym, new TypeHolder(holderType));
+		}
+		
+		return new Pair<Environment, Substitution>(childEnv, argsSubst);
+	}
+	
+	/**
 	 * Does the actual logic for inferWithArgs, since for functions creation and interpretation environment might differ.
 	 * @param args arguments applied with
 	 * @param creationEnv environment where abstraction was created
@@ -129,42 +175,10 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 				throw new InvalidArgumentsException(this, args);
 			}
 			
-			//Now try to infer each argument and put it into environment that will be used to infer body
-			Environment childEnv = Environment.create(creationEnv);
-			Substitution argsSubst = Substitution.EMPTY;
-
-			Iterator<Expression> itFormalArg = this.args.iterator();
-			Iterator<Type> itFormalArgType = this.argsType.iterator();
-			Iterator<Type> itArgType = ((TypeTuple)argsInfered.first).iterator();
-
-			//Since types unified, all iterators will be of the same length
-			while (itFormalArg.hasNext()) {
-				Expression sym = itFormalArg.next();
-				Type fArgType = itFormalArgType.next();
-				Type argType = itArgType.next();
-				Type holderType;
-				
-				//If representation of this argument can be unified with representation of 
-				//formal argument then use it.
-				Optional<Substitution> uni = Type.unifyRepresentation(fArgType, argType);
-				if(uni.isPresent()) {
-					holderType = fArgType.apply(uni.get());
-					Optional<Substitution> o = argsSubst.union(uni.get());
-					if(!o.isPresent()) {
-						throw new SubstitutionsCannotBeMergedException(argsSubst, uni.get());
-					}
-					argsSubst = o.get();
-				}
-				//Otherwise use representation of formal argument, since it will be converted
-				else{
-					holderType = fArgType;
-				}
-
-				if (!(sym instanceof Symbol)) {
-					throw new AppendableException(sym + " is not instance of " + Symbol.class.getName());
-				}
-				childEnv.put((Symbol) sym, new TypeHolder(holderType));
-			}			
+			Pair<Environment, Substitution> ceS = this.prepareInferenceEnvironment(creationEnv, (TypeTuple)argsInfered.first);
+			
+			Environment childEnv = ceS.first;
+			Substitution argsSubst = ceS.second;		
 			
 			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv, typeEnv);
 			Optional<Substitution> o = argsSubst.union(bodyInfered.second);
@@ -175,9 +189,18 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			Type argsType = this.argsType.apply(o.get());
 			Type bodyType = bodyInfered.first.apply(o.get());
 			
-			TypeArrow finalType = (TypeArrow) Type.renameAllVariables(new TypeArrow(argsType, bodyType));
+			TypeArrow finalType = new TypeArrow(argsType, bodyType);
+			
+			Set<TypeVariable> scopeVariables = this.argsType.getVariables();
+			scopeVariables.addAll(finalType.getVariables());
+			
+			Map<TypeVariable, TypeVariable> replacements = TypeVariable.makeRenameMap(scopeVariables);
+			
+			Substitution finalSubstitution = o.get().removeTypeVariables(replacements);
+			
+			finalType = (TypeArrow) finalType.replaceVariables(replacements);
 
-			return new Pair<Type, Substitution>(finalType, Substitution.EMPTY);
+			return new Pair<Type, Substitution>(finalType, finalSubstitution);
 		} catch (AppendableException e) {
 			e.appendMessage("\nin " + this.toString());
 			throw e;

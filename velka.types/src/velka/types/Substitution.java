@@ -9,10 +9,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import velka.types.Substitution;
 import velka.util.AppendableException;
+import velka.util.NameGenerator;
 import velka.util.Pair;
 
 /**
@@ -133,6 +135,69 @@ public class Substitution {
 	 */
 	public Stream<Pair<TypeVariable, Type>> stream(){
 		return this.elements.entrySet().stream().map(e -> new Pair<TypeVariable, Type>(e.getKey(), e.getValue()));
+	}
+	
+	/**
+	 * Removes typevariable from all lefts sides of subsitutions and replaces it with replacee variable on right sides of remaining substituions
+	 * 
+	 * @param typeVariable removed typevariable
+	 * @param replacee replacing type variable for right side occurences of typevariable
+	 * @return new Substituion instances
+	 * @throws AppendableException 
+	 */
+	public Substitution removeTypeVariable(TypeVariable typeVariable, TypeVariable replacee) throws AppendableException {
+		Set<Pair<TypeVariable, Type>> s = this.stream().collect(Collectors.toSet());
+		List<Pair<TypeVariable, Type>> r = new LinkedList<Pair<TypeVariable, Type>>();
+		
+		for(Pair<TypeVariable, Type> p : s) {
+			if(!(p.first.equals(typeVariable))) {
+				Type t = p.second.replaceVariable(typeVariable, replacee);
+				r.add(new Pair<TypeVariable, Type>(p.first, t));
+			}
+		}
+		
+		return new Substitution(r);
+	}
+	
+	/**
+	 * Removes typeVariable from all lefts sides of subsitution and replaces it with new unique variable on right sides
+	 * 
+	 * @param typeVariable removed type variable
+	 * @return new Substitution instance
+	 * @throws AppendableException
+	 */
+	public Substitution removeTypeVariable(TypeVariable typeVariable) throws AppendableException {
+		return this.removeTypeVariable(typeVariable, new TypeVariable(NameGenerator.next()));
+	}
+	
+	/**
+	 * Removes all type variables in key set of replace map from left sides of the substitution and replaces them on right side by their mapped values
+	 * 
+	 * @param replaceMap map specifing what variables will be removed and by what type variable will they be replaced
+	 * @return new Substitution instane
+	 * @throws AppendableException
+	 */
+	public Substitution removeTypeVariables(Map<TypeVariable, TypeVariable> replaceMap) throws AppendableException {
+		Substitution s = this;
+		for(Map.Entry<TypeVariable, TypeVariable> e : replaceMap.entrySet()) {
+			s = s.removeTypeVariable(e.getKey(), e.getValue());
+		}
+		return s;
+	}
+	
+	/**
+	 * Removes all type variables in key set of replace map from left sides of the substitution and replaces them on right side by new unique type variables
+	 * 
+	 * @param typeVariables removed type variables
+	 * @return new Substitution instance
+	 * @throws AppendableException
+	 */
+	public Substitution removeTypeVariables(Set<TypeVariable> typeVariables) throws AppendableException{
+		Substitution s = this;
+		for(TypeVariable tv : typeVariables) {
+			s = s.removeTypeVariable(tv, new TypeVariable(NameGenerator.next()));
+		}
+		return s;		
 	}
 
 	@Override

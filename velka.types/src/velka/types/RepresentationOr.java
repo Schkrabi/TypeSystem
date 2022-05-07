@@ -13,10 +13,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import velka.types.RepresentationOr;
-import velka.types.Substitution;
-import velka.types.Type;
-import velka.types.TypeSetDoesNotUnifyException;
-import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.Pair;
 import velka.util.ThrowingFunction;
@@ -281,7 +277,7 @@ public class RepresentationOr extends Type {
 	}
 
 	@Override
-	protected Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
+	public Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
 		try {
 			return RepresentationOr.makeRepresentationOr(this.representations.stream()
 					.map(ThrowingFunction.wrapper(r -> r.replaceVariable(replaced, replacee)))
