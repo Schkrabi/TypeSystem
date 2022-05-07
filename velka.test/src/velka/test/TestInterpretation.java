@@ -2044,12 +2044,12 @@ class TestInterpretation {
 				"                    (if (< i n)\n" + 
 				"                        (construct List Native (f i) (build-list-native-aux n f (+ i 1)))\n" + 
 				"                        (construct List Native)))))\n" + 
-				"        (define build-list-native\n" + 
+				"        (define build-list-native-t\n" + 
 				"            (let-type (A)\n" + 
 				"                (lambda ((Int:Native n) (((Int:Native) #> A) f))\n" + 
 				"                    (build-list-native-aux n f 0))))\n" + 
-				"        (build-list-native\n" + 
-				"            1 (lambda ((Int:Native x)) (build-list-native x (lambda ((Int:Native y)) y))))";
+				"        (build-list-native-t\n" + 
+				"            1 (lambda ((Int:Native x)) (build-list-native-t x (lambda ((Int:Native y)) y))))";
 		
 		List<Expression> exprs = TestInterpretation.parseString_multipleExpression(code);
 		for(Expression e : exprs) {

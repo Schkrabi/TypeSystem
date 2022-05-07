@@ -150,9 +150,12 @@ public class Substitution {
 		List<Pair<TypeVariable, Type>> r = new LinkedList<Pair<TypeVariable, Type>>();
 		
 		for(Pair<TypeVariable, Type> p : s) {
+			Type t = p.second.replaceVariable(typeVariable, replacee);
 			if(!(p.first.equals(typeVariable))) {
-				Type t = p.second.replaceVariable(typeVariable, replacee);
 				r.add(new Pair<TypeVariable, Type>(p.first, t));
+			}
+			else{
+				r.add(new Pair<TypeVariable, Type>(replacee, t));
 			}
 		}
 		
