@@ -45,7 +45,7 @@ import velka.util.ThrowingPredicate;
  *
  */
 public class JavaLinkedList {
-	
+
 	/**
 	 * Clojure namespace symbol for JavaLinkedList
 	 */
@@ -55,7 +55,7 @@ public class JavaLinkedList {
 	 * Type of java linked list in velka
 	 */
 	public final static TypeAtom TypeListJavaLinked = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaLinked"));
-	
+
 	private static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
 	public static final Symbol constructorSymbol_out = new Symbol("construct-linked-list");
 
@@ -88,7 +88,7 @@ public class JavaLinkedList {
 			return constructorSymbol;
 		}
 	};
-	
+
 	/**
 	 * Symbol for boolean add(E e)
 	 */
@@ -122,14 +122,10 @@ public class JavaLinkedList {
 
 			return LitBoolean.TRUE;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -141,7 +137,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for void add(int index, E element)
 	 */
@@ -174,20 +170,15 @@ public class JavaLinkedList {
 
 			@SuppressWarnings("unchecked")
 			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
-			l.add((int)index.value, e);
+			l.add((int) index.value, e);
 
 			return Expression.EMPTY_EXPRESSION;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
 					TypeTuple.EMPTY_TUPLE);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -198,7 +189,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for boolean addAll(Collection<? extends E> c)
 	 */
@@ -214,12 +205,9 @@ public class JavaLinkedList {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String list = "_list";
 			String collection = "_collection";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, collection), 
-					LitBoolean.clojureBooleanToClojureLitBoolean(
-							ClojureHelper.applyClojureFunction(".addAll", 
-									ClojureHelper.getLiteralInnerValue(list),
-									ClojureHelper.getLiteralInnerValue(collection))));
+			String code = ClojureHelper.fnHelper(Arrays.asList(list, collection),
+					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction(".addAll",
+							ClojureHelper.getLiteralInnerValue(list), ClojureHelper.getLiteralInnerValue(collection))));
 
 			return code;
 		}
@@ -261,7 +249,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for boolean contains(Object o)
 	 */
@@ -299,15 +287,12 @@ public class JavaLinkedList {
 
 			return LitBoolean.FALSE;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A), TypeAtom.TypeBoolNative);
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A),
+					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -317,7 +302,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for boolean containsAll(Collection<?> c)
 	 */
@@ -374,7 +359,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for E get(int index)
 	 */
@@ -405,16 +390,12 @@ public class JavaLinkedList {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) list.javaObject;
 
-			return l.get((int)index.value);
+			return l.get((int) index.value);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -425,7 +406,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for int indexOf(Object o)
 	 */
@@ -461,14 +442,10 @@ public class JavaLinkedList {
 
 			return new LitInteger(ret);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -479,7 +456,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for boolean isEmpty()
 	 */
@@ -527,7 +504,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for int lastIndexOf(E e)
 	 */
@@ -563,14 +540,10 @@ public class JavaLinkedList {
 
 			return new LitInteger(ret);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -581,7 +554,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for boolean remove(Object o)
 	 */
@@ -618,15 +591,12 @@ public class JavaLinkedList {
 			}
 			return LitBoolean.FALSE;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A), TypeAtom.TypeBoolNative);
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A),
+					TypeAtom.TypeBoolNative);
 			;
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -637,7 +607,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * symbol for boolean removeAll(Collection<?> c)
 	 */
@@ -695,13 +665,13 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for boolean retainAll(Collection<?> c)
 	 */
 	private static final Symbol retainAllSymbol = new Symbol("retain-all", NAMESPACE);
 	public static final Symbol retainAllSymbol_out = new Symbol("java-linked-list-retain-all");
-	
+
 	/**
 	 * Operator for boolean retainAll(Collection<?> c)
 	 */
@@ -753,7 +723,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for E set(int index, E element)
 	 */
@@ -785,16 +755,12 @@ public class JavaLinkedList {
 
 			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
 
-			return al.set((int)index.value, element);
+			return al.set((int) index.value, element);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
 					A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -806,7 +772,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for int size()
 	 */
@@ -852,7 +818,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for List<E> subList(int fromIndex, int toIndex)
 	 */
@@ -867,7 +833,8 @@ public class JavaLinkedList {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_list _from _to] " + LitComposite.clojureValueToClojureLiteral(
-					"(java.util.LinkedList. (.subList (first _list) (first _from) (first _to)))", JavaLinkedList.TypeListJavaLinked) + ")";
+					"(java.util.LinkedList. (.subList (first _list) (first _from) (first _to)))",
+					JavaLinkedList.TypeListJavaLinked) + ")";
 			return code;
 		}
 
@@ -885,7 +852,7 @@ public class JavaLinkedList {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
 
-			LinkedList<Expression> sublist = new LinkedList<Expression>(al.subList((int)from.value, (int)to.value));
+			LinkedList<Expression> sublist = new LinkedList<Expression>(al.subList((int) from.value, (int) to.value));
 
 			return new LitComposite(new LitInteropObject(sublist), JavaLinkedList.TypeListJavaLinked);
 		}
@@ -904,7 +871,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for List<T> map(Function<T, E>)
 	 */
@@ -919,13 +886,14 @@ public class JavaLinkedList {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_list _abst] "
-					+ LitComposite
-							.clojureValueToClojureLiteral("(java.util.LinkedList. (map (fn [_e] ("
-									+ ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
+					+ LitComposite.clojureValueToClojureLiteral(
+							"(java.util.LinkedList. (map (fn [_e] (" + ClojureCoreSymbols.eapplyClojureSymbol_full
+									+ " _abst "
 									+ ClojureHelper.addTypeMetaInfo_str("[_e]",
-											"(velka.types.TypeTuple. [("
-													+ ClojureCoreSymbols.getTypeClojureSymbol_full + " _e)])")
-									+ ")) (first _list)))", JavaLinkedList.TypeListJavaLinked)
+											"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
+													+ " _e)])")
+									+ ")) (first _list)))",
+							JavaLinkedList.TypeListJavaLinked)
 					+ ")";
 			return code;
 		}
@@ -958,19 +926,11 @@ public class JavaLinkedList {
 
 			return new LitComposite(new LitInteropObject(rslt), JavaLinkedList.TypeListJavaLinked);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeVariable B = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(JavaLinkedList.TypeListJavaLinked, new TypeArrow(new TypeTuple(A), B)),
 					JavaLinkedList.TypeListJavaLinked);
@@ -983,7 +943,7 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for List<T> map2(List<E2> other, Function<T, E1, E2>)
 	 */
@@ -997,13 +957,17 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list1 _list2 _abst] " + LitComposite.clojureValueToClojureLiteral(
-					"(java.util.LinkedList. (map (fn [_e1 _e2] (" + ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
-							+ ClojureHelper.addTypeMetaInfo_str("[_e1 _e2]",
-									"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
-											+ " _e1) (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " _e2)])")
-							+ ")) (first _list1) (first _list2)))",
-					JavaLinkedList.TypeListJavaLinked) + ")";
+			String code = "(fn [_list1 _list2 _abst] "
+					+ LitComposite.clojureValueToClojureLiteral(
+							"(java.util.LinkedList. (map (fn [_e1 _e2] (" + ClojureCoreSymbols.eapplyClojureSymbol_full
+									+ " _abst "
+									+ ClojureHelper.addTypeMetaInfo_str("[_e1 _e2]",
+											"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
+													+ " _e1) (" + ClojureCoreSymbols.getTypeClojureSymbol_full
+													+ " _e2)])")
+									+ ")) (first _list1) (first _list2)))",
+							JavaLinkedList.TypeListJavaLinked)
+					+ ")";
 			return code;
 		}
 
@@ -1040,24 +1004,12 @@ public class JavaLinkedList {
 
 			return new LitComposite(new LitInteropObject(rslt), JavaLinkedList.TypeListJavaLinked);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable B = new TypeVariable(NameGenerator.next());
-
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable C = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeVariable B = new TypeVariable(NameGenerator.next());
+			TypeVariable C = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked,
 					JavaLinkedList.TypeListJavaLinked, new TypeArrow(new TypeTuple(A, B), C)),
 					JavaLinkedList.TypeListJavaLinked);
@@ -1070,13 +1022,13 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for T foldl(Function<T, E, T>)
 	 */
 	private static final Symbol foldlSymbol = new Symbol("foldl", NAMESPACE);
 	public static final Symbol foldlSymbol_out = new Symbol("java-linked-list-foldl");
-	
+
 	/**
 	 * Operator for T foldl(Function<T, E, T>)
 	 */
@@ -1087,8 +1039,8 @@ public class JavaLinkedList {
 			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
 					+ ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
 					+ ClojureHelper.addTypeMetaInfo_str("[_agg _element]",
-							"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
-									+ " _agg) (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " _element)])")
+							"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " _agg) ("
+									+ ClojureCoreSymbols.getTypeClojureSymbol_full + " _element)])")
 					+ ")) _term (first _list)))";
 			return code;
 		}
@@ -1119,17 +1071,12 @@ public class JavaLinkedList {
 
 			return rslt;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(Arrays
-					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, JavaLinkedList.TypeListJavaLinked)),
-					A);
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(
+					new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, JavaLinkedList.TypeListJavaLinked)), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1139,13 +1086,13 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	/**
 	 * Symbol for T foldr(Function<T, E, T>)
 	 */
 	private static final Symbol foldrSymbol = new Symbol("foldr", NAMESPACE);
 	public static final Symbol foldrSymbol_out = new Symbol("java-linked-list-foldr");
-	
+
 	/**
 	 * Operator for T foldr(Function<T, E, T>)
 	 */
@@ -1156,8 +1103,8 @@ public class JavaLinkedList {
 			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
 					+ ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
 					+ ClojureHelper.addTypeMetaInfo_str("[_agg _element]",
-							"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
-									+ " _agg) (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " _element)])")
+							"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " _agg) ("
+									+ ClojureCoreSymbols.getTypeClojureSymbol_full + " _element)])")
 					+ ")) _term (reverse (first _list))))";
 			return code;
 		}
@@ -1174,7 +1121,7 @@ public class JavaLinkedList {
 
 			Expression agg = terminator;
 			ListIterator<Expression> i = list.listIterator(list.size());
-			while(i.hasPrevious()) {
+			while (i.hasPrevious()) {
 				Expression element = i.previous();
 				AbstractionApplication app = new AbstractionApplication(abst, new Tuple(agg, element));
 				agg = app.interpret(env, typeEnv);
@@ -1182,17 +1129,12 @@ public class JavaLinkedList {
 
 			return agg;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(Arrays
-					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, JavaLinkedList.TypeListJavaLinked)),
-					A);
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(
+					new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, JavaLinkedList.TypeListJavaLinked)), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1200,12 +1142,12 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return foldrSymbol;
 		}
-		
+
 	};
-	
+
 	public static final Symbol LinkedListToArrayListSymbol = new Symbol("to-array-list", NAMESPACE);
 	public static final Symbol LinkedListToArrayListSymbol_out = new Symbol("linked-list-2-array-list");
-	
+
 	/**
 	 * Conversion LinkedList 2 ArrayList
 	 */
@@ -1243,10 +1185,10 @@ public class JavaLinkedList {
 		}
 
 	};
-	
+
 	public static final Symbol LinkedListToNativeListSymbol = new Symbol("to-list-native", NAMESPACE);
 	public static final Symbol LinkedListToNativeListSymbol_out = new Symbol("linked-list-2-native-list");
-	
+
 	/**
 	 * Conversion LinkedList 2 NativeList
 	 */
@@ -1255,11 +1197,10 @@ public class JavaLinkedList {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String list = "_list";
-			String code = ClojureHelper.fnHelper(Arrays.asList(list), 
-					ClojureHelper.applyClojureFunction("lazy-seq", 
+			String code = ClojureHelper.fnHelper(Arrays.asList(list),
+					ClojureHelper.applyClojureFunction("lazy-seq",
 							ClojureHelper.addTypeMetaInfo(
-									ClojureHelper.applyClojureFunction("seq", 
-											ClojureHelper.getLiteralInnerValue(list)), 
+									ClojureHelper.applyClojureFunction("seq", ClojureHelper.getLiteralInnerValue(list)),
 									TypeAtom.TypeListNative)));
 			return code;
 		}
@@ -1271,15 +1212,15 @@ public class JavaLinkedList {
 			LitInteropObject lio = (LitInteropObject) lc.value;
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) lio.javaObject;
-			
+
 			LitComposite converted = ListNative.EMPTY_LIST_NATIVE;
-			
+
 			ListIterator<Expression> i = l.listIterator(l.size());
-			while(i.hasPrevious()) {
+			while (i.hasPrevious()) {
 				Expression e = i.previous();
-				converted = new LitComposite(new Tuple(e, converted), TypeAtom.TypeListNative );
+				converted = new LitComposite(new Tuple(e, converted), TypeAtom.TypeListNative);
 			}
-			
+
 			return converted;
 		}
 
@@ -1292,65 +1233,63 @@ public class JavaLinkedList {
 		@Override
 		public Symbol getClojureSymbol() {
 			return LinkedListToNativeListSymbol;
-		}};
-		
-		public static final Symbol everypSymbol = new Symbol("velka-everyp", NAMESPACE);
-		public static final Symbol everypSymbol_out = new Symbol("java-linked-list-everyp");
-		
-		public static final Operator everyp = new Operator() {
+		}
+	};
 
-			@Override
-			protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-				String list = "_list";
-				String pred = "_pred";
-				String pred_arg = "_arg";
-				String code = ClojureHelper.fnHelper(
-						Arrays.asList(list, pred),
-						LitBoolean.clojureBooleanToClojureLitBoolean(
-								ClojureHelper.applyClojureFunction(
-										"every?",
-										ClojureHelper.fnHelper(
-												Arrays.asList(pred_arg),
-												ClojureHelper.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
-										ClojureHelper.getLiteralInnerValue(list))));
-				return code;
-			}
+	public static final Symbol everypSymbol = new Symbol("velka-everyp", NAMESPACE);
+	public static final Symbol everypSymbol_out = new Symbol("java-linked-list-everyp");
 
-			@Override
-			public Symbol getClojureSymbol() {
-				return everypSymbol;
-			}
+	public static final Operator everyp = new Operator() {
 
-			@Override
-			protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-					Optional<Expression> rankingFunction) throws AppendableException {
-				@SuppressWarnings("unchecked")
-				LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-						.get(0)).value).javaObject);
-				Expression pred = args.get(1);
-				
-				Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(
-						expr -> {
-							AbstractionApplication appl = new AbstractionApplication(pred, new Tuple((Expression)expr));
-							Expression rslt = appl.interpret(env, typeEnv);
-							return rslt.equals(LitBoolean.TRUE);
-						}
-						));
-				
-				return ret ? LitBoolean.TRUE : LitBoolean.FALSE;
-			}
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String list = "_list";
+			String pred = "_pred";
+			String pred_arg = "_arg";
+			String code = ClojureHelper.fnHelper(Arrays.asList(list, pred),
+					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction("every?",
+							ClojureHelper.fnHelper(Arrays.asList(pred_arg),
+									ClojureHelper
+											.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
+							ClojureHelper.getLiteralInnerValue(list))));
+			return code;
+		}
 
-			@Override
-			public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-				Type type = new TypeArrow(
-						new TypeTuple(TypeListJavaLinked, new TypeArrow(
-								new TypeTuple(new TypeVariable(NameGenerator.next())), TypeAtom.TypeBoolNative)),
-						TypeAtom.TypeBoolNative);
-				return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-			}};
-	
+		@Override
+		public Symbol getClojureSymbol() {
+			return everypSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			@SuppressWarnings("unchecked")
+			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
+					.get(0)).value).javaObject);
+			Expression pred = args.get(1);
+
+			Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(expr -> {
+				AbstractionApplication appl = new AbstractionApplication(pred, new Tuple((Expression) expr));
+				Expression rslt = appl.interpret(env, typeEnv);
+				return rslt.equals(LitBoolean.TRUE);
+			}));
+
+			return ret ? LitBoolean.TRUE : LitBoolean.FALSE;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(
+					new TypeTuple(TypeListJavaLinked, new TypeArrow(
+							new TypeTuple(new TypeVariable(NameGenerator.next())), TypeAtom.TypeBoolNative)),
+					TypeAtom.TypeBoolNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+	};
+
 	/**
 	 * Initializes values for java linked list in environment
+	 * 
 	 * @param env initialized environment
 	 */
 	public static void initializeInEnvironment(Environment env) {

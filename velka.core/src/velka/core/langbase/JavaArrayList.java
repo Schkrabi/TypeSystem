@@ -44,7 +44,7 @@ import velka.util.ThrowingPredicate;
  *
  */
 public class JavaArrayList {
-	
+
 	/**
 	 * Clojure namespace for JavaArrayList
 	 */
@@ -56,7 +56,7 @@ public class JavaArrayList {
 	public static final TypeAtom TypeListJavaArray = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaArray"));
 
 	public static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
-	
+
 	/**
 	 * Constructor
 	 */
@@ -86,12 +86,12 @@ public class JavaArrayList {
 			return constructorSymbol;
 		}
 	};
-	
+
 	/**
 	 * Symbol for constructor from list
 	 */
 	public static Symbol constructorFromListSymbol = new Symbol("velka-construct-from-list", NAMESPACE);
-	
+
 	/**
 	 * Operator for contructor from list
 	 */
@@ -103,7 +103,7 @@ public class JavaArrayList {
 			final String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					ClojureHelper.applyClojureFunction("java.util.ArrayList.",
 							ClojureHelper.applyClojureFunction("doall", ClojureHelper.getLiteralInnerValue(list))));
-			
+
 			return code;
 		}
 
@@ -115,30 +115,30 @@ public class JavaArrayList {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
 				Optional<Expression> rankingFunction) throws AppendableException {
-			LitComposite lit = (LitComposite)args.get(0);
-			LitInteropObject interop = (LitInteropObject)lit.value;
+			LitComposite lit = (LitComposite) args.get(0);
+			LitInteropObject interop = (LitInteropObject) lit.value;
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>)interop.javaObject;
-			
+			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
+
 			ArrayList<Expression> al = new ArrayList<Expression>(l);
-			
+
 			return new LitInteropObject(al);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), JavaArrayList.TypeListJavaArray);
-			
+
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
-		
+
 	};
-	
+
 	/**
 	 * Symbol for Capacity Constructor
 	 */
 	public static final Symbol constructorCapacitySymbol = new Symbol("velka-contruct-capacity", NAMESPACE);
-	
+
 	/**
 	 * Operator for capacity constructor
 	 */
@@ -147,9 +147,9 @@ public class JavaArrayList {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			final String capacity = "_capacity";
-			final String code = ClojureHelper.fnHelper(Arrays.asList(capacity),
-					ClojureHelper.applyClojureFunction("java.util.ArrayList.", ClojureHelper.applyClojureFunction("first", capacity)));
-			
+			final String code = ClojureHelper.fnHelper(Arrays.asList(capacity), ClojureHelper.applyClojureFunction(
+					"java.util.ArrayList.", ClojureHelper.applyClojureFunction("first", capacity)));
+
 			return code;
 		}
 
@@ -161,20 +161,20 @@ public class JavaArrayList {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
 				Optional<Expression> rankingFunction) throws AppendableException {
-			LitInteger lit = (LitInteger)args.get(0);
-			
+			LitInteger lit = (LitInteger) args.get(0);
+
 			ArrayList<Expression> al = new ArrayList<Expression>((int) lit.value);
-			
+
 			return new LitInteropObject(al);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), JavaArrayList.TypeListJavaArray);
-			
+
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
-		
+
 	};
 
 	/**
@@ -210,16 +210,11 @@ public class JavaArrayList {
 
 			return LitBoolean.TRUE;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A),
-					TypeAtom.TypeBoolNative);
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -262,20 +257,15 @@ public class JavaArrayList {
 
 			@SuppressWarnings("unchecked")
 			ArrayList<Object> l = (ArrayList<Object>) list.javaObject;
-			l.add((int)index.value, e);
+			l.add((int) index.value, e);
 
 			return Expression.EMPTY_EXPRESSION;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative, A),
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative, A),
 					TypeTuple.EMPTY_TUPLE);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -302,13 +292,9 @@ public class JavaArrayList {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String list = "_list";
 			String collection = "_collection";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, collection), 
-					LitBoolean.clojureBooleanToClojureLitBoolean(
-							ClojureHelper.applyClojureFunction(".addAll", 
-									ClojureHelper.getLiteralInnerValue(list),
-									ClojureHelper.getLiteralInnerValue(collection))
-							));
+			String code = ClojureHelper.fnHelper(Arrays.asList(list, collection),
+					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction(".addAll",
+							ClojureHelper.getLiteralInnerValue(list), ClojureHelper.getLiteralInnerValue(collection))));
 
 			return code;
 		}
@@ -388,14 +374,10 @@ public class JavaArrayList {
 
 			return LitBoolean.FALSE;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -494,16 +476,12 @@ public class JavaArrayList {
 			@SuppressWarnings("unchecked")
 			ArrayList<Expression> l = (ArrayList<Expression>) list.javaObject;
 
-			return l.get((int)index.value);
+			return l.get((int) index.value);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -550,14 +528,10 @@ public class JavaArrayList {
 
 			return new LitInteger(ret);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -652,14 +626,10 @@ public class JavaArrayList {
 
 			return new LitInteger(ret);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -739,16 +709,11 @@ public class JavaArrayList {
 			}
 			return LitBoolean.FALSE;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeBoolNative);
-			;
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -879,7 +844,7 @@ public class JavaArrayList {
 	 * Symbol for E set(int index, E element)
 	 */
 	private static final Symbol setSymbol = new Symbol("velka-set", NAMESPACE);
-	public static final Symbol setSymbol_out = new Symbol("java-array-list-set");  
+	public static final Symbol setSymbol_out = new Symbol("java-array-list-set");
 
 	/**
 	 * Operator for E set(int index, E element)
@@ -906,16 +871,12 @@ public class JavaArrayList {
 
 			ArrayList<Expression> al = (ArrayList<Expression>) list.javaObject;
 
-			return al.set((int)index.value, element);
+			return al.set((int) index.value, element);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative, A),
 					A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -1007,7 +968,7 @@ public class JavaArrayList {
 			@SuppressWarnings("unchecked")
 			ArrayList<Expression> al = (ArrayList<Expression>) list.javaObject;
 
-			ArrayList<Expression> sublist = new ArrayList<Expression>(al.subList((int)from.value, (int)to.value));
+			ArrayList<Expression> sublist = new ArrayList<Expression>(al.subList((int) from.value, (int) to.value));
 
 			return new LitComposite(new LitInteropObject(sublist), JavaArrayList.TypeListJavaArray);
 		}
@@ -1045,8 +1006,8 @@ public class JavaArrayList {
 							.clojureValueToClojureLiteral("(java.util.ArrayList. (map (fn [_e] ("
 									+ ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
 									+ ClojureHelper.addTypeMetaInfo_str("[_e]",
-											"(velka.types.TypeTuple. [("
-													+ ClojureCoreSymbols.getTypeClojureSymbol_full + " _e)])")
+											"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
+													+ " _e)])")
 									+ ")) (first _list)))", JavaArrayList.TypeListJavaArray)
 					+ ")";
 			return code;
@@ -1080,19 +1041,11 @@ public class JavaArrayList {
 
 			return new LitComposite(new LitInteropObject(rslt), JavaArrayList.TypeListJavaArray);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeVariable B = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(JavaArrayList.TypeListJavaArray, new TypeArrow(new TypeTuple(A), B)),
 					JavaArrayList.TypeListJavaArray);
@@ -1110,7 +1063,7 @@ public class JavaArrayList {
 	 * Symbol for List<T> map2(List<E2> other, Function<T, E1, E2>)
 	 */
 	private static final Symbol map2Symbol = new Symbol("velka-map2", NAMESPACE);
-	public static final Symbol map2Symbol_out = new Symbol("java-array-list-map2"); 
+	public static final Symbol map2Symbol_out = new Symbol("java-array-list-map2");
 
 	/**
 	 * Operator for List<T> map2(List<E2> other, Function<T, E1, E2>)
@@ -1119,13 +1072,17 @@ public class JavaArrayList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list1 _list2 _abst] " + LitComposite.clojureValueToClojureLiteral(
-					"(java.util.ArrayList. (map (fn [_e1 _e2] (" + ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
-							+ ClojureHelper.addTypeMetaInfo_str("[_e1 _e2]",
-									"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
-											+ " _e1) (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " _e2)])")
-							+ ")) (first _list1) (first _list2)))",
-					JavaArrayList.TypeListJavaArray) + ")";
+			String code = "(fn [_list1 _list2 _abst] "
+					+ LitComposite.clojureValueToClojureLiteral(
+							"(java.util.ArrayList. (map (fn [_e1 _e2] (" + ClojureCoreSymbols.eapplyClojureSymbol_full
+									+ " _abst "
+									+ ClojureHelper.addTypeMetaInfo_str("[_e1 _e2]",
+											"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
+													+ " _e1) (" + ClojureCoreSymbols.getTypeClojureSymbol_full
+													+ " _e2)])")
+									+ ")) (first _list1) (first _list2)))",
+							JavaArrayList.TypeListJavaArray)
+					+ ")";
 			return code;
 		}
 
@@ -1162,23 +1119,12 @@ public class JavaArrayList {
 
 			return new LitComposite(new LitInteropObject(rslt), JavaArrayList.TypeListJavaArray);
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable B = new TypeVariable(NameGenerator.next());
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable C = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeVariable B = new TypeVariable(NameGenerator.next());
+			TypeVariable C = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray,
 					JavaArrayList.TypeListJavaArray, new TypeArrow(new TypeTuple(A, B), C)),
 					JavaArrayList.TypeListJavaArray);
@@ -1240,15 +1186,11 @@ public class JavaArrayList {
 
 			return rslt;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-		private final TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeVariable B = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays
 					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, JavaArrayList.TypeListJavaArray)),
 					A);
@@ -1304,14 +1246,10 @@ public class JavaArrayList {
 
 			return agg;
 		}
-		
-		/**
-		 * Type Variable used for list elements
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays
 					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, JavaArrayList.TypeListJavaArray)),
 					A);
@@ -1324,7 +1262,7 @@ public class JavaArrayList {
 		}
 
 	};
-	
+
 	public static final Symbol ArrayListToLinkedListSymbol = new Symbol("to-linked-list", NAMESPACE);
 	public static final Symbol ArrayListToLinkedListSymbol_out = new Symbol("array-list-2-linked-list");
 
@@ -1365,10 +1303,10 @@ public class JavaArrayList {
 		}
 
 	};
-	
+
 	public static final Symbol ArrayListToNativeListSymbol = new Symbol("to-velka-list", NAMESPACE);
 	public static final Symbol ArrayListToNativeListSymbol_out = new Symbol("array-list-2-native-list");
-	
+
 	/**
 	 * Conversion ArrayList 2 NativeList
 	 */
@@ -1377,7 +1315,7 @@ public class JavaArrayList {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String list = "_list";
-			
+
 			String code = ClojureHelper
 					.fnHelper(Arrays.asList(list),
 							LitComposite.clojureValueToClojureLiteral(
@@ -1395,9 +1333,9 @@ public class JavaArrayList {
 			LitInteropObject lio = (LitInteropObject) lc.value;
 			@SuppressWarnings("unchecked")
 			ArrayList<Expression> l = (ArrayList<Expression>) lio.javaObject;
-			
+
 			LinkedList<Expression> ll = new LinkedList<Expression>(l);
-			
+
 			return new LitComposite(new LitInteropObject(ll), TypeAtom.TypeListNative);
 		}
 
@@ -1410,62 +1348,59 @@ public class JavaArrayList {
 		@Override
 		public Symbol getClojureSymbol() {
 			return ArrayListToNativeListSymbol;
-		}};
-		
-		public static final Symbol everypSymbol = new Symbol("velka-everyp", NAMESPACE);
-		public static final Symbol everypSymbol_out = new Symbol("java-array-list-everyp");
-		
-		public static final Operator everyp = new Operator() {
+		}
+	};
 
-			@Override
-			protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-				String list = "_list";
-				String pred = "_pred";
-				String pred_arg = "_arg";
-				String code = ClojureHelper.fnHelper(
-						Arrays.asList(list, pred),
-						LitBoolean.clojureBooleanToClojureLitBoolean(
-								ClojureHelper.applyClojureFunction(
-										"every?",
-										ClojureHelper.fnHelper(
-												Arrays.asList(pred_arg),
-												ClojureHelper.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
-										ClojureHelper.getLiteralInnerValue(list))));
-				return code;
-			}
+	public static final Symbol everypSymbol = new Symbol("velka-everyp", NAMESPACE);
+	public static final Symbol everypSymbol_out = new Symbol("java-array-list-everyp");
 
-			@Override
-			public Symbol getClojureSymbol() {
-				return everypSymbol;
-			}
+	public static final Operator everyp = new Operator() {
 
-			@Override
-			protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-					Optional<Expression> rankingFunction) throws AppendableException {
-				@SuppressWarnings("unchecked")
-				ArrayList<Expression> l = (ArrayList<Expression>) (((LitInteropObject) ((LitComposite) args
-						.get(0)).value).javaObject);
-				Expression pred = args.get(1);
-				
-				Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(
-						expr -> {
-							AbstractionApplication appl = new AbstractionApplication(pred, new Tuple((Expression)expr));
-							Expression rslt = appl.interpret(env, typeEnv);
-							return rslt.equals(LitBoolean.TRUE);
-						}
-						));
-				
-				return ret ? LitBoolean.TRUE : LitBoolean.FALSE;
-			}
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String list = "_list";
+			String pred = "_pred";
+			String pred_arg = "_arg";
+			String code = ClojureHelper.fnHelper(Arrays.asList(list, pred),
+					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction("every?",
+							ClojureHelper.fnHelper(Arrays.asList(pred_arg),
+									ClojureHelper
+											.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
+							ClojureHelper.getLiteralInnerValue(list))));
+			return code;
+		}
 
-			@Override
-			public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-				Type type = new TypeArrow(
-						new TypeTuple(TypeListJavaArray, new TypeArrow(
-								new TypeTuple(new TypeVariable(NameGenerator.next())), TypeAtom.TypeBoolNative)),
-						TypeAtom.TypeBoolNative);
-				return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-			}};
+		@Override
+		public Symbol getClojureSymbol() {
+			return everypSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			@SuppressWarnings("unchecked")
+			ArrayList<Expression> l = (ArrayList<Expression>) (((LitInteropObject) ((LitComposite) args
+					.get(0)).value).javaObject);
+			Expression pred = args.get(1);
+
+			Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(expr -> {
+				AbstractionApplication appl = new AbstractionApplication(pred, new Tuple((Expression) expr));
+				Expression rslt = appl.interpret(env, typeEnv);
+				return rslt.equals(LitBoolean.TRUE);
+			}));
+
+			return ret ? LitBoolean.TRUE : LitBoolean.FALSE;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(
+					new TypeTuple(TypeListJavaArray, new TypeArrow(
+							new TypeTuple(new TypeVariable(NameGenerator.next())), TypeAtom.TypeBoolNative)),
+					TypeAtom.TypeBoolNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+	};
 
 	/**
 	 * Initializes values for java array list in environment

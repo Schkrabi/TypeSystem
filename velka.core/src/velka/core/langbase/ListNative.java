@@ -210,7 +210,8 @@ public class ListNative {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list),
-					ClojureHelper.clojureIfHelper(ClojureHelper.applyClojureFunction("empty?", ClojureHelper.getLiteralInnerValue(list)),
+					ClojureHelper.clojureIfHelper(
+							ClojureHelper.applyClojureFunction("empty?", ClojureHelper.getLiteralInnerValue(list)),
 							ClojureHelper.errorHelper(ClojureHelper.stringHelper(errorMsg)),
 							ClojureHelper.applyClojureFunction("first", ClojureHelper.getLiteralInnerValue(list))));
 			return code;
@@ -241,13 +242,9 @@ public class ListNative {
 			return l.get(0);
 		}
 
-		/**
-		 * Type variable for use in lambda
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeListNative)), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -375,9 +372,12 @@ public class ListNative {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(
-					new TypeArrow(new TypeTuple(Arrays.asList(new TypeVariable("A"))), new TypeVariable("B")),
-					TypeAtom.TypeListNative)), TypeAtom.TypeListNative);
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeVariable B = new TypeVariable(NameGenerator.next());
+			TypeArrow type = new TypeArrow(
+					new TypeTuple(
+							Arrays.asList(new TypeArrow(new TypeTuple(Arrays.asList(A)), B), TypeAtom.TypeListNative)),
+					TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -452,21 +452,11 @@ public class ListNative {
 			return new LitComposite(new LitInteropObject(agg), TypeAtom.TypeListNative);
 		}
 
-		/**
-		 * Type variable for use in lambda
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-		/**
-		 * Type variable for use in lambda
-		 */
-		private final TypeVariable B = new TypeVariable(NameGenerator.next());
-		/**
-		 * Type variable for use in lambda
-		 */
-		private final TypeVariable C = new TypeVariable(NameGenerator.next());
-
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeVariable B = new TypeVariable(NameGenerator.next());
+			TypeVariable C = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), C),
 					TypeAtom.TypeListNative, TypeAtom.TypeListNative), TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -527,17 +517,10 @@ public class ListNative {
 			return term;
 		}
 
-		/**
-		 * Type variable for use in lambda
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-		/**
-		 * Type variable for use in lambda
-		 */
-		private final TypeVariable B = new TypeVariable(NameGenerator.next());
-
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeVariable B = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(new TypeArrow(new TypeTuple(A, B), A), A, TypeAtom.TypeListNative), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -595,13 +578,9 @@ public class ListNative {
 			return new LitComposite(new LitInteropObject(ll), TypeAtom.TypeListNative);
 		}
 
-		/**
-		 * Type variable for use in lambda
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, A), TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -751,13 +730,9 @@ public class ListNative {
 			return LitBoolean.FALSE;
 		}
 
-		/**
-		 * Type variable for use in lambda
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, A), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -776,14 +751,15 @@ public class ListNative {
 			String arg = "_arg";
 			String code = ClojureHelper
 					.fnHelper(Arrays.asList(list, pred),
-						LitComposite.clojureValueToClojureLiteral(
-								ClojureHelper.applyClojureFunction("lazy-seq",
-									ClojureHelper.applyClojureFunction("filter",
-											ClojureHelper.fnHelper(Arrays.asList(arg),
-													ClojureHelper.getLiteralInnerValue(ClojureHelper
-															.applyVelkaFunction(pred, arg))),
-											ClojureHelper.getLiteralInnerValue(list))),
-								TypeAtom.TypeListNative));
+							LitComposite
+									.clojureValueToClojureLiteral(
+											ClojureHelper.applyClojureFunction("lazy-seq",
+													ClojureHelper.applyClojureFunction("filter",
+															ClojureHelper.fnHelper(Arrays.asList(arg),
+																	ClojureHelper.getLiteralInnerValue(ClojureHelper
+																			.applyVelkaFunction(pred, arg))),
+															ClojureHelper.getLiteralInnerValue(list))),
+											TypeAtom.TypeListNative));
 			return code;
 		}
 
@@ -813,13 +789,9 @@ public class ListNative {
 			return new LitComposite(new LitInteropObject(aux), TypeAtom.TypeListNative);
 		}
 
-		/**
-		 * Type variable for use in lambda
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			final TypeArrow type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListNative, new TypeArrow(new TypeTuple(A), TypeAtom.TypeBoolNative)),
 					TypeAtom.TypeListNative);
@@ -874,13 +846,9 @@ public class ListNative {
 			return l.get((int) index.value);
 		}
 
-		/**
-		 * Type variable for use in lambda
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeIntNative), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -897,13 +865,19 @@ public class ListNative {
 			String n = "_n";
 			String fn = "_fn";
 			String arg = "_arg";
-			String code = ClojureHelper.fnHelper(Arrays.asList(n, fn),
-					LitComposite.clojureValueToClojureLiteral(
-							ClojureHelper.applyClojureFunction("lazy-seq", ClojureHelper.applyClojureFunction("map",
-									ClojureHelper.fnHelper(Arrays.asList(arg),
-											ClojureHelper.applyVelkaFunction(fn, LitInteger.clojureIntToClojureLitInteger(arg))),
-									ClojureHelper.applyClojureFunction("range", ClojureHelper.getLiteralInnerValue(n)))),
-							TypeAtom.TypeListNative));
+			String code = ClojureHelper
+					.fnHelper(Arrays.asList(n, fn),
+							LitComposite
+									.clojureValueToClojureLiteral(
+											ClojureHelper.applyClojureFunction("lazy-seq",
+													ClojureHelper.applyClojureFunction("map",
+															ClojureHelper.fnHelper(Arrays.asList(arg),
+																	ClojureHelper.applyVelkaFunction(fn,
+																			LitInteger.clojureIntToClojureLitInteger(
+																					arg))),
+															ClojureHelper.applyClojureFunction("range",
+																	ClojureHelper.getLiteralInnerValue(n)))),
+											TypeAtom.TypeListNative));
 
 			return code;
 		}
@@ -932,10 +906,9 @@ public class ListNative {
 			return new LitComposite(new LitInteropObject(l), TypeAtom.TypeListNative);
 		}
 
-		private final TypeVariable buildListNative_A = new TypeVariable(NameGenerator.next());
-
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable buildListNative_A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeIntNative,
 							new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), buildListNative_A)),
@@ -1083,20 +1056,18 @@ public class ListNative {
 		}
 
 	};
-	
+
 	public static final Symbol reverseSymbol = new Symbol("velka-reverse", NAMESPACE);
 	public static final Symbol reverseSymbol_out = new Symbol("reverse-list-native");
-	
+
 	public static final Operator reverse = new Operator() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String list = "list";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list),
+			String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					LitComposite.clojureValueToClojureLiteral(
-							ClojureHelper.applyClojureFunction("reverse",
-									ClojureHelper.getLiteralInnerValue(list)),
+							ClojureHelper.applyClojureFunction("reverse", ClojureHelper.getLiteralInnerValue(list)),
 							TypeAtom.TypeListNative));
 			return code;
 		}
@@ -1114,10 +1085,10 @@ public class ListNative {
 					.get(0)).value).javaObject);
 			ListIterator<Expression> li = l.listIterator(l.size());
 			List<Expression> r = new LinkedList<Expression>();
-			while(li.hasPrevious()) {
+			while (li.hasPrevious()) {
 				r.add(li.previous());
 			}
-			
+
 			return new LitComposite(new LitInteropObject(r), TypeAtom.TypeListNative);
 		}
 
@@ -1126,12 +1097,12 @@ public class ListNative {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
-		
+
 	};
-	
+
 	public static final Symbol everypSymbol = new Symbol("velka-everyp", NAMESPACE);
 	public static final Symbol everypSymbol_out = new Symbol("everyp-list-native");
-	
+
 	public static final Operator everyp = new Operator() {
 
 		@Override
@@ -1139,15 +1110,12 @@ public class ListNative {
 			String list = "_list";
 			String pred = "_pred";
 			String pred_arg = "_arg";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, pred),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
-							ClojureHelper.applyClojureFunction(
-									"every?",
-									ClojureHelper.fnHelper(
-											Arrays.asList(pred_arg),
-											ClojureHelper.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
-									ClojureHelper.getLiteralInnerValue(list))));
+			String code = ClojureHelper.fnHelper(Arrays.asList(list, pred),
+					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction("every?",
+							ClojureHelper.fnHelper(Arrays.asList(pred_arg),
+									ClojureHelper
+											.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
+							ClojureHelper.getLiteralInnerValue(list))));
 			return code;
 		}
 
@@ -1163,15 +1131,13 @@ public class ListNative {
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);
 			Expression pred = args.get(1);
-			
-			Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(
-					expr -> {
-						AbstractionApplication appl = new AbstractionApplication(pred, new Tuple((Expression)expr));
-						Expression rslt = appl.interpret(env, typeEnv);
-						return rslt.equals(LitBoolean.TRUE);
-					}
-					));
-			
+
+			Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(expr -> {
+				AbstractionApplication appl = new AbstractionApplication(pred, new Tuple((Expression) expr));
+				Expression rslt = appl.interpret(env, typeEnv);
+				return rslt.equals(LitBoolean.TRUE);
+			}));
+
 			return ret ? LitBoolean.TRUE : LitBoolean.FALSE;
 		}
 
@@ -1182,7 +1148,8 @@ public class ListNative {
 							new TypeTuple(new TypeVariable(NameGenerator.next())), TypeAtom.TypeBoolNative)),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}};
+		}
+	};
 
 	/**
 	 * Initializes list functions in environment
@@ -1272,19 +1239,20 @@ public class ListNative {
 
 		return new Tuple(l);
 	}
-	
+
 	/**
 	 * Prints list in clojure style
+	 * 
 	 * @param l printed list
 	 * @return string with printed list
 	 */
 	public static String toStringListNative(List<Expression> l) {
 		StringBuilder sb = new StringBuilder("(");
 		Iterator<Expression> i = l.iterator();
-		while(i.hasNext()) {
+		while (i.hasNext()) {
 			Expression e = i.next();
 			sb.append(e.toString());
-			if(i.hasNext()) {
+			if (i.hasNext()) {
 				sb.append(" ");
 			}
 		}
