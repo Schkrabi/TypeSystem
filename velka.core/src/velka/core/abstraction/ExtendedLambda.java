@@ -34,7 +34,6 @@ import velka.util.AppendableException;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ThrowingFunction;
-import velka.types.TypeRepresentation;
 
 /**
  * Extended lambda expression allowing for the different implementation of body

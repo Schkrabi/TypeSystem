@@ -1,6 +1,5 @@
 package velka.types;
 
-import velka.types.Substitution;
 import velka.util.AppendableException;
 
 /**

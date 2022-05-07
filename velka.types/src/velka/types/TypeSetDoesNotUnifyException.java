@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
-import velka.types.Type;
 import velka.util.AppendableException;
 
 /**

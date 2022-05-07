@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import velka.types.Substitution;
 import velka.util.AppendableException;
 
 /**

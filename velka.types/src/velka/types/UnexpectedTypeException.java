@@ -1,6 +1,5 @@
 package velka.types;
 
-import velka.types.Type;
 import velka.util.AppendableException;
 
 /**

@@ -4,7 +4,6 @@ import velka.util.Pair;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
-import velka.core.literal.Literal;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
