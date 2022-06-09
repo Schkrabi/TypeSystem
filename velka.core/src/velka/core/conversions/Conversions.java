@@ -84,9 +84,31 @@ public class Conversions {
 		}
 		TypeArrow t = (TypeArrow) to;
 
-		Tuple formalArgs = new Tuple(
-				((TypeTuple) t.ltype).stream().map(x -> new Symbol(NameGenerator.next())).collect(Collectors.toList()));
-		TypeTuple argsType = (TypeTuple) t.ltype;
+		Tuple formalArgs;
+		TypeTuple argsType;
+		if(t.ltype instanceof TypeVariable) {
+			formalArgs = new Tuple(
+					((TypeTuple)from.ltype).stream()
+						.map(x -> new Symbol(NameGenerator.next()))
+						.collect(Collectors.toList()));
+			argsType = new TypeTuple(
+					((TypeTuple)from.ltype).stream()
+						.map(x -> new TypeVariable(NameGenerator.next()))
+						.collect(Collectors.toList()));
+		}
+		else if(t.ltype instanceof TypeTuple) {
+			formalArgs = new Tuple(
+					((TypeTuple) t.ltype).stream()
+						.map(x -> new Symbol(NameGenerator.next()))
+						.collect(Collectors.toList()));
+			argsType = (TypeTuple) t.ltype;
+		}
+		else{
+			throw new AppendableException("Invalid to type arrow in conversion "
+					+ t.toString()
+					+ " left type must be type variable or type tuple.");
+		}
+		
 		Tuple realArgs = (Tuple) Conversions.convert(t.ltype, formalArgs, from.ltype, typeEnv);
 		Expression body = Conversions.convert(from.rtype, new AbstractionApplication(converted, realArgs), t.rtype, typeEnv);
 

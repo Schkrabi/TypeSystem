@@ -38,6 +38,7 @@ import velka.core.application.DefineRepresentation;
 import velka.core.application.DefineSymbol;
 import velka.core.application.DefineType;
 import velka.core.application.ExceptionExpr;
+import velka.core.application.Extend;
 import velka.core.application.Get;
 import velka.core.application.IfExpression;
 import velka.core.application.InstanceOf;
@@ -84,7 +85,7 @@ class TestInterpretation {
 	@DisplayName("Test String Literal")
 	void testLitString() throws AppendableException {
 		LitString litString = new LitString("test");
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertAll(() -> {
@@ -107,7 +108,7 @@ class TestInterpretation {
 	@DisplayName("Test Integer Literal")
 	public void testLitInteger() throws AppendableException {
 		LitInteger litInteger = new LitInteger(128);
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertAll(() -> {
@@ -130,7 +131,7 @@ class TestInterpretation {
 	@DisplayName("Test Double Literal")
 	public void testLitDouble() throws AppendableException {
 		LitDouble litDouble = new LitDouble(3.14);
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertAll(() -> {
@@ -157,7 +158,7 @@ class TestInterpretation {
 		TestInterpretation.testDifference(LitBoolean.FALSE, LitBoolean.TRUE);
 		TestInterpretation.testDifference(LitBoolean.TRUE, Expression.EMPTY_EXPRESSION);
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestInterpretation.testInterpretation(LitBoolean.TRUE, LitBoolean.TRUE, env, typeEnv);
@@ -186,7 +187,7 @@ class TestInterpretation {
 		TestInterpretation.testDifference(enumValue1, differentEnumValue);
 		TestInterpretation.testDifference(enumValue1, Expression.EMPTY_EXPRESSION);
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestInterpretation.testInterpretation(enumValue1, enumValue1, env, typeEnv);
@@ -219,7 +220,7 @@ class TestInterpretation {
 		TestInterpretation.testDifference(composite1, composite3);
 		TestInterpretation.testDifference(composite1, Expression.EMPTY_EXPRESSION);
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestInterpretation.testInterpretation(composite1, composite1, env, typeEnv);
@@ -237,7 +238,7 @@ class TestInterpretation {
 	@DisplayName("Test Type Holder")
 	public void testTypeHolder() throws AppendableException {
 		TypeHolder typeHolder = new TypeHolder(TypeTuple.EMPTY_TUPLE);
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertThrows(AppendableException.class, () -> typeHolder.interpret(env, typeEnv));
@@ -274,7 +275,7 @@ class TestInterpretation {
 	@DisplayName("Test Symbol")
 	public void testVariable() throws AppendableException {
 		Symbol variable = new Symbol("x");
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertAll(() -> {
@@ -323,7 +324,7 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test Empty Expression")
 	public void testEmptyExpression() throws AppendableException {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestInterpretation.testInference(Expression.EMPTY_EXPRESSION.infer(env, typeEnv), TypeTuple.EMPTY_TUPLE,
@@ -339,7 +340,7 @@ class TestInterpretation {
 	@DisplayName("Test Tuple")
 	public void testTuple() throws Exception {
 		final Tuple tuple = new Tuple(Arrays.asList(new LitInteger(128), new Symbol("x"), LitBoolean.FALSE));
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertAll(() -> {
@@ -400,7 +401,7 @@ class TestInterpretation {
 	@DisplayName("Test User Exception")
 	void testExceptionExpr() throws AppendableException {
 		final ExceptionExpr exception = new ExceptionExpr(new LitString("test"));
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertThrows(UserException.class, () -> exception.interpret(env, typeEnv));
@@ -441,7 +442,7 @@ class TestInterpretation {
 	@DisplayName("Test Define Expression")
 	void testDefExpression() throws AppendableException {
 		DefineSymbol defExpression = new DefineSymbol(new Symbol("pi"), new LitDouble(Math.PI));
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -494,7 +495,7 @@ class TestInterpretation {
 	void testLambda() throws AppendableException {
 		final Lambda lambda = new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
 				new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)), new Symbol("x"));
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -527,7 +528,7 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test Function")
 	void testFunction() throws AppendableException {
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		Environment bound = Environment.create(top);
@@ -605,7 +606,7 @@ class TestInterpretation {
 										ConversionOperators.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))))));
 		TestInterpretation.testDifference(lambda, Expression.EMPTY_EXPRESSION);
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -636,7 +637,7 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test Extended Function")
 	public void testExtendedFunction() throws AppendableException {
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		Environment bound = Environment.create(top);
@@ -707,7 +708,7 @@ class TestInterpretation {
 						new Tuple(Arrays.asList(new LitInteger(21)))));
 		TestInterpretation.testDifference(application, Expression.EMPTY_EXPRESSION);
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -793,7 +794,7 @@ class TestInterpretation {
 		TestInterpretation.testDifference(ifExprT, ifExprF);
 		TestInterpretation.testDifference(ifExprT, Expression.EMPTY_EXPRESSION);
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -819,7 +820,7 @@ class TestInterpretation {
 		TestInterpretation.testDifference(andExpressionT, andExpressionF);
 		TestInterpretation.testDifference(andExpressionT, Expression.EMPTY_EXPRESSION);
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -844,7 +845,7 @@ class TestInterpretation {
 		TestInterpretation.testDifference(orExpressionT, orExpressionF);
 		TestInterpretation.testDifference(orExpressionT, Expression.EMPTY_EXPRESSION);
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -985,7 +986,7 @@ class TestInterpretation {
         
         tempOut.delete();
         
-        Environment env = Environment.initTopLevelEnvitonment();
+        Environment env = Environment.initTopLevelEnvironment();
         TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
         
         TestInterpretation.testOperator(Operators.StrSplit, 
@@ -1007,6 +1008,17 @@ class TestInterpretation {
 		TestInterpretation.testOperator(Operators.doubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(6.28)), LitBoolean.TRUE, TypeAtom.TypeBoolNative);
 		TestInterpretation.testOperator(Operators.doubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), LitBoolean.FALSE, TypeAtom.TypeBoolNative);
 		TestInterpretation.testOperator(Operators.modulo, new Tuple(new LitInteger(5), new LitInteger(3)), new LitInteger(2), TypeAtom.TypeIntNative);
+		
+		TestInterpretation.testOperator(Operators.conversionCost,
+				new Tuple(new Lambda(new Tuple(new Symbol("x")), new TypeTuple(TypeAtom.TypeIntNative), new LitString("foo")),
+						new Tuple(new LitComposite(new LitString("IV"), TypeAtom.TypeIntRoman))),
+				new LitInteger(1),
+				TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operators.conversionCost,
+				new Tuple(new Lambda(new Tuple(new Symbol("x")), new TypeTuple(TypeAtom.TypeIntNative), new LitString("foo")),
+						new Tuple(new LitInteger(42))),
+				new LitInteger(0),
+				TypeAtom.TypeIntNative);
 	}
 
 	@Test
@@ -1041,7 +1053,7 @@ class TestInterpretation {
 				new Tuple(Arrays.asList(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
 						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))));
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		TestInterpretation.testInterpretation(e, new LitInteger(84), top, typeEnv);
@@ -1050,7 +1062,7 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test Environment")
 	void testEnvironment() throws AppendableException {
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 
 		Environment environment = Environment.create(top);
 		environment.put(new Symbol("x"), Expression.EMPTY_EXPRESSION);
@@ -1096,7 +1108,7 @@ class TestInterpretation {
 	void testDefTypeExpression() throws AppendableException {
 		DefineType defTypeExpression = new DefineType(new TypeName("Test"));
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -1127,7 +1139,7 @@ class TestInterpretation {
 				new Tuple(Arrays.asList(new Symbol("x"))),
 				new LitComposite(new Tuple(Arrays.asList(new Symbol("x"))), typeAtomWildcard));
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 		typeEnv.addType(name);
 		typeEnv.addRepresentation(typeAtomNative);
@@ -1171,7 +1183,7 @@ class TestInterpretation {
 
 		DefineRepresentation defRep = new DefineRepresentation(name, TypeRepresentation.NATIVE);
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -1208,7 +1220,7 @@ class TestInterpretation {
 
 		DefineConstructor defCon = new DefineConstructor(type, constructor);
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 		typeEnv.addType(name);
 		typeEnv.addRepresentation(type);
@@ -1238,7 +1250,7 @@ class TestInterpretation {
 	void testConstruct() throws AppendableException {
 		Construct construct = new Construct(TypeAtom.TypeIntRoman, new Tuple(Arrays.asList(new LitString("XLII"))));
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -1267,7 +1279,7 @@ class TestInterpretation {
 		Deconstruct deconstruct = new Deconstruct(new LitComposite(new LitString("42"), TypeAtom.TypeIntString),
 				TypeAtom.TypeStringNative);
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -1297,7 +1309,7 @@ class TestInterpretation {
 		CanDeconstructAs cannotDeconstrut = new CanDeconstructAs(
 				new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman), TypeAtom.TypeIntNative);
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -1325,7 +1337,7 @@ class TestInterpretation {
 	void testConvert() throws AppendableException {
 		Convert convert = new Convert(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, new LitInteger(42));
 
-		Environment top = Environment.initTopLevelEnvitonment();
+		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
 		assertAll(() -> {
@@ -1353,7 +1365,7 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test List Native")
 	void testListNative() throws AppendableException {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		assertEquals(
@@ -1446,7 +1458,7 @@ class TestInterpretation {
 	void testTypeSymbol() throws AppendableException {
 		TypeSymbol typeSymbol = new TypeSymbol(TypeAtom.TypeIntNative);
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertAll(() -> {
@@ -1470,7 +1482,7 @@ class TestInterpretation {
 	void testInstanceOf() throws AppendableException {
 		InstanceOf iof = new InstanceOf(new LitInteger(42), TypeAtom.TypeIntNative);
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertAll(() -> {
@@ -1504,7 +1516,7 @@ class TestInterpretation {
 	void testInstanceOfRepresentation() throws AppendableException {
 		InstanceOfRepresentation iofr = new InstanceOfRepresentation(new LitInteger(42), TypeAtom.TypeIntNative);
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertAll(() -> {
@@ -1558,7 +1570,7 @@ class TestInterpretation {
 
 		Tuple args = new Tuple(new LitInteger(42));
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		AbstractionApplication app_defElambda_defSelectionFunction = new AbstractionApplication(elambda_defaultSelectionFunction, args);
@@ -1785,7 +1797,7 @@ class TestInterpretation {
 				+ "(convert List:JavaArray List:JavaLinked l)", 
 				new LitComposite(new LitInteropObject(converted), JavaLinkedList.TypeListJavaLinked));
 		
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		TestInterpretation.testInterpretString("(define l (construct List JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
@@ -2019,7 +2031,7 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test logging")
 	void testLogging() throws AppendableException {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		assertNotEquals(new LitInteger(0),
@@ -2035,7 +2047,7 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test deep inference")
 	void testDeepInference() throws AppendableException {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		String code = "(define build-list-native-aux\n" + 
@@ -2070,7 +2082,7 @@ class TestInterpretation {
 		TestInterpretation.testDifference(get, get2);
 		TestInterpretation.testDifference(get, Expression.EMPTY_EXPRESSION);
 		
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		assertAll(() -> {
@@ -2090,7 +2102,7 @@ class TestInterpretation {
 	void testLoopRecur() throws Exception {
 		Expression e = TestInterpretation.parseString("(loop ((x 1)) (if (= x 2) x (recur (+ x 1))))");
 		
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		Pair<Type, Substitution> p = e.infer(env, typeEnv);
@@ -2148,7 +2160,7 @@ class TestInterpretation {
 	void letTypeInference() throws AppendableException {
 		String code = "(define foo (let-type (A) (lambda ((A a)) a)))" + "(tuple (foo 42) (foo \"bar\"))";
 		List<Expression> l = TestInterpretation.parseString_multipleExpression(code);
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		//Pair<Type, Substitution> p1 = l.get(0).infer(env, typeEnv);
@@ -2157,6 +2169,58 @@ class TestInterpretation {
 
 		TestInterpretation.testInference(p2, new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative),
 				l.get(1));
+	}
+	
+	@Test
+	@DisplayName("test extend")
+	void extendTest() throws AppendableException {
+		Tuple elambda_args = new Tuple(new Symbol("x"));
+		
+		ExtendedLambda elambda = ExtendedLambda.makeExtendedLambda(
+				Arrays.asList(
+						new Lambda(
+								elambda_args,
+								new TypeTuple(TypeAtom.TypeIntNative),
+								new LitString("foo"))));
+		
+		Lambda implementation = new Lambda(
+										elambda_args,
+										new TypeTuple(TypeAtom.TypeIntString),
+										new LitString("bar"));
+		
+		Extend extend = new Extend(elambda, implementation);
+		
+		testReflexivity(extend);
+		testDifference(extend, 
+				new Extend(Expression.EMPTY_EXPRESSION, implementation));
+		testDifference(extend,
+				new Extend(elambda, Expression.EMPTY_EXPRESSION));
+		
+		Environment env = Environment.initTopLevelEnvironment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		
+		Pair<Type, Substitution> p = extend.infer(env, typeEnv);
+		testInference(p, 
+				RepresentationOr.makeRepresentationOr(
+						new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeStringNative),
+						new TypeArrow(new TypeTuple(TypeAtom.TypeIntString), TypeAtom.TypeStringNative)), 
+				extend);
+		
+		testInterpretation(
+				extend, 
+				ExtendedFunction.makeExtendedFunction(
+						Arrays.asList(
+								new Function(new TypeTuple(TypeAtom.TypeIntNative),
+										elambda_args,
+										new LitString("foo"),
+										env),
+								new Function(new TypeTuple(TypeAtom.TypeIntString),
+										elambda_args,
+										new LitString("bar"),
+										env)),
+						env), 
+				env, 
+				typeEnv);
 	}
 
 	private static Expression parseString(String s) throws AppendableException {
@@ -2222,7 +2286,7 @@ class TestInterpretation {
 	private static void testOperator(final Operator operator, Tuple args, Expression expectedInterpret,
 			Type expectedInference) throws AppendableException {
 		AbstractionApplication application = new AbstractionApplication(operator, args);
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestInterpretation.testInterpretation(application, expectedInterpret, env, typeEnv);
@@ -2244,7 +2308,7 @@ class TestInterpretation {
 		});
 
 		AbstractionApplication appl = new AbstractionApplication(conversion, new Tuple(Arrays.asList(argument)));
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestInterpretation.testInterpretation(appl, expectedInterpret, env, typeEnv);
@@ -2253,7 +2317,7 @@ class TestInterpretation {
 	}
 
 	private static void testInterpretString(String interpreted, Expression expected) throws AppendableException {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		TestInterpretation.testInterpretString(interpreted, expected, env, typeEnv);
 	}

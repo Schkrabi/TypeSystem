@@ -86,8 +86,9 @@ public class VelkaClojureOperators {
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.dadd));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.doubleLesserThan));
 		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.modulo));
+		sb.append(ClojureHelper.makeOperatorDeclaration(Operators.conversionCost));
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		try {
 			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
@@ -130,6 +131,7 @@ public class VelkaClojureOperators {
 			sb.append(ClojureHelper.makeOperatorDef(Operators.dadd, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.doubleLesserThan, env, typeEnv));
 			sb.append(ClojureHelper.makeOperatorDef(Operators.modulo, env, typeEnv));
+			sb.append(ClojureHelper.makeOperatorDef(Operators.conversionCost, env, typeEnv));
 			
 		} catch (AppendableException e) {
 			System.err.println("Error generating velka.clojure.operaotrs: " + e.getMessage());

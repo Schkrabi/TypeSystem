@@ -177,7 +177,7 @@ class TestTypes {
 				new TypeVariable("b"),
 				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)));
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertThrows(ConversionException.class,
@@ -221,7 +221,7 @@ class TestTypes {
 		TestTypes.testConvertTo(typeArrow, Expression.EMPTY_EXPRESSION, new TypeVariable("c"),
 				Expression.EMPTY_EXPRESSION);
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		Expression e = Conversions.convert(typeArrow,
@@ -296,7 +296,7 @@ class TestTypes {
 		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitComposite(new LitString("42"), TypeAtom.TypeIntString),
 				TypeAtom.TypeIntRoman, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman));
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertThrows(ConversionException.class, () -> Conversions.convert(atom, Expression.EMPTY_EXPRESSION,
@@ -351,7 +351,7 @@ class TestTypes {
 
 		TestTypes.testGetUnconstrainedVariables(ror, Arrays.asList());
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertEquals(Expression.EMPTY_EXPRESSION,
@@ -466,7 +466,7 @@ class TestTypes {
 		assertNotNull(to);
 		assertNotNull(expected);
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		Expression converted = Conversions.convert(type, from, to, typeEnv).interpret(env, typeEnv);

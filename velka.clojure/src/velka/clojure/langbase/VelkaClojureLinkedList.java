@@ -51,7 +51,7 @@ public class VelkaClojureLinkedList {
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.sublist));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaLinkedList.everyp));
 		
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		
 		try {
 			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);

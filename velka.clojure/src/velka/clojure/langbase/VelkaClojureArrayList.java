@@ -50,7 +50,7 @@ public class VelkaClojureArrayList {
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.sublist));
 		sb.append(ClojureHelper.makeOperatorDeclaration(JavaArrayList.everyp));
 		
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		
 		try {
 			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);

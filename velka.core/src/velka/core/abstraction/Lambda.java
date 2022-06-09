@@ -210,9 +210,8 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	/**
 	 * Creates code of this lambda as simple lambda in Clojure (e.g. (fn [x] x))
 	 * 
-	 * @param expectedType expected type of this lambda
-	 * @param env          environment where lambda is evaluated
-	 * @param typeEnv 
+	 * @param env environment where lambda is evaluated
+	 * @param typeEnv type environment
 	 * @return string containing clojure code
 	 * @throws AppendableException Thrown on unification error or when any argument
 	 *                             is not a variable

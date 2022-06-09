@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Optional;
 
@@ -1632,4 +1633,128 @@ public final class Operators {
 		}
 	};
 
+	/**
+	 * Operator for computing conversion cost
+	 */
+	public static final Operator conversionCost = new Operator() {
+		
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String fun = "_fun";
+			String arg = "_arg";
+			String funArgType = "_funArgType";
+			String argType = "_argType";
+			String x = "_x";
+			String y = "_y";
+			
+			String code = ClojureHelper.fnHelper(Arrays.asList(fun, arg),
+					ClojureHelper.letHelper(
+							LitInteger.clojureIntToClojureLitInteger(
+									ClojureHelper.applyClojureFunction(
+											"reduce",
+											"+",
+											"0",
+											ClojureHelper.applyClojureFunction(
+													"map",
+													ClojureHelper.fnHelper(
+															Arrays.asList(x, y),
+															ClojureHelper.applyClojureFunction(
+																	"if",
+																	ClojureHelper.applyClojureFunction(
+																			".isEmpty",
+																			ClojureHelper.applyClojureFunction(
+																					"velka.types.Type/unifyRepresentation",
+																					x,
+																					y)),
+																	"1",
+																	"0")),
+													funArgType,
+													argType))),
+							new Pair<String, String>(
+									funArgType, 
+									ClojureHelper.applyClojureFunction(
+											".ltype",
+											ClojureHelper.applyClojureFunction(
+													ClojureCoreSymbols.getTypeClojureSymbol_full,
+													fun))),
+							new Pair<String, String>(
+									argType,
+									ClojureHelper.applyClojureFunction(
+											ClojureCoreSymbols.getTypeClojureSymbol_full,
+											arg))));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("converison-cost", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
+				Optional<Expression> rankingFunction) throws AppendableException {
+			Expression fun = args.get(0);
+			Pair<Type, Substitution> funInfered = fun.infer(env, typeEnv);
+			
+			if(!(funInfered.first instanceof TypeArrow))
+			{
+				throw new AppendableException("First argument of "
+						+ this.toString()
+						+ " must be a function, got: "
+						+ fun.toString()
+						+ " infering to: "
+						+ funInfered.first.toString()
+						+ " in "
+						+ "(" + this.toString() + " " + fun.toString() + " " + args.toString() + ")");
+			}
+			TypeTuple funArgsTypeTuple = (TypeTuple)((TypeArrow)funInfered.first).ltype;
+			
+			Expression applArgs = args.get(1);
+			Pair<Type, Substitution> applArgsInfered = applArgs.infer(env, typeEnv);
+			
+			if(!(applArgsInfered.first instanceof TypeTuple)) {
+				throw new AppendableException("Second argument of "
+						+ this.toString()
+						+ " must be an argument tuple, got: "
+						+ applArgs.toString()
+						+ " infering to: "
+						+ applArgsInfered.first.toString()
+						+ " in "
+						+ "(" + this.toString() + " " + fun.toString() + " " + args.toString() + ")");
+			}
+			TypeTuple applArgsTypeTuple = (TypeTuple)(applArgsInfered.first);
+			
+			Iterator<Type> itFun = funArgsTypeTuple.iterator();
+			Iterator<Type> itApplArgs = applArgsTypeTuple.iterator();
+			
+			int cost = 0;
+			while(itFun.hasNext()) {
+				Type funCurrent = itFun.next();
+				Type applArgCurrent = itApplArgs.next();
+				
+				Optional<Substitution> o = Type.unifyRepresentation(funCurrent, applArgCurrent);
+				if(o.isEmpty()) {
+					cost++;
+				}
+			}
+			
+			return new LitInteger(cost);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeVariable B = new TypeVariable(NameGenerator.next());
+			
+			Type type = new TypeArrow(new TypeTuple(new TypeArrow(A, B), A), TypeAtom.TypeIntNative);
+			
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "conversion-cost";
+		}
+	};
 }

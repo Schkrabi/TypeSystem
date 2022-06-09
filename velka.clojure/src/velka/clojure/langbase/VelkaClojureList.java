@@ -75,7 +75,7 @@ public class VelkaClojureList {
 		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.ListNativeToLinkedListOperator));
 		sb.append(ClojureHelper.makeOperatorDeclaration(ListNative.ListNativeToArrayListOperator));
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		try {
 			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 

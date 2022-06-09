@@ -94,7 +94,7 @@ class TestComplex {
 	@Test
 	@DisplayName("Test Recursion")
 	void testRecursion() throws Exception {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestComplex.testInterpretString("(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))" + "(fact 5)",
@@ -110,7 +110,7 @@ class TestComplex {
 	@Test
 	@DisplayName("Test Basic Extended lambda")
 	void testExtemdedLambda() throws Exception {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestComplex.testInterpretString("(type Name)" + "(representation Unstructured Name)"
@@ -139,7 +139,7 @@ class TestComplex {
 	@Test
 	@DisplayName("Test User List Interpretation")
 	void testComplexList() throws AppendableException {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TypeName listTypeName = new TypeName("List");
@@ -428,7 +428,7 @@ class TestComplex {
 	@Test
 	@DisplayName("Test Complex Types")
 	void testComplexTypes() throws Exception {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestComplex.testInterpretString("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)",
@@ -459,7 +459,7 @@ class TestComplex {
 	@Test
 	@DisplayName("Clojure Literals")
 	void testClojureLiterals() throws AppendableException {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestComplex.testClojureCompile("0",
@@ -487,7 +487,7 @@ class TestComplex {
 	@Test
 	@DisplayName("Clojure Special Forms and Applications")
 	void testSpecialFormsAndApplication() throws Exception {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestComplex.assertIntprtAndCompPrintSameValues("(println ((lambda (x y) x) 42 21))");
@@ -515,52 +515,56 @@ class TestComplex {
 	void testClojureOperators() throws Exception {
 		
 		
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (+ 21 21))\n"); 
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (* 1 42))\n"); 
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (/ 84 2))\n"); 
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (- 63 21))\n");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (and #t #f))\n"); 
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-and 42 1))\n"); 
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-or 42 1))\n");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (concat \"Hello \" \"World\"))\n"); 
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (equals? 42 \"42\"))\n");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (< 42 42))\n"); 
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (not #t))\n"); 
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (= 42 42))\n");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (or #t #f))\n"); 
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (cons 42 \"42\"))\n");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (car (cons 42 \"42\")))\n"); 
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (cdr (cons 42 \"42\")))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (shr 2 1))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (shl 2 1))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (ushr 2 1))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (ushr -1 10))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-not 6))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-xor 6 5))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (to-str 42))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (str-split \"foo bar baz\" \" \"))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (parse-int \"42\"))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (ddiv 1.5 0.5))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (floor 3.141521))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (int-to-double 42))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (dadd 3.14 3.14))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (dlt 3.14 6.28))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (dlt 3.14 3.14))");
-		
-		File tempOut = File.createTempFile("velka_read_test", null);
-        String content  = "hello world !!";       
-        Files.writeString(tempOut.toPath(), content);
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (read-file \"" + tempOut.toPath().toString().replace("\\", "/") + "\"))");
-		tempOut.delete();
-		
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (mod 5 3))");
-		TestComplex.assertIntprtAndCompPrintSameValues("(println (= (timestamp) 0))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (+ 21 21))\n"); 
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (* 1 42))\n"); 
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (/ 84 2))\n"); 
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (- 63 21))\n");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (and #t #f))\n"); 
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-and 42 1))\n"); 
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-or 42 1))\n");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (concat \"Hello \" \"World\"))\n"); 
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (equals? 42 \"42\"))\n");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (< 42 42))\n"); 
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (not #t))\n"); 
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (= 42 42))\n");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (or #t #f))\n"); 
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (cons 42 \"42\"))\n");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (car (cons 42 \"42\")))\n"); 
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (cdr (cons 42 \"42\")))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (shr 2 1))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (shl 2 1))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (ushr 2 1))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (ushr -1 10))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-not 6))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-xor 6 5))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (to-str 42))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (str-split \"foo bar baz\" \" \"))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (parse-int \"42\"))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (ddiv 1.5 0.5))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (floor 3.141521))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (int-to-double 42))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (dadd 3.14 3.14))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (dlt 3.14 6.28))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (dlt 3.14 3.14))");
+//		
+//		File tempOut = File.createTempFile("velka_read_test", null);
+//        String content  = "hello world !!";       
+//        Files.writeString(tempOut.toPath(), content);
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (read-file \"" + tempOut.toPath().toString().replace("\\", "/") + "\"))");
+//		tempOut.delete();
+//		
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (mod 5 3))");
+//		TestComplex.assertIntprtAndCompPrintSameValues("(println (= (timestamp) 0))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(println (conversion-cost (lambda ((Int:Native x)) \"foo\") (tuple (construct Int Roman \"IV\"))))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(println (conversion-cost (lambda ((Int:Native x)) \"foo\") (tuple 42)))");
 	}
 
 	@Test
 	@DisplayName("Clojure Conversions")
 	void testClojureConversions() throws Exception {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		TestComplex.testClojureCompileNoCmp("(IntNative2IntRoman 42)", env, typeEnv);
@@ -585,7 +589,7 @@ class TestComplex {
 	@Test
 	@DisplayName("Clojure List")
 	void testListClojure() throws Exception {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		// List
@@ -836,7 +840,7 @@ class TestComplex {
 
 		Expression e3 = new AbstractionApplication(rankingLambda, new Tuple(formalArgs3, realArgsExpr, args));
 
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		l = velka.compiler.Compiler.eval(Arrays.asList(e1), env, typeEnv);
@@ -893,7 +897,7 @@ class TestComplex {
 		
 		Tuple args = new Tuple(new LitInteger(42));
 		
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		@SuppressWarnings("unused")
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
@@ -913,7 +917,7 @@ class TestComplex {
 	@Test
 	@DisplayName("Test Clojure Headers")
 	void testClojureHeaders() throws Exception {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		StringBuilder definitions = new StringBuilder();
@@ -1443,7 +1447,7 @@ class TestComplex {
 	@Test
 	@DisplayName("Test logging")
 	void testLogging() throws Exception {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		TestComplex.testClojureCompileNoCmp("(timestamp)", env, typeEnv);
 		TestComplex.testClojureCompileNoCmp("(init-logger \"test-clj-log\")", env, typeEnv);
@@ -1476,7 +1480,7 @@ class TestComplex {
 		Files.copy(velkaUtilJar, tmpDir.resolve(Paths.get("velka.util.jar")), StandardCopyOption.REPLACE_EXISTING);
 		Files.copy(velkaTypesJar, tmpDir.resolve(Paths.get("velka.types.jar")), StandardCopyOption.REPLACE_EXISTING);		
 		
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		ClojureCodeGenerator.ExpressionListToCljFile(
@@ -1498,6 +1502,14 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (loop ((x 1)) (if (= x 2) x (recur (+ x 1)))))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (loop ((x 1) (a (construct List JavaArray))) (if (= x 2) a (recur (+ x 1) (cdr (tuple (java-array-list-add-to-end a x) a))))))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (loop ((x 0) (s \"\")) (if (= x 3) s (recur (+ x 1) (loop ((y 0) (z s)) (if (= y 2) z (recur (+ y 1) (concat z \"a\"))))))))");
+	}
+	
+	@Test
+	@DisplayName("Test extend")
+	void testExtend() throws Exception {
+		assertIntprtAndCompPrintSameValues(
+				"(println ((extend "
+				+ "(extended-lambda ((Int x)) ((Int:Native) \"foo\")) (lambda ((Int:Roman x)) \"bar\")) (construct Int Roman \"X\")))");
 	}
 	
 	@Test
@@ -1617,12 +1629,12 @@ class TestComplex {
 	}
 
 	private static void assertIntprtAndCompPrintSameValues(List<Expression> in) throws Exception {
-		Environment intpEnv = Environment.initTopLevelEnvitonment();
+		Environment intpEnv = Environment.initTopLevelEnvironment();
 		TypeEnvironment intpTypeEnv = TypeEnvironment.initBasicTypes(intpEnv);
 
 		String interpretationPrintOut = TestComplex.interpretationPrint(in, intpEnv, intpTypeEnv);
 
-		Environment cmplEnv = Environment.initTopLevelEnvitonment();
+		Environment cmplEnv = Environment.initTopLevelEnvironment();
 		TypeEnvironment cmplTypeEnv = TypeEnvironment.initBasicTypes(cmplEnv);
 
 		String compilationPrintOut = TestComplex.clojureCompilationResult(in, cmplEnv, cmplTypeEnv);
@@ -1725,7 +1737,7 @@ class TestComplex {
 
 	@SuppressWarnings("unused")
 	private static void testClojureCompileClj(String code, String expected) throws Exception {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		String result = TestComplex.clojureCompilationResult(Parser.read(code), env,

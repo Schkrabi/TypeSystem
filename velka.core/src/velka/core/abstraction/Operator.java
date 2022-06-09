@@ -41,7 +41,7 @@ public abstract class Operator extends Abstraction {
 	 * @return code
 	 */
 	public String clojureDef() {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv;
 		try {
 			typeEnv = TypeEnvironment.initBasicTypes(env);

@@ -29,6 +29,7 @@ import velka.core.application.DefineRepresentation;
 import velka.core.application.DefineSymbol;
 import velka.core.application.DefineType;
 import velka.core.application.ExceptionExpr;
+import velka.core.application.Extend;
 import velka.core.application.Get;
 import velka.core.application.IfExpression;
 import velka.core.application.InstanceOf;
@@ -172,6 +173,9 @@ class TestParser {
 		this.testParse(
 				"(extended-lambda-selection ((Int x)) (lambda ((List:Native x) (List:Native y)) 1) ((Int:Native) x))",
 				ExtendedLambda.makeExtendedLambda(impls, ranking));
+		
+		this.testParse("(extend foo bar)",
+				new Extend(new Symbol("foo"), new Symbol("bar")));
 	}
 
 	@Test
@@ -493,7 +497,7 @@ class TestParser {
 	@Test
 	@DisplayName("Test Type Environment")
 	public void testTypeEnvironment() throws AppendableException {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertAll(() -> {
@@ -559,7 +563,7 @@ class TestParser {
 	@Test
 	@DisplayName("Test Exceptions")
 	void testExceptions() {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		assertAll(() -> {
 			new UserException("test");
 			new DuplicateConversionException(TypeAtom.TypeBool, TypeAtom.TypeBoolNative,

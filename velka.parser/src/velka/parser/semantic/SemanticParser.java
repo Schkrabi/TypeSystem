@@ -25,6 +25,7 @@ import velka.core.application.DefineRepresentation;
 import velka.core.application.DefineSymbol;
 import velka.core.application.DefineType;
 import velka.core.application.ExceptionExpr;
+import velka.core.application.Extend;
 import velka.core.application.Get;
 import velka.core.application.IfExpression;
 import velka.core.application.InstanceOf;
@@ -285,6 +286,9 @@ public class SemanticParser {
 			break;
 		case SemanticParserStatic.LOOP:
 			e = SemanticParser.parseLoop(specialFormList, typeLet);
+			break;
+		case SemanticParserStatic.EXTEND:
+			e = SemanticParser.parseExtend(specialFormList, typeLet);
 			break;
 		default:
 			throw new AppendableException("Unrecognized special form " + specialForm);
@@ -1266,5 +1270,28 @@ public class SemanticParser {
 		Tuple args = new Tuple(l);
 		
 		return new Recur(args);
+	}
+	
+	/**
+	 * Parses extend special form list
+	 * 
+	 * @param specialFormList special form list
+	 * @param typeLet used typelet
+	 * @return Parsed expression
+	 * @throws AppendableException if anything is wrong
+	 */
+	private static Expression parseExtend(List<SemanticNode> specialFormList, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		try {
+			Validations.validateExtend(specialFormList, typeLet);
+		}catch(AppendableException e) {
+			e.appendMessage(" in " + specialFormList);
+			throw e;
+		}
+		
+		Expression extendedFunction = SemanticParser.parseNode(specialFormList.get(1));
+		Expression implementation = SemanticParser.parseNode(specialFormList.get(2));
+		
+		return new Extend(extendedFunction, implementation);
 	}
 }

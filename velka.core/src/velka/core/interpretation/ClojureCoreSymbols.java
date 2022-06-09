@@ -127,5 +127,15 @@ public class ClojureCoreSymbols {
 	 * Fully qualified symbol form lang-pstr clojure function
 	 */
 	public static final String langPstrClojure_full = ClojureHelper.fullyQualifySymbol(ClojureCoreSymbols.NAMESPACE, langPstrClojure);
+	
+	/**
+	 * Symbol for as-function clojure function
+	 */
+	public static final String asFunctionClojure = "as-function";
+	
+	/**
+	 * Fully qualified symbol for as-function clojure function 
+	 */
+	public static final String asFunctionClojure_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, asFunctionClojure);
 
 }

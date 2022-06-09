@@ -35,7 +35,7 @@ public class VelkaClojureConversions {
 		sb.append(ClojureHelper.makeOperatorDeclaration(ConversionOperators.IntStringToIntNative));
 		sb.append(ClojureHelper.makeOperatorDeclaration(ConversionOperators.IntStringToIntRoman));
 		
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		try {
 			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 			

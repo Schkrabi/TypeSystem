@@ -89,9 +89,9 @@ public class DefineSymbol extends Expression {
 		Pair<Type, Substitution> innerInfered = this.inferDefined(env, typeEnv);
 		e.put(this.name, new TypeHolder(innerInfered.first, this.name));
 		Expression interpreted = this.defined.interpret(e, typeEnv);
-		if(!env.containsVariable(this.name)) {
+		//if(!env.containsVariable(this.name)) {
 			env.put(this.name, interpreted);
-		}
+		//}
 		return Expression.EMPTY_EXPRESSION;
 	}
 

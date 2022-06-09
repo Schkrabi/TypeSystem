@@ -35,7 +35,7 @@ public class VelkaClojureConstructors {
 		sb.append(ClojureHelper.makeOperatorDeclaration(ConstructorOperators.BoolConstructor));
 		sb.append(ClojureHelper.makeOperatorDeclaration(ConstructorOperators.BoolNativeConstructor));
 		
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		
 		try {
 			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);

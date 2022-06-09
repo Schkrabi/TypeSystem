@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import velka.core.expression.Expression;
@@ -34,6 +35,14 @@ public class ExtendedFunction extends ExtendedLambda {
 			Environment createdEnvironment) {
 		super(implementations, rankingFunction);
 		creationEnvironment = createdEnvironment;
+	}
+	
+	/**
+	 * Gets shallow copy of implementations set as Functions
+	 * @return Set
+	 */
+	public Set<Function> getImplementationsAsFunctions(){
+		return this.implementations.stream().map(x -> (Function)x).collect(Collectors.toSet());
 	}
 
 	@Override

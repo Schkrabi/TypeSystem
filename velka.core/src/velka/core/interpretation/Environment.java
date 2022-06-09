@@ -184,7 +184,7 @@ public class Environment implements Comparable<Environment> {
 		return new Environment(parent, initFrom);
 	}
 
-	public static Environment initTopLevelEnvitonment() {
+	public static Environment initTopLevelEnvironment() {
 		Environment env = new Environment();
 		env.put(new Symbol(Operators.Addition.toString()), Operators.Addition);
 		env.put(new Symbol(Operators.Subtraction.toString()), Operators.Subtraction);
@@ -223,6 +223,7 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Symbol(Operators.dadd.toString()), Operators.dadd);
 		env.put(new Symbol(Operators.doubleLesserThan.toString()), Operators.doubleLesserThan);
 		env.put(new Symbol(Operators.modulo.toString()), Operators.modulo);
+		env.put(new Symbol(Operators.conversionCost.toString()), Operators.conversionCost);
 		
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
 				ConversionOperators.IntNativeToIntRoman);

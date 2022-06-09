@@ -68,6 +68,32 @@ public class ExtendedLambda extends Abstraction {
 		this.implementations = new TreeSet<Lambda>(implementations);
 		this.selectionFunction = selectionFunction;
 	}
+	
+	/**
+	 * Gets shallow copy of implementation sets
+	 * @return TreeSet
+	 */
+	public Set<? extends Lambda> getImplementations(){
+		return new TreeSet<Lambda>(this.implementations);
+	}
+	
+	/**
+	 * Gets clojure code of the selection function
+	 * @param env
+	 * @param typeEnv
+	 * @return
+	 * @throws AppendableException
+	 */
+	public String selectionFunctionCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		String selectionFunCode = "";
+		if(this.selectionFunction instanceof Operator) {
+			selectionFunCode = ((Operator)this.selectionFunction).getClojureSymbol().toClojureCode(env, typeEnv);
+		}
+		else{
+			selectionFunCode = this.selectionFunction.toClojureCode(env, typeEnv);
+		}
+		return selectionFunCode;
+	}
 
 	@Override
 	public Expression interpret(final Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -264,13 +290,7 @@ public class ExtendedLambda extends Abstraction {
 			throw re;
 		}
 		
-		String selectionFunCode = "";
-		if(this.selectionFunction instanceof Operator) {
-			selectionFunCode = ((Operator)this.selectionFunction).getClojureSymbol().toClojureCode(env, typeEnv);
-		}
-		else{
-			selectionFunCode = this.selectionFunction.toClojureCode(env, typeEnv);
-		}
+		String selectionFunCode = this.selectionFunctionCode(env, typeEnv);
 		
 		final String impls = "_impls";
 		final String args = "_args";

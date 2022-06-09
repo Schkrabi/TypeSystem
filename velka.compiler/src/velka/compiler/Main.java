@@ -44,7 +44,7 @@ public class Main {
 	}
 	
 	private static void runMode(String mode, Path currentFolder, String fileArg) throws Exception {
-		Environment topLevel = Environment.initTopLevelEnvitonment();
+		Environment topLevel = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(topLevel);
 		Compiler.init(topLevel, typeEnv);
 		switch(mode) {

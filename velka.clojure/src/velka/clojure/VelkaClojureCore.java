@@ -94,6 +94,7 @@ public class VelkaClojureCore {
 			+ ClojureHelper.addTypeMetaInfo_str("    (vec (map " + ClojureCoreSymbols.convertClojureSymbol + " to arg))", "to") + ")";
 	
 	private static String convertFn_to = "_to";
+	private static String convertFn_toNormal = "_toNormal";
 	private static String convertFn_arg = "_arg";
 	private static String convertFn_from = "_from";
 	private static String convertFn_impl = "_impl";
@@ -110,8 +111,27 @@ public class VelkaClojureCore {
 								ClojureHelper.fnHelper(
 										new Pair<List<String>, String>(Arrays.asList(convertFn_fn_args), convertFn_impl),
 										new Pair<List<String>, String>(Arrays.asList(convertFn_fn_args, convertFn_fn_ranking), convertFn_impl)), 
-								convertFn_to), 
-					new Pair<String, String>(convertFn_from, ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol, convertFn_arg)),
+								convertFn_toNormal),
+						new Pair<String, String>(convertFn_from, ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol, convertFn_arg)),
+						new Pair<String, String>(
+							convertFn_toNormal, 
+							ClojureHelper.applyClojureFunction(
+								"velka.types.TypeArrow.",
+								ClojureHelper.applyClojureFunction(
+										"if",
+										ClojureHelper.applyClojureFunction(
+												"instance?",
+												"velka.types.TypeTuple",
+												ClojureHelper.applyClojureFunction(
+														".ltype",
+														convertFn_to)),
+										convertFn_to,
+										ClojureHelper.applyClojureFunction(
+												".ltype",
+												convertFn_from)),
+								ClojureHelper.applyClojureFunction(
+									".rtype",
+									convertFn_to))),
 					new Pair<String, String>(convertFn_impl, 
 							ClojureHelper.condHelper(
 									new Pair<String, String>(
@@ -121,37 +141,37 @@ public class VelkaClojureCore {
 											ClojureHelper.addTypeMetaInfo_str(
 													ClojureHelper.fnHelper(Arrays.asList(), 
 															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
-																	ClojureHelper.applyClojureFunction(".rtype", convertFn_to),
+																	ClojureHelper.applyClojureFunction(".rtype", convertFn_toNormal),
 																	ClojureHelper.applyClojureFunction("apply",
 																			ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
 																			ClojureHelper.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)))), 
-													convertFn_to)),
+													convertFn_toNormal)),
 									new Pair<String, String>(
 											ClojureHelper.applyClojureFunction("instance?",
 													"velka.types.TypeVariable",
-													ClojureHelper.applyClojureFunction(".ltype", convertFn_to)),
+													ClojureHelper.applyClojureFunction(".ltype", convertFn_toNormal)),
 											ClojureHelper.addTypeMetaInfo_str(
 													ClojureHelper.fnHelper(
 															Arrays.asList("& " + convertFn_fn_arg), 
 															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
-																	ClojureHelper.applyClojureFunction(".rtype", convertFn_to),
+																	ClojureHelper.applyClojureFunction(".rtype", convertFn_toNormal),
 																	ClojureHelper.applyClojureFunction("apply", 
 																			ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
-																			"_a"))), convertFn_to)),
+																			"_a"))), convertFn_toNormal)),
 									new Pair<String, String>(
 											":else",
 											ClojureHelper.addTypeMetaInfo_str(
 													ClojureHelper.fnHelper(
 															Arrays.asList("& " + convertFn_fn_arg), 
 															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
-																	ClojureHelper.applyClojureFunction(".rtype", convertFn_to),
+																	ClojureHelper.applyClojureFunction(".rtype", convertFn_toNormal),
 																	ClojureHelper.applyClojureFunction("apply", 
 																			ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
 																			ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol,
 																					ClojureHelper.applyClojureFunction(".ltype", convertFn_from),
 																					ClojureHelper.addTypeMetaInfo_str(convertFn_fn_arg, 
-																							ClojureHelper.applyClojureFunction(".ltype", convertFn_to)))))), 
-													convertFn_to))))));
+																							ClojureHelper.applyClojureFunction(".ltype", convertFn_toNormal)))))), 
+													convertFn_toNormal))))));
 	/**
 	 * Definition for convert-set clojure function
 	 */
@@ -268,6 +288,25 @@ public class VelkaClojureCore {
 											new Pair<String, String>(langPstrClojureDef_type, 
 													ClojureHelper.applyClojureFunction(
 															ClojureCoreSymbols.getTypeClojureSymbol_full, langPstrClojureDef_expr))))));
+	
+	private static final String asFunctionClojureDef_f = "_f";
+	private static final String asFunctionClojureDef_this = "_this";
+	private static final String asFunctionClojureDef_arg = "_arg";
+	public static final String asFunctionClojureDef = 
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.asFunctionClojure,
+					Arrays.asList(asFunctionClojureDef_f),
+					ClojureHelper.applyClojureFunction(
+							"reify",
+							"java.util.function.Function",
+							ClojureHelper.applyClojureFunction(
+									"apply",
+									ClojureHelper.clojureVectorHelper(
+											asFunctionClojureDef_this,
+											asFunctionClojureDef_arg
+											),
+									ClojureHelper.applyClojureFunction(
+											asFunctionClojureDef_f,
+											asFunctionClojureDef_arg))));
 
 	/**
 	 * Generates clojure code for definitions of velka.clojure.core namespace
@@ -296,6 +335,7 @@ public class VelkaClojureCore {
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.convertClojureSymbol));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.selectImplementationClojureSymbol));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.eapplyClojureSymbol));
+		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.asFunctionClojure));
 	
 		// Definitions
 		sb.append(type2typeSymbolDef);
@@ -336,6 +376,8 @@ public class VelkaClojureCore {
 //				+ ":else (throw (Throwable. (str exp \" is not a printable expression\"))))))]"
 //				+ "(lang-pstr-aux exp 0))))");
 		sb.append(langPstrClojureDef);
+		sb.append("\n");
+		sb.append(asFunctionClojureDef);
 	
 		return sb.toString();
 	}

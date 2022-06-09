@@ -57,7 +57,7 @@ class TestUtil {
 	@Test
 	@DisplayName("ClojureCodeGenerator")
 	public void testClojureCodeGeneratorBasic() throws IOException, Exception {
-		Environment env = Environment.initTopLevelEnvitonment();
+		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		assertAll(() -> new ClojureCodeGenerator(),
 				() -> ClojureCodeGenerator.ExpressionListToClojureCode(

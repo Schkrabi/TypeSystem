@@ -35,7 +35,7 @@ public class Parser {
 	 * @throws RecognitionException
 	 * @throws AppendableException
 	 */
-	public static List<Expression> read(InputStream in) throws IOException, RecognitionException, AppendableException {
+	public static List<Expression> read(InputStream in) throws IOException, AppendableException {
 		ExprsContext exprsContext = parseCharStream(CharStreams.fromStream(in));		
 		return tokenParse(exprsContext);
 	}

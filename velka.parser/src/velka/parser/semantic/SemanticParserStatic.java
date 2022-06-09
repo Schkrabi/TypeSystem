@@ -19,6 +19,7 @@ import velka.core.application.DefineRepresentation;
 import velka.core.application.DefineSymbol;
 import velka.core.application.DefineType;
 import velka.core.application.ExceptionExpr;
+import velka.core.application.Extend;
 import velka.core.application.Get;
 import velka.core.application.IfExpression;
 import velka.core.application.InstanceOf;
@@ -69,6 +70,7 @@ public final class SemanticParserStatic {
 	public static final String LET_AST = "let*";
 	public static final String LOOP = Loop.LOOP;
 	public static final String RECUR = Recur.RECUR;
+	public static final String EXTEND = Extend.EXTEND;
 	
 	/**
 	 * Unused special form. For testing purposes only!
@@ -107,6 +109,7 @@ public final class SemanticParserStatic {
 		specialForms.add(LET_AST);
 		specialForms.add(LOOP);
 		specialForms.add(RECUR);
+		specialForms.add(EXTEND);
 	}
 
 	/**

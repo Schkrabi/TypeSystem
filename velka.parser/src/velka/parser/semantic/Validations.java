@@ -830,4 +830,24 @@ public class Validations {
 			throw new UnexpectedExpressionException(recur.asSymbol());
 		}
 	}
+	
+	/**
+	 * Validates Extend special form.
+	 * 
+	 * @param l validated list
+	 * @param typeLet used typelet
+	 * @throws AppendableException if anything is wrong
+	 */
+	public static void validateExtend(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
+		throws AppendableException {
+		if(l.size() != 3) {
+			throw new InvalidNumberOfArgsException(2, l.size() - 1);
+		}
+		
+		SemanticNode extend = l.get(0);
+		if(extend.type != SemanticNode.NodeType.SYMBOL
+				|| !extend.asSymbol().equals(SemanticParserStatic.EXTEND)) {
+			throw new UnexpectedExpressionException(extend.asSymbol());
+		}
+	}
 }
