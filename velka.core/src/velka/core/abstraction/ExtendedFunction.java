@@ -8,9 +8,10 @@ import velka.types.TypeSetDoesNotUnifyException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import velka.core.expression.Expression;
@@ -31,7 +32,7 @@ public class ExtendedFunction extends ExtendedLambda {
 
 	public final Environment creationEnvironment;
 
-	private ExtendedFunction(Collection<Function> implementations, Expression rankingFunction,
+	protected ExtendedFunction(Map<Function, Expression> implementations, Expression rankingFunction,
 			Environment createdEnvironment) {
 		super(implementations, rankingFunction);
 		creationEnvironment = createdEnvironment;
@@ -42,14 +43,14 @@ public class ExtendedFunction extends ExtendedLambda {
 	 * @return Set
 	 */
 	public Set<Function> getImplementationsAsFunctions(){
-		return this.implementations.stream().map(x -> (Function)x).collect(Collectors.toSet());
+		return this.implementations.keySet().stream().map(x -> (Function)x).collect(Collectors.toSet());
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
 			Set<Pair<Type, Substitution>> s = new HashSet<Pair<Type, Substitution>>();
-			for (Expression e : this.implementations) {
+			for (Expression e : this.implementations.keySet()) {
 				Pair<Type, Substitution> p = e.infer(env, typeEnv);
 				s.add(p);
 			}
@@ -84,41 +85,9 @@ public class ExtendedFunction extends ExtendedLambda {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof ExtendedFunction) {
-			boolean envEquals = this.creationEnvironment.equals(((ExtendedFunction) other).creationEnvironment);
+			return this.creationEnvironment.equals(((ExtendedFunction) other).creationEnvironment)
+					&& super.equals(other);
 
-			if (!envEquals) {
-				return false;
-			}
-
-			// Have to compare implementation by implementation to get unification of
-			// argtypes
-			for (Lambda l : this.implementations) {
-				boolean found = false;
-				for (Lambda k : ((ExtendedFunction) other).implementations) {
-					if (k.equals(l)) {
-						found = true;
-						break;
-					}
-				}
-				if (!found) {
-					return false;
-				}
-			}
-
-			for (Lambda k : ((ExtendedFunction) other).implementations) {
-				boolean found = false;
-				for (Lambda l : this.implementations) {
-					if (l.equals(k)) {
-						found = true;
-						break;
-					}
-				}
-				if (!found) {
-					return false;
-				}
-			}
-
-			return true;
 		}
 		return false;
 	}
@@ -128,7 +97,7 @@ public class ExtendedFunction extends ExtendedLambda {
 		StringBuilder s = new StringBuilder("(ExFunctionInternal (");
 
 		// Arguments
-		Iterator<? extends Lambda> k = this.implementations.iterator();
+		Iterator<? extends Lambda> k = this.implementations.keySet().iterator();
 		while (k.hasNext()) {
 			Lambda f = k.next();
 			s.append('(');
@@ -179,7 +148,14 @@ public class ExtendedFunction extends ExtendedLambda {
 	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
 			Environment createdEnvironment, Expression rankingFunction) throws AppendableException {
 		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
-		return new ExtendedFunction(implementations, rankingFunction, createdEnvironment);
+		
+		Map<Function, Expression> m = new TreeMap<Function, Expression>();
+		for(Function f : implementations) {
+			Expression e = f.defaultCostFunction();
+			m.put(f, e);
+		}
+		
+		return new ExtendedFunction(m, rankingFunction, createdEnvironment);
 	}
 
 	@Override

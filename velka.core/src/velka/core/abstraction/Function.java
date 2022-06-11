@@ -106,4 +106,10 @@ public class Function extends Lambda implements Comparable<Expression> {
 	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
 		return this;
 	}
+	
+	@Override
+	public Lambda defaultCostFunction() throws AppendableException {
+		Lambda l = super.defaultCostFunction();
+		return new Function(l.argsType, l.args, l.body, this.creationEnvironment);
+	}
 }

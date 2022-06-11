@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import velka.util.AppendableException;
 import velka.util.NameGenerator;
 import velka.util.Pair;
+import velka.core.application.AbstractionApplication;
 import velka.core.exceptions.InvalidArgumentsException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -308,5 +309,27 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	public Abstraction selectImplementation(Tuple args, Optional<Expression> rankingFunction, Environment env,
 			TypeEnvironment typeEnv) throws AppendableException {
 		return this;
+	}
+	
+	/**
+	 * Creates default cost function for this lambda
+	 * @return a Lambda expression
+	 * @throws AppendableException if inference fails
+	 */
+	public Lambda defaultCostFunction() throws AppendableException {
+		Environment env = Environment.initTopLevelEnvironment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		
+		Pair<Type, Substitution> p = this.infer(env, typeEnv);
+		TypeArrow type = (TypeArrow)p.first;
+		TypeTuple argsType = (TypeTuple)type.ltype;
+		
+		Lambda costFunction = new Lambda(
+				this.args,
+				argsType,
+				new AbstractionApplication(
+						Operators.conversionCost,
+						new Tuple(this, this.args)));
+		return costFunction;
 	}
 }

@@ -5,8 +5,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import velka.core.application.AbstractionApplication;
@@ -55,17 +58,18 @@ public class ExtendedLambda extends Abstraction {
 	public static final String EXTENDED_LAMBDA_COST = "extended-lambda-selection";
 
 	/**
-	 * Various implementations of this function
+	 * Implementations of this function.
+	 * Implementations are keys of the map, cost functionas are values
 	 */
-	protected final Set<? extends Lambda> implementations;
+	protected final Map<? extends Lambda, Expression> implementations;
 
 	/**
 	 * Ranking function for this extended lambda
 	 */
 	public final Expression selectionFunction;
 
-	protected ExtendedLambda(Collection<? extends Lambda> implementations, Expression selectionFunction) {
-		this.implementations = new TreeSet<Lambda>(implementations);
+	protected ExtendedLambda(Map<? extends Lambda, Expression> implementations, Expression selectionFunction) {
+		this.implementations = new TreeMap<Lambda, Expression>(implementations);
 		this.selectionFunction = selectionFunction;
 	}
 	
@@ -73,8 +77,8 @@ public class ExtendedLambda extends Abstraction {
 	 * Gets shallow copy of implementation sets
 	 * @return TreeSet
 	 */
-	public Set<? extends Lambda> getImplementations(){
-		return new TreeSet<Lambda>(this.implementations);
+	public Map<Lambda, Expression> getImplementations(){
+		return new TreeMap<Lambda, Expression>(this.implementations);
 	}
 	
 	/**
@@ -97,25 +101,25 @@ public class ExtendedLambda extends Abstraction {
 
 	@Override
 	public Expression interpret(final Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Set<Function> fs = null;
-		try {
-			fs = this.implementations.stream().map(ThrowingFunction.wrapper(x -> (Function) x.interpret(env, typeEnv)))
-					.collect(Collectors.toSet());
-		} catch (RuntimeException re) {
-			AppendableException e = (AppendableException) re.getCause();
-			throw e;
+		Map<Function, Expression> m = new TreeMap<Function, Expression>();
+		
+		for(Map.Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
+			Function f = (Function)e.getKey().interpret(env, typeEnv);
+			Expression r = e.getValue().interpret(env, typeEnv);
+			
+			m.put(f, r);
 		}
-
-		return ExtendedFunction.makeExtendedFunction(fs, env, this.selectionFunction);
+		
+		return new ExtendedFunction(m, this.selectionFunction, env);
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Lambda sample = this.implementations.stream().findAny().get();
+		Lambda sample = this.implementations.keySet().stream().findAny().get();
 		
 		List<Set<Type>> argsTypeSets = sample.argsType.stream().map(x -> new TreeSet<Type>()).collect(Collectors.toList());
 		
-		for(Lambda l : this.implementations) {
+		for(Lambda l : this.implementations.keySet()) {
 			Iterator<Set<Type>> iSets = argsTypeSets.iterator();
 			Iterator<Type> iArgsType = l.argsType.iterator();
 			while(iSets.hasNext()) {
@@ -162,7 +166,7 @@ public class ExtendedLambda extends Abstraction {
 		try {
 			Set<Type> types = new TreeSet<Type>();
 			Substitution s = Substitution.EMPTY;
-			for (Lambda l : this.implementations) {
+			for (Lambda l : this.implementations.keySet()) {
 				Pair<Type, Substitution> p = l.doInferWithArgs(args, creationEnv, applicationEnvironment, typeEnv);
 				types.add(p.first);
 				Optional<Substitution> o = s.union(p.second);
@@ -183,7 +187,7 @@ public class ExtendedLambda extends Abstraction {
 	public String toString() {
 		StringBuilder s = new StringBuilder("(elambda (");
 
-		Iterator<? extends Lambda> k = this.implementations.iterator();
+		Iterator<? extends Lambda> k = this.implementations.keySet().iterator();
 		while (k.hasNext()) {
 			Lambda l = k.next();
 			s.append('(');
@@ -205,14 +209,28 @@ public class ExtendedLambda extends Abstraction {
 	public int compareTo(Expression other) {
 		if (other instanceof ExtendedLambda) {
 			ExtendedLambda o = (ExtendedLambda) other;
-
-			for (Lambda l : this.implementations) {
-				if (!o.implementations.contains(l))
+			
+			for (Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
+				Lambda l = e.getKey();				
+				if (!o.implementations.containsKey(l)) {
 					return 1;
+				}
+				Expression v = e.getValue();
+				int cmp = o.implementations.get(l).compareTo(v);
+				if(cmp != 0) {
+					return cmp;
+				}
 			}
-			for (Lambda l : o.implementations) {
-				if (!this.implementations.contains(l))
+			for (Entry<? extends Lambda, Expression> e : o.implementations.entrySet()) {
+				Lambda l = e.getKey();
+				if (!this.implementations.containsKey(l)) {
 					return -1;
+				}
+				Expression v = e.getValue();
+				int cmp = this.implementations.get(l).compareTo(v);
+				if(cmp != 0) {
+					return cmp;
+				}
 			}
 			return 0;
 		}
@@ -273,7 +291,13 @@ public class ExtendedLambda extends Abstraction {
 	public static ExtendedLambda makeExtendedLambda(Collection<Lambda> implementations, Expression rankingFunction)
 			throws AppendableException {
 		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
-		return new ExtendedLambda(implementations, rankingFunction);
+		
+		Map<Lambda, Expression> m = new TreeMap<Lambda, Expression>();
+		for(Lambda l : implementations) {
+			m.put(l, l.defaultCostFunction());
+		}
+		
+		return new ExtendedLambda(m, rankingFunction);
 	}
 
 	@Override
@@ -281,7 +305,7 @@ public class ExtendedLambda extends Abstraction {
 		String implsValue = "";
 		
 		try {
-			implsValue = ClojureHelper.listNativeClojure(this.implementations.stream()
+			implsValue = ClojureHelper.listNativeClojure(this.implementations.keySet().stream()
 					.map(ThrowingFunction.wrapper(x -> x.toClojureFn(env, typeEnv))).collect(Collectors.toList()));
 		} catch (RuntimeException re) {
 			if (re.getCause() instanceof AppendableException) {
@@ -320,7 +344,7 @@ public class ExtendedLambda extends Abstraction {
 				new AbstractionApplication(
 						selectionFunction.isPresent() ? selectionFunction.get() : this.selectionFunction,
 						new Tuple(
-								ListNative.collectionToListNative(this.implementations),
+								ListNative.collectionToListNative(this.implementations.keySet()),
 								ListNative.tupleToListNative(args)
 								));
 		

@@ -125,7 +125,9 @@ public class VelkaClojureCore {
 												ClojureHelper.applyClojureFunction(
 														".ltype",
 														convertFn_to)),
-										convertFn_to,
+										ClojureHelper.applyClojureFunction(
+												".ltype", 
+												convertFn_to),
 										ClojureHelper.applyClojureFunction(
 												".ltype",
 												convertFn_from)),
