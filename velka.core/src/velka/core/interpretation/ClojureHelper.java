@@ -47,13 +47,9 @@ public class ClojureHelper {
 	 * @return clojure code with meta information
 	 */
 	public static String addTypeMetaInfo_str(String cljCode, String typeInfo) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("(with-meta ");
-		sb.append(cljCode);
-		sb.append(" {:lang-type ");
-		sb.append(typeInfo);
-		sb.append("})");
-		return sb.toString();
+		String code = addMetadata(cljCode, new Pair<String, String>(":lang-type", typeInfo));
+		
+		return code;
 	}
 
 	/**
@@ -653,5 +649,78 @@ public class ClojureHelper {
 						ClojureHelper.makeAtomicConversionRecord(fromType, toType, conversionCode)));
 		
 		return code;
+	}
+	
+	/**
+	 * Creates code representing clojure map
+	 * @param bindings map bindings
+	 * @return clojure code
+	 */
+	public static String mapHelper(Collection<Pair<String, String>> bindings) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("{");
+		
+		Iterator<Pair<String, String>> i = bindings.iterator();
+		while(i.hasNext()) {
+			Pair<String, String> p = i.next();
+			sb.append(p.first);
+			sb.append(" ");
+			sb.append(p.second);
+			if(i.hasNext()) {
+				sb.append(" ");
+			}
+		}
+		
+		sb.append("}");
+		return sb.toString();
+	}
+	
+	/**
+	 * Creates code representing clojure map
+	 * @param bindings map bindings
+	 * @return clojure code
+	 */
+	@SafeVarargs
+	public static String mapHelper(Pair<String, String> ...bindings) {
+		return mapHelper(Arrays.asList(bindings));
+	}
+	
+	/**
+	 * Adds cost function to fn implementation
+	 * @param fnCode code of implementation
+	 * @param costFunctionCode code of cost function
+	 * @return Clojure code
+	 */
+	public static String setCostFunction(String fnCode, String costFunctionCode) {
+		String code = addMetadata(fnCode, new Pair<String, String>(ClojureCoreSymbols.costFunctionKey, costFunctionCode)); 
+		return code;
+	}
+	
+	/**
+	 * Adds metadata to clojure expression
+	 * @param cljExpr expression
+	 * @param metadata collection of key - value metadata pairs
+	 * @return Clojure code
+	 */
+	public static String addMetadata(String cljExpr, Collection<Pair<String, String>> metadata) {
+		String code = ClojureHelper.applyClojureFunction(
+				"vary-meta",
+				cljExpr,
+				"merge",
+				mapHelper(metadata));
+		
+		return code;
+	}
+	
+	/**
+	 * Adds metadata to clojure expression
+	 * 
+	 * @param cljExpr expression
+	 * @param bindings key - value metadata pairs
+	 * @return Clojure code
+	 */
+	@SafeVarargs
+	public static String addMetadata(String cljExpr, Pair<String, String> ...bindings) {
+		return addMetadata(cljExpr, Arrays.asList(bindings));
 	}
 }

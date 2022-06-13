@@ -131,11 +131,20 @@ public class ClojureCoreSymbols {
 	/**
 	 * Symbol for as-function clojure function
 	 */
-	public static final String asFunctionClojure = "as-function";
-	
+	public static final String asFunctionClojure = "as-function";	
 	/**
 	 * Fully qualified symbol for as-function clojure function 
 	 */
 	public static final String asFunctionClojure_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, asFunctionClojure);
 
+	public static final String costFunctionKey = ":cost-fn";
+	
+	/**
+	 * Symbol for get-cost-function clojure function
+	 */
+	public static final String getCostFunction = "get-cost-function";
+	/**
+	 * Fully qualified symbol for get-cost-function clojure function
+	 */
+	public static final String getCostFunction_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, getCostFunction);
 }

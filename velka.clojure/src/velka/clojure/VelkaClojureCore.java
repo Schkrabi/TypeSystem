@@ -309,6 +309,16 @@ public class VelkaClojureCore {
 									ClojureHelper.applyClojureFunction(
 											asFunctionClojureDef_f,
 											asFunctionClojureDef_arg))));
+	
+	private static final String getCostFunctionDef_fun = "_fun";
+	public static final String getCostFunctionDef = 
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.getCostFunction,
+					Arrays.asList(getCostFunctionDef_fun),
+					ClojureHelper.applyClojureFunction(
+							ClojureCoreSymbols.costFunctionKey,
+							ClojureHelper.applyClojureFunction(
+									"meta",
+									getCostFunctionDef_fun)));
 
 	/**
 	 * Generates clojure code for definitions of velka.clojure.core namespace
@@ -338,6 +348,7 @@ public class VelkaClojureCore {
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.selectImplementationClojureSymbol));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.eapplyClojureSymbol));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.asFunctionClojure));
+		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.getCostFunction));
 	
 		// Definitions
 		sb.append(type2typeSymbolDef);
@@ -380,6 +391,8 @@ public class VelkaClojureCore {
 		sb.append(langPstrClojureDef);
 		sb.append("\n");
 		sb.append(asFunctionClojureDef);
+		sb.append("\n");
+		sb.append(getCostFunctionDef);
 	
 		return sb.toString();
 	}

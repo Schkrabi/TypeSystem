@@ -304,15 +304,21 @@ public class ExtendedLambda extends Abstraction {
 	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {		
 		String implsValue = "";
 		
-		try {
-			implsValue = ClojureHelper.listNativeClojure(this.implementations.keySet().stream()
-					.map(ThrowingFunction.wrapper(x -> x.toClojureFn(env, typeEnv))).collect(Collectors.toList()));
-		} catch (RuntimeException re) {
-			if (re.getCause() instanceof AppendableException) {
-				throw (AppendableException) re.getCause();
-			}
-			throw re;
+		List<String> implCodes = new LinkedList<String>();
+		
+		for(Map.Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
+			Lambda l = e.getKey();
+			Expression ex = e.getValue();
+			
+			String implCode = l.toClojureFn(env, typeEnv);
+			String costFnCode = ex.toClojureCode(env, typeEnv);
+			
+			String implWithCostCode = ClojureHelper.setCostFunction(implCode, costFnCode);
+			
+			implCodes.add(implWithCostCode);
 		}
+		
+		implsValue = ClojureHelper.listNativeClojure(implCodes);
 		
 		String selectionFunCode = this.selectionFunctionCode(env, typeEnv);
 		

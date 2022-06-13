@@ -458,28 +458,16 @@ class TestComplex {
 
 	@Test
 	@DisplayName("Clojure Literals")
-	void testClojureLiterals() throws AppendableException {
+	void testClojureLiterals() throws Exception {
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		TestComplex.testClojureCompile("0",
-				"(with-meta [0] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"Int\") (new velka.types.TypeRepresentation \"Native\"))})",
-				env, typeEnv);
-		TestComplex.testClojureCompile("3.141521",
-				"(with-meta [3.141521] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"Double\") (new velka.types.TypeRepresentation \"Native\"))})",
-				env, typeEnv);
-		TestComplex.testClojureCompile("#t",
-				"(with-meta [true] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"Bool\") (new velka.types.TypeRepresentation \"Native\"))})",
-				env, typeEnv);
-		TestComplex.testClojureCompile("#f",
-				"(with-meta [false] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"Bool\") (new velka.types.TypeRepresentation \"Native\"))})",
-				env, typeEnv);
-		TestComplex.testClojureCompile("\"Hello World\"",
-				"(with-meta [\"Hello World\"] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"String\") (new velka.types.TypeRepresentation \"Native\"))})",
-				env, typeEnv);
-		TestComplex.testClojureCompileExpression(new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
-				"(with-meta [(with-meta [\"XLII\"] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"String\") (new velka.types.TypeRepresentation \"Native\"))})] {:lang-type (new velka.types.TypeAtom (new velka.types.TypeName \"Int\") (new velka.types.TypeRepresentation \"Roman\"))})",
-				env, typeEnv);
+		TestComplex.assertIntprtAndCompPrintSameValues("(println 0)");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println 3.141521)");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println #t)");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println #f)");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println \"Hello World\")");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (construct Int Roman \"XLII\"))");
 
 		TestComplex.testClojureCompile("variable", "variable", env, typeEnv);
 	}
