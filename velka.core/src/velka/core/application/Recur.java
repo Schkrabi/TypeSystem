@@ -6,13 +6,13 @@ import java.util.List;
 
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 

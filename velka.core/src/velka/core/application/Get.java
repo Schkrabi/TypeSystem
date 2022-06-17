@@ -3,7 +3,6 @@ package velka.core.application;
 import velka.core.conversions.Conversions;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
-import velka.core.interpretation.ClojureCoreSymbols;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitInteger;
@@ -13,6 +12,7 @@ import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
+import velka.util.ClojureCoreSymbols;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 

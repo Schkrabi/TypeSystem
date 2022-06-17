@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import velka.util.ClojureHelper;
 import velka.types.Type;
 import velka.util.AppendableException;
 import velka.util.NameGenerator;
@@ -194,5 +195,21 @@ public abstract class Type implements Comparable<Type> {
 	 */
 	public Type removeRepresentationInformation() throws AppendableException {
 		return this.map(t -> t instanceof TypeAtom ? new TypeAtom(((TypeAtom)t).name, TypeRepresentation.WILDCARD) : t);
+	}
+
+	/**
+	 * Adds type meta information to given clojure code piece
+	 * 
+	 * @param cljCode code to put the meta information to
+	 * @param type    type
+	 * @return clojure code with meta information
+	 */
+	public static String addTypeMetaInfo(String cljCode, Type type) {
+		try {
+			return ClojureHelper.addTypeMetaInfo_str(cljCode, type.clojureTypeRepresentation());
+		} catch (AppendableException e) {
+			e.printStackTrace();
+		}
+		return "";
 	}
 }

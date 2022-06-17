@@ -3,7 +3,6 @@ package velka.types;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +13,7 @@ import java.util.stream.Collectors;
 
 import velka.types.RepresentationOr;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 import velka.util.ThrowingFunction;
 
@@ -230,17 +230,17 @@ public class RepresentationOr extends Type {
 
 	@Override
 	public String clojureTypeRepresentation() throws AppendableException {
-		StringBuilder sb = new StringBuilder("(velka.types.RepresentationOr/makeRepresentationOr #{");
-		Iterator<Type> i = this.representations.iterator();
-		while (i.hasNext()) {
-			Type t = i.next();
-			sb.append(t.clojureTypeRepresentation());
-			if (i.hasNext()) {
-				sb.append(" ");
-			}
+		List<String> representationsCode = new LinkedList<String>();
+		for(Type t : this.representations) {
+			String current = t.clojureTypeRepresentation();
+			representationsCode.add(current);
 		}
-		sb.append("})");
-		return sb.toString();
+		
+		String code = ClojureHelper.applyClojureFunction(
+				"velka.types.RepresentationOr/makeRepresentationOr",
+				ClojureHelper.clojureSetHelper(representationsCode));
+		
+		return code;
 	}
 
 	/**

@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.ThrowingFunction;
 
 /**
@@ -257,17 +258,17 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 	@Override
 	public String clojureTypeRepresentation() throws AppendableException {
-		StringBuilder s = new StringBuilder("(new velka.types.TypeTuple [");
-		Iterator<Type> i = this.values.iterator();
-		while (i.hasNext()) {
-			Type t = i.next();
-			s.append(t.clojureTypeRepresentation());
-			if (i.hasNext()) {
-				s.append(" ");
-			}
+		List<String> l = new LinkedList<String>();
+		for(Type t : this.values) {
+			String s = t.clojureTypeRepresentation();
+			l.add(s);
 		}
-		s.append("])");
-		return s.toString();
+		
+		String code = ClojureHelper.instantiateJavaClass(
+				this.getClass(),
+				ClojureHelper.clojureVectorHelper(l));
+		
+		return code;
 	}
 
 	@Override

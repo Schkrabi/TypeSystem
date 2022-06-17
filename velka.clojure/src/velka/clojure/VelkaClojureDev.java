@@ -6,8 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import velka.core.interpretation.ClojureHelper;
 import velka.types.TypeAtom;
+import velka.util.ClojureHelper;
 
 /**
  * Class containing dev utilities for debugging generated clojure code

@@ -7,6 +7,7 @@ import java.util.function.Function;
 
 import velka.types.TypeArrow;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 
 /**
  * Class for functions types
@@ -115,8 +116,12 @@ public class TypeArrow extends Type {
 
 	@Override
 	public String clojureTypeRepresentation() throws AppendableException {
-		return "(new velka.types.TypeArrow " + this.ltype.clojureTypeRepresentation() + " "
-				+ this.rtype.clojureTypeRepresentation() + ")";
+		String code = ClojureHelper.instantiateJavaClass(
+						this.getClass(),
+						this.ltype.clojureTypeRepresentation(),
+						this.rtype.clojureTypeRepresentation());
+		
+		return code;
 	}
 
 	/**

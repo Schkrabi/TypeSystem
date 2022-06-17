@@ -18,15 +18,16 @@ import velka.core.abstraction.ConstructorOperators;
 import velka.core.abstraction.Operators;
 import velka.core.conversions.Conversions;
 import velka.core.expression.Expression;
-import velka.core.interpretation.ClojureCoreSymbols;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
+import velka.types.Type;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
+import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 
 /**
  * Class generating files and project structure for runnable and compilable
@@ -188,7 +189,7 @@ public class ClojureCodeGenerator {
 	public static String writeMain() throws AppendableException {
 		// TODO add support of command line arguments!
 		return "(defn -main []\n"
-				+ ClojureHelper.applyVelkaFunction("main", ClojureHelper.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)) + ")";
+				+ ClojureHelper.applyVelkaFunction("main", Type.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)) + ")";
 	}
 	
 	public static Path createDepsEdn(Path directory) throws IOException {

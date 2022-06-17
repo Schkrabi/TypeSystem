@@ -5,7 +5,6 @@ import java.util.Iterator;
 import velka.core.conversions.Conversions;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
-import velka.core.interpretation.ClojureCoreSymbols;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
@@ -13,6 +12,7 @@ import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
+import velka.util.ClojureCoreSymbols;
 import velka.util.Pair;
 
 /**

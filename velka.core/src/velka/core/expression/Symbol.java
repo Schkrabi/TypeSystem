@@ -1,10 +1,10 @@
 package velka.core.expression;
 
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.core.abstraction.Operator;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;

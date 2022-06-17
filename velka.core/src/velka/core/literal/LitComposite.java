@@ -10,6 +10,7 @@ import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 
 /**
@@ -88,5 +89,16 @@ public class LitComposite extends Literal {
 		// return "<" + this.composedType.toString() + " "
 		// + this.value.stream().map(x -> x.toString() + ",").reduce("", (x, y) -> x +
 		// y) + ">";
+	}
+
+	/**
+	 * Creates code for composite literal (LitComposite) in clojure.
+	 * @param type type of composite literal
+	 * @param value value of the composite literal
+	 * @return string with code
+	 * @throws AppendableException if there is issue with compiling type into clojure
+	 */
+	public static String litCompositeHelper(Type type, String value) throws AppendableException {
+		return ClojureHelper.litCompositeHelper_str(type.clojureTypeRepresentation(), value);
 	}
 }

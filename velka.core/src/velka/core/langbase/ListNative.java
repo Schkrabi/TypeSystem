@@ -23,7 +23,6 @@ import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
@@ -31,6 +30,7 @@ import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ThrowingPredicate;
@@ -52,7 +52,7 @@ public class ListNative {
 	 * Clojure code for empty list
 	 */
 	public static final String EMPTY_LIST_NATIVE_CLOJURE = LitComposite.clojureValueToClojureLiteral(
-			ClojureHelper.addTypeMetaInfo("'()", TypeAtom.TypeListNative), TypeAtom.TypeListNative);
+			Type.addTypeMetaInfo("'()", TypeAtom.TypeListNative), TypeAtom.TypeListNative);
 
 	/**
 	 * Symbol for empty constructor
@@ -67,7 +67,7 @@ public class ListNative {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = ClojureHelper.fnHelper(Arrays.asList(),
-					ClojureHelper.addTypeMetaInfo("'()", TypeAtom.TypeListNative));
+					Type.addTypeMetaInfo("'()", TypeAtom.TypeListNative));
 			return code;
 		}
 
@@ -102,7 +102,7 @@ public class ListNative {
 			String val = "_value";
 			String rest = "_rest";
 			String code = ClojureHelper.fnHelper(Arrays.asList(val, rest),
-					ClojureHelper.applyClojureFunction("lazy-seq", ClojureHelper.addTypeMetaInfo(
+					ClojureHelper.applyClojureFunction("lazy-seq", Type.addTypeMetaInfo(
 							ClojureHelper.applyClojureFunction("cons", val, ClojureHelper.getLiteralInnerValue(rest)),
 							TypeAtom.TypeListNative)));
 			return code;
@@ -548,7 +548,7 @@ public class ListNative {
 					LitComposite.clojureValueToClojureLiteral(
 							ClojureHelper.applyClojureFunction("lazy-seq",
 									ClojureHelper.applyClojureFunction("concat",
-											ClojureHelper.getLiteralInnerValue(list), ClojureHelper
+											ClojureHelper.getLiteralInnerValue(list), Type
 													.addTypeMetaInfo("'(" + element + ")", TypeAtom.TypeListNative))),
 							TypeAtom.TypeListNative));
 			return code;
@@ -1258,5 +1258,27 @@ public class ListNative {
 		}
 		sb.append(")");
 		return sb.toString();
+	}
+
+	/**
+	 * Creates code for ListNative value in clojure
+	 * @param members code for members of list
+	 * @return code for list native
+	 */
+	public static String listNativeClojure(Collection<String> members) {
+		String code = ClojureHelper.applyClojureFunction(
+				"lazy-seq",
+				ClojureHelper.applyClojureFunction("list", members));
+		
+		return LitComposite.clojureValueToClojureLiteral(code, TypeAtom.TypeListNative);
+	}
+	
+	/**
+	 * Creates code for ListNative value in clojure
+	 * @param members members of the list
+	 * @return code for list
+	 */
+	public static String listNativeClojure(String ...members) {
+		return listNativeClojure(Arrays.asList(members));
 	}
 }

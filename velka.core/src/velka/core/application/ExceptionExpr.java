@@ -7,8 +7,6 @@ import velka.core.conversions.Conversions;
 import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
-import velka.core.interpretation.ClojureCoreSymbols;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitString;
@@ -19,6 +17,8 @@ import velka.types.TypeAtom;
 import velka.types.TypeVariable;
 import velka.types.TypesDoesNotUnifyException;
 import velka.util.AppendableException;
+import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 

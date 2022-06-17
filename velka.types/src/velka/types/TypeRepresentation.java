@@ -1,6 +1,7 @@
 package velka.types;
 
 import velka.types.TypeRepresentation;
+import velka.util.ClojureHelper;
 
 /**
  * Class for names of type representations
@@ -47,7 +48,11 @@ public class TypeRepresentation implements Comparable<TypeRepresentation> {
 	 * @return string with code
 	 */
 	public String toClojureRepresentation() {
-		return "(new velka.types.TypeRepresentation \"" + this.name + "\")";
+		String code = ClojureHelper.instantiateJavaClass(
+				this.getClass(),
+				ClojureHelper.stringHelper(this.name));
+		
+		return code;
 	}
 
 	/**

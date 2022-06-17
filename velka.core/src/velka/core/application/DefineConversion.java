@@ -6,7 +6,6 @@ import java.util.Optional;
 import velka.core.abstraction.Lambda;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
@@ -99,7 +98,7 @@ public class DefineConversion extends Expression {
 		Lambda conversionLambda = this.makeConversionLambda(env);
 		typeEnv.addConversion(this.from, this.to, conversionLambda);
 		
-		String code = ClojureHelper.addConversionToGlobalTable(this.from, this.to,
+		String code = TypeAtom.addConversionToGlobalTable(this.from, this.to,
 				conversionLambda.toClojureCode(env, typeEnv));
 
 		return code;

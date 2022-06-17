@@ -5,6 +5,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 
+import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
 
@@ -112,8 +114,11 @@ public class TypeAtom extends Type {
 
 	@Override
 	public String clojureTypeRepresentation() {
-		return "(new velka.types.TypeAtom " + this.name.toClojureRepresentation() + " "
-				+ this.representation.toClojureRepresentation() + ")";
+		String code = ClojureHelper.instantiateJavaClass(
+				this.getClass(),
+				this.name.toClojureRepresentation(),
+				this.representation.toClojureRepresentation());
+		return code;
 	}
 
 	@Override
@@ -173,5 +178,38 @@ public class TypeAtom extends Type {
 	@Override
 	public Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
 		return this;
+	}
+
+	/**
+	 * Creates code to add conversion to global variable
+	 * 
+	 * @param fromType from type of conversion
+	 * @param toType to type of conversion
+	 * @param conversionCode code for conversion
+	 * @return String with code
+	 */
+	public static String addConversionToGlobalTable(TypeAtom fromType, TypeAtom toType, String conversionCode) {
+		String code = ClojureHelper.rebindGlobalVariable(ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
+				ClojureHelper.applyClojureFunction("assoc",
+						ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
+						makeAtomicConversionRecord(fromType, toType, conversionCode)));
+		
+		return code;
+	}
+
+	/**
+	 * Creates record for atomic conversion map
+	 * 
+	 * @param fromType from type of conversion
+	 * @param toType to type of conversion
+	 * @param conversionCode code for conversion
+	 * @return String with code
+	 */
+	public static String makeAtomicConversionRecord(TypeAtom fromType, TypeAtom toType, String conversionCode) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(ClojureHelper.clojureVectorHelper(fromType.clojureTypeRepresentation(), toType.clojureTypeRepresentation()));
+		sb.append(" ");
+		sb.append(conversionCode);
+		return sb.toString();
 	}
 }

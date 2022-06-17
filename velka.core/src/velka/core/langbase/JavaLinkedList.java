@@ -14,8 +14,6 @@ import velka.core.application.AbstractionApplication;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
-import velka.core.interpretation.ClojureCoreSymbols;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
@@ -31,6 +29,8 @@ import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
+import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ThrowingBinaryOperator;
@@ -1199,7 +1199,7 @@ public class JavaLinkedList {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					ClojureHelper.applyClojureFunction("lazy-seq",
-							ClojureHelper.addTypeMetaInfo(
+							Type.addTypeMetaInfo(
 									ClojureHelper.applyClojureFunction("seq", ClojureHelper.getLiteralInnerValue(list)),
 									TypeAtom.TypeListNative)));
 			return code;

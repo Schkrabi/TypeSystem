@@ -8,11 +8,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import velka.core.abstraction.ConversionOperators;
-import velka.core.interpretation.ClojureCoreSymbols;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.literal.LitComposite;
+import velka.types.Type;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
+import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 
 /**
@@ -61,21 +62,21 @@ public class VelkaClojureCore {
 	 * Definition for map of atomic type conversion
 	 */
 	public static String atomicConversionMapClojureDef = "(def ^:dynamic " + ClojureCoreSymbols.atomicConversionMapClojureSymbol + "{"
-			+ ClojureHelper.makeAtomicConversionRecord(TypeAtom.TypeIntNative, TypeAtom.TypeIntString,
+			+ TypeAtom.makeAtomicConversionRecord(TypeAtom.TypeIntNative, TypeAtom.TypeIntString,
 					ConversionOperators.IntNativeToIntString.clojureDef())
 			+ "\n"
-			+ ClojureHelper.makeAtomicConversionRecord(
+			+ TypeAtom.makeAtomicConversionRecord(
 					TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, ConversionOperators.IntNativeToIntRoman.clojureDef())
 			+ "\n"
-			+ ClojureHelper.makeAtomicConversionRecord(TypeAtom.TypeIntString, TypeAtom.TypeIntNative,
+			+ TypeAtom.makeAtomicConversionRecord(TypeAtom.TypeIntString, TypeAtom.TypeIntNative,
 					ConversionOperators.IntStringToIntNative.clojureDef())
 			+ "\n"
-			+ ClojureHelper.makeAtomicConversionRecord(
+			+ TypeAtom.makeAtomicConversionRecord(
 					TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, ConversionOperators.IntStringToIntRoman.clojureDef())
 			+ "\n"
-			+ ClojureHelper.makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative,
+			+ TypeAtom.makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative,
 					ConversionOperators.IntRomanToIntNative.clojureDef())
-			+ "\n" + ClojureHelper.makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
+			+ "\n" + TypeAtom.makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
 					ConversionOperators.IntRomanToIntString.clojureDef())
 			+ "})";
 	/**
@@ -146,7 +147,7 @@ public class VelkaClojureCore {
 																	ClojureHelper.applyClojureFunction(".rtype", convertFn_toNormal),
 																	ClojureHelper.applyClojureFunction("apply",
 																			ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
-																			ClojureHelper.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)))), 
+																			Type.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)))), 
 													convertFn_toNormal)),
 									new Pair<String, String>(
 											ClojureHelper.applyClojureFunction("instance?",

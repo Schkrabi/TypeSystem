@@ -11,11 +11,11 @@ import java.util.Optional;
 import velka.core.conversions.Conversions;
 import velka.core.exceptions.ConversionException;
 import velka.core.expression.Expression;
-import velka.core.interpretation.ClojureCoreSymbols;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
+import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 
 /**

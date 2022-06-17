@@ -1,4 +1,4 @@
-package velka.core.interpretation;
+package velka.util;
 
 public class ClojureCoreSymbols {
 

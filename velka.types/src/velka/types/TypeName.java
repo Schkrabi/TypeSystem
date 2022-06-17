@@ -1,6 +1,7 @@
 package velka.types;
 
 import velka.types.TypeName;
+import velka.util.ClojureHelper;
 
 /**
  * . This class holds names for type atoms
@@ -46,7 +47,11 @@ public class TypeName implements Comparable<TypeName> {
 	 * @return string with code
 	 */
 	public String toClojureRepresentation() {
-		return "(new velka.types.TypeName \"" + this.name + "\")";
+		String code = ClojureHelper.instantiateJavaClass(
+				this.getClass(),
+				ClojureHelper.stringHelper(this.name));
+				
+		return code;
 	}
 
 	public static final TypeName INT = new TypeName("Int");

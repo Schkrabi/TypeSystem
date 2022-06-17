@@ -1,7 +1,6 @@
 package velka.core.literal;
 
 import velka.core.expression.Expression;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
@@ -38,6 +37,6 @@ public abstract class Literal extends Expression {
 	 * @return clojure code
 	 */
 	public static String clojureValueToClojureLiteral(String clojureValue, Type type) {
-		return ClojureHelper.addTypeMetaInfo("[" + clojureValue + "]", type);
+		return Type.addTypeMetaInfo("[" + clojureValue + "]", type);
 	}
 }

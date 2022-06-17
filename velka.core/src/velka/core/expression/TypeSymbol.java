@@ -1,12 +1,12 @@
 package velka.core.expression;
 
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitComposite;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 
 /**

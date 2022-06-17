@@ -11,6 +11,7 @@ import java.util.function.Function;
 
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 
@@ -98,7 +99,11 @@ public class TypeVariable extends Type {
 
 	@Override
 	public String clojureTypeRepresentation() throws AppendableException {
-		return "(new velka.types.TypeVariable \"" + this.name + "\")";
+		String code = ClojureHelper.instantiateJavaClass(
+				this.getClass(),
+				ClojureHelper.stringHelper(this.name));
+		
+		return code;
 	}
 
 	@Override

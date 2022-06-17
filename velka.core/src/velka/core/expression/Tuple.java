@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 import velka.util.ThrowingFunction;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;

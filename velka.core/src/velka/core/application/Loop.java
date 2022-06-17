@@ -11,7 +11,6 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
@@ -21,6 +20,7 @@ import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.types.TypesDoesNotUnifyException;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 

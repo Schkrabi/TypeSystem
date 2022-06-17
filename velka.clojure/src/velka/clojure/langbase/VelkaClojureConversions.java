@@ -6,11 +6,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import velka.core.abstraction.ConversionOperators;
+import velka.core.abstraction.Operator;
 import velka.core.conversions.Conversions;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 
 public class VelkaClojureConversions {
 
@@ -28,23 +29,23 @@ public class VelkaClojureConversions {
 		// Declare namespace
 		sb.append(ClojureHelper.declareNamespace(Conversions.NAMESPACE));
 		
-		sb.append(ClojureHelper.makeOperatorDeclaration(ConversionOperators.IntNativeToIntRoman));
-		sb.append(ClojureHelper.makeOperatorDeclaration(ConversionOperators.IntNativeToIntString));
-		sb.append(ClojureHelper.makeOperatorDeclaration(ConversionOperators.IntRomanToIntNative));
-		sb.append(ClojureHelper.makeOperatorDeclaration(ConversionOperators.IntRomanToIntString));
-		sb.append(ClojureHelper.makeOperatorDeclaration(ConversionOperators.IntStringToIntNative));
-		sb.append(ClojureHelper.makeOperatorDeclaration(ConversionOperators.IntStringToIntRoman));
+		sb.append(Operator.makeOperatorDeclaration(ConversionOperators.IntNativeToIntRoman));
+		sb.append(Operator.makeOperatorDeclaration(ConversionOperators.IntNativeToIntString));
+		sb.append(Operator.makeOperatorDeclaration(ConversionOperators.IntRomanToIntNative));
+		sb.append(Operator.makeOperatorDeclaration(ConversionOperators.IntRomanToIntString));
+		sb.append(Operator.makeOperatorDeclaration(ConversionOperators.IntStringToIntNative));
+		sb.append(Operator.makeOperatorDeclaration(ConversionOperators.IntStringToIntRoman));
 		
 		Environment env = Environment.initTopLevelEnvironment();
 		try {
 			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 			
-			sb.append(ClojureHelper.makeOperatorDef(ConversionOperators.IntNativeToIntRoman, env, typeEnv));
-			sb.append(ClojureHelper.makeOperatorDef(ConversionOperators.IntNativeToIntString, env, typeEnv));
-			sb.append(ClojureHelper.makeOperatorDef(ConversionOperators.IntRomanToIntNative, env, typeEnv));
-			sb.append(ClojureHelper.makeOperatorDef(ConversionOperators.IntRomanToIntString, env, typeEnv));
-			sb.append(ClojureHelper.makeOperatorDef(ConversionOperators.IntStringToIntNative, env, typeEnv));
-			sb.append(ClojureHelper.makeOperatorDef(ConversionOperators.IntStringToIntRoman, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(ConversionOperators.IntNativeToIntRoman, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(ConversionOperators.IntNativeToIntString, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(ConversionOperators.IntRomanToIntNative, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(ConversionOperators.IntRomanToIntString, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(ConversionOperators.IntStringToIntNative, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(ConversionOperators.IntStringToIntRoman, env, typeEnv));
 		}catch(AppendableException e) {
 			System.err.println("Error generating " + RELATIVE_PATH.toString() + " :" + e.getMessage());
 			return "";

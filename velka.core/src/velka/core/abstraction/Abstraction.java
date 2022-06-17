@@ -6,12 +6,12 @@ import java.util.Optional;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 
 /**
@@ -67,7 +67,7 @@ public abstract class Abstraction extends Expression {
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException{
 		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		String code = ClojureHelper.addTypeMetaInfo(this.implementationsToClojure(env, typeEnv), p.first);
+		String code = Type.addTypeMetaInfo(this.implementationsToClojure(env, typeEnv), p.first);
 		
 		return code;
 	}
@@ -94,4 +94,21 @@ public abstract class Abstraction extends Expression {
 	 * @throws AppendableException 
 	 */
 	public abstract Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException;
+
+	/**
+	 * Creates definition for an abstraction in clojure
+	 * 
+	 * @param fnName name of the function
+	 * @param fn defined abstraction
+	 * @param env environment
+	 * @param typeEnv type environment
+	 * @return string with code
+	 * @throws AppendableException
+	 */
+	public static String makeLambdaDef(String fnName, Abstraction fn, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		String code =  ClojureHelper.applyClojureFunction("def", fnName, fn.toClojureCode(env, typeEnv));
+		
+		return code;
+	}
 }

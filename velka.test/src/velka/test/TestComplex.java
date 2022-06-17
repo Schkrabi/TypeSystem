@@ -38,8 +38,6 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeSymbol;
-import velka.core.interpretation.ClojureCoreSymbols;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.JavaArrayList;
@@ -60,6 +58,8 @@ import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
+import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 
@@ -917,7 +917,7 @@ class TestComplex {
 				definitions.toString(),
 				ClojureHelper.applyClojureFunction("println", 
 						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.listNativeToTuple_full, 
-								ClojureHelper.listNativeClojure(LitInteger.clojureIntToClojureLitInteger("1"),
+								ListNative.listNativeClojure(LitInteger.clojureIntToClojureLitInteger("1"),
 										LitInteger.clojureIntToClojureLitInteger("2")))),
 				"([1] [2])");
 		
@@ -1034,14 +1034,14 @@ class TestComplex {
 				new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntString),
 				new LitString("impl3"));
 		
-		String args1 = ClojureHelper.listNativeClojure(LitInteger.clojureIntToClojureLitInteger("42"),
+		String args1 = ListNative.listNativeClojure(LitInteger.clojureIntToClojureLitInteger("42"),
 				LitInteger.clojureIntToClojureLitInteger("42")); 
-		String args2 = ClojureHelper.listNativeClojure(LitComposite.clojureValueToClojureLiteral(
+		String args2 = ListNative.listNativeClojure(LitComposite.clojureValueToClojureLiteral(
 				LitString.clojureStringToClojureLitString(ClojureHelper.stringHelper("42")), TypeAtom.TypeIntString),
 				LitComposite.clojureValueToClojureLiteral(
 						LitString.clojureStringToClojureLitString(ClojureHelper.stringHelper("42")),
 						TypeAtom.TypeIntString)); 
-		String args3 = ClojureHelper.listNativeClojure(LitInteger.clojureIntToClojureLitInteger("42"),
+		String args3 = ListNative.listNativeClojure(LitInteger.clojureIntToClojureLitInteger("42"),
 				LitComposite.clojureValueToClojureLiteral(
 						LitString.clojureStringToClojureLitString(ClojureHelper.stringHelper("42")),
 						TypeAtom.TypeIntString)); 
@@ -1060,7 +1060,7 @@ class TestComplex {
 														ExtendedLambda.defaultSelectionFunction
 															.getClojureSymbol().toClojureCode(env, typeEnv), 
 														"nil"),
-										ClojureHelper.listNativeClojure(
+											ListNative.listNativeClojure(
 												impl1.toClojureCode(env, typeEnv), 
 												impl2.toClojureCode(env, typeEnv), 
 												impl3.toClojureCode(env, typeEnv)),
@@ -1079,7 +1079,7 @@ class TestComplex {
 														ExtendedLambda.defaultSelectionFunction
 															.getClojureSymbol().toClojureCode(env, typeEnv), 
 														"nil"),
-										ClojureHelper.listNativeClojure(
+											ListNative.listNativeClojure(
 												impl1.toClojureCode(env, typeEnv), 
 												impl2.toClojureCode(env, typeEnv), 
 												impl3.toClojureCode(env, typeEnv)),
@@ -1098,7 +1098,7 @@ class TestComplex {
 														ExtendedLambda.defaultSelectionFunction
 															.getClojureSymbol().toClojureCode(env, typeEnv), 
 														"nil"),
-										ClojureHelper.listNativeClojure(
+											ListNative.listNativeClojure(
 												impl1.toClojureCode(env, typeEnv), 
 												impl2.toClojureCode(env, typeEnv), 
 												impl3.toClojureCode(env, typeEnv)),

@@ -1,19 +1,10 @@
-package velka.core.interpretation;
+package velka.util;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import velka.core.abstraction.Abstraction;
-import velka.core.abstraction.Operator;
-import velka.core.literal.LitComposite;
-import velka.types.Type;
-import velka.types.TypeAtom;
-import velka.util.AppendableException;
-import velka.util.NameGenerator;
-import velka.util.Pair;
 
 /**
  * Class containing static utilities used to help with generating clojure code
@@ -22,22 +13,6 @@ import velka.util.Pair;
  *
  */
 public class ClojureHelper {
-
-	/**
-	 * Adds type meta information to given clojure code piece
-	 * 
-	 * @param cljCode code to put the meta information to
-	 * @param type    type
-	 * @return clojure code with meta information
-	 */
-	public static String addTypeMetaInfo(String cljCode, Type type) {
-		try {
-			return ClojureHelper.addTypeMetaInfo_str(cljCode, type.clojureTypeRepresentation());
-		} catch (AppendableException e) {
-			e.printStackTrace();
-		}
-		return "";
-	}
 
 	/**
 	 * Adds type meta information to given clojure code piece
@@ -69,13 +44,10 @@ public class ClojureHelper {
 	 * @return string with code
 	 */
 	public static String makeDeclaration(String symbol) {
-		return "(declare " + symbol + ")\n";
+		String code = applyClojureFunction("declare", symbol);
+		return code;
 	}
 	
-	public static String makeOperatorDeclaration(Operator operator) {
-		return ClojureHelper.makeDeclaration(operator.getClojureSymbol().name);
-	}
-
 	/**
 	 * Creates dynamic declaration for given symbol
 	 * 
@@ -106,35 +78,6 @@ public class ClojureHelper {
 		return "(require '[" + namespace + "])\n";
 	}
 
-	/**
-	 * Creates definition for an abstraction in clojure
-	 * 
-	 * @param fnName name of the function
-	 * @param fn defined abstraction
-	 * @param env environment
-	 * @param typeEnv type environment
-	 * @return string with code
-	 * @throws AppendableException
-	 */
-	public static String makeLambdaDef(String fnName, Abstraction fn, Environment env, TypeEnvironment typeEnv)
-			throws AppendableException {
-		return "(def " + fnName + " " + fn.toClojureCode(env, typeEnv) + ")\n";
-	}
-	
-	/**
-	 * Creates definitions for operator 
-	 * 
-	 * @param operator defined operator
-	 * @param env environment
-	 * @param typeEnvtype environment
-	 * @return string with code
-	 * @throws AppendableException
-	 */
-	public static String makeOperatorDef(Operator operator, Environment env, TypeEnvironment typeEnv) 
-		throws AppendableException {
-		return makeLambdaDef(operator.getClojureSymbol().name, operator, env, typeEnv);
-	}
-	
 	public static String clojureVectorHelper(Collection<String> members) {
 		StringBuilder sb = new StringBuilder("[");
 		
@@ -312,17 +255,6 @@ public class ClojureHelper {
 	 */
 	public static String litCompositeHelper_str(String type, String value) {
 		return addTypeMetaInfo_str("[" + value + "]", type);
-	}
-	
-	/**
-	 * Creates code for composite literal (LitComposite) in clojure.
-	 * @param type type of composite literal
-	 * @param value value of the composite literal
-	 * @return string with code
-	 * @throws AppendableException if there is issue with compiling type into clojure
-	 */
-	public static String litCompositeHelper(Type type, String value) throws AppendableException {
-		return litCompositeHelper_str(type.clojureTypeRepresentation(), value);
 	}
 	
 	/**
@@ -530,39 +462,6 @@ public class ClojureHelper {
 	}
 	
 	/**
-	 * Creates code for ListNative value in clojure
-	 * @param members code for members of list
-	 * @return code for list native
-	 */
-	public static String listNativeClojure(Collection<String> members) {
-		StringBuilder sb = new StringBuilder("(lazy-seq ");
-		
-		sb.append("(list ");
-		
-		Iterator<String> i = members.iterator();
-		while(i.hasNext()) {
-			String element = i.next();
-			sb.append(element);
-			if(i.hasNext()) {
-				sb.append(" ");
-			}
-		}
-		
-		sb.append("))");
-		
-		return LitComposite.clojureValueToClojureLiteral(sb.toString(), TypeAtom.TypeListNative);
-	}
-	
-	/**
-	 * Creates code for ListNative value in clojure
-	 * @param members members of the list
-	 * @return code for list
-	 */
-	public static String listNativeClojure(String ...members) {
-		return ClojureHelper.listNativeClojure(Arrays.asList(members));
-	}
-	
-	/**
 	 * Gets inner value of literal
 	 * @param literalCode
 	 * @return
@@ -616,39 +515,6 @@ public class ClojureHelper {
 	public static String rebindGlobalVariable(String symbol, String value) {
 		return ClojureHelper.applyClojureFunction("alter-var-root", "#'" + symbol,
 				ClojureHelper.applyClojureFunction("constantly", value));
-	}
-	
-	/**
-	 * Creates record for atomic conversion map
-	 * 
-	 * @param fromType from type of conversion
-	 * @param toType to type of conversion
-	 * @param conversionCode code for conversion
-	 * @return String with code
-	 */
-	public static String makeAtomicConversionRecord(TypeAtom fromType, TypeAtom toType, String conversionCode) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(ClojureHelper.clojureVectorHelper(fromType.clojureTypeRepresentation(), toType.clojureTypeRepresentation()));
-		sb.append(" ");
-		sb.append(conversionCode);
-		return sb.toString();
-	}
-	
-	/**
-	 * Creates code to add conversion to global variable
-	 * 
-	 * @param fromType from type of conversion
-	 * @param toType to type of conversion
-	 * @param conversionCode code for conversion
-	 * @return String with code
-	 */
-	public static String addConversionToGlobalTable(TypeAtom fromType, TypeAtom toType, String conversionCode) {
-		String code = ClojureHelper.rebindGlobalVariable(ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
-				ClojureHelper.applyClojureFunction("assoc",
-						ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
-						ClojureHelper.makeAtomicConversionRecord(fromType, toType, conversionCode)));
-		
-		return code;
 	}
 	
 	/**
@@ -722,5 +588,63 @@ public class ClojureHelper {
 	@SafeVarargs
 	public static String addMetadata(String cljExpr, Pair<String, String> ...bindings) {
 		return addMetadata(cljExpr, Arrays.asList(bindings));
+	}
+	
+	/**
+	 * Creates code for clojure set
+	 * 
+	 * @param members clojure code of the set members
+	 * @return clojure code
+	 */
+	public static String clojureSetHelper(Collection<String> members) {
+		StringBuilder sb = new StringBuilder("#{");
+		
+		Iterator<String> i = members.iterator();
+		while(i.hasNext()) {
+			String current = i.next();
+			sb.append(current);
+			if(i.hasNext()) {
+				sb.append(" ");
+			}
+		}
+		sb.append("}");
+		return sb.toString();
+	}
+	
+	/**
+	 * Creates code for clojure set
+	 * 
+	 * @param members clojure code of the set members
+	 * @return clojure code
+	 */
+	public static String clojureSetHelper(String ...members) {
+		String code = clojureSetHelper(Arrays.asList(members));
+		return code;
+	}
+	
+	/**
+	 * Creates code that instantiates java class in clojure.
+	 * 
+	 * @param instantiated instantiated class
+	 * @param arguments arguments of the constructor
+	 * @return Clojure code
+	 */
+	public static String instantiateJavaClass(Class<? extends Object> instantiated, Collection<String> arguments) {
+		String code = applyClojureFunction(
+				instantiated.getName() + ".",
+				arguments);
+		return code;
+	}
+	
+	/**
+	 * Creates code that instantiates java class in clojure.
+	 * 
+	 * @param instantiated instantiated class
+	 * @param arguments arguments of the constructor
+	 * @return Clojure code
+	 */
+	public static String instantiateJavaClass(Class<? extends Object> instantiated, String ...arguments) {
+		String code = instantiateJavaClass(instantiated, Arrays.asList(arguments));
+		return code;
 	}
 }

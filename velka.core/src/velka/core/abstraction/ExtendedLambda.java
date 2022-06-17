@@ -17,8 +17,6 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
-import velka.core.interpretation.ClojureCoreSymbols;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.ListNative;
@@ -34,6 +32,8 @@ import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
+import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ThrowingFunction;
@@ -329,7 +329,7 @@ public class ExtendedLambda extends Abstraction {
 			implCodes.add(implWithCostCode);
 		}
 		
-		implsValue = ClojureHelper.listNativeClojure(implCodes);
+		implsValue = ListNative.listNativeClojure(implCodes);
 		
 		String selectionFunCode = this.selectionFunctionCode(env, typeEnv);
 		
