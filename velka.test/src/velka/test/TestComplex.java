@@ -349,7 +349,7 @@ class TestComplex {
 																new AbstractionApplication(new Symbol("head-list"),
 																		new Tuple(Arrays.asList(new Symbol("l")))))))),
 								env)),
-						env),
+						env, typeEnv),
 				env, typeEnv);
 
 		TestComplex.testInterpretString(

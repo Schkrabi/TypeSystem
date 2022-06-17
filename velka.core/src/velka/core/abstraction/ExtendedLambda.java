@@ -13,7 +13,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import velka.core.application.AbstractionApplication;
-import velka.core.exceptions.MalformedSelectionFunctionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -24,6 +23,7 @@ import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.ListNative;
 import velka.core.literal.LitComposite;
+import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
@@ -71,6 +71,11 @@ public class ExtendedLambda extends Abstraction {
 	protected ExtendedLambda(Map<? extends Lambda, Expression> implementations, Expression selectionFunction) {
 		this.implementations = new TreeMap<Lambda, Expression>(implementations);
 		this.selectionFunction = selectionFunction;
+	}
+	
+	protected ExtendedLambda(Map<? extends Lambda, Expression> implementations) {
+		this.implementations = new TreeMap<Lambda, Expression>(implementations);
+		this.selectionFunction = null;
 	}
 	
 	/**
@@ -299,6 +304,12 @@ public class ExtendedLambda extends Abstraction {
 		
 		return new ExtendedLambda(m, rankingFunction);
 	}
+	
+	public static ExtendedLambda makeExtendedLambda(Map<Lambda, Expression> implementations) {
+		Type.unifyMany(implementations.keySet().stream().map(x -> x.argsType).collect(Collectors.toSet()));
+		
+		return new ExtendedLambda(implementations);
+	}
 
 	@Override
 	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {		
@@ -346,19 +357,32 @@ public class ExtendedLambda extends Abstraction {
 	@Override
 	public Abstraction selectImplementation(Tuple args, Optional<Expression> selectionFunction, Environment env,
 			TypeEnvironment typeEnv) throws AppendableException {
-		AbstractionApplication selectionApplication = 
-				new AbstractionApplication(
-						selectionFunction.isPresent() ? selectionFunction.get() : this.selectionFunction,
-						new Tuple(
-								ListNative.collectionToListNative(this.implementations.keySet()),
-								ListNative.tupleToListNative(args)
-								));
-		
-		Expression impl = selectionApplication.interpret(env, typeEnv);
-		if(!(impl instanceof Abstraction)) {
-			throw new MalformedSelectionFunctionException(this, selectionApplication.fun, args, impl);
+		Lambda bestImplementation = null;
+		long bestCost = Long.MAX_VALUE;
+		for(Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
+			AbstractionApplication costComputation = new AbstractionApplication(e.getValue(), args);
+			Expression costExpression = costComputation.interpret(env, typeEnv);
+			
+			if(!(costExpression instanceof LitInteger)) {
+				throw new AppendableException("Cost function " 
+												+ e.getValue().toString()
+												+ " did not returned LitInteger, got: "
+												+ costExpression.toString()
+												+ " for implementation "
+												+ e.getKey().toString()
+												+ " in extended function "
+												+ this.toString());
+			}
+			
+			long cost = ((LitInteger)costExpression).value;
+			
+			if(cost < bestCost || bestImplementation == null) {
+				bestCost = cost;
+				bestImplementation = e.getKey();
+			}
 		}
-		return (Abstraction)impl;
+		
+		return bestImplementation;
 	}
 	
 	/**

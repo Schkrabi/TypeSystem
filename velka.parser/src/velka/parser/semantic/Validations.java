@@ -840,7 +840,7 @@ public class Validations {
 	 */
 	public static void validateExtend(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
 		throws AppendableException {
-		if(l.size() != 3) {
+		if(l.size() > 4 || l.size() < 3) {
 			throw new InvalidNumberOfArgsException(2, l.size() - 1);
 		}
 		

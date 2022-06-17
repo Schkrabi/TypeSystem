@@ -1,24 +1,20 @@
 package velka.core.application;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
 import velka.core.abstraction.ExtendedFunction;
-import velka.core.abstraction.ExtendedLambda;
 import velka.core.abstraction.Function;
 import velka.core.expression.Expression;
-import velka.core.expression.Tuple;
-import velka.core.interpretation.ClojureCoreSymbols;
-import velka.core.interpretation.ClojureHelper;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
+import velka.types.TypeAtom;
 import velka.util.AppendableException;
 import velka.util.Pair;
 
@@ -48,10 +44,68 @@ public class Extend extends Expression implements Comparable<Expression> {
 	 */
 	public final Expression implementation;
 	
+	/**
+	 * Cost function for implementation
+	 */
+	public final Optional<Expression> costFunction;
+	
 	public Extend(Expression extendedFunction, Expression implementation) {
 		super();
 		this.extendedFunction = extendedFunction;
 		this.implementation = implementation;
+		this.costFunction = Optional.empty();
+	}
+	
+	public Extend(Expression extendedFunction, Expression implementation, Expression costFunction) {
+		super();
+		this.extendedFunction = extendedFunction;
+		this.implementation = implementation;
+		this.costFunction = Optional.of(costFunction);
+	}
+	
+	private boolean isCostFunctionInferingCorrectly(Type implType, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		if(this.costFunction.isEmpty()) {
+			return true;
+		}
+		
+		Expression costF = costFunction.get();
+		Pair<Type, Substitution> infered = costF.infer(env, typeEnv);
+		
+		if(!infered.first.isApplicableType()){
+			throw new AppendableException("Cost function "
+					+ costF.toString() 
+					+ " does not infer to applicable type, got "
+					+ infered.first.toString()
+					+ " in "
+					+ this.toString());
+		}
+		TypeArrow costFunType = (TypeArrow)infered.first.removeRepresentationInformation();
+		
+		Optional<Substitution> o = Type.unifyTypes(costFunType.rtype, TypeAtom.TypeIntNative);
+		if(o.isEmpty()) {
+			throw new AppendableException("Cost function "
+					+ costF.toString()
+					+ " must return integer, got: "
+					+ costFunType.rtype.toString()
+					+ " in "
+					+ this.toString());
+		}
+		
+		TypeArrow implementationType = (TypeArrow)implType.removeRepresentationInformation();
+		o = Type.unifyTypes(costFunType.ltype, implementationType.ltype);
+		if(o.isEmpty()) {
+			throw new AppendableException("Cost function "
+					+ costF.toString()
+					+ " argument type "
+					+ costFunType.ltype.toString()
+					+ " is not unyfiable with implementation " 
+					+ this.implementation.toString()
+					+ " argument type "
+					+ implementationType.ltype.toString()
+					+ " in "
+					+ this.toString());
+		}
+		return true;
 	}
 	
 	@Override
@@ -80,39 +134,42 @@ public class Extend extends Expression implements Comparable<Expression> {
 		}
 		Function implementationIntp = (Function)implIntp;
 		
-		Set<Function> implementations = extendedFunctionIntp.getImplementationsAsFunctions();
-		implementations.add(implementationIntp);
+		Expression costFunction = this.getInterpretedCostFunction(env, typeEnv);
 		
-		@SuppressWarnings("unchecked")
+		Map<Function, Expression> implementations = extendedFunctionIntp.getImplementationsAsFunctions();
+		implementations.put(implementationIntp, costFunction);
+		
 		ExtendedFunction extendedFunction = 
 				ExtendedFunction.makeExtendedFunction(implementations, extendedFunctionIntp.creationEnvironment);
 		
 		return extendedFunction;
 	}
+	
+	/**
+	 * Gets interpreted cost function for this extend 
+	 * @param env interpretation environment
+	 * @param typeEnv type environment
+	 * @return Interpreted function
+	 * @throws AppendableException if anything goes wrong
+	 */
+	private Expression getInterpretedCostFunction(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		if(this.costFunction.isPresent()) {
+			return this.costFunction.get().interpret(env, typeEnv);
+		}
+		
+		Expression defaultCost = ((Function)this.implementation.interpret(env, typeEnv))
+				.defaultCostFunction().interpret(env, typeEnv);
+		
+		return defaultCost;
+	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Pair<Type, Substitution> extendedFunctionInfered = this.extendedFunction.infer(env, typeEnv);
-		Pair<Type, Substitution> implementationInfered = this.implementation.infer(env, typeEnv);
 		
-		Set<Type> representations;
-		if ((extendedFunctionInfered.first instanceof RepresentationOr)
-				&& ((RepresentationOr) extendedFunctionInfered.first).getRepresentations().stream()
-						.allMatch(x -> x instanceof TypeArrow)) {
-			representations = ((RepresentationOr)extendedFunctionInfered.first).getRepresentations();
-		}
-		else if(extendedFunctionInfered.first instanceof TypeArrow) {
-			representations = new TreeSet<Type>();
-			representations.add(extendedFunctionInfered.first);
-		}
-		else {
-			throw new AppendableException(
-					this.extendedFunction.toString()
-					+ " must infer to Representation Or of type arrows or type arrow, got: "
-					+ extendedFunctionInfered.first.toString()
-					+ " in "
-					+ this.toString());
-		}
+		Set<Type> representations = getExtendedFunctionRepresentations(extendedFunctionInfered);
+		
+		Pair<Type, Substitution> implementationInfered = this.implementation.infer(env, typeEnv);
 		
 		representations.add(implementationInfered.first);
 		
@@ -134,7 +191,38 @@ public class Extend extends Expression implements Comparable<Expression> {
 						+ this.toString());
 		}
 		
+		this.isCostFunctionInferingCorrectly(implementationInfered.first, env, typeEnv);
+		
 		return new Pair<Type, Substitution>(type, s.get());
+	}
+
+	/**
+	 * Gets representations of modified extended functions
+	 * @param extendedFunctionInfered inference result of extended function
+	 * @return Set of representations
+	 * @throws AppendableException if extended function is not valid
+	 */
+	private Set<Type> getExtendedFunctionRepresentations(Pair<Type, Substitution> extendedFunctionInfered)
+			throws AppendableException {
+		Set<Type> representations;
+		if ((extendedFunctionInfered.first instanceof RepresentationOr)
+				&& ((RepresentationOr) extendedFunctionInfered.first).getRepresentations().stream()
+						.allMatch(x -> x instanceof TypeArrow)) {
+			representations = ((RepresentationOr)extendedFunctionInfered.first).getRepresentations();
+		}
+		else if(extendedFunctionInfered.first instanceof TypeArrow) {
+			representations = new TreeSet<Type>();
+			representations.add(extendedFunctionInfered.first);
+		}
+		else {
+			throw new AppendableException(
+					this.extendedFunction.toString()
+					+ " must infer to Representation Or of type arrows or type arrow, got: "
+					+ extendedFunctionInfered.first.toString()
+					+ " in "
+					+ this.toString());
+		}
+		return representations;
 	}
 
 	@Override
@@ -152,7 +240,8 @@ public class Extend extends Expression implements Comparable<Expression> {
 	public boolean equals(Object other) {
 		if(other instanceof Extend) {
 			return this.extendedFunction.equals(((Extend)other).extendedFunction)
-					&& this.implementation.equals(((Extend)other).implementation);
+					&& this.implementation.equals(((Extend)other).implementation)
+					&& this.costFunction.equals(((Extend)other).costFunction);
 		}
 		return false;
 	}
@@ -166,6 +255,21 @@ public class Extend extends Expression implements Comparable<Expression> {
 				return cmp;
 			}
 			cmp = this.implementation.compareTo(o.implementation);
+			if(cmp != 0) {
+				return cmp;
+			}
+			
+			if(this.costFunction.isPresent()) {
+				if(o.costFunction.isPresent()) {
+					cmp = this.costFunction.get().compareTo(o.costFunction.get());
+				}
+				else {
+					cmp = 1;
+				}
+			}
+			else {
+				cmp = o.costFunction.isPresent() ? -1 : 0;
+			}
 			return cmp;
 		}
 		return super.compareTo(other);

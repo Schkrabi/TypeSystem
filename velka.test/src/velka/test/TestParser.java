@@ -176,6 +176,8 @@ class TestParser {
 		
 		this.testParse("(extend foo bar)",
 				new Extend(new Symbol("foo"), new Symbol("bar")));
+		this.testParse("(extend foo bar baz)",
+				new Extend(new Symbol("foo"), new Symbol("bar"), new Symbol("baz")));
 	}
 
 	@Test

@@ -326,7 +326,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 		
 		Lambda costFunction = new Lambda(
 				this.args,
-				argsType,
+				(TypeTuple)argsType.removeRepresentationInformation(),
 				new AbstractionApplication(
 						Operators.conversionCost,
 						new Tuple(this, this.args)));

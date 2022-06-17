@@ -1292,6 +1292,11 @@ public class SemanticParser {
 		Expression extendedFunction = SemanticParser.parseNode(specialFormList.get(1));
 		Expression implementation = SemanticParser.parseNode(specialFormList.get(2));
 		
+		if(specialFormList.size() == 4) {
+			Expression costFunction = SemanticParser.parseNode(specialFormList.get(3));
+			return new Extend(extendedFunction, implementation, costFunction);
+		}
+		
 		return new Extend(extendedFunction, implementation);
 	}
 }

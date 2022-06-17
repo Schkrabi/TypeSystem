@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -38,12 +39,23 @@ public class ExtendedFunction extends ExtendedLambda {
 		creationEnvironment = createdEnvironment;
 	}
 	
+	protected ExtendedFunction(Map<Function, Expression> implementations, Environment createdEnvironment) {
+		super(implementations);
+		this.creationEnvironment = createdEnvironment;
+	}
+	
 	/**
 	 * Gets shallow copy of implementations set as Functions
 	 * @return Set
 	 */
-	public Set<Function> getImplementationsAsFunctions(){
-		return this.implementations.keySet().stream().map(x -> (Function)x).collect(Collectors.toSet());
+	public Map<Function, Expression> getImplementationsAsFunctions(){
+		Map<Function, Expression> m = new TreeMap<Function, Expression>();
+		
+		for(Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
+			m.put((Function)e.getKey(), e.getValue());
+		}
+		
+		return m;
 	}
 
 	@Override
@@ -130,9 +142,9 @@ public class ExtendedFunction extends ExtendedLambda {
 	 *                             unify
 	 */
 	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
-			Environment createdEnvironment) throws AppendableException {
+			Environment createdEnvironment, TypeEnvironment typeEnv) throws AppendableException {
 		return ExtendedFunction.makeExtendedFunction(implementations, createdEnvironment,
-				ExtendedLambda.defaultSelectionFunction);
+				ExtendedLambda.defaultSelectionFunction, typeEnv);
 	}
 
 	/**
@@ -146,16 +158,32 @@ public class ExtendedFunction extends ExtendedLambda {
 	 *                             unify
 	 */
 	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
-			Environment createdEnvironment, Expression rankingFunction) throws AppendableException {
+			Environment createdEnvironment, Expression rankingFunction, TypeEnvironment typeEnv) 
+					throws AppendableException {
 		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
 		
 		Map<Function, Expression> m = new TreeMap<Function, Expression>();
 		for(Function f : implementations) {
-			Expression e = f.defaultCostFunction();
+			Expression e = f.defaultCostFunction().interpret(createdEnvironment, typeEnv);
 			m.put(f, e);
 		}
 		
 		return new ExtendedFunction(m, rankingFunction, createdEnvironment);
+	}
+	
+	/**
+	 * 
+	 * @param implementations
+	 * @param createdEnvironment
+	 * @return
+	 * @throws AppendableException
+	 */
+	public static ExtendedFunction makeExtendedFunction(
+			Map<Function, Expression> implementations, 
+			Environment createdEnvironment) throws AppendableException {
+		Type.unifyMany(implementations.keySet().stream().map(x -> x.argsType).collect(Collectors.toSet()));
+		
+		return new ExtendedFunction(implementations, createdEnvironment);
 	}
 
 	@Override

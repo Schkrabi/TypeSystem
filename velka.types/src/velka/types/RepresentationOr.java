@@ -250,7 +250,7 @@ public class RepresentationOr extends Type {
 	 * @return true or false.
 	 */
 	public boolean isApplicableType() {
-		return this.representations.stream().map(x -> x.isApplicableType()).reduce(true, Boolean::logicalAnd);
+		return this.representations.stream().allMatch(x -> x.isApplicableType());
 	}
 
 	@Override

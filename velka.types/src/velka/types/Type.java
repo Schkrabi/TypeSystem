@@ -186,4 +186,13 @@ public abstract class Type implements Comparable<Type> {
 		}
 		return t;
 	}
+	
+	/**
+	 * Removes all representation information from type.
+	 * @return Type with representation information removed and replaced with wildcards
+	 * @throws AppendableException unlikely
+	 */
+	public Type removeRepresentationInformation() throws AppendableException {
+		return this.map(t -> t instanceof TypeAtom ? new TypeAtom(((TypeAtom)t).name, TypeRepresentation.WILDCARD) : t);
+	}
 }

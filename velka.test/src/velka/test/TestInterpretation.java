@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -648,20 +650,20 @@ class TestInterpretation {
 				new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
 						new Tuple(Arrays.asList(new Symbol("y"))), new Symbol("y"), bound));
 
-		ExtendedFunction function = ExtendedFunction.makeExtendedFunction(implementations, bound);
+		ExtendedFunction function = ExtendedFunction.makeExtendedFunction(implementations, bound, typeEnv);
 
 		TestInterpretation.testReflexivity(function);
 
 		List<Function> tmpImpls = new LinkedList<Function>(implementations);
 		tmpImpls.remove(0);
-		TestInterpretation.testDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound));
+		TestInterpretation.testDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound, typeEnv));
 
 		tmpImpls = new LinkedList<Function>(implementations);
 		tmpImpls.add(new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Symbol("y"))), new Symbol("y"), top));
-		TestInterpretation.testDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound));
+		TestInterpretation.testDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound, typeEnv));
 
-		TestInterpretation.testDifference(function, ExtendedFunction.makeExtendedFunction(implementations, top));
+		TestInterpretation.testDifference(function, ExtendedFunction.makeExtendedFunction(implementations, top, typeEnv));
 
 		TestInterpretation.testDifference(function, Expression.EMPTY_EXPRESSION);
 
@@ -683,7 +685,7 @@ class TestInterpretation {
 								new Tuple(Arrays.asList(new Symbol("x"))), new Symbol("x"), top),
 						new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)),
 								new Tuple(Arrays.asList(new Symbol("x"))), new Symbol("x"), top)),
-						bound)
+						bound, typeEnv)
 				.infer(top, typeEnv));
 	}
 
@@ -1548,44 +1550,64 @@ class TestInterpretation {
 	}
 
 	@Test
-	@DisplayName("Test custom ranking function interpretation")
-	void testCustomRanking() throws AppendableException {
-		Lambda impl1 = new Lambda(new Tuple(new Symbol("a")), new TypeTuple(TypeAtom.TypeIntNative),
+	@DisplayName("Test custom cost function")
+	void testCustomCostFunction() throws AppendableException {
+		Tuple elambda_args = new Tuple(new Symbol("a"));
+		
+		Lambda impl1 = new Lambda(
+				elambda_args, 
+				new TypeTuple(TypeAtom.TypeIntNative),
 				new LitString("Int Native"));
-		Lambda impl2 = new Lambda(new Tuple(new Symbol("a")), new TypeTuple(TypeAtom.TypeIntString),
+		Lambda impl2 = new Lambda(
+				elambda_args, 
+				new TypeTuple(TypeAtom.TypeIntString),
 				new LitString("Int String"));
-		Lambda impl3 = new Lambda(new Tuple(new Symbol("a")), new TypeTuple(TypeAtom.TypeIntRoman),
+		Lambda impl3 = new Lambda(
+				elambda_args, 
+				new TypeTuple(TypeAtom.TypeIntRoman),
 				new LitString("Int Roman"));
-
-		ExtendedLambda elambda_defaultSelectionFunction = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3));
-
-		Lambda selectionFunction = (Lambda) TestInterpretation.parseString("(lambda (impls args) "
-				+ "(head-list-native (filter-list-native impls (lambda (x) (instance-of-representation x ((Int:Roman) #> String:Native))))))");
-
-		Lambda selectionFunction2 = (Lambda) TestInterpretation.parseString("(lambda (impls args) "
-				+ "(head-list-native (filter-list-native impls (lambda (x) (instance-of-representation x ((Int:String) #> String:Native))))))");
-
-		ExtendedLambda elambda_customSelectionFunction = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3),
-				selectionFunction);
-
-		Tuple args = new Tuple(new LitInteger(42));
-
+		
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Tuple args = new Tuple(new LitInteger(42));
 
-		AbstractionApplication app_defElambda_defSelectionFunction = new AbstractionApplication(elambda_defaultSelectionFunction, args);
-		TestInterpretation.testInterpretation(app_defElambda_defSelectionFunction, new LitString("Int Native"), env, typeEnv);
+		ExtendedLambda elambda_defaultCostFunction = 
+				ExtendedLambda.makeExtendedLambda(Arrays.asList(
+						impl1, 
+						impl2, 
+						impl3));
+		AbstractionApplication app_defElambda_defSelectionFunction = 
+				new AbstractionApplication(
+						elambda_defaultCostFunction, 
+						args);
+		TestInterpretation.testInterpretation(
+				app_defElambda_defSelectionFunction, 
+				new LitString("Int Native"), 
+				env, 
+				typeEnv);
+		
+		Lambda costFunction = new Lambda(
+				elambda_args,
+				new TypeTuple(TypeAtom.TypeInt),
+				new LitInteger(Long.MIN_VALUE));
 
-		AbstractionApplication app_defElambda_cusSelectionFunction = new AbstractionApplication(elambda_defaultSelectionFunction, args,
-				selectionFunction);
-		TestInterpretation.testInterpretation(app_defElambda_cusSelectionFunction, new LitString("Int Roman"), env, typeEnv);
+		Map<Lambda, Expression> m = new TreeMap<Lambda, Expression>();
+		m.put(impl1, impl1.defaultCostFunction());
+		m.put(impl2, costFunction);
+		m.put(impl3, impl3.defaultCostFunction());
+		
+		ExtendedLambda elambda_customCostFunction = 
+				ExtendedLambda.makeExtendedLambda(m);
 
-		AbstractionApplication app_cusElambda_defSelectionFunction = new AbstractionApplication(elambda_customSelectionFunction, args);
-		TestInterpretation.testInterpretation(app_cusElambda_defSelectionFunction, new LitString("Int Roman"), env, typeEnv);
-
-		AbstractionApplication app_cusElambda_cusSelectionFunction = new AbstractionApplication(elambda_customSelectionFunction, args,
-				selectionFunction2);
-		TestInterpretation.testInterpretation(app_cusElambda_cusSelectionFunction, new LitString("Int String"), env, typeEnv);
+		AbstractionApplication app_customCostFunction = 
+				new AbstractionApplication(
+						elambda_customCostFunction, 
+						args);
+		TestInterpretation.testInterpretation(
+				app_customCostFunction, 
+				new LitString("Int String"), 
+				env, 
+				typeEnv);
 	}
 
 	@Test
@@ -2206,20 +2228,86 @@ class TestInterpretation {
 						new TypeArrow(new TypeTuple(TypeAtom.TypeIntString), TypeAtom.TypeStringNative)), 
 				extend);
 		
+		Map<Function, Expression> m = new TreeMap<Function, Expression>();
+		
+		Lambda impl = new Lambda(
+				elambda_args,
+				new TypeTuple(TypeAtom.TypeIntNative),
+				new LitString("foo"));
+		m.put((Function) impl.interpret(env, typeEnv),
+			  new Function(new TypeTuple(TypeAtom.TypeInt),
+					  elambda_args,
+					  new AbstractionApplication(
+							  Operators.conversionCost,
+							  new Tuple(impl, elambda_args)),
+					  env));
+		
+		impl = new Lambda(
+				elambda_args,
+				new TypeTuple(TypeAtom.TypeIntString),
+				new LitString("bar"));
+		m.put((Function) impl.interpret(env, typeEnv),
+			  new Function(new TypeTuple(TypeAtom.TypeInt),
+					  elambda_args,
+					  new AbstractionApplication(
+							  Operators.conversionCost,
+							  new Tuple(impl, elambda_args)),
+					  env));
+		
 		testInterpretation(
 				extend, 
 				ExtendedFunction.makeExtendedFunction(
-						Arrays.asList(
-								new Function(new TypeTuple(TypeAtom.TypeIntNative),
-										elambda_args,
-										new LitString("foo"),
-										env),
-								new Function(new TypeTuple(TypeAtom.TypeIntString),
-										elambda_args,
-										new LitString("bar"),
-										env)),
+						m,
 						env), 
 				env, 
+				typeEnv);
+		
+		
+		Lambda costLambda = new Lambda(
+				elambda_args,
+				new TypeTuple(TypeAtom.TypeInt),
+				new LitInteger(0));
+		Extend extendWithCost = new Extend(elambda, implementation, costLambda);
+		
+		testReflexivity(extendWithCost);
+		testDifference(extend, extendWithCost);
+		
+		p = extendWithCost.infer(env, typeEnv);
+		testInference(p, 
+				RepresentationOr.makeRepresentationOr(
+						new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeStringNative),
+						new TypeArrow(new TypeTuple(TypeAtom.TypeIntString), TypeAtom.TypeStringNative)), 
+				extendWithCost);
+		
+		
+		Map<Function, Expression> expectedImpls = new TreeMap<Function, Expression>();
+		impl = new Lambda(
+				elambda_args,
+				new TypeTuple(TypeAtom.TypeIntNative),
+				new LitString("foo"));
+		expectedImpls.put(
+				(Function) impl.interpret(env, typeEnv),
+				new Function(new TypeTuple(TypeAtom.TypeInt),
+						elambda_args,
+						new AbstractionApplication(Operators.conversionCost,
+								  new Tuple(impl, elambda_args)),
+						env));
+		
+		impl = new Lambda(
+				elambda_args,
+				new TypeTuple(TypeAtom.TypeIntString),
+				new LitString("bar"));
+		expectedImpls.put(
+				(Function) impl.interpret(env, typeEnv),
+				new Function(new TypeTuple(TypeAtom.TypeInt),
+						elambda_args,
+						new LitInteger(0),
+						env));
+		
+		testInterpretation(
+				extendWithCost,
+				ExtendedFunction.makeExtendedFunction(expectedImpls, env),
+				env,
 				typeEnv);
 	}
 
