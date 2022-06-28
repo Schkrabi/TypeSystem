@@ -4,14 +4,20 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import velka.core.abstraction.ExtendedLambda;
 import velka.core.abstraction.Operator;
 import velka.core.abstraction.Operators;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.types.Type;
+import velka.types.TypeArrow;
+import velka.types.TypeAtom;
+import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
+import velka.util.NameGenerator;
 
 /**
  * This class is generating velka.clojure.operators namespace file
@@ -34,6 +40,21 @@ public class VelkaClojureOperators {
 	 * Relative file path
 	 */
 	public static final Path RELATIVE_PATH = VELKA_CLOJURE_OPERATORS_PATH.resolve(VELKA_CLOJURE_OPERAOTRS_NAME);
+	
+	private static final String defaultCostFunctionDef_fn = "_fn";
+	private static final String defaultCostFunctionDef_args = "_args";
+	public static final String defaultCostFunctionDef =
+			ClojureHelper.clojureDefnHelper(
+					Operators.defaultCostFunction,
+					Arrays.asList(defaultCostFunctionDef_fn),
+						Type.addTypeMetaInfo(
+							ClojureHelper.fnHelper(
+									Arrays.asList("& " + defaultCostFunctionDef_args),
+									ClojureHelper.applyVelkaFunction(
+											Operators.conversionCostSym_full,
+											defaultCostFunctionDef_fn,
+											ClojureHelper.tupleHelper_str(defaultCostFunctionDef_args))),
+						new TypeArrow(new TypeVariable(NameGenerator.next()), TypeAtom.TypeIntNative)));
 
 	/**
 	 * Generates clojure code for definitions of velka.clojure.operators namespace
@@ -88,6 +109,7 @@ public class VelkaClojureOperators {
 		sb.append(Operator.makeOperatorDeclaration(Operators.doubleLesserThan));
 		sb.append(Operator.makeOperatorDeclaration(Operators.modulo));
 		sb.append(Operator.makeOperatorDeclaration(Operators.conversionCost));
+		sb.append(ClojureHelper.makeDeclaration(Operators.defaultCostFunction));
 
 		Environment env = Environment.initTopLevelEnvironment();
 		try {
@@ -133,6 +155,7 @@ public class VelkaClojureOperators {
 			sb.append(Operator.makeOperatorDef(Operators.doubleLesserThan, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.modulo, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.conversionCost, env, typeEnv));
+			sb.append("\n" + defaultCostFunctionDef);
 			
 		} catch (AppendableException e) {
 			System.err.println("Error generating velka.clojure.operaotrs: " + e.getMessage());

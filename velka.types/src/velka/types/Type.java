@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import velka.util.ClojureHelper;
 import velka.types.Type;
@@ -24,6 +25,14 @@ public abstract class Type implements Comparable<Type> {
 	 * @return
 	 */
 	public abstract Set<TypeVariable> getVariables();
+	
+	/**
+	 * Returns true if this type contains any type variables, returns false otherwise.
+	 * @return true or false.
+	 */
+	public boolean hasVariables() {
+		return !this.getVariables().isEmpty();
+	}
 
 	/**
 	 * Applies substitution to this type
@@ -171,6 +180,68 @@ public abstract class Type implements Comparable<Type> {
 	 * @return type with applied function
 	 */
 	public abstract Type map(java.util.function.Function<Type, Type> fun) throws AppendableException;
+	
+	/**
+	 * Maps and reduces type to a single value
+	 * @param <R> Type of value that reduce will return
+	 * @param mapFun maps type atoms to specified value for reduction
+	 * @param combiner combines two results
+	 * @param terminator initial value to combine with
+	 * @return an R value
+	 * @throws AppendableException
+	 */
+	public abstract <R> R reduce(
+			java.util.function.Function<TerminalType, R> mapFun, 
+			java.util.function.BinaryOperator<R> combiner,
+			R terminator) throws AppendableException;
+	
+	protected abstract <R> R doMap2AndReduce(
+			Type other,
+			java.util.function.BiFunction<Type, Type, R> mapFun,
+			java.util.function.BinaryOperator<R> combinator,
+			R terminator) throws AppendableException;
+	
+	public <R> R map2AndReduce(
+			Type other,
+			java.util.function.BiFunction<Type, Type, R> mapFun,
+			java.util.function.BinaryOperator<R> combinator,
+			R terminator) throws AppendableException {
+		if(other instanceof RepresentationOr) {
+			return other.map2AndReduce(this, mapFun, combinator, terminator);
+		}
+		
+		return this.doMap2AndReduce(other, mapFun, combinator, terminator);
+	}
+	
+	/**
+	 * Indicates whether this type can be converted to other
+	 * @param other other type
+	 * @param atomCheck binary function that checks if type atoms can be converted to one another
+	 * @return true if this type can be converted to other, false otherwise
+	 */
+	public boolean canConvertTo(Type other, BiFunction<TypeAtom, TypeAtom, Boolean> atomCheck) {
+		if(other instanceof TypeVariable) {
+			return true;
+		}
+		if(other instanceof RepresentationOr) {
+			for(Type t : ((RepresentationOr)other).getRepresentations()) {
+				if(this.canConvertTo(t, atomCheck)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		return doCanConvertTo(other, atomCheck);
+	}
+	
+	/**
+	 * Worker method for canConvertTo for subclasses
+	 * @param other other type
+	 * @param atomCheck binary function that checks if type atoms can be converted to one another
+	 * @return true if this type can be converted to other, false otherwise
+	 */
+	public abstract boolean doCanConvertTo(Type other, BiFunction<TypeAtom, TypeAtom, Boolean> atomCheck);
 	
 	/**
 	 * Replaces all type variables with new unused names

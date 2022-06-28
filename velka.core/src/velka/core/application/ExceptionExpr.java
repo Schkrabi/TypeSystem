@@ -3,7 +3,6 @@ package velka.core.application;
 import java.util.Arrays;
 import java.util.Optional;
 
-import velka.core.conversions.Conversions;
 import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
@@ -48,8 +47,7 @@ public class ExceptionExpr extends SpecialFormApplication {
 		Tuple iArgs = (Tuple)this.args.interpret(env, typeEnv);
 		Expression iArg = iArgs.get(0);
 		if(!(iArg instanceof LitString)) {
-			Pair<Type, Substitution> inf = iArg.infer(env, typeEnv);
-			iArg = Conversions.convert(inf.first, iArg, TypeAtom.TypeStringNative, typeEnv);
+			iArg = iArg.convert(TypeAtom.TypeStringNative, env, typeEnv);
 			iArg = iArg.interpret(env, typeEnv);
 		}
 		

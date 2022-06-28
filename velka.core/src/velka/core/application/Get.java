@@ -1,6 +1,5 @@
 package velka.core.application;
 
-import velka.core.conversions.Conversions;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
@@ -57,8 +56,7 @@ public class Get extends SpecialFormApplication {
 		if(expressionIndex instanceof LitInteger) {
 			index = (LitInteger)expressionIndex;
 		}else {
-			Pair<Type, Substitution> inf = expressionIndex.infer(env, typeEnv);
-			Expression c = Conversions.convert(inf.first, expressionIndex, TypeAtom.TypeIntNative, typeEnv);
+			Expression c = expressionIndex.convert(TypeAtom.TypeIntNative, env, typeEnv);
 			c = c.interpret(env, typeEnv);
 			
 			if(!(c instanceof LitInteger)) {

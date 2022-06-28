@@ -1632,6 +1632,9 @@ public final class Operators {
 			return "mod";
 		}
 	};
+	
+	public static final String conversionCostSym = "converison-cost";
+	public static final String conversionCostSym_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, conversionCostSym);
 
 	/**
 	 * Operator for computing conversion cost
@@ -1688,7 +1691,7 @@ public final class Operators {
 
 		@Override
 		public Symbol getClojureSymbol() {
-			return new Symbol("converison-cost", NAMESPACE);
+			return new Symbol(conversionCostSym, NAMESPACE);
 		}
 
 		@Override
@@ -1757,4 +1760,7 @@ public final class Operators {
 			return "conversion-cost";
 		}
 	};
+	
+	public static final String defaultCostFunction = "default-cost-function";
+	public static final String defaultCostFunction_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, defaultCostFunction);
 }

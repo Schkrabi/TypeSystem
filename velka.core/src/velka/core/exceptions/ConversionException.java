@@ -16,22 +16,17 @@ public class ConversionException extends AppendableException {
 	 */
 	private static final long serialVersionUID = -695682878010968390L;
 	/**
-	 * Type from which conversion was attempted
-	 */
-	public final Type fromType;
-	/**
 	 * Type to which conversion was attempted
 	 */
-	public final Type toType;
+	public final Type to;
 	/**
 	 * Expression which should have been converted
 	 */
 	public final Expression converted;
 
-	public ConversionException(Type fromType, Type toType, Expression converted) {
-		super("Trying to convert uncovertable types " + fromType.toString() + " to " + toType.toString());
-		this.fromType = fromType;
-		this.toType = toType;
+	public ConversionException(Type to, Expression converted) {
+		super("Cannot convert " + converted.toString() + " to " + to.toString());
+		this.to = to;
 		this.converted = converted;
 	}
 }

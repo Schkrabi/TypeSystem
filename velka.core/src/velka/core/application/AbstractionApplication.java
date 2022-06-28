@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import velka.core.abstraction.Abstraction;
-import velka.core.conversions.Conversions;
 import velka.core.exceptions.InvalidNumberOfArgumentsException;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
@@ -94,7 +93,7 @@ public class AbstractionApplication extends Application {
 			throw new InvalidNumberOfArgumentsException(expectedNumberOfArgs, iArgs, this);
 		}
 
-		Expression cArgs = Conversions.convert(iArgsInfered.first, iArgs, abstArgsType, typeEnv);
+		Expression cArgs = iArgs.convert(abstArgsType, env, typeEnv);
 		Tuple cArgsTuple = (Tuple) cArgs.interpret(env, typeEnv);
 
 		// Finally evaluate application
@@ -256,5 +255,12 @@ public class AbstractionApplication extends Application {
 	@Override
 	protected String applicatedToString() {
 		return this.fun.toString();
+	}
+
+	@Override
+	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		Expression intprt = this.interpret(env, typeEnv);
+		return intprt.convert(to, env, typeEnv);
 	}
 }

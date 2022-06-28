@@ -15,8 +15,8 @@ import velka.clojure.langbase.VelkaClojureLinkedList;
 import velka.clojure.langbase.VelkaClojureList;
 import velka.clojure.langbase.VelkaClojureOperators;
 import velka.core.abstraction.ConstructorOperators;
+import velka.core.abstraction.ConversionOperators;
 import velka.core.abstraction.Operators;
-import velka.core.conversions.Conversions;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
@@ -79,7 +79,7 @@ public class ClojureCodeGenerator {
 		sb.append(ClojureHelper.requireNamespace(Operators.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(ListNative.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(ConstructorOperators.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(Conversions.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(ConversionOperators.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(JavaArrayList.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(JavaLinkedList.NAMESPACE));
 

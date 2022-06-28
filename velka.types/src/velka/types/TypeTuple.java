@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,6 +44,10 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	
 	public TypeTuple(Type ...types) {
 		this.values = new Vector<Type>(Arrays.asList(types));
+	}
+	
+	public TypeTuple(Stream<? extends Type> values) {
+		this.values = new Vector<Type>(values.collect(Collectors.toList()));
 	}
 
 	private TypeTuple() {
@@ -316,5 +322,66 @@ public class TypeTuple extends Type implements Iterable<Type> {
 			}
 			throw re;
 		}
+	}
+
+	@Override
+	public <R> R reduce(Function<TerminalType, R> mapFun, BinaryOperator<R> combiner, R terminator)
+			throws AppendableException {
+		R agg = terminator;
+		
+		for(Type t : this) {
+			R current = t.reduce(mapFun, combiner, terminator);
+			agg = combiner.apply(agg, current);
+		}
+		
+		return agg;
+	}
+
+	@Override
+	protected <R> R doMap2AndReduce(Type other, BiFunction<Type, Type, R> mapFun, BinaryOperator<R> combinator,
+			R terminator) throws AppendableException {
+		if(!(other instanceof TypeTuple)) {
+			throw new AppendableException("Cannot map2AndReduce " + this.toString() + " with " + other.toString());
+		}
+		TypeTuple o = (TypeTuple)other;
+		if(this.size() != o.size()) {
+			throw new AppendableException("Cannot map2AndReduce " + this.toString() + " with " + other.toString());
+		}
+		
+		R agg = terminator;
+		Iterator<Type> it_this = this.iterator();
+		Iterator<Type> it_other = o.iterator();
+		
+		while(it_this.hasNext()) {
+			Type c_this = it_this.next();
+			Type c_other = it_other.next();
+			R current = c_this.map2AndReduce(c_other, mapFun, combinator, terminator);
+			agg = combinator.apply(agg, current);
+		}
+		
+		return agg;
+	}
+
+	@Override
+	public boolean doCanConvertTo(Type other, BiFunction<TypeAtom, TypeAtom, Boolean> atomCheck) {
+		if(!(other instanceof TypeTuple)) {
+			return false;
+		}
+		TypeTuple o = (TypeTuple)other;
+		if(this.size() != o.size()) {
+			return false;
+		}
+		
+		Iterator<Type> it_this = this.iterator();
+		Iterator<Type> it_other = o.iterator();
+
+		while(it_this.hasNext()) {
+			Type c_this = it_this.next();
+			Type c_other = it_other.next();
+			if(!c_this.canConvertTo(c_other, atomCheck)) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

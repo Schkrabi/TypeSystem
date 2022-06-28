@@ -14,12 +14,12 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.BiFunction;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import velka.core.abstraction.Lambda;
-import velka.core.conversions.Conversions;
 import velka.core.exceptions.ConversionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -55,7 +55,7 @@ class TestTypes {
 			new TypeNotRecognizedException("test");
 			new TypesDoesNotUnifyException(TypeAtom.TypeInt, TypeAtom.TypeBool);
 			new UnexpectedTypeException(TypeAtom.TypeInt, TypeArrow.class);
-			new ConversionException(TypeAtom.TypeInt, TypeAtom.TypeBool, Expression.EMPTY_EXPRESSION);
+			new ConversionException(TypeAtom.TypeBool, Expression.EMPTY_EXPRESSION);
 		});
 	}
 
@@ -130,7 +130,6 @@ class TestTypes {
 		TestTypes.testDifference(variable, TypeTuple.EMPTY_TUPLE);
 
 		TestTypes.testGetUnconstrainedVariables(variable, Arrays.asList(new TypeVariable("x")));
-		TestTypes.testConvertTo(variable, Expression.EMPTY_EXPRESSION, TypeAtom.TypeInt, Expression.EMPTY_EXPRESSION);
 
 		TestTypes.testApply(variable, Substitution.EMPTY, variable);
 		TestTypes.testApply(variable,
@@ -181,13 +180,11 @@ class TestTypes {
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		assertThrows(ConversionException.class,
-				() -> Conversions.convert(tuple,
-						new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
-						TypeAtom.TypeInt, typeEnv));
+				() -> (new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)))
+						.convert(TypeAtom.TypeInt, env, typeEnv));
 		assertThrows(ConversionException.class,
-				() -> Conversions.convert(tuple,
-						new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString)), typeEnv));
+				() -> (new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)))
+						.convert(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString)), env, typeEnv));
 
 		TestTypes.testApply(tuple,
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),
@@ -224,10 +221,12 @@ class TestTypes {
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		Expression e = Conversions.convert(typeArrow,
-				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Symbol("x")),
-				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman), typeEnv);
+		Expression e = 
+				(new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
+						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Symbol("x")))
+					.convert(new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman), 
+							env, 
+							typeEnv);
 
 		assertTrue(e instanceof Lambda);
 
@@ -236,7 +235,7 @@ class TestTypes {
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman));
 
 		assertThrows(ConversionException.class,
-				() -> Conversions.convert(typeArrow, Expression.EMPTY_EXPRESSION, TypeAtom.TypeInt, typeEnv));
+				() -> Expression.EMPTY_EXPRESSION.convert(TypeAtom.TypeInt, env, typeEnv));
 
 		TestTypes.testApply(new TypeArrow(TypeAtom.TypeBool, new TypeVariable("a")),
 				new Substitution(
@@ -299,14 +298,14 @@ class TestTypes {
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		assertThrows(ConversionException.class, () -> Conversions.convert(atom, Expression.EMPTY_EXPRESSION,
-				new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt), typeEnv));
+		assertThrows(ConversionException.class, 
+				() -> Expression.EMPTY_EXPRESSION.convert(new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt), env, typeEnv));
 		assertThrows(ConversionException.class,
-				() -> Conversions.convert(atom, Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntString, typeEnv));
+				() -> Expression.EMPTY_EXPRESSION.convert(TypeAtom.TypeIntString, env, typeEnv));
 		assertThrows(ConversionException.class,
-				() -> Conversions.convert((new TypeAtom(new TypeName("Test"), TypeRepresentation.NATIVE)),
-						Expression.EMPTY_EXPRESSION, new TypeAtom(new TypeName("Test"), TypeRepresentation.STRING),
-						typeEnv));
+				() -> Expression.EMPTY_EXPRESSION.convert(
+						new TypeAtom(new TypeName("Test"), TypeRepresentation.STRING),
+						env, typeEnv));
 
 		TestTypes.testApply(TypeAtom.TypeInt,
 				new Substitution(
@@ -350,12 +349,6 @@ class TestTypes {
 		TestTypes.testDifference(ror, TypeTuple.EMPTY_TUPLE);
 
 		TestTypes.testGetUnconstrainedVariables(ror, Arrays.asList());
-
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-
-		assertEquals(Expression.EMPTY_EXPRESSION,
-				Conversions.convert(ror, Expression.EMPTY_EXPRESSION, TypeAtom.TypeIntRoman, typeEnv));
 
 		TestTypes.testApply(
 				RepresentationOr.makeRepresentationOr(
@@ -432,6 +425,56 @@ class TestTypes {
 						new Pair<TypeVariable, Type>(new TypeVariable("y"), RepresentationOr.makeRepresentationOr(
 								Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeIntNative))))));
 	}
+	
+	@Test
+	@DisplayName("canConvertTo test")
+	void canCovertToTest() throws AppendableException {
+		BiFunction<TypeAtom, TypeAtom, Boolean> atomChecker = 
+				(t, o) -> t.name.equals(o.name);
+				
+		assertEquals(TypeAtom.TypeIntNative.canConvertTo(TypeAtom.TypeIntString, atomChecker), true);
+		assertEquals(TypeAtom.TypeIntNative.canConvertTo(TypeAtom.TypeStringNative, atomChecker), false);
+		assertEquals(
+				TypeAtom.TypeIntNative.canConvertTo(new TypeVariable("A"), atomChecker),
+				true);
+		assertEquals(
+				(new TypeVariable("A")).canConvertTo(TypeAtom.TypeIntNative, atomChecker),
+				true);
+		assertEquals(
+				(new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative))
+					.canConvertTo(new TypeTuple(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman), atomChecker),
+				true);
+		assertEquals(
+				(new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative))
+					.canConvertTo(new TypeTuple(TypeAtom.TypeIntString, TypeAtom.TypeStringNative), atomChecker),
+				false);
+		assertEquals(
+				(new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative))
+					.canConvertTo(new TypeArrow(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString), atomChecker),
+				true);
+		assertEquals(
+				(new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative))
+					.canConvertTo(new TypeArrow(TypeAtom.TypeStringNative, TypeAtom.TypeIntString), atomChecker),
+				false);
+		assertEquals(
+				RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)
+					.canConvertTo(TypeAtom.TypeIntNative, atomChecker),
+				true);
+		assertEquals(
+				RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)
+					.canConvertTo(TypeAtom.TypeStringNative, atomChecker),
+				false);
+		assertEquals(
+				TypeAtom.TypeIntNative.canConvertTo(
+						RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString), 
+						atomChecker),
+				true);
+		assertEquals(
+				TypeAtom.TypeStringNative.canConvertTo(
+						RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString), 
+						atomChecker),
+				false);
+	}
 
 	static void testReflexivity(Type type) {
 		assertNotNull(type);
@@ -469,7 +512,8 @@ class TestTypes {
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		Expression converted = Conversions.convert(type, from, to, typeEnv).interpret(env, typeEnv);
+		Expression converted = 
+				from.convert(to, env, typeEnv).interpret(env, typeEnv);
 
 		assertEquals(converted, expected);
 	}

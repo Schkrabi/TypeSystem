@@ -3,7 +3,7 @@ package velka.types;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
@@ -16,7 +16,7 @@ import velka.util.AppendableException;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class TypeAtom extends Type {
+public class TypeAtom extends TerminalType {
 
 	public final TypeName name;
 	public final TypeRepresentation representation;
@@ -108,6 +108,12 @@ public class TypeAtom extends Type {
 			if (this.equals(other)) {
 				return Optional.of(Substitution.EMPTY);
 			}
+			TypeAtom o = (TypeAtom)other;
+			if(this.name.equals(o.name)
+					&& (this.representation.equals(TypeRepresentation.WILDCARD)
+							|| o.representation.equals(TypeRepresentation.WILDCARD))) {
+				return Optional.of(Substitution.EMPTY);
+			}
 		}
 		return Optional.empty();
 	}
@@ -171,11 +177,6 @@ public class TypeAtom extends Type {
 	public static final TypeAtom TypeTypeNative = new TypeAtom(TypeName.TYPE, TypeRepresentation.NATIVE);
 
 	@Override
-	public Type map(Function<Type, Type> fun) throws AppendableException {
-		return fun.apply(this);
-	}
-
-	@Override
 	public Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
 		return this;
 	}
@@ -211,5 +212,16 @@ public class TypeAtom extends Type {
 		sb.append(" ");
 		sb.append(conversionCode);
 		return sb.toString();
+	}
+
+	@Override
+	public boolean doCanConvertTo(Type other, BiFunction<TypeAtom, TypeAtom, Boolean> atomCheck) {
+		if(!(other instanceof TypeAtom)) {
+			return false;
+		}
+		if(this.equals(other)) {
+			return true;
+		}
+		return atomCheck.apply(this, (TypeAtom) other);
 	}
 }

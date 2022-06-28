@@ -1,10 +1,13 @@
 package velka.core.literal;
 
+import velka.core.exceptions.ConversionException;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
+import velka.types.TypeAtom;
+import velka.types.TypeRepresentation;
 import velka.util.AppendableException;
 import velka.util.Pair;
 
@@ -38,5 +41,26 @@ public abstract class Literal extends Expression {
 	 */
 	public static String clojureValueToClojureLiteral(String clojureValue, Type type) {
 		return Type.addTypeMetaInfo("[" + clojureValue + "]", type);
+	}
+	
+	@Override
+	public Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		if(!(to instanceof TypeAtom)) {
+			throw new ConversionException(to, this);
+		}		
+		TypeAtom to_typeAtom = (TypeAtom)to;
+		Pair<Type, Substitution> p = this.infer(env, typeEnv);
+		TypeAtom myType = (TypeAtom)p.first;
+		
+		if(!TypeAtom.isSameBasicType(myType, to_typeAtom)) {
+			throw new ConversionException(to, this);
+		}
+		if(to_typeAtom.representation.equals(TypeRepresentation.WILDCARD)) {
+			return this;
+		}
+		
+		Expression e = typeEnv.convertTo(this, myType, to_typeAtom);
+		
+		return e.interpret(env, typeEnv);
 	}
 }

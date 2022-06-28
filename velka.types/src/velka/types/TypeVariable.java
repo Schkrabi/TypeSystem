@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
@@ -21,7 +21,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class TypeVariable extends Type {
+public class TypeVariable extends TerminalType {
 	/**
 	 * Name of the variable
 	 */
@@ -112,11 +112,6 @@ public class TypeVariable extends Type {
 	}
 
 	@Override
-	public Type map(Function<Type, Type> fun) throws AppendableException {
-		return fun.apply(this);
-	}
-
-	@Override
 	public Type replaceVariable(TypeVariable replaced, TypeVariable replacee) {
 		if(this.equals(replaced)) {
 			return replacee;
@@ -137,5 +132,10 @@ public class TypeVariable extends Type {
 			m.put(tv, new TypeVariable(NameGenerator.next()));
 		}
 		return m;
+	}
+
+	@Override
+	public boolean doCanConvertTo(Type other, BiFunction<TypeAtom, TypeAtom, Boolean> atomCheck) {
+		return true;
 	}
 }

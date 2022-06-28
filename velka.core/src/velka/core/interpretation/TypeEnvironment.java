@@ -20,6 +20,7 @@ import velka.core.exceptions.UnrecognizedConstructorException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
+import velka.core.expression.TypeHolder;
 import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
@@ -185,6 +186,16 @@ public class TypeEnvironment {
 		TypeInformation info = this.getTypeInfo(fromType);
 		info.addConversion(toType, conversionConstructor);
 	}
+	
+	/**
+	 * Returns true if first type is converable to the second
+	 * @param from type
+	 * @param to type
+	 * @return True if types are convertable, false otherwise.
+	 */
+	public boolean canConvert(Type from, Type to) {
+		return from.canConvertTo(to, (t, o) -> this.canConvertAtom(t, o));		
+	}
 
 	/**
 	 * Returns true if from type is convertable to to type. Otherwise returns false
@@ -193,7 +204,7 @@ public class TypeEnvironment {
 	 * @param to   type
 	 * @return true or false.
 	 */
-	public boolean canConvert(TypeAtom from, TypeAtom to) {
+	public boolean canConvertAtom(TypeAtom from, TypeAtom to) {
 		TypeInformation info = null;
 		try {
 			info = this.getTypeInfo(from);
@@ -217,8 +228,8 @@ public class TypeEnvironment {
 	 *                             if the conversion is invalid
 	 */
 	private Expression getConversionConstructor(TypeAtom fromType, TypeAtom toType) throws AppendableException {
-		if (!this.canConvert(fromType, toType)) {
-			throw new ConversionException(fromType, toType, null);
+		if (!this.canConvertAtom(fromType, toType)) {
+			throw new ConversionException(toType, new TypeHolder(fromType));
 		}
 		TypeInformation info = this.getTypeInfo(fromType);
 		return info.getConversionConstructorTo(toType).get();
@@ -490,7 +501,9 @@ public class TypeEnvironment {
 		 * @return true if conversion exists, false otherwise
 		 */
 		public boolean canConvertTo(TypeAtom toType) {
-			return this.getConversionConstructorTo(toType).isPresent();
+			return toType.representation.equals(TypeRepresentation.WILDCARD)
+					|| this.type.representation.equals(TypeRepresentation.WILDCARD)
+					|| this.getConversionConstructorTo(toType).isPresent();
 		}
 
 		@Override

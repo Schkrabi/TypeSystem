@@ -124,4 +124,11 @@ public class Construct extends Expression {
 		}
 		return super.compareTo(other);
 	}
+
+	@Override
+	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		Expression e = this.interpret(env, typeEnv);
+		return e.convert(to, env, typeEnv);
+	}
 }

@@ -319,6 +319,12 @@ class TestInterpretation {
 			public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 				return null;
 			}
+
+			@Override
+			protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+					throws AppendableException {
+				return null;
+			}
 		});
 		assertThrows(AppendableException.class, () -> variable.infer(fault, typeEnv));
 	}
@@ -396,6 +402,13 @@ class TestInterpretation {
 			public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 				return null;
 			}
+
+			@Override
+			protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+					throws AppendableException {
+				// TODO Auto-generated method stub
+				return null;
+			}
 		}))).infer(env, typeEnv));
 	}
 
@@ -435,6 +448,13 @@ class TestInterpretation {
 
 			@Override
 			public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+				return null;
+			}
+
+			@Override
+			protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+					throws AppendableException {
+				// TODO Auto-generated method stub
 				return null;
 			}
 		}).infer(env, typeEnv));
@@ -487,6 +507,13 @@ class TestInterpretation {
 
 			@Override
 			public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+				return null;
+			}
+
+			@Override
+			protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+					throws AppendableException {
+				// TODO Auto-generated method stub
 				return null;
 			}
 		}).infer(top, typeEnv));
@@ -1576,12 +1603,12 @@ class TestInterpretation {
 						impl1, 
 						impl2, 
 						impl3));
-		AbstractionApplication app_defElambda_defSelectionFunction = 
+		AbstractionApplication app_defCostFunction = 
 				new AbstractionApplication(
 						elambda_defaultCostFunction, 
 						args);
 		TestInterpretation.testInterpretation(
-				app_defElambda_defSelectionFunction, 
+				app_defCostFunction, 
 				new LitString("Int Native"), 
 				env, 
 				typeEnv);

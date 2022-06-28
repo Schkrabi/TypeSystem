@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 
 import velka.core.abstraction.ConversionOperators;
 import velka.core.abstraction.Operator;
-import velka.core.conversions.Conversions;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
@@ -27,7 +26,7 @@ public class VelkaClojureConversions {
 		sb.append(ClojureHelper.requireNamespace("clojure.string"));
 
 		// Declare namespace
-		sb.append(ClojureHelper.declareNamespace(Conversions.NAMESPACE));
+		sb.append(ClojureHelper.declareNamespace(ConversionOperators.NAMESPACE));
 		
 		sb.append(Operator.makeOperatorDeclaration(ConversionOperators.IntNativeToIntRoman));
 		sb.append(Operator.makeOperatorDeclaration(ConversionOperators.IntNativeToIntString));

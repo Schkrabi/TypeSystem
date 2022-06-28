@@ -14,6 +14,8 @@ import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.core.application.AbstractionApplication;
+import velka.core.application.Convert;
+import velka.core.exceptions.ConversionException;
 import velka.core.exceptions.InvalidArgumentsException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -113,7 +115,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 	
 	/**
-	 * Creates new environment, where each argument is binded to typeholder with its infered type and returns this environemnts along with substitution, which is union of all argument inference substitutions
+	 * Creates new environment, where each argument is binded to typeholder with its inferred type and returns this environments along with substitution, which is union of all argument inference substitutions
 	 * @param creationEnv environment where abstraction was created
 	 * @param argsInfered Infered type of applied arguments
 	 * @return pair of environment and substitution
@@ -302,7 +304,8 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 
 	@Override
 	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return ClojureHelper.lambdaHelper(this.toClojureFn(env, typeEnv));
+		String code = this.toClojureFn(env, typeEnv);
+		return code;
 	}
 
 	@Override
@@ -331,5 +334,54 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 						Operators.conversionCost,
 						new Tuple(this, this.args)));
 		return costFunction;
+	}
+
+	@Override
+	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		//Cannot convert into more general type
+		//	converting [Int:Native] -> Int:Native to [A] -> Int:Native is not possible
+		//	to should not contain any type variables.
+		//However type of this can contain type variables
+		//	converting A -> B to [Int:Native Int:Native] -> String:Native is viable
+		if(!(to instanceof TypeArrow)) {
+			throw new ConversionException(to, this);
+		}
+		TypeArrow to_typeArrow = (TypeArrow)to;
+		
+		Optional<Substitution> o = Type.unifyTypes(this.argsType, to_typeArrow.ltype);
+		if(o.isEmpty()) {
+			throw new ConversionException(to, this);
+		}
+		
+		Tuple formalArgs = null;
+		Expression convertedArgs = null;
+		
+		TypeArrow from_typeArrow = (TypeArrow)from;
+		if(from_typeArrow.ltype instanceof TypeVariable) {
+			formalArgs = this.args;
+			convertedArgs = this.args;
+		}
+		else {
+			formalArgs = new Tuple(this.args.stream().map(x -> new Symbol(NameGenerator.next())));
+			convertedArgs = new Convert(to_typeArrow.ltype, from_typeArrow.ltype, formalArgs);
+		}
+		
+		Expression convertedBody = 
+				new Convert(
+						from_typeArrow.rtype,
+						to_typeArrow.rtype,
+						new AbstractionApplication(
+								this,
+								convertedArgs));
+		
+		TypeTuple convertedArgsType =
+				(TypeTuple)to_typeArrow.ltype.apply(o.get());
+								
+		Lambda lambda = new Lambda(
+				formalArgs,
+				convertedArgsType,
+				convertedBody);
+		
+		return lambda;
 	}
 }

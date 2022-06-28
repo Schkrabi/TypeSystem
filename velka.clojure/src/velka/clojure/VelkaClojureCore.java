@@ -5,13 +5,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
 
 import velka.core.abstraction.ConversionOperators;
 import velka.core.literal.LitComposite;
+import velka.types.RepresentationOr;
 import velka.types.Type;
+import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
+import velka.types.TypeVariable;
+import velka.types.TypesDoesNotUnifyException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
 import velka.util.Pair;
@@ -22,11 +25,17 @@ import velka.util.Pair;
  *
  */
 public class VelkaClojureCore {
+	
+	private static final String type2typeSymbol_type = "_type";
 	/**
 	 * Definition for type-2-type-symbol function
 	 */
-	public static String type2typeSymbolDef = "(defn " + ClojureCoreSymbols.type2typeSymbolSymbol + " [type] \n"
-			+ ClojureHelper.addTypeMetaInfo_str("[type]", "type") + ")";
+	public static String type2typeSymbolDef = ClojureHelper.clojureDefnHelper(
+			ClojureCoreSymbols.type2typeSymbolSymbol,
+			Arrays.asList(type2typeSymbol_type),
+			ClojureHelper.addTypeMetaInfo_str(
+					ClojureHelper.clojureVectorHelper(type2typeSymbol_type),
+					type2typeSymbol_type)); 
 	
 	private static final String getTypeClojure_expr = "_expr";
 	/**
@@ -61,80 +70,158 @@ public class VelkaClojureCore {
 	/**
 	 * Definition for map of atomic type conversion
 	 */
-	public static String atomicConversionMapClojureDef = "(def ^:dynamic " + ClojureCoreSymbols.atomicConversionMapClojureSymbol + "{"
-			+ TypeAtom.makeAtomicConversionRecord(TypeAtom.TypeIntNative, TypeAtom.TypeIntString,
-					ConversionOperators.IntNativeToIntString.clojureDef())
-			+ "\n"
-			+ TypeAtom.makeAtomicConversionRecord(
-					TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, ConversionOperators.IntNativeToIntRoman.clojureDef())
-			+ "\n"
-			+ TypeAtom.makeAtomicConversionRecord(TypeAtom.TypeIntString, TypeAtom.TypeIntNative,
-					ConversionOperators.IntStringToIntNative.clojureDef())
-			+ "\n"
-			+ TypeAtom.makeAtomicConversionRecord(
-					TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, ConversionOperators.IntStringToIntRoman.clojureDef())
-			+ "\n"
-			+ TypeAtom.makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative,
-					ConversionOperators.IntRomanToIntNative.clojureDef())
-			+ "\n" + TypeAtom.makeAtomicConversionRecord(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
-					ConversionOperators.IntRomanToIntString.clojureDef())
-			+ "})";
+	public static String atomicConversionMapClojureDef = ClojureHelper.dynamicDef(
+			ClojureCoreSymbols.atomicConversionMapClojureSymbol,
+			ClojureHelper.mapHelper(
+					new Pair<String, String>(
+							ClojureHelper.clojureVectorHelper(
+									TypeAtom.TypeIntNative.clojureTypeRepresentation(),
+									TypeAtom.TypeIntString.clojureTypeRepresentation()),
+							ConversionOperators.IntNativeToIntString.clojureDef()),
+					new Pair<String, String>(
+							ClojureHelper.clojureVectorHelper(
+									TypeAtom.TypeIntNative.clojureTypeRepresentation(),
+									TypeAtom.TypeIntRoman.clojureTypeRepresentation()),
+							ConversionOperators.IntNativeToIntRoman.clojureDef()),
+					new Pair<String, String>(
+							ClojureHelper.clojureVectorHelper(
+									TypeAtom.TypeIntString.clojureTypeRepresentation(),
+									TypeAtom.TypeIntNative.clojureTypeRepresentation()),
+							ConversionOperators.IntStringToIntNative.clojureDef()),
+					new Pair<String, String>(
+							ClojureHelper.clojureVectorHelper(
+									TypeAtom.TypeIntString.clojureTypeRepresentation(),
+									TypeAtom.TypeIntRoman.clojureTypeRepresentation()),
+							ConversionOperators.IntStringToIntRoman.clojureDef()),
+					new Pair<String, String>(
+							ClojureHelper.clojureVectorHelper(
+									TypeAtom.TypeIntRoman.clojureTypeRepresentation(),
+									TypeAtom.TypeIntNative.clojureTypeRepresentation()),
+							ConversionOperators.IntRomanToIntNative.clojureDef()),
+					new Pair<String, String>(
+							ClojureHelper.clojureVectorHelper(
+									TypeAtom.TypeIntRoman.clojureTypeRepresentation(),
+									TypeAtom.TypeIntString.clojureTypeRepresentation()),
+							ConversionOperators.IntRomanToIntString.clojureDef())));
+	
+	private static String convert_to = "_to";
+	private static String convert_expr = "_expr";
+	private static String convert_from = "_from";
 	/**
 	 * Definition for convert-type-atom clojure function
 	 */
-	public static String convertAtomClojureDef = "(defn " + ClojureCoreSymbols.convertAtomClojureSymbol + " [to arg]\n"
-			+ "    (let [from (" + ClojureCoreSymbols.getTypeClojureSymbol + " arg)]\n" + "        (cond (= from to) arg\n"
-			+ "              (and (instance? velka.types.TypeAtom to) (= (.representation to) velka.types.TypeRepresentation/WILDCARD)) arg\n"
-			+ "              (contains? " + ClojureCoreSymbols.atomicConversionMapClojureSymbol + " [from to])\n"
-			+ "                  (((get " + ClojureCoreSymbols.atomicConversionMapClojureSymbol + " [from to]) nil) arg)\n"
-			+ "              :else (throw (Throwable. (str \"Conversion from \" from \" to \" to \" does not exists.\"))))))";
+	public static String convertAtomClojureDef = ClojureHelper.clojureDefnHelper(
+			ClojureCoreSymbols.convertAtomClojureSymbol,
+			Arrays.asList(convert_to, convert_expr),
+			ClojureHelper.letHelper(
+					ClojureHelper.condHelper(
+							new Pair<String, String>(
+									ClojureHelper.applyClojureFunction(
+											"=",
+											convert_from,
+											convert_to),
+									convert_expr),
+							new Pair<String, String>(
+									ClojureHelper.applyClojureFunction(
+											"and",
+											ClojureHelper.isInstanceOfClass(
+													convert_to,
+													TypeAtom.class),
+											ClojureHelper.applyClojureFunction(
+													"=",
+													ClojureHelper.applyClojureFunction(
+															".representation",
+															convert_to),
+													"velka.types.TypeRepresentation/WILDCARD")
+													),
+											convert_expr),
+							new Pair <String, String>(
+									ClojureHelper.applyClojureFunction(
+											"contains?",
+											ClojureCoreSymbols.atomicConversionMapClojureSymbol,
+											ClojureHelper.clojureVectorHelper(
+													convert_from,
+													convert_to)),
+									ClojureHelper.applyVelkaFunction(
+										ClojureHelper.applyClojureFunction(
+												"get",
+												ClojureCoreSymbols.atomicConversionMapClojureSymbol,
+												ClojureHelper.clojureVectorHelper(
+														convert_from,
+														convert_to)),
+										convert_expr)),
+							new Pair<String, String>(
+									":else",
+									ClojureHelper.errorHelper(
+											ClojureHelper.applyClojureFunction(
+													"str",
+													ClojureHelper.stringHelper("Type atom conversion from "),
+													convert_from,
+													ClojureHelper.stringHelper(" to "),
+													convert_to,
+													ClojureHelper.stringHelper(" does not exist, when converting "),
+													convert_expr)))),
+					new Pair<String, String>(
+							convert_from, 
+							ClojureHelper.applyClojureFunction(
+									ClojureCoreSymbols.getTypeClojureSymbol, 
+									convert_expr))));
+
 	/**
 	 * Definition for convert-tuple clojure function
 	 */
-	public static String convertTupleClojureDef = "(defn " + ClojureCoreSymbols.convertTupleClojureSymbol + " [to arg]\n"
-			+ ClojureHelper.addTypeMetaInfo_str("    (vec (map " + ClojureCoreSymbols.convertClojureSymbol + " to arg))", "to") + ")";
-	
+	public static String convertTupleClojureDef = ClojureHelper.clojureDefnHelper(
+			ClojureCoreSymbols.convertTupleClojureSymbol,
+			Arrays.asList(convert_to, convert_expr),
+			ClojureHelper.addTypeMetaInfo_str(
+					ClojureHelper.applyClojureFunction(
+							"vec",
+							ClojureHelper.applyClojureFunction(
+									"map",
+									ClojureCoreSymbols.convertClojureSymbol,
+									convert_to,
+									convert_expr)),
+					convert_to)); 
+
 	private static String convertFn_to = "_to";
 	private static String convertFn_toNormal = "_toNormal";
-	private static String convertFn_arg = "_arg";
+	private static String convertFn_expr = "_expr";
 	private static String convertFn_from = "_from";
 	private static String convertFn_impl = "_impl";
-	private static String convertFn_fn_args = "_args";
-	private static String convertFn_fn_ranking = "ranking";
 	private static String convertFn_fn_arg = "_a";
 	/**
 	 * Definition for convert-fn clojure function
 	 */
 	public static String convertFnClojureDef = ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.convertFnClojureSymbol, 
-			Arrays.asList(convertFn_to, convertFn_arg), 
+			Arrays.asList(convertFn_to, convertFn_expr), 
 			ClojureHelper.letHelper(
-						ClojureHelper.addTypeMetaInfo_str(
-								ClojureHelper.fnHelper(
-										new Pair<List<String>, String>(Arrays.asList(convertFn_fn_args), convertFn_impl),
-										new Pair<List<String>, String>(Arrays.asList(convertFn_fn_args, convertFn_fn_ranking), convertFn_impl)), 
-								convertFn_toNormal),
-						new Pair<String, String>(convertFn_from, ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol, convertFn_arg)),
-						new Pair<String, String>(
-							convertFn_toNormal, 
+					convertFn_impl,
+					new Pair<String, String>(
+							convertFn_from, 
 							ClojureHelper.applyClojureFunction(
-								"velka.types.TypeArrow.",
-								ClojureHelper.applyClojureFunction(
-										"if",
-										ClojureHelper.applyClojureFunction(
-												"instance?",
-												"velka.types.TypeTuple",
-												ClojureHelper.applyClojureFunction(
-														".ltype",
-														convertFn_to)),
-										ClojureHelper.applyClojureFunction(
-												".ltype", 
-												convertFn_to),
-										ClojureHelper.applyClojureFunction(
-												".ltype",
-												convertFn_from)),
-								ClojureHelper.applyClojureFunction(
-									".rtype",
-									convertFn_to))),
+									ClojureCoreSymbols.getTypeClojureSymbol, 
+									convertFn_expr)),
+					new Pair<String, String>(
+						convertFn_toNormal, 
+						ClojureHelper.applyClojureFunction(
+							"velka.types.TypeArrow.",
+							ClojureHelper.applyClojureFunction(
+									"if",
+									ClojureHelper.applyClojureFunction(
+											"instance?",
+											"velka.types.TypeTuple",
+											ClojureHelper.applyClojureFunction(
+													".ltype",
+													convertFn_to)),
+									ClojureHelper.applyClojureFunction(
+											".ltype", 
+											convertFn_to),
+									ClojureHelper.applyClojureFunction(
+											".ltype",
+											convertFn_from)),
+							ClojureHelper.applyClojureFunction(
+								".rtype",
+								convertFn_to))),
 					new Pair<String, String>(convertFn_impl, 
 							ClojureHelper.condHelper(
 									new Pair<String, String>(
@@ -145,8 +232,9 @@ public class VelkaClojureCore {
 													ClojureHelper.fnHelper(Arrays.asList(), 
 															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
 																	ClojureHelper.applyClojureFunction(".rtype", convertFn_toNormal),
-																	ClojureHelper.applyClojureFunction("apply",
-																			ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
+																	ClojureHelper.applyClojureFunction(
+																			ClojureCoreSymbols.eapplyClojureSymbol_full,
+																			convertFn_expr,
 																			Type.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)))), 
 													convertFn_toNormal)),
 									new Pair<String, String>(
@@ -158,8 +246,9 @@ public class VelkaClojureCore {
 															Arrays.asList("& " + convertFn_fn_arg), 
 															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
 																	ClojureHelper.applyClojureFunction(".rtype", convertFn_toNormal),
-																	ClojureHelper.applyClojureFunction("apply", 
-																			ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
+																	ClojureHelper.applyClojureFunction(
+																			ClojureCoreSymbols.eapplyClojureSymbol_full, 
+																			convertFn_expr,
 																			"_a"))), convertFn_toNormal)),
 									new Pair<String, String>(
 											":else",
@@ -168,55 +257,250 @@ public class VelkaClojureCore {
 															Arrays.asList("& " + convertFn_fn_arg), 
 															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
 																	ClojureHelper.applyClojureFunction(".rtype", convertFn_toNormal),
-																	ClojureHelper.applyClojureFunction("apply", 
-																			ClojureHelper.applyClojureFunction(convertFn_arg, "nil"),
+																	ClojureHelper.applyClojureFunction(
+																			ClojureCoreSymbols.eapplyClojureSymbol_full, 
+																			convertFn_expr,
 																			ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol,
 																					ClojureHelper.applyClojureFunction(".ltype", convertFn_from),
 																					ClojureHelper.addTypeMetaInfo_str(convertFn_fn_arg, 
 																							ClojureHelper.applyClojureFunction(".ltype", convertFn_toNormal)))))), 
 													convertFn_toNormal))))));
+	
+	private static String convert_reps = "_reps";
+	private static String convert_t = "_t";
+	private static String convert_e = "_e";
 	/**
 	 * Definition for convert-set clojure function
 	 */
-	public static String convertRepOrClojureDef = "(defn " + ClojureCoreSymbols.convertRepOrClojureSymbol + " [to arg]\n"
-			+ "	(let [from (" + ClojureCoreSymbols.getTypeClojureSymbol + " arg)\n" + "		  reps (.getRepresentations from)]\n"
-			+ "		(if (some identity \n" + // ~ (apply or...
-			"				(map (fn [t] (try (velka.types.Type/unifyTypes t to) (catch velka.types.TypesDoesNotUnifyException e false)))\n"
-			+ "					reps))\n"
-			+ "			arg (throw (Throwable. (str \"Conversion from \" from \" to \" to \" does not exists.\"))))))";
+	public static String convertRepOrClojureDef = ClojureHelper.clojureDefnHelper(
+			ClojureCoreSymbols.convertRepOrClojureSymbol,
+			Arrays.asList(convert_to, convert_expr),
+			ClojureHelper.letHelper(
+					ClojureHelper.applyClojureFunction(
+							"if",
+							ClojureHelper.applyClojureFunction(
+									"some",
+									"identity",
+									ClojureHelper.applyClojureFunction(
+											"map",
+											ClojureHelper.fnHelper(
+													Arrays.asList(convert_t),
+													ClojureHelper.tryCatchHelper(
+															ClojureHelper.applyClojureFunction(
+																	"velka.types.Type/unifyTypes",
+																	convert_t,
+																	convert_to),
+															TypesDoesNotUnifyException.class,
+															convert_e,
+															"false")),
+											convert_reps)),
+							convert_expr,
+							ClojureHelper.errorHelper(
+									ClojureHelper.applyClojureFunction(
+											"str",
+											ClojureHelper.stringHelper("Cannot convert "),
+											convert_from,
+											ClojureHelper.stringHelper(" to "),
+											convert_to,
+											ClojureHelper.stringHelper(" converted value "),
+											convert_expr))),
+					new Pair<String, String>(
+							convert_from,
+							ClojureHelper.applyClojureFunction(
+									ClojureCoreSymbols.getTypeClojureSymbol,
+									convert_expr)),
+					new Pair<String, String>(
+							convert_reps,
+							ClojureHelper.applyClojureFunction(
+									".getRepresentations",
+									convert_from)))); 
+			
 	/**
 	 * Definition for convert-to-set clojure function
 	 */
-	public static String convertToRepOrClojureDef = "(defn " + ClojureCoreSymbols.convertToRepOrClojureSymbol + " [to arg]\n"
-			+ "	(let [from (" + ClojureCoreSymbols.getTypeClojureSymbol + " arg)\n" + "		  reps (.getRepresentations to)]\n"
-			+ "		(if (some identity \n" + // ~ (apply or...
-			"				(map (fn [t] (try (velka.types.Type/unifyTypes t from) (catch velka.types.TypesDoesNotUnifyException e false)))\n"
-			+ "					reps))\n"
-			+ "			arg (throw (Throwable. (str \"Conversion from \" from \" to \" to \" does not exists.\"))))))";
+	public static String convertToRepOrClojureDef = ClojureHelper.clojureDefnHelper(
+			ClojureCoreSymbols.convertToRepOrClojureSymbol,
+			Arrays.asList(convert_to, convert_expr),
+			ClojureHelper.letHelper(
+					ClojureHelper.applyClojureFunction(
+							"if",
+							ClojureHelper.applyClojureFunction(
+									"some",
+									"identity",
+									ClojureHelper.applyClojureFunction(
+											"map",
+											ClojureHelper.fnHelper(
+													Arrays.asList(convert_t),
+													ClojureHelper.tryCatchHelper(
+															ClojureHelper.applyClojureFunction(
+																	"velka.types.Type/unifyTypes",
+																	convert_t,
+																	convert_from),
+															TypesDoesNotUnifyException.class,
+															convert_e,
+															"false")),
+											convert_reps)),
+							convert_expr,
+							ClojureHelper.errorHelper(
+									ClojureHelper.applyClojureFunction(
+											"str",
+											ClojureHelper.stringHelper("Cannot convert "),
+											convert_from,
+											ClojureHelper.stringHelper(" to "),
+											convert_to,
+											ClojureHelper.stringHelper(" converted value "),
+											convert_expr))),
+					new Pair<String, String>(
+							convert_from,
+							ClojureHelper.applyClojureFunction(
+									ClojureCoreSymbols.getTypeClojureSymbol,
+									convert_expr)),
+					new Pair<String, String>(
+							convert_reps,
+							ClojureHelper.applyClojureFunction(
+									".getRepresentations",
+									convert_to))));
+			
 	/**
 	 * Definition for convert clojure function
 	 */
-	public static String convertClojureDef = "(defn " + ClojureCoreSymbols.convertClojureSymbol + " [to arg]\n" + "    (let [from ("
-			+ ClojureCoreSymbols.getTypeClojureSymbol + " arg)]" + "        (if (instance? velka.types.TypeVariable to)\n"
-			+ "            arg\n" + "            (if (instance? velka.types.RepresentationOr to)\n"
-			+ "				(" + ClojureCoreSymbols.convertToRepOrClojureSymbol + " to arg)\n"
-			+ "            	(cond (instance? velka.types.TypeAtom from) (" + ClojureCoreSymbols.convertAtomClojureSymbol
-			+ " to arg)\n" + "                 	  (instance? velka.types.TypeTuple from) ("
-			+ ClojureCoreSymbols.convertTupleClojureSymbol + " to arg)\n"
-			+ "                  	  (instance? velka.types.TypeArrow from) (" + ClojureCoreSymbols.convertFnClojureSymbol
-			+ " to arg)\n" + "                  	  (instance? velka.types.RepresentationOr from) ("
-			+ ClojureCoreSymbols.convertRepOrClojureSymbol + " to arg))))))";
+	public static String convertClojureDef = 
+			ClojureHelper.clojureDefnHelper(
+					ClojureCoreSymbols.convertClojureSymbol,
+					Arrays.asList(convert_to, convert_expr),
+					ClojureHelper.letHelper(
+							ClojureHelper.condHelper(
+									new Pair<String, String>(
+											ClojureHelper.applyClojureFunction(
+													"or",
+													ClojureHelper.isInstanceOfClass(
+															convert_from,
+															TypeVariable.class),
+													ClojureHelper.isInstanceOfClass(
+															convert_to,
+															TypeVariable.class)),
+											convert_expr),
+									new Pair<String, String>(
+											ClojureHelper.isInstanceOfClass(
+													convert_to,
+													RepresentationOr.class),
+											ClojureHelper.applyClojureFunction(
+													ClojureCoreSymbols.convertToRepOrClojureSymbol,
+													convert_to,
+													convert_expr)),
+									new Pair<String, String>(
+											ClojureHelper.isInstanceOfClass(
+													convert_from,
+													RepresentationOr.class),
+											ClojureHelper.applyClojureFunction(
+													ClojureCoreSymbols.convertRepOrClojureSymbol,
+													convert_to,
+													convert_expr)),
+									new Pair<String, String>(
+											ClojureHelper.isInstanceOfClass(
+													convert_from,
+													TypeAtom.class),
+											ClojureHelper.applyClojureFunction(
+													ClojureCoreSymbols.convertAtomClojureSymbol,
+													convert_to,
+													convert_expr)),
+									new Pair<String, String>(
+											ClojureHelper.isInstanceOfClass(
+													convert_from,
+													TypeTuple.class),
+											ClojureHelper.applyClojureFunction(
+													ClojureCoreSymbols.convertTupleClojureSymbol,
+													convert_to,
+													convert_expr)),
+									new Pair<String, String>(
+											ClojureHelper.isInstanceOfClass(
+													convert_from,
+													TypeArrow.class),
+											ClojureHelper.applyClojureFunction(
+													ClojureCoreSymbols.convertFnClojureSymbol,
+													convert_to,
+													convert_expr))),
+							new Pair<String, String>(
+									convert_from,
+									ClojureHelper.applyClojureFunction(
+											ClojureCoreSymbols.getTypeClojureSymbol,
+											convert_expr))));
+	
+	private static String eapply_abstr = "_abstr";
+	private static String eapply_args = "_args";
+	private static String eapply_impl = "_impl";
+	private static String eapply_fn_i = "_i";
+	private static String eapply_fn_p1 = "_p1";
+	private static String eapply_fn_p2 = "_p2";
 	/**
 	 * Definition for eapply function
 	 */
-	public static String eapplyClojureDef = "(defn " + ClojureCoreSymbols.eapplyClojureSymbol + "\n" + "    ([abstraction args ranking]\n"
-			+ "        (let [impl (abstraction args ranking)\n" + "              converted-args ("
-			+ ClojureCoreSymbols.convertClojureSymbol + "                                 (.ltype (" + ClojureCoreSymbols.getTypeClojureSymbol
-			+ " impl))\n" + "                                 args)]\n" + "            (apply impl converted-args)))\n"
-			+ "    ([abstraction args]\n" + "        (let [impl (abstraction args)\n" + "              converted-args ("
-			+ ClojureCoreSymbols.convertClojureSymbol  + "                                 (.ltype (" + ClojureCoreSymbols.getTypeClojureSymbol
-			+ " impl))\n" + "                                 args)]\n" + "            (apply impl converted-args))))";
-	
+	public static String eapplyClojureDef = ClojureHelper.clojureDefnHelper(
+			ClojureCoreSymbols.eapplyClojureSymbol,
+			Arrays.asList(eapply_abstr, eapply_args),
+			ClojureHelper.letHelper(
+					ClojureHelper.applyClojureFunction(
+							"apply",
+							eapply_impl,
+							ClojureHelper.applyClojureFunction(
+									ClojureCoreSymbols.convertClojureSymbol,
+									ClojureHelper.applyClojureFunction(
+											".ltype",
+											ClojureHelper.applyClojureFunction(
+													ClojureCoreSymbols.getTypeClojureSymbol,
+													eapply_impl)),
+									eapply_args)),
+					new Pair<String, String>(
+							eapply_impl,
+							ClojureHelper.condHelper(
+									new Pair<String, String>(
+											ClojureHelper.applyClojureFunction("fn?", eapply_abstr),
+											eapply_abstr),
+									new Pair<String, String>(
+											ClojureHelper.applyClojureFunction("set?", eapply_abstr),
+											ClojureHelper.applyClojureFunction(
+													"first",
+													ClojureHelper.applyClojureFunction(
+															"reduce",
+															ClojureHelper.fnHelper(
+																	Arrays.asList(eapply_fn_p1, eapply_fn_p2),
+																	ClojureHelper.applyClojureFunction(
+																			"if",
+																			ClojureHelper.applyClojureFunction(
+																					"<",
+																					ClojureHelper.applyClojureFunction(
+																							"second",
+																							eapply_fn_p1),
+																					ClojureHelper.applyClojureFunction(
+																							"second",
+																							eapply_fn_p2)),
+																			eapply_fn_p1,
+																			eapply_fn_p2)),
+															ClojureHelper.applyClojureFunction(
+																	"map",
+																	ClojureHelper.fnHelper(
+																			Arrays.asList(eapply_fn_i),
+																			ClojureHelper.clojureVectorHelper(
+																					eapply_fn_i,
+																					ClojureHelper.getLiteralInnerValue(
+																						ClojureHelper.applyVelkaFunction_argsTuple(
+																								ClojureHelper.applyClojureFunction(
+																										ClojureCoreSymbols.getCostFunction_full,
+																										eapply_fn_i),
+																								eapply_args)))),
+																	eapply_abstr)))),
+									new Pair<String, String>(
+											":else",
+											ClojureHelper.errorHelper(
+													ClojureHelper.applyClojureFunction(
+															"str",
+															ClojureHelper.stringHelper("invalid abstraction "),
+															eapply_abstr,
+															ClojureHelper.stringHelper(" in (eapply "),
+															eapply_abstr,
+															ClojureHelper.stringHelper(" "),
+															eapply_args,
+															ClojureHelper.stringHelper(")"))))))));
 	
 	private static final String langPstrClojureDef_expr = "_expr";
 	private static final String langPstrClojureDef_level = "_level";

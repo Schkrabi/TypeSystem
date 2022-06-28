@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -289,5 +291,38 @@ public class RepresentationOr extends Type {
 			}
 			throw re;
 		}
+	}
+
+	@Override
+	public <R> R reduce(Function<TerminalType, R> mapFun, BinaryOperator<R> combiner, R terminator)
+			throws AppendableException {
+		R agg = terminator;
+		
+		for(Type t : this.representations) {
+			R current = t.reduce(mapFun, combiner, terminator);
+			agg = combiner.apply(agg, current);
+		}
+		return agg;
+	}
+
+	@Override
+	protected <R> R doMap2AndReduce(Type other, BiFunction<Type, Type, R> mapFun, BinaryOperator<R> combinator,
+			R terminator) throws AppendableException {
+		R agg = terminator;
+		for(Type t : this.representations) {
+			R current = t.map2AndReduce(other, mapFun, combinator, terminator);
+			agg = combinator.apply(agg, current);
+		}
+		return agg;
+	}
+
+	@Override
+	public boolean doCanConvertTo(Type other, BiFunction<TypeAtom, TypeAtom, Boolean> atomCheck) {
+		for(Type t : this.representations) {
+			if(t.canConvertTo(other, atomCheck)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -1,5 +1,6 @@
 package velka.core.expression;
 
+import velka.core.exceptions.ConversionException;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitComposite;
@@ -65,6 +66,11 @@ public class TypeSymbol extends Expression {
 	@Override
 	public String toString() {
 		return "[\"" + this.type.toString() + "\"]";
+	}
+
+	@Override
+	public Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		throw new ConversionException(to, this);
 	}
 
 }

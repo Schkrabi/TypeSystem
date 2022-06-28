@@ -3,7 +3,6 @@ package velka.core.application;
 import java.util.Iterator;
 import java.util.Optional;
 
-import velka.core.conversions.Conversions;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
@@ -37,8 +36,7 @@ public class OrExpression extends SpecialFormApplication {
 		for(Expression e : (Tuple)args) {
 			Expression ie = e.interpret(env, typeEnv);
 			if(!(ie instanceof LitBoolean)) {
-				Pair<Type, Substitution> inf = ie.infer(env, typeEnv);
-				ie = Conversions.convert(inf.first, ie, TypeAtom.TypeBoolNative, typeEnv);
+				ie = ie.convert(TypeAtom.TypeBoolNative, env, typeEnv);
 				ie = ie.interpret(env, typeEnv);
 			}
 			

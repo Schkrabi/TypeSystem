@@ -8,7 +8,6 @@ import velka.util.Pair;
 import java.util.Arrays;
 import java.util.Optional;
 
-import velka.core.conversions.Conversions;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
@@ -70,8 +69,7 @@ public class IfExpression extends SpecialFormApplication {
 	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Expression iCond = this.getCondition().interpret(env, typeEnv);
 		if(!(iCond instanceof LitBoolean)) {
-			Pair<Type, Substitution> inf = iCond.infer(env, typeEnv);
-			iCond = Conversions.convert(inf.first, iCond, TypeAtom.TypeBoolNative, typeEnv);
+			iCond = iCond.convert(TypeAtom.TypeBoolNative, env, typeEnv);
 			iCond = iCond.interpret(env, typeEnv);
 		}
 		
@@ -85,9 +83,8 @@ public class IfExpression extends SpecialFormApplication {
 		
 		Expression iFalse = this.getFalseBranch().interpret(env, typeEnv);
 		Pair<Type, Substitution> inf = this.infer(env, typeEnv);
-		Pair<Type, Substitution> fInf = iFalse.infer(env, typeEnv);
 		
-		iFalse = Conversions.convert(fInf.first, iFalse, inf.first, typeEnv);
+		iFalse = iFalse.convert(inf.first, env, typeEnv);
 		iFalse = iFalse.interpret(env, typeEnv);
 		return iFalse;
 	}

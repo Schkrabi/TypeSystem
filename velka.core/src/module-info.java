@@ -4,7 +4,6 @@ module velka.core {
 	requires java.logging;
 	exports velka.core.abstraction;
 	exports velka.core.application;
-	exports velka.core.conversions;
 	exports velka.core.expression;
 	exports velka.core.exceptions;
 	exports velka.core.interpretation;

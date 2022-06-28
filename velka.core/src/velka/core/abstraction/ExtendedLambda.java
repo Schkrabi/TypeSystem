@@ -13,6 +13,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import velka.core.application.AbstractionApplication;
+import velka.core.exceptions.ConversionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -312,9 +313,7 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {		
-		String implsValue = "";
-		
+	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {				
 		List<String> implCodes = new LinkedList<String>();
 		
 		for(Map.Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
@@ -329,29 +328,7 @@ public class ExtendedLambda extends Abstraction {
 			implCodes.add(implWithCostCode);
 		}
 		
-		implsValue = ListNative.listNativeClojure(implCodes);
-		
-		String selectionFunCode = this.selectionFunctionCode(env, typeEnv);
-		
-		final String impls = "_impls";
-		final String args = "_args";
-		final String selectionFn = "_selection-function";
-		
-		String code = ClojureHelper.letHelper(
-				ClojureHelper.fnHelper(
-						new Pair<List<String>, String>(Arrays.asList(args),
-								ClojureHelper.applyVelkaFunction(selectionFunCode,
-										impls,
-										ClojureHelper.applyClojureFunction(
-												ClojureCoreSymbols.tuple2velkaListSymbol_full, args))),
-						new Pair<List<String>, String>(Arrays.asList(args, selectionFn),
-								ClojureHelper.applyVelkaFunction(selectionFn,
-										impls,
-										ClojureHelper.applyClojureFunction(
-												ClojureCoreSymbols.tuple2velkaListSymbol_full, args)))),
-				new Pair<String, String>(impls, implsValue));
-		
-		return code;
+		return ClojureHelper.clojureSetHelper(implCodes);
 	}
 
 	@Override
@@ -494,4 +471,17 @@ public class ExtendedLambda extends Abstraction {
 		}
 		
 	};
+
+	@Override
+	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		if(!(to instanceof TypeArrow)) {
+			throw new ConversionException(to, this);
+		}
+		if(Type.unifyTypes(from, to).isPresent()) {
+			return this;
+		}		
+		
+		throw new ConversionException(to, this);
+	}
 }

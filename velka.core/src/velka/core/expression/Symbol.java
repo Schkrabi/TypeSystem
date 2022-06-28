@@ -107,4 +107,14 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	public int hashCode() {
 		return this.name.hashCode();// * this.namespace.hashCode();
 	}
+
+	@Override
+	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		Expression intprt = this.interpret(env, typeEnv);
+		if(intprt.equals(this)) {
+			return this;
+		}
+		return intprt.convert(to, env, typeEnv);
+	}
 }

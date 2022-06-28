@@ -105,4 +105,11 @@ public class CanDeconstructAs extends Expression {
 		return "(" + CAN_DECONSTRUCT_AS + " " + this.expression.toString() + " " + this.as.toString() + ")";
 	}
 
+	@Override
+	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		Expression e = this.interpret(env, typeEnv);
+		return e.convert(to, env, typeEnv);
+	}
+
 }

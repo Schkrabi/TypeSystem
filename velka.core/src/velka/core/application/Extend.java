@@ -7,6 +7,7 @@ import java.util.TreeSet;
 
 import velka.core.abstraction.ExtendedFunction;
 import velka.core.abstraction.Function;
+import velka.core.abstraction.Operators;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
@@ -16,6 +17,8 @@ import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
+import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 
 /**
@@ -227,8 +230,57 @@ public class Extend extends Expression implements Comparable<Expression> {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		//TODO implement once the new elambda representation is in place
-		return "";
+		String extFun = "_extFun";
+		String extFunType = "_extFunType";
+		String impl_noCost = "_implNoCost";
+		String impl = "_impl";
+		String implType = "_implType";
+		String code = ClojureHelper.letHelper(
+				ClojureHelper.addTypeMetaInfo_str(
+						ClojureHelper.applyClojureFunction(
+								"conj",
+								extFun,
+								impl),
+						ClojureHelper.applyClojureFunction(
+								"if",
+								ClojureHelper.isInstanceOfClass(
+										extFunType,
+										RepresentationOr.class),
+								ClojureHelper.applyClojureFunction(
+										"conj",
+										extFunType,
+										implType),
+								ClojureHelper.applyClojureFunction(
+										"velka.types.RepresentationOr/makeRepresentationOr",
+										ClojureHelper.clojureSetHelper(
+												extFunType,
+												implType)))),
+				new Pair<String, String>(
+						extFun,
+						this.extendedFunction.toClojureCode(env, typeEnv)),
+				new Pair<String, String>(
+						impl_noCost,
+						this.implementation.toClojureCode(env, typeEnv)),
+				new Pair<String, String>(
+						impl,
+						ClojureHelper.setCostFunction(
+								impl_noCost,
+								this.costFunction.isPresent() ?
+										this.costFunction.get().toClojureCode(env, typeEnv) :
+										ClojureHelper.applyClojureFunction(
+												Operators.defaultCostFunction_full,
+												impl_noCost))),
+				new Pair<String, String>(
+						implType,
+						ClojureHelper.applyClojureFunction(
+								ClojureCoreSymbols.getTypeClojureSymbol_full,
+								impl)),
+				new Pair<String, String>(
+						extFunType,
+						ClojureHelper.applyClojureFunction(
+								ClojureCoreSymbols.getTypeClojureSymbol_full,
+								extFun)));
+		return code;
 	}
 	
 	@Override
@@ -286,5 +338,12 @@ public class Extend extends Expression implements Comparable<Expression> {
 		sb.append(this.implementation.toString());
 		sb.append(")");
 		return sb.toString();
+	}
+
+	@Override
+	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		Expression e = this.interpret(env, typeEnv);
+		return e.convert(to, env, typeEnv);
 	}
 }

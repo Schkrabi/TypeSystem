@@ -3,6 +3,8 @@ package velka.types;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 import velka.types.TypeArrow;
@@ -156,5 +158,49 @@ public class TypeArrow extends Type {
 	@Override
 	public Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
 		return new TypeArrow(this.ltype.replaceVariable(replaced, replacee), this.rtype.replaceVariable(replaced, replacee));
+	}
+
+	@Override
+	public <R> R reduce(Function<TerminalType, R> mapFun, BinaryOperator<R> combiner, R terminator)
+			throws AppendableException {
+		R agg = terminator;
+		R lresult = this.ltype.reduce(mapFun, combiner, terminator);
+		agg = combiner.apply(agg, lresult);
+		
+		R rresult = this.rtype.reduce(mapFun, combiner, terminator);
+		agg = combiner.apply(agg, rresult);		
+		
+		return agg;
+	}
+
+	@Override
+	protected <R> R doMap2AndReduce(Type other, BiFunction<Type, Type, R> mapFun,
+			BinaryOperator<R> combinator, R terminator) throws AppendableException {
+		if(other instanceof TypeArrow) {
+			throw new AppendableException("Cannot map2AndReduce " + this.toString() + " with " + other.toString());
+		}
+		TypeArrow o = (TypeArrow)other;
+		
+		R agg = terminator;
+		R lresult = this.ltype.map2AndReduce(o.ltype, mapFun, combinator, terminator);
+		agg = combinator.apply(agg, lresult);
+		
+		R rresult = this.rtype.map2AndReduce(o.rtype, mapFun, combinator, terminator);
+		agg = combinator.apply(agg, rresult);
+		
+		return agg;
+	}
+
+	@Override
+	public boolean doCanConvertTo(Type other, BiFunction<TypeAtom, TypeAtom, Boolean> atomCheck) {
+		if(!(other instanceof TypeArrow)) {
+			return false;
+		}
+		TypeArrow o = (TypeArrow)other;
+		
+		Boolean canConvertL = this.ltype.canConvertTo(o.ltype, atomCheck);
+		Boolean canConvertR = this.rtype.canConvertTo(o.rtype, atomCheck);
+		
+		return canConvertL && canConvertR;
 	}
 }

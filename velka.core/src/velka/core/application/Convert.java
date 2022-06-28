@@ -3,12 +3,10 @@ package velka.core.application;
 import velka.types.Substitution;
 import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
-import velka.types.TypeAtom;
 import velka.types.TypesDoesNotUnifyException;
 
 import java.util.Optional;
 
-import velka.core.conversions.Conversions;
 import velka.core.exceptions.ConversionException;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
@@ -34,17 +32,17 @@ public class Convert extends Expression {
 	/**
 	 * Type
 	 */
-	public final TypeAtom from;
+	public final Type from;
 	/**
 	 * Type
 	 */
-	public final TypeAtom to;
+	public final Type to;
 	/**
 	 * Converted expression
 	 */
 	public final Expression expression;
 
-	public Convert(TypeAtom from, TypeAtom to, Expression expression) {
+	public Convert(Type from, Type to, Expression expression) {
 		this.from = from;
 		this.to = to;
 		this.expression = expression;
@@ -52,7 +50,7 @@ public class Convert extends Expression {
 
 	@Override
 	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return Conversions.convert(from, this.expression, this.to, typeEnv).interpret(env, typeEnv);
+		return this.expression.convert(this.to, env, typeEnv);
 	}
 
 	@Override
@@ -64,7 +62,7 @@ public class Convert extends Expression {
 		}
 		
 		if (!typeEnv.canConvert(this.from, this.to)) {
-			throw new ConversionException(this.from, this.to, this.expression);
+			throw new ConversionException(this.to, this.expression);
 		}
 
 		Optional<Substitution> opt = s.get().union(p.second);
@@ -113,5 +111,11 @@ public class Convert extends Expression {
 			return this.expression.compareTo(((Convert) other).expression);
 		}
 		return super.compareTo(other);
+	}
+
+	@Override
+	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		throw new ConversionException(to, this);
 	}
 }

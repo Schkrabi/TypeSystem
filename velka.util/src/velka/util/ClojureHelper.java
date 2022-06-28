@@ -55,7 +55,17 @@ public class ClojureHelper {
 	 * @return string with code
 	 */
 	public static String makeDynamicDeclaration(String symbol) {
-		return "(declare ^:dynamic " + symbol + ")\n";
+		return applyClojureFunction("declare", "^:dynamic", symbol);
+	}
+	
+	/**
+	 * Creates a dynamic definition for given symbol to given value
+	 * @param symbol defined symbol
+	 * @param value binded value
+	 * @return string with Clojure code
+	 */
+	public static String dynamicDef(String symbol, String value) {
+		return applyClojureFunction("def", "^:dynamic", symbol, value);
 	}
 
 	/**
@@ -645,6 +655,46 @@ public class ClojureHelper {
 	 */
 	public static String instantiateJavaClass(Class<? extends Object> instantiated, String ...arguments) {
 		String code = instantiateJavaClass(instantiated, Arrays.asList(arguments));
+		return code;
+	}
+	
+	/**
+	 * Creares clojure code that checks if given expression is instance of given class name
+	 * @param expression inspected expression
+	 * @param className name of the class
+	 * @return Clojure Code
+	 */
+	public static String isInstanceOfClass(String expression, String className) {
+		return applyClojureFunction("instance?", className, expression);
+	}
+	
+	/**
+	 * Creares clojure code that checks if given expression is instance of given class name
+	 * @param expression inspected expression
+	 * @param cl class object
+	 * @return Clojure code
+	 */
+	public static String isInstanceOfClass(String expression, Class<? extends Object> cl) {
+		return isInstanceOfClass(expression, cl.getName());
+	}
+	
+	/**
+	 * Creates code for clojure try catch block
+	 * @param tryClause code for try block
+	 * @param exceptionClass class of catched exception
+	 * @param exceptionName symbol to bind exception to
+	 * @param catchClause code to execute in catch block
+	 * @return clojure code
+	 */
+	public static String tryCatchHelper(String tryClause, Class<? extends Exception> exceptionClass, String exceptionName, String catchClause) {
+		String code = applyClojureFunction(
+				"try",
+				tryClause,
+				applyClojureFunction(
+						"catch",
+						exceptionClass.getName(),
+						exceptionName,
+						catchClause));
 		return code;
 	}
 }

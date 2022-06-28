@@ -3,6 +3,7 @@
  */
 package velka.core.expression;
 
+import velka.core.exceptions.ConversionException;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
@@ -98,5 +99,10 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	@Override
 	public int hashCode() {
 		return this.type.hashCode();
+	}
+
+	@Override
+	public Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		throw new ConversionException(to, this);
 	}
 }

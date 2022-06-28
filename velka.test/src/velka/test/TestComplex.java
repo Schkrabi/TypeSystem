@@ -16,6 +16,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import velka.clojure.ClojureCodeGenerator;
 import velka.core.abstraction.ConstructorOperators;
+import velka.core.abstraction.ConversionOperators;
 import velka.core.abstraction.ExtendedFunction;
 import velka.core.abstraction.ExtendedLambda;
 import velka.core.abstraction.Function;
@@ -33,7 +36,6 @@ import velka.core.application.AbstractionApplication;
 import velka.core.application.CanDeconstructAs;
 import velka.core.application.Construct;
 import velka.core.application.IfExpression;
-import velka.core.conversions.Conversions;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -847,59 +849,58 @@ class TestComplex {
 	}
 	
 	@Test
-	@DisplayName("Test Custom Ranking Function Compilation")
+	@DisplayName("Test Custom Cost Function Compilation")
 	void testCustomRanking() throws Exception {
+Tuple elambda_args = new Tuple(new Symbol("a"));
+		
 		Lambda impl1 = new Lambda(
-				new Tuple(new Symbol("a")),
+				elambda_args, 
 				new TypeTuple(TypeAtom.TypeIntNative),
-				new LitString("Int Native")
-				);
+				new LitString("Int Native"));
 		Lambda impl2 = new Lambda(
-				new Tuple(new Symbol("a")),
+				elambda_args, 
 				new TypeTuple(TypeAtom.TypeIntString),
-				new LitString("Int String")
-				);
+				new LitString("Int String"));
 		Lambda impl3 = new Lambda(
-				new Tuple(new Symbol("a")),
+				elambda_args, 
 				new TypeTuple(TypeAtom.TypeIntRoman),
-				new LitString("Int Roman")
-				);
+				new LitString("Int Roman"));
 		
-		ExtendedLambda elambda_defaultRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3));
-		
-		Lambda ranking = (Lambda)TestComplex.parseString("(lambda (impls args) "
-				+ "(head-list-native (filter-list-native impls (lambda (x) (instance-of-representation x ((Int:Roman) #> String:Native))))))").get(0);
-		
-		Expression rnkAppl = new AbstractionApplication(Operators.PrintlnOperator,
-				new Tuple(new AbstractionApplication(ranking, new Tuple(
-						ListNative.makeListNativeExpression(new TypeSymbol(
-								new TypeArrow(new TypeTuple(TypeAtom.TypeIntRoman), TypeAtom.TypeStringNative))),
-						ListNative.makeListNativeExpression(new LitInteger(42))))));
-		
-		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(rnkAppl));	 
-		
-		Lambda ranking2 = (Lambda)TestComplex.parseString("(lambda (impls args) "
-				+ "(head-list-native (filter-list-native impls (lambda (x) (instance-of-representation x ((Int:Roman) #> String:Native))))))").get(0);
-		
-		ExtendedLambda elambda_customRanking = ExtendedLambda.makeExtendedLambda(Arrays.asList(impl1, impl2, impl3), ranking);
-		
+		//Environment env = Environment.initTopLevelEnvironment();
+		//TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		Tuple args = new Tuple(new LitInteger(42));
 		
-		Environment env = Environment.initTopLevelEnvironment();
-		@SuppressWarnings("unused")
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		ExtendedLambda elambda_defaultCostFunction = 
+				ExtendedLambda.makeExtendedLambda(Arrays.asList(
+						impl1, 
+						impl2, 
+						impl3));
+		AbstractionApplication app_defCostFunction = 
+				new AbstractionApplication(
+						elambda_defaultCostFunction, 
+						args);
 		
-		AbstractionApplication app_defElambda_defRanking = new AbstractionApplication(Operators.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_defaultRanking, args)));
-		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defElambda_defRanking));
+		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defCostFunction));
 		
-		AbstractionApplication app_defElambda_cusRanking = new AbstractionApplication(Operators.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_defaultRanking, args, ranking)));
-		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defElambda_cusRanking));
+		Lambda costFunction = new Lambda(
+				elambda_args,
+				new TypeTuple(TypeAtom.TypeInt),
+				new LitInteger(Long.MIN_VALUE));
+
+		Map<Lambda, Expression> m = new TreeMap<Lambda, Expression>();
+		m.put(impl1, impl1.defaultCostFunction());
+		m.put(impl2, costFunction);
+		m.put(impl3, impl3.defaultCostFunction());
 		
-		AbstractionApplication app_cusElambda_defRanking = new AbstractionApplication(Operators.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_customRanking, args)));
-		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_cusElambda_defRanking));
+		ExtendedLambda elambda_customCostFunction = 
+				ExtendedLambda.makeExtendedLambda(m);
+
+		AbstractionApplication app_customCostFunction = 
+				new AbstractionApplication(
+						elambda_customCostFunction, 
+						args);
 		
-		AbstractionApplication app_cusElambda_cusRanking = new AbstractionApplication(Operators.PrintlnOperator, new Tuple(new AbstractionApplication(elambda_customRanking, args, ranking2)));
-		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_cusElambda_cusRanking));
+		TestComplex.assertIntprtAndCompPrintSameValues(Arrays.asList(app_customCostFunction));
 	}
 	
 	@Test
@@ -994,8 +995,14 @@ class TestComplex {
 		Expression arg = new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman);
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (((" + ClojureCoreSymbols.convertFnClojureSymbol_full + " " +  
-				lambda_to.clojureTypeRepresentation() + " " + l.toClojureCode(env, typeEnv) + ") nil) " + arg.toClojureCode(env, typeEnv) + "))",
+				ClojureHelper.applyClojureFunction(
+						"println",
+						ClojureHelper.applyClojureFunction(
+								ClojureHelper.applyClojureFunction(
+										ClojureCoreSymbols.convertFnClojureSymbol_full,
+										lambda_to.clojureTypeRepresentation(),
+										l.toClojureCode(env, typeEnv)),
+								arg.toClojureCode(env, typeEnv))),
 				"[[1]]");
 		
 		Lambda l2 = (Lambda)(TestComplex.parseString("(lambda () 1)")).get(0);
@@ -1004,12 +1011,10 @@ class TestComplex {
 				definitions.toString(),
 				ClojureHelper.applyClojureFunction("println", 
 						ClojureHelper.applyClojureFunction(
-								ClojureHelper.applyClojureFunction(
 										ClojureHelper.applyClojureFunction(
 												ClojureCoreSymbols.convertFnClojureSymbol_full, 
 												l2_to.clojureTypeRepresentation(),
-												l2.toClojureCode(env, typeEnv)), 
-										"nil"))),
+												l2.toClojureCode(env, typeEnv)))),
 				"[[1]]");
 		
 		assertClojureFunction(
@@ -1022,90 +1027,11 @@ class TestComplex {
 				definitions.toString(),
 				"(println (" + ClojureCoreSymbols.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
 						+ (new Tuple(arg)).toClojureCode(env, typeEnv) + "))",
-				"[1]");
-		
-		Lambda impl1 = new Lambda(new Tuple(new Symbol("x"), new Symbol("y")),
-				new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-				new LitString("impl1"));
-		Lambda impl2 = new Lambda(new Tuple(new Symbol("x"), new Symbol("y")),
-				new TypeTuple(TypeAtom.TypeIntString, TypeAtom.TypeIntString),
-				new LitString("impl2"));
-		Lambda impl3 = new Lambda(new Tuple(new Symbol("x"), new Symbol("y")),
-				new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntString),
-				new LitString("impl3"));
-		
-		String args1 = ListNative.listNativeClojure(LitInteger.clojureIntToClojureLitInteger("42"),
-				LitInteger.clojureIntToClojureLitInteger("42")); 
-		String args2 = ListNative.listNativeClojure(LitComposite.clojureValueToClojureLiteral(
-				LitString.clojureStringToClojureLitString(ClojureHelper.stringHelper("42")), TypeAtom.TypeIntString),
-				LitComposite.clojureValueToClojureLiteral(
-						LitString.clojureStringToClojureLitString(ClojureHelper.stringHelper("42")),
-						TypeAtom.TypeIntString)); 
-		String args3 = ListNative.listNativeClojure(LitInteger.clojureIntToClojureLitInteger("42"),
-				LitComposite.clojureValueToClojureLiteral(
-						LitString.clojureStringToClojureLitString(ClojureHelper.stringHelper("42")),
-						TypeAtom.TypeIntString)); 
+				"[1]"); 
 				
 				ListNative.makeListNativeExpression(
 				new LitInteger(42),
-				new LitComposite(new LitString("42"), TypeAtom.TypeIntString));		
-		
-		assertClojureFunction(
-				definitions.toString(),
-				ClojureHelper.applyClojureFunction("println", 
-						ClojureHelper.applyClojureFunction(
-								ClojureHelper.applyClojureFunction(
-										ClojureHelper.applyClojureFunction(
-												ClojureHelper.applyClojureFunction(
-														ExtendedLambda.defaultSelectionFunction
-															.getClojureSymbol().toClojureCode(env, typeEnv), 
-														"nil"),
-											ListNative.listNativeClojure(
-												impl1.toClojureCode(env, typeEnv), 
-												impl2.toClojureCode(env, typeEnv), 
-												impl3.toClojureCode(env, typeEnv)),
-										args1), "nil"),
-						"nil", "nil")
-						),
-				"[impl1]");
-		
-		assertClojureFunction(
-				definitions.toString(),
-				ClojureHelper.applyClojureFunction("println", 
-						ClojureHelper.applyClojureFunction(
-								ClojureHelper.applyClojureFunction(
-										ClojureHelper.applyClojureFunction(
-												ClojureHelper.applyClojureFunction(
-														ExtendedLambda.defaultSelectionFunction
-															.getClojureSymbol().toClojureCode(env, typeEnv), 
-														"nil"),
-											ListNative.listNativeClojure(
-												impl1.toClojureCode(env, typeEnv), 
-												impl2.toClojureCode(env, typeEnv), 
-												impl3.toClojureCode(env, typeEnv)),
-										args2), "nil"),
-						"nil", "nil")
-						),
-				"[impl2]");
-		
-		assertClojureFunction(
-				definitions.toString(),
-				ClojureHelper.applyClojureFunction("println", 
-						ClojureHelper.applyClojureFunction(
-								ClojureHelper.applyClojureFunction(
-										ClojureHelper.applyClojureFunction(
-												ClojureHelper.applyClojureFunction(
-														ExtendedLambda.defaultSelectionFunction
-															.getClojureSymbol().toClojureCode(env, typeEnv), 
-														"nil"),
-											ListNative.listNativeClojure(
-												impl1.toClojureCode(env, typeEnv), 
-												impl2.toClojureCode(env, typeEnv), 
-												impl3.toClojureCode(env, typeEnv)),
-										args3), "nil"),
-						"nil", "nil")
-						),
-				"[impl3]");
+				new LitComposite(new LitString("42"), TypeAtom.TypeIntString));	
 		
 		ExtendedLambda elambda = ExtendedLambda.makeExtendedLambda(
 				new Lambda(
@@ -1118,9 +1044,12 @@ class TestComplex {
 						new LitString("b")));
 		
 		TestComplex.clojureCodeResult(definitions.toString() + 
-				"(println (" + ClojureCoreSymbols.convertRepOrClojureSymbol_full + " "
-				+ new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeStringNative).clojureTypeRepresentation() + " "
-				+ elambda.toClojureCode(env, typeEnv) + "))");
+				ClojureHelper.applyClojureFunction(
+						"println",
+						ClojureHelper.applyClojureFunction(
+								ClojureCoreSymbols.convertRepOrClojureSymbol_full,
+								new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeStringNative).clojureTypeRepresentation(),
+								elambda.toClojureCode(env, typeEnv))));
 		
 		TestComplex.assertClojureFunction(definitions.toString(),
 				 	"(println (" + ClojureCoreSymbols.convertToRepOrClojureSymbol_full + " " + 
@@ -1498,6 +1427,9 @@ class TestComplex {
 		assertIntprtAndCompPrintSameValues(
 				"(println ((extend "
 				+ "(extended-lambda ((Int x)) ((Int:Native) \"foo\")) (lambda ((Int:Roman x)) \"bar\")) (construct Int Roman \"X\")))");
+		assertIntprtAndCompPrintSameValues(
+				"(println ((extend "
+				+ "(extended-lambda ((Int x)) ((Int:Native) \"foo\")) (lambda ((Int:Roman x)) \"bar\") (lambda ((Int:* x)) -999)) 42))");
 	}
 	
 	@Test
@@ -1523,7 +1455,7 @@ class TestComplex {
 		sb.append(ClojureHelper.requireNamespace(Operators.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(ListNative.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(ConstructorOperators.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(Conversions.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(ConversionOperators.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(JavaArrayList.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(JavaLinkedList.NAMESPACE));
 		sb.append(definitions);
@@ -1581,6 +1513,7 @@ class TestComplex {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private static void testClojureCompileExpression(Expression e, String expected, Environment env,
 			TypeEnvironment typeEnv) throws AppendableException {
 		List<Expression> l = new LinkedList<Expression>();

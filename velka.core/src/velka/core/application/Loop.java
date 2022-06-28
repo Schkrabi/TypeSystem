@@ -188,4 +188,11 @@ public class Loop extends Expression {
 		sb.append(")");
 		return sb.toString();
 	}
+
+	@Override
+	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+			throws AppendableException {
+		Expression e = this.interpret(env, typeEnv);
+		return e.convert(to, env, typeEnv);
+	}
 }

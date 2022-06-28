@@ -14,6 +14,7 @@ import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.Pair;
 import velka.util.ThrowingFunction;
+import velka.core.exceptions.ConversionException;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
@@ -40,6 +41,10 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	
 	public Tuple(Expression ...exprs) {
 		this.values = new Vector<Expression>(Arrays.asList(exprs));
+	}
+	
+	public Tuple(Stream<? extends Expression> values) {
+		this.values = new Vector<Expression>(values.collect(Collectors.toList()));
 	}
 
 	/**
@@ -212,4 +217,27 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	 * Clojure code for empty tuple
 	 */
 	public static final String EMPTY_TUPLE_CLOJURE = ClojureHelper.tupleHelper();
+
+	@Override
+	public Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		if(!(to instanceof TypeTuple)) {
+			throw new ConversionException(to, this);
+		}
+		TypeTuple to_typeTuple = (TypeTuple)to;
+		
+		if(to_typeTuple.size() != this.size()) {
+			throw new ConversionException(to, this);
+		}
+		
+		List<Expression> l = new LinkedList<Expression>();
+		Iterator<Type> it_to = to_typeTuple.iterator();
+		Iterator<Expression> it = this.iterator();
+		while(it.hasNext()) {
+			Expression e = it.next();
+			Type t = it_to.next();
+			Expression c = e.convert(t, env, typeEnv);
+			l.add(c);
+		}
+		return new Tuple(l);
+	}
 }
