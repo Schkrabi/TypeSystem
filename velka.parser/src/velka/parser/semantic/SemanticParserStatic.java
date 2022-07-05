@@ -42,35 +42,33 @@ import velka.util.ThrowingFunction;
  *
  */
 public final class SemanticParserStatic {
-	public static final String DEFINE = DefineSymbol.DEFINE;
-	public static final String DEFINE_TYPE = DefineType.TYPE;
-	public static final String DEFINE_REPRESENTATION = DefineRepresentation.REPRESENTATION;
-	public static final String DEFINE_CONVERSION = DefineConversion.CONVERSION;
-	public static final String DEFINE_CONSTRUCTOR = DefineConstructor.CONSTRUCTOR;
+	public static final String AND = AndExpression.AND;
+	public static final String CAN_DECONSTRUCT_AS = CanDeconstructAs.CAN_DECONSTRUCT_AS;
+	public static final String CONS = "cons";
 	public static final String CONSTRUCT = Construct.CONSTRUCT;
 	public static final String CONVERT = Convert.CONVERT;
-	public static final String LAMBDA = Lambda.LAMBDA;
-	public static final String EXTENDED_LAMBDA = ExtendedLambda.EXTENDED_LAMBDA;
-	public static final String IF = IfExpression.IF;
-	public static final String CONS = "cons";
-	public static final String ERROR = ExceptionExpr.ERROR;
-	public static final String AND = AndExpression.AND;
-	public static final String OR = OrExpression.OR;
+	public static final String CONSTRUCTOR = DefineConstructor.CONSTRUCTOR;
+	public static final String CONVERSION = DefineConversion.CONVERSION;
 	public static final String DECONSTRUCT = Deconstruct.DECONSTRUCT;
-	public static final String CAN_DECONSTRUCT_AS = CanDeconstructAs.CAN_DECONSTRUCT_AS;
-	public static final String LET_TYPE = "let-type";
+	public static final String DEFINE = DefineSymbol.DEFINE;
+	public static final String EAPPLY = AbstractionApplication.EAPPLY;
+	public static final String ERROR = ExceptionExpr.ERROR;
+	public static final String EXTEND = Extend.EXTEND;
+	public static final String EXTENDED_LAMBDA = ExtendedLambda.EXTENDED_LAMBDA;
+	public static final String GET = Get.GET;
+	public static final String IF = IfExpression.IF;
 	public static final String INSTANCE_OF = InstanceOf.INSTANCE_OF;
 	public static final String INSTANCE_OF_REPRESENTATION = InstanceOfRepresentation.INSTANCE_OF_REPRESENTATION;
-	public static final String EAPPLY = AbstractionApplication.EAPPLY;
-	//TODO rename to EXTENDED_LAMBDA_COST
-	public static final String EXTENDED_LAMBDA_RANKING = ExtendedLambda.EXTENDED_LAMBDA_COST;
-	public static final String GET = Get.GET;
-	public static final String TUPLE = "tuple";
+	public static final String LAMBDA = Lambda.LAMBDA;
 	public static final String LET = "let";
 	public static final String LET_AST = "let*";
+	public static final String LET_TYPE = "let-type";
 	public static final String LOOP = Loop.LOOP;
+	public static final String OR = OrExpression.OR;
 	public static final String RECUR = Recur.RECUR;
-	public static final String EXTEND = Extend.EXTEND;
+	public static final String REPRESENTATION = DefineRepresentation.REPRESENTATION;
+	public static final String TUPLE = "tuple";
+	public static final String TYPE = DefineType.TYPE;
 	
 	/**
 	 * Unused special form. For testing purposes only!
@@ -81,19 +79,19 @@ public final class SemanticParserStatic {
 
 	static {
 		specialForms = new TreeSet<String>();
-		specialForms.add(DEFINE_REPRESENTATION);
-		specialForms.add(DEFINE_TYPE);
+		specialForms.add(REPRESENTATION);
+		specialForms.add(TYPE);
 		specialForms.add(EXTENDED_LAMBDA);
 		specialForms.add(IF);
 		specialForms.add(LAMBDA);
-		specialForms.add(DEFINE_CONVERSION);
+		specialForms.add(CONVERSION);
 		specialForms.add(DEFINE);
 		specialForms.add(CONS);
 		specialForms.add(ERROR);
 		specialForms.add(UNUSED);
 		specialForms.add(AND);
 		specialForms.add(OR);
-		specialForms.add(DEFINE_CONSTRUCTOR);
+		specialForms.add(CONSTRUCTOR);
 		specialForms.add(CONSTRUCT);
 		specialForms.add(CONVERT);
 		specialForms.add(DECONSTRUCT);
@@ -102,7 +100,6 @@ public final class SemanticParserStatic {
 		specialForms.add(INSTANCE_OF);
 		specialForms.add(INSTANCE_OF_REPRESENTATION);
 		specialForms.add(EAPPLY);
-		specialForms.add(EXTENDED_LAMBDA_RANKING);
 		specialForms.add(GET);
 		specialForms.add(TUPLE);
 		specialForms.add(LET);

@@ -247,7 +247,7 @@ public class Extend extends Expression implements Comparable<Expression> {
 										extFunType,
 										RepresentationOr.class),
 								ClojureHelper.applyClojureFunction(
-										"conj",
+										".conjoin",
 										extFunType,
 										implType),
 								ClojureHelper.applyClojureFunction(

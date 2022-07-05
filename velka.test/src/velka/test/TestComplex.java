@@ -115,14 +115,22 @@ class TestComplex {
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		TestComplex.testInterpretString("(type Name)" + "(representation Unstructured Name)"
+		TestComplex.testInterpretString(
+				"(type Name)" 
+				+ "(representation Unstructured Name)"
 				+ "(constructor Name Unstructured ((String:Native x)) x)" + "(representation Structured Name)"
 				+ "(constructor Name Structured ((String:Native x) (String:Native y)) (cons x y))"
-				+ "((extended-lambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (construct Name Unstructured \"Jan Novak\"))",
+				+ "((extend (extend (extended-lambda (Name)) "
+					+ "(lambda ((Name:Unstructured x)) \"unstructured\")) "
+					+ "(lambda ((Name:Structured x)) \"structured\")) "
+						+ "(construct Name Unstructured \"Jan Novak\"))",
 				new LitString("unstructured"), env, typeEnv);
 
 		TestComplex.testInterpretString(
-				"((extended-lambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (construct Name Structured \"Jan\" \"Novak\"))",
+				"((extend (extend (extended-lambda (Name)) "
+					+ "(lambda ((Name:Unstructured x)) \"unstructured\")) "
+					+ "(lambda ((Name:Structured x)) \"structured\")) "
+						+ "(construct Name Structured \"Jan\" \"Novak\"))",
 				new LitString("structured"), env, typeEnv);
 
 		TestComplex.testInterpretString(
@@ -135,7 +143,11 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(println ((lambda ((String:Native x) (Int:String y)) x) \"test\" (construct Int String \"1984\")))");
 		
-		TestComplex.assertIntprtAndCompPrintSameValues("(println ((extended-lambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (construct Int Roman \"XLII\") 66))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(println "
+				+ "((extend (extended-lambda (Bool Int Int)) "
+						+ "(lambda ((Bool:Native x) (Int:String y) (Int:String z)) (if x z y))) "
+						+ "#f (construct Int Roman \"XLII\") 66))");
 	}
 
 	@Test
@@ -177,25 +189,31 @@ class TestComplex {
 				"(define y (construct List Functional (construct Int Roman \"XLII\") (construct List Functional (construct Int String \"42\") (construct List Functional 42 (construct List Functional)))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
 		TestComplex.testInterpretString(
-				"(define is-list-empty (extended-lambda ((List l))\n"
-						+ "                        ((List:Linked) (can-deconstruct-as l ()))\n"
-						+ "                        ((List:Functional) (can-deconstruct-as l ()))))",
+					"(define is-list-empty (extended-lambda (List)))"
+				+	"(define is-list-empty (extend is-list-empty (lambda ((List:Linked l)) (can-deconstruct-as l ()))))"
+				+ 	"(define is-list-empty (extend is-list-empty (lambda ((List:Functional l)) (can-deconstruct-as l ()))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
 		TestComplex.testInterpretString("(is-list-empty x)", LitBoolean.FALSE, env, typeEnv);
 		TestComplex.testInterpretString("(is-list-empty y)", LitBoolean.FALSE, env, typeEnv);
 		TestComplex.testInterpretString("(is-list-empty (construct List Linked))", LitBoolean.TRUE, env, typeEnv);
 		TestComplex.testInterpretString("(is-list-empty (construct List Functional))", LitBoolean.TRUE, env, typeEnv);
 
-		TestComplex.testInterpretString("(define head-list (let-type (A C) (extended-lambda ((List l))\n"
-				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List:Linked)))))\n"
-				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List:Functional) #> C)) #> C))))))))",
+		TestComplex.testInterpretString(
+					"(define head-list (extended-lambda (List)))"
+				+	"(define head-list (let-type (A C) (extend head-list (lambda ((List:Linked l)) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List:Linked))))))))"
+				+	"(define head-list (let-type (A C) (extend head-list (lambda ((List:Functional l)) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List:Functional) #> C)) #> C))))))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
 		TestComplex.testInterpretString("(head-list x)", xlii, env, typeEnv);
 		TestComplex.testInterpretString("(head-list y)", xlii, env, typeEnv);
 
-		TestComplex.testInterpretString("(define tail-list (let-type (A) (extended-lambda ((List l)) \n"
-				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List:Linked)))))\n"
-				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))",
+		TestComplex.testInterpretString(
+					"(define tail-list (extended-lambda (List)))"
+				+	"(define tail-list (let-type (A) (extend tail-list (lambda ((List:Linked l)) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List:Linked))))))))"
+				+	"(define tail-list (let-type (A) " 
+					+ "(extend tail-list " 
+						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+							+ "(error \"Cannot make tail of empty list!\") " 
+							+ "(fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
 
 		TestComplex.testInterpretString("(tail-list x)",
@@ -224,63 +242,16 @@ class TestComplex {
 						linkedList),
 				env, typeEnv);
 
-//		TestComplex.testInterpretString(
-//				"(let-type (A) (extended-lambda ((List l) (A x))"
-//						+ "((List:Linked A) (if (can-deconstruct-as l ())"
-//						+ "(construct List Linked x (construct List Linked))"
-//						+ "(construct List Linked (head-list l) (append-list (tail-list l) x))))"
-//						+ "((List:Functional A) (if (can-deconstruct-as l ())"
-//						+ "(construct List Functional x (construct List Functional))"
-//						+ "(construct List Functional (head-list l) (append-list (tail-list l) x))))))",
-//				ExtendedFunction
-//						.makeExtendedFunction(Arrays.asList(
-//								new Function(new TypeTuple(Arrays.asList(linkedList, new TypeVariable("A"))),
-//										new Tuple(Arrays.asList(new Symbol("l"), new Symbol("x"))),
-//										new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
-//												new Construct(linkedList,
-//														new Tuple(Arrays.asList(new Symbol("x"),
-//																new Construct(linkedList, Tuple.EMPTY_TUPLE)))),
-//												new Construct(linkedList,
-//														new Tuple(Arrays.asList(
-//																new AbstractionApplication(new Symbol("head-list"),
-//																		new Tuple(Arrays.asList(new Symbol("l")))),
-//																new AbstractionApplication(new Symbol("append-list"),
-//																		new Tuple(Arrays.asList(
-//																				new AbstractionApplication(
-//																						new Symbol("tail-list"),
-//																						new Tuple(Arrays.asList(
-//																								new Symbol("l")))),
-//																				new Symbol("x")))))))),
-//										env),
-//								new Function(new TypeTuple(Arrays.asList(typeListFuntionalAtom, new TypeVariable("A"))),
-//										new Tuple(Arrays.asList(new Symbol("l"), new Symbol("x"))),
-//										new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
-//												new Construct(typeListFuntionalAtom,
-//														new Tuple(Arrays.asList(new Symbol("x"),
-//																new Construct(typeListFuntionalAtom,
-//																		Tuple.EMPTY_TUPLE)))),
-//												new Construct(typeListFuntionalAtom,
-//														new Tuple(Arrays.asList(
-//																new AbstractionApplication(new Symbol("head-list"),
-//																		new Tuple(Arrays.asList(new Symbol("l")))),
-//																new AbstractionApplication(new Symbol("append-list"),
-//																		new Tuple(Arrays.asList(
-//																				new AbstractionApplication(
-//																						new Symbol("tail-list"),
-//																						new Tuple(Arrays.asList(
-//																								new Symbol("l")))),
-//																				new Symbol("x")))))))),
-//										env)),
-//								env),
-//				env, typeEnv);
-
-		TestComplex.testInterpretString("(define append-list (let-type (A) (extended-lambda ((List l) (A x))\n"
-				+ "                        ((List:Linked A) (if (is-list-empty l)\n"
-				+ "                            (construct List Linked x (construct List Linked))\n"
-				+ "                            (construct List Linked (head-list l) (append-list (tail-list l) x))))\n"
-				+ "						((List:Functional A) (if (is-list-empty l)\n"
-				+ "                            (construct List Functional x (construct List Functional))\n"
-				+ "                            (construct List Functional (head-list l) (append-list (tail-list l) x)))))))\n",
+		TestComplex.testInterpretString(
+					"(define append-list (let-type (A) (extended-lambda (List A))))"
+				+	"(define append-list (let-type (A) (extend append-list (lambda ((List:Linked l) (A x)) "
+							+	"(if (is-list-empty l) "
+								+	"(construct List Linked x (construct List Linked)) "
+								+	"(construct List Linked (head-list l) (append-list (tail-list l) x)))))))"
+				+	"(define append-list (let-type (A) (extend append-list (lambda ((List:Functional l) (A x)) "
+							+	"(if (is-list-empty l) "
+								+	"(construct List Functional x (construct List Functional)) "
+								+	"(construct List Functional (head-list l) (append-list (tail-list l) x)))))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
 
 		TestComplex
@@ -304,13 +275,14 @@ class TestComplex {
 								linkedList),
 						env, typeEnv);
 
-		TestComplex.testInterpretString("(extended-lambda ((List l))"
-				+ "                        ((List:Linked) (if (can-deconstruct-as l ())"
-				+ "                                            (construct List Linked)"
-				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l))))"
-				+ "                        ((List:Functional) (if (can-deconstruct-as l ())"
-				+ "                                            (construct List Functional)"
-				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l)))))",
+		TestComplex.testInterpretString(
+					"(extend (extend (extended-lambda (List)) "
+						+	"(lambda ((List:Linked l)) (if (can-deconstruct-as l ()) "
+							+	"(construct List Linked) "
+							+	"(append-list (reverse-list (tail-list l)) (head-list l))))) "
+						+	"(lambda ((List:Functional l)) (if (can-deconstruct-as l ()) "
+							+	"(construct List Functional) "
+							+	"(append-list (reverse-list (tail-list l)) (head-list l)))))",
 				ExtendedFunction.makeExtendedFunction(Arrays.asList(
 						new Function(new TypeTuple(Arrays.asList(linkedList)),
 								new Tuple(Arrays
@@ -354,8 +326,7 @@ class TestComplex {
 						env, typeEnv),
 				env, typeEnv);
 
-		TestComplex.testInterpretString(
-				"(define reverse-list (lambda ((List l)) "
+		TestComplex.testInterpretString("(define reverse-list (lambda ((List l)) "
 						+ "(if (is-list-empty l) " + "(construct List Linked) "
 						+ "(append-list (reverse-list (tail-list l)) (head-list l)))))" + "(reverse-list x)",
 				new LitComposite(
@@ -435,11 +406,16 @@ class TestComplex {
 
 		TestComplex.testInterpretString("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)",
 				new LitInteger(42), env, typeEnv);
-		TestComplex.testInterpretString("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
-				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\")))) +)",
+		TestComplex.testInterpretString(
+				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
+					+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
+					+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int String \"21\") (construct Int String \"21\")))) "
+					+ "+)",
 				new LitInteger(42), env, typeEnv);
-		TestComplex.testInterpretString("((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
-				+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\"))))"
+		TestComplex.testInterpretString(
+				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
+				+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
+				+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int String \"21\") (construct Int String \"21\")))) "
 				+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))",
 				new LitComposite(new LitString("2121"), TypeAtom.TypeIntString), env, typeEnv);
 		TestComplex.testInterpretString(
@@ -448,14 +424,22 @@ class TestComplex {
 						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
 				env, typeEnv);
 
-		TestComplex.assertIntprtAndCompPrintSameValues("(type Name)\n" + "(representation Unstructured Name)\n"
-				+ "(constructor Name Unstructured ((String:Native x)) x)\n" + "(representation Structured Name)\n"
-				+ "(constructor Name Structured ((String:Native x) (String:Native y)) (cons x y))\n"
-				+ "(println ((extended-lambda (x) ((Name:Unstructured) \"unstructured\") ((Name:Structured) \"structured\")) (construct Name Unstructured \"Jan Novak\")))\n"
-				+ "(println ((extended-lambda (x) ((Name:Structured) \"structured\")) (construct Name Structured \"Jan\" \"Novak\")))\n"
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(type Name) " 
+				+ "(representation Unstructured Name) "
+				+ "(constructor Name Unstructured ((String:Native x)) x) " 
+				+ "(representation Structured Name) "
+				+ "(constructor Name Structured ((String:Native x) (String:Native y)) (cons x y)) "
+				+ "(println "
+					+ "((extend (extended-lambda (Name)) "
+						+ "(lambda ((Name:Unstructured x)) \"unstructured\"))"
+					+ "(construct Name Unstructured \"Jan Novak\")))"
+				+ "(println "
+					+ "((extend (extended-lambda (Name)) "
+						+ "(lambda ((Name:Structured x)) \"structured\")) "
+					+ "(construct Name Structured \"Jan\" \"Novak\")))"
 				+ "(conversion Name:Structured Name:Unstructured ((Name:Structured x)) (construct Name Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))\n"
-				+ "(println ((lambda ((Name:Unstructured x)) x) (construct Name Structured \"Jan\" \"Novak\")))\n"
-				+ "");
+				+ "(println ((lambda ((Name:Unstructured x)) x) (construct Name Structured \"Jan\" \"Novak\")))");
 	}
 
 	@Test
@@ -491,13 +475,20 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (or #t #f))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(define answer 42)" + "(println answer)");
 
-		TestComplex.assertIntprtAndCompPrintSameValues("(type Name2)" + "(representation Structured Name2)"
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				"(type Name2)" 
+				+ "(representation Structured Name2)"
 				+ "(constructor Name2 Structured ((String:Native x) (String:Native y)) (cons x y))"
-				+ "(representation Unstructured Name2)" + "(constructor Name2 Unstructured ((String:Native x)) x)"
+				+ "(representation Unstructured Name2)" 
+				+ "(constructor Name2 Unstructured ((String:Native x)) x)"
 				+ "(conversion Name2:Structured Name2:Unstructured"
 				+ "((Name2:Structured x)) (construct Name2 Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))"
 				+ "(println ((lambda ((Name2:Unstructured x)) x) (construct Name2 Structured \"Jan\" \"Novak\")))"
-				+ "(println ((extended-lambda ((Int x)) ((Int:Native) \"Native\") ((Int:String) \"String\")) (construct Int String \"42\")))");
+				+ "(println "
+					+"((extend (extend (extended-lambda (Int)) "
+						+ "(lambda ((Int:Native x)) \"Native\")) "
+						+ "(lambda ((Int:String x)) \"String\")) "
+					+ "(construct Int String \"42\")))");
 	}
 
 	@Test
@@ -565,7 +556,10 @@ class TestComplex {
 		TestComplex.testClojureCompileNoCmp("(IntString2IntRoman (Int:String \"42\"))", env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp(
-				"((extended-lambda (x y z) ((Bool:Native Int:String Int:String) (if x z y))) #f (Int:Roman \"XLII\") 66)",
+				"((extend (extended-lambda (Bool Int Int)) "
+					+ "(lambda ((Bool:Native x) (Int:String y) (Int:String z)) "
+						+ "(if x z y))) "
+					+ "#f (Int:Roman \"XLII\") 66)",
 				env, typeEnv);
 
 		TestComplex.assertIntprtAndCompPrintSameValues(
@@ -600,15 +594,33 @@ class TestComplex {
 		TestComplex.testClojureCompileNoCmp(
 				"(define y (construct List2 Functional (construct Int Roman \"XLII\") (construct List2 Functional (construct Int String \"42\") (construct List2 Functional 42 (construct List2 Functional)))))",
 				env, typeEnv);
+		
+		TestComplex.testClojureCompileNoCmp(
+				"(let-type (A) (lambda ((List2:Functional l)) (if (can-deconstruct-as l ()) "
+					+ "(error \"smt\") "
+					+ "(fcar (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))",
+					env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp(
-				"(define head-list2 (let-type (A) (extended-lambda ((List2 l)) ((List2:Linked) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List2:Linked)))))"
-						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))))",
+				"(define head-list2 "
+					+ "(extend (extend (extended-lambda (List2)) "
+						+ "(let-type (A) (lambda ((List2:Linked l)) (if (can-deconstruct-as l ()) "
+							+ "(error \"Cannot make head of empty list!\") "
+							+ "(car (deconstruct l (A List2:Linked)))))))"
+						+ "(let-type (A) (lambda ((List2:Functional l)) (if (can-deconstruct-as l ()) " 
+							+ "(error \"Cannot make head of empty list!\") "
+							+ "(fcar (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))))",
 				env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp(
-				"(define tail-list2 (let-type (A) (extended-lambda ((List2 l)) ((List2:Linked) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List2:Linked)))))"
-						+ "((List2:Functional) (if (can-deconstruct-as l ()) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))))",
+				"(define tail-list2 (let-type (A) "
+					+ "(extend (extend (extended-lambda (List2)) "
+						+ "(lambda ((List2:Linked l)) (if (can-deconstruct-as l ()) "
+							+ "(error \"Cannot make tail of empty list!\") "
+							+ "(cdr (deconstruct l (A List2:Linked))))))"
+						+ "(lambda ((List2:Functional l)) (if (can-deconstruct-as l ()) "
+							+ "(error \"Cannot make tail of empty list!\") "
+							+ "(fcdr (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))))",
 				env, typeEnv);
 
 		// This is interesting, extended lambda is not sufficient, when I might want to
@@ -632,12 +644,15 @@ class TestComplex {
 		TestComplex.testClojureCompileNoCmp("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)", env,
 				typeEnv);
 		TestComplex.testClojureCompileNoCmp(
-				"((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
-						+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\")))) +)",
+				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
+					+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
+					+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int String \"21\") (construct Int String \"21\")))) "
+					+ "+)",
 				env, typeEnv);
 		TestComplex.testClojureCompileNoCmp(
-				"((extended-lambda (f) ((((Int:Native Int:Native) #> Int:Native)) (f 21 21))"
-						+ "((((Int:String Int:String) #> Int:String)) (f (construct Int String \"21\") (construct Int String \"21\"))))"
+				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
+						+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
+						+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int String \"21\") (construct Int String \"21\")))) "
 						+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))",
 				env, typeEnv);
 
@@ -645,83 +660,111 @@ class TestComplex {
 				"(let-type (A B) ((lambda ((A x) (B y)) (cons x y)) 42 (construct Int String  \"42\")))", env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp(
-				"(let-type (A) (extended-lambda ((List2 l) (A x))" + "((List2:Linked A) (if (can-deconstruct-as l ())"
-						+ "(construct List2 Linked x (construct List2 Linked))"
-						+ "(construct List2 Linked (head-list l) (append-list (tail-list l) x))))"
-						+ "((List2:Functional A) (if (can-deconstruct-as l ())"
+				"(let-type (A) (extend (extend (extended-lambda (List2 A)) "
+					+ "(lambda ((List2:Linked l) (A x)) (if (can-deconstruct-as l ()) "
+						+ "(construct List2 Linked x (construct List2 Linked)) "
+						+ "(construct List2 Linked (head-list l) (append-list (tail-list l) x))))) "
+					+ "(lambda ((List:Functional l) (A x)) (if (can-deconstruct-as l ()) "
 						+ "(construct List2 Functional x (construct List2 Functional))"
 						+ "(construct List2 Functional (head-list l) (append-list (tail-list l) x))))))",
 				env, typeEnv);
 
-		TestComplex.testClojureCompileNoCmp("(extended-lambda ((List2 l))"
-				+ "                        ((List2:Linked) (if (can-deconstruct-as l ())"
-				+ "                                            (construct List2 Linked)"
-				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l))))"
-				+ "                        ((List2:Functional) (if (can-deconstruct-as l ())"
-				+ "                                            (construct List2 Functional)"
-				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l)))))",
+		TestComplex.testClojureCompileNoCmp(
+				"(extend (extend (extended-lambda (List2)) "
+					+ "(lambda ((List2:Linked l)) (if (can-deconstruct-as l ()) "
+						+ "(construct List2 Linked) "
+						+ "(append-list (reverse-list (tail-list l)) (head-list l))))) "
+					+ "(lambda ((List2:Functional l)) (if (can-deconstruct-as l ()) "
+						+ "(construct List2 Functional) "
+						+ "(append-list (reverse-list (tail-list l)) (head-list l)))))",
 				env, typeEnv);
 
-		TestComplex.testClojureCompileNoCmp("(let-type (A B) (extended-lambda ((((A) #> B) f) (List2 l))"
-				+ "                    ((((A) #> B) List2:Linked) (if (can-deconstruct-as l ())"
-				+ "                                                (construct List2 Linked)"
-				+ "                                                (construct List2 Linked (f (head-list l)) (map-list f (tail-list l)))))"
-				+ "                    ((((A) #> B) List2:Functional) (if (can-deconstruct-as l ())"
-				+ "                                                    (construct List2 Functional)"
-				+ "                                                    (construct List2 Functional (f (head-list l)) (map-list f (tail-list l)))))))",
+		TestComplex.testClojureCompileNoCmp(
+				"(let-type (A B) (extend (extend (extended-lambda (((A) #> B) List2)) "
+					+ "(lambda ((((A) #> B) f) (List2:Linked l)) (if (can-deconstruct-as l ()) "
+						+ "(construct List2 Linked) "
+						+ "(construct List2 Linked (f (head-list l)) (map-list f (tail-list l)))))) "
+					+ "(lambda ((((A) #> B) f) (List2:Functional l)) (if (can-deconstruct-as l ()) "
+						+ "(construct List2 Functional) "
+						+ "(construct List2 Functional (f (head-list l)) (map-list f (tail-list l)))))))",
 				env, typeEnv);
 
 		TestComplex.testClojureCompileNoCmp("(println (cons 42 \"42\"))", env, typeEnv);
 
-		TestComplex.assertIntprtAndCompPrintSameValues(";;List is now already defined internal type, so we omit it\n"
-				+ ";;(type List)\n" + "\n" + "(representation Linked List)\n"
-				+ "(constructor List Linked (x (List l)) (cons x l))\n" + "(constructor List Linked () ())\n" + "\n"
+		TestComplex.assertIntprtAndCompPrintSameValues(
+				";;List is now already defined internal type, so we omit it\n"
+				+ "(representation Linked List)\n"
+				+ "(constructor List Linked (x (List l)) (cons x l))\n" 
+				+ "(constructor List Linked () ())\n" + "\n"
 				+ "(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
 				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
-				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" + "(define z (fcons 1 2))\n"
-				+ "(println (fcar z))\n" + "(println (fcdr z))\n" + "\n" + "(representation Functional List)\n"
-				+ "(constructor List Functional (x (List l)) (fcons x l))\n" + "(constructor List Functional () ())\n"
+				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" 
+				+ "(define z (fcons 1 2))\n"
+				+ "(println (fcar z))\n" 
+				+ "(println (fcdr z))\n" 
+				+ "(representation Functional List)\n"
+				+ "(constructor List Functional (x (List l)) (fcons x l))\n" 
+				+ "(constructor List Functional () ())\n"
 				+ "(define x (construct List Linked (construct Int Roman \"XLII\") (construct List Linked (construct Int String \"42\") (construct List Linked 42 (construct List Linked)))))\n"
 				+ "(define y (construct List Functional (construct Int Roman \"XLII\") (construct List Functional (construct Int String \"42\") (construct List Functional 42 (construct List Functional)))))\n"
-				+ "(println x)\n" + "\n" + "(define is-list-empty (extended-lambda ((List l))\n"
-				+ "                        ((List:Linked) (can-deconstruct-as l ()))\n"
-				+ "                        ((List:Functional) (can-deconstruct-as l ()))))\n"
-				+ "                        \n" + "(println (is-list-empty x))\n" + "(println (is-list-empty y))\n"
+				+ "(println x)\n" 
+				+ "(define is-list-empty "
+					+ "(extend (extend (extended-lambda (List)) "
+						+ "(lambda ((List:Linked l)) (can-deconstruct-as l ()))) "
+						+ "(lambda ((List:Functional l)) (can-deconstruct-as l ()))))"
+				+ "(println (is-list-empty x))" 
+				+ "(println (is-list-empty y))"
 				+ "(println (is-list-empty (construct List Linked)))\n"
 				+ "(println (is-list-empty (construct List Functional)))\n"
 				+ "(println (is-list-empty (let-type (A) (cdr (deconstruct x (A List:Linked))))))\n"
 				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct y ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
 				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct (construct List Functional 42 (construct List Functional)) ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
-				+ "\n" + "(define head-list (let-type (A B)\n" + "                    (extended-lambda ((List l))\n"
-				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List:Linked)))))\n"
-				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List:Functional) #> B)) #> B))))))))\n"
-				+ "(println (head-list x))\n" + "(println (head-list y))\n" + "\n" + "(define tail-list (let-type (A)\n"
-				+ "                    (extended-lambda ((List l)) \n"
-				+ "          					((List:Linked) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (cdr (deconstruct l (A List:Linked)))))\n"
-				+ "          					((List:Functional) (if (is-list-empty l) (error \"Cannot make tail of empty list!\") (fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))\n"
-				+ "(println (tail-list x))\n" + "(println (head-list (tail-list y)))\n" + "\n"
-				+ "(define build-list-aux (lambda (i n f)\n" + "            						(if (= i n)\n"
-				+ "            							(construct List Linked)\n"
-				+ "            							(construct List Linked (f i) (build-list-aux (+ i 1) n f)))))\n"
-				+ "(println (build-list-aux 0 5 (lambda (x) (+ x 1))))\n" + "\n"
-				+ "(define build-list (lambda (n f) (build-list-aux 0 n f)))\n"
-				+ "(println (build-list 5 (lambda (x) (+ x 1))))\n" + "\n" + "(define append-list (let-type (A)\n"
-				+ "                    (extended-lambda ((List l) (A x))\n"
-				+ "                        ((List:Linked A) (if (is-list-empty l)\n"
-				+ "                            (construct List Linked x (construct List Linked))\n"
-				+ "                            (construct List Linked (head-list l) (append-list (tail-list l) x))))\n"
-				+ "						((List:Functional A) (if (is-list-empty l)\n"
-				+ "                            (construct List Functional x (construct List Functional))\n"
-				+ "                            (construct List Functional (head-list l) (append-list (tail-list l) x)))))))\n"
-				+ "                            \n" + "(println (append-list x 21))\n" + "\n"
-				+ "(define reverse-list (extended-lambda ((List l))\n"
-				+ "                        ((List:Linked) (if (is-list-empty l) \n"
-				+ "                                            (construct List Linked) \n"
-				+ "                                            (append-list (reverse-list (tail-list l)) (head-list l))))\n"
-				+ "                        ((List:Functional) (if (is-list-empty l)\n"
-				+ "                                                (construct List Functional)\n"
-				+ "                                                (append-list (reverse-list (tail-list l)) (head-list l))))))\n"
-				+ "(println (reverse-list x))\n" + "(println (head-list (reverse-list y)))\n" + "");
+				+ "(define head-list (let-type (A B) "
+					+ "(extend (extend (extended-lambda (List)) "
+						+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+							+ "(error \"Cannot make head of empty list\") "
+							+ "(car (deconstruct l (A List:Linked)))))) "
+						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+							+ "(error \"Cannot make head of empty list\") "
+							+ "(fcar (deconstruct l ((((A List:Functional) #> B)) #> B))))))))"
+				+ "(println (head-list x))" 
+				+ "(println (head-list y))" 
+				+ "(define tail-list (let-type (A) "
+					+ "(extend (extend (extended-lambda (List)) "
+						+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+							+ "(error \"Cannot take tail of an empty list\") "
+							+ "(cdr (deconstruct l (A List:Linked)))))) "
+						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+							+ "(error \"Cannot take tail of an empty list\") "
+							+ "(fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))"
+				+ "(println (tail-list x)) " 
+				+ "(println (head-list (tail-list y))) "
+				+ "(define build-list-aux (lambda (i n f) " 
+					+ "(if (= i n) "
+						+ "(construct List Linked) "
+						+ "(construct List Linked (f i) (build-list-aux (+ i 1) n f))))) "
+				+ "(println (build-list-aux 0 5 (lambda (x) (+ x 1)))) "
+				+ "(define build-list (lambda (n f) (build-list-aux 0 n f))) "
+				+ "(println (build-list 5 (lambda (x) (+ x 1)))) " 
+				+ "(define append-list (let-type (A) "
+					+ "(extend (extend (extended-lambda (List A)) "
+						+ "(lambda ((List:Linked l) (A x)) (if (is-list-empty l) "
+							+ "(construct List Linked x (construct List Linked)) "
+							+ "(construct List Linked (head-list l) (append-list (tail-list l) x))))) "
+						+ "(lambda ((List:Functional l) (A x)) (if (is-list-empty l) "
+							+ "(construct List Functional x (construct List Functional)) "
+							+ "(construct List Functional (head-list l) (append-list (tail-list l) x))))))) "
+				+ "(println (append-list x 21)) "
+				+ "(define reverse-list "
+					+ "(extend (extend (extended-lambda (List)) "
+						+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+							+ "(construct List Linked) "
+							+ "(append-list (reverse-list (tail-list l)) (head-list l))))) "
+						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+							+ "(construct List Functional) "
+							+ "(append-list (reverse-list (tail-list l)) (head-list l)))))) "
+				+ "(println (reverse-list x)) " 
+				+ "(println (head-list (reverse-list y)))");
 	}
 
 	@Test
@@ -1425,11 +1468,17 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 	@DisplayName("Test extend")
 	void testExtend() throws Exception {
 		assertIntprtAndCompPrintSameValues(
-				"(println ((extend "
-				+ "(extended-lambda ((Int x)) ((Int:Native) \"foo\")) (lambda ((Int:Roman x)) \"bar\")) (construct Int Roman \"X\")))");
+				"(println ((extend (extend "
+				+ "(extended-lambda (Int)) "
+					+ "(lambda ((Int:Native x)) \"foo\")) "
+					+ "(lambda ((Int:Roman x)) \"bar\")) "
+				+ "(construct Int Roman \"X\")))");
 		assertIntprtAndCompPrintSameValues(
-				"(println ((extend "
-				+ "(extended-lambda ((Int x)) ((Int:Native) \"foo\")) (lambda ((Int:Roman x)) \"bar\") (lambda ((Int:* x)) -999)) 42))");
+				"(println ((extend (extend "
+				+ "(extended-lambda (Int)) "
+					+ "(lambda ((Int:Native x)) \"foo\")) "
+					+ "(lambda ((Int:Roman x)) \"bar\") (lambda ((Int:* x)) -999)) "
+				+ "42))");
 	}
 	
 	@Test

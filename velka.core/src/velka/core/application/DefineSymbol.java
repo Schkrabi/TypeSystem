@@ -54,12 +54,16 @@ public class DefineSymbol extends Expression {
 	 * @throws AppendableException
 	 */
 	public Pair<Type, Substitution> inferDefined(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		//Symbol already exists in this environment, this is a redefinition
+		if(env.containsVariable(this.name)) {
+			Pair<Type, Substitution> infered = this.defined.infer(env, typeEnv);
+			return infered;
+		}
+		//Symbol does not exists in environment, create mockup to allow recursion
 		Environment childEnv = Environment.create(env);
-
-		// Define creates new binding in environment, need to have reference to type of
-		// this variable existing in environment from we are infering
 		TypeVariable tv = new TypeVariable(NameGenerator.next());
 		childEnv.put(this.name, new TypeHolder(tv));
+		
 		Pair<Type, Substitution> infered = this.defined.infer(childEnv, typeEnv);
 
 		Substitution s = infered.second;

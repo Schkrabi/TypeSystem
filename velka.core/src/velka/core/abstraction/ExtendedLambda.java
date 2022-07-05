@@ -15,25 +15,18 @@ import java.util.stream.Collectors;
 import velka.core.application.AbstractionApplication;
 import velka.core.exceptions.ConversionException;
 import velka.core.expression.Expression;
-import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
-import velka.core.langbase.ListNative;
-import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
-import velka.core.literal.LitInteropObject;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
-import velka.types.TypeAtom;
-import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
-import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
@@ -52,31 +45,23 @@ public class ExtendedLambda extends Abstraction {
 	 * Symbol for extended lambda-special form
 	 */
 	public static final String EXTENDED_LAMBDA = "extended-lambda";
-	
-	/**
-	 * Symbol for extended-lambda-cost special form
-	 */
-	public static final String EXTENDED_LAMBDA_COST = "extended-lambda-selection";
 
+	public final Type argsType;
+	
 	/**
 	 * Implementations of this function.
 	 * Implementations are keys of the map, cost functionas are values
 	 */
 	protected final Map<? extends Lambda, Expression> implementations;
-
-	/**
-	 * Ranking function for this extended lambda
-	 */
-	public final Expression selectionFunction;
-
-	protected ExtendedLambda(Map<? extends Lambda, Expression> implementations, Expression selectionFunction) {
+	
+	protected ExtendedLambda(Type argsType, Map<? extends Lambda, Expression> implementations) {
 		this.implementations = new TreeMap<Lambda, Expression>(implementations);
-		this.selectionFunction = selectionFunction;
+		this.argsType = argsType;
 	}
 	
-	protected ExtendedLambda(Map<? extends Lambda, Expression> implementations) {
-		this.implementations = new TreeMap<Lambda, Expression>(implementations);
-		this.selectionFunction = null;
+	public ExtendedLambda(Type argsType) {
+		this.implementations = new TreeMap<Lambda, Expression>();
+		this.argsType = argsType;
 	}
 	
 	/**
@@ -85,24 +70,6 @@ public class ExtendedLambda extends Abstraction {
 	 */
 	public Map<Lambda, Expression> getImplementations(){
 		return new TreeMap<Lambda, Expression>(this.implementations);
-	}
-	
-	/**
-	 * Gets clojure code of the selection function
-	 * @param env
-	 * @param typeEnv
-	 * @return
-	 * @throws AppendableException
-	 */
-	public String selectionFunctionCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		String selectionFunCode = "";
-		if(this.selectionFunction instanceof Operator) {
-			selectionFunCode = ((Operator)this.selectionFunction).getClojureSymbol().toClojureCode(env, typeEnv);
-		}
-		else{
-			selectionFunCode = this.selectionFunction.toClojureCode(env, typeEnv);
-		}
-		return selectionFunCode;
 	}
 
 	@Override
@@ -116,11 +83,16 @@ public class ExtendedLambda extends Abstraction {
 			m.put(f, r);
 		}
 		
-		return new ExtendedFunction(m, this.selectionFunction, env);
+		return new ExtendedFunction(this.argsType, m, env);
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		if(this.implementations.isEmpty()) {
+			Type t =  new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next()));
+			return new Pair<Type, Substitution>(t, Substitution.EMPTY);
+		}
+		
 		Lambda sample = this.implementations.keySet().stream().findAny().get();
 		
 		List<Set<Type>> argsTypeSets = sample.argsType.stream().map(x -> new TreeSet<Type>()).collect(Collectors.toList());
@@ -216,13 +188,18 @@ public class ExtendedLambda extends Abstraction {
 		if (other instanceof ExtendedLambda) {
 			ExtendedLambda o = (ExtendedLambda) other;
 			
+			int cmp = this.argsType.compareTo(o.argsType);
+			if(cmp != 0) {
+				return cmp;
+			}
+			
 			for (Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
 				Lambda l = e.getKey();				
 				if (!o.implementations.containsKey(l)) {
 					return 1;
 				}
 				Expression v = e.getValue();
-				int cmp = o.implementations.get(l).compareTo(v);
+				cmp = o.implementations.get(l).compareTo(v);
 				if(cmp != 0) {
 					return cmp;
 				}
@@ -233,7 +210,7 @@ public class ExtendedLambda extends Abstraction {
 					return -1;
 				}
 				Expression v = e.getValue();
-				int cmp = this.implementations.get(l).compareTo(v);
+				cmp = this.implementations.get(l).compareTo(v);
 				if(cmp != 0) {
 					return cmp;
 				}
@@ -282,7 +259,13 @@ public class ExtendedLambda extends Abstraction {
 	 *                             unify
 	 */
 	public static ExtendedLambda makeExtendedLambda(Collection<Lambda> implementations) throws AppendableException {
-		return ExtendedLambda.makeExtendedLambda(implementations, ExtendedLambda.defaultSelectionFunction);
+		Map<Lambda, Expression> m = new TreeMap<Lambda, Expression>();
+		for(Lambda l : implementations) {
+			Expression costF = l.defaultCostFunction();
+			m.put(l, costF);
+		}
+		
+		return ExtendedLambda.makeExtendedLambda(m);
 	}
 
 	/**
@@ -293,23 +276,25 @@ public class ExtendedLambda extends Abstraction {
 	 * @return new ExtendedLambda object
 	 * @throws AppendableException thrown if any of the argument types does not
 	 *                             unify
-	 */
-	public static ExtendedLambda makeExtendedLambda(Collection<Lambda> implementations, Expression rankingFunction)
-			throws AppendableException {
-		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
-		
-		Map<Lambda, Expression> m = new TreeMap<Lambda, Expression>();
-		for(Lambda l : implementations) {
-			m.put(l, l.defaultCostFunction());
+	 */	
+	public static ExtendedLambda makeExtendedLambda(Map<Lambda, Expression> implementations)
+			throws AppendableException{
+		if(implementations.isEmpty()) {
+			throw new AppendableException("Cannot create extended lambda from empty implementation set.");
 		}
 		
-		return new ExtendedLambda(m, rankingFunction);
-	}
-	
-	public static ExtendedLambda makeExtendedLambda(Map<Lambda, Expression> implementations) {
-		Type.unifyMany(implementations.keySet().stream().map(x -> x.argsType).collect(Collectors.toSet()));
+		Optional<Substitution> o = Type.unifyMany(implementations.keySet().stream().map(x -> x.argsType).collect(Collectors.toSet()));
 		
-		return new ExtendedLambda(implementations);
+		if(!o.isPresent()) {
+			throw new AppendableException("Cannot create extended lambda from implementations: "
+					+ implementations);
+		}
+		
+		Type sample = implementations.keySet().stream().findAny().get().argsType;
+		sample.apply(o.get());
+		sample = sample.removeRepresentationInformation();
+		
+		return new ExtendedLambda(sample, implementations);
 	}
 
 	@Override
@@ -361,116 +346,6 @@ public class ExtendedLambda extends Abstraction {
 		
 		return bestImplementation;
 	}
-	
-	/**
-	 * Default selection function
-	 */
-	public static final Operator defaultSelectionFunction = new Operator() {
-		
-		/**
-		 * Type Variable for return type of the operator
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-		/**
-		 * Type Variable for return type of the operator
-		 */
-		private final TypeVariable B = new TypeVariable(NameGenerator.next());
-		
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			final String implList = "_impl-list";
-			final String argList = "_arg-list";
-			final String argType = "_arg-type";
-			
-			final String pair1 = "_pair1";
-			final String pair2 = "_pair2";
-			
-			final String impl = "_impl";
-			
-			//(fn [impl-list arg-list]
-			//	(let [argType (GET-TYPE (LIST-NATIVE-2-VECTOR arg-list))]
-			//		(second (reduce (fn [pair1 pair2] (if (< (first pair1) (first pair2)) pair1 pair2))
-			//						(map (fn [impl] [(.tupleDistance (.ltype (GET-TYPE impl)) argsType)]) impl-list)))))
-			final String code = ClojureHelper.fnHelper(Arrays.asList(implList, argList),
-					ClojureHelper.letHelper(
-							ClojureHelper.applyClojureFunction("second",
-									ClojureHelper.applyClojureFunction("reduce",
-											ClojureHelper.fnHelper(Arrays.asList(pair1, pair2),
-													ClojureHelper.clojureIfHelper(
-															ClojureHelper.applyClojureFunction("<",
-																	ClojureHelper.applyClojureFunction(
-																			"first", pair1),
-																	ClojureHelper.applyClojureFunction("first", pair2)),
-															pair1, pair2)),
-											ClojureHelper.applyClojureFunction("map", 
-													ClojureHelper.fnHelper(Arrays.asList(impl),
-														ClojureHelper.clojureVectorHelper(
-																ClojureHelper.applyClojureFunction(".tupleDistance",
-																		ClojureHelper.applyClojureFunction(".ltype",
-																				ClojureHelper.applyClojureFunction(
-																						ClojureCoreSymbols.getTypeClojureSymbol_full,
-																						impl)),
-																		argType),
-																impl)),
-													ClojureHelper.getLiteralInnerValue(implList)))),
-							new Pair<String, String>(argType,
-									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full,
-											ClojureHelper.applyClojureFunction(
-													ClojureCoreSymbols.listNativeToTuple_full, argList)))));
-			
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("default-selection-function", Operators.NAMESPACE);
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
-			LitComposite implList = (LitComposite)args.get(0);
-			LitComposite argList = (LitComposite)args.get(1);
-			
-			TypeTuple argsTuple = null;
-			
-			try {
-				argsTuple = new TypeTuple(ListNative.listNativeToTuple(argList).stream().map(ThrowingFunction.wrapper(e -> e.infer(env, typeEnv).first)).collect(Collectors.toList()));
-			}catch(RuntimeException re) {
-				if(re.getCause() instanceof AppendableException) {
-					throw (AppendableException)re.getCause();
-				}
-				throw re;
-			}
-			
-			int bestCost = Integer.MAX_VALUE;
-			Lambda bestImplementation = null; 
-			
-			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>)((LitInteropObject)implList.value).javaObject;
-			for(Expression e : l) {
-				Lambda current = (Lambda)e;
-				
-				int currentCost = argsTuple.tupleDistance(current.argsType);
-				
-				if(currentCost < bestCost || bestImplementation == null) {
-					bestCost = currentCost;
-					bestImplementation = current;
-				}
-			}
-			
-			return bestImplementation;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeListNative),
-					new TypeArrow(A, B));
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-		
-	};
 
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)

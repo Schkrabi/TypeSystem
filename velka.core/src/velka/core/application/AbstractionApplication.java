@@ -66,7 +66,7 @@ public class AbstractionApplication extends Application {
 		Expression ifun = this.fun.interpret(env, typeEnv);
 
 		if (!(ifun instanceof Abstraction)) {
-			throw new AppendableException(ifun.toString() + "is not an abstration");
+			throw new AppendableException(ifun.toString() + " is not an abstration");
 		}
 		Abstraction abst = (Abstraction) ifun;
 

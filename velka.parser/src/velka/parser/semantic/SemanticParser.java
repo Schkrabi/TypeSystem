@@ -6,9 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import velka.core.abstraction.ExtendedLambda;
@@ -164,12 +162,9 @@ public class SemanticParser {
 			throw e;
 		}
 
-		List<TypeVariablePair> args = SemanticParser.parseTypedArgList(l.get(1).asList(), typeLet);
-		Tuple argsTuple = new Tuple(args.stream().map(x -> x.second).collect(Collectors.toList()));
-		List<SemanticNode> impls = l.subList(2, l.size());
-		Set<Lambda> implementations = SemanticParser.parseImplementations(argsTuple, impls, typeLet);
+		Type type = SemanticParser.parseType(l.get(1), typeLet);
 
-		return ExtendedLambda.makeExtendedLambda(implementations);
+		return new ExtendedLambda(type);
 	}
 
 	/**
@@ -206,10 +201,10 @@ public class SemanticParser {
 			Map<TypeVariable, TypeVariable> typeLet) throws AppendableException {
 		Expression e;
 		switch (specialForm) {
-		case SemanticParserStatic.DEFINE_REPRESENTATION:
+		case SemanticParserStatic.REPRESENTATION:
 			e = SemanticParser.parseDefrep(specialFormList, typeLet);
 			break;
-		case SemanticParserStatic.DEFINE_TYPE:
+		case SemanticParserStatic.TYPE:
 			e = SemanticParser.parseDeftype(specialFormList, typeLet);
 			break;
 		case SemanticParserStatic.EXTENDED_LAMBDA:
@@ -221,7 +216,7 @@ public class SemanticParser {
 		case SemanticParserStatic.LAMBDA:
 			e = SemanticParser.parseLambda(specialFormList, typeLet);
 			break;
-		case SemanticParserStatic.DEFINE_CONVERSION:
+		case SemanticParserStatic.CONVERSION:
 			e = SemanticParser.parseDefconversion(specialFormList, typeLet);
 			break;
 		case SemanticParserStatic.DEFINE:
@@ -239,7 +234,7 @@ public class SemanticParser {
 		case SemanticParserStatic.OR:
 			e = SemanticParser.parseOr(specialFormList, typeLet);
 			break;
-		case SemanticParserStatic.DEFINE_CONSTRUCTOR:
+		case SemanticParserStatic.CONSTRUCTOR:
 			e = SemanticParser.parseDefineConstructor(specialFormList, typeLet);
 			break;
 		case SemanticParserStatic.CONSTRUCT:
@@ -265,9 +260,6 @@ public class SemanticParser {
 			break;
 		case SemanticParserStatic.EAPPLY:
 			e = SemanticParser.parseEapply(specialFormList, typeLet);
-			break;
-		case SemanticParserStatic.EXTENDED_LAMBDA_RANKING:
-			e = SemanticParser.parseExtendedLambdaRanking(specialFormList, typeLet);
 			break;
 		case SemanticParserStatic.GET:
 			e = SemanticParser.parseGet(specialFormList, typeLet);
@@ -600,64 +592,6 @@ public class SemanticParser {
 		Type type = SemanticParser.parseType(pair.asList().get(0), letType);
 		Symbol variable = new Symbol(pair.asList().get(1).asSymbol());
 		return new TypeVariablePair(type, variable);
-	}
-
-	/**
-	 * Parses list of types
-	 * 
-	 * @param l parsed list
-	 * @return Tuple of types that list represents
-	 * @throws AppendableException
-	 */
-	private static TypeTuple parseTypeList(List<SemanticNode> l, Map<TypeVariable, TypeVariable> letType)
-			throws AppendableException {
-		List<Type> types = new LinkedList<Type>();
-		for (SemanticNode t : l) {
-			types.add(SemanticParser.parseType(t, letType));
-		}
-		return new TypeTuple(types);
-	}
-
-	/**
-	 * Parses list containing the implementations of extended lambda
-	 * 
-	 * @param lambdaArgs extended lambda formal arguments
-	 * @param l          list of implementations
-	 * @return Set of Lambdas containing the implementations
-	 * @throws AppendableException
-	 */
-	private static Set<Lambda> parseImplementations(Tuple lambdaArgs, List<SemanticNode> l,
-			Map<TypeVariable, TypeVariable> letType) throws AppendableException {
-		Validations.validateImplementations(l, letType);
-
-		Set<Lambda> s = new TreeSet<Lambda>();
-
-		for (SemanticNode n : l) {
-			s.add(SemanticParser.parseImplementation(lambdaArgs, n.asList(), letType));
-		}
-
-		return s;
-	}
-
-	/**
-	 * Parses single implementation of extended lambda
-	 * 
-	 * @param args formal arguments of the implementation
-	 * @param l    list containing unparsed implementation
-	 * @return Lambda representing parsed implementation
-	 * @throws AppendableException
-	 */
-	private static Lambda parseImplementation(Tuple args, List<SemanticNode> l, Map<TypeVariable, TypeVariable> letType)
-			throws AppendableException {
-		try {
-			Validations.validateImplementation(l, letType);
-		} catch (AppendableException e) {
-			e.appendMessage("in implementation " + l);
-			throw e;
-		}
-		TypeTuple argsType = SemanticParser.parseTypeList(l.get(0).asList(), letType);
-		Expression body = SemanticParser.parseNode(l.get(1), letType);
-		return new Lambda(args, argsType, body);
 	}
 
 	private static TypeAtom parseConversionType(SemanticNode typeNode, Map<TypeVariable, TypeVariable> letType)
@@ -1026,34 +960,6 @@ public class SemanticParser {
 
 		return new AbstractionApplication(abstraction, args);
 	}
-
-	/**
-	 * parses extended-lambda-ranking special form list
-	 * 
-	 * @param specialFormList list of the special form
-	 * @param typeLet         used typelet
-	 * @return ExtendedLambda expression
-	 * @throws AppendableException if validation fails
-	 */
-	private static Expression parseExtendedLambdaRanking(List<SemanticNode> specialFormList,
-			Map<TypeVariable, TypeVariable> typeLet) throws AppendableException {
-		try {
-			Validations.validateExtendedLambdaRankingList(specialFormList, typeLet);
-		} catch (AppendableException e) {
-			e.appendMessage("in " + specialFormList.toString());
-			throw e;
-		}
-
-		List<TypeVariablePair> args = SemanticParser.parseTypedArgList(specialFormList.get(1).asList(), typeLet);
-		Tuple argsTuple = new Tuple(args.stream().map(x -> x.second).collect(Collectors.toList()));
-
-		Expression ranking = SemanticParser.parseNode(specialFormList.get(2), typeLet);
-
-		List<SemanticNode> impls = specialFormList.subList(3, specialFormList.size());
-		Set<Lambda> implementations = SemanticParser.parseImplementations(argsTuple, impls, typeLet);
-
-		return ExtendedLambda.makeExtendedLambda(implementations, ranking);
-	}
 	
 	/**
 	 * Parses Get special form
@@ -1264,7 +1170,7 @@ public class SemanticParser {
 		List<Expression> l = new LinkedList<Expression>();
 		
 		for(SemanticNode n : argsList) {
-			l.add(SemanticParser.parseNode(n));
+			l.add(SemanticParser.parseNode(n, typeLet));
 		}		
 		
 		Tuple args = new Tuple(l);
@@ -1289,11 +1195,11 @@ public class SemanticParser {
 			throw e;
 		}
 		
-		Expression extendedFunction = SemanticParser.parseNode(specialFormList.get(1));
-		Expression implementation = SemanticParser.parseNode(specialFormList.get(2));
+		Expression extendedFunction = SemanticParser.parseNode(specialFormList.get(1), typeLet);
+		Expression implementation = SemanticParser.parseNode(specialFormList.get(2), typeLet);
 		
 		if(specialFormList.size() == 4) {
-			Expression costFunction = SemanticParser.parseNode(specialFormList.get(3));
+			Expression costFunction = SemanticParser.parseNode(specialFormList.get(3), typeLet);
 			return new Extend(extendedFunction, implementation, costFunction);
 		}
 		

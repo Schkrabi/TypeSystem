@@ -170,10 +170,6 @@ class TestParser {
 		Lambda impl = new Lambda(new Tuple(new Symbol("x")), new TypeTuple(TypeAtom.TypeIntNative), new Symbol("x"));
 		List<Lambda> impls = new ArrayList<Lambda>();
 		impls.add(impl);
-		this.testParse(
-				"(extended-lambda-selection ((Int x)) (lambda ((List:Native x) (List:Native y)) 1) ((Int:Native) x))",
-				ExtendedLambda.makeExtendedLambda(impls, ranking));
-		
 		this.testParse("(extend foo bar)",
 				new Extend(new Symbol("foo"), new Symbol("bar")));
 		this.testParse("(extend foo bar baz)",
@@ -203,21 +199,8 @@ class TestParser {
 	@Test
 	@DisplayName("Test Extended Lambda")
 	void testElambda() throws AppendableException {
-		Expression parsed = parseString("(extended-lambda ((Int x)) ((Int:String) y))");
+		Expression parsed = parseString("(extended-lambda (Int))");
 		assertTrue(parsed instanceof ExtendedLambda);
-	}
-
-	@Test
-	@DisplayName("Test Validate Extended Lambda")
-	public void testValidateElambda() {
-		// Too few arguments
-		assertThrows(AppendableException.class, () -> parseString("(extended-lambda (x))"));
-
-		// Second argument is not a list
-		assertThrows(UnexpectedExpressionException.class, () -> parseString("(extended-lambda x x)"));
-
-		// Badly formed implementation
-		assertThrows(UnexpectedExpressionException.class, () -> parseString("(extended-lambda (x) x x)"));
 	}
 
 	@Test
@@ -313,16 +296,7 @@ class TestParser {
 		assertThrows(AppendableException.class, () -> parseString("(extended-lambda (x) x ((Integer) x y))"));
 
 		// Badly formed type list
-		assertThrows(UnexpectedExpressionException.class, () -> parseString("(extended-lambda (x) x (1234 x))"));
-
-//		assertThrows(AppendableException.class,
-//				() -> Validations.validateImplementation(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "x"),
-//						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x")),
-//						new TreeMap<TypeVariable, TypeVariable>()));
-//		assertThrows(AppendableException.class,
-//				() -> Validations.validateImplementation(
-//						Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x")),
-//						new TreeMap<TypeVariable, TypeVariable>()));
+		assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(extended-lambda (x) x (1234 x))"));
 	}
 
 	@Test
@@ -332,18 +306,6 @@ class TestParser {
 		assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(conversion x)"));
 		// Too many args
 		assertThrows(InvalidNumberOfArgsException.class, () -> parseString("(conversion x y z w q)"));
-
-//		// Bad special form
-//		assertThrows(UnexpectedExpressionException.class,
-//				() -> Validations.validateDefconversionList(Arrays.asList(SemanticNode.make(NodeType.SYMBOL, "fail"),
-//						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"),
-//						SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"))));
-//
-//		assertThrows(UnexpectedExpressionException.class,
-//				() -> Validations
-//						.validateDefconversionList(Arrays.asList(SemanticNode.make(NodeType.INT, Integer.valueOf(1234)),
-//								SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"),
-//								SemanticNode.make(NodeType.SYMBOL, "x"), SemanticNode.make(NodeType.SYMBOL, "x"))));
 
 		// Bad From Type
 		assertThrows(UnexpectedExpressionException.class, () -> parseString("(conversion 1234 Int (x) x)"));

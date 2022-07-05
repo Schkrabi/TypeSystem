@@ -6,7 +6,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import velka.core.abstraction.ExtendedLambda;
 import velka.core.abstraction.Operator;
 import velka.core.abstraction.Operators;
 import velka.core.interpretation.Environment;
@@ -101,7 +100,6 @@ public class VelkaClojureOperators {
 		sb.append(Operator.makeOperatorDeclaration(Operators.Subtraction));
 		sb.append(Operator.makeOperatorDeclaration(Operators.Timestamp));
 		sb.append(Operator.makeOperatorDeclaration(Operators.ToStr));
-		sb.append(Operator.makeOperatorDeclaration(ExtendedLambda.defaultSelectionFunction));
 		sb.append(Operator.makeOperatorDeclaration(Operators.DivisionFloatingPoint));
 		sb.append(Operator.makeOperatorDeclaration(Operators.intToDouble));
 		sb.append(Operator.makeOperatorDeclaration(Operators.floor));
@@ -147,7 +145,6 @@ public class VelkaClojureOperators {
 			sb.append(Operator.makeOperatorDef(Operators.Subtraction, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.Timestamp, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.ToStr, env, typeEnv));
-			sb.append(Operator.makeOperatorDef(ExtendedLambda.defaultSelectionFunction, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.DivisionFloatingPoint, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.intToDouble, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.floor, env, typeEnv));

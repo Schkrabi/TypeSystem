@@ -325,4 +325,16 @@ public class RepresentationOr extends Type {
 		}
 		return false;
 	}
+	
+	/**
+	 * Creates new Representation Or adding given representation to set
+	 * @param t added representation
+	 * @return new RepresentationOr
+	 * @throws AppendableException if representation cannot be added to set
+	 */
+	public RepresentationOr conjoin(Type t) throws AppendableException {		
+		Set<Type> s = this.getRepresentations();
+		s.add(t);
+		return (RepresentationOr) RepresentationOr.makeRepresentationOr(s);
+	}
 }

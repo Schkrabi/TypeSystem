@@ -59,7 +59,7 @@ public class Validations {
 		}
 		SemanticNode deftypeSymbol = defTypeList.get(0);
 		if (deftypeSymbol.type != SemanticNode.NodeType.SYMBOL
-				|| !deftypeSymbol.asSymbol().equals(SemanticParserStatic.DEFINE_TYPE)) {
+				|| !deftypeSymbol.asSymbol().equals(SemanticParserStatic.TYPE)) {
 			throw new UnexpectedExpressionException(deftypeSymbol.toString());
 		}
 
@@ -85,7 +85,7 @@ public class Validations {
 		}
 		SemanticNode defRepSymbol = defRepList.get(0);
 		if (defRepSymbol.type != SemanticNode.NodeType.SYMBOL
-				|| !defRepSymbol.asSymbol().equals(SemanticParserStatic.DEFINE_REPRESENTATION)) {
+				|| !defRepSymbol.asSymbol().equals(SemanticParserStatic.REPRESENTATION)) {
 			throw new UnexpectedExpressionException(defRepSymbol.toString());
 		}
 
@@ -127,20 +127,13 @@ public class Validations {
 	 */
 	public static boolean validateElambdaList(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
 			throws AppendableException {
-		if (l.size() < 3) {
-			throw new AppendableException("Too few arguments (" + l.size() + ")");
+		if (l.size() != 2) {
+			throw new InvalidNumberOfArgsException(1, l.size() - 1);
 		}
 
 		SemanticNode argsList = l.get(1);
 		if (argsList.type != SemanticNode.NodeType.LIST) {
 			throw new UnexpectedExpressionException(argsList.toString());
-		}
-
-		try {
-			Validations.validateImplementations(l.subList(2, l.size()), typeLet);
-		} catch (AppendableException e) {
-			e.appendMessage(" in " + l);
-			throw e;
 		}
 
 		return true;
@@ -253,7 +246,7 @@ public class Validations {
 
 		SemanticNode defConversion = l.get(0);
 		if (defConversion.type != SemanticNode.NodeType.SYMBOL
-				|| !defConversion.asSymbol().equals(SemanticParserStatic.DEFINE_CONVERSION)) {
+				|| !defConversion.asSymbol().equals(SemanticParserStatic.CONVERSION)) {
 			throw new UnexpectedExpressionException(defConversion.toString());
 		}
 
@@ -390,7 +383,7 @@ public class Validations {
 
 		SemanticNode constructor = l.get(0);
 		if (constructor.type != SemanticNode.NodeType.SYMBOL
-				|| !constructor.asSymbol().equals(SemanticParserStatic.DEFINE_CONSTRUCTOR)) {
+				|| !constructor.asSymbol().equals(SemanticParserStatic.CONSTRUCTOR)) {
 			throw new UnexpectedExpressionException(constructor.toString());
 		}
 
@@ -614,38 +607,6 @@ public class Validations {
 		if (eapply.type != SemanticNode.NodeType.SYMBOL
 				|| !eapply.asSymbol().contentEquals(SemanticParserStatic.EAPPLY)) {
 			throw new UnexpectedExpressionException(eapply.toString());
-		}
-	}
-
-	/**
-	 * Validates extended-lambda-ranking special form
-	 * 
-	 * @param l       validated list
-	 * @param typeLet used typelet
-	 * @throws AppendableException if validation fails
-	 */
-	public static void validateExtendedLambdaRankingList(List<SemanticNode> l, Map<TypeVariable, TypeVariable> typeLet)
-			throws AppendableException {
-		if (l.size() < 4) {
-			throw new AppendableException("Too few arguments (" + l.size() + ")");
-		}
-
-		SemanticNode elambdaRanking = l.get(0);
-		if (elambdaRanking.type != SemanticNode.NodeType.SYMBOL
-				|| !elambdaRanking.asSymbol().contentEquals(SemanticParserStatic.EXTENDED_LAMBDA_RANKING)) {
-			throw new UnexpectedExpressionException(elambdaRanking.toString());
-		}
-
-		SemanticNode argsList = l.get(1);
-		if (argsList.type != SemanticNode.NodeType.LIST) {
-			throw new UnexpectedExpressionException(argsList.toString());
-		}
-
-		try {
-			Validations.validateImplementations(l.subList(3, l.size()), typeLet);
-		} catch (AppendableException e) {
-			e.appendMessage(" in " + l);
-			throw e;
 		}
 	}
 

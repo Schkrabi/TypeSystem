@@ -3,7 +3,9 @@ package velka.core.abstraction;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
+import velka.types.TypeArrow;
 import velka.types.TypeSetDoesNotUnifyException;
+import velka.types.TypeVariable;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -20,6 +22,7 @@ import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
+import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ThrowingBinaryOperator;
 
@@ -32,15 +35,14 @@ import velka.util.ThrowingBinaryOperator;
 public class ExtendedFunction extends ExtendedLambda {
 
 	public final Environment creationEnvironment;
-
-	protected ExtendedFunction(Map<Function, Expression> implementations, Expression rankingFunction,
-			Environment createdEnvironment) {
-		super(implementations, rankingFunction);
-		creationEnvironment = createdEnvironment;
+	
+	protected ExtendedFunction(Type argsType, Map<Function, Expression> implementations, Environment createdEnvironment) {
+		super(argsType, implementations);
+		this.creationEnvironment = createdEnvironment;
 	}
 	
-	protected ExtendedFunction(Map<Function, Expression> implementations, Environment createdEnvironment) {
-		super(implementations);
+	public ExtendedFunction(Type argsType, Environment createdEnvironment) {
+		super(argsType, new TreeMap<Lambda, Expression>());
 		this.creationEnvironment = createdEnvironment;
 	}
 	
@@ -61,6 +63,11 @@ public class ExtendedFunction extends ExtendedLambda {
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		try {
+			if(this.implementations.isEmpty()) {
+				Type t =  new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next()));
+				return new Pair<Type, Substitution>(t, Substitution.EMPTY);
+			}
+			
 			Set<Pair<Type, Substitution>> s = new HashSet<Pair<Type, Substitution>>();
 			for (Expression e : this.implementations.keySet()) {
 				Pair<Type, Substitution> p = e.infer(env, typeEnv);
@@ -136,21 +143,6 @@ public class ExtendedFunction extends ExtendedLambda {
 	 * Creates new extended function
 	 * 
 	 * @param implementations    function implementations
-	 * @param createdEnvironment environment where function was created
-	 * @return new ExtendedFunction object
-	 * @throws AppendableException thrown if argument types of function does not
-	 *                             unify
-	 */
-	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
-			Environment createdEnvironment, TypeEnvironment typeEnv) throws AppendableException {
-		return ExtendedFunction.makeExtendedFunction(implementations, createdEnvironment,
-				ExtendedLambda.defaultSelectionFunction, typeEnv);
-	}
-
-	/**
-	 * Creates new extended function
-	 * 
-	 * @param implementations    function implementations
 	 * @param rankingFunction    ranking function used for selecting implementation
 	 * @param createdEnvironment environment where function was created
 	 * @return new ExtendedFunction object
@@ -158,17 +150,15 @@ public class ExtendedFunction extends ExtendedLambda {
 	 *                             unify
 	 */
 	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
-			Environment createdEnvironment, Expression rankingFunction, TypeEnvironment typeEnv) 
-					throws AppendableException {
-		Type.unifyMany(implementations.stream().map(x -> x.argsType).collect(Collectors.toSet()));
-		
+			Environment createdEnvironment, TypeEnvironment typeEnv) 
+					throws AppendableException {		
 		Map<Function, Expression> m = new TreeMap<Function, Expression>();
 		for(Function f : implementations) {
 			Expression e = f.defaultCostFunction().interpret(createdEnvironment, typeEnv);
 			m.put(f, e);
 		}
 		
-		return new ExtendedFunction(m, rankingFunction, createdEnvironment);
+		return makeExtendedFunction(m, createdEnvironment);
 	}
 	
 	/**
@@ -181,9 +171,21 @@ public class ExtendedFunction extends ExtendedLambda {
 	public static ExtendedFunction makeExtendedFunction(
 			Map<Function, Expression> implementations, 
 			Environment createdEnvironment) throws AppendableException {
-		Type.unifyMany(implementations.keySet().stream().map(x -> x.argsType).collect(Collectors.toSet()));
+		if(implementations.isEmpty()) {
+			throw new AppendableException("Cannot create extended function from empty implementation map.");
+		}
 		
-		return new ExtendedFunction(implementations, createdEnvironment);
+		Optional<Substitution> o = Type.unifyMany(implementations.keySet().stream().map(x -> x.argsType).collect(Collectors.toSet()));
+		
+		if(o.isEmpty()) {
+			throw new AppendableException("Cannot create extended function from implementations: "
+					+ implementations.toString());
+		}
+		
+		Type sample = implementations.keySet().stream().findAny().get().argsType;
+		sample = sample.apply(o.get()).removeRepresentationInformation();
+		
+		return new ExtendedFunction(sample, implementations, createdEnvironment);
 	}
 
 	@Override
