@@ -1,7 +1,6 @@
 package velka.core.abstraction;
 
 import java.util.Iterator;
-import java.util.Optional;
 
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
@@ -96,8 +95,7 @@ public class Function extends Lambda implements Comparable<Expression> {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-			Optional<Expression> rankingFunction) throws AppendableException {
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Environment childEnvironment = Abstraction.lexicalClojure(this.args, args, this.creationEnvironment);
 		return this.body.interpret(childEnvironment, typeEnv);
 	}

@@ -1062,14 +1062,20 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCoreSymbols.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
-						+ (new Tuple(arg)).toClojureCode(env, typeEnv) + "))",
+				ClojureHelper.applyClojureFunction(
+						"println",
+						ClojureHelper.applyVelkaFunction_argsTuple(
+								l.toClojureCode(env, typeEnv),
+								(new Tuple(arg)).toClojureCode(env, typeEnv))),
 				"[1]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCoreSymbols.eapplyClojureSymbol_full + " " + l.toClojureCode(env, typeEnv) + " "
-						+ (new Tuple(arg)).toClojureCode(env, typeEnv) + "))",
+				ClojureHelper.applyClojureFunction(
+						"println",
+						ClojureHelper.applyVelkaFunction_argsTuple(
+								l.toClojureCode(env, typeEnv),
+								(new Tuple(arg)).toClojureCode(env, typeEnv))),
 				"[1]"); 
 				
 				ListNative.makeListNativeExpression(

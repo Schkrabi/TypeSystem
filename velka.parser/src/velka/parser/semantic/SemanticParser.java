@@ -953,10 +953,10 @@ public class SemanticParser {
 		Expression abstraction = SemanticParser.parseNode(specialFormList.get(1), typeLet);
 		Expression args = SemanticParser.parseNode(specialFormList.get(2), typeLet);
 
-		if (specialFormList.size() == 4) {
-			Expression ranking = SemanticParser.parseNode(specialFormList.get(3), typeLet);
-			return new AbstractionApplication(abstraction, args, ranking);
-		}
+//		if (specialFormList.size() == 4) {
+//			Expression ranking = SemanticParser.parseNode(specialFormList.get(3), typeLet);
+//			return new AbstractionApplication(abstraction, args, ranking);
+//		}
 
 		return new AbstractionApplication(abstraction, args);
 	}

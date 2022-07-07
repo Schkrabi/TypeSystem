@@ -1579,7 +1579,8 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test custom cost function")
 	void testCustomCostFunction() throws AppendableException {
-		Tuple elambda_args = new Tuple(new Symbol("a"));
+		Symbol arg = new Symbol("a");
+		Tuple elambda_args = new Tuple(arg);
 		
 		Lambda impl1 = new Lambda(
 				elambda_args, 
@@ -1635,6 +1636,26 @@ class TestInterpretation {
 				new LitString("Int String"), 
 				env, 
 				typeEnv);
+		
+//		Lambda preferIntRoman = new Lambda(
+//				elambda_args,
+//				new TypeTuple(TypeAtom.TypeInt),
+//				new IfExpression(
+//						new InstanceOfRepresentation(arg, TypeAtom.TypeIntRoman),
+//						new LitInteger(Long.MIN_VALUE),
+//						new LitInteger(Long.MAX_VALUE)));
+//		
+//		AbstractionApplication app_customCostOnAppl = 
+//				new AbstractionApplication(
+//					elambda_defaultCostFunction,
+//					args,
+//					preferIntRoman);
+//		
+//		testInterpretation(
+//				app_customCostOnAppl,
+//				new LitString("Int Roman"),
+//				env,
+//				typeEnv);
 	}
 
 	@Test

@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import velka.types.Substitution;
@@ -77,8 +76,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return new LitInteropObject(new LinkedList<Expression>());
 		}
 
@@ -114,8 +112,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression val = args.get(0);
 			LitComposite rest = (LitComposite) args.get(1);
 			LitInteropObject interop = (LitInteropObject) rest.value;
@@ -171,8 +168,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitComposite list = ((LitComposite) args.get(0));
 			LitInteropObject interop = (LitInteropObject) list.value;
 			@SuppressWarnings("unchecked")
@@ -228,8 +224,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitComposite list = ((LitComposite) args.get(0));
 			LitInteropObject interop = (LitInteropObject) list.value;
 			@SuppressWarnings("unchecked")
@@ -288,8 +283,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitComposite list = ((LitComposite) args.get(0));
 			LitInteropObject interop = (LitInteropObject) list.value;
 			@SuppressWarnings("unchecked")
@@ -351,8 +345,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression f = args.get(0);
 			LitComposite list = ((LitComposite) args.get(1));
 			LitInteropObject interop = (LitInteropObject) list.value;
@@ -426,8 +419,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression f = args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l1 = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
@@ -501,8 +493,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression f = args.get(0);
 			Expression term = args.get(1);
 			@SuppressWarnings("unchecked")
@@ -565,8 +556,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);
@@ -618,8 +608,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);
@@ -664,8 +653,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);
@@ -716,8 +704,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);
@@ -769,8 +756,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);
@@ -832,8 +818,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);
@@ -888,8 +873,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger n = (LitInteger) args.get(0);
 			Expression fn = args.get(1);
 
@@ -948,8 +932,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);
@@ -994,8 +977,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);
@@ -1033,8 +1015,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l0 = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);
@@ -1078,8 +1059,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);
@@ -1125,8 +1105,7 @@ public class ListNative {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);

@@ -164,8 +164,8 @@ class TestParser {
 
 		this.testParse("(eapply + (cons 1 2))",
 				new AbstractionApplication(new Symbol("+"), new Tuple(new LitInteger(1), new LitInteger(2))));
-		this.testParse("(eapply + (cons 1 2) (lambda ((List:Native x) (List:Native y)) 1))",
-				new AbstractionApplication(new Symbol("+"), new Tuple(new LitInteger(1), new LitInteger(2)), ranking));
+//		this.testParse("(eapply + (cons 1 2) (lambda ((List:Native x) (List:Native y)) 1))",
+//				new AbstractionApplication(new Symbol("+"), new Tuple(new LitInteger(1), new LitInteger(2)), ranking));
 
 		Lambda impl = new Lambda(new Tuple(new Symbol("x")), new TypeTuple(TypeAtom.TypeIntNative), new Symbol("x"));
 		List<Lambda> impls = new ArrayList<Lambda>();

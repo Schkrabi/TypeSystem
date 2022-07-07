@@ -232,8 +232,7 @@ public class VelkaClojureCore {
 													ClojureHelper.fnHelper(Arrays.asList(), 
 															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
 																	ClojureHelper.applyClojureFunction(".rtype", convertFn_toNormal),
-																	ClojureHelper.applyClojureFunction(
-																			ClojureCoreSymbols.eapplyClojureSymbol_full,
+																	ClojureHelper.applyVelkaFunction_argsTuple(
 																			convertFn_expr,
 																			Type.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)))), 
 													convertFn_toNormal)),
@@ -246,8 +245,7 @@ public class VelkaClojureCore {
 															Arrays.asList("& " + convertFn_fn_arg), 
 															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
 																	ClojureHelper.applyClojureFunction(".rtype", convertFn_toNormal),
-																	ClojureHelper.applyClojureFunction(
-																			ClojureCoreSymbols.eapplyClojureSymbol_full, 
+																	ClojureHelper.applyVelkaFunction_argsTuple( 
 																			convertFn_expr,
 																			"_a"))), convertFn_toNormal)),
 									new Pair<String, String>(
@@ -257,8 +255,7 @@ public class VelkaClojureCore {
 															Arrays.asList("& " + convertFn_fn_arg), 
 															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
 																	ClojureHelper.applyClojureFunction(".rtype", convertFn_toNormal),
-																	ClojureHelper.applyClojureFunction(
-																			ClojureCoreSymbols.eapplyClojureSymbol_full, 
+																	ClojureHelper.applyVelkaFunction_argsTuple( 
 																			convertFn_expr,
 																			ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol,
 																					ClojureHelper.applyClojureFunction(".ltype", convertFn_from),
@@ -428,6 +425,7 @@ public class VelkaClojureCore {
 	
 	private static String eapply_abstr = "_abstr";
 	private static String eapply_args = "_args";
+	private static String eapply_costF = "_costF";
 	private static String eapply_impl = "_impl";
 	private static String eapply_fn_i = "_i";
 	private static String eapply_fn_p1 = "_p1";
@@ -437,7 +435,7 @@ public class VelkaClojureCore {
 	 */
 	public static String eapplyClojureDef = ClojureHelper.clojureDefnHelper(
 			ClojureCoreSymbols.eapplyClojureSymbol,
-			Arrays.asList(eapply_abstr, eapply_args),
+			Arrays.asList(eapply_abstr, eapply_args, eapply_costF),
 			ClojureHelper.letHelper(
 					ClojureHelper.applyClojureFunction(
 							"apply",
@@ -485,8 +483,14 @@ public class VelkaClojureCore {
 																					ClojureHelper.getLiteralInnerValue(
 																						ClojureHelper.applyVelkaFunction_argsTuple(
 																								ClojureHelper.applyClojureFunction(
-																										ClojureCoreSymbols.getCostFunction_full,
-																										eapply_fn_i),
+																										"if",
+																										ClojureHelper.applyClojureFunction(
+																												"nil?",
+																												eapply_costF),
+																										ClojureHelper.applyClojureFunction(
+																												ClojureCoreSymbols.getCostFunction_full,
+																												eapply_fn_i),
+																										eapply_costF),
 																								eapply_args)))),
 																	eapply_abstr)))),
 									new Pair<String, String>(

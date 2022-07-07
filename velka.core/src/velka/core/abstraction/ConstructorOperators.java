@@ -1,7 +1,6 @@
 package velka.core.abstraction;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -35,8 +34,7 @@ public final class ConstructorOperators {
 	public static Operator IntNativeConstructor = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger arg = (LitInteger) args.get(0);
 			return arg;
 		}
@@ -69,8 +67,7 @@ public final class ConstructorOperators {
 	public static Operator IntConstructor = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger arg = (LitInteger) args.get(0);
 			return arg;
 		}
@@ -102,8 +99,7 @@ public final class ConstructorOperators {
 	public static Operator IntStringConstructor = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitString arg = (LitString) args.get(0);
 			return new LitComposite(arg, TypeAtom.TypeIntString);
 		}
@@ -135,8 +131,7 @@ public final class ConstructorOperators {
 	public static Operator IntRomanConstructor = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitString arg = (LitString) args.get(0);
 			return new LitComposite(arg, TypeAtom.TypeIntRoman);
 		}
@@ -169,8 +164,7 @@ public final class ConstructorOperators {
 	public static Operator StringNativeConstructor = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitString arg = (LitString) args.get(0);
 			return arg;
 		}
@@ -204,8 +198,7 @@ public final class ConstructorOperators {
 	public static Operator StringConstructor = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitString arg = (LitString) args.get(0);
 			return arg;
 		}
@@ -238,8 +231,7 @@ public final class ConstructorOperators {
 	public static Operator DoubleNativeConstructor = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitDouble arg = (LitDouble) args.get(0);
 			return arg;
 		}
@@ -272,8 +264,7 @@ public final class ConstructorOperators {
 	public static Operator DoubleConstructor = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitDouble arg = (LitDouble) args.get(0);
 			return arg;
 		}
@@ -307,8 +298,7 @@ public final class ConstructorOperators {
 	public static Operator BoolNativeConstructor = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitBoolean arg = (LitBoolean) args.get(0);
 			return arg;
 		}
@@ -340,8 +330,7 @@ public final class ConstructorOperators {
 	public static Operator BoolConstructor = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitBoolean arg = (LitBoolean) args.get(0);
 			return arg;
 		}

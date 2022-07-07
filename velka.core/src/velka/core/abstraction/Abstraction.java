@@ -23,10 +23,10 @@ import velka.util.Pair;
  */
 public abstract class Abstraction extends Expression {
 
-	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv, Optional<Expression> rankingFunction) throws AppendableException;
+	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException;
 
 	public Expression substituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv, Optional<Expression> rankingFunction) throws AppendableException {
-		return this.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
+		return this.doSubstituteAndEvaluate(args, env, typeEnv);
 	}
 
 	/**

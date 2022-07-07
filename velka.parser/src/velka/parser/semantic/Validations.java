@@ -598,7 +598,7 @@ public class Validations {
 	 * @throws AppendableException if validation fails
 	 */
 	public static void validateEapplyList(List<SemanticNode> specialFormList) throws AppendableException {
-		if (specialFormList.size() != 4 && specialFormList.size() != 3) {
+		if (/*specialFormList.size() != 4 &&*/ specialFormList.size() != 3) {
 			throw new AppendableException(
 					"error, invalid number of arguments.\n eapply has syntax \n\t(eapply fun arg-tuple)\nOR\n\t(eapply fun arg-tuple ranking-fun)");
 		}

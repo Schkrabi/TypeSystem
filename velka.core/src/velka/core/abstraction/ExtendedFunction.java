@@ -189,10 +189,10 @@ public class ExtendedFunction extends ExtendedLambda {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-			Optional<Expression> rankingFunction) throws AppendableException {
-		Abstraction a = this.selectImplementation(args, rankingFunction, env, typeEnv);
-		return a.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+//		Abstraction a = this.selectImplementation(args, rankingFunction, env, typeEnv);
+//		return a.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
+		throw new AppendableException("This method should not be directly used.");
 	}
 
 	@Override

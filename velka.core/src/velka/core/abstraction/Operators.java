@@ -58,8 +58,7 @@ public final class Operators {
 	public static final Operator Addition = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger x = (LitInteger) args.get(0);
 			LitInteger y = (LitInteger) args.get(1);
 
@@ -104,8 +103,7 @@ public final class Operators {
 	public static final Operator BitAnd = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger arg0 = (LitInteger) args.get(0);
 			LitInteger arg1 = (LitInteger) args.get(1);
 
@@ -140,8 +138,7 @@ public final class Operators {
 	public static final Operator BitOr = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger arg0 = (LitInteger) args.get(0);
 			LitInteger arg1 = (LitInteger) args.get(1);
 
@@ -184,8 +181,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger num = (LitInteger) args.get(0);
 			LitInteger n = (LitInteger) args.get(1);
 
@@ -226,8 +222,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger num = (LitInteger) args.get(0);
 			LitInteger n = (LitInteger) args.get(1);
 
@@ -268,8 +263,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger num = (LitInteger) args.get(0);
 
 			LitInteger n;
@@ -316,8 +310,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger l = (LitInteger) args.get(0);
 
 			long ret = ~l.value;
@@ -355,8 +348,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger val1 = (LitInteger) args.get(0);
 			LitInteger val2 = (LitInteger) args.get(1);
 
@@ -396,8 +388,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Tuple arg = (Tuple) args.get(0);
 
 			return arg.get(0);
@@ -432,8 +423,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Tuple arg = (Tuple) args.get(0);
 
 			return arg.get(1);
@@ -460,8 +450,7 @@ public final class Operators {
 	public static final Operator Concantenation = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitString arg0 = (LitString) args.get(0);
 			LitString arg1 = (LitString) args.get(1);
 
@@ -498,8 +487,7 @@ public final class Operators {
 	public static final Operator Division = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger arg0 = (LitInteger) args.get(0);
 			LitInteger arg1 = (LitInteger) args.get(1);
 
@@ -550,8 +538,7 @@ public final class Operators {
 				TypeAtom.TypeBoolNative);
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression arg0 = args.get(0);
 			Expression arg1 = args.get(1);
 
@@ -585,8 +572,7 @@ public final class Operators {
 	public static final Operator LesserThan = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger arg0 = (LitInteger) args.get(0);
 			LitInteger arg1 = (LitInteger) args.get(1);
 
@@ -621,8 +607,7 @@ public final class Operators {
 	public static final Operator Multiplication = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger arg0 = (LitInteger) args.get(0);
 			LitInteger arg1 = (LitInteger) args.get(1);
 
@@ -666,8 +651,7 @@ public final class Operators {
 	public static final Operator Not = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitBoolean arg = (LitBoolean) args.get(0);
 
 			return arg.value ? LitBoolean.FALSE : LitBoolean.TRUE;
@@ -699,8 +683,7 @@ public final class Operators {
 	public static final Operator NumericEqual = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger arg0 = (LitInteger) args.get(0);
 			LitInteger arg1 = (LitInteger) args.get(1);
 
@@ -736,8 +719,7 @@ public final class Operators {
 	public static final Operator Subtraction = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger arg0 = (LitInteger) args.get(0);
 			LitInteger arg1 = (LitInteger) args.get(1);
 
@@ -785,8 +767,7 @@ public final class Operators {
 				new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()))), TypeAtom.TypeIntNative);
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression arg = (Expression) args.get(0);
 
 			String s = arg.toString();
@@ -832,8 +813,7 @@ public final class Operators {
 	public static final Operator CanUnifyTypes = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeSymbol t1 = (TypeSymbol) args.get(0);
 			TypeSymbol t2 = (TypeSymbol) args.get(1);
 
@@ -881,8 +861,7 @@ public final class Operators {
 	 */
 	public static final Operator CanUnifyRepresentations = new Operator() {
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeSymbol t1 = (TypeSymbol) args.get(0);
 			TypeSymbol t2 = (TypeSymbol) args.get(1);
 
@@ -931,8 +910,7 @@ public final class Operators {
 	public static final Operator IsSameType = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression e1 = args.get(0);
 			Expression e2 = args.get(1);
 
@@ -984,8 +962,7 @@ public final class Operators {
 	public static final Operator IsSameRepresentation = new Operator() {
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression e1 = args.get(0);
 			Expression e2 = args.get(1);
 
@@ -1044,8 +1021,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return new LitInteger(System.currentTimeMillis());
 		}
 
@@ -1090,8 +1066,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
 			// suppress the logging output to the console
@@ -1152,8 +1127,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitString s = (LitString) args.get(0);
 			Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 			logger.info(s.value);
@@ -1190,8 +1164,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression e = args.get(0);
 			String s;
 			
@@ -1245,8 +1218,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitString arg = (LitString) args.get(0);
 
 			String content = "";
@@ -1293,8 +1265,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitString lsStr = (LitString) args.get(0);
 			LitString lsBy = (LitString) args.get(1);
 
@@ -1340,8 +1311,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitString arg = (LitString) args.get(0);
 
 			int i;
@@ -1394,8 +1364,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitDouble d1 = (LitDouble)args.get(0);
 			LitDouble d2 = (LitDouble)args.get(1);
 			
@@ -1437,8 +1406,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger i = (LitInteger)args.get(0);
 			return new LitDouble((double)i.value);
 		}
@@ -1476,8 +1444,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitDouble d = (LitDouble)args.get(0);
 			
 			double floored = Math.floor(d.value);
@@ -1519,8 +1486,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitDouble d1 = (LitDouble)args.get(0);
 			LitDouble d2 = (LitDouble)args.get(1);
 			
@@ -1564,8 +1530,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitDouble d1 = (LitDouble)args.get(0);
 			LitDouble d2 = (LitDouble)args.get(1);
 			
@@ -1609,8 +1574,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger i = (LitInteger)args.get(0);
 			LitInteger j = (LitInteger)args.get(1);
 			
@@ -1695,8 +1659,7 @@ public final class Operators {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression fun = args.get(0);
 			Pair<Type, Substitution> funInfered = fun.infer(env, typeEnv);
 			

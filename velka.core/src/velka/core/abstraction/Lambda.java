@@ -285,10 +285,9 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-			Optional<Expression> rankingFunction) throws AppendableException {
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Function f = (Function) this.interpret(env, typeEnv);
-		return f.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
+		return f.doSubstituteAndEvaluate(args, env, typeEnv);
 	}
 
 	/**

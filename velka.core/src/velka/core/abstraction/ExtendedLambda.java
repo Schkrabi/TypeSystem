@@ -234,10 +234,9 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-			Optional<Expression> rankingFunction) throws AppendableException {
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		ExtendedFunction f = (ExtendedFunction) this.interpret(env, typeEnv);
-		return f.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
+		return f.doSubstituteAndEvaluate(args, env, typeEnv);
 	}
 	
 	/**
@@ -322,7 +321,13 @@ public class ExtendedLambda extends Abstraction {
 		Lambda bestImplementation = null;
 		long bestCost = Long.MAX_VALUE;
 		for(Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
-			AbstractionApplication costComputation = new AbstractionApplication(e.getValue(), args);
+			AbstractionApplication costComputation;
+			if(selectionFunction.isPresent()) {
+				costComputation = new AbstractionApplication(selectionFunction.get(), args);
+			}
+			else {
+				costComputation = new AbstractionApplication(e.getValue(), args);
+			}
 			Expression costExpression = costComputation.interpret(env, typeEnv);
 			
 			if(!(costExpression instanceof LitInteger)) {

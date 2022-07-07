@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import velka.core.abstraction.Abstraction;
@@ -29,7 +28,6 @@ import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
-import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
@@ -66,13 +64,14 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [] (java.util.LinkedList.))";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(),
+					ClojureHelper.applyClojureFunction("java.util.LinkedList."));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression e = new LitInteropObject(new LinkedList<Object>());
 			return e;
 		}
@@ -102,14 +101,20 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _e] " + LitBoolean.clojureBooleanToClojureLitBoolean("(.add (first _list) _e)")
-					+ ")";
+			String list = "_list";
+			String e = "_e";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, e),
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(
+									".add",
+									ClojureHelper.getLiteralInnerValue(list),
+									e)));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -151,14 +156,27 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _index _e] (second (doall [(.add (first _list) (first _index) _e) "
-					+ Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv) + "])))";
+			String list = "_list";
+			String index = "_index";
+			String e = "_e";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, index, e),
+					ClojureHelper.applyClojureFunction(
+							"second",
+							ClojureHelper.applyClojureFunction(
+									"doall",
+									ClojureHelper.clojureVectorHelper(
+											ClojureHelper.applyClojureFunction(
+													".add",
+													ClojureHelper.getLiteralInnerValue(list),
+													ClojureHelper.getLiteralInnerValue(index),
+													e),
+											Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv)))));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -213,8 +231,7 @@ public class JavaLinkedList {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -263,14 +280,20 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _object] "
-					+ LitBoolean.clojureBooleanToClojureLitBoolean("(.contains (first _list) _object)") + ")";
+			String list = "_list";
+			String object = "_object";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, object),
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(
+									".contains",
+									ClojureHelper.getLiteralInnerValue(list),
+									object)));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -316,15 +339,20 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _collection] "
-					+ LitBoolean.clojureBooleanToClojureLitBoolean("(.containsAll (first _list) (first _collection))")
-					+ ")";
+			String list = "_list";
+			String collection = "_collection";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, collection),
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(
+									".containsAll",
+									ClojureHelper.getLiteralInnerValue(list),
+									ClojureHelper.getLiteralInnerValue(collection))));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -373,13 +401,20 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _index] (.get (first _list) (first _index)))";
+			String list = "_list";
+			String index = "_index";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, index),
+					ClojureHelper.applyClojureFunction(
+							".get",
+							ClojureHelper.getLiteralInnerValue(list),
+							ClojureHelper.getLiteralInnerValue(index)));
+			
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -420,14 +455,20 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _object] "
-					+ LitInteger.clojureIntToClojureLitInteger("(.indexOf (first _list) _object)") + ")";
+			String list = "_list";
+			String object = "_object";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, object),
+					LitInteger.clojureIntToClojureLitInteger(
+						ClojureHelper.applyClojureFunction(
+								".indexOf",
+								ClojureHelper.getLiteralInnerValue(list),
+								object)));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -470,14 +511,18 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list] " + LitBoolean.clojureBooleanToClojureLitBoolean("(.isEmpty (first _list))")
-					+ ")";
+			String list = "_list";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list),
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(
+									".isEmpty",
+									ClojureHelper.getLiteralInnerValue(list))));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -518,14 +563,20 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _object] "
-					+ LitInteger.clojureIntToClojureLitInteger("(.lastIndexOf (first _list) _object)") + ")";
+			String list = "_list";
+			String object = "_object";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, object),
+					LitInteger.clojureIntToClojureLitInteger(
+							ClojureHelper.applyClojureFunction(
+									".lastIndexOf",
+									ClojureHelper.getLiteralInnerValue(list),
+									object)));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -568,14 +619,20 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _o] " + LitBoolean.clojureBooleanToClojureLitBoolean("(.remove (first _list) _o)")
-					+ ")";
+			String list = "_list";
+			String o = "_o";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, o),
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(
+									".remove",
+									ClojureHelper.getLiteralInnerValue(list),
+									o)));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -621,15 +678,21 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _c] "
-					+ LitBoolean.clojureBooleanToClojureLitBoolean("(.removeAll (first _list) (first _c))") + ")";
+			String list = "_list";
+			String c = "_c";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, c),
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(
+									".removeAll",
+									ClojureHelper.getLiteralInnerValue(list),
+									ClojureHelper.getLiteralInnerValue(c))));
 			return code;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -679,15 +742,22 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _c] "
-					+ LitBoolean.clojureBooleanToClojureLitBoolean("(.retainAll (first _list) (first _c))") + ")";
+			String list = "_list";
+			String c = "_c";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, c),
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(
+									".retainAll",
+									ClojureHelper.getLiteralInnerValue(list),
+									ClojureHelper.getLiteralInnerValue(c))));
+			
 			return code;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -737,14 +807,22 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _index _element] (.set (first _list) (first _index) _element))";
+			String list = "_list";
+			String index = "_index";
+			String element = "_element";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, index, element),
+					ClojureHelper.applyClojureFunction(
+							".set",
+							ClojureHelper.getLiteralInnerValue(list),
+							ClojureHelper.getLiteralInnerValue(index),
+							element));
 			return code;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -786,13 +864,18 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list] " + LitInteger.clojureIntToClojureLitInteger("(.size (first _list))") + ")";
+			String list = "_list";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list),
+					LitInteger.clojureIntToClojureLitInteger(
+							ClojureHelper.applyClojureFunction(
+									".size",
+									ClojureHelper.getLiteralInnerValue(list))));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -832,15 +915,25 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _from _to] " + LitComposite.clojureValueToClojureLiteral(
-					"(java.util.LinkedList. (.subList (first _list) (first _from) (first _to)))",
-					JavaLinkedList.TypeListJavaLinked) + ")";
+			String list = "_list";
+			String from = "_from";
+			String to = "_to";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, from, to),
+					LitComposite.clojureValueToClojureLiteral(
+							ClojureHelper.applyClojureFunction(
+									"java.util.LinkedList.",
+									ClojureHelper.applyClojureFunction(
+											".subList",
+											ClojureHelper.getLiteralInnerValue(list),
+											ClojureHelper.getLiteralInnerValue(from),
+											ClojureHelper.getLiteralInnerValue(to))),
+							JavaLinkedList.TypeListJavaLinked));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -885,22 +978,28 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list _abst] "
-					+ LitComposite.clojureValueToClojureLiteral(
-							"(java.util.LinkedList. (map (fn [_e] (" + ClojureCoreSymbols.eapplyClojureSymbol_full
-									+ " _abst "
-									+ ClojureHelper.addTypeMetaInfo_str("[_e]",
-											"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
-													+ " _e)])")
-									+ ")) (first _list)))",
-							JavaLinkedList.TypeListJavaLinked)
-					+ ")";
+			String list = "_list";
+			String abst = "_abst";
+			String e = "_e";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, abst),
+					LitComposite.clojureValueToClojureLiteral(
+							ClojureHelper.applyClojureFunction(
+									"java.util.LinkedList.",
+									ClojureHelper.applyClojureFunction(
+											"map",
+											ClojureHelper.fnHelper(
+													Arrays.asList(e),
+													ClojureHelper.applyVelkaFunction(
+															abst,
+															e)),
+											ClojureHelper.getLiteralInnerValue(list))),
+							JavaLinkedList.TypeListJavaLinked));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -957,23 +1056,32 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_list1 _list2 _abst] "
-					+ LitComposite.clojureValueToClojureLiteral(
-							"(java.util.LinkedList. (map (fn [_e1 _e2] (" + ClojureCoreSymbols.eapplyClojureSymbol_full
-									+ " _abst "
-									+ ClojureHelper.addTypeMetaInfo_str("[_e1 _e2]",
-											"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full
-													+ " _e1) (" + ClojureCoreSymbols.getTypeClojureSymbol_full
-													+ " _e2)])")
-									+ ")) (first _list1) (first _list2)))",
-							JavaLinkedList.TypeListJavaLinked)
-					+ ")";
+			String list1 = "_list1";
+			String list2 = "_list2";
+			String abst = "_abst";
+			String e1 = "_e1";
+			String e2 = "_e2";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list1, list2, abst),
+					LitComposite.clojureValueToClojureLiteral(
+							ClojureHelper.applyClojureFunction(
+									"java.util.LinkedList.",
+									ClojureHelper.applyClojureFunction(
+											"map",
+											ClojureHelper.fnHelper(
+													Arrays.asList(e1, e2),
+													ClojureHelper.applyVelkaFunction(
+															abst,
+															e1,
+															e2)),
+											ClojureHelper.getLiteralInnerValue(list1),
+											ClojureHelper.getLiteralInnerValue(list2))),
+							JavaLinkedList.TypeListJavaLinked));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			LitComposite lc = (LitComposite) args.get(0);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -1036,18 +1144,28 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
-					+ ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
-					+ ClojureHelper.addTypeMetaInfo_str("[_agg _element]",
-							"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " _agg) ("
-									+ ClojureCoreSymbols.getTypeClojureSymbol_full + " _element)])")
-					+ ")) _term (first _list)))";
+			String abst = "_abst";
+			String term = "_term";
+			String list = "_list";
+			String agg = "_agg";
+			String element = "_element";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(abst, term, list),
+					ClojureHelper.applyClojureFunction(
+							"reduce",
+							ClojureHelper.fnHelper(
+									Arrays.asList(agg, element),
+									ClojureHelper.applyVelkaFunction(
+											abst,
+											agg,
+											element)),
+							term,
+							ClojureHelper.getLiteralInnerValue(list)));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Abstraction abst = (Abstraction) args.get(0);
 			Expression terminator = args.get(1);
 			LitComposite lc = (LitComposite) args.get(2);
@@ -1100,18 +1218,30 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_abst _term _list] (reduce (fn [_agg _element] ("
-					+ ClojureCoreSymbols.eapplyClojureSymbol_full + " _abst "
-					+ ClojureHelper.addTypeMetaInfo_str("[_agg _element]",
-							"(velka.types.TypeTuple. [(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " _agg) ("
-									+ ClojureCoreSymbols.getTypeClojureSymbol_full + " _element)])")
-					+ ")) _term (reverse (first _list))))";
+			String abst = "_abst";
+			String term = "_term";
+			String list = "_list";
+			String agg = "_agg";
+			String element = "_element";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(abst, term, list),
+					ClojureHelper.applyClojureFunction(
+							"reduce",
+							ClojureHelper.fnHelper(
+									Arrays.asList(agg, element),
+									ClojureHelper.applyVelkaFunction(
+											abst,
+											agg,
+											element)),
+							term,
+							ClojureHelper.applyClojureFunction(
+									"reverse",
+									ClojureHelper.getLiteralInnerValue(list))));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Abstraction abst = (Abstraction) args.get(0);
 			Expression terminator = args.get(1);
 			LitComposite lc = (LitComposite) args.get(2);
@@ -1155,14 +1285,19 @@ public class JavaLinkedList {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_linkedList] " + LitComposite.clojureValueToClojureLiteral(
-					"(java.util.ArrayList. (first _linkedList))", JavaArrayList.TypeListJavaArray) + ")";
+			String list = "_list";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list),
+					LitComposite.clojureValueToClojureLiteral(
+							ClojureHelper.applyClojureFunction(
+									"java.util.ArrayList.",
+									ClojureHelper.getLiteralInnerValue(list)),
+							JavaArrayList.TypeListJavaArray));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitComposite lc = (LitComposite) args.get(0);
 			LitInteropObject lio = (LitInteropObject) lc.value;
 			@SuppressWarnings("unchecked")
@@ -1206,8 +1341,7 @@ public class JavaLinkedList {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitComposite lc = (LitComposite) args.get(0);
 			LitInteropObject lio = (LitInteropObject) lc.value;
 			@SuppressWarnings("unchecked")
@@ -1261,8 +1395,7 @@ public class JavaLinkedList {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
 					.get(0)).value).javaObject);

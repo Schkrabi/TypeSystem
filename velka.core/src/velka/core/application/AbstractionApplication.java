@@ -12,6 +12,7 @@ import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ThrowingFunction;
@@ -44,20 +45,20 @@ public class AbstractionApplication extends Application {
 	public final Expression fun;
 
 	/**
-	 * Ranking function for this abstraction application
+	 * Cost function for this abstraction application
 	 */
-	public final Optional<Expression> selectionFunction;
+	public final Optional<Expression> costFunction;
 
 	public AbstractionApplication(Expression fun, Expression args) {
 		super(args);
 		this.fun = fun;
-		this.selectionFunction = Optional.empty();
+		this.costFunction = Optional.empty();
 	}
 
-	public AbstractionApplication(Expression fun, Expression args, Expression selectionFunction) {
+	public AbstractionApplication(Expression fun, Expression args, Expression costFunction) {
 		super(args);
 		this.fun = fun;
-		this.selectionFunction = Optional.of(selectionFunction);
+		this.costFunction = Optional.of(costFunction);
 	}
 
 	@Override
@@ -80,7 +81,7 @@ public class AbstractionApplication extends Application {
 		Pair<Type, Substitution> iArgsInfered = iArgs.infer(env, typeEnv);
 
 		// Select implementation to use (if applicable)
-		abst = abst.selectImplementation(iArgs, this.selectionFunction, env, typeEnv);
+		abst = abst.selectImplementation(iArgs, this.costFunction, env, typeEnv);
 
 		// Convert arguments to specific representations
 		Pair<Type, Substitution> abstInfered = abst.inferWithArgs(iArgs, env, typeEnv);
@@ -97,7 +98,7 @@ public class AbstractionApplication extends Application {
 		Tuple cArgsTuple = (Tuple) cArgs.interpret(env, typeEnv);
 
 		// Finally evaluate application
-		return abst.substituteAndEvaluate(cArgsTuple, env, typeEnv, this.selectionFunction);
+		return abst.substituteAndEvaluate(cArgsTuple, env, typeEnv, this.costFunction);
 	}
 
 	/**
@@ -196,23 +197,14 @@ public class AbstractionApplication extends Application {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		StringBuilder sb = new StringBuilder();
+		String code = ClojureHelper.applyVelkaFunction_argsTuple(
+				this.fun.toClojureCode(env, typeEnv),
+				this.args.toClojureCode(env, typeEnv),
+				this.costFunction.isPresent() ?
+						this.costFunction.get().toClojureCode(env, typeEnv) :
+						"nil");
 		
-		sb.append("(");
-		sb.append(ClojureCoreSymbols.eapplyClojureSymbol_full);
-		sb.append(" ");
-		sb.append(this.fun.toClojureCode(env, typeEnv));
-		sb.append(" ");
-		sb.append(this.args.toClojureCode(env, typeEnv));
-		
-		if(this.selectionFunction.isPresent()) {
-			sb.append(" ");
-			sb.append(this.selectionFunction.get().toClojureCode(env, typeEnv));
-		}
-		
-		sb.append(")");
-		
-		return sb.toString();
+		return code;
 	}
 
 	@Override
@@ -225,13 +217,13 @@ public class AbstractionApplication extends Application {
 			c = this.args.compareTo(o.args);
 			if (c != 0)
 				return c;
-			if (this.selectionFunction.isEmpty() && o.selectionFunction.isEmpty())
+			if (this.costFunction.isEmpty() && o.costFunction.isEmpty())
 				return 0;
-			if (this.selectionFunction.isEmpty() && o.selectionFunction.isPresent())
+			if (this.costFunction.isEmpty() && o.costFunction.isPresent())
 				return -1;
-			if (this.selectionFunction.isPresent() && o.selectionFunction.isEmpty())
+			if (this.costFunction.isPresent() && o.costFunction.isEmpty())
 				return 1;
-			c = this.selectionFunction.get().compareTo(o.selectionFunction.get());
+			c = this.costFunction.get().compareTo(o.costFunction.get());
 			return c;
 		}
 		return super.compareTo(other);
@@ -242,14 +234,14 @@ public class AbstractionApplication extends Application {
 		if (other instanceof AbstractionApplication) {
 			return this.fun.equals(((AbstractionApplication) other).fun)
 					&& this.args.equals(((AbstractionApplication) other).args)
-					&& this.selectionFunction.equals(((AbstractionApplication) other).selectionFunction);
+					&& this.costFunction.equals(((AbstractionApplication) other).costFunction);
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return this.fun.hashCode() * this.args.hashCode() * this.selectionFunction.hashCode();
+		return this.fun.hashCode() * this.args.hashCode() * this.costFunction.hashCode();
 	}
 
 	@Override

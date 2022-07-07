@@ -1,7 +1,6 @@
 package velka.core.abstraction;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -40,8 +39,7 @@ public final class ConversionOperators {
 	public static final Operator IntNativeToIntRoman = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger arg = (LitInteger) args.get(0);
 	
 			return new LitComposite(new LitString(RomanNumbers.int2roman(arg.value)), TypeAtom.TypeIntRoman);
@@ -77,8 +75,7 @@ public final class ConversionOperators {
 	public static final Operator IntNativeToIntString = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitInteger arg = (LitInteger) args.get(0);
 			return new LitComposite(new LitString(Long.toString(arg.value)), TypeAtom.TypeIntString);
 		}
@@ -113,8 +110,7 @@ public final class ConversionOperators {
 	public static final Operator IntRomanToIntNative = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitComposite arg = (LitComposite) args.get(0);
 			LitString strArg = (LitString) arg.value;
 			return new LitInteger(RomanNumbers.roman2int(strArg.value));
@@ -148,8 +144,7 @@ public final class ConversionOperators {
 	public static final Operator IntRomanToIntString = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitComposite arg = (LitComposite) args.get(0);
 			LitString strArg = (LitString) arg.value;
 			int value = RomanNumbers.roman2int(strArg.value);
@@ -189,8 +184,7 @@ public final class ConversionOperators {
 	public static final Operator IntStringToIntNative = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitComposite arg = (LitComposite) args.get(0);
 			LitString strArg = (LitString) arg.value;
 	
@@ -225,8 +219,7 @@ public final class ConversionOperators {
 	public static final Operator IntStringToIntRoman = new Operator() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv,
-				Optional<Expression> rankingFunction) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitComposite arg = (LitComposite) args.get(0);
 			LitString strArg = (LitString) arg.value;
 			int value = Integer.parseInt(strArg.value);
