@@ -3,12 +3,14 @@ package velka.test;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,7 +22,9 @@ import java.util.logging.Logger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import velka.compiler.LangbaseDocumentationGenerator;
 import velka.core.abstraction.Abstraction;
+import velka.core.abstraction.ConstructorOperators;
 import velka.core.abstraction.ConversionOperators;
 import velka.core.abstraction.ExtendedFunction;
 import velka.core.abstraction.ExtendedLambda;
@@ -1024,26 +1028,26 @@ class TestInterpretation {
         		ListNative.makeListNativeExpression(new LitString("foo"), new LitString("bar"), new LitString("baz")).interpret(env, typeEnv), 
         		TypeAtom.TypeListNative);
         
-        TestInterpretation.testOperator(Operators.parseInt, 
+        TestInterpretation.testOperator(Operators.ParseInt, 
         		new Tuple(new LitString("42")), new LitInteger(42), TypeAtom.TypeIntNative);
         
-		TestInterpretation.testOperator(Operators.intToDouble, new Tuple(new LitInteger(42)), new LitDouble(42.0f),
+		TestInterpretation.testOperator(Operators.IntToDouble, new Tuple(new LitInteger(42)), new LitDouble(42.0f),
 				TypeAtom.TypeDoubleNative);
 		
-		TestInterpretation.testOperator(Operators.floor, new Tuple(new LitDouble(3.14f)), new LitInteger(3),
+		TestInterpretation.testOperator(Operators.Floor, new Tuple(new LitDouble(3.14f)), new LitInteger(3),
 				TypeAtom.TypeIntNative);
 		
-		TestInterpretation.testOperator(Operators.dadd, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), new LitDouble(6.28), TypeAtom.TypeDoubleNative);
-		TestInterpretation.testOperator(Operators.doubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(6.28)), LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.doubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.modulo, new Tuple(new LitInteger(5), new LitInteger(3)), new LitInteger(2), TypeAtom.TypeIntNative);
+		TestInterpretation.testOperator(Operators.DoubleAddition, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), new LitDouble(6.28), TypeAtom.TypeDoubleNative);
+		TestInterpretation.testOperator(Operators.DoubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(6.28)), LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operators.DoubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+		TestInterpretation.testOperator(Operators.Modulo, new Tuple(new LitInteger(5), new LitInteger(3)), new LitInteger(2), TypeAtom.TypeIntNative);
 		
-		TestInterpretation.testOperator(Operators.conversionCost,
+		TestInterpretation.testOperator(Operators.ConversionCost,
 				new Tuple(new Lambda(new Tuple(new Symbol("x")), new TypeTuple(TypeAtom.TypeIntNative), new LitString("foo")),
 						new Tuple(new LitComposite(new LitString("IV"), TypeAtom.TypeIntRoman))),
 				new LitInteger(1),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.conversionCost,
+		TestInterpretation.testOperator(Operators.ConversionCost,
 				new Tuple(new Lambda(new Tuple(new Symbol("x")), new TypeTuple(TypeAtom.TypeIntNative), new LitString("foo")),
 						new Tuple(new LitInteger(42))),
 				new LitInteger(0),
@@ -2286,7 +2290,7 @@ class TestInterpretation {
 			  new Function(new TypeTuple(TypeAtom.TypeInt),
 					  elambda_args,
 					  new AbstractionApplication(
-							  Operators.conversionCost,
+							  Operators.ConversionCost,
 							  new Tuple(impl, elambda_args)),
 					  env));
 		
@@ -2298,7 +2302,7 @@ class TestInterpretation {
 			  new Function(new TypeTuple(TypeAtom.TypeInt),
 					  elambda_args,
 					  new AbstractionApplication(
-							  Operators.conversionCost,
+							  Operators.ConversionCost,
 							  new Tuple(impl, elambda_args)),
 					  env));
 		
@@ -2337,7 +2341,7 @@ class TestInterpretation {
 				(Function) impl.interpret(env, typeEnv),
 				new Function(new TypeTuple(TypeAtom.TypeInt),
 						elambda_args,
-						new AbstractionApplication(Operators.conversionCost,
+						new AbstractionApplication(Operators.ConversionCost,
 								  new Tuple(impl, elambda_args)),
 						env));
 		
@@ -2357,6 +2361,20 @@ class TestInterpretation {
 				ExtendedFunction.makeExtendedFunction(expectedImpls, env),
 				env,
 				typeEnv);
+	}
+	
+	@Test
+	@DisplayName("Documentation generator test")
+	void testDocumentationGeneration() throws Exception {
+		LangbaseDocumentationGenerator generator = new LangbaseDocumentationGenerator();
+		Map<Path, String> doc = generator.generate(Arrays.asList(
+				Operators.class,
+				ConversionOperators.class,
+				JavaArrayList.class,
+				JavaLinkedList.class,
+				ListNative.class,
+				ConstructorOperators.class));
+		assertNotNull(doc);
 	}
 
 	private static Expression parseString(String s) throws AppendableException {

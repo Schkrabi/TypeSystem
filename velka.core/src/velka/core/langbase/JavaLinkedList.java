@@ -34,6 +34,9 @@ import velka.util.Pair;
 import velka.util.ThrowingBinaryOperator;
 import velka.util.ThrowingFunction;
 import velka.util.ThrowingPredicate;
+import velka.util.annotations.VelkaConstructor;
+import velka.util.annotations.VelkaOperator;
+import velka.util.annotations.VelkaOperatorBank;
 
 /**
  * 
@@ -42,6 +45,9 @@ import velka.util.ThrowingPredicate;
  * @author Mgr. Radomir Skrabal
  *
  */
+@VelkaOperatorBank(
+		description = "Operators for working with wrapped java.util.LinkedList.", 
+		header = "Linked List")
 public class JavaLinkedList {
 
 	/**
@@ -60,6 +66,10 @@ public class JavaLinkedList {
 	/**
 	 * Constructor
 	 */
+	@VelkaConstructor(
+			description = "Constructs empty List:Linked.", 
+			name = "Construct empty list", 
+			syntax = "(construct List JavaLinked)")
 	public static final Operator constructor = new Operator() {
 
 		@Override
@@ -97,6 +107,10 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean add(E e)
 	 */
+	@VelkaOperator(
+			description = "Appends the specified element to the end of this list.", 
+			example = "(java-linked-list-add-to-end (construct List JavaLinked) 42)", 
+			syntax = "(java-linked-list-add-to-end <list> <element>)")
 	public static final Operator addToEnd = new Operator() {
 
 		@Override
@@ -140,6 +154,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return addToEndSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return addToEndSymbol_out.toString();
+		}
 
 	};
 
@@ -152,6 +171,10 @@ public class JavaLinkedList {
 	/**
 	 * Operator for void add(int index, E element)
 	 */
+	@VelkaOperator(
+			description = "Inserts the specified element at the specified position in this list.", 
+			example = "(java-linked-list-add-to-index (construct List JavaLinked) 0 42)", 
+			syntax = "(java-linked-list-add-to-index <list> <index> <element>)")
 	public static final Operator addToIndex = new Operator() {
 
 		@Override
@@ -205,6 +228,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return addToIndexSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return addToIndexSymbol_out.toString();
+		}
 
 	};
 
@@ -217,6 +245,14 @@ public class JavaLinkedList {
 	/**
 	 * operator for boolean addAll(Collection<? extends E> c)
 	 */
+	@VelkaOperator(
+			description = "Appends all of the elements in the specified collection to the end of this list, in the order that they are returned by the specified collection's Iterator.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add l 42)\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+					+ "(println l)\n"
+					+ ";;(42 0 1 2)", 
+			syntax = "(java-linked-list-add-all <list1> <list2>)")
 	public static final Operator addAll = new Operator() {
 
 		@Override
@@ -264,6 +300,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return addAllSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return addAllSymbol_out.toString();
+		}
 
 	};
 
@@ -276,6 +317,10 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean contains(Object o)
 	 */
+	@VelkaOperator(
+			description = "Returns true if this list contains the specified element.", 
+			example = "(java-linked-list-contains (construct List JavaLinked) 42) ; = #f", 
+			syntax = "(java-linked-list-contains <list> <element>)")
 	public static final Operator contains = new Operator() {
 
 		@Override
@@ -323,6 +368,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return containsSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return containsSymbol_out.toString();
+		}
 
 	};
 
@@ -335,6 +385,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean containsAll(Collection<?> c)
 	 */
+	@VelkaOperator(
+			description = "Returns true if this list contains all of the elements in the specified list.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+					+ "(java-linked-list-contains-all k (build-list-native 2 (lambda (x) x))) ;; = #t", 
+			syntax = "(java-linked-list-contains-all <list1> <list2>)")
 	public static final Operator containsAll = new Operator() {
 
 		@Override
@@ -385,6 +441,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return containsAllSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return containsAllSymbol_out.toString();
+		}
 
 	};
 
@@ -397,6 +458,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for E get(int index)
 	 */
+	@VelkaOperator(
+			description = "Returns the element at the specified position in this list.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+					+ "(java-linked-list-get l 1) ;; = 1", 
+			syntax = "(java-linked-list-get <list> <index>)")
 	public static final Operator get = new Operator() {
 
 		@Override
@@ -439,6 +506,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return getSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return getSymbol_out.toString();
+		}
 
 	};
 
@@ -451,6 +523,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for int indexOf(Object o)
 	 */
+	@VelkaOperator(
+			description = "Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+					+ "(java-linked-list-index-of l 1) ;; = 1", 
+			syntax = "(java-linked-list-index-of <list> <element>)")
 	public static final Operator indexOf = new Operator() {
 
 		@Override
@@ -495,6 +573,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return indexOfSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return indexOfSymbol_out.toString();
+		}
 
 	};
 
@@ -507,6 +590,10 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean isEmpty()
 	 */
+	@VelkaOperator(
+			description = "Returns true if this list contains no elements.", 
+			example = "(java-linked-list-is-empty (construct List JavaLinked)) ;; = #t", 
+			syntax = "(java-linked-list-is-empty <list>)")
 	public static final Operator isEmpty = new Operator() {
 
 		@Override
@@ -547,6 +634,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return isEmptySymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return isEmptySymbol_out.toString();
+		}
 
 	};
 
@@ -559,6 +651,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for int lastIndexOf(E e)
 	 */
+	@VelkaOperator(
+			description = "Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
+					+ "(java-linked-list-last-index-of l 1) ;; = 2", 
+			syntax = "(java-linked-list-last-index-of <list> <element>)")
 	public static final Operator lastIndexOf = new Operator() {
 
 		@Override
@@ -603,6 +701,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return lastIndexOfSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return lastIndexOfSymbol_out.toString();
+		}
 
 	};
 
@@ -615,6 +718,14 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean remove(Object o)
 	 */
+	@VelkaOperator(
+			description = "Removes the first occurrence of the specified element from this list, if it is present.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+					+ "(java-linked-list-remove l 1)\n"
+					+ "(println l)\n"
+					+ "(0 2)", 
+			syntax = "(java-linked-list-remove <list> <element>)")
 	public static final Operator remove = new Operator() {
 
 		@Override
@@ -662,6 +773,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return removeSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return removeSymbol_out.toString();
+		}
 
 	};
 
@@ -674,6 +790,17 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean removeAll(Collection<?> c)
 	 */
+	@VelkaOperator(
+			description = "Removes from this list all of its elements that are contained in the specified collection.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
+					+ "(println l)\n"
+					+ "(0 1 2 1 1 1)\n"
+					+ "(java-linked-list-remove l 1)\n"
+					+ "(println l)\n"
+					+ "(0 2)", 
+			syntax = "(java-linked-list-remove <list> <element>)")
 	public static final Operator removeAll = new Operator() {
 
 		@Override
@@ -726,6 +853,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return removeAllSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return removeAllSymbol_out.toString();
+		}
 
 	};
 
@@ -738,6 +870,15 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean retainAll(Collection<?> c)
 	 */
+	@VelkaOperator(
+			description = "Retains only the elements in this list that are contained in the specified collection.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
+					+ "(java-linked-list-retain-all l (build-list-native 2 (lambda (x) (+ 1 x))))\n"
+					+ "(println l)\n"
+					+ "(2 3)", 
+			syntax = "(java-linked-list-retain-all <retained-list> <retainee-list>)")
 	public static final Operator retainAll = new Operator() {
 
 		@Override
@@ -791,6 +932,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return retainAllSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return retainAllSymbol_out.toString();
+		}
 
 	};
 
@@ -803,6 +949,14 @@ public class JavaLinkedList {
 	/**
 	 * Operator for E set(int index, E element)
 	 */
+	@VelkaOperator(
+			description = "Replaces the element at the specified position in this list with the specified element.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+					+ "(java-linked-list-set l 1 42)\n"
+					+ "(println l)\n"
+					+ "(0 42 2)", 
+			syntax = "(java-linked-list-set <list> <index> <element>)")
 	public static final Operator set = new Operator() {
 
 		@Override
@@ -849,6 +1003,10 @@ public class JavaLinkedList {
 			return setSymbol;
 		}
 
+		@Override
+		public String toString() {
+			return setSymbol_out.toString();
+		}
 	};
 
 	/**
@@ -860,6 +1018,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for int size()
 	 */
+	@VelkaOperator(
+			description = "Returns the number of elements in this list.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+					+ "(java-linked-list-size l) ;; = 3", 
+			syntax = "(java-linked-list-size <list>)")
 	public static final Operator size = new Operator() {
 
 		@Override
@@ -899,6 +1063,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return sizeSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return sizeSymbol_out.toString();
+		}
 
 	};
 
@@ -911,6 +1080,13 @@ public class JavaLinkedList {
 	/**
 	 * Operator for List<E> subList(int fromIndex, int toIndex)
 	 */
+	@VelkaOperator(
+			description = "Returns a view of the portion of this list between the specified fromIndex, inclusive, and toIndex, exclusive.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) x)))\n"
+					+ "(java-linked-list-sublist l 3 7)\n"
+					+ ";; = (2 3 4 5 6 7)", 
+			syntax = "(java-linked-list-sublist <list> <fromIndex> <toIndex>)")
 	public static final Operator sublist = new Operator() {
 
 		@Override
@@ -962,6 +1138,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return sublistSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return sublistSymbol_out.toString();
+		}
 
 	};
 
@@ -974,6 +1155,13 @@ public class JavaLinkedList {
 	/**
 	 * Operator for List<T> map(Function<T, E>)
 	 */
+	@VelkaOperator(
+			description = "Returns a List:JavaLinked consisting of the results of applying the given function to the elements of list.", 
+			example = "(def l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+					+ "(java-linked-list-map l (lambda (x) (+ x 2)))\n"
+					+ ";; = (2 3 4)", 
+			syntax = "(java-linked-list-map <list> <function>)")
 	public static final Operator map = new Operator() {
 
 		@Override
@@ -1040,6 +1228,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return mapSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return map2Symbol_out.toString();
+		}
 
 	};
 
@@ -1052,6 +1245,15 @@ public class JavaLinkedList {
 	/**
 	 * Operator for List<T> map2(List<E2> other, Function<T, E1, E2>)
 	 */
+	@VelkaOperator(
+			description = "Returns a List:JavaLinked consisting of the results of applying the given function to the elements of list1 and list2.", 
+			example = "(def l1 (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l1 (build-list-native 3 (lambda (x) x)))\n"
+					+ "(def l2 (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l2 (build-list-native 3 (lambda (x) (+ x 1))))\n"
+					+ "(java-linked-list-map2 l1 l2 +)\n"
+					+ ";; = (1 3 5)", 
+			syntax = "(java-linked-list-map2 <list1> <list2> <function>)")
 	public static final Operator map2 = new Operator() {
 
 		@Override
@@ -1129,6 +1331,10 @@ public class JavaLinkedList {
 			return map2Symbol;
 		}
 
+		@Override
+		public String toString() {
+			return map2Symbol_out.toString();
+		}
 	};
 
 	/**
@@ -1140,6 +1346,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for T foldl(Function<T, E, T>)
 	 */
+	@VelkaOperator(
+			description = "Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the beginning.", 
+			example = "(def l1 (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) (+ x 1))))\n"
+					+ "(java-linked-list-foldl / 0 l) ;; = 0.16666666666666666666666666666667", 
+			syntax = "(java-linked-list-foldl <function> <terminator> <list>)")
 	public static final Operator foldl = new Operator() {
 
 		@Override
@@ -1202,6 +1414,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return foldlSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return foldlSymbol_out.toString();
+		}
 
 	};
 
@@ -1214,6 +1431,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for T foldr(Function<T, E, T>)
 	 */
+	@VelkaOperator(
+			description = "Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the end.", 
+			example = "(def l1 (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) (+ x 1))))\n"
+					+ "(java-linked-list-foldr / 0 l) ;; = 1.5", 
+			syntax = "(java-linked-list-foldr <function> <terminator> <list>)")
 	public static final Operator foldr = new Operator() {
 
 		@Override
@@ -1272,6 +1495,11 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return foldrSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return foldrSymbol_out.toString();
+		}
 
 	};
 
@@ -1281,6 +1509,10 @@ public class JavaLinkedList {
 	/**
 	 * Conversion LinkedList 2 ArrayList
 	 */
+	@VelkaOperator(
+			description = "Converts List:JavaLinked to List:JavaArray)", 
+			example = "(linked-list-2-array-list (construct List JavaLinked))", 
+			syntax = "(linked-list-2-array-list <linked-list>)")
 	public static Operator LinkedListToArrayList = new Operator() {
 
 		@Override
@@ -1319,6 +1551,10 @@ public class JavaLinkedList {
 			return LinkedListToArrayListSymbol;
 		}
 
+		@Override
+		public String toString() {
+			return LinkedListToArrayListSymbol_out.toString();
+		}
 	};
 
 	public static final Symbol LinkedListToNativeListSymbol = new Symbol("to-list-native", NAMESPACE);
@@ -1327,6 +1563,10 @@ public class JavaLinkedList {
 	/**
 	 * Conversion LinkedList 2 NativeList
 	 */
+	@VelkaOperator(
+			description = "Converts List:JavaLinked to List:Native.", 
+			example = "(linked-list-2-native-list (construct List JavaLinked))", 
+			syntax = "(linked-list-2-native-list <linked list>)")
 	public static Operator LinkedListToNativeList = new Operator() {
 
 		@Override
@@ -1368,11 +1608,23 @@ public class JavaLinkedList {
 		public Symbol getClojureSymbol() {
 			return LinkedListToNativeListSymbol;
 		}
+		
+		@Override
+		public String toString() {
+			return LinkedListToNativeListSymbol_out.toString();
+		}
 	};
 
 	public static final Symbol everypSymbol = new Symbol("velka-everyp", NAMESPACE);
 	public static final Symbol everypSymbol_out = new Symbol("java-linked-list-everyp");
 
+	@VelkaOperator(
+			description = "Returns true if every element of this list returns true for the predicate. Otherwise returns false.", 
+			example = "(define l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (* 2 x)))\n"
+					+ "(java-linked-list-everyp l (lambda (x) (= (mod x 2) 0))) ;; = #t\n"
+					+ "(java-linked-list-everyp l (lambda (x) (= x 1))) ;; = #f", 
+			syntax = "(java-linked-list-everyp <list> <predicate>)")
 	public static final Operator everyp = new Operator() {
 
 		@Override
@@ -1392,6 +1644,11 @@ public class JavaLinkedList {
 		@Override
 		public Symbol getClojureSymbol() {
 			return everypSymbol;
+		}
+		
+		@Override
+		public String toString() {
+			return everypSymbol_out.toString();
 		}
 
 		@Override
@@ -1446,5 +1703,7 @@ public class JavaLinkedList {
 		env.put(foldlSymbol_out, foldl);
 		env.put(foldrSymbol_out, foldr);
 		env.put(everypSymbol_out, everyp);
+		env.put(LinkedListToArrayListSymbol_out, LinkedListToArrayListSymbol);
+		env.put(LinkedListToNativeListSymbol_out, LinkedListToNativeListSymbol);
 	}
 }

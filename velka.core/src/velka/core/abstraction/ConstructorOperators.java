@@ -20,12 +20,17 @@ import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.Pair;
+import velka.util.annotations.VelkaConstructor;
+import velka.util.annotations.VelkaOperatorBank;
 
 /**
  * This class contains contructor operators
  * @author Mgr. Radomir Skrabal
  *
  */
+@VelkaOperatorBank(
+		description = "General constructors for basic Velka representations.", 
+		header = "General Constructors")
 public final class ConstructorOperators {
 
 	/**
@@ -61,6 +66,7 @@ public final class ConstructorOperators {
 		}
 	
 	};
+	
 	/**
 	 * Int constructor (really constructs Int:Native)
 	 */
@@ -96,6 +102,10 @@ public final class ConstructorOperators {
 	/**
 	 * Int:String constructor
 	 */
+	@VelkaConstructor(
+			description = "Constructs Int:String from string.", 
+			name = "Construct Int String", 
+			syntax = "(construct Int String <string>)")
 	public static Operator IntStringConstructor = new Operator() {
 	
 		@Override
@@ -128,6 +138,10 @@ public final class ConstructorOperators {
 	/**
 	 * Int:Roman constructor
 	 */
+	@VelkaConstructor(
+			description = "Construct Int Roman from string.", 
+			name = "Construct Int Roman", 
+			syntax = "(construct Int Roman <string>)")
 	public static Operator IntRomanConstructor = new Operator() {
 	
 		@Override
@@ -326,7 +340,7 @@ public final class ConstructorOperators {
 	};
 	/**
 	 * Bool constructor (really constructs Bool:Native)
-	 */
+	 */	
 	public static Operator BoolConstructor = new Operator() {
 	
 		@Override

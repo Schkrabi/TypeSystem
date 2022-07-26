@@ -93,20 +93,20 @@ public class VelkaClojureOperators {
 		sb.append(Operator.makeOperatorDeclaration(Operators.Multiplication));
 		sb.append(Operator.makeOperatorDeclaration(Operators.Not));
 		sb.append(Operator.makeOperatorDeclaration(Operators.NumericEqual));
-		sb.append(Operator.makeOperatorDeclaration(Operators.parseInt));
+		sb.append(Operator.makeOperatorDeclaration(Operators.ParseInt));
 		sb.append(Operator.makeOperatorDeclaration(Operators.PrintlnOperator));
 		sb.append(Operator.makeOperatorDeclaration(Operators.ReadFile));
 		sb.append(Operator.makeOperatorDeclaration(Operators.StrSplit));
 		sb.append(Operator.makeOperatorDeclaration(Operators.Subtraction));
 		sb.append(Operator.makeOperatorDeclaration(Operators.Timestamp));
 		sb.append(Operator.makeOperatorDeclaration(Operators.ToStr));
-		sb.append(Operator.makeOperatorDeclaration(Operators.DivisionFloatingPoint));
-		sb.append(Operator.makeOperatorDeclaration(Operators.intToDouble));
-		sb.append(Operator.makeOperatorDeclaration(Operators.floor));
-		sb.append(Operator.makeOperatorDeclaration(Operators.dadd));
-		sb.append(Operator.makeOperatorDeclaration(Operators.doubleLesserThan));
-		sb.append(Operator.makeOperatorDeclaration(Operators.modulo));
-		sb.append(Operator.makeOperatorDeclaration(Operators.conversionCost));
+		sb.append(Operator.makeOperatorDeclaration(Operators.DoubleDivision));
+		sb.append(Operator.makeOperatorDeclaration(Operators.IntToDouble));
+		sb.append(Operator.makeOperatorDeclaration(Operators.Floor));
+		sb.append(Operator.makeOperatorDeclaration(Operators.DoubleAddition));
+		sb.append(Operator.makeOperatorDeclaration(Operators.DoubleLesserThan));
+		sb.append(Operator.makeOperatorDeclaration(Operators.Modulo));
+		sb.append(Operator.makeOperatorDeclaration(Operators.ConversionCost));
 		sb.append(ClojureHelper.makeDeclaration(Operators.defaultCostFunction));
 
 		Environment env = Environment.initTopLevelEnvironment();
@@ -138,20 +138,20 @@ public class VelkaClojureOperators {
 			sb.append(Operator.makeOperatorDef(Operators.Multiplication, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.Not, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.NumericEqual, env, typeEnv));
-			sb.append(Operator.makeOperatorDef(Operators.parseInt, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(Operators.ParseInt, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.PrintlnOperator, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.ReadFile, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.StrSplit, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.Subtraction, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.Timestamp, env, typeEnv));
 			sb.append(Operator.makeOperatorDef(Operators.ToStr, env, typeEnv));
-			sb.append(Operator.makeOperatorDef(Operators.DivisionFloatingPoint, env, typeEnv));
-			sb.append(Operator.makeOperatorDef(Operators.intToDouble, env, typeEnv));
-			sb.append(Operator.makeOperatorDef(Operators.floor, env, typeEnv));
-			sb.append(Operator.makeOperatorDef(Operators.dadd, env, typeEnv));
-			sb.append(Operator.makeOperatorDef(Operators.doubleLesserThan, env, typeEnv));
-			sb.append(Operator.makeOperatorDef(Operators.modulo, env, typeEnv));
-			sb.append(Operator.makeOperatorDef(Operators.conversionCost, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(Operators.DoubleDivision, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(Operators.IntToDouble, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(Operators.Floor, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(Operators.DoubleAddition, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(Operators.DoubleLesserThan, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(Operators.Modulo, env, typeEnv));
+			sb.append(Operator.makeOperatorDef(Operators.ConversionCost, env, typeEnv));
 			sb.append("\n" + defaultCostFunctionDef);
 			
 		} catch (AppendableException e) {

@@ -33,7 +33,13 @@ import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ThrowingPredicate;
+import velka.util.annotations.VelkaConstructor;
+import velka.util.annotations.VelkaOperator;
+import velka.util.annotations.VelkaOperatorBank;
 
+@VelkaOperatorBank(
+		description = "Operators for working with velka Lists", 
+		header = "List")
 public class ListNative {
 
 	/**
@@ -61,6 +67,10 @@ public class ListNative {
 	/**
 	 * Construtor for empty list
 	 */
+	@VelkaConstructor(
+			description = "Constructs Empty List:Native.", 
+			name = "Construct Empty List", 
+			syntax = "(construct List Native)")
 	public static final Operator constructorEmpty = new Operator() {
 
 		@Override
@@ -93,6 +103,10 @@ public class ListNative {
 	/**
 	 * Constructor for non-empty list
 	 */
+	@VelkaConstructor(
+			description = "Constructs new List:Native adding element as head to list.", 
+			name = "Construct by cons", 
+			syntax = "(construct List Native <element> <list>)")
 	public static final Operator constructor = new Operator() {
 
 		@Override
@@ -145,6 +159,10 @@ public class ListNative {
 	/**
 	 * is-list-native-empty operator
 	 */
+	@VelkaOperator(
+			description = "Returns _true_ if list is empty. Returns _false_ otherwise.", 
+			example = "(is-list-native-empty (construct List Native)) ;; = #t", 
+			syntax = "(is-list-native-empty <list>)")
 	public static final Operator isEmpty = new Operator() {
 
 		@Override
@@ -198,6 +216,10 @@ public class ListNative {
 	/**
 	 * head-list-native operator
 	 */
+	@VelkaOperator(
+			description = "Returns first element in this list.", 
+			example = "(head-list-native (build-list-native 5 (lambda (x) x))) ;; = 0", 
+			syntax = "(head-list-native <list>)")
 	public static final Operator headListNativeOperator = new Operator() {
 
 		private final String errorMsg = "Cannot take head of empty list.";
@@ -252,6 +274,10 @@ public class ListNative {
 	private static final Symbol tailSymbol = new Symbol("tail", NAMESPACE);
 	public static final Symbol tailSymbol_out = new Symbol("tail-list-native");
 
+	@VelkaOperator(
+			description = "Returns list consisting of all elements of original list, except the first element.", 
+			example = "(tail-list-native (build-list-native 5 (lambda (x) x))) ;; = (1 2 3 4)", 
+			syntax = "(tail-list-native <list>)")
 	public static final Operator tailListNativeOperator = new Operator() {
 
 		private final String errorMsg = "Cannot take tail of empty list.";
@@ -315,6 +341,12 @@ public class ListNative {
 	/**
 	 * map-list-native operator
 	 */
+	@VelkaOperator(
+			description = "Returns a List:Native consisting of the results of applying the given function to the elements of list.", 
+			example = "(map-list-native\n"
+					+ "    (build-list-native 5 (lambda (x)))\n"
+					+ "    (lambda (y) (* y 2))) ;; = (0 2 4 6 8)", 
+			syntax = "(map-list-native <list> <function>)")
 	public static final Operator mapListNativeOperator = new Operator() {
 
 		@Override
@@ -385,6 +417,13 @@ public class ListNative {
 	/**
 	 * map2-list-native operator
 	 */
+	@VelkaOperator(
+			description = "Returns a List:Native consisting of the results of applying the given function to the elements of list1 and list2.", 
+			example = "(map2-list-native\n"
+					+ "    (build-list-native 5 (lambda (x) x))\n"
+					+ "    (build-list-native 5 (lambda (x) x))\n"
+					+ "    +) ;; = (0 2 4 6 8)", 
+			syntax = "(map2-list-native <list1> <list2> <function>)")
 	public static final Operator map2ListNativeOperator = new Operator() {
 
 		@Override
@@ -465,6 +504,10 @@ public class ListNative {
 	/**
 	 * foldl-list-native operator
 	 */
+	@VelkaOperator(
+			description = "Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the beginning.", 
+			example = "(foldl-list-native / 0 (build-list-native 3 (lambda (x) (+ x 1)))) ;; = 0.16666666666666666666666666666667", 
+			syntax = "(foldl-list-native <function> <terminator> <list>)")
 	public static final Operator foldlListNativeOperator = new Operator() {
 
 		@Override
@@ -528,6 +571,10 @@ public class ListNative {
 	/**
 	 * add-to-end operator
 	 */
+	@VelkaOperator(
+			description = "Creates new list with appended the specified element to the end of list.", 
+			example = "(add-to-end-list-native (construct List Native) 42) ;; = (42)", 
+			syntax = "(add-to-end-list-native <list> <element>)")
 	public static final Operator addToEndOperator = new Operator() {
 
 		@Override
@@ -583,6 +630,10 @@ public class ListNative {
 	/**
 	 * list-native-2-array-list operator
 	 */
+	@VelkaOperator(
+			description = "Converts List:Native to List:JavaArray.", 
+			example = "(list-native-2-array-list (build-list-native 5 (lambda (x) x)))", 
+			syntax = "(list-native-2-array-list <list native>)")
 	public static final Operator ListNativeToArrayListOperator = new Operator() {
 
 		@Override
@@ -628,6 +679,10 @@ public class ListNative {
 	public static final Symbol ListNativeToLinkedListSymbol = new Symbol("to-linked-list", NAMESPACE);
 	public static final Symbol ListNativeToLinkedListSymbol_out = new Symbol("list-native-2-linked-list");
 
+	@VelkaOperator(
+			description = "Converts List:Native to List:JavaLinked.", 
+			example = "(list-native-2-linked-list (build-list-native 5 (lambda (x) x)))", 
+			syntax = "(list-native-2-linked-list <list native>)")
 	public static final Operator ListNativeToLinkedListOperator = new Operator() {
 
 		@Override
@@ -682,6 +737,11 @@ public class ListNative {
 	/**
 	 * contains operator
 	 */
+	@VelkaOperator(
+			description = "Returns true if this list contains the specified element.", 
+			example = "(contains-list-native (build-list-native 3 (lambda (x) x)) 0) ; = #t\n"
+					+ "(contains-list-native (build-list-native 3 (lambda (x) x)) 5) ; = #f", 
+			syntax = "(contains-list-native <list> <element>)")
 	public static final Operator contains = new Operator() {
 
 		@Override
@@ -701,6 +761,11 @@ public class ListNative {
 		@Override
 		public Symbol getClojureSymbol() {
 			return containsSymbol;
+		}
+		
+		@Override
+		public String toString() {
+			return ListNative.containsSymbol_out.toString();
 		}
 
 		@Override
@@ -729,6 +794,10 @@ public class ListNative {
 	public static final Symbol filterSymbol = new Symbol("velka-filter", NAMESPACE);
 	public static final Symbol filterSymbol_out = new Symbol("filter-list-native");
 
+	@VelkaOperator(
+			description = "Returns new List:Native containing only those elements of list, for which predicate returns true.", 
+			example = "(filter-list-native (build-list-native 5 (lambda (x) x)) (lambda (y) (= (mod y 2) 0))) ;; = (0 2 4)", 
+			syntax = "(filter-list-native <list> <predicate>)")
 	public static final Operator filter = new Operator() {
 
 		@Override
@@ -753,6 +822,11 @@ public class ListNative {
 		@Override
 		public Symbol getClojureSymbol() {
 			return filterSymbol;
+		}
+		
+		@Override
+		public String toString() {
+			return ListNative.filterSymbol_out.toString();
 		}
 
 		@Override
@@ -798,6 +872,10 @@ public class ListNative {
 	/**
 	 * Get operator
 	 */
+	@VelkaOperator(
+			description = "Returns the element at the specified position in this list.", 
+			example = "(get-list-native (build-list-native 5 (lambda (x) (* 2 x))) 1) ;; = 2", 
+			syntax = "(get-list-native <list> <index>)")
 	public static final Operator get = new Operator() {
 
 		private static final String errorMsg = "Index out of range";
@@ -815,6 +893,11 @@ public class ListNative {
 		@Override
 		public Symbol getClojureSymbol() {
 			return getSymbol;
+		}
+		
+		@Override
+		public String toString() {
+			return ListNative.getSymbol_out.toString();
 		}
 
 		@Override
@@ -843,6 +926,11 @@ public class ListNative {
 	public static final Symbol buildListSymbol = new Symbol("build-list", NAMESPACE);
 	public static final Symbol buildListSymbol_out = new Symbol("build-list-native");
 
+	@VelkaOperator(
+			description = "Creates a List:Native of n elements by applying function to the integers from 0 to (- n 1) in order.\n"
+					+ "If lst is the resulting list, then (get-list-native lst i) is the value produced by (function i).", 
+			example = "(build-list-native 5 (lambda (x) (* x x))) ;; = (0 1 4 9 16)", 
+			syntax = "(build-list-native <n> <function>)")
 	public static final Operator buildList = new Operator() {
 
 		@Override
@@ -870,6 +958,11 @@ public class ListNative {
 		@Override
 		public Symbol getClojureSymbol() {
 			return buildListSymbol;
+		}
+		
+		@Override
+		public String toString() {
+			return ListNative.buildListSymbol_out.toString();
 		}
 
 		@Override
@@ -905,6 +998,10 @@ public class ListNative {
 	public static final Symbol removeSymbol = new Symbol("velka-remove", NAMESPACE);
 	public static final Symbol removeSymbol_out = new Symbol("remove-list-native");
 
+	@VelkaOperator(
+			description = "Removes the first occurrence of the specified element from this list, if it is present.", 
+			example = "(remove-list-native build-list-native 3 (lambda (x) x)) 1) ;; = (0 2)", 
+			syntax = "(remove-list-native <list> <element>)")
 	public static final Operator remove = new Operator() {
 
 		@Override
@@ -929,6 +1026,11 @@ public class ListNative {
 		@Override
 		public Symbol getClojureSymbol() {
 			return removeSymbol;
+		}
+		
+		@Override
+		public String toString() {
+			return ListNative.removeSymbol_out.toString();
 		}
 
 		@Override
@@ -960,6 +1062,10 @@ public class ListNative {
 	public static final Symbol sizeSymbol = new Symbol("velka-size", NAMESPACE);
 	public static final Symbol sizeSymbol_out = new Symbol("size-list-native");
 
+	@VelkaOperator(
+			description = "Returns the number of elements in this list.", 
+			example = "(size-list-native (build-list-native 3 (lambda (x) x))) ;; = 3", 
+			syntax = "(size-list-native <list>)")
 	public static final Operator size = new Operator() {
 
 		@Override
@@ -974,6 +1080,11 @@ public class ListNative {
 		@Override
 		public Symbol getClojureSymbol() {
 			return sizeSymbol;
+		}
+		
+		@Override
+		public String toString() {
+			return ListNative.sizeSymbol_out.toString();
 		}
 
 		@Override
@@ -996,6 +1107,10 @@ public class ListNative {
 	public static final Symbol appendSymbol = new Symbol("append", NAMESPACE);
 	public static final Symbol appendSymbol_out = new Symbol("append-list-native");
 
+	@VelkaOperator(
+			description = "Creates a new List:Native where contents of list2 are appended after contents of list1.", 
+			example = "(append-list-native (build-list-native 2 (lambda (x) x)) (build-list-native 3 (lambda (x) (+ x 2)))) ;; = (0 1 2 3 4)", 
+			syntax = "(append-list-native <list1> <list2>)")
 	public static final Operator append = new Operator() {
 
 		@Override
@@ -1012,6 +1127,11 @@ public class ListNative {
 		@Override
 		public Symbol getClojureSymbol() {
 			return appendSymbol;
+		}
+		
+		@Override
+		public String toString() {
+			return ListNative.appendSymbol_out.toString();
 		}
 
 		@Override
@@ -1041,6 +1161,10 @@ public class ListNative {
 	public static final Symbol reverseSymbol = new Symbol("velka-reverse", NAMESPACE);
 	public static final Symbol reverseSymbol_out = new Symbol("reverse-list-native");
 
+	@VelkaOperator(
+			description = "Creates new List:Native with the same elements as list, but in reversed (last to first) order.", 
+			example = "(reverse-list-native (build-list-native 5 (lambda (x) x))) ;; = (4 3 2 1 0)", 
+			syntax = "(reverse-list-native <list>)")
 	public static final Operator reverse = new Operator() {
 
 		@Override
@@ -1056,6 +1180,11 @@ public class ListNative {
 		@Override
 		public Symbol getClojureSymbol() {
 			return reverseSymbol;
+		}
+		
+		@Override
+		public String toString() {
+			return ListNative.reverseSymbol_out.toString();
 		}
 
 		@Override
@@ -1083,6 +1212,11 @@ public class ListNative {
 	public static final Symbol everypSymbol = new Symbol("velka-everyp", NAMESPACE);
 	public static final Symbol everypSymbol_out = new Symbol("everyp-list-native");
 
+	@VelkaOperator(
+			description = "Returns true if every element of this list returns true for the predicate. Otherwise returns false.", 
+			example = "(everyp-list-native (build-list-native 10 (* 2 x)) (lambda (x) (= (mod x 2) 0))) ;; = #t\n"
+					+ "(everyp-list-native (build-list-native 10 (* 2 x)) (lambda (x) (= x 1))) ;; = #f", 
+			syntax = "(everyp-list-native <list> <predicate>)")
 	public static final Operator everyp = new Operator() {
 
 		@Override
@@ -1102,6 +1236,11 @@ public class ListNative {
 		@Override
 		public Symbol getClojureSymbol() {
 			return everypSymbol;
+		}
+		
+		@Override
+		public String toString() {
+			return ListNative.everypSymbol_out.toString();
 		}
 
 		@Override

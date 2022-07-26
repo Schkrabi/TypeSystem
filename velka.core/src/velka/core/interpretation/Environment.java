@@ -216,14 +216,14 @@ public class Environment implements Comparable<Environment> {
 		env.put(new Symbol(Operators.ToStr.toString()), Operators.ToStr);
 		env.put(new Symbol(Operators.ReadFile.toString()), Operators.ReadFile);
 		env.put(new Symbol(Operators.StrSplit.toString()), Operators.StrSplit);
-		env.put(new Symbol(Operators.parseInt.toString()), Operators.parseInt);
-		env.put(new Symbol(Operators.DivisionFloatingPoint.toString()), Operators.DivisionFloatingPoint);
-		env.put(new Symbol(Operators.intToDouble.toString()), Operators.intToDouble);
-		env.put(new Symbol(Operators.floor.toString()), Operators.floor);
-		env.put(new Symbol(Operators.dadd.toString()), Operators.dadd);
-		env.put(new Symbol(Operators.doubleLesserThan.toString()), Operators.doubleLesserThan);
-		env.put(new Symbol(Operators.modulo.toString()), Operators.modulo);
-		env.put(new Symbol(Operators.conversionCost.toString()), Operators.conversionCost);
+		env.put(new Symbol(Operators.ParseInt.toString()), Operators.ParseInt);
+		env.put(new Symbol(Operators.DoubleDivision.toString()), Operators.DoubleDivision);
+		env.put(new Symbol(Operators.IntToDouble.toString()), Operators.IntToDouble);
+		env.put(new Symbol(Operators.Floor.toString()), Operators.Floor);
+		env.put(new Symbol(Operators.DoubleAddition.toString()), Operators.DoubleAddition);
+		env.put(new Symbol(Operators.DoubleLesserThan.toString()), Operators.DoubleLesserThan);
+		env.put(new Symbol(Operators.Modulo.toString()), Operators.Modulo);
+		env.put(new Symbol(Operators.ConversionCost.toString()), Operators.ConversionCost);
 		
 		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
 				ConversionOperators.IntNativeToIntRoman);

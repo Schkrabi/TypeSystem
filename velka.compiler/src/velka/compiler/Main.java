@@ -4,10 +4,17 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import velka.clojure.ClojureCodeGenerator;
+import velka.core.abstraction.ConstructorOperators;
+import velka.core.abstraction.ConversionOperators;
+import velka.core.abstraction.Operators;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.langbase.JavaArrayList;
+import velka.core.langbase.JavaLinkedList;
+import velka.core.langbase.ListNative;
 
 /**
  * Main entry point for testing
@@ -23,6 +30,7 @@ public class Main {
 	public static final String REPL = "repl";
 	public static final String PREPARE = "prepare";
 	public static final String HELP = "help";
+	public static final String DOCUMENTATION = "documentation";
 	
 	public static final String USAGE = 
 			"Usage:\n" 
@@ -65,6 +73,16 @@ public class Main {
 			break;
 		case REPL:
 			Compiler.repl(System.in, System.out, topLevel, typeEnv, true);
+			break;
+		case DOCUMENTATION:
+			LangbaseDocumentationGenerator.spitDocStatic(
+					Arrays.asList(Operators.class,
+							ConversionOperators.class,
+							JavaArrayList.class,
+							JavaLinkedList.class,
+							ListNative.class,
+							ConstructorOperators.class),
+					Paths.get(fileArg));
 			break;
 		case HELP:
 		default:
