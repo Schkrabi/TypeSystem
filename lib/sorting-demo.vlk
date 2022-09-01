@@ -1,0 +1,232 @@
+;;Demo code - sorting arrays
+;;To run this code with compiled Velka use following command:
+;;
+;;java -jar velka.compiler.jar interpret sorting-demo.vlk
+;;
+;;;;;;;;;;;;;
+;;CONSTANTS;;
+;;;;;;;;;;;;;
+(define _ARRAY_SIZE_TRESHOLD_ 7)
+
+;;Array type
+(type Array)
+
+;; This is a hack or bending of concept.
+;; These representations are the same from data point of view, but will be using different algorithms.
+(representation InsertSort Array)
+(representation QuickSort Array)
+
+;;The new representations are only wrapping exising List:JavaArray representation
+;;which is just a wrap of java.util.ArrayList
+;;;;;;;;;;;;;;;;;;;;
+;;InsertSort array;;
+;;;;;;;;;;;;;;;;;;;;
+(constructor Array InsertSort ((List:JavaArray l)) l)
+
+;;Get underlying List:JavaArray
+(define array-insertsort-get-list
+        (lambda ((Array:InsertSort a))
+                (deconstruct a List:JavaArray)))
+
+;;Get value on index
+(define array-insertsort-get
+        (lambda ((Array:InsertSort a) (Int:Native index))
+                (java-array-list-get (array-insertsort-get-list a) index)))
+
+;;Set value on index
+(define array-insertsort-set
+        (let-type (A)
+            (lambda ((Array:InsertSort a) (Int:Native index) (A value))
+                    (java-array-list-set (array-insertsort-get-list a) index value))))
+
+;;Size of the array
+(define array-insertsort-size
+        (lambda ((Array:InsertSort a))
+            (java-array-list-size (array-insertsort-get-list a))))
+
+;;Swap values on index1 and index2
+(define array-insertsort-swap
+        (lambda ((Array:InsertSort a) (Int:Native index1) (Int:Native index2))
+                (let ((value1 (array-insertsort-get a index1))
+                      (value2 (array-insertsort-get a index2)))
+                     (get 
+                         (tuple
+                             (array-insertsort-set a index1 value2)
+                             (array-insertsort-set a index2 value1)
+                             a) 
+                         2))))
+
+;;Insertsort subroutine
+(define array-insertsort-sort-at
+        (lambda ((Array:InsertSort a) (Int:Native low) (Int:Native index))
+                (loop ((i index)
+                       (al a))
+                    (if (= i low)
+                        al
+                        (if (< (array-insertsort-get al i) 
+                               (array-insertsort-get al (- i 1)))
+                            (recur (- i 1) (array-insertsort-swap al i (- i 1)))
+                            al)))))
+
+;;Insertsort auxiliary function
+(define array-insertsort-sort-aux
+        (lambda ((Array:InsertSort a) (Int:Native low) (Int:Native high) (Int:Native index))
+                (loop ((i index)
+                       (al a))
+                      (if (< high i)
+                          al
+                          (recur (+ i 1) (array-insertsort-sort-at al low i))))))
+
+;;Insertsort main function
+(define array-insertsort-sort
+            (lambda ((Array:InsertSort a) (Int:Native low) (Int:Native high))
+                    (array-insertsort-sort-aux a low high 0)))
+
+;;Pure insertsort entrypoint
+(define insertsort-pure
+        (lambda ((Array:InsertSort a))
+                (array-insertsort-sort a 0 (- (array-insertsort-size a) 1))))
+
+;;;;;;;;;;;;;;;;;;;
+;;QuickSort Array;;
+;;;;;;;;;;;;;;;;;;;
+(constructor Array QuickSort ((List:JavaArray l)) l)
+
+;;Gets underlying List:JavaArray
+(define array-quicksort-get-list
+        (lambda ((Array:QuickSort a))
+                (deconstruct a List:JavaArray)))
+
+;;Gets value on index
+(define array-quicksort-get
+        (lambda ((Array:QuickSort a) (Int:Native index))
+                (java-array-list-get (array-quicksort-get-list a) index)))
+
+;;Sets value on index
+(define array-quicksort-set
+        (let-type (A)
+            (lambda ((Array:QuickSort a) (Int:Native index) (A value))
+                    (java-array-list-set (array-quicksort-get-list a) index value))))
+
+;;Size of the array
+(define array-quicksort-size
+        (lambda ((Array:QuickSort a))
+            (java-array-list-size (array-quicksort-get-list a))))
+
+;;Swaps values on index1 and index2
+(define array-quicksort-swap
+        (lambda ((Array:QuickSort a) (Int:Native index1) (Int:Native index2))
+                (let ((value1 (array-quicksort-get a index1))
+                      (value2 (array-quicksort-get a index2)))
+                     (get 
+                         (tuple
+                             (array-quicksort-set a index1 value2)
+                             (array-quicksort-set a index2 value1)
+                             a) 
+                         2))))
+
+;;Auxiliary function for quicksort-partition
+(define array-quicksort-partition-aux
+        (lambda ((Array:QuickSort a)
+                 (Int:Native low)
+                 (Int:Native high)
+                 (Int:Native pivot)
+                 (Int:Native pivot-index)
+                 (Int:Native index))
+                (if (= index high)
+                    pivot-index
+                    (let ((current (array-quicksort-get a index)))
+                         (if (< current pivot)
+                             (array-quicksort-partition-aux 
+                                 (array-quicksort-swap a (+ pivot-index 1) index) 
+                                 low 
+                                 high 
+                                 pivot 
+                                 (+ 1 pivot-index) 
+                                 (+ 1 index))
+                             (array-quicksort-partition-aux a low high pivot pivot-index (+ 1 index)))))))
+
+;;Quicksort partition function
+(define array-quicksort-partition
+        (lambda ((Array:QuickSort a) (Int:Native low) (Int:Native high))
+                (let* ((pivot-index (array-quicksort-partition-aux 
+                                        a low high (array-quicksort-get a high) (- low 1) low))
+                       (tmp (array-quicksort-swap a (+ pivot-index 1) high)))
+                      (+ pivot-index 1))))
+
+;;Main loop of the pure quicksort
+(define quicksort-pure-main
+        (lambda ((Array:QuickSort a) (Int:Native low) (Int:Native high))
+                (if (< low high)
+                    (let* ((pivot-index (array-quicksort-partition a low high))
+                           (tmp1 (quicksort-pure-main a low (- pivot-index 1)))
+                           (tmp2 (quicksort-pure-main a (+ pivot-index 1) high)))
+                          a)
+                    a)))
+
+;;Main entrypoint of the pure quicksort algorithm
+(define quicksort-pure
+        (lambda ((Array:QuickSort a))
+                (quicksort-pure-main a 0 (- (array-quicksort-size a) 1))))
+
+;;;;;;;;;;;;;;;
+;;CONVERSIONS;;
+;;;;;;;;;;;;;;;
+;Conversions are trivial because underyling representations are identical
+(conversion Array:InsertSort Array:QuickSort
+            ((Array:InsertSort a))
+            (construct Array QuickSort (array-insertsort-get-list a)))
+
+(conversion Array:QuickSort Array:InsertSort
+            ((Array:QuickSort a))
+            (construct Array InsertSort (array-quicksort-get-list a)))
+
+;;;;;;;;;;;;;;;;;;;;;;
+;;EXTENDED FUNCTIONS;;
+;;;;;;;;;;;;;;;;;;;;;;
+;;Size of the array
+(define array-size
+        (extend (extend 
+			(extended-lambda (Array))
+				(lambda ((Array:InsertSort a)) (array-insertsort-size a)))
+				(lambda ((Array:QuickSort a)) (array-quicksort-size a))))
+
+;;Sort main extended function
+(define sort-main
+		(extend (extend
+			(extended-lambda (Array Int Int))
+				;Implementation
+				(lambda ((Array:InsertSort a) (Int:Native low) (Int:Native high)) 
+					(array-insertsort-sort a low high))
+					;Cost function, prefers smaller arrays
+					(lambda ((Array a) (Int low) (Int high)) (- (array-size a) _ARRAY_SIZE_TRESHOLD_)))
+				;Implementation
+				(lambda ((Array:QuickSort a) (Int:Native low) (Int:Native high)) 
+					(if (< low high)
+                                (let* ((pivot-index (array-quicksort-partition a low high))
+                                    (tmp1 (sort-main a low (- pivot-index 1)))
+                                    (tmp2 (sort-main a (+ pivot-index 1) high)))
+                                    a)
+                                a))
+					;Cost function, prefers larger arrays
+					(lambda ((Array a) (Int low) (Int high)) (- _ARRAY_SIZE_TRESHOLD_ (array-size a)))))
+
+;;Sort main entrypoint function
+(define sort
+        (lambda ((Array a))
+                (sort-main a 0 (- (array-size a) 1))))
+
+;;Main function
+(define main
+	(lambda ()
+				;;Testing array, ordered largest to Smallest	
+		(let ((test-array (construct Array QuickSort 
+				(build-list-native 10 (lambda (x) (- 10 x))))))
+			(tuple 
+				(println test-array)
+				(sort test-array)
+				(println test-array)))))
+		
+;Comment following line if you are compiling the code, otherwise main will be executed during compilation
+(main)
+			
