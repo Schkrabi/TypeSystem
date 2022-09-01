@@ -9,6 +9,7 @@ import velka.core.exceptions.UnboundVariableException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.langbase.JavaArrayList;
+import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
 import velka.types.TypeAtom;
@@ -241,6 +242,7 @@ public class Environment implements Comparable<Environment> {
 		ListNative.initializeInEnvironment(env);
 		JavaArrayList.initializeInEnvironment(env);
 		JavaLinkedList.initializeInEnvironment(env);
+		JavaBitSet.initializeInEnvironment(env);
 		
 		return env;
 	}

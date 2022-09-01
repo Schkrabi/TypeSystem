@@ -21,6 +21,7 @@ import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.JavaArrayList;
+import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
 import velka.types.Type;
@@ -82,6 +83,7 @@ public class ClojureCodeGenerator {
 		sb.append(ClojureHelper.requireNamespace(ConversionOperators.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(JavaArrayList.NAMESPACE));
 		sb.append(ClojureHelper.requireNamespace(JavaLinkedList.NAMESPACE));
+		sb.append(ClojureHelper.requireNamespace(JavaBitSet.NAMESPACE));
 
 		Iterator<Expression> i = exprs.iterator();
 		while (i.hasNext()) {
@@ -161,6 +163,10 @@ public class ClojureCodeGenerator {
 		Files.createDirectories(directory.resolve(VelkaClojureLinkedList.VELKA_CLOJURE_LINKEDLIST_PATH));
 		Path velkaClojureLinkedList = directory.resolve(VelkaClojureLinkedList.RELATIVE_PATH);
 		VelkaClojureLinkedList.generateFile(velkaClojureLinkedList);
+		
+		Files.createDirectories(directory.resolve(JavaBitSet.VELKA_CLOJURE_BITSET_PATH));
+		Path velkaCloureBitSet = directory.resolve(JavaBitSet.RELATIVE_PATH);
+		JavaBitSet.generateFile(velkaCloureBitSet);
 		
 		Files.createDirectories(directory.resolve(ClojureCodeGenerator.CLASSES_PATH));
 		

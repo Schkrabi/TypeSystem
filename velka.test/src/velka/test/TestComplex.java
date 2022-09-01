@@ -43,6 +43,7 @@ import velka.core.expression.TypeSymbol;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.JavaArrayList;
+import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
 import velka.core.literal.LitBoolean;
@@ -1408,6 +1409,129 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				+ "(println (" + JavaLinkedList.getSymbol_out + " l 0))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))");
+	}
+	
+	@Test
+	@DisplayName("Test Java Bit Set")
+	void testJavaBitSet() throws Exception {
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-set-str (construct Set BitSet)))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-set-str (construct Set BitSet 2048)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s (construct Set BitSet))\n"
+				+ 	"(println (bit-set-str (" + JavaBitSet.setSymbol_out.toString() + " s 3)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s (construct Set BitSet))\n"
+				+	"(println (bit-set-str (" + JavaBitSet.setValueSymbol_out.toString() + " s 3 #t)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s (construct Set BitSet))\n"
+				+	"(println (bit-set-str (" + JavaBitSet.setIntervalSymbol_out.toString() + " s 2 5)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s (construct Set BitSet))\n"
+				+	"(println (bit-set-str (" + JavaBitSet.setIntervalValueSymbol_out.toString() + " s 2 5 #t)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s1 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+				+	"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+				+	"(println (bit-set-str (" + JavaBitSet.andSymbol_out.toString() + " s1 s2)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s1 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+				+	"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+				+	"(println (bit-set-str (" + JavaBitSet.andNotSymbol_out.toString() + " s1 s2)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+				+	"(println (" + JavaBitSet.cardinalitySymbol_out.toString() + " s2))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+				+	"(println (bit-set-str (" + JavaBitSet.clearSymbol_out.toString() + " s2)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (bit-set-str (" + JavaBitSet.clearBitIndexSymbol_out.toString() + " s2 5)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (bit-set-str (" + JavaBitSet.clearIntervalSymbol_out.toString() + " s2 5 7)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (bit-set-str (" + JavaBitSet.cloneSymbol_out.toString() + " s2)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s1 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+				+	"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+				+	"(println (" + JavaBitSet.equalsSymbol_out.toString() + " s1 s2))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (bit-set-str (" + JavaBitSet.flipSymbol_out.toString() + " s2 2)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (bit-set-str (" + JavaBitSet.flipIntervalSymbol_out.toString() + " s2 2 5)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (" + JavaBitSet.getSymbol_out.toString() + " s2 5))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (bit-set-str (" + JavaBitSet.getIntervalSymbol_out.toString() + " s2 5 7)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s1 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+				+	"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+				+	"(println (" + JavaBitSet.intersectsSymbol_out.toString() + " s1 s2))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (" + JavaBitSet.isEmptySymbol_out.toString() + " s2))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (" + JavaBitSet.lengthSymbol_out.toString() + " s2))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (" + JavaBitSet.nextClearBitSymbol_out.toString() + " s2 5))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (" + JavaBitSet.nextSetBitSymbol_out.toString() + " s2 0))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s1 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+				+	"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+				+	"(println (bit-set-str (" + JavaBitSet.orSymbol_out.toString() + " s1 s2)))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (" + JavaBitSet.previousClearBitSymbol_out.toString() + " s2 5))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (" + JavaBitSet.previousSetBitSymbol_out.toString() + " s2 9))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s1 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 2 5)\n"
+				+	"(println (" + JavaBitSet.sizeSymbol_out.toString() + " s1))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+				+	"(println (" + JavaBitSet.strSymbol_out.toString() + " s2))");
+		TestComplex.assertIntprtAndCompPrintSameValues(
+					"(define s1 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+				+	"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+				+	"(println (bit-set-str (" + JavaBitSet.xorSymbol_out.toString() + " s1 s2)))");
 	}
 	
 	@Test

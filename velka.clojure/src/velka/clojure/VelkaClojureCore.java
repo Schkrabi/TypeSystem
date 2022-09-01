@@ -540,6 +540,12 @@ public class VelkaClojureCore {
 																	ClojureHelper.applyClojureFunction("pr-str", ClojureHelper.getLiteralInnerValue(langPstrClojureDef_expr)), 
 																	ClojureHelper.getLiteralInnerValue(langPstrClojureDef_expr))),
 													new Pair<String, String>(
+															ClojureHelper.applyClojureFunction("=",
+																	langPstrClojureDef_type,
+																	"velka.types.TypeAtom/TypeSetBitSet"),
+															ClojureHelper.applyClojureFunction(".toString",
+																	ClojureHelper.getLiteralInnerValue(langPstrClojureDef_expr))),
+													new Pair<String, String>(
 															ClojureHelper.applyClojureFunction("=", 
 																	langPstrClojureDef_type, "velka.types.TypeTuple/EMPTY_TUPLE"), 
 															"[]"),

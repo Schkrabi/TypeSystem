@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,6 +62,7 @@ import velka.core.expression.TypeSymbol;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.JavaArrayList;
+import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
 import velka.core.literal.LitBoolean;
@@ -2100,6 +2102,246 @@ class TestInterpretation {
 		TestInterpretation.testInterpretString(
 				"(java-linked-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
 				LitBoolean.TRUE);
+	}
+	
+	@Test
+	@DisplayName("Test Java Bit Set")
+	void testJavaBitSet() throws AppendableException {
+		BitSet bs = new BitSet();
+		LitComposite bitSet = new LitComposite(
+				new LitInteropObject(bs),
+				TypeAtom.TypeSetBitSet);
+		
+		testInterpretString(
+				"(construct Set BitSet)",
+				bitSet);
+		
+		BitSet nbitsBs = new BitSet(2048);
+		LitComposite nBitsBitSet = new LitComposite(
+				new LitInteropObject(nbitsBs),
+				TypeAtom.TypeSetBitSet);
+		
+		testInterpretString(
+				"(construct Set BitSet 2048)",
+				nBitsBitSet);
+		
+		bs.set(3);
+		testInterpretString(
+					"(define s (construct Set BitSet))\n"
+				+ 	"(" + JavaBitSet.setSymbol_out.toString() + " s 3)",
+				bitSet);
+		testInterpretString(
+					"(define s (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setValueSymbol_out.toString() + " s 3 #t)",
+				bitSet);
+		bs.set(2, 5);
+		testInterpretString(
+					"(define s (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s 2 5)",
+				bitSet);
+		testInterpretString(
+					"(define s (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalValueSymbol_out.toString() + " s 2 5 #t)",
+				bitSet);
+		
+		nbitsBs.set(4, 7);
+		nbitsBs.and(bs);
+		testInterpretString(
+				"(define s1 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+			+	"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+			+	"(" + JavaBitSet.andSymbol_out.toString() + " s1 s2)",
+			nBitsBitSet);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		nbitsBs.andNot(bs);
+		testInterpretString(
+				"(define s1 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+			+	"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+			+	"(" + JavaBitSet.andNotSymbol_out.toString() + " s1 s2)",
+			nBitsBitSet);
+		
+		testInterpretString(
+					"(define s2 (construct Set BitSet))\n"
+				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+				+	"(" + JavaBitSet.cardinalitySymbol_out.toString() + " s2)",
+				new LitInteger(bs.cardinality()));
+		
+		nbitsBs.clear();
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+			+	"(" + JavaBitSet.clearSymbol_out.toString() + " s2)",
+			nBitsBitSet);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		nbitsBs.clear(5);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.clearBitIndexSymbol_out.toString() + " s2 5)",
+			nBitsBitSet);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		nbitsBs.clear(5, 7);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.clearIntervalSymbol_out.toString() + " s2 5 7)",
+			nBitsBitSet);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.cloneSymbol_out.toString() + " s2)",
+			nBitsBitSet);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s1 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+			+	"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+			+	"(" + JavaBitSet.equalsSymbol_out.toString() + " s1 s2)",
+			LitBoolean.FALSE);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		nbitsBs.flip(2);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.flipSymbol_out.toString() + " s2 2)",
+			nBitsBitSet);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		nbitsBs.flip(2, 5);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.flipIntervalSymbol_out.toString() + " s2 2 5)",
+			nBitsBitSet);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.getSymbol_out.toString() + " s2 5)",
+			nbitsBs.get(5) ? LitBoolean.TRUE : LitBoolean.FALSE);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.getIntervalSymbol_out.toString() + " s2 5 7)",
+			new LitComposite(new LitInteropObject(nbitsBs.get(5, 7)), TypeAtom.TypeSetBitSet));
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s1 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+			+	"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+			+	"(" + JavaBitSet.intersectsSymbol_out.toString() + " s1 s2)",
+			nbitsBs.intersects(bs) ? LitBoolean.TRUE : LitBoolean.FALSE);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.isEmptySymbol_out.toString() + " s2)",
+			nbitsBs.isEmpty() ? LitBoolean.TRUE : LitBoolean.FALSE);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.lengthSymbol_out.toString() + " s2)",
+			new LitInteger(nbitsBs.length()));
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.nextClearBitSymbol_out.toString() + " s2 5)",
+			new LitInteger(nbitsBs.nextClearBit(5)));
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.nextSetBitSymbol_out.toString() + " s2 0)",
+			new LitInteger(nbitsBs.nextSetBit(0)));
+		
+		nbitsBs.set(4, 7);
+		nbitsBs.or(bs);
+		testInterpretString(
+				"(define s1 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+			+	"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+			+	"(" + JavaBitSet.orSymbol_out.toString() + " s1 s2)",
+			nBitsBitSet);
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.previousClearBitSymbol_out.toString() + " s2 5)",
+			new LitInteger(nbitsBs.previousClearBit(5)));
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.previousSetBitSymbol_out.toString() + " s2 9)",
+			new LitInteger(nbitsBs.previousSetBit(9)));
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s1 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 2 5)\n"
+			+	"(" + JavaBitSet.sizeSymbol_out.toString() + " s1)",
+			new LitInteger(bs.size()));
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		testInterpretString(
+				"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
+			+	"(" + JavaBitSet.strSymbol_out.toString() + " s2)",
+			new LitString(nbitsBs.toString()));
+		
+		nbitsBs.clear();
+		nbitsBs.set(4, 7);
+		nbitsBs.xor(bs);
+		testInterpretString(
+				"(define s1 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
+			+	"(define s2 (construct Set BitSet))\n"
+			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
+			+	"(" + JavaBitSet.xorSymbol_out.toString() + " s1 s2)",
+			nBitsBitSet);
 	}
 	
 	@Test

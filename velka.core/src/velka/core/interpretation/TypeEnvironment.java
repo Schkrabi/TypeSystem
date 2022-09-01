@@ -22,6 +22,7 @@ import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
 import velka.core.langbase.JavaArrayList;
+import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
 import velka.core.literal.LitComposite;
@@ -330,6 +331,11 @@ public class TypeEnvironment {
 		// List Java Linked
 		typeEnvironment.addRepresentation(JavaLinkedList.TypeListJavaLinked);
 		typeEnvironment.addConstructor(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.constructor, env);
+		
+		//Set Bit Set
+		typeEnvironment.addRepresentation(TypeAtom.TypeSetBitSet);
+		typeEnvironment.addConstructor(TypeAtom.TypeSetBitSet, JavaBitSet.constructor, env);
+		typeEnvironment.addConstructor(TypeAtom.TypeSetBitSet, JavaBitSet.nBitsConstructor, env);
 
 		// Conversions
 		typeEnvironment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, ConversionOperators.IntNativeToIntRoman);

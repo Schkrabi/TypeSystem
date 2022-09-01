@@ -13,6 +13,7 @@ import velka.core.abstraction.Operators;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.JavaArrayList;
+import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
 
@@ -81,7 +82,8 @@ public class Main {
 							JavaArrayList.class,
 							JavaLinkedList.class,
 							ListNative.class,
-							ConstructorOperators.class),
+							ConstructorOperators.class,
+							JavaBitSet.class),
 					Paths.get(fileArg));
 			break;
 		case HELP:

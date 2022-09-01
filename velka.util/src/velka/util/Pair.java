@@ -26,4 +26,16 @@ public class Pair<T1, T2> {
 	public String toString() {
 		return "(" + first.toString() + "," + second.toString() + ")";
 	}
+	
+	/**
+	 * Creates a pair value
+	 * @param <T1> Type of first element
+	 * @param <T2> Type of second element
+	 * @param first first element
+	 * @param second second element
+	 * @return pair of two elements
+	 */
+	public static <T1, T2> Pair<T1, T2> of(T1 first, T2 second){
+		return new Pair<T1, T2>(first, second);
+	}
 }

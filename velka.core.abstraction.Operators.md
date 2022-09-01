@@ -193,7 +193,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[SYSGENNAMEhi, SYSGENNAMEhj] -> Bool:Native
+[SYSGENNAMEhs, SYSGENNAMEht] -> Bool:Native
 ~~~
 
 Returns _true_ if representations carried by _arg1_ and _arg2_ can be unified. Otherwise returns _false_. This operator works on level of representations, meaning for example _Int:Native_ and _Int:String_ cannot unify and type symbols carriing them will yield _false_ on application of the operator.
@@ -216,7 +216,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[SYSGENNAMEif, SYSGENNAMEig] -> Bool:Native
+[SYSGENNAMEiq, SYSGENNAMEir] -> Bool:Native
 ~~~
 
 Returns _true_ if types carried by _arg1_ and _arg2_ can be unified. Otherwise returns _false_. This operator works on level of types, not taking type representations into account. Meaning for example _Int:Native_ and _Int:String_ can unify and type symbols carriing them will yield _true_ on application of the operator. 
@@ -239,7 +239,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEjc, SYSGENNAMEjd]] -> SYSGENNAMEjc
+[[SYSGENNAMEjo, SYSGENNAMEjp]] -> SYSGENNAMEjo
 ~~~
 
 Extracts first value from a pair.
@@ -259,7 +259,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEjz, SYSGENNAMEka]] -> SYSGENNAMEka
+[[SYSGENNAMEkm, SYSGENNAMEkn]] -> SYSGENNAMEkn
 ~~~
 
 Extracts second value from a pair.
@@ -303,7 +303,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[SYSGENNAMElr -> SYSGENNAMEls, SYSGENNAMElr] -> Int:Native
+[SYSGENNAMEmg -> SYSGENNAMEmh, SYSGENNAMEmg] -> Int:Native
 ~~~
 
 Computes cost of representation conversion for applying _fun_ with _arg_.
@@ -486,7 +486,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[SYSGENNAMEta, SYSGENNAMEtb] -> Bool:Native
+[SYSGENNAMEty, SYSGENNAMEtz] -> Bool:Native
 ~~~
 
 Returns _true_ if representations _A_ and _B_ can be unified. Otherwise returns _false_. This operator works on level of representations.
@@ -509,7 +509,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[SYSGENNAMEtx, SYSGENNAMEty] -> Bool:Native
+[SYSGENNAMEuw, SYSGENNAMEux] -> Bool:Native
 ~~~
 
 Returns _true_ if types _A_ and _B_ can be unified. Otherwise returns _false_. This operator works on level of types, not taking type representations into account.
@@ -778,7 +778,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[SYSGENNAMEaem] -> String:Native
+[SYSGENNAMEafy] -> String:Native
 ~~~
 
 Returns readable representation of its argument.
