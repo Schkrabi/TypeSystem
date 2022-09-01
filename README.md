@@ -322,12 +322,13 @@ However conversions are mostly invoked implicitely during evaluation of function
     
 System tries to convert any arguments to required representations and then applies function to converted arguments. If conversion does not exists error is thrown.
 
-Extended-lambda is special form, allowing us to create functions which can behave specifically to representations of its arguments. For example:
+Extended-lambda is special form, allowing us to create functions which can behave specifically to representations of its arguments. Extended-lambda creates an empty extended function. Implementations can be added by _extend_ special form.For example:
 
 ~~~
-(define f (extended-lambda ((Name x)) 
-							((Name:Structured) "Structured")
-							((Name:Unstructured) "Unstructured")))
+(define f (extend (extend 
+	(extended-lambda (Name)) 
+		(lambda ((Name:Structured name)) "Structured"))
+		(lambda ((Name:Unstructured name)) "Unstructured")))
 							
 (f (construct Name Structured "John" "Doe")) => Structured
 (f (construct Name Unstructured "John Doe")) => Unstructured
