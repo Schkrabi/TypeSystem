@@ -2,10 +2,34 @@
 General constructors for basic Velka representations.
 
 ## Table of Contents
+* [IntNativeConstructor(Int:Native)](#velka.core.abstraction.ConstructorOperators$1)
+* [IntConstructor(Int)](#velka.core.abstraction.ConstructorOperators$2)
 * [IntStringConstructor(Int:String)](#velka.core.abstraction.ConstructorOperators$3)
 * [IntRomanConstructor(Int:Roman)](#velka.core.abstraction.ConstructorOperators$4)
+* [StringNativeConstructor(String:Native)](#velka.core.abstraction.ConstructorOperators$5)
+* [StringConstructor(String)](#velka.core.abstraction.ConstructorOperators$6)
+* [DoubleNativeConstructor(Double:Native)](#velka.core.abstraction.ConstructorOperators$7)
+* [DoubleConstructor(Double)](#velka.core.abstraction.ConstructorOperators$8)
+* [BoolNativeConstructor(Bool:Native)](#velka.core.abstraction.ConstructorOperators$9)
+* [BoolConstructor(Bool)](#velka.core.abstraction.ConstructorOperators$10)
 
 ## Constructors
+### <a name="velka.core.abstraction.ConstructorOperators$1"> IntNativeConstructor(Int:Native)</a>
+Type Signature:
+
+~~~
+[Int:Native] -> Int:Native
+~~~
+
+
+### <a name="velka.core.abstraction.ConstructorOperators$2"> IntConstructor(Int)</a>
+Type Signature:
+
+~~~
+[Int:Native] -> Int:Native
+~~~
+
+
 ### <a name="velka.core.abstraction.ConstructorOperators$3"> IntStringConstructor(Int:String)</a>
 Syntax:
 
@@ -34,4 +58,52 @@ Type Signature:
 ~~~
 
 Construct Int Roman from string.
+### <a name="velka.core.abstraction.ConstructorOperators$5"> StringNativeConstructor(String:Native)</a>
+Type Signature:
+
+~~~
+[String:Native] -> String:Native
+~~~
+
+
+### <a name="velka.core.abstraction.ConstructorOperators$6"> StringConstructor(String)</a>
+Type Signature:
+
+~~~
+[String:Native] -> String:Native
+~~~
+
+
+### <a name="velka.core.abstraction.ConstructorOperators$7"> DoubleNativeConstructor(Double:Native)</a>
+Type Signature:
+
+~~~
+[Double:Native] -> Double:Native
+~~~
+
+
+### <a name="velka.core.abstraction.ConstructorOperators$8"> DoubleConstructor(Double)</a>
+Type Signature:
+
+~~~
+[Double:Native] -> Double:Native
+~~~
+
+
+### <a name="velka.core.abstraction.ConstructorOperators$9"> BoolNativeConstructor(Bool:Native)</a>
+Type Signature:
+
+~~~
+[Bool:Native] -> Bool:Native
+~~~
+
+
+### <a name="velka.core.abstraction.ConstructorOperators$10"> BoolConstructor(Bool)</a>
+Type Signature:
+
+~~~
+[Bool:Native] -> Bool:Native
+~~~
+
+
 

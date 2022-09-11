@@ -34,7 +34,13 @@ import velka.util.Pair;
 import velka.util.ThrowingBinaryOperator;
 import velka.util.ThrowingFunction;
 import velka.util.ThrowingPredicate;
+import velka.util.annotations.Description;
+import velka.util.annotations.Example;
+import velka.util.annotations.Header;
+import velka.util.annotations.Name;
+import velka.util.annotations.Syntax;
 import velka.util.annotations.VelkaConstructor;
+import velka.util.annotations.VelkaConversion;
 import velka.util.annotations.VelkaOperator;
 import velka.util.annotations.VelkaOperatorBank;
 
@@ -45,9 +51,9 @@ import velka.util.annotations.VelkaOperatorBank;
  * @author Mgr. Radomir Skrabal
  *
  */
-@VelkaOperatorBank(
-		description = "Operators for working with wrapped java.util.LinkedList.", 
-		header = "Linked List")
+@VelkaOperatorBank
+@Description("Operators for working with wrapped java.util.LinkedList.") 
+@Header("Linked List")
 public class JavaLinkedList {
 
 	/**
@@ -59,6 +65,16 @@ public class JavaLinkedList {
 	 * Type of java linked list in velka
 	 */
 	public final static TypeAtom TypeListJavaLinked = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaLinked"));
+	
+	/**
+	 * Type name for list iterator
+	 */
+	public final static TypeName TypeNameIterator = new TypeName("LinkedListIterator");
+	
+	/**
+	 * Type for list iterator
+	 */
+	public final static TypeAtom TypeIterator = new TypeAtom(TypeNameIterator, TypeRepresentation.NATIVE);
 
 	private static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
 	public static final Symbol constructorSymbol_out = new Symbol("construct-linked-list");
@@ -66,10 +82,10 @@ public class JavaLinkedList {
 	/**
 	 * Constructor
 	 */
-	@VelkaConstructor(
-			description = "Constructs empty List:Linked.", 
-			name = "Construct empty list", 
-			syntax = "(construct List JavaLinked)")
+	@VelkaConstructor
+	@Description("Constructs empty List:Linked.") 
+	@Name("Construct empty list") 
+	@Syntax("(construct List JavaLinked)")
 	public static final Operator constructor = new Operator() {
 
 		@Override
@@ -107,10 +123,10 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean add(E e)
 	 */
-	@VelkaOperator(
-			description = "Appends the specified element to the end of this list.", 
-			example = "(java-linked-list-add-to-end (construct List JavaLinked) 42)", 
-			syntax = "(java-linked-list-add-to-end <list> <element>)")
+	@VelkaOperator
+	@Description("Appends the specified element to the end of this list.") 
+	@Example("(java-linked-list-add-to-end (construct List JavaLinked) 42)") 
+	@Syntax("(java-linked-list-add-to-end <list> <element>)")
 	public static final Operator addToEnd = new Operator() {
 
 		@Override
@@ -171,10 +187,10 @@ public class JavaLinkedList {
 	/**
 	 * Operator for void add(int index, E element)
 	 */
-	@VelkaOperator(
-			description = "Inserts the specified element at the specified position in this list.", 
-			example = "(java-linked-list-add-to-index (construct List JavaLinked) 0 42)", 
-			syntax = "(java-linked-list-add-to-index <list> <index> <element>)")
+	@VelkaOperator
+	@Description("Inserts the specified element at the specified position in this list.") 
+	@Example("(java-linked-list-add-to-index (construct List JavaLinked) 0 42)") 
+	@Syntax("(java-linked-list-add-to-index <list> <index> <element>)")
 	public static final Operator addToIndex = new Operator() {
 
 		@Override
@@ -245,14 +261,14 @@ public class JavaLinkedList {
 	/**
 	 * operator for boolean addAll(Collection<? extends E> c)
 	 */
-	@VelkaOperator(
-			description = "Appends all of the elements in the specified collection to the end of this list, in the order that they are returned by the specified collection's Iterator.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Appends all of the elements in the specified collection to the end of this list, in the order that they are returned by the specified collection's Iterator.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add l 42)\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(println l)\n"
-					+ ";;(42 0 1 2)", 
-			syntax = "(java-linked-list-add-all <list1> <list2>)")
+					+ ";;(42 0 1 2)") 
+	@Syntax("(java-linked-list-add-all <list1> <list2>)")
 	public static final Operator addAll = new Operator() {
 
 		@Override
@@ -317,10 +333,10 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean contains(Object o)
 	 */
-	@VelkaOperator(
-			description = "Returns true if this list contains the specified element.", 
-			example = "(java-linked-list-contains (construct List JavaLinked) 42) ; = #f", 
-			syntax = "(java-linked-list-contains <list> <element>)")
+	@VelkaOperator
+	@Description("Returns true if this list contains the specified element.") 
+	@Example("(java-linked-list-contains (construct List JavaLinked) 42) ; = #f") 
+	@Syntax("(java-linked-list-contains <list> <element>)")
 	public static final Operator contains = new Operator() {
 
 		@Override
@@ -385,12 +401,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean containsAll(Collection<?> c)
 	 */
-	@VelkaOperator(
-			description = "Returns true if this list contains all of the elements in the specified list.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Returns true if this list contains all of the elements in the specified list.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-linked-list-contains-all k (build-list-native 2 (lambda (x) x))) ;; = #t", 
-			syntax = "(java-linked-list-contains-all <list1> <list2>)")
+					+ "(java-linked-list-contains-all k (build-list-native 2 (lambda (x) x))) ;; = #t") 
+	@Syntax("(java-linked-list-contains-all <list1> <list2>)")
 	public static final Operator containsAll = new Operator() {
 
 		@Override
@@ -458,12 +474,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for E get(int index)
 	 */
-	@VelkaOperator(
-			description = "Returns the element at the specified position in this list.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Returns the element at the specified position in this list.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-linked-list-get l 1) ;; = 1", 
-			syntax = "(java-linked-list-get <list> <index>)")
+					+ "(java-linked-list-get l 1) ;; = 1") 
+	@Syntax("(java-linked-list-get <list> <index>)")
 	public static final Operator get = new Operator() {
 
 		@Override
@@ -523,12 +539,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for int indexOf(Object o)
 	 */
-	@VelkaOperator(
-			description = "Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-linked-list-index-of l 1) ;; = 1", 
-			syntax = "(java-linked-list-index-of <list> <element>)")
+					+ "(java-linked-list-index-of l 1) ;; = 1") 
+	@Syntax("(java-linked-list-index-of <list> <element>)")
 	public static final Operator indexOf = new Operator() {
 
 		@Override
@@ -590,10 +606,10 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean isEmpty()
 	 */
-	@VelkaOperator(
-			description = "Returns true if this list contains no elements.", 
-			example = "(java-linked-list-is-empty (construct List JavaLinked)) ;; = #t", 
-			syntax = "(java-linked-list-is-empty <list>)")
+	@VelkaOperator
+	@Description("Returns true if this list contains no elements.") 
+	@Example("(java-linked-list-is-empty (construct List JavaLinked)) ;; = #t") 
+	@Syntax("(java-linked-list-is-empty <list>)")
 	public static final Operator isEmpty = new Operator() {
 
 		@Override
@@ -651,12 +667,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for int lastIndexOf(E e)
 	 */
-	@VelkaOperator(
-			description = "Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
-					+ "(java-linked-list-last-index-of l 1) ;; = 2", 
-			syntax = "(java-linked-list-last-index-of <list> <element>)")
+					+ "(java-linked-list-last-index-of l 1) ;; = 2") 
+	@Syntax("(java-linked-list-last-index-of <list> <element>)")
 	public static final Operator lastIndexOf = new Operator() {
 
 		@Override
@@ -718,14 +734,14 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean remove(Object o)
 	 */
-	@VelkaOperator(
-			description = "Removes the first occurrence of the specified element from this list, if it is present.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Removes the first occurrence of the specified element from this list, if it is present.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-linked-list-remove l 1)\n"
 					+ "(println l)\n"
-					+ "(0 2)", 
-			syntax = "(java-linked-list-remove <list> <element>)")
+					+ "(0 2)") 
+	@Syntax("(java-linked-list-remove <list> <element>)")
 	public static final Operator remove = new Operator() {
 
 		@Override
@@ -790,17 +806,17 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean removeAll(Collection<?> c)
 	 */
-	@VelkaOperator(
-			description = "Removes from this list all of its elements that are contained in the specified collection.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Removes from this list all of its elements that are contained in the specified collection.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
 					+ "(println l)\n"
 					+ "(0 1 2 1 1 1)\n"
 					+ "(java-linked-list-remove l 1)\n"
 					+ "(println l)\n"
-					+ "(0 2)", 
-			syntax = "(java-linked-list-remove <list> <element>)")
+					+ "(0 2)")
+	@Syntax("(java-linked-list-remove <list> <element>)")
 	public static final Operator removeAll = new Operator() {
 
 		@Override
@@ -870,15 +886,15 @@ public class JavaLinkedList {
 	/**
 	 * Operator for boolean retainAll(Collection<?> c)
 	 */
-	@VelkaOperator(
-			description = "Retains only the elements in this list that are contained in the specified collection.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Retains only the elements in this list that are contained in the specified collection.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
 					+ "(java-linked-list-retain-all l (build-list-native 2 (lambda (x) (+ 1 x))))\n"
 					+ "(println l)\n"
-					+ "(2 3)", 
-			syntax = "(java-linked-list-retain-all <retained-list> <retainee-list>)")
+					+ "(2 3)") 
+	@Syntax("(java-linked-list-retain-all <retained-list> <retainee-list>)")
 	public static final Operator retainAll = new Operator() {
 
 		@Override
@@ -949,14 +965,14 @@ public class JavaLinkedList {
 	/**
 	 * Operator for E set(int index, E element)
 	 */
-	@VelkaOperator(
-			description = "Replaces the element at the specified position in this list with the specified element.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Replaces the element at the specified position in this list with the specified element.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-linked-list-set l 1 42)\n"
 					+ "(println l)\n"
-					+ "(0 42 2)", 
-			syntax = "(java-linked-list-set <list> <index> <element>)")
+					+ "(0 42 2)") 
+	@Syntax("(java-linked-list-set <list> <index> <element>)")
 	public static final Operator set = new Operator() {
 
 		@Override
@@ -1018,12 +1034,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for int size()
 	 */
-	@VelkaOperator(
-			description = "Returns the number of elements in this list.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Returns the number of elements in this list.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-linked-list-size l) ;; = 3", 
-			syntax = "(java-linked-list-size <list>)")
+					+ "(java-linked-list-size l) ;; = 3") 
+	@Syntax("(java-linked-list-size <list>)")
 	public static final Operator size = new Operator() {
 
 		@Override
@@ -1080,13 +1096,13 @@ public class JavaLinkedList {
 	/**
 	 * Operator for List<E> subList(int fromIndex, int toIndex)
 	 */
-	@VelkaOperator(
-			description = "Returns a view of the portion of this list between the specified fromIndex, inclusive, and toIndex, exclusive.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Returns a view of the portion of this list between the specified fromIndex, inclusive, and toIndex, exclusive.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) x)))\n"
 					+ "(java-linked-list-sublist l 3 7)\n"
-					+ ";; = (2 3 4 5 6 7)", 
-			syntax = "(java-linked-list-sublist <list> <fromIndex> <toIndex>)")
+					+ ";; = (2 3 4 5 6 7)") 
+	@Syntax("(java-linked-list-sublist <list> <fromIndex> <toIndex>)")
 	public static final Operator sublist = new Operator() {
 
 		@Override
@@ -1155,13 +1171,13 @@ public class JavaLinkedList {
 	/**
 	 * Operator for List<T> map(Function<T, E>)
 	 */
-	@VelkaOperator(
-			description = "Returns a List:JavaLinked consisting of the results of applying the given function to the elements of list.", 
-			example = "(def l (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Returns a List:JavaLinked consisting of the results of applying the given function to the elements of list.") 
+	@Example("(def l (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-linked-list-map l (lambda (x) (+ x 2)))\n"
-					+ ";; = (2 3 4)", 
-			syntax = "(java-linked-list-map <list> <function>)")
+					+ ";; = (2 3 4)") 
+	@Syntax("(java-linked-list-map <list> <function>)")
 	public static final Operator map = new Operator() {
 
 		@Override
@@ -1231,7 +1247,7 @@ public class JavaLinkedList {
 		
 		@Override
 		public String toString() {
-			return map2Symbol_out.toString();
+			return mapSymbol_out.toString();
 		}
 
 	};
@@ -1245,15 +1261,15 @@ public class JavaLinkedList {
 	/**
 	 * Operator for List<T> map2(List<E2> other, Function<T, E1, E2>)
 	 */
-	@VelkaOperator(
-			description = "Returns a List:JavaLinked consisting of the results of applying the given function to the elements of list1 and list2.", 
-			example = "(def l1 (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Returns a List:JavaLinked consisting of the results of applying the given function to the elements of list1 and list2.") 
+	@Example("(def l1 (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l1 (build-list-native 3 (lambda (x) x)))\n"
 					+ "(def l2 (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l2 (build-list-native 3 (lambda (x) (+ x 1))))\n"
 					+ "(java-linked-list-map2 l1 l2 +)\n"
-					+ ";; = (1 3 5)", 
-			syntax = "(java-linked-list-map2 <list1> <list2> <function>)")
+					+ ";; = (1 3 5)") 
+	@Syntax("(java-linked-list-map2 <list1> <list2> <function>)")
 	public static final Operator map2 = new Operator() {
 
 		@Override
@@ -1346,12 +1362,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for T foldl(Function<T, E, T>)
 	 */
-	@VelkaOperator(
-			description = "Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the beginning.", 
-			example = "(def l1 (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the beginning.") 
+	@Example("(def l1 (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) (+ x 1))))\n"
-					+ "(java-linked-list-foldl / 0 l) ;; = 0.16666666666666666666666666666667", 
-			syntax = "(java-linked-list-foldl <function> <terminator> <list>)")
+					+ "(java-linked-list-foldl / 0 l) ;; = 0.16666666666666666666666666666667") 
+	@Syntax("(java-linked-list-foldl <function> <terminator> <list>)")
 	public static final Operator foldl = new Operator() {
 
 		@Override
@@ -1431,12 +1447,12 @@ public class JavaLinkedList {
 	/**
 	 * Operator for T foldr(Function<T, E, T>)
 	 */
-	@VelkaOperator(
-			description = "Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the end.", 
-			example = "(def l1 (construct List JavaLinked))\n"
+	@VelkaOperator
+	@Description("Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the end.") 
+	@Example("(def l1 (construct List JavaLinked))\n"
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) (+ x 1))))\n"
-					+ "(java-linked-list-foldr / 0 l) ;; = 1.5", 
-			syntax = "(java-linked-list-foldr <function> <terminator> <list>)")
+					+ "(java-linked-list-foldr / 0 l) ;; = 1.5") 
+	@Syntax("(java-linked-list-foldr <function> <terminator> <list>)")
 	public static final Operator foldr = new Operator() {
 
 		@Override
@@ -1509,10 +1525,10 @@ public class JavaLinkedList {
 	/**
 	 * Conversion LinkedList 2 ArrayList
 	 */
-	@VelkaOperator(
-			description = "Converts List:JavaLinked to List:JavaArray)", 
-			example = "(linked-list-2-array-list (construct List JavaLinked))", 
-			syntax = "(linked-list-2-array-list <linked-list>)")
+	@VelkaConversion
+	@Description("Converts List:JavaLinked to List:JavaArray)") 
+	@Example("(linked-list-2-array-list (construct List JavaLinked))") 
+	@Syntax("(linked-list-2-array-list <linked-list>)")
 	public static Operator LinkedListToArrayList = new Operator() {
 
 		@Override
@@ -1563,10 +1579,10 @@ public class JavaLinkedList {
 	/**
 	 * Conversion LinkedList 2 NativeList
 	 */
-	@VelkaOperator(
-			description = "Converts List:JavaLinked to List:Native.", 
-			example = "(linked-list-2-native-list (construct List JavaLinked))", 
-			syntax = "(linked-list-2-native-list <linked list>)")
+	@VelkaConversion
+	@Description("Converts List:JavaLinked to List:Native.") 
+	@Example("(linked-list-2-native-list (construct List JavaLinked))") 
+	@Syntax("(linked-list-2-native-list <linked list>)")
 	public static Operator LinkedListToNativeList = new Operator() {
 
 		@Override
@@ -1618,13 +1634,13 @@ public class JavaLinkedList {
 	public static final Symbol everypSymbol = new Symbol("velka-everyp", NAMESPACE);
 	public static final Symbol everypSymbol_out = new Symbol("java-linked-list-everyp");
 
-	@VelkaOperator(
-			description = "Returns true if every element of this list returns true for the predicate. Otherwise returns false.", 
-			example = "(define l (construct List JavaLinked))\n"
-					+ "(java-linked-list-add-all l (build-list-native 10 (* 2 x)))\n"
+	@VelkaOperator
+	@Description("Returns true if every element of this list returns true for the predicate. Otherwise returns false.") 
+	@Example("(define l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 					+ "(java-linked-list-everyp l (lambda (x) (= (mod x 2) 0))) ;; = #t\n"
-					+ "(java-linked-list-everyp l (lambda (x) (= x 1))) ;; = #f", 
-			syntax = "(java-linked-list-everyp <list> <predicate>)")
+					+ "(java-linked-list-everyp l (lambda (x) (= x 1))) ;; = #f") 
+	@Syntax("(java-linked-list-everyp <list> <predicate>)")
 	public static final Operator everyp = new Operator() {
 
 		@Override
@@ -1676,34 +1692,579 @@ public class JavaLinkedList {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 	};
+	
+	public static final Symbol listIteratorSymbol = new Symbol("list-iterator", NAMESPACE);
+	public static final Symbol listIteratorSymbol_out = new Symbol("java-linked-list-iterator");
+	
+	@VelkaOperator
+	@Description("Returns a list-iterator of the elements in this list (in proper sequence), starting at the specified position in the list.") 
+	@Example("(define l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+					+ "(java-linked-list-iterator l 0)") 
+	@Syntax("(java-linked-list-iterator <list> <index>)")
+	public static final Operator listIterator = new Operator() {
 
-	/**
-	 * Initializes values for java linked list in environment
-	 * 
-	 * @param env initialized environment
-	 */
-	public static void initializeInEnvironment(Environment env) {
-		env.put(addToEndSymbol_out, addToEnd);
-		env.put(addToIndexSymbol_out, addToIndex);
-		env.put(addAllSymbol_out, addAll);
-		env.put(containsSymbol_out, contains);
-		env.put(containsAllSymbol_out, containsAll);
-		env.put(getSymbol_out, get);
-		env.put(indexOfSymbol_out, indexOf);
-		env.put(isEmptySymbol_out, isEmpty);
-		env.put(lastIndexOfSymbol_out, lastIndexOf);
-		env.put(removeSymbol_out, remove);
-		env.put(removeAllSymbol_out, removeAll);
-		env.put(retainAllSymbol_out, retainAll);
-		env.put(setSymbol_out, set);
-		env.put(sizeSymbol_out, size);
-		env.put(sublistSymbol_out, sublist);
-		env.put(mapSymbol_out, map);
-		env.put(map2Symbol_out, map2);
-		env.put(foldlSymbol_out, foldl);
-		env.put(foldrSymbol_out, foldr);
-		env.put(everypSymbol_out, everyp);
-		env.put(LinkedListToArrayListSymbol_out, LinkedListToArrayListSymbol);
-		env.put(LinkedListToNativeListSymbol_out, LinkedListToNativeListSymbol);
-	}
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String list = "_list";
+			String index = "_index";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list, index),
+					LitComposite.litCompositeHelper(
+							TypeIterator,
+							ClojureHelper.applyClojureFunction(
+									".listIterator",
+									ClojureHelper.getLiteralInnerValue(list),
+									ClojureHelper.getLiteralInnerValue(index))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return listIteratorSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite list_lc = (LitComposite)args.get(0);
+			LitInteropObject list_io = (LitInteropObject)list_lc.value;
+			LinkedList<?> list = (LinkedList<?>)list_io.javaObject;
+			
+			LitInteger index = (LitInteger)args.get(1);
+			
+			ListIterator<?> li = list.listIterator((int) index.value);
+			
+			return new LitComposite(
+					new LitInteropObject(li),
+					TypeIterator);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(
+					new TypeTuple(TypeListJavaLinked, TypeAtom.TypeIntNative),
+					TypeIterator);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return listIteratorSymbol_out.toString();
+		}
+	};
+	
+	public static final Symbol iteratorAddSymbol = new Symbol("iterator-add", NAMESPACE);
+	public static final Symbol iteratorAddSymbol_out = new Symbol("linked-list-iterator-add");
+	
+	@VelkaOperator
+	@Description("Inserts the specified element into the list (optional operation).") 
+	@Example("(define l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+					+ "(define it (java-linked-list-iterator l 0))\n"
+					+ "(linked-list-iterator-add it 42)") 
+	@Syntax("(linked-list-iterator-add <list-iterator> <element>)")
+	public static final Operator iteratorAdd = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String listIt = "_list-iterator";
+			String element = "_element";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(listIt, element),
+					ClojureHelper.applyClojureFunction(
+							"second",
+							ClojureHelper.clojureVectorHelper(
+									ClojureHelper.applyClojureFunction(
+											".add",
+											ClojureHelper.getLiteralInnerValue(listIt),
+											ClojureHelper.getLiteralInnerValue(element)),
+									listIt)));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return iteratorAddSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite it_lc = (LitComposite)args.get(0);
+			LitInteropObject it_io = (LitInteropObject)it_lc.value;
+			@SuppressWarnings("unchecked")
+			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
+			
+			Expression e = args.get(1);
+			
+			it.add(e);
+			
+			return it_lc;
+		}
+		
+		
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			Type type = new TypeArrow(
+					new TypeTuple(TypeIterator, A),
+					TypeIterator);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return iteratorAddSymbol_out.toString();
+		}
+	};
+	
+	public static final Symbol iteratorHasNextSymbol = new Symbol("has-next", NAMESPACE);
+	public static final Symbol iteratorHasNextSymbol_out = new Symbol("linked-list-iterator-has-next");
+	
+	@VelkaOperator
+	@Description("Returns true if this list iterator has more elements when traversing the list in the forward direction.") 
+	@Example("(define l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+					+ "(define it (java-linked-list-iterator l 0))\n"
+					+ "(linked-list-iterator-has-next it)") 
+	@Syntax("(linked-list-iterator-has-next <list iterator>)")
+	public static final Operator iteratorHasNext = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String it = "_iterator";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(it),
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(
+									".hasNext",
+									ClojureHelper.getLiteralInnerValue(it))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return iteratorHasNextSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite it_lc = (LitComposite)args.get(0);
+			LitInteropObject it_io = (LitInteropObject)it_lc.value;
+			@SuppressWarnings("unchecked")
+			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
+			
+			return it.hasNext() ? LitBoolean.TRUE : LitBoolean.FALSE;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(
+					new TypeTuple(TypeIterator),
+					TypeAtom.TypeBoolNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return iteratorHasNextSymbol_out.toString();
+		}
+	};
+	
+	public static final Symbol iteratorHasPreviousSymbol = new Symbol("has-previous", NAMESPACE);
+	public static final Symbol iteratorHasPreviousSymbol_out = new Symbol("linked-list-iterator-has-previous");
+	
+	@VelkaOperator
+	@Description("Returns true if this list iterator has more elements when traversing the list in the reverse direction.") 
+	@Example("(define l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+					+ "(define it (java-linked-list-iterator l 0))\n"
+					+ "(linked-list-iterator-has-previous it)") 
+	@Syntax("linked-list-iterator-has-previous <iterator>)")
+	public static final Operator iteratorHasPrevious = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String it = "_iterator";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(it),
+					LitBoolean.clojureBooleanToClojureLitBoolean(
+							ClojureHelper.applyClojureFunction(
+									".hasPrevious",
+									ClojureHelper.getLiteralInnerValue(it))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return iteratorHasPreviousSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite it_lc = (LitComposite)args.get(0);
+			LitInteropObject it_io = (LitInteropObject)it_lc.value;
+			@SuppressWarnings("unchecked")
+			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
+			
+			return it.hasPrevious() ? LitBoolean.TRUE : LitBoolean.FALSE;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(
+					new TypeTuple(TypeIterator),
+					TypeAtom.TypeBoolNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return iteratorHasPreviousSymbol_out.toString();
+		}
+	};
+	
+	public static final Symbol iteratorNextSymbol = new Symbol("iterator-next", NAMESPACE);
+	public static final Symbol iteratorNextSymbol_out = new Symbol("linked-list-iterator-next");
+	
+	@VelkaOperator
+	@Description("Returns the next element in the list and advances the cursor position.") 
+	@Example("(define l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+					+ "(define it (java-linked-list-iterator l 0))\n"
+					+ "(linked-list-iterator-next it)") 
+	@Syntax("(linked-list-iterator-next <iterator>)")
+	public static final Operator iteratorNext = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String it = "_iterator";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(it),
+					ClojureHelper.applyClojureFunction(
+							".next",
+							ClojureHelper.getLiteralInnerValue(it)));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return iteratorNextSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite it_lc = (LitComposite)args.get(0);
+			LitInteropObject it_io = (LitInteropObject)it_lc.value;
+			@SuppressWarnings("unchecked")
+			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
+			return it.next();
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			Type type = new TypeArrow(
+					new TypeTuple(TypeIterator),
+					A);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return iteratorNextSymbol_out.toString();
+		}
+	};
+	
+	public static final Symbol iteratorNextIndexSymbol = new Symbol("next-index", NAMESPACE);
+	public static final Symbol iteratorNextIndexSymbol_out = new Symbol("linked-list-iterator-next-index");
+	
+	@VelkaOperator
+	@Description("Returns the index of the element that would be returned by a subsequent call to linked-list-iterator-next.") 
+	@Example("(define l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+					+ "(define it (java-linked-list-iterator l 0))\n"
+					+ "(linked-list-iterator-next-index it)") 
+	@Syntax("(linked-list-iterator-next-index <iterator>)")
+	public static final Operator iteratorNextIndex = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String it = "_iterator";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(it),
+					LitInteger.clojureIntToClojureLitInteger(
+							ClojureHelper.applyClojureFunction(
+									".nextIndex",
+									ClojureHelper.getLiteralInnerValue(it))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return iteratorNextIndexSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite it_lc = (LitComposite)args.get(0);
+			LitInteropObject it_io = (LitInteropObject)it_lc.value;
+			@SuppressWarnings("unchecked")
+			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
+			
+			int index = it.nextIndex();
+			return new LitInteger(index);			
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(
+					new TypeTuple(TypeIterator),
+					TypeAtom.TypeIntNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return iteratorNextIndexSymbol_out.toString();
+		}
+	};
+	
+	public static final Symbol iteratorPreviousSymbol = new Symbol("iterator-previous", NAMESPACE);
+	public static final Symbol iteratorPreviousSymbol_out = new Symbol("linked-list-iterator-previous");
+	
+	@VelkaOperator
+	@Description("Returns the previous element in the list and moves the cursor position backwards.") 
+	@Example("(define l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+					+ "(define it (java-linked-list-iterator l 3))\n"
+					+ "(linked-list-iterator-previous it)") 
+	@Syntax("(linked-list-iterator-previous <iterator>)")
+	public static final Operator iteratorPrevious = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String it = "_iterator";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(it),
+					ClojureHelper.applyClojureFunction(
+							".previous",
+							ClojureHelper.getLiteralInnerValue(it)));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return iteratorPreviousSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite it_lc = (LitComposite)args.get(0);
+			LitInteropObject it_io = (LitInteropObject)it_lc.value;
+			@SuppressWarnings("unchecked")
+			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
+			return it.previous();
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			Type type = new TypeArrow(
+					new TypeTuple(TypeIterator),
+					A);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return iteratorPreviousSymbol_out.toString();
+		}
+	};
+	
+	public static final Symbol iteratorPreviousIndexSymbol = new Symbol("previous-index", NAMESPACE);
+	public static final Symbol iteratorPreviousIndexSymbol_out = new Symbol("linked-list-iterator-previous-index");
+	
+	@VelkaOperator
+	@Description("Returns the index of the element that would be returned by a subsequent call to linked-list-iterator-previous.") 
+	@Example("(define l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+					+ "(define it (java-linked-list-iterator l 3))\n"
+					+ "(linked-list-iterator-previous-index it)") 
+	@Syntax("(linked-list-iterator-previous-index <iterator>)")
+	public static final Operator iteratorPreviousIndex = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String it = "_iterator";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(it),
+					LitInteger.clojureIntToClojureLitInteger(
+							ClojureHelper.applyClojureFunction(
+									".previousIndex",
+									ClojureHelper.getLiteralInnerValue(it))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return iteratorPreviousIndexSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite it_lc = (LitComposite)args.get(0);
+			LitInteropObject it_io = (LitInteropObject)it_lc.value;
+			@SuppressWarnings("unchecked")
+			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
+			
+			int index = it.previousIndex();
+			return new LitInteger(index);			
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(
+					new TypeTuple(TypeIterator),
+					TypeAtom.TypeIntNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return iteratorPreviousIndexSymbol_out.toString();
+		}
+	};
+	
+	public static final Symbol iteratorRemoveSymbol = new Symbol("iterator-remove", NAMESPACE);
+	public static final Symbol iteratorRemoveSymbol_out = new Symbol("linked-list-iterator-remove");
+	
+	@VelkaOperator
+	@Description("Removes from the list the last element that was returned by linked-list-iterator-next or linked-list-iterator-next (optional operation).") 
+	@Example("(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+			+ "(define it (java-linked-list-iterator l 3))\n"
+			+ "(linked-list-iterator-next it)"
+			+ "(linked-list-iterator-next (linked-list-iterator-remove it))") 
+	@Syntax("(linked-list-iterator-remove <iterator>)")
+	public static final Operator iteratorRemove = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String it = "_iterator";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(it),
+					ClojureHelper.applyClojureFunction(
+							"second",
+							ClojureHelper.clojureVectorHelper(
+									ClojureHelper.applyClojureFunction(
+											".remove",
+											ClojureHelper.getLiteralInnerValue(it)),
+									it)));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return iteratorRemoveSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite it_lc = (LitComposite)args.get(0);
+			LitInteropObject it_io = (LitInteropObject)it_lc.value;
+			@SuppressWarnings("unchecked")
+			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
+			
+			it.remove();
+			
+			return it_lc;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(
+					new TypeTuple(TypeIterator),
+					TypeIterator);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return iteratorRemoveSymbol_out.toString();
+		}
+	};
+	
+	public static final Symbol iteratorSetSymbol = new Symbol("iterator-set", NAMESPACE);
+	public static final Symbol iteratorSetSymbol_out = new Symbol("linked-list-iterator-set");
+	
+	@VelkaOperator
+	@Description("Replaces the last element returned by linked-list-iterator-next or linked-list-iterator-previous() with the specified element (optional operation).") 
+	@Example("(define l (construct List JavaLinked))\n"
+					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+					+ "(define it (java-linked-list-iterator l 3))\n"
+					+ "(linked-list-iterator-next it)"
+					+ "(linked-list-iterator-set it 42)") 
+	@Syntax("(linked-list-iterator-remove <iterator> <element>)")
+	public static final Operator iteratorSet = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String it = "_iterator";
+			String element = "_element";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(it, element),
+					ClojureHelper.applyClojureFunction(
+							"second",
+							ClojureHelper.clojureVectorHelper(
+									ClojureHelper.applyClojureFunction(
+											".set",
+											ClojureHelper.getLiteralInnerValue(it),
+											ClojureHelper.getLiteralInnerValue(element)),
+									it)));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return iteratorSetSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite it_lc = (LitComposite)args.get(0);
+			LitInteropObject it_io = (LitInteropObject)it_lc.value;
+			@SuppressWarnings("unchecked")
+			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
+			
+			Expression e = args.get(1);
+			
+			it.set(e);
+			
+			return it_lc;
+		}		
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			Type type = new TypeArrow(
+					new TypeTuple(TypeIterator, A),
+					TypeIterator);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return iteratorSetSymbol_out.toString();
+		}
+	};
 }

@@ -38,6 +38,10 @@ import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
+import velka.util.annotations.Description;
+import velka.util.annotations.Example;
+import velka.util.annotations.Header;
+import velka.util.annotations.Syntax;
 import velka.util.annotations.VelkaOperator;
 import velka.util.annotations.VelkaOperatorBank;
 
@@ -47,9 +51,9 @@ import velka.util.annotations.VelkaOperatorBank;
  * @author Mgr. Radomir Skrabal
  *
  */
-@VelkaOperatorBank(
-		header = "General",
-		description = "General operators for primitive types and utility.")
+@VelkaOperatorBank
+@Header("General")
+@Description("General operators for primitive types and utility.")
 public final class Operators {
 	
 	/**
@@ -60,10 +64,10 @@ public final class Operators {
 	/**
 	 * Addition (+) operator
 	 */
-	@VelkaOperator(
-			description = "Adds two integers.", 
-			example = "(+ 21 21) ; = 42",
-			syntax = "(+ arg1 arg2)")
+	@VelkaOperator
+	@Description("Adds two integers.") 
+	@Example("(+ 21 21) ; = 42")
+	@Syntax("(+ arg1 arg2)")
 	public static final Operator Addition = new Operator() {
 
 		@Override
@@ -110,10 +114,10 @@ public final class Operators {
 	/**
 	 * Bit and (&) operator
 	 */
-	@VelkaOperator(
-			description = "Performs bit-wise and of two integers.", 
-			example = "(bit-and 5 1) ; = 1", 
-			syntax = "(bit-and <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Performs bit-wise and of two integers.") 
+	@Example("(bit-and 5 1) ; = 1") 
+	@Syntax("(bit-and <arg1> <arg2>)")
 	public static final Operator BitAnd = new Operator() {
 
 		@Override
@@ -150,10 +154,10 @@ public final class Operators {
 	/**
 	 * Bit Not operator
 	 */
-	@VelkaOperator(
-			description = "Negates all bits in binary representation of the argument.", 
-			example = ">(bit-not 42) ;;= -43", 
-			syntax = "(bit-not <arg>)")
+	@VelkaOperator
+	@Description("Negates all bits in binary representation of the argument.") 
+	@Example(">(bit-not 42) ;;= -43") 
+	@Syntax("(bit-not <arg>)")
 	public static final Operator BitNot = new Operator() {
 
 		@Override
@@ -191,10 +195,10 @@ public final class Operators {
 	/**
 	 * Bit or (|) operator
 	 */
-	@VelkaOperator(
-			description = "Performs bit-wise or of two integers.", 
-			example = "(bit-or 5 1) ; = 5", 
-			syntax = "(bit-or <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Performs bit-wise or of two integers.") 
+	@Example("(bit-or 5 1) ; = 5") 
+	@Syntax("(bit-or <arg1> <arg2>)")
 	public static final Operator BitOr = new Operator() {
 
 		@Override
@@ -231,10 +235,10 @@ public final class Operators {
 	/**
 	 * Bit shift left (shl) operator
 	 */
-	@VelkaOperator(
-			description = "Shifts bits of binary representation_bits_ left by _n_ positions.", 
-			example = ">(shl 1 4) ;;=16", 
-			syntax = "(shl <bits> <n>)")
+	@VelkaOperator
+	@Description("Shifts bits of binary representation_bits_ left by _n_ positions.") 
+	@Example(">(shl 1 4) ;;=16") 
+	@Syntax("(shl <bits> <n>)")
 	public static final Operator BitShiftLeft = new Operator() {
 
 		@Override
@@ -283,10 +287,10 @@ public final class Operators {
 	/**
 	 * Bit shift right (shr) operator
 	 */
-	@VelkaOperator(
-			description = "Shifts bits of binary representation_bits_ right by _n_ positions.", 
-			example = ">(shr 16 4) ;; = 1", 
-			syntax = "(shr <bits> <n>)")
+	@VelkaOperator
+	@Description("Shifts bits of binary representation_bits_ right by _n_ positions.") 
+	@Example(">(shr 16 4) ;; = 1") 
+	@Syntax("(shr <bits> <n>)")
 	public static final Operator BitShiftRight = new Operator() {
 
 		@Override
@@ -328,10 +332,10 @@ public final class Operators {
 	/**
 	 * Bit XOR operator
 	 */
-	@VelkaOperator(
-			description = "Computes xor of binary representations of integer arguments.", 
-			example = ">(bit-xor 6 3) ;; = 5", 
-			syntax = "(bit-xor <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Computes xor of binary representations of integer arguments.") 
+	@Example(">(bit-xor 6 3) ;; = 5") 
+	@Syntax("(bit-xor <arg1> <arg2>)")
 	public static final Operator BitXor = new Operator() {
 
 		@Override
@@ -372,15 +376,15 @@ public final class Operators {
 	/**
 	 * can-unify-representations operator
 	 */
-	@VelkaOperator(
-			description = "Returns _true_ if representations carried by _arg1_ and _arg2_ can be unified. "
+	@VelkaOperator
+	@Description("Returns _true_ if representations carried by _arg1_ and _arg2_ can be unified. "
 			+ "Otherwise returns _false_. " 
 			+ "This operator works on level of representations, meaning for example " 
 			+ "_Int:Native_ and _Int:String_ cannot unify and type symbols carriing them will yield _false_ on application of the operator.\n\n"
-			+ "For type level variant see [can-unify-types](#canUnifyTypes).", 
-			example = "(can-unify-representations 42 42) ;; = #t\n"
-			+ "(can-unify-representations 42 (construct Int String \"42\"))", 
-			syntax = "(can-unify-representations <arg1> <arg2>)")
+			+ "For type level variant see [can-unify-types](#canUnifyTypes).") 
+	@Example("(can-unify-representations 42 42) ;; = #t\n"
+			+ "(can-unify-representations 42 (construct Int String \"42\"))") 
+	@Syntax("(can-unify-representations <arg1> <arg2>)")
 	public static final Operator CanUnifyRepresentations = new Operator() {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -430,15 +434,15 @@ public final class Operators {
 	/**
 	 * can-unify-types operator
 	 */
-	@VelkaOperator(
-			description = "Returns _true_ if types carried by _arg1_ and _arg2_ can be unified. " 
+	@VelkaOperator
+	@Description("Returns _true_ if types carried by _arg1_ and _arg2_ can be unified. " 
 					+ "Otherwise returns _false_. This operator works on level of types, not taking type " 
 					+ "representations into account. Meaning for example _Int:Native_ and _Int:String_ can unify " 
 					+ "and type symbols carriing them will yield _true_ on application of the operator. \n\n"
-					+ "For representation level variant see [can-unify-representations](#canUnifyRepresentations).", 
-			example = "(can-unify-types 42 (construct Int String \"42\")) ;; = #t)\n"
-					+ "(can-unify-types 42 \"42\") ;; = #f", 
-			syntax = "(can-unify-types <arg1> <arg2>)")
+					+ "For representation level variant see [can-unify-representations](#canUnifyRepresentations).") 
+	@Example("(can-unify-types 42 (construct Int String \"42\")) ;; = #t)\n"
+					+ "(can-unify-types 42 \"42\") ;; = #f") 
+	@Syntax("(can-unify-types <arg1> <arg2>)")
 	public static final Operator CanUnifyTypes = new Operator() {
 
 		@Override
@@ -489,10 +493,10 @@ public final class Operators {
 	/**
 	 * car operator
 	 */
-	@VelkaOperator(
-			description = "Extracts first value from a pair.", 
-			example = "(car (cons 42 \"42\")) ; = 42", 
-			syntax = "(car <arg>)")
+	@VelkaOperator
+	@Description("Extracts first value from a pair.") 
+	@Example("(car (cons 42 \"42\")) ; = 42") 
+	@Syntax("(car <arg>)")
 	public static final Operator Car = new Operator() {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
@@ -528,10 +532,10 @@ public final class Operators {
 	/**
 	 * cdr operator
 	 */
-	@VelkaOperator(
-			description = "Extracts second value from a pair.", 
-			example = "(cdr (cons 42 \"42\")) ; = \"42\"", 
-			syntax = "(cdr <arg>)")
+	@VelkaOperator
+	@Description("Extracts second value from a pair.") 
+	@Example("(cdr (cons 42 \"42\")) ; = \"42\"") 
+	@Syntax("(cdr <arg>)")
 	public static final Operator Cdr = new Operator() {
 
 		@Override
@@ -568,10 +572,10 @@ public final class Operators {
 	/**
 	 * Concatenation operator
 	 */
-	@VelkaOperator(
-			description = "Concatenates two strings.", 
-			example = "(concat \"foo\" \"bar\") ; = \"foobar\"", 
-			syntax = "(concat <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Concatenates two strings.") 
+	@Example("(concat \"foo\" \"bar\") ; = \"foobar\"") 
+	@Syntax("(concat <arg1> <arg2>)")
 	public static final Operator Concantenation = new Operator() {
 
 		@Override
@@ -613,14 +617,14 @@ public final class Operators {
 	/**
 	 * Operator for computing conversion cost
 	 */
-	@VelkaOperator(
-			description = "Computes cost of representation conversion for applying _fun_ with _arg_.", 
-			example = "(conversion-cost <fun> <arg>)", 
-			syntax = "(conversion-cost\r\n"
-					+ "	(lambda ((Int:Native x) (Int:Native y)) (+ x y))\r\n"
-					+ "	(tuple\r\n"
-					+ "		(construct Int String \"42\")\r\n"
-					+ "		(construct Int Roman \"XLII\"))) ; = 2")
+	@VelkaOperator
+	@Description("Computes cost of representation conversion for applying _fun_ with _arg_.") 
+	@Example("(conversion-cost <fun> <arg>)") 
+	@Syntax("(conversion-cost\r\n"
+		+ "	(lambda ((Int:Native x) (Int:Native y)) (+ x y))\r\n"
+		+ "	(tuple\r\n"
+		+ "		(construct Int String \"42\")\r\n"
+		+ "		(construct Int Roman \"XLII\"))) ; = 2")
 	public static final Operator ConversionCost = new Operator() {
 		
 		@Override
@@ -745,10 +749,10 @@ public final class Operators {
 	/**
 	 * Division (/) operator
 	 */
-	@VelkaOperator(
-			description = "Divides _arg1_ by _arg2_. if _arg2_ evaluates to zero, causes exception.", 
-			example = "(/ 84 2) ; = 42", 
-			syntax = "(/ <arg1> <arg2)")
+	@VelkaOperator
+	@Description("Divides _arg1_ by _arg2_. if _arg2_ evaluates to zero, causes exception.") 
+	@Example("(/ 84 2) ; = 42") 
+	@Syntax("(/ <arg1> <arg2)")
 	public static final Operator Division = new Operator() {
 
 		@Override
@@ -796,10 +800,10 @@ public final class Operators {
 	/**
 	 * Operator for addition of double values
 	 */
-	@VelkaOperator(
-			description = "Adds two double numbers.", 
-			example = "(dadd 21.5 22.5) += 42.0", 
-			syntax = "(dadd <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Adds two double numbers.") 
+	@Example("(dadd 21.5 22.5) += 42.0") 
+	@Syntax("(dadd <arg1> <arg2>)")
 	public static final Operator DoubleAddition = new Operator() {
 
 		@Override
@@ -843,10 +847,10 @@ public final class Operators {
 	/**
 	 * Floating point division operator
 	 */
-	@VelkaOperator(
-			description = "Divides _arg1_ by _arg2_. If _arg2_ evaluates to zero, causes exception.", 
-			example = "(ddiv 8.4 0.2) ;= 42.0", 
-			syntax = "(ddiv <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Divides _arg1_ by _arg2_. If _arg2_ evaluates to zero, causes exception.") 
+	@Example("(ddiv 8.4 0.2) ;= 42.0") 
+	@Syntax("(ddiv <arg1> <arg2>)")
 	public static final Operator DoubleDivision = new Operator() {
 
 		@Override
@@ -890,11 +894,11 @@ public final class Operators {
 	/**
 	 * Operator for Double lesser than
 	 */
-	@VelkaOperator(
-			description = "Comapres two doubles. Returns _true_  if _arg1_ is smaller or equal than _arg2_, otherwise returns _false_.", 
-			example = "(dlt 42.1 54.3) ; = #t\n"
-					+ "(dlt 42.1 21.3) + = #f", 
-			syntax = "(dlt <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Comapres two doubles. Returns _true_  if _arg1_ is smaller or equal than _arg2_, otherwise returns _false_.") 
+	@Example("(dlt 42.1 54.3) ; = #t\n"
+					+ "(dlt 42.1 21.3) + = #f") 
+	@Syntax("(dlt <arg1> <arg2>)")
 	public static final Operator DoubleLesserThan = new Operator() {
 
 		@Override
@@ -941,11 +945,11 @@ public final class Operators {
 	/**
 	 * Equality operator
 	 */
-	@VelkaOperator(
-			description = "Returns true if arguments are equal, otherwise returns false.", 
-			example = "(equals? 42 \"42\") ; = #f\n"
-					+ "(equals? (cons 42 42) (cons 42 42)) ; = #t", 
-			syntax = "(equals? <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Returns true if arguments are equal, otherwise returns false.") 
+	@Example("(equals? 42 \"42\") ; = #f\n"
+			+ "(equals? (cons 42 42) (cons 42 42)) ; = #t") 
+	@Syntax("(equals? <arg1> <arg2>)")
 	public static final Operator Equals = new Operator() {
 
 		private final TypeArrow type = new TypeArrow(
@@ -986,11 +990,11 @@ public final class Operators {
 	/**
 	 * Operator for logging initialization
 	 */
-	@VelkaOperator(
-			description = "Initializes logger, which will write to file specified by _name_. For logging messages see [log](#log).", 
-			example = ">(init-logger \"test-log.log\")\n"
-					+ "[]", 
-			syntax = "(init-logger <name>)")
+	@VelkaOperator
+	@Description("Initializes logger, which will write to file specified by _name_. For logging messages see [log](#log).") 
+	@Example(">(init-logger \"test-log.log\")\n"
+					+ "[]")
+	@Syntax("(init-logger <name>)")
 	public static Operator InitLogger = new Operator() {
 
 		@Override
@@ -1062,10 +1066,10 @@ public final class Operators {
 	/**
 	 * Operator for coercing int to double
 	 */
-	@VelkaOperator(
-			description = "Coerces _arg_ to _Double:Native_ type.", 
-			example = "(int-to-double 42) ; = 42.0", 
-			syntax = "(int-to-double <arg>)")
+	@VelkaOperator
+	@Description("Coerces _arg_ to _Double:Native_ type.") 
+	@Example("(int-to-double 42) ; = 42.0") 
+	@Syntax("(int-to-double <arg>)")
 	public static final Operator IntToDouble = new Operator() {
 
 		@Override
@@ -1106,10 +1110,10 @@ public final class Operators {
 	/**
 	 * Floor operator
 	 */
-	@VelkaOperator(
-			description = "Coerces _arg_ to _Double:Native_ type.", 
-			example = "(int-to-double 42) ; = 42.0", 
-			syntax = "(int-to-double <arg>)")
+	@VelkaOperator
+	@Description("Coerces _arg_ to _Double:Native_ type.") 
+	@Example("(int-to-double 42) ; = 42.0") 
+	@Syntax("(int-to-double <arg>)")
 	public static final Operator Floor = new Operator() {
 
 		@Override
@@ -1151,13 +1155,12 @@ public final class Operators {
 	/**
 	 * is-same-representation operator
 	 */
-	@VelkaOperator(
-			description = "Returns _true_ if representations _A_ and _B_ can be unified. Otherwise returns _false_. This operator works on level of representations.\n"
-					+ "For type level variant see [is-same-type](#isSameType).", 
-			example = "(is-same-type 42 84) ; = true\n"
-					+ "(is-same-type 42 (construct Int String \"84\")) ; = false\n"
-					+ "(is-same-type 42 \"84\") ; = false", 
-			syntax = "(is-same-representation <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Returns _true_ if representations _A_ and _B_ can be unified. Otherwise returns _false_. This operator works on level of representations.\n"
+			+ "For type level variant see [is-same-type](#isSameType).")
+	@Example("(is-same-type 42 84) ; = true\n" + "(is-same-type 42 (construct Int String \"84\")) ; = false\n"
+			+ "(is-same-type 42 \"84\") ; = false")
+	@Syntax("(is-same-representation <arg1> <arg2>)")
 	public static final Operator IsSameRepresentation = new Operator() {
 
 		@Override
@@ -1211,13 +1214,12 @@ public final class Operators {
 	/**
 	 * is-same-type operator
 	 */
-	@VelkaOperator(
-			description = "Returns _true_ if types _A_ and _B_ can be unified. Otherwise returns _false_. This operator works on level of types, not taking type representations into account.\n"
-					+ "For representation level variant see [is-same-representation](#isSameRepresentation).", 
-			example = "(is-same-type 42 84) ; = true\n"
-					+ "(is-same-type 42 (construct Int String \"84\")) ; = true\n"
-					+ "(is-same-type 42 \"84\") ; = false", 
-			syntax = "(is-same-type <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Returns _true_ if types _A_ and _B_ can be unified. Otherwise returns _false_. This operator works on level of types, not taking type representations into account.\n"
+			+ "For representation level variant see [is-same-representation](#isSameRepresentation).")
+	@Example("(is-same-type 42 84) ; = true\n" + "(is-same-type 42 (construct Int String \"84\")) ; = true\n"
+			+ "(is-same-type 42 \"84\") ; = false")
+	@Syntax("(is-same-type <arg1> <arg2>)")
 	public static final Operator IsSameType = new Operator() {
 
 		@Override
@@ -1271,10 +1273,10 @@ public final class Operators {
 	/**
 	 * Lesser than (<) operator
 	 */
-	@VelkaOperator(
-			description = "Returns _true_ if frist argument is lesser than second argument. Returns _false_ otherwise.", 
-			example = "(< 42 1) ; = #f", 
-			syntax = "(< <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Returns _true_ if frist argument is lesser than second argument. Returns _false_ otherwise.") 
+	@Example("(< 42 1) ; = #f") 
+	@Syntax("(< <arg1> <arg2>)")
 	public static final Operator LesserThan = new Operator() {
 
 		@Override
@@ -1311,13 +1313,10 @@ public final class Operators {
 	/**
 	 * Log operator
 	 */
-	@VelkaOperator(
-			description = "Logs a message. [init-logger](#initLogger) must be called before use of _log_.", 
-			example = ">(init-logger \"test-log.log\")\n"
-					+ "[]\n"
-					+ ">(log \"test message\")\n"
-					+ "[]", 
-			syntax = "(log <message>)")
+	@VelkaOperator
+	@Description("Logs a message. [init-logger](#initLogger) must be called before use of _log_.")
+	@Example(">(init-logger \"test-log.log\")\n" + "[]\n" + ">(log \"test message\")\n" + "[]")
+	@Syntax("(log <message>)")
 	public static final Operator Log = new Operator() {
 
 		@Override
@@ -1353,10 +1352,10 @@ public final class Operators {
 
 	};
 	
-	@VelkaOperator(
-			description = "Returns a remainder after an integer division.", 
-			example = "(mod 43 3) ; = 1", 
-			syntax = "(mod <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Returns a remainder after an integer division.") 
+	@Example("(mod 43 3) ; = 1") 
+	@Syntax("(mod <arg1> <arg2>)")
 	public static final Operator Modulo = new Operator() {
 
 		@Override
@@ -1403,10 +1402,10 @@ public final class Operators {
 	/**
 	 * Multiplication (*) operator
 	 */
-	@VelkaOperator(
-			description = "Multiplies two integers.", 
-			example = "(* 6 7) ; = 42", 
-			syntax = "(* <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Multiplies two integers.") 
+	@Example("(* 6 7) ; = 42") 
+	@Syntax("(* <arg1> <arg2>)")
 	public static final Operator Multiplication = new Operator() {
 
 		@Override
@@ -1451,11 +1450,10 @@ public final class Operators {
 	/**
 	 * Not operator
 	 */
-	@VelkaOperator(
-			description = "Logical not of argument.", 
-			example = "(not #t) ; = #f\n"
-					+ "(not (equals? 42 \"42\")) ; = #t", 
-			syntax = "(not <arg>)")
+	@VelkaOperator
+	@Description("Logical not of argument.")
+	@Example("(not #t) ; = #f\n" + "(not (equals? 42 \"42\")) ; = #t")
+	@Syntax("(not <arg>)")
 	public static final Operator Not = new Operator() {
 
 		@Override
@@ -1489,10 +1487,10 @@ public final class Operators {
 	/**
 	 * Numeric equal (=) operator
 	 */
-	@VelkaOperator(
-			description = "Compares two integers for equality.", 
-			example = "(= 42 42) ; = #t", 
-			syntax = "(= <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Compares two integers for equality.") 
+	@Example("(= 42 42) ; = #t") 
+	@Syntax("(= <arg1> <arg2>)")
 	public static final Operator NumericEqual = new Operator() {
 
 		@Override
@@ -1530,10 +1528,10 @@ public final class Operators {
 	/**
 	 * parse-int operator
 	 */
-	@VelkaOperator(
-			description = "Tries to parse string into integer. Throws error if string cannot be parsed.", 
-			example = ">(parse-int \"42\") ;; = 42", 
-			syntax = "(parse-int <string>)")
+	@VelkaOperator
+	@Description("Tries to parse string into integer. Throws error if string cannot be parsed.") 
+	@Example(">(parse-int \"42\") ;; = 42") 
+	@Syntax("(parse-int <string>)")
 	public static final Operator ParseInt = new Operator() {
 
 		@Override
@@ -1579,10 +1577,10 @@ public final class Operators {
 	/**
 	 * Println operator
 	 */
-	@VelkaOperator(
-			description = "Prints its argument to standard output with endline and returns number of printed characters.", 
-			example = "(println \"foo\") ; prints \"foo\" and returns 5", 
-			syntax = "(println <arg>)")
+	@VelkaOperator
+	@Description("Prints its argument to standard output with endline and returns number of printed characters.") 
+	@Example("(println \"foo\") ; prints \"foo\" and returns 5") 
+	@Syntax("(println <arg>)")
 	public static final Operator PrintlnOperator = new Operator() {
 
 		private final TypeArrow type = new TypeArrow(
@@ -1633,11 +1631,10 @@ public final class Operators {
 	/**
 	 * Operator read-file
 	 */
-	@VelkaOperator(
-			description = "Reads contents of file specified by _filename_ and returns it as string.", 
-			example = ">(read-file \"foo.txt\")\n"
-					+ "\"foo bar baz\"", 
-			syntax = "(read-file <filename>)")
+	@VelkaOperator
+	@Description("Reads contents of file specified by _filename_ and returns it as string.")
+	@Example(">(read-file \"foo.txt\")\n" + "\"foo bar baz\"")
+	@Syntax("(read-file <filename>)")
 	public static final Operator ReadFile = new Operator() {
 
 		@Override
@@ -1683,11 +1680,10 @@ public final class Operators {
 	/**
 	 * str-split operator
 	 */
-	@VelkaOperator(
-			description = "Splits _string_ by _by_ into a List:Native.", 
-			example = ">(str-split \"foo;bar;baz\" \";\")\n"
-					+ "[\"foo\" [\"bar\" [\"baz\" []]]]", 
-			syntax = "(str-split <string> <by>)")
+	@VelkaOperator
+	@Description("Splits _string_ by _by_ into a List:Native.")
+	@Example(">(str-split \"foo;bar;baz\" \";\")\n" + "[\"foo\" [\"bar\" [\"baz\" []]]]")
+	@Syntax("(str-split <string> <by>)")
 	public static final Operator StrSplit = new Operator() {
 
 		@Override
@@ -1735,10 +1731,10 @@ public final class Operators {
 	/**
 	 * Subtraction (-) operator
 	 */
-	@VelkaOperator(
-			description = "Subtracts _arg2_ from _arg1_.", 
-			example = "(- 43 1) ; = 42", 
-			syntax = "(- <arg1> <arg2>)")
+	@VelkaOperator
+	@Description("Subtracts _arg2_ from _arg1_.") 
+	@Example("(- 43 1) ; = 42") 
+	@Syntax("(- <arg1> <arg2>)")
 	public static final Operator Subtraction = new Operator() {
 
 		@Override
@@ -1787,10 +1783,10 @@ public final class Operators {
 	/**
 	 * Operator for current nano timestamp
 	 */
-	@VelkaOperator(
-			description = "Returns current System/currentTimeMillis wrapped from java.", 
-			example = "(timestamp) ; = 1658062149471", 
-			syntax = "(timestamp)")
+	@VelkaOperator
+	@Description("Returns current System/currentTimeMillis wrapped from java.") 
+	@Example("(timestamp) ; = 1658062149471") 
+	@Syntax("(timestamp)")
 	public static Operator Timestamp = new Operator() {
 
 		@Override
@@ -1826,13 +1822,10 @@ public final class Operators {
 	/**
 	 * to-str operator
 	 */
-	@VelkaOperator(
-			description = "Returns readable representation of its argument.", 
-			example = ">(to-str 42)\n"
-					+ "\"42\"\n"
-					+ ">(to-str (construct List Native))\n"
-					+ "\"[]\"", 
-			syntax = "(to-str <expr>)")
+	@VelkaOperator
+	@Description("Returns readable representation of its argument.")
+	@Example(">(to-str 42)\n" + "\"42\"\n" + ">(to-str (construct List Native))\n" + "\"[]\"")
+	@Syntax("(to-str <expr>)")
 	public static final Operator ToStr = new Operator() {
 
 		@Override
@@ -1887,10 +1880,10 @@ public final class Operators {
 	/**
 	 * Unsigned bit shift right (ushr) operator
 	 */
-	@VelkaOperator(
-			description = " Bitwise shift right, without sign-extension. ", 
-			example = "(ushr -1 3) ;; = 2305843009213693951", 
-			syntax = "(ushr <bits> <n>)")
+	@VelkaOperator
+	@Description(" Bitwise shift right, without sign-extension. ") 
+	@Example("(ushr -1 3) ;; = 2305843009213693951") 
+	@Syntax("(ushr <bits> <n>)")
 	public static final Operator UnsignedBitShiftRight = new Operator() {
 
 		@Override

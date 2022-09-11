@@ -34,7 +34,13 @@ import velka.util.Pair;
 import velka.util.ThrowingBinaryOperator;
 import velka.util.ThrowingFunction;
 import velka.util.ThrowingPredicate;
+import velka.util.annotations.Description;
+import velka.util.annotations.Example;
+import velka.util.annotations.Header;
+import velka.util.annotations.Name;
+import velka.util.annotations.Syntax;
 import velka.util.annotations.VelkaConstructor;
+import velka.util.annotations.VelkaConversion;
 import velka.util.annotations.VelkaOperator;
 import velka.util.annotations.VelkaOperatorBank;
 
@@ -44,9 +50,9 @@ import velka.util.annotations.VelkaOperatorBank;
  * @author Mgr. Radomir Skrabal
  *
  */
-@VelkaOperatorBank(
-		description = "Operators for working with wrapped java.util.ArrayList.", 
-		header = "Array List")
+@VelkaOperatorBank
+@Description("Operators for working with wrapped java.util.ArrayList.") 
+@Header("Array List")
 public class JavaArrayList {
 
 	/**
@@ -64,10 +70,10 @@ public class JavaArrayList {
 	/**
 	 * Constructor
 	 */
-	@VelkaConstructor(
-			description = "Constructs empty List:JavaArray.", 
-			name = "Construct Empty List", 
-			syntax = "(construct List JavaArray)")
+	@VelkaConstructor
+	@Description("Constructs empty List:JavaArray.") 
+	@Name("Construct Empty List") 
+	@Syntax("(construct List JavaArray)")
 	public static final Operator constructor = new Operator() {
 
 		@Override
@@ -109,10 +115,10 @@ public class JavaArrayList {
 	/**
 	 * Operator for contructor from list
 	 */
-	@VelkaConstructor(
-			description = "Construct List:JavaArray from existing list inserting all its elements.", 
-			name = "Construct from list", 
-			syntax = "(construct List JavaArray <list>)")
+	@VelkaConstructor
+	@Description("Construct List:JavaArray from existing list inserting all its elements.") 
+	@Name("Construct from list") 
+	@Syntax("(construct List JavaArray <list>)")
 	public static Operator constructorFromList = new Operator() {
 
 		@Override
@@ -164,10 +170,10 @@ public class JavaArrayList {
 	/**
 	 * Operator for capacity constructor
 	 */
-	@VelkaConstructor(
-			description = "Constructs List:JavaArray with specified pre-allocated capacity.", 
-			name = "Construct with capacity", 
-			syntax = "(construc List JavaArray <capacity>)")
+	@VelkaConstructor
+	@Description("Constructs List:JavaArray with specified pre-allocated capacity.") 
+	@Name("Construct with capacity") 
+	@Syntax("(construc List JavaArray <capacity>)")
 	public static Operator constructorCapacity = new Operator() {
 
 		@Override
@@ -216,10 +222,10 @@ public class JavaArrayList {
 	/**
 	 * Operator for boolean add(E e)
 	 */
-	@VelkaOperator(
-			description = "Appends the specified element to the end of list.", 
-			example = "(java-array-list-add-to-end (construct List JavaArray) 42)", 
-			syntax = "(java-array-list-add-to-end <list> <element>)")
+	@VelkaOperator
+	@Description("Appends the specified element to the end of list.") 
+	@Example("(java-array-list-add-to-end (construct List JavaArray) 42)") 
+	@Syntax("(java-array-list-add-to-end <list> <element>)")
 	public static final Operator addToEnd = new Operator() {
 
 		@Override
@@ -279,10 +285,10 @@ public class JavaArrayList {
 	/**
 	 * Operator for void add(int index, E element)
 	 */
-	@VelkaOperator(
-			description = "Inserts the specified element at the specified position in list.", 
-			example = "(java-array-list-to-index (construct List JavaArray) 0 42)", 
-			syntax = "(java-array-list-to-index <list> <index> <element>)")
+	@VelkaOperator
+	@Description("Inserts the specified element at the specified position in list.") 
+	@Example("(java-array-list-to-index (construct List JavaArray) 0 42)") 
+	@Syntax("(java-array-list-to-index <list> <index> <element>)")
 	public static final Operator addToIndex = new Operator() {
 
 		@Override
@@ -352,14 +358,11 @@ public class JavaArrayList {
 	/**
 	 * operator for boolean addAll(Collection<? extends E> c)
 	 */
-	@VelkaOperator(
-			description = "Appends all of the elements in the specified collection to the end of this list, in the order that they are returned by the specified collection's Iterator.", 
-			example = "(def l (construct List JavaArray))\n"
-					+ "(java-array-list-add l 42)\n"
-					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(println l)\n"
-					+ ";;(42 0 1 2)", 
-			syntax = "(java-array-list-add-all <list1> <list2>)")
+	@VelkaOperator
+	@Description("Appends all of the elements in the specified collection to the end of this list, in the order that they are returned by the specified collection's Iterator.")
+	@Example("(def l (construct List JavaArray))\n" + "(java-array-list-add l 42)\n"
+			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n" + "(println l)\n" + ";;(42 0 1 2)")
+	@Syntax("(java-array-list-add-all <list1> <list2>)")
 	public static final Operator addAll = new Operator() {
 
 		@Override
@@ -428,10 +431,10 @@ public class JavaArrayList {
 	/**
 	 * Operator for boolean contains(Object o)
 	 */
-	@VelkaOperator(
-			description = "Returns true if this list contains the specified element.", 
-			example = "(java-array-list-contains (construct List JavaArray) 42) ; = #f", 
-			syntax = "(java-array-list-contains <list> <element>)")
+	@VelkaOperator
+	@Description("Returns true if this list contains the specified element.") 
+	@Example("(java-array-list-contains (construct List JavaArray) 42) ; = #f") 
+	@Syntax("(java-array-list-contains <list> <element>)")
 	public static final Operator contains = new Operator() {
 
 		@Override
@@ -494,12 +497,12 @@ public class JavaArrayList {
 	/**
 	 * Operator for boolean containsAll(Collection<?> c)
 	 */
-	@VelkaOperator(
-			description = "Returns true if this list contains all of the elements in the specified list.", 
-			example = "(def l (construct List JavaArray))\n"
-					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-array-list-contains-all k (build-list-native 2 (lambda (x) x))) ;; = #t", 
-			syntax = "(java-array-list-contains-all <list1> <list2>)")
+	@VelkaOperator
+	@Description("Returns true if this list contains all of the elements in the specified list.")
+	@Example("(def l (construct List JavaArray))\n"
+			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+			+ "(java-array-list-contains-all k (build-list-native 2 (lambda (x) x))) ;; = #t")
+	@Syntax("(java-array-list-contains-all <list1> <list2>)")
 	public static final Operator containsAll = new Operator() {
 
 		@Override
@@ -567,12 +570,11 @@ public class JavaArrayList {
 	/**
 	 * Operator for E get(int index)
 	 */
-	@VelkaOperator(
-			description = "Returns the element at the specified position in this list.", 
-			example = "(def l (construct List JavaArray))\n"
-					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-array-list-get l 1) ;; = 1", 
-			syntax = "(java-array-list-get <list> <index>)")
+	@VelkaOperator
+	@Description("Returns the element at the specified position in this list.")
+	@Example("(def l (construct List JavaArray))\n"
+			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n" + "(java-array-list-get l 1) ;; = 1")
+	@Syntax("(java-array-list-get <list> <index>)")
 	public static final Operator get = new Operator() {
 
 		@Override
@@ -631,12 +633,12 @@ public class JavaArrayList {
 	/**
 	 * Operator for int indexOf(Object o)
 	 */
-	@VelkaOperator(
-			description = "Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.", 
-			example = "(def l (construct List JavaArray))\n"
-					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-array-list-index-of l 1) ;; = 1", 
-			syntax = "(java-array-list-index-of <list> <element>)")
+	@VelkaOperator
+	@Description("Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.")
+	@Example("(def l (construct List JavaArray))\n"
+			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+			+ "(java-array-list-index-of l 1) ;; = 1")
+	@Syntax("(java-array-list-index-of <list> <element>)")
 	public static final Operator indexOf = new Operator() {
 
 		@Override
@@ -698,10 +700,10 @@ public class JavaArrayList {
 	/**
 	 * Operator for boolean isEmpty()
 	 */
-	@VelkaOperator(
-			description = "Returns true if this list contains no elements.", 
-			example = "(java-array-list-is-empty (construct List JavaArray)) ;; = #t", 
-			syntax = "(java-array-list-is-empty <list>)")
+	@VelkaOperator
+	@Description("Returns true if this list contains no elements.") 
+	@Example("(java-array-list-is-empty (construct List JavaArray)) ;; = #t") 
+	@Syntax("(java-array-list-is-empty <list>)")
 	public static final Operator isEmpty = new Operator() {
 
 		@Override
@@ -759,12 +761,12 @@ public class JavaArrayList {
 	/**
 	 * Operator for int lastIndexOf(E e)
 	 */
-	@VelkaOperator(
-			description = "Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.", 
-			example = "(def l (construct List JavaArray))\n"
-					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
-					+ "(java-array-list-last-index-of l 1) ;; = 2", 
-			syntax = "(java-array-list-last-index-of <list> <element>)")
+	@VelkaOperator
+	@Description("Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.")
+	@Example("(def l (construct List JavaArray))\n"
+			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
+			+ "(java-array-list-last-index-of l 1) ;; = 2")
+	@Syntax("(java-array-list-last-index-of <list> <element>)")
 	public static final Operator lastIndexOf = new Operator() {
 
 		@Override
@@ -826,14 +828,12 @@ public class JavaArrayList {
 	/**
 	 * Operator for boolean remove(Object o)
 	 */
-	@VelkaOperator(
-			description = "Removes the first occurrence of the specified element from this list, if it is present.", 
-			example = "(def l (construct List JavaArray))\n"
-					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-array-list-remove l 1)\n"
-					+ "(println l)\n"
-					+ "(0 2)", 
-			syntax = "(java-array-list-remove <list> <element>)")
+	@VelkaOperator
+	@Description("Removes the first occurrence of the specified element from this list, if it is present.")
+	@Example("(def l (construct List JavaArray))\n"
+			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n" + "(java-array-list-remove l 1)\n"
+			+ "(println l)\n" + "(0 2)")
+	@Syntax("(java-array-list-remove <list> <element>)")
 	public static final Operator remove = new Operator() {
 
 		@Override
@@ -895,17 +895,13 @@ public class JavaArrayList {
 	/**
 	 * Operator for boolean removeAll(Collection<?> c)
 	 */
-	@VelkaOperator(
-			description = "Removes from this list all of its elements that are contained in the specified collection.", 
-			example = "(def l (construct List JavaArray))\n"
-					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
-					+ "(println l)\n"
-					+ "(0 1 2 1 1 1)\n"
-					+ "(java-array-list-remove l 1)\n"
-					+ "(println l)\n"
-					+ "(0 2)", 
-			syntax = "(java-array-list-remove <list> <element>)")
+	@VelkaOperator
+	@Description("Removes from this list all of its elements that are contained in the specified collection.")
+	@Example("(def l (construct List JavaArray))\n"
+			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
+			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) 1)))\n" + "(println l)\n" + "(0 1 2 1 1 1)\n"
+			+ "(java-array-list-remove l 1)\n" + "(println l)\n" + "(0 2)")
+	@Syntax("(java-array-list-remove <list> <element>)")
 	public static final Operator removeAll = new Operator() {
 
 		@Override
@@ -975,15 +971,15 @@ public class JavaArrayList {
 	/**
 	 * Operator for boolean retainAll(Collection<?> c)
 	 */
-	@VelkaOperator(
-			description = "Retains only the elements in this list that are contained in the specified collection.", 
-			example = "(def l (construct List JavaArray))\n"
+	@VelkaOperator
+	@Description("Retains only the elements in this list that are contained in the specified collection.") 
+	@Example("(def l (construct List JavaArray))\n"
 					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
 					+ "(java-array-list-retain-all l (build-list-native 2 (lambda (x) (+ 1 x))))\n"
 					+ "(println l)\n"
-					+ "(2 3)", 
-			syntax = "(java-array-list-retain-all <retained-list> <retainee-list>)")
+					+ "(2 3)") 
+	@Syntax("(java-array-list-retain-all <retained-list> <retainee-list>)")
 	public static final Operator retainAll = new Operator() {
 
 		@Override
@@ -1053,14 +1049,14 @@ public class JavaArrayList {
 	/**
 	 * Operator for E set(int index, E element)
 	 */
-	@VelkaOperator(
-			description = "Replaces the element at the specified position in this list with the specified element.", 
-			example = "(def l (construct List JavaArray))\n"
+	@VelkaOperator
+	@Description("Replaces the element at the specified position in this list with the specified element.") 
+	@Example("(def l (construct List JavaArray))\n"
 					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-array-list-set l 1 42)\n"
 					+ "(println l)\n"
-					+ "(0 42 2)", 
-			syntax = "(java-array-list-set <list> <index> <element>)")
+					+ "(0 42 2)") 
+	@Syntax("(java-array-list-set <list> <index> <element>)")
 	public static final Operator set = new Operator() {
 
 		@Override
@@ -1123,12 +1119,12 @@ public class JavaArrayList {
 	/**
 	 * Operator for int size()
 	 */
-	@VelkaOperator(
-			description = "Returns the number of elements in this list.", 
-			example = "(def l (construct List JavaArray))\n"
+	@VelkaOperator
+	@Description("Returns the number of elements in this list.") 
+	@Example("(def l (construct List JavaArray))\n"
 					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-array-list-size l) ;; = 3", 
-			syntax = "(java-array-list-size <list>)")
+					+ "(java-array-list-size l) ;; = 3") 
+	@Syntax("(java-array-list-size <list>)")
 	public static final Operator size = new Operator() {
 
 		@Override
@@ -1185,13 +1181,13 @@ public class JavaArrayList {
 	/**
 	 * Operator for List<E> subList(int fromIndex, int toIndex)
 	 */
-	@VelkaOperator(
-			description = "Returns a view of the portion of this list between the specified fromIndex, inclusive, and toIndex, exclusive.", 
-			example = "(def l (construct List JavaArray))\n"
+	@VelkaOperator
+	@Description("Returns a view of the portion of this list between the specified fromIndex, inclusive, and toIndex, exclusive.") 
+	@Example("(def l (construct List JavaArray))\n"
 					+ "(java-array-list-add-all l (build-list-native 10 (lambda (x) x)))\n"
 					+ "(java-array-list-sublist l 3 7)\n"
-					+ ";; = (2 3 4 5 6 7)", 
-			syntax = "(java-array-list-sublist <list> <fromIndex> <toIndex>)")
+					+ ";; = (2 3 4 5 6 7)")
+	@Syntax("(java-array-list-sublist <list> <fromIndex> <toIndex>)")
 	public static final Operator sublist = new Operator() {
 
 		@Override
@@ -1259,13 +1255,13 @@ public class JavaArrayList {
 	/**
 	 * Operator for List<T> map(Function<T, E>)
 	 */
-	@VelkaOperator(
-			description = "Returns a List:JavaArray consisting of the results of applying the given function to the elements of list.", 
-			example = "(def l (construct List JavaArray))\n"
+	@VelkaOperator
+	@Description("Returns a List:JavaArray consisting of the results of applying the given function to the elements of list.") 
+	@Example("(def l (construct List JavaArray))\n"
 					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-array-list-map l (lambda (x) (+ x 2)))\n"
-					+ ";; = (2 3 4)", 
-			syntax = "(java-array-list-map <list> <function>)")
+					+ ";; = (2 3 4)") 
+	@Syntax("(java-array-list-map <list> <function>)")
 	public static final Operator map = new Operator() {
 
 		@Override
@@ -1349,15 +1345,15 @@ public class JavaArrayList {
 	/**
 	 * Operator for List<T> map2(List<E2> other, Function<T, E1, E2>)
 	 */
-	@VelkaOperator(
-			description = "Returns a List:JavaArray consisting of the results of applying the given function to the elements of list1 and list2.", 
-			example = "(def l1 (construct List JavaArray))\n"
+	@VelkaOperator
+	@Description("Returns a List:JavaArray consisting of the results of applying the given function to the elements of list1 and list2.") 
+	@Example("(def l1 (construct List JavaArray))\n"
 					+ "(java-array-list-add-all l1 (build-list-native 3 (lambda (x) x)))\n"
 					+ "(def l2 (construct List JavaArray))\n"
 					+ "(java-array-list-add-all l2 (build-list-native 3 (lambda (x) (+ x 1))))\n"
 					+ "(java-array-list-map2 l1 l2 +)\n"
-					+ ";; = (1 3 5)", 
-			syntax = "(java-array-list-map2 <list1> <list2> <function>)")
+					+ ";; = (1 3 5)") 
+	@Syntax("(java-array-list-map2 <list1> <list2> <function>)")
 	public static final Operator map2 = new Operator() {
 
 		@Override
@@ -1452,12 +1448,12 @@ public class JavaArrayList {
 	/**
 	 * Operator for T foldl(Function<T, E, T>)
 	 */
-	@VelkaOperator(
-			description = "Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the beginning.", 
-			example = "(def l1 (construct List JavaArray))\n"
+	@VelkaOperator
+	@Description("Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the beginning.") 
+	@Example("(def l1 (construct List JavaArray))\n"
 					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) (+ x 1))))\n"
-					+ "(java-array-list-foldl / 0 l) ;; = 0.16666666666666666666666666666667", 
-			syntax = "(java-array-list-foldl <function> <terminator> <list>)")
+					+ "(java-array-list-foldl / 0 l) ;; = 0.16666666666666666666666666666667") 
+	@Syntax("(java-array-list-foldl <function> <terminator> <list>)")
 	public static final Operator foldl = new Operator() {
 
 		@Override
@@ -1538,12 +1534,12 @@ public class JavaArrayList {
 	/**
 	 * Operator for T foldr(Function<T, E, T>)
 	 */
-	@VelkaOperator(
-			description = "Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the end.", 
-			example = "(def l1 (construct List JavaArray))\n"
+	@VelkaOperator
+	@Description("Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the end.") 
+	@Example("(def l1 (construct List JavaArray))\n"
 					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) (+ x 1))))\n"
-					+ "(java-array-list-foldr / 0 l) ;; = 1.5", 
-			syntax = "(java-array-list-foldr <function> <terminator> <list>)")
+					+ "(java-array-list-foldr / 0 l) ;; = 1.5") 
+	@Syntax("(java-array-list-foldr <function> <terminator> <list>)")
 	public static final Operator foldr = new Operator() {
 
 		@Override
@@ -1617,10 +1613,10 @@ public class JavaArrayList {
 	/**
 	 * Conversion ArrayList 2 LinkedList
 	 */
-	@VelkaOperator(
-			description = "Converts List:JavaArray to List:JavaLinked.", 
-			example = "(array-list-2-linked-list (construct List JavaArray))", 
-			syntax = "(array-list-2-linked-list <array list>)")
+	@VelkaConversion
+	@Description("Converts List:JavaArray to List:JavaLinked.") 
+	@Example("(array-list-2-linked-list (construct List JavaArray))") 
+	@Syntax("(array-list-2-linked-list <array list>)")
 	public static Operator ArrayListToLinkedList = new Operator() {
 
 		@Override
@@ -1672,10 +1668,10 @@ public class JavaArrayList {
 	/**
 	 * Conversion ArrayList 2 NativeList
 	 */
-	@VelkaOperator(
-			description = "Converts List:JavaArray to List:Native.", 
-			example = "(array-list-2-native-list (construct List JavaArray))", 
-			syntax = "(array-list-2-native-list <array list>)")
+	@VelkaConversion
+	@Description("Converts List:JavaArray to List:Native.") 
+	@Example("(array-list-2-native-list (construct List JavaArray))") 
+	@Syntax("(array-list-2-native-list <array list>)")
 	public static Operator ArrayListToNativeList = new Operator() {
 
 		@Override
@@ -1724,13 +1720,13 @@ public class JavaArrayList {
 	public static final Symbol everypSymbol = new Symbol("velka-everyp", NAMESPACE);
 	public static final Symbol everypSymbol_out = new Symbol("java-array-list-everyp");
 
-	@VelkaOperator(
-			description = "Returns true if every element of this list returns true for the predicate. Otherwise returns false.", 
-			example = "(define l (construct List JavaArray))\n"
+	@VelkaOperator
+	@Description("Returns true if every element of this list returns true for the predicate. Otherwise returns false.") 
+	@Example("(define l (construct List JavaArray))\n"
 					+ "(java-array-list-add-all l (build-list-native 10 (* 2 x)))\n"
 					+ "(java-array-list-everyp l (lambda (x) (= (mod x 2) 0))) ;; = #t\n"
-					+ "(java-array-list-everyp l (lambda (x) (= x 1))) ;; = #f", 
-			syntax = "(java-array-list-everyp <list> <predicate>)")
+					+ "(java-array-list-everyp l (lambda (x) (= x 1))) ;; = #f") 
+	@Syntax("(java-array-list-everyp <list> <predicate>)")
 	public static final Operator everyp = new Operator() {
 
 		@Override

@@ -9,8 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target(FIELD)
 public @interface VelkaConstructor {
-	public String name();
-	public String description();
-	public String syntax();
 	public boolean showInDoc() default true;
 }

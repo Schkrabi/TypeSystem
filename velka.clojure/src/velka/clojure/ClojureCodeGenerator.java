@@ -24,6 +24,7 @@ import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
+import velka.core.util.OperatorBankUtil;
 import velka.types.Type;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
@@ -127,6 +128,10 @@ public class ClojureCodeGenerator {
 			TypeEnvironment typeEnv) throws Exception {
 		return ExpressionListToCljFile(dir.resolve(DEFAULT_FILENAME), DEFAULT_NAMESPACE, exprs, env, typeEnv);
 	}
+	
+	private static Path generateFile(Class<?> clazz, String namespace, Path dest) throws IOException {
+		return Files.writeString(dest, OperatorBankUtil.writeDefinitions(clazz, namespace));
+	}
 
 	
 	public static Path generateClojureProject(Path directory) throws IOException {
@@ -162,11 +167,11 @@ public class ClojureCodeGenerator {
 		
 		Files.createDirectories(directory.resolve(VelkaClojureLinkedList.VELKA_CLOJURE_LINKEDLIST_PATH));
 		Path velkaClojureLinkedList = directory.resolve(VelkaClojureLinkedList.RELATIVE_PATH);
-		VelkaClojureLinkedList.generateFile(velkaClojureLinkedList);
+		generateFile(JavaLinkedList.class, JavaLinkedList.NAMESPACE, velkaClojureLinkedList);
 		
 		Files.createDirectories(directory.resolve(JavaBitSet.VELKA_CLOJURE_BITSET_PATH));
 		Path velkaCloureBitSet = directory.resolve(JavaBitSet.RELATIVE_PATH);
-		JavaBitSet.generateFile(velkaCloureBitSet);
+		generateFile(JavaBitSet.class, JavaBitSet.NAMESPACE, velkaCloureBitSet);
 		
 		Files.createDirectories(directory.resolve(ClojureCodeGenerator.CLASSES_PATH));
 		

@@ -9,6 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface VelkaOperatorBank {
-	public String header();
-	public String description();
+
 }

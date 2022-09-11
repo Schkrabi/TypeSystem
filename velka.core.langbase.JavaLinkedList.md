@@ -2,7 +2,7 @@
 Operators for working with wrapped java.util.LinkedList.
 
 ## Table of Contents
-* [constructor(velka.core.langbase.JavaLinkedList$1@3d8314f0)](#velka.core.langbase.JavaLinkedList$1)
+* [constructor(velka.core.langbase.JavaLinkedList$1@1996cd68)](#velka.core.langbase.JavaLinkedList$1)
 * [addToEnd(java-linked-list-add-to-end)](#velka.core.langbase.JavaLinkedList$2)
 * [addToIndex(java-linked-list-add-to-index)](#velka.core.langbase.JavaLinkedList$3)
 * [addAll(java-linked-list-add-all)](#velka.core.langbase.JavaLinkedList$4)
@@ -18,16 +18,24 @@ Operators for working with wrapped java.util.LinkedList.
 * [set(java-linked-list-set)](#velka.core.langbase.JavaLinkedList$14)
 * [size(java-linked-list-size)](#velka.core.langbase.JavaLinkedList$15)
 * [sublist(java-linked-list-sublist)](#velka.core.langbase.JavaLinkedList$16)
-* [map(java-linked-list-map2)](#velka.core.langbase.JavaLinkedList$17)
+* [map(java-linked-list-map)](#velka.core.langbase.JavaLinkedList$17)
 * [map2(java-linked-list-map2)](#velka.core.langbase.JavaLinkedList$18)
 * [foldl(java-linked-list-foldl)](#velka.core.langbase.JavaLinkedList$19)
 * [foldr(java-linked-list-foldr)](#velka.core.langbase.JavaLinkedList$20)
-* [LinkedListToArrayList(linked-list-2-array-list)](#velka.core.langbase.JavaLinkedList$21)
-* [LinkedListToNativeList(linked-list-2-native-list)](#velka.core.langbase.JavaLinkedList$22)
 * [everyp(java-linked-list-everyp)](#velka.core.langbase.JavaLinkedList$23)
+* [listIterator(java-linked-list-iterator)](#velka.core.langbase.JavaLinkedList$24)
+* [iteratorAdd(linked-list-iterator-add)](#velka.core.langbase.JavaLinkedList$25)
+* [iteratorHasNext(linked-list-iterator-has-next)](#velka.core.langbase.JavaLinkedList$26)
+* [iteratorHasPrevious(linked-list-iterator-has-previous)](#velka.core.langbase.JavaLinkedList$27)
+* [iteratorNext(linked-list-iterator-next)](#velka.core.langbase.JavaLinkedList$28)
+* [iteratorNextIndex(linked-list-iterator-next-index)](#velka.core.langbase.JavaLinkedList$29)
+* [iteratorPrevious(linked-list-iterator-previous)](#velka.core.langbase.JavaLinkedList$30)
+* [iteratorPreviousIndex(linked-list-iterator-previous-index)](#velka.core.langbase.JavaLinkedList$31)
+* [iteratorRemove(linked-list-iterator-remove)](#velka.core.langbase.JavaLinkedList$32)
+* [iteratorSet(linked-list-iterator-set)](#velka.core.langbase.JavaLinkedList$33)
 
 ## Constructors
-### <a name="velka.core.langbase.JavaLinkedList$1"> constructor(velka.core.langbase.JavaLinkedList$1@3d8314f0)</a>
+### <a name="velka.core.langbase.JavaLinkedList$1"> constructor(velka.core.langbase.JavaLinkedList$1@1996cd68)</a>
 Syntax:
 
 ~~~
@@ -53,7 +61,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEbjk] -> Bool:Native
+[List:JavaLinked, SYSGENNAMEbcq] -> Bool:Native
 ~~~
 
 Appends the specified element to the end of this list.
@@ -73,7 +81,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, Int:Native, SYSGENNAMEbkh] -> []
+[List:JavaLinked, Int:Native, SYSGENNAMEbdn] -> []
 ~~~
 
 Inserts the specified element at the specified position in this list.
@@ -117,7 +125,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEbma] -> Bool:Native
+[List:JavaLinked, SYSGENNAMEbfg] -> Bool:Native
 ~~~
 
 Returns true if this list contains the specified element.
@@ -159,7 +167,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, Int:Native] -> SYSGENNAMEbnt
+[List:JavaLinked, Int:Native] -> SYSGENNAMEbgz
 ~~~
 
 Returns the element at the specified position in this list.
@@ -181,7 +189,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEboq] -> Int:Native
+[List:JavaLinked, SYSGENNAMEbhw] -> Int:Native
 ~~~
 
 Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.
@@ -223,7 +231,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEbqj] -> Int:Native
+[List:JavaLinked, SYSGENNAMEbjp] -> Int:Native
 ~~~
 
 Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.
@@ -245,7 +253,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEbrg] -> Bool:Native
+[List:JavaLinked, SYSGENNAMEbkm] -> Bool:Native
 ~~~
 
 Removes the first occurrence of the specified element from this list, if it is present.
@@ -321,7 +329,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, Int:Native, SYSGENNAMEbtv] -> SYSGENNAMEbtv
+[List:JavaLinked, Int:Native, SYSGENNAMEbnb] -> SYSGENNAMEbnb
 ~~~
 
 Replaces the element at the specified position in this list with the specified element.
@@ -380,7 +388,7 @@ Example:
 (java-linked-list-sublist l 3 7)
 ;; = (2 3 4 5 6 7)
 ~~~
-### <a name="velka.core.langbase.JavaLinkedList$17"> map(java-linked-list-map2)</a>
+### <a name="velka.core.langbase.JavaLinkedList$17"> map(java-linked-list-map)</a>
 Syntax:
 
 ~~~
@@ -390,7 +398,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, [SYSGENNAMEbwk] -> SYSGENNAMEbwl] -> List:JavaLinked
+[List:JavaLinked, [SYSGENNAMEbpq] -> SYSGENNAMEbpr] -> List:JavaLinked
 ~~~
 
 Returns a List:JavaLinked consisting of the results of applying the given function to the elements of list.
@@ -413,7 +421,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, List:JavaLinked, [SYSGENNAMEbxi, SYSGENNAMEbxj] -> SYSGENNAMEbxk] -> List:JavaLinked
+[List:JavaLinked, List:JavaLinked, [SYSGENNAMEbqo, SYSGENNAMEbqp] -> SYSGENNAMEbqq] -> List:JavaLinked
 ~~~
 
 Returns a List:JavaLinked consisting of the results of applying the given function to the elements of list1 and list2.
@@ -438,7 +446,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEbyh, SYSGENNAMEbyh] -> SYSGENNAMEbyh, SYSGENNAMEbyh, List:JavaLinked] -> SYSGENNAMEbyh
+[[SYSGENNAMEbrn, SYSGENNAMEbrn] -> SYSGENNAMEbrn, SYSGENNAMEbrn, List:JavaLinked] -> SYSGENNAMEbrn
 ~~~
 
 Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the beginning.
@@ -460,7 +468,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEbze, SYSGENNAMEbze] -> SYSGENNAMEbze, SYSGENNAMEbze, List:JavaLinked] -> SYSGENNAMEbze
+[[SYSGENNAMEbsk, SYSGENNAMEbsk] -> SYSGENNAMEbsk, SYSGENNAMEbsk, List:JavaLinked] -> SYSGENNAMEbsk
 ~~~
 
 Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the end.
@@ -472,46 +480,6 @@ Example:
 (java-linked-list-add-all l (build-list-native 3 (lambda (x) (+ x 1))))
 (java-linked-list-foldr / 0 l) ;; = 1.5
 ~~~
-### <a name="velka.core.langbase.JavaLinkedList$21"> LinkedListToArrayList(linked-list-2-array-list)</a>
-Syntax:
-
-~~~
-(linked-list-2-array-list <linked-list>)
-~~~
-
-Type Signature:
-
-~~~
-[List:JavaLinked] -> List:JavaArray
-~~~
-
-Converts List:JavaLinked to List:JavaArray)
-
-Example:
-
-~~~
-(linked-list-2-array-list (construct List JavaLinked))
-~~~
-### <a name="velka.core.langbase.JavaLinkedList$22"> LinkedListToNativeList(linked-list-2-native-list)</a>
-Syntax:
-
-~~~
-(linked-list-2-native-list <linked list>)
-~~~
-
-Type Signature:
-
-~~~
-[List:JavaLinked] -> List:Native
-~~~
-
-Converts List:JavaLinked to List:Native.
-
-Example:
-
-~~~
-(linked-list-2-native-list (construct List JavaLinked))
-~~~
 ### <a name="velka.core.langbase.JavaLinkedList$23"> everyp(java-linked-list-everyp)</a>
 Syntax:
 
@@ -522,7 +490,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, [SYSGENNAMEcbt] -> Bool:Native] -> Bool:Native
+[List:JavaLinked, [SYSGENNAMEbth] -> Bool:Native] -> Bool:Native
 ~~~
 
 Returns true if every element of this list returns true for the predicate. Otherwise returns false.
@@ -531,7 +499,235 @@ Example:
 
 ~~~
 (define l (construct List JavaLinked))
-(java-linked-list-add-all l (build-list-native 10 (* 2 x)))
+(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))
 (java-linked-list-everyp l (lambda (x) (= (mod x 2) 0))) ;; = #t
 (java-linked-list-everyp l (lambda (x) (= x 1))) ;; = #f
+~~~
+### <a name="velka.core.langbase.JavaLinkedList$24"> listIterator(java-linked-list-iterator)</a>
+Syntax:
+
+~~~
+(java-linked-list-iterator <list> <index>)
+~~~
+
+Type Signature:
+
+~~~
+[List:JavaLinked, Int:Native] -> LinkedListIterator:Native
+~~~
+
+Returns a list-iterator of the elements in this list (in proper sequence), starting at the specified position in the list.
+
+Example:
+
+~~~
+(define l (construct List JavaLinked))
+(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))
+(java-linked-list-iterator l 0)
+~~~
+### <a name="velka.core.langbase.JavaLinkedList$25"> iteratorAdd(linked-list-iterator-add)</a>
+Syntax:
+
+~~~
+(linked-list-iterator-add <list-iterator> <element>)
+~~~
+
+Type Signature:
+
+~~~
+[LinkedListIterator:Native, SYSGENNAMEbva] -> LinkedListIterator:Native
+~~~
+
+Inserts the specified element into the list (optional operation).
+
+Example:
+
+~~~
+(define l (construct List JavaLinked))
+(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))
+(define it (java-linked-list-iterator l 0))
+(linked-list-iterator-add it 42)
+~~~
+### <a name="velka.core.langbase.JavaLinkedList$26"> iteratorHasNext(linked-list-iterator-has-next)</a>
+Syntax:
+
+~~~
+(linked-list-iterator-has-next <list iterator>)
+~~~
+
+Type Signature:
+
+~~~
+[LinkedListIterator:Native] -> Bool:Native
+~~~
+
+Returns true if this list iterator has more elements when traversing the list in the forward direction.
+
+Example:
+
+~~~
+(define l (construct List JavaLinked))
+(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))
+(define it (java-linked-list-iterator l 0))
+(linked-list-iterator-has-next it)
+~~~
+### <a name="velka.core.langbase.JavaLinkedList$27"> iteratorHasPrevious(linked-list-iterator-has-previous)</a>
+Syntax:
+
+~~~
+linked-list-iterator-has-previous <iterator>)
+~~~
+
+Type Signature:
+
+~~~
+[LinkedListIterator:Native] -> Bool:Native
+~~~
+
+Returns true if this list iterator has more elements when traversing the list in the reverse direction.
+
+Example:
+
+~~~
+(define l (construct List JavaLinked))
+(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))
+(define it (java-linked-list-iterator l 0))
+(linked-list-iterator-has-previous it)
+~~~
+### <a name="velka.core.langbase.JavaLinkedList$28"> iteratorNext(linked-list-iterator-next)</a>
+Syntax:
+
+~~~
+(linked-list-iterator-next <iterator>)
+~~~
+
+Type Signature:
+
+~~~
+[LinkedListIterator:Native] -> SYSGENNAMEbxp
+~~~
+
+Returns the next element in the list and advances the cursor position.
+
+Example:
+
+~~~
+(define l (construct List JavaLinked))
+(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))
+(define it (java-linked-list-iterator l 0))
+(linked-list-iterator-next it)
+~~~
+### <a name="velka.core.langbase.JavaLinkedList$29"> iteratorNextIndex(linked-list-iterator-next-index)</a>
+Syntax:
+
+~~~
+(linked-list-iterator-next-index <iterator>)
+~~~
+
+Type Signature:
+
+~~~
+[LinkedListIterator:Native] -> Int:Native
+~~~
+
+Returns the index of the element that would be returned by a subsequent call to linked-list-iterator-next.
+
+Example:
+
+~~~
+(define l (construct List JavaLinked))
+(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))
+(define it (java-linked-list-iterator l 0))
+(linked-list-iterator-next-index it)
+~~~
+### <a name="velka.core.langbase.JavaLinkedList$30"> iteratorPrevious(linked-list-iterator-previous)</a>
+Syntax:
+
+~~~
+(linked-list-iterator-previous <iterator>)
+~~~
+
+Type Signature:
+
+~~~
+[LinkedListIterator:Native] -> SYSGENNAMEbzi
+~~~
+
+Returns the previous element in the list and moves the cursor position backwards.
+
+Example:
+
+~~~
+(define l (construct List JavaLinked))
+(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))
+(define it (java-linked-list-iterator l 3))
+(linked-list-iterator-previous it)
+~~~
+### <a name="velka.core.langbase.JavaLinkedList$31"> iteratorPreviousIndex(linked-list-iterator-previous-index)</a>
+Syntax:
+
+~~~
+(linked-list-iterator-previous-index <iterator>)
+~~~
+
+Type Signature:
+
+~~~
+[LinkedListIterator:Native] -> Int:Native
+~~~
+
+Returns the index of the element that would be returned by a subsequent call to linked-list-iterator-previous.
+
+Example:
+
+~~~
+(define l (construct List JavaLinked))
+(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))
+(define it (java-linked-list-iterator l 3))
+(linked-list-iterator-previous-index it)
+~~~
+### <a name="velka.core.langbase.JavaLinkedList$32"> iteratorRemove(linked-list-iterator-remove)</a>
+Syntax:
+
+~~~
+(linked-list-iterator-remove <iterator>)
+~~~
+
+Type Signature:
+
+~~~
+[LinkedListIterator:Native] -> LinkedListIterator:Native
+~~~
+
+Removes from the list the last element that was returned by linked-list-iterator-next or linked-list-iterator-next (optional operation).
+
+Example:
+
+~~~
+(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))
+(define it (java-linked-list-iterator l 3))
+(linked-list-iterator-next it)(linked-list-iterator-next (linked-list-iterator-remove it))
+~~~
+### <a name="velka.core.langbase.JavaLinkedList$33"> iteratorSet(linked-list-iterator-set)</a>
+Syntax:
+
+~~~
+(linked-list-iterator-remove <iterator> <element>)
+~~~
+
+Type Signature:
+
+~~~
+[LinkedListIterator:Native, SYSGENNAMEcbx] -> LinkedListIterator:Native
+~~~
+
+Replaces the last element returned by linked-list-iterator-next or linked-list-iterator-previous() with the specified element (optional operation).
+
+Example:
+
+~~~
+(define l (construct List JavaLinked))
+(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))
+(define it (java-linked-list-iterator l 3))
+(linked-list-iterator-next it)(linked-list-iterator-set it 42)
 ~~~

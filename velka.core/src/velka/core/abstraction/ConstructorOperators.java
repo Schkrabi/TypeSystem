@@ -20,6 +20,10 @@ import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.Pair;
+import velka.util.annotations.Description;
+import velka.util.annotations.Header;
+import velka.util.annotations.Name;
+import velka.util.annotations.Syntax;
 import velka.util.annotations.VelkaConstructor;
 import velka.util.annotations.VelkaOperatorBank;
 
@@ -28,14 +32,15 @@ import velka.util.annotations.VelkaOperatorBank;
  * @author Mgr. Radomir Skrabal
  *
  */
-@VelkaOperatorBank(
-		description = "General constructors for basic Velka representations.", 
-		header = "General Constructors")
+@VelkaOperatorBank
+@Description("General constructors for basic Velka representations.") 
+@Header("General Constructors")
 public final class ConstructorOperators {
 
 	/**
 	 * Int:Native constructor
 	 */
+	@VelkaConstructor(showInDoc = false)
 	public static Operator IntNativeConstructor = new Operator() {
 	
 		@Override
@@ -70,6 +75,7 @@ public final class ConstructorOperators {
 	/**
 	 * Int constructor (really constructs Int:Native)
 	 */
+	@VelkaConstructor(showInDoc = false)
 	public static Operator IntConstructor = new Operator() {
 	
 		@Override
@@ -102,10 +108,10 @@ public final class ConstructorOperators {
 	/**
 	 * Int:String constructor
 	 */
-	@VelkaConstructor(
-			description = "Constructs Int:String from string.", 
-			name = "Construct Int String", 
-			syntax = "(construct Int String <string>)")
+	@VelkaConstructor
+	@Description("Constructs Int:String from string.") 
+	@Name("Construct Int String") 
+	@Syntax("(construct Int String <string>)")
 	public static Operator IntStringConstructor = new Operator() {
 	
 		@Override
@@ -138,10 +144,10 @@ public final class ConstructorOperators {
 	/**
 	 * Int:Roman constructor
 	 */
-	@VelkaConstructor(
-			description = "Construct Int Roman from string.", 
-			name = "Construct Int Roman", 
-			syntax = "(construct Int Roman <string>)")
+	@VelkaConstructor
+	@Description("Construct Int Roman from string.") 
+	@Name("Construct Int Roman") 
+	@Syntax("(construct Int Roman <string>)")
 	public static Operator IntRomanConstructor = new Operator() {
 	
 		@Override
@@ -172,9 +178,11 @@ public final class ConstructorOperators {
 		}
 	
 	};
+	
 	/**
 	 * String:Native constructor
 	 */
+	@VelkaConstructor(showInDoc = false)
 	public static Operator StringNativeConstructor = new Operator() {
 	
 		@Override
@@ -206,9 +214,11 @@ public final class ConstructorOperators {
 		}
 	
 	};
+	
 	/**
 	 * String constructor (really constructs String:Native)
 	 */
+	@VelkaConstructor(showInDoc = false)
 	public static Operator StringConstructor = new Operator() {
 	
 		@Override
@@ -239,9 +249,11 @@ public final class ConstructorOperators {
 			return new Symbol("velka-string", Operators.NAMESPACE);
 		}
 	};
+	
 	/**
 	 * Double:Native constructor
 	 */
+	@VelkaConstructor(showInDoc = false)
 	public static Operator DoubleNativeConstructor = new Operator() {
 	
 		@Override
@@ -272,9 +284,11 @@ public final class ConstructorOperators {
 			return new Symbol("velka-double-native", Operators.NAMESPACE);
 		}
 	};
+	
 	/**
 	 * Double constructor (really constructs Double:Native)
 	 */
+	@VelkaConstructor(showInDoc = false)
 	public static Operator DoubleConstructor = new Operator() {
 	
 		@Override
@@ -306,9 +320,11 @@ public final class ConstructorOperators {
 		}
 	
 	};
+	
 	/**
 	 * Bool:Native constructor
 	 */
+	@VelkaConstructor(showInDoc = false)
 	public static Operator BoolNativeConstructor = new Operator() {
 	
 		@Override
@@ -338,9 +354,11 @@ public final class ConstructorOperators {
 			return new Symbol("velka-bool-native", Operators.NAMESPACE);
 		}
 	};
+	
 	/**
 	 * Bool constructor (really constructs Bool:Native)
 	 */	
+	@VelkaConstructor(showInDoc = false)
 	public static Operator BoolConstructor = new Operator() {
 	
 		@Override

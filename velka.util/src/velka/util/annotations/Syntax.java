@@ -8,6 +8,6 @@ import java.lang.annotation.Target;
 
 @Retention(RUNTIME)
 @Target(FIELD)
-public @interface VelkaOperator {
-
+public @interface Syntax {
+	public String value();
 }

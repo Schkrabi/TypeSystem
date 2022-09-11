@@ -2,8 +2,8 @@
 Operators for working with velka Lists
 
 ## Table of Contents
-* [constructorEmpty(velka.core.langbase.ListNative$1@2df32bf7)](#velka.core.langbase.ListNative$1)
-* [constructor(velka.core.langbase.ListNative$2@530612ba)](#velka.core.langbase.ListNative$2)
+* [constructorEmpty(velka.core.langbase.ListNative$1@3339ad8e)](#velka.core.langbase.ListNative$1)
+* [constructor(velka.core.langbase.ListNative$2@555590)](#velka.core.langbase.ListNative$2)
 * [isEmpty(is-list-native-empty)](#velka.core.langbase.ListNative$3)
 * [headListNativeOperator(head-list-native)](#velka.core.langbase.ListNative$4)
 * [tailListNativeOperator(tail-list-native)](#velka.core.langbase.ListNative$5)
@@ -11,8 +11,6 @@ Operators for working with velka Lists
 * [map2ListNativeOperator(map2-list-native)](#velka.core.langbase.ListNative$7)
 * [foldlListNativeOperator(foldl-list-native)](#velka.core.langbase.ListNative$8)
 * [addToEndOperator(add-to-end-list-native)](#velka.core.langbase.ListNative$9)
-* [ListNativeToArrayListOperator(list-native-2-array-list)](#velka.core.langbase.ListNative$10)
-* [ListNativeToLinkedListOperator(list-native-2-linked-list)](#velka.core.langbase.ListNative$11)
 * [contains(contains-list-native)](#velka.core.langbase.ListNative$12)
 * [filter(filter-list-native)](#velka.core.langbase.ListNative$13)
 * [get(get-list-native)](#velka.core.langbase.ListNative$14)
@@ -24,7 +22,7 @@ Operators for working with velka Lists
 * [everyp(everyp-list-native)](#velka.core.langbase.ListNative$20)
 
 ## Constructors
-### <a name="velka.core.langbase.ListNative$1"> constructorEmpty(velka.core.langbase.ListNative$1@2df32bf7)</a>
+### <a name="velka.core.langbase.ListNative$1"> constructorEmpty(velka.core.langbase.ListNative$1@3339ad8e)</a>
 Syntax:
 
 ~~~
@@ -38,7 +36,7 @@ Type Signature:
 ~~~
 
 Constructs Empty List:Native.
-### <a name="velka.core.langbase.ListNative$2"> constructor(velka.core.langbase.ListNative$2@530612ba)</a>
+### <a name="velka.core.langbase.ListNative$2"> constructor(velka.core.langbase.ListNative$2@555590)</a>
 Syntax:
 
 ~~~
@@ -48,7 +46,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[SYSGENNAMEcdm, List:Native] -> List:Native
+[SYSGENNAMEcdq, List:Native] -> List:Native
 ~~~
 
 Constructs new List:Native adding element as head to list.
@@ -84,7 +82,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native] -> SYSGENNAMEcff
+[List:Native] -> SYSGENNAMEcfj
 ~~~
 
 Returns first element in this list.
@@ -124,7 +122,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEcgy] -> SYSGENNAMEcgz, List:Native] -> List:Native
+[[SYSGENNAMEchc] -> SYSGENNAMEchd, List:Native] -> List:Native
 ~~~
 
 Returns a List:Native consisting of the results of applying the given function to the elements of list.
@@ -146,7 +144,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEchw, SYSGENNAMEchx] -> SYSGENNAMEchy, List:Native, List:Native] -> List:Native
+[[SYSGENNAMEcia, SYSGENNAMEcib] -> SYSGENNAMEcic, List:Native, List:Native] -> List:Native
 ~~~
 
 Returns a List:Native consisting of the results of applying the given function to the elements of list1 and list2.
@@ -169,7 +167,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEciv, SYSGENNAMEciw] -> SYSGENNAMEciv, SYSGENNAMEciv, List:Native] -> SYSGENNAMEciv
+[[SYSGENNAMEciz, SYSGENNAMEcja] -> SYSGENNAMEciz, SYSGENNAMEciz, List:Native] -> SYSGENNAMEciz
 ~~~
 
 Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the beginning.
@@ -189,7 +187,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native, SYSGENNAMEcjt] -> List:Native
+[List:Native, SYSGENNAMEcjx] -> List:Native
 ~~~
 
 Creates new list with appended the specified element to the end of list.
@@ -198,46 +196,6 @@ Example:
 
 ~~~
 (add-to-end-list-native (construct List Native) 42) ;; = (42)
-~~~
-### <a name="velka.core.langbase.ListNative$10"> ListNativeToArrayListOperator(list-native-2-array-list)</a>
-Syntax:
-
-~~~
-(list-native-2-array-list <list native>)
-~~~
-
-Type Signature:
-
-~~~
-[List:Native] -> List:JavaArray
-~~~
-
-Converts List:Native to List:JavaArray.
-
-Example:
-
-~~~
-(list-native-2-array-list (build-list-native 5 (lambda (x) x)))
-~~~
-### <a name="velka.core.langbase.ListNative$11"> ListNativeToLinkedListOperator(list-native-2-linked-list)</a>
-Syntax:
-
-~~~
-(list-native-2-linked-list <list native>)
-~~~
-
-Type Signature:
-
-~~~
-[List:Native] -> List:JavaLinked
-~~~
-
-Converts List:Native to List:JavaLinked.
-
-Example:
-
-~~~
-(list-native-2-linked-list (build-list-native 5 (lambda (x) x)))
 ~~~
 ### <a name="velka.core.langbase.ListNative$12"> contains(contains-list-native)</a>
 Syntax:
@@ -249,7 +207,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native, SYSGENNAMEcmi] -> Bool:Native
+[List:Native, SYSGENNAMEcku] -> Bool:Native
 ~~~
 
 Returns true if this list contains the specified element.
@@ -270,7 +228,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native, [SYSGENNAMEcnf] -> Bool:Native] -> List:Native
+[List:Native, [SYSGENNAMEclr] -> Bool:Native] -> List:Native
 ~~~
 
 Returns new List:Native containing only those elements of list, for which predicate returns true.
@@ -290,7 +248,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native, Int:Native] -> SYSGENNAMEcoc
+[List:Native, Int:Native] -> SYSGENNAMEcmo
 ~~~
 
 Returns the element at the specified position in this list.
@@ -310,7 +268,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[Int:Native, [Int:Native] -> SYSGENNAMEcoz] -> List:Native
+[Int:Native, [Int:Native] -> SYSGENNAMEcnl] -> List:Native
 ~~~
 
 Creates a List:Native of n elements by applying function to the integers from 0 to (- n 1) in order.
@@ -411,7 +369,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native, [SYSGENNAMEctg] -> Bool:Native] -> Bool:Native
+[List:Native, [SYSGENNAMEcrs] -> Bool:Native] -> Bool:Native
 ~~~
 
 Returns true if every element of this list returns true for the predicate. Otherwise returns false.

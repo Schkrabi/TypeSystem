@@ -1,15 +1,11 @@
 package velka.core.langbase;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import velka.core.abstraction.Operator;
 import velka.core.expression.Expression;
@@ -22,14 +18,22 @@ import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
+import velka.core.util.OperatorBankUtil;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
+import velka.types.TypeName;
+import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.Pair;
+import velka.util.annotations.Description;
+import velka.util.annotations.Example;
+import velka.util.annotations.Header;
+import velka.util.annotations.Name;
+import velka.util.annotations.Syntax;
 import velka.util.annotations.VelkaConstructor;
 import velka.util.annotations.VelkaOperator;
 import velka.util.annotations.VelkaOperatorBank;
@@ -40,10 +44,16 @@ import velka.util.annotations.VelkaOperatorBank;
  * @author Mgr. Radomir Skrabal
  *
  */
-@VelkaOperatorBank(
-		description = "Operators for working with wrapped java.util.BitSet", 
-		header = "Bit Set")
+@VelkaOperatorBank
+@Description("Operators for working with wrapped java.util.BitSet") 
+@Header("Bit Set")
 public class JavaBitSet {
+	
+	/**
+	 * Type of Set:BitSet in Velka
+	 */
+	public static final TypeAtom TypeSetBitSet = new TypeAtom(TypeName.SET, new TypeRepresentation("BitSet"));
+	
 	/**
 	 * Clojure namespace for JavaArrayList
 	 */
@@ -52,7 +62,10 @@ public class JavaBitSet {
 	public static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
 	
 	
-	@VelkaConstructor(description = "Constructs empty Set:BitSet.", name = "Construct Empty bitset", syntax = "(construct Set BitSet)")
+	@VelkaConstructor
+	@Description("Constructs empty Set:BitSet.")
+	@Name("Construct Empty bitset")
+	@Syntax("(construct Set BitSet)")
 	public static final Operator constructor = new Operator() {
 
 		@Override
@@ -77,7 +90,7 @@ public class JavaBitSet {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeSetBitSet);
+			Type type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 
@@ -89,7 +102,10 @@ public class JavaBitSet {
 	
 	public static final Symbol nBitsConstructorSymbol = new Symbol("nbits-construct", NAMESPACE);
 	
-	@VelkaConstructor(description = "Creates a bit set whose initial size is large enough to explicitly represent bits with indices in the range 0 through nbits-1.", name = "Construct bit set with capacity", syntax = "(construct Set BitSet <nbits>)")
+	@VelkaConstructor
+	@Description("Creates a bit set whose initial size is large enough to explicitly represent bits with indices in the range 0 through nbits-1.")
+	@Name("Construct bit set with capacity")
+	@Syntax("(construct Set BitSet <nbits>)")
 	public static final Operator nBitsConstructor = new Operator() {
 
 		@Override
@@ -118,7 +134,7 @@ public class JavaBitSet {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeSetBitSet);
+			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -137,14 +153,14 @@ public class JavaBitSet {
 	/**
 	 * Operator for void and(BitSet set)	
 	 */
-	@VelkaOperator(
-			description = "Performs a logical AND of this target bit set with the argument bit set.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Performs a logical AND of this target bit set with the argument bit set.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(define s2 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
-					+ "(bit-set-and s1 s2)", 
-			syntax = "(bit-set-and <set1> <set2>)")
+					+ "(bit-set-and s1 s2)") 
+	@Syntax("(bit-set-and <set1> <set2>)")
 	public static final Operator and = new Operator() {
 
 		@Override
@@ -189,8 +205,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -203,14 +219,14 @@ public class JavaBitSet {
 	public static final Symbol andNotSymbol = new Symbol("andNot", NAMESPACE);
 	public static final Symbol andNotSymbol_out = new Symbol("bit-set-and-not");
 	
-	@VelkaOperator(
-			description = "Clears all of the bits in this BitSet whose corresponding bit is set in the specified BitSet.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Clears all of the bits in this BitSet whose corresponding bit is set in the specified BitSet.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(define s2 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
-					+ "(bit-set-and-not s1 s2)", 
-			syntax = "(bit-set-and-not <set1> <set2>)")
+					+ "(bit-set-and-not s1 s2)") 
+	@Syntax("(bit-set-and-not <set1> <set2>)")
 	public static final Operator andNot = new Operator() {
 
 		@Override
@@ -255,8 +271,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		} 
 		
@@ -269,12 +285,12 @@ public class JavaBitSet {
 	public static final Symbol cardinalitySymbol = new Symbol("cardinality", NAMESPACE);
 	public static final Symbol cardinalitySymbol_out = new Symbol("bit-set-cardinality");
 	
-	@VelkaOperator(
-			description = "Returns the number of bits set to true in this BitSet.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Returns the number of bits set to true in this BitSet.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(bit-set-cardinality s1)", 
-			syntax = "(bit-set-cardinality <set>)")
+					+ "(bit-set-cardinality s1)") 
+	@Syntax("(bit-set-cardinality <set>)")
 	public static final Operator cardinality = new Operator() {
 
 		@Override
@@ -310,7 +326,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet),
+					new TypeTuple(TypeSetBitSet),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -324,12 +340,12 @@ public class JavaBitSet {
 	public static final Symbol clearSymbol = new Symbol("clear", NAMESPACE);
 	public static final Symbol clearSymbol_out = new Symbol("bit-set-clear");
 	
-	@VelkaOperator(
-			description = "Sets all of the bits in this BitSet to false.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Sets all of the bits in this BitSet to false.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(bit-set-clear s1)", 
-			syntax = "(bit-set-clear <set>)")
+					+ "(bit-set-clear s1)") 
+	@Syntax("(bit-set-clear <set>)")
 	public static final Operator clear = new Operator() {
 
 		@Override
@@ -365,7 +381,7 @@ public class JavaBitSet {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet), TypeAtom.TypeSetBitSet);
+			Type type = new TypeArrow(new TypeTuple(TypeSetBitSet), TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -378,12 +394,12 @@ public class JavaBitSet {
 	public static final Symbol clearBitIndexSymbol = new Symbol("clear-bit-index", NAMESPACE);
 	public static final Symbol clearBitIndexSymbol_out = new Symbol("bit-set-clear-bit-index");
 	
-	@VelkaOperator(
-			description = "Sets the bit specified by the index to false.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Sets the bit specified by the index to false.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(bit-set-clear-bit-index s1 3)", 
-			syntax = "(bit-set-clear-bit-index <set> <index>)")
+					+ "(bit-set-clear-bit-index s1 3)") 
+	@Syntax("(bit-set-clear-bit-index <set> <index>)")
 	public static final Operator clearBitIndex = new Operator() {
 
 		@Override
@@ -422,8 +438,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -436,12 +452,12 @@ public class JavaBitSet {
 	public static final Symbol clearIntervalSymbol = new Symbol("clear-interval", NAMESPACE);
 	public static final Symbol clearIntervalSymbol_out = new Symbol("bit-set-clear-interval");
 	
-	@VelkaOperator(
-			description = "Sets the bits from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to false.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Sets the bits from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to false.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(bit-set-clear-interval s1 2 4)", 
-			syntax = "(bit-set-clear-interval <set> <fromIndex> <toIndex>)")
+					+ "(bit-set-clear-interval s1 2 4)") 
+	@Syntax("(bit-set-clear-interval <set> <fromIndex> <toIndex>)")
 	public static final Operator clearInterval = new Operator() {
 
 		@Override
@@ -483,8 +499,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -497,12 +513,12 @@ public class JavaBitSet {
 	public static final Symbol cloneSymbol = new Symbol("velka-clone", NAMESPACE);
 	public static final Symbol cloneSymbol_out = new Symbol("bit-set-clone");
 	
-	@VelkaOperator(
-			description = "Cloning this BitSet produces a new BitSet that is equal to it.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Cloning this BitSet produces a new BitSet that is equal to it.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(bit-set-clone s1)", 
-			syntax = "(bit-set-clone <set>)")
+					+ "(bit-set-clone s1)")
+	@Syntax("(bit-set-clone <set>)")
 	public static final Operator clone = new Operator() {
 
 		@Override
@@ -511,7 +527,7 @@ public class JavaBitSet {
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
 					LitComposite.litCompositeHelper(
-							TypeAtom.TypeSetBitSet,
+							TypeSetBitSet,
 							ClojureHelper.applyClojureFunction(
 									".clone",
 									ClojureHelper.getLiteralInnerValue(set))));
@@ -529,14 +545,14 @@ public class JavaBitSet {
 			LitComposite lc = (LitComposite)args.get(0);
 			LitInteropObject set = (LitInteropObject)lc.value;
 			BitSet bSet = (BitSet)set.javaObject;
-			return new LitComposite(new LitInteropObject(bSet.clone()), TypeAtom.TypeSetBitSet);
+			return new LitComposite(new LitInteropObject(bSet.clone()), TypeSetBitSet);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -550,14 +566,14 @@ public class JavaBitSet {
 	public static final Symbol equalsSymbol = new Symbol("velka-equal", NAMESPACE);
 	public static final Symbol equalsSymbol_out = new Symbol("bit-set-equalp");
 	
-	@VelkaOperator(
-			description = "Compares this object against the specified object.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Compares this object against the specified object.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(define s2 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
-					+ "(bit-set-equalp s1 s2)", 
-			syntax = "(bit-set-equalp <set1> <set2>)")
+					+ "(bit-set-equalp s1 s2)")
+	@Syntax("(bit-set-equalp <set1> <set2>)")
 	public static final Operator equals = new Operator() {
 
 		@Override
@@ -597,7 +613,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
+					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
 					TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -611,11 +627,11 @@ public class JavaBitSet {
 	public static final Symbol flipSymbol = new Symbol("flip", NAMESPACE);
 	public static final Symbol flipSymbol_out = new Symbol("bit-set-flip");
 	
-	@VelkaOperator(
-			description = "Sets the bit at the specified index to the complement of its current value.", 
-			example = "(define s1 (construct Set BitSet))\n"
-					+ "(bit-set-flip s1 3)", 
-			syntax = "(bit-set-flip <set> <bitIndex>)")
+	@VelkaOperator
+	@Description("Sets the bit at the specified index to the complement of its current value.") 
+	@Example("(define s1 (construct Set BitSet))\n"
+					+ "(bit-set-flip s1 3)")
+	@Syntax("(bit-set-flip <set> <bitIndex>)")
 	public static final Operator flip = new Operator() {
 
 		@Override
@@ -656,8 +672,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -670,11 +686,11 @@ public class JavaBitSet {
 	public static final Symbol flipIntervalSymbol = new Symbol("flip-interval", NAMESPACE);
 	public static final Symbol flipIntervalSymbol_out = new Symbol("bit-set-flip-interval");
 	
-	@VelkaOperator(
-			description = "Sets each bit from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to the complement of its current value.", 
-			example = "(define s1 (construct Set BitSet))\n"
-					+ "(bit-set-flip-interval s1 3 5)", 
-			syntax = "(bit-set-flip-interval <set> <fromIndex> <toIndex>)")
+	@VelkaOperator
+	@Description("Sets each bit from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to the complement of its current value.") 
+	@Example("(define s1 (construct Set BitSet))\n"
+					+ "(bit-set-flip-interval s1 3 5)")
+	@Syntax("(bit-set-flip-interval <set> <fromIndex> <toIndex>)")
 	public static final Operator flipInterval = new Operator() {
 
 		@Override
@@ -718,8 +734,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -732,12 +748,12 @@ public class JavaBitSet {
 	public static final Symbol getSymbol = new Symbol("velka-get", NAMESPACE);
 	public static final Symbol getSymbol_out = new Symbol("bit-set-get");
 	
-	@VelkaOperator(
-			description = "Returns the value of the bit with the specified index.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Returns the value of the bit with the specified index.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(bit-set-get s1 3)", 
-			syntax = "(bit-set-get <set> <index>)")
+					+ "(bit-set-get s1 3)") 
+	@Syntax("(bit-set-get <set> <index>)")
 	public static final Operator get = new Operator() {
 
 		@Override
@@ -773,7 +789,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -787,12 +803,12 @@ public class JavaBitSet {
 	public static final Symbol getIntervalSymbol = new Symbol("get-interval", NAMESPACE);
 	public static final Symbol getIntervalSymbol_out = new Symbol("bit-set-get-interval");
 	
-	@VelkaOperator(
-			description = "Returns a new BitSet composed of bits from this BitSet from fromIndex (inclusive) to toIndex (exclusive).", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Returns a new BitSet composed of bits from this BitSet from fromIndex (inclusive) to toIndex (exclusive).") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(bit-set-get-interval s1 2 4)", 
-			syntax = "(bit-set-get-interval <set> <fromIndex> <toIndex>)")
+					+ "(bit-set-get-interval s1 2 4)") 
+	@Syntax("(bit-set-get-interval <set> <fromIndex> <toIndex>)")
 	public static final Operator getInterval = new Operator() {
 
 		@Override
@@ -803,7 +819,7 @@ public class JavaBitSet {
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set, fromIndex, toIndex),
 					LitComposite.litCompositeHelper(
-							TypeAtom.TypeSetBitSet,
+							TypeSetBitSet,
 							ClojureHelper.applyClojureFunction(
 									".get",
 									ClojureHelper.getLiteralInnerValue(set),
@@ -827,14 +843,14 @@ public class JavaBitSet {
 			LitInteger fromIndex = (LitInteger)args.get(1);
 			LitInteger toIndex = (LitInteger)args.get(2);
 			return new LitComposite(new LitInteropObject(bSet.get((int) fromIndex.value, (int) toIndex.value)),
-					TypeAtom.TypeSetBitSet);
+					TypeSetBitSet);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -847,14 +863,14 @@ public class JavaBitSet {
 	public static final Symbol intersectsSymbol = new Symbol("intersects", NAMESPACE);
 	public static final Symbol intersectsSymbol_out = new Symbol("bit-set-intersects");
 	
-	@VelkaOperator(
-			description = "Returns true if the specified BitSet has any bits set to true that are also set to true in this BitSet.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Returns true if the specified BitSet has any bits set to true that are also set to true in this BitSet.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(define s2 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
-					+ "(bit-set-intersects s1 s2)", 
-			syntax = "(bit-set-intersects <set1> <set2>)")
+					+ "(bit-set-intersects s1 s2)") 
+	@Syntax("(bit-set-intersects <set1> <set2>)")
 	public static final Operator intersects = new Operator() {
 
 		@Override
@@ -894,8 +910,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -908,13 +924,13 @@ public class JavaBitSet {
 	public static final Symbol isEmptySymbol = new Symbol("velka-is-empty", NAMESPACE);
 	public static final Symbol isEmptySymbol_out = new Symbol("bit-set-is-empty");
 	
-	@VelkaOperator(
-			description = "Returns true if this BitSet contains no bits that are set to true.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Returns true if this BitSet contains no bits that are set to true.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-is-empty s1)\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(bit-set-is-empty s1)", 
-			syntax = "(bit-set-is-empty <set>)")
+					+ "(bit-set-is-empty s1)") 
+	@Syntax("(bit-set-is-empty <set>)")
 	public static final Operator isEmpty = new Operator() {
 
 		@Override
@@ -947,7 +963,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet),
+					new TypeTuple(TypeSetBitSet),
 					TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -961,12 +977,12 @@ public class JavaBitSet {
 	public static final Symbol lengthSymbol = new Symbol("velka-length", NAMESPACE);
 	public static final Symbol lengthSymbol_out = new Symbol("bit-set-length");
 	
-	@VelkaOperator(
-			description = "Returns the \"logical size\" of this BitSet: the index of the highest set bit in the BitSet plus one.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Returns the \"logical size\" of this BitSet: the index of the highest set bit in the BitSet plus one.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(bit-set-length s1);; = 5", 
-			syntax = "(bit-set-length <set>)")
+					+ "(bit-set-length s1);; = 5") 
+	@Syntax("(bit-set-length <set>)")
 	public static final Operator length = new Operator() {
 
 		@Override
@@ -999,7 +1015,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet),
+					new TypeTuple(TypeSetBitSet),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1013,10 +1029,10 @@ public class JavaBitSet {
 	public static final Symbol nextClearBitSymbol = new Symbol("next-clear-bit", NAMESPACE);
 	public static final Symbol nextClearBitSymbol_out = new Symbol("bit-set-next-clear-bit");
 	
-	@VelkaOperator(
-			description = "Returns the index of the first bit that is set to false that occurs on or after the specified starting index.", 
-			example = "",//TODO 
-			syntax = "(bit-set-next-clear-bit <set> <fromIndex>)")
+	//TODO Example
+	@VelkaOperator
+	@Description("Returns the index of the first bit that is set to false that occurs on or after the specified starting index.")  
+	@Syntax("(bit-set-next-clear-bit <set> <fromIndex>)")
 	public static final Operator nextClearBit = new Operator() {
 
 		@Override
@@ -1053,7 +1069,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1067,10 +1083,10 @@ public class JavaBitSet {
 	public static final Symbol nextSetBitSymbol = new Symbol("next-set-bit", NAMESPACE);
 	public static final Symbol nextSetBitSymbol_out = new Symbol("bit-set-next-set-bit");
 	
-	@VelkaOperator(
-			description = "Returns the index of the first bit that is set to true that occurs on or after the specified starting index.", 
-			example = "", //TODO
-			syntax = "(bit-set-next-set-bit <set> <fromIndex>)")
+	//TODO Example
+	@VelkaOperator
+	@Description("Returns the index of the first bit that is set to true that occurs on or after the specified starting index.") 
+	@Syntax("(bit-set-next-set-bit <set> <fromIndex>)")
 	public static final Operator nextSetBit = new Operator() {
 
 		@Override
@@ -1107,7 +1123,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1121,14 +1137,14 @@ public class JavaBitSet {
 	public static final Symbol orSymbol = new Symbol("velka-or", NAMESPACE);
 	public static final Symbol orSymbol_out = new Symbol("bit-set-or");
 	
-	@VelkaOperator(
-			description = "Performs a logical OR of this bit set with the bit set argument.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Performs a logical OR of this bit set with the bit set argument.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(define s2 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
-					+ "(bit-set-or s1 s2)", 
-			syntax = "(bit-set-or <set1> <set2>)")
+					+ "(bit-set-or s1 s2)") 
+	@Syntax("(bit-set-or <set1> <set2>)")
 	public static final Operator or = new Operator() {
 
 		@Override
@@ -1173,8 +1189,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1187,10 +1203,10 @@ public class JavaBitSet {
 	public static final Symbol previousClearBitSymbol = new Symbol("previous-clear-bit", NAMESPACE);
 	public static final Symbol previousClearBitSymbol_out = new Symbol("bit-set-previous-clear-bit");
 	
-	@VelkaOperator(
-			description = "Returns the index of the nearest bit that is set to false that occurs on or before the specified starting index.", 
-			example = "", //TODO 
-			syntax = "(bit-set-previous-clear-bit <set> <fromIndex>)")
+	//TODO Example
+	@VelkaOperator
+	@Description("Returns the index of the nearest bit that is set to false that occurs on or before the specified starting index.")  
+	@Syntax("(bit-set-previous-clear-bit <set> <fromIndex>)")
 	public static final Operator previousClearBit = new Operator() {
 
 		@Override
@@ -1227,7 +1243,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1241,10 +1257,10 @@ public class JavaBitSet {
 	public static final Symbol previousSetBitSymbol = new Symbol("previous-set-bit", NAMESPACE);
 	public static final Symbol previousSetBitSymbol_out = new Symbol("bit-set-previous-set-bit");
 	
-	@VelkaOperator(
-			description = "Returns the index of the nearest bit that is set to true that occurs on or before the specified starting index.", 
-			example = "", //TODO 
-			syntax = "(bit-set-previous-set-bit <set> <fromIndex>)")
+	//TODO Example
+	@VelkaOperator
+	@Description("Returns the index of the nearest bit that is set to true that occurs on or before the specified starting index.")  
+	@Syntax("(bit-set-previous-set-bit <set> <fromIndex>)")
 	public static final Operator previousSetBit = new Operator() {
 
 		@Override
@@ -1281,7 +1297,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1295,11 +1311,11 @@ public class JavaBitSet {
 	public static final Symbol setSymbol = new Symbol("velka-set", NAMESPACE);
 	public static final Symbol setSymbol_out = new Symbol("bit-set-set");
 	
-	@VelkaOperator(
-			description = "Sets the bit at the specified index to true.", 
-			example = "(define s1 (construct Set BitSet))\n"
-					+ "(bit-set-set s1 3)", 
-			syntax = "(bit-set-set <set> <bitIndex>)")
+	@VelkaOperator
+	@Description("Sets the bit at the specified index to true.") 
+	@Example("(define s1 (construct Set BitSet))\n"
+					+ "(bit-set-set s1 3)") 
+	@Syntax("(bit-set-set <set> <bitIndex>)")
 	public static final Operator set = new Operator() {
 
 		@Override
@@ -1340,8 +1356,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1354,11 +1370,11 @@ public class JavaBitSet {
 	public static final Symbol setValueSymbol = new Symbol("set-value", NAMESPACE);
 	public static final Symbol setValueSymbol_out = new Symbol("bit-set-set-value");
 	
-	@VelkaOperator(
-			description = "Sets the bit at the specified index to the specified value.", 
-			example = "(define s1 (construct Set BitSet))\n"
-					+ "(bit-set-set-value s1 3 #t)", 
-			syntax = "(bit-set-set-value <set> <bitIndex> <value>)")
+	@VelkaOperator
+	@Description("Sets the bit at the specified index to the specified value.") 
+	@Example("(define s1 (construct Set BitSet))\n"
+					+ "(bit-set-set-value s1 3 #t)") 
+	@Syntax("(bit-set-set-value <set> <bitIndex> <value>)")
 	public static final Operator setValue = new Operator() {
 
 		@Override
@@ -1402,8 +1418,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1416,11 +1432,11 @@ public class JavaBitSet {
 	public static final Symbol setIntervalSymbol = new Symbol("set-interval", NAMESPACE);
 	public static final Symbol setIntervalSymbol_out = new Symbol("bit-set-set-interval");
 	
-	@VelkaOperator(
-			description = "Sets the bits from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to true.", 
-			example = "(define s1 (construct Set BitSet))\n"
-					+ "(bit-set-set-interval s1 3 5)", 
-			syntax = "(bit-set-set-interval <set> <fromIndex> <toIndex>)")
+	@VelkaOperator
+	@Description("Sets the bits from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to true.") 
+	@Example("(define s1 (construct Set BitSet))\n"
+					+ "(bit-set-set-interval s1 3 5)") 
+	@Syntax("(bit-set-set-interval <set> <fromIndex> <toIndex>)")
 	public static final Operator setInterval = new Operator() {
 
 		@Override
@@ -1464,8 +1480,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1478,11 +1494,11 @@ public class JavaBitSet {
 	public static final Symbol setIntervalValueSymbol = new Symbol("set-interval-value", NAMESPACE);
 	public static final Symbol setIntervalValueSymbol_out = new Symbol("bit-set-set-interval-value");
 	
-	@VelkaOperator(
-			description = "Sets the bits from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to the specified value.", 
-			example = "(define s1 (construct Set BitSet))\n"
-					+ "(bit-set-set-interval-value s1 3 5 #f)", 
-			syntax = "(bit-set-set-interval-value <set> <fromIndex> <toIndex> <value>)")	
+	@VelkaOperator
+	@Description("Sets the bits from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to the specified value.") 
+	@Example("(define s1 (construct Set BitSet))\n"
+					+ "(bit-set-set-interval-value s1 3 5 #f)") 
+	@Syntax("(bit-set-set-interval-value <set> <fromIndex> <toIndex> <value>)")	
 	public static final Operator setIntervalValue = new Operator() {
 
 		@Override
@@ -1530,8 +1546,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1544,12 +1560,12 @@ public class JavaBitSet {
 	public static final Symbol sizeSymbol = new Symbol("velka-size", NAMESPACE);
 	public static final Symbol sizeSymbol_out = new Symbol("bit-set-size");
 	
-	@VelkaOperator(
-			description = "Returns the number of bits of space actually in use by this BitSet to represent bit values.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Returns the number of bits of space actually in use by this BitSet to represent bit values.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 3 5)\n"
-					+ "(bit-set-size s1)", 
-			syntax = "(bit-set-size <set>)")
+					+ "(bit-set-size s1)") 
+	@Syntax("(bit-set-size <set>)")
 	public static final Operator size = new Operator() {
 
 		@Override
@@ -1582,7 +1598,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet),
+					new TypeTuple(TypeSetBitSet),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1596,12 +1612,12 @@ public class JavaBitSet {
 	public static final Symbol strSymbol = new Symbol("velka-str", NAMESPACE);
 	public static final Symbol strSymbol_out = new Symbol("bit-set-str");
 	
-	@VelkaOperator(
-			description = "Returns a string representation of this bit set.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Returns a string representation of this bit set.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 3 5)\n"
-					+ "(bit-set-str s1)", 
-			syntax = "(bit-set-str <set>)")
+					+ "(bit-set-str s1)") 
+	@Syntax("(bit-set-str <set>)")
 	public static final Operator str = new Operator() {
 
 		@Override
@@ -1634,7 +1650,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet),
+					new TypeTuple(TypeSetBitSet),
 					TypeAtom.TypeStringNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1648,14 +1664,14 @@ public class JavaBitSet {
 	public static final Symbol xorSymbol = new Symbol("velka-xor", NAMESPACE);
 	public static final Symbol xorSymbol_out = new Symbol("bit-set-xor");
 	
-	@VelkaOperator(
-			description = "Performs a logical XOR of this bit set with the bit set argument.", 
-			example = "(define s1 (construct Set BitSet))\n"
+	@VelkaOperator
+	@Description("Performs a logical XOR of this bit set with the bit set argument.") 
+	@Example("(define s1 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(define s2 (construct Set BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
-					+ "(bit-set-xor s1 s2)", 
-			syntax = "(bit-set-xor <set1> <set2>)")
+					+ "(bit-set-xor s1 s2)") 
+	@Syntax("(bit-set-xor <set1> <set2>)")
 	public static final Operator xor = new Operator() {
 
 		@Override
@@ -1700,8 +1716,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeSetBitSet);
+					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
+					TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1711,71 +1727,11 @@ public class JavaBitSet {
 		}
 	};
 	
-	private static void putOperatorToEnvironment(Operator operator, Environment env) {
-		env.put(new Symbol(operator.toString()), operator);
-	}
-	
-	private static List<Operator> getOperators() throws IllegalArgumentException, IllegalAccessException {
-		Class<?> clazz = JavaBitSet.class;
-		List<Field> fields = 
-				Arrays.asList(clazz.getFields())
-				.stream()
-				.filter(f -> f.getAnnotation(VelkaOperator.class) != null)
-				.collect(Collectors.toList());
-		
-		List<Operator> l = new ArrayList<Operator>(fields.size());
-		for(Field f : fields) {
-			Operator operator = (Operator) f.get(null);
-			l.add(operator);
-		}
-		return l;
-	}
-	
-	public static void initializeInEnvironment(Environment env) {		
-		try {
-			for(Operator operator : JavaBitSet.getOperators()) {
-				JavaBitSet.putOperatorToEnvironment(operator, env);
-			}
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		}
-	}
-	
 	public static final Path VELKA_CLOJURE_BITSET_PATH = Paths.get("velka", "clojure");
 	public static final Path VELKA_CLOJURE_BITSET_NAME = Paths.get("bitSet.clj");
 	public static final Path RELATIVE_PATH = VELKA_CLOJURE_BITSET_PATH.resolve(VELKA_CLOJURE_BITSET_NAME);
 	
-	private static String writeDefinitions() {
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append(ClojureHelper.requireNamespace("clojure.string"));
-		sb.append(ClojureHelper.declareNamespace(NAMESPACE));
-		
-		try {
-			List<Operator> operators = JavaBitSet.getOperators();
-		
-			for(Operator operator : operators) {
-				sb.append(Operator.makeOperatorDeclaration(operator));
-			}
-			
-			Environment env = Environment.initTopLevelEnvironment();
-			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-			
-			for(Operator operator : operators) {
-				sb.append(Operator.makeOperatorDef(operator, env, typeEnv));
-			}
-			
-		} catch (Exception e) {
-			System.err.println("Error generating " + RELATIVE_PATH.toString() + " :" + e.getMessage());
-			return "";
-		}
-		
-		return sb.toString();
-	}
-	
 	public static Path generateFile(Path dest) throws IOException {
-		return Files.writeString(dest, writeDefinitions());
+		return Files.writeString(dest, OperatorBankUtil.writeDefinitions(JavaBitSet.class, NAMESPACE));
 	}
 }

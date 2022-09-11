@@ -17,6 +17,7 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Logger;
@@ -2102,6 +2103,96 @@ class TestInterpretation {
 		TestInterpretation.testInterpretString(
 				"(java-linked-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
 				LitBoolean.TRUE);
+		
+		LinkedList<LitInteger> ll = new LinkedList<LitInteger>();
+		ll.add(new LitInteger(0));
+		ll.add(new LitInteger(2));
+		ll.add(new LitInteger(4));
+		ll.add(new LitInteger(6));
+		ll.add(new LitInteger(8));
+		ll.add(new LitInteger(10));
+		ll.add(new LitInteger(12));
+		ll.add(new LitInteger(14));
+		ll.add(new LitInteger(16));
+		ll.add(new LitInteger(18));
+		ListIterator<LitInteger> li = ll.listIterator(0);
+		TestInterpretation.testInterpretString(
+				"(define l (construct List JavaLinked))\n"
+						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))"
+						+ "(linked-list-iterator-next (java-linked-list-iterator l 0))",
+				li.next());
+		
+		li.previous();
+		li.add(new LitInteger(42));
+		TestInterpretation.testInterpretString(
+				"(define l (construct List JavaLinked))\n"
+						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+						+ "(define it (java-linked-list-iterator l 0))\n"
+						+ "(linked-list-iterator-next (linked-list-iterator-add it 42))",
+				li.next());
+		
+		li.remove();
+		testInterpretString(
+				"(define l (construct List JavaLinked))\n"
+						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+						+ "(define it (java-linked-list-iterator l 0))\n"
+						+ "(linked-list-iterator-has-next it)",
+				li.hasNext() ? LitBoolean.TRUE : LitBoolean.FALSE);
+		
+		li.previous();
+		testInterpretString(
+				"(define l (construct List JavaLinked))\n"
+						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+						+ "(define it (java-linked-list-iterator l 0))\n"
+						+ "(linked-list-iterator-has-previous it)",
+				li.hasPrevious() ? LitBoolean.TRUE : LitBoolean.FALSE);
+		
+		testInterpretString(
+				"(define l (construct List JavaLinked))\n"
+						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+						+ "(define it (java-linked-list-iterator l 0))\n"
+						+ "(linked-list-iterator-next-index it)",
+				new LitInteger(li.nextIndex()));
+		
+		li.next();
+		li.next();
+		li.next();
+		testInterpretString(
+				"(define l (construct List JavaLinked))\n"
+						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+						+ "(define it (java-linked-list-iterator l 3))\n"
+						+ "(linked-list-iterator-previous it)",
+				li.previous());
+		
+		li.next();
+		testInterpretString(
+				"(define l (construct List JavaLinked))\n"
+						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+						+ "(define it (java-linked-list-iterator l 3))\n"
+						+ "(linked-list-iterator-previous-index it)",
+				new LitInteger(li.previousIndex()));
+		
+		li.next();
+		li.remove();
+		testInterpretString(
+				"(define l (construct List JavaLinked))\n"
+						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+						+ "(define it (java-linked-list-iterator l 3))\n"
+						+ "(linked-list-iterator-next it)"
+						+ "(linked-list-iterator-next (linked-list-iterator-remove it))",
+				li.next());
+		
+		li.add(new LitInteger(8));
+		li.previous();
+		li.set(new LitInteger(42));
+		li.previous();
+		testInterpretString(
+				"(define l (construct List JavaLinked))\n"
+						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+						+ "(define it (java-linked-list-iterator l 3))\n"
+						+ "(linked-list-iterator-next it)"
+						+ "(linked-list-iterator-next (linked-list-iterator-set it 42))",
+				li.next());
 	}
 	
 	@Test
@@ -2110,7 +2201,7 @@ class TestInterpretation {
 		BitSet bs = new BitSet();
 		LitComposite bitSet = new LitComposite(
 				new LitInteropObject(bs),
-				TypeAtom.TypeSetBitSet);
+				JavaBitSet.TypeSetBitSet);
 		
 		testInterpretString(
 				"(construct Set BitSet)",
@@ -2119,7 +2210,7 @@ class TestInterpretation {
 		BitSet nbitsBs = new BitSet(2048);
 		LitComposite nBitsBitSet = new LitComposite(
 				new LitInteropObject(nbitsBs),
-				TypeAtom.TypeSetBitSet);
+				JavaBitSet.TypeSetBitSet);
 		
 		testInterpretString(
 				"(construct Set BitSet 2048)",
@@ -2246,7 +2337,7 @@ class TestInterpretation {
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.getIntervalSymbol_out.toString() + " s2 5 7)",
-			new LitComposite(new LitInteropObject(nbitsBs.get(5, 7)), TypeAtom.TypeSetBitSet));
+			new LitComposite(new LitInteropObject(nbitsBs.get(5, 7)), JavaBitSet.TypeSetBitSet));
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);

@@ -17,6 +17,10 @@ import velka.core.abstraction.Operator;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
+import velka.util.annotations.Description;
+import velka.util.annotations.Example;
+import velka.util.annotations.Header;
+import velka.util.annotations.Syntax;
 import velka.util.annotations.VelkaConstructor;
 import velka.util.annotations.VelkaOperator;
 import velka.util.annotations.VelkaOperatorBank;
@@ -109,15 +113,16 @@ public class LangbaseDocumentationGenerator {
 			throw new AppendableException(operatorBank.toString() + " must be annotated with "
 					+ VelkaOperatorBank.class.getName() + "to generate documentation!");
 		}
-		
-		VelkaOperatorBank annotation = operatorBank.getAnnotation(VelkaOperatorBank.class);
+
+		Description description = operatorBank.getAnnotation(Description.class);
+		Header header = operatorBank.getAnnotation(Header.class);
 		
 		return new StringBuilder()
 				.append("# ")
-				.append(annotation.header())
+				.append(header != null ? header.value() : operatorBank.getName())
 				.append("\n")
-				.append(annotation.description())
-				.append("\n\n")
+				.append(description != null ? description.value() : "")
+				.append(description != null ? "\n\n" : "")
 				.append(this.operatorBankToc(operatorBank))
 				.append("\n\n")
 				.append(this.operatorBankConstructors(operatorBank))
@@ -328,16 +333,15 @@ public class LangbaseDocumentationGenerator {
 	 * @throws AppendableException unlikely
 	 */
 	private String operatorDoc(Field operatorField, Operator operator) throws AppendableException {
-		VelkaOperator operatorAnnotation = operatorField.getAnnotation(VelkaOperator.class);
-		String description 	= operatorAnnotation.description();	
+		Description description = operatorField.getAnnotation(Description.class);	
 		
 		return new StringBuilder()
 			.append(this.operatorDocHeader(operatorField, operator))		
-			.append(this.operatorDocSyntax(operatorAnnotation))
+			.append(this.docSyntax(operatorField))
 			.append(this.operatorDocType(operator))
-			.append(description)
-			.append("\n\n")
-			.append(this.operatorDocExample(operatorAnnotation))
+			.append(description != null ? description.value() : "")
+			.append(description != null ? "\n\n" : "")
+			.append(this.docExample(operatorField))
 			.toString();	
 	}
 	
@@ -350,14 +354,13 @@ public class LangbaseDocumentationGenerator {
 	 * @throws AppendableException unlikely
 	 */
 	private String constructorDoc(Field operatorField, Operator operator) throws AppendableException {
-		VelkaConstructor constructorAnnotation = operatorField.getAnnotation(VelkaConstructor.class);
-		String description = constructorAnnotation.description();
+		Description description = operatorField.getAnnotation(Description.class);
 		
 		return new StringBuilder()
 				.append(this.operatorDocHeader(operatorField, operator))
-				.append(this.constructorDocSyntax(constructorAnnotation))
+				.append(this.docSyntax(operatorField))
 				.append(this.operatorDocType(operator))
-				.append(description)
+				.append(description != null ? description.value() : "")
 				.toString();
 	}
 	
@@ -385,33 +388,19 @@ public class LangbaseDocumentationGenerator {
 	 * @param syntax syntax string
 	 * @return Markdown code
 	 */
-	private String docSyntax(String syntax) {
+	private String docSyntax(Field field) {
+		Syntax syntax = field.getAnnotation(Syntax.class);
+		if(syntax == null) {
+			return "";
+		}
+		
 		return new StringBuilder()
 				.append("Syntax:\n\n")
 				.append("~~~\n")
-				.append(syntax)
+				.append(syntax.value())
 				.append("\n")
 				.append("~~~\n\n")
 				.toString();
-	}
-	
-	/**
-	 * Generates syntax of the operator Markdown documentation
-	 * 
-	 * @param operatorAnnotation operator VelkaOperator annotation
-	 * @return Markdown code
-	 */
-	private String operatorDocSyntax(VelkaOperator operatorAnnotation) {
-		return this.docSyntax(operatorAnnotation.syntax());
-	}
-	
-	/**
-	 * Generates syntax of the operator Markdown documentation
-	 * @param constructorAnnotation constructors VelkaConstructor annotation
-	 * @return Markdown code
-	 */
-	private String constructorDocSyntax(VelkaConstructor constructorAnnotation) {
-		return this.docSyntax(constructorAnnotation.syntax());
 	}
 	
 	/**
@@ -440,11 +429,17 @@ public class LangbaseDocumentationGenerator {
 	 * @param example operator example
 	 * @return Markdown code
 	 */
-	private String operatorDocExample(VelkaOperator operatorAnnotation) {
+	private String docExample(Field operatorField) {
+		Example example = operatorField.getAnnotation(Example.class);
+		
+		if(example == null) {
+			return "";
+		}
+		
 		return new StringBuilder()
 				.append("Example:\n\n")
 				.append("~~~\n")
-				.append(operatorAnnotation.example())
+				.append(example.value())
 				.append("\n")
 				.append("~~~")
 				.toString();

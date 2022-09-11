@@ -415,11 +415,7 @@ Type Signature:
 
 Returns the index of the first bit that is set to false that occurs on or after the specified starting index.
 
-Example:
 
-~~~
-
-~~~
 ### <a name="velka.core.langbase.JavaBitSet$19"> nextSetBit(bit-set-next-set-bit)</a>
 Syntax:
 
@@ -435,11 +431,7 @@ Type Signature:
 
 Returns the index of the first bit that is set to true that occurs on or after the specified starting index.
 
-Example:
 
-~~~
-
-~~~
 ### <a name="velka.core.langbase.JavaBitSet$20"> or(bit-set-or)</a>
 Syntax:
 
@@ -479,11 +471,7 @@ Type Signature:
 
 Returns the index of the nearest bit that is set to false that occurs on or before the specified starting index.
 
-Example:
 
-~~~
-
-~~~
 ### <a name="velka.core.langbase.JavaBitSet$22"> previousSetBit(bit-set-previous-set-bit)</a>
 Syntax:
 
@@ -499,11 +487,7 @@ Type Signature:
 
 Returns the index of the nearest bit that is set to true that occurs on or before the specified starting index.
 
-Example:
 
-~~~
-
-~~~
 ### <a name="velka.core.langbase.JavaBitSet$23"> set(bit-set-set)</a>
 Syntax:
 

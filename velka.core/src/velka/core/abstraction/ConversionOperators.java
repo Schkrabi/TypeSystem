@@ -19,7 +19,11 @@ import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.Pair;
 import velka.util.RomanNumbers;
-import velka.util.annotations.VelkaOperator;
+import velka.util.annotations.Description;
+import velka.util.annotations.Example;
+import velka.util.annotations.Header;
+import velka.util.annotations.Syntax;
+import velka.util.annotations.VelkaConversion;
 import velka.util.annotations.VelkaOperatorBank;
 
 /**
@@ -28,9 +32,9 @@ import velka.util.annotations.VelkaOperatorBank;
  * @author Mgr. Radomir Skrabal
  *
  */
-@VelkaOperatorBank(
-		description = "Conversions of build-in representations", 
-		header = "General Conversions")
+@VelkaOperatorBank
+@Description("Conversions of build-in representations") 
+@Header("General Conversions")
 public final class ConversionOperators {
 	
 	/**
@@ -41,10 +45,10 @@ public final class ConversionOperators {
 	/**
 	 * Conversion from Int:Native to Int:Roman
 	 */
-	@VelkaOperator(
-			description = "Converts integer in native represetation into roman representation. This is shorthand for _(convert Int:Native Int:Roman arg)_.", 
-			example = "(IntNative2IntRoman 42) ; = \"XLII\"", 
-			syntax = "(IntNative2IntRoman <arg>)")
+	@VelkaConversion
+	@Description("Converts integer in native represetation into roman representation. This is shorthand for _(convert Int:Native Int:Roman arg)_.") 
+	@Example("(IntNative2IntRoman 42) ; = \"XLII\"") 
+	@Syntax("(IntNative2IntRoman <arg>)")
 	public static final Operator IntNativeToIntRoman = new Operator() {
 	
 		@Override
@@ -82,10 +86,10 @@ public final class ConversionOperators {
 	/**
 	 * Conversion from Int:Native to Int:String
 	 */
-	@VelkaOperator(
-			description = "Converts integer in native represetation into string representation. This is shorthand for _(convert Int:Native Int:String arg)_.", 
-			example = "(IntNative2IntString 42) ; = \"42\"", 
-			syntax = "(IntNative2IntString <arg>)")
+	@VelkaConversion
+	@Description("Converts integer in native represetation into string representation. This is shorthand for _(convert Int:Native Int:String arg)_.") 
+	@Example("(IntNative2IntString 42) ; = \"42\"") 
+	@Syntax("(IntNative2IntString <arg>)")
 	public static final Operator IntNativeToIntString = new Operator() {
 	
 		@Override
@@ -118,13 +122,14 @@ public final class ConversionOperators {
 		}
 	
 	};
+	
 	/**
 	 * Conversion from Int:Roman to Int:Native
 	 */
-	@VelkaOperator(
-			description = "Converts integer in roman represetation into native representation. This is shorthand for _(convert Int:Roman Int:Native arg)_.", 
-			example = "(IntRoman2IntNative (construct Int Roman \"XLII\")) ; = 42", 
-			syntax = "(IntRoman2IntNative <arg>)")
+	@VelkaConversion
+	@Description("Converts integer in roman represetation into native representation. This is shorthand for _(convert Int:Roman Int:Native arg)_.") 
+	@Example("(IntRoman2IntNative (construct Int Roman \"XLII\")) ; = 42") 
+	@Syntax("(IntRoman2IntNative <arg>)")
 	public static final Operator IntRomanToIntNative = new Operator() {
 	
 		@Override
@@ -156,13 +161,14 @@ public final class ConversionOperators {
 			return new Symbol("int-roman-2-int-native", NAMESPACE);
 		}
 	};
+	
 	/**
 	 * Conversion from Int:Roman to Int:String
 	 */
-	@VelkaOperator(
-			description = "Converts integer in roman represetation into string representation. This is shorthand for _(convert Int:Roman Int:String arg)_.", 
-			example = "(IntRoman2IntString (construct Int Roman \"XLII\")) ; = \"42\"", 
-			syntax = "(IntRoman2IntString <arg>)")
+	@VelkaConversion
+	@Description("Converts integer in roman represetation into string representation. This is shorthand for _(convert Int:Roman Int:String arg)_.") 
+	@Example("(IntRoman2IntString (construct Int Roman \"XLII\")) ; = \"42\"") 
+	@Syntax("(IntRoman2IntString <arg>)")
 	public static final Operator IntRomanToIntString = new Operator() {
 	
 		@Override
@@ -200,13 +206,14 @@ public final class ConversionOperators {
 		}
 	
 	};
+	
 	/**
 	 * Conversion from Int:String to Int:Native
 	 */
-	@VelkaOperator(
-			description = "Converts integer in string represetation into native representation. This is shorthand for _(convert Int:String Int:Native arg)_.", 
-			example = "(IntString2IntNative (construct Int String \"42\")) ; = 42", 
-			syntax = "(IntString2IntNative <arg>)")
+	@VelkaConversion
+	@Description("Converts integer in string represetation into native representation. This is shorthand for _(convert Int:String Int:Native arg)_.") 
+	@Example("(IntString2IntNative (construct Int String \"42\")) ; = 42") 
+	@Syntax("(IntString2IntNative <arg>)")
 	public static final Operator IntStringToIntNative = new Operator() {
 	
 		@Override
@@ -239,13 +246,14 @@ public final class ConversionOperators {
 			return new Symbol("int-string-2-int-native", NAMESPACE);
 		}
 	};
+	
 	/**
 	 * Conversion from Int:String to Int:Roman
 	 */
-	@VelkaOperator(
-			description = "Converts integer in string represetation into roman representation. This is shorthand for _(convert Int:String Int:Roman arg)_.", 
-			example = "(IntString2IntRoman (construct Int String \"42\")) => \"XLII\"", 
-			syntax = "(IntString2IntRoman <arg>)")
+	@VelkaConversion
+	@Description("Converts integer in string represetation into roman representation. This is shorthand for _(convert Int:String Int:Roman arg)_.") 
+	@Example("(IntString2IntRoman (construct Int String \"42\")) => \"XLII\"") 
+	@Syntax("(IntString2IntRoman <arg>)")
 	public static final Operator IntStringToIntRoman = new Operator() {
 	
 		@Override

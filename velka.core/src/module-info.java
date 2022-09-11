@@ -9,4 +9,5 @@ module velka.core {
 	exports velka.core.interpretation;
 	exports velka.core.langbase;
 	exports velka.core.literal;
+	exports velka.core.util;
 }

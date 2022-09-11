@@ -12,6 +12,7 @@ import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
+import velka.core.util.OperatorBankUtil;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
 
@@ -241,8 +242,8 @@ public class Environment implements Comparable<Environment> {
 		
 		ListNative.initializeInEnvironment(env);
 		JavaArrayList.initializeInEnvironment(env);
-		JavaLinkedList.initializeInEnvironment(env);
-		JavaBitSet.initializeInEnvironment(env);
+		OperatorBankUtil.initializeInEnvironment(JavaLinkedList.class, env);
+		OperatorBankUtil.initializeInEnvironment(JavaBitSet.class, env);
 		
 		return env;
 	}
