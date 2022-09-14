@@ -23,8 +23,6 @@ import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
-import velka.types.TypeName;
-import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
@@ -48,11 +46,6 @@ import velka.util.annotations.VelkaOperatorBank;
 @Description("Operators for working with wrapped java.util.BitSet") 
 @Header("Bit Set")
 public class JavaBitSet {
-	
-	/**
-	 * Type of Set:BitSet in Velka
-	 */
-	public static final TypeAtom TypeSetBitSet = new TypeAtom(TypeName.SET, new TypeRepresentation("BitSet"));
 	
 	/**
 	 * Clojure namespace for JavaArrayList
@@ -90,7 +83,7 @@ public class JavaBitSet {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeSetBitSet);
+			Type type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 
@@ -134,7 +127,7 @@ public class JavaBitSet {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeSetBitSet);
+			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -205,8 +198,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -271,8 +264,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		} 
 		
@@ -326,7 +319,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet),
+					new TypeTuple(TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -381,7 +374,7 @@ public class JavaBitSet {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(new TypeTuple(TypeSetBitSet), TypeSetBitSet);
+			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet), TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -438,8 +431,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -499,8 +492,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -527,7 +520,7 @@ public class JavaBitSet {
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
 					LitComposite.litCompositeHelper(
-							TypeSetBitSet,
+							TypeAtom.TypeSetBitSet,
 							ClojureHelper.applyClojureFunction(
 									".clone",
 									ClojureHelper.getLiteralInnerValue(set))));
@@ -545,14 +538,14 @@ public class JavaBitSet {
 			LitComposite lc = (LitComposite)args.get(0);
 			LitInteropObject set = (LitInteropObject)lc.value;
 			BitSet bSet = (BitSet)set.javaObject;
-			return new LitComposite(new LitInteropObject(bSet.clone()), TypeSetBitSet);
+			return new LitComposite(new LitInteropObject(bSet.clone()), TypeAtom.TypeSetBitSet);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -613,7 +606,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -672,8 +665,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -734,8 +727,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -789,7 +782,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -819,7 +812,7 @@ public class JavaBitSet {
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set, fromIndex, toIndex),
 					LitComposite.litCompositeHelper(
-							TypeSetBitSet,
+							TypeAtom.TypeSetBitSet,
 							ClojureHelper.applyClojureFunction(
 									".get",
 									ClojureHelper.getLiteralInnerValue(set),
@@ -843,14 +836,14 @@ public class JavaBitSet {
 			LitInteger fromIndex = (LitInteger)args.get(1);
 			LitInteger toIndex = (LitInteger)args.get(2);
 			return new LitComposite(new LitInteropObject(bSet.get((int) fromIndex.value, (int) toIndex.value)),
-					TypeSetBitSet);
+					TypeAtom.TypeSetBitSet);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -910,8 +903,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -963,7 +956,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet),
+					new TypeTuple(TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1015,7 +1008,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet),
+					new TypeTuple(TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1069,7 +1062,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1123,7 +1116,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1189,8 +1182,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1243,7 +1236,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1297,7 +1290,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1356,8 +1349,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1418,8 +1411,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1480,8 +1473,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1546,8 +1539,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1598,7 +1591,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet),
+					new TypeTuple(TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1650,7 +1643,7 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet),
+					new TypeTuple(TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeStringNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1716,8 +1709,8 @@ public class JavaBitSet {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeSetBitSet, TypeSetBitSet),
-					TypeSetBitSet);
+					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
+					TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		

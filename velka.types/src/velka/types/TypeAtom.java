@@ -20,6 +20,10 @@ public class TypeAtom extends TerminalType {
 
 	public final TypeName name;
 	public final TypeRepresentation representation;
+	/**
+	 * Type of Set:BitSet in Velka
+	 */
+	public static final TypeAtom TypeSetBitSet = new TypeAtom(TypeName.SET, new TypeRepresentation("BitSet"));
 
 	public TypeAtom(TypeName name, TypeRepresentation representation) {
 		this.name = name;
