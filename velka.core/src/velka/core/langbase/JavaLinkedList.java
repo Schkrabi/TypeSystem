@@ -1603,15 +1603,9 @@ public class JavaLinkedList {
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) lio.javaObject;
 
-			LitComposite converted = ListNative.EMPTY_LIST_NATIVE;
+			LinkedList<Expression> ll = new LinkedList<Expression>(l);
 
-			ListIterator<Expression> i = l.listIterator(l.size());
-			while (i.hasPrevious()) {
-				Expression e = i.previous();
-				converted = new LitComposite(new Tuple(e, converted), TypeAtom.TypeListNative);
-			}
-
-			return converted;
+			return new LitComposite(new LitInteropObject(ll), TypeAtom.TypeListNative);
 		}
 
 		@Override
