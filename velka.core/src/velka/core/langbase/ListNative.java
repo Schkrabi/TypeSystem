@@ -17,7 +17,6 @@ import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
-import velka.core.application.Construct;
 import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -194,6 +193,9 @@ public class ListNative {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitComposite list = ((LitComposite) args.get(0));
+			if(!(list.value instanceof LitInteropObject)) {
+				System.err.println("err");
+			}
 			LitInteropObject interop = (LitInteropObject) list.value;
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
@@ -1328,17 +1330,8 @@ public class ListNative {
 	 * @return list native literal (LitComposite instance)
 	 */
 	public static Expression makeListNativeExpression(List<Expression> l) {
-		ListIterator<Expression> i = l.listIterator(l.size());
-
-		Expression agg = new Construct(TypeAtom.TypeListNative, Tuple.EMPTY_TUPLE);
-
-		while (i.hasPrevious()) {
-			Expression e = i.previous();
-
-			agg = new Construct(TypeAtom.TypeListNative, new Tuple(e, agg));
-		}
-
-		return agg;
+		LinkedList<Expression> ll = new LinkedList<Expression>(l);
+		return new LitComposite(new LitInteropObject(ll), TypeAtom.TypeListNative);
 	}
 
 	/**

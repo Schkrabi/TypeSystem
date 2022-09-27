@@ -14,7 +14,6 @@ import velka.core.expression.TypeHolder;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
-import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
@@ -96,12 +95,8 @@ public class Loop extends Expression {
 			
 			tmp = opt.get();
 		}
-		Optional<Substitution> opt = s.union(tmp);
-		if(opt.isEmpty()) {
-			throw new SubstitutionsCannotBeMergedException(s, tmp);
-		}
 
-		return new Pair<Type, Substitution>(infered.first, opt.get());
+		return new Pair<Type, Substitution>(infered.first, s.compose(tmp));
 	}
 
 	@Override

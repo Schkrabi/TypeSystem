@@ -4,9 +4,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import velka.util.AppendableException;
@@ -24,7 +22,6 @@ import velka.core.expression.TypeHolder;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
-import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeTuple;
@@ -140,11 +137,6 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			Optional<Substitution> uni = Type.unifyRepresentation(fArgType, argType);
 			if(uni.isPresent()) {
 				holderType = fArgType.apply(uni.get());
-				Optional<Substitution> o = argsSubst.union(uni.get());
-				if(!o.isPresent()) {
-					throw new SubstitutionsCannotBeMergedException(argsSubst, uni.get());
-				}
-				argsSubst = o.get();
 			}
 			//Otherwise use representation of formal argument, since it will be converted
 			else{
@@ -184,26 +176,14 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			Substitution argsSubst = ceS.second;		
 			
 			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv, typeEnv);
-			Optional<Substitution> o = argsSubst.union(bodyInfered.second);
-			if(!o.isPresent()) {
-				throw new SubstitutionsCannotBeMergedException(argsSubst, bodyInfered.second);
-			}			
+			Substitution s = argsSubst.compose(bodyInfered.second);
 			
-			Type argsType = this.argsType.apply(o.get());
-			Type bodyType = bodyInfered.first.apply(o.get());
+			Type argsType = this.argsType.apply(s);
+			Type bodyType = bodyInfered.first.apply(s);
 			
 			TypeArrow finalType = new TypeArrow(argsType, bodyType);
 			
-			Set<TypeVariable> scopeVariables = this.argsType.getVariables();
-			scopeVariables.addAll(finalType.getVariables());
-			
-			Map<TypeVariable, TypeVariable> replacements = TypeVariable.makeRenameMap(scopeVariables);
-			
-			Substitution finalSubstitution = o.get().removeTypeVariables(replacements);
-			
-			finalType = (TypeArrow) finalType.replaceVariables(replacements);
-
-			return new Pair<Type, Substitution>(finalType, finalSubstitution);
+			return new Pair<Type, Substitution>(finalType, s);
 		} catch (AppendableException e) {
 			e.appendMessage("\nin " + this.toString());
 			throw e;

@@ -1,6 +1,8 @@
 package velka.test;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
@@ -53,6 +55,7 @@ import velka.core.literal.LitString;
 import velka.parser.Parser;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
+import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
@@ -842,55 +845,6 @@ class TestComplex {
 		TestComplex.assertIntprtAndCompPrintSameValues("(is-same-representation 42 (construct Int String \"42\"))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(is-same-representation 42 \"42\")");
 	}
-
-	@Test
-	@DisplayName("Test user defined ranking function")
-	void testUserDefRanking() throws Exception {
-		String ranking = "(let-type (A) (lambda ((List:Native formalArgTypes) (List:Native realArgs) (A args))" + "(foldl-list-native + 0 (map2-list-native "
-				+ "(lambda (x y) (if (is-same-representation x y) 0 1)) " + "formalArgTypes " + "realArgs))))";
-
-		String realArgs = "(construct List Native 42 (construct List Native \"42\" (construct List Native #t (construct List Native))))";
-		Expression args = new Tuple(new LitInteger(42), new LitString("42"), LitBoolean.TRUE);
-
-		List<Expression> l = Parser.read(ranking);
-		Lambda rankingLambda = (Lambda) l.get(0);
-		l = Parser.read(realArgs);
-		Expression realArgsExpr = l.get(0);
-
-		// (Int:Native String:Native Bool:Native)
-		Expression formalArgs1 = ListNative.makeListNativeExpression(new TypeSymbol(TypeAtom.TypeIntNative),
-				new TypeSymbol(TypeAtom.TypeStringNative), new TypeSymbol(TypeAtom.TypeBoolNative));
-
-		Expression formalArgs2 = ListNative.makeListNativeExpression(new TypeSymbol(TypeAtom.TypeIntString),
-				new TypeSymbol(TypeAtom.TypeStringNative), new TypeSymbol(TypeAtom.TypeBoolNative));
-
-		Expression formalArgs3 = ListNative.makeListNativeExpression(new TypeSymbol(TypeAtom.TypeIntString),
-				new TypeSymbol(new TypeAtom(TypeName.STRING, new TypeRepresentation("other"))),
-				new TypeSymbol(new TypeAtom(TypeName.BOOL, new TypeRepresentation("other"))));				
-
-		Expression e1 = new AbstractionApplication(rankingLambda, new Tuple(formalArgs1, realArgsExpr, args));
-
-		Expression e2 = new AbstractionApplication(rankingLambda, new Tuple(formalArgs2, realArgsExpr, args));
-
-		Expression e3 = new AbstractionApplication(rankingLambda, new Tuple(formalArgs3, realArgsExpr, args));
-
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
-		l = velka.compiler.Compiler.eval(Arrays.asList(e1), env, typeEnv);
-		assertEquals(new LitInteger(0), l.get(0));
-
-		l = velka.compiler.Compiler.eval(Arrays.asList(e2), env, typeEnv);
-		assertEquals(new LitInteger(1), l.get(0));
-
-		l = velka.compiler.Compiler.eval(Arrays.asList(e3), env, typeEnv);
-		assertEquals(new LitInteger(3), l.get(0));
-
-		TestComplex.assertIntprtAndCompPrintSameValues(
-				Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator, new Tuple(e1)),
-						new AbstractionApplication(Operators.PrintlnOperator, new Tuple(e2)),
-						new AbstractionApplication(Operators.PrintlnOperator, new Tuple(e3))));
-	}
 	
 	@Test
 	@DisplayName("Test Custom Cost Function Compilation")
@@ -1662,16 +1616,37 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 	
 	@Test
 	@DisplayName("Test Sandbox")
-	void testSandbox() throws Exception{
-//		ProcessBuilder pb = new ProcessBuilder("echo", "%JAVA_HOME%");
-//		pb.inheritIO();
-//		Map<String, String> env = pb.environment();
-//		String path = env.get("PATH");
-//		env.put("PATH", "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\windows\\system32;C:\\windows;C:\\windows\\System32\\Wbem;C:\\windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\windows\\System32\\OpenSSH\\;C:\\Program Files\\dotnet\\;C:\\Program Files\\Git\\cmd;C:\\Program Files (x86)\\dotnet\\;C:\\Java\\jdk-17.0.1\\bin;C:\\Java\\apache-ant-1.10.12\\bin;C:\\Users\\r.skrabal\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\r.skrabal\\.dotnet\\tools;C:\\windows\\System32;");
-//		//pb.redirectOutput(System.out);
-//		//pb.redirectError(System.err);		
-//		Process p = pb.start();
-//		p.waitFor();
+	void testSandbox() throws Exception{				
+		Expression e = parseString(
+				"(let-type (A B C D) "
+				+ "(lambda (((C D) cd))"
+					+ "(tuple"
+						+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) cd)"
+						+ "((lambda (((Double:Native B) ab)) (dadd (car ab) 1.0)) cd)"
+						+ "((lambda (((Double:Native Double:Native) ab)) (dadd (car ab) (cdr ab))) cd))))"
+				).get(0);
+		
+		Environment env = Environment.initTopLevelEnvironment();
+		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		
+		assertThrows(SubstitutionsCannotBeMergedException.class,
+				() -> e.infer(env, typeEnv));
+		
+		assertAll(() ->
+				parseString(
+						"(let-type (A B)"
+								+ "(lambda ()"
+									+ "(tuple"
+										+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) (tuple 3.14 42))"
+										+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) (tuple \"foo\" 42)))))")
+				.get(0).infer(env, typeEnv));
+		
+		testInterpretString(
+				"(define f (lambda (x) x))"
+				+ "(tuple (f \"foo\") (f 42))",
+				new Tuple(new LitString("foo"), new LitInteger(42)),
+				env,
+				typeEnv);
 	}
 	
 	private static void assertClojureFunction(String definitions, String testCase, String expectedResult) throws IOException, InterruptedException, AppendableException {

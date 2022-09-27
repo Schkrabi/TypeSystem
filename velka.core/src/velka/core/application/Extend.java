@@ -176,27 +176,11 @@ public class Extend extends Expression implements Comparable<Expression> {
 		
 		representations.add(implementationInfered.first);
 		
-		RepresentationOr type = (RepresentationOr) RepresentationOr.makeRepresentationOr(representations);
-		
-		Optional<Substitution> s = extendedFunctionInfered.second.union(implementationInfered.second);
-		
-		if(!s.isPresent()) {
-			throw new AppendableException(
-						"Substitutions "
-						+ extendedFunctionInfered.second.toString()
-						+ " and "
-						+ implementationInfered.second.toString()
-						+ " cannot be merged, infered expressions were "
-						+ this.extendedFunction.toString()
-						+ " and "
-						+ this.implementation.toString()
-						+ " in "
-						+ this.toString());
-		}
+		Type type = RepresentationOr.makeRepresentationOr(representations); 
 		
 		this.isCostFunctionInferingCorrectly(implementationInfered.first, env, typeEnv);
 		
-		return new Pair<Type, Substitution>(type, s.get());
+		return new Pair<Type, Substitution>(type, extendedFunctionInfered.second.compose(implementationInfered.second));
 	}
 
 	/**

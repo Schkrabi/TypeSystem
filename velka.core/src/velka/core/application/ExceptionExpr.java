@@ -10,7 +10,6 @@ import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitString;
 import velka.types.Substitution;
-import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeAtom;
 import velka.types.TypeVariable;
@@ -65,12 +64,7 @@ public class ExceptionExpr extends SpecialFormApplication {
 				throw new TypesDoesNotUnifyException(infered.first, TypeAtom.TypeStringNative);
 			}
 			
-			Optional<Substitution> opt = s.get().union(infered.second);
-			if(opt.isEmpty()) {
-				throw new SubstitutionsCannotBeMergedException(s.get(), infered.second);
-			}
-			
-			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), opt.get());
+			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), s.get().compose(infered.second));
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;

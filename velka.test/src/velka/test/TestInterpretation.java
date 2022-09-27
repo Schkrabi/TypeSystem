@@ -76,11 +76,13 @@ import velka.core.literal.LitString;
 import velka.parser.Parser;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
+import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeName;
 import velka.types.TypeRepresentation;
+import velka.types.TypeSetDoesNotUnifyException;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.types.TypesDoesNotUnifyException;
@@ -413,10 +415,21 @@ class TestInterpretation {
 			@Override
 			protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
 					throws AppendableException {
-				// TODO Auto-generated method stub
 				return null;
 			}
 		}))).infer(env, typeEnv));
+		
+		//Test if cross-used bound variables in tuples are infered correctly
+		Expression e = parseString("(let-type (A) (lambda ((A x)) (tuple (+ x 0) (floor x))))");
+		
+		assertThrows(SubstitutionsCannotBeMergedException.class, () -> e.infer(env, typeEnv));
+		
+		assertEquals(
+				(new Tuple(Arrays.asList(Tuple.EMPTY_TUPLE))),
+				(new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION, Tuple.EMPTY_TUPLE)))
+				.stream()
+				.filter(x -> !x.equals(Expression.EMPTY_EXPRESSION))
+				.collect(Tuple.toTuple));
 	}
 
 	@Test
@@ -2087,15 +2100,7 @@ class TestInterpretation {
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
 				+ "(convert List:JavaLinked List:Native l)", 
-				new LitComposite(
-						new Tuple(
-								new LitInteger(42),
-								new LitComposite(
-										new Tuple(
-												new LitInteger(21), 
-												ListNative.EMPTY_LIST_NATIVE), 
-										TypeAtom.TypeListNative)), 
-						TypeAtom.TypeListNative));
+				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21)));
 		
 		TestInterpretation.testInterpretString(
 				"(java-linked-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
@@ -2201,7 +2206,7 @@ class TestInterpretation {
 		BitSet bs = new BitSet();
 		LitComposite bitSet = new LitComposite(
 				new LitInteropObject(bs),
-				JavaBitSet.TypeSetBitSet);
+				TypeAtom.TypeSetBitSet);
 		
 		testInterpretString(
 				"(construct Set BitSet)",
@@ -2210,7 +2215,7 @@ class TestInterpretation {
 		BitSet nbitsBs = new BitSet(2048);
 		LitComposite nBitsBitSet = new LitComposite(
 				new LitInteropObject(nbitsBs),
-				JavaBitSet.TypeSetBitSet);
+				TypeAtom.TypeSetBitSet);
 		
 		testInterpretString(
 				"(construct Set BitSet 2048)",
@@ -2337,7 +2342,7 @@ class TestInterpretation {
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.getIntervalSymbol_out.toString() + " s2 5 7)",
-			new LitComposite(new LitInteropObject(nbitsBs.get(5, 7)), JavaBitSet.TypeSetBitSet));
+			new LitComposite(new LitInteropObject(nbitsBs.get(5, 7)), TypeAtom.TypeSetBitSet));
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
@@ -2694,6 +2699,11 @@ class TestInterpretation {
 				ExtendedFunction.makeExtendedFunction(expectedImpls, env),
 				env,
 				typeEnv);
+		
+		//Test if cross-used type variables inferes correctly (substitution merge)
+		Expression f = parseString(
+				"(let-type (A) (extend (extend (extended-lambda (A)) (lambda ((A x)) (floor x))) (lambda ((A x)) (+ x 1))))");
+		assertThrows(TypeSetDoesNotUnifyException.class, () -> f.infer(env, typeEnv));
 	}
 	
 	@Test

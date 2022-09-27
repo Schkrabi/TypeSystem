@@ -9,7 +9,6 @@ import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
-import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
@@ -78,16 +77,6 @@ public class DefineConversion extends Expression {
 		Optional<Substitution> right = Type.unifyTypes(type.rtype, this.to);
 		if(right.isEmpty()) {
 			throw new TypesDoesNotUnifyException(type.rtype, this.to);
-		}
-		
-		Optional<Substitution> opt = left.get().union(right.get());
-		if(opt.isEmpty()) {
-			throw new SubstitutionsCannotBeMergedException(left.get(), right.get());
-		}
-		
-		Optional<Substitution> tmp =  opt.get().union(p.second);
-		if(tmp.isEmpty()) {
-			throw new SubstitutionsCannotBeMergedException(opt.get(), p.second);
 		}
 		
 		return new Pair<Type, Substitution>(Expression.EMPTY_EXPRESSION.infer(env, typeEnv).first, Substitution.EMPTY);

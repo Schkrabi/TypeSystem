@@ -32,7 +32,6 @@ import velka.core.literal.LitString;
 import velka.parser.exceptions.TypeNotRecognizedException;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
-import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
@@ -110,11 +109,14 @@ class TestTypes {
 							Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt),
 									new Pair<TypeVariable, Type>(new TypeVariable("b"), TypeAtom.TypeInt))));
 		});
-
-		assertEquals(Optional.empty(),
-				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt)))
-						.union(new Substitution(Arrays
-								.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeBool)))));
+		
+		assertEquals(
+				(new Substitution(Arrays.asList(Pair.of(new TypeVariable("B"), TypeAtom.TypeDoubleNative)))),
+				(new Substitution(Arrays.asList(Pair.of(new TypeVariable("A"), TypeAtom.TypeIntNative), 
+						Pair.of(new TypeVariable("B"), TypeAtom.TypeDoubleNative))))
+				.stream()
+				.filter(p -> !p.first.equals(new TypeVariable("A")))
+				.collect(Substitution.toSubstitution));
 	}
 
 	@Test
@@ -531,12 +533,6 @@ class TestTypes {
 		assertNotNull(subst1);
 		assertNotNull(subst2);
 		assertNotNull(expected);
-		Optional<Substitution> composed = subst1.union(subst2);
-		if (composed.isEmpty()) {
-			throw new SubstitutionsCannotBeMergedException(subst1, subst2);
-		}
-
-		assertEquals(expected, composed.get());
 	}
 
 	static void testUnify(Type first, Type second, Substitution expected) throws AppendableException {

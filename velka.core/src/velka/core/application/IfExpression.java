@@ -14,7 +14,6 @@ import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.types.Substitution;
-import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
@@ -99,13 +98,10 @@ public class IfExpression extends SpecialFormApplication {
 		if(s.isEmpty()) {
 			throw new TypesDoesNotUnifyException(argsInfered.first, argsExpected);
 		}
+
+		Substitution composed = s.get().compose(argsInfered.second);
 		
-		Optional<Substitution> opt = s.get().union(argsInfered.second);
-		if(opt.isEmpty()) {
-			throw new SubstitutionsCannotBeMergedException(s.get(), argsInfered.second);
-		}
-		
-		return new Pair<Type, Substitution>(tv.apply(opt.get()), opt.get());
+		return new Pair<Type, Substitution>(tv.apply(composed), composed);
 	}
 	
 	@Override

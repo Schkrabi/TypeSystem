@@ -57,12 +57,15 @@ public class OrExpression extends SpecialFormApplication {
 				throw new TypesDoesNotUnifyException(p.first, TypeAtom.TypeBoolNative);
 			}
 			
-			Optional<Substitution> opt = agg.union(p.second);
+			//Optional<Substitution> opt = agg.union(p.second);
+			//TODO check if union necessary
+			Optional<Substitution> opt = Optional.of(agg.compose(p.second));
 			if(opt.isEmpty()) {
 				throw new SubstitutionsCannotBeMergedException(agg, p.second);
 			}
 			
-			Optional<Substitution> tmp = opt.get().union(s.get());
+			//Optional<Substitution> tmp = opt.get().union(s.get());
+			Optional<Substitution> tmp = Optional.of(opt.get().compose(s.get()));
 			if(tmp.isEmpty()) {
 				throw new SubstitutionsCannotBeMergedException(opt.get(), s.get());
 			}

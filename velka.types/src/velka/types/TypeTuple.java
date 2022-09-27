@@ -211,16 +211,12 @@ public class TypeTuple extends Type implements Iterable<Type> {
 					Type t = i.next();
 					Type u = j.next();
 
-					Optional<Substitution> ot = Type.unifyTypes(t, u);
+					Optional<Substitution> ot = Type.unifyTypes(t.apply(s), u.apply(s));
 					if(ot.isEmpty()) {
 						return Optional.empty();
 					}
 
-					Optional<Substitution> tmp = s.union(ot.get());
-					if(tmp.isEmpty()) {
-						return Optional.empty();
-					}
-					s = tmp.get();
+					s = s.compose(ot.get());
 				}
 				return Optional.of(s);
 			}
@@ -244,17 +240,12 @@ public class TypeTuple extends Type implements Iterable<Type> {
 					Type t = i.next();
 					Type u = j.next();
 
-					Optional<Substitution> ot = Type.unifyRepresentation(t, u);
+					Optional<Substitution> ot = Type.unifyRepresentation(t.apply(s), u.apply(s));
 					if(ot.isEmpty()) {
 						return Optional.empty();
 					}
 					
-					Optional<Substitution> tmp = s.union(ot.get()); 
-					if(tmp.isEmpty()) {
-						return Optional.empty();
-					}
-					
-					s = tmp.get();
+					s = s.compose(ot.get());
 				}
 				return Optional.of(s);
 			}

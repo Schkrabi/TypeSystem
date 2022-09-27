@@ -2,6 +2,7 @@ package velka.core.application;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import velka.core.abstraction.Abstraction;
@@ -11,14 +12,12 @@ import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
-import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ThrowingFunction;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
-import velka.types.SubstitutionCollectionCannotBeMerged;
 import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -119,21 +118,27 @@ public class AbstractionApplication extends Application {
 			throw new TypesDoesNotUnifyException(argsType, abstType.ltype);
 		}
 		
-		//Why this was not assigned?, check during testing
-		Optional<Substitution> tmp = s.get().union(argsSubst);
-		if(tmp.isEmpty()) {
+		//Remove unbound abstType substitutions
+		Set<TypeVariable> unbound = abstType.getVariables();
+		Substitution r = s.get().stream()
+				.filter(p -> !unbound.contains(p.first))
+				.collect(Substitution.toSubstitution);
+		
+		Optional<Substitution> composed = r.merge(argsSubst);
+		if(composed.isEmpty()) {
 			throw new SubstitutionsCannotBeMergedException(s.get(), argsSubst);
 		}
-		s = tmp;
-		
-		tmp = s.get().union(abstSubst);
-		if(tmp.isEmpty()) {
-			throw new SubstitutionsCannotBeMergedException(s.get(), abstSubst);
+		composed = composed.get().merge(abstSubst);
+		if(composed.isEmpty()) {
+			throw new SubstitutionsCannotBeMergedException(composed.get(), abstSubst);
 		}
-		s = tmp;
-
-		TypeArrow finalFnType = (TypeArrow) abstType.apply(s.get());
-		return new Pair<Type, Substitution>(finalFnType.rtype, s.get());
+		
+		TypeArrow finalFnType = (TypeArrow) abstType
+				.apply(s.get())
+				.apply(argsSubst)
+				.apply(abstSubst);
+		
+		return new Pair<Type, Substitution>(finalFnType.rtype, composed.get());
 	}
 
 	@Override
@@ -151,10 +156,11 @@ public class AbstractionApplication extends Application {
 						new TypeVariable(NameGenerator.next()));
 				Substitution s = new Substitution(
 						new Pair<TypeVariable, Type>((TypeVariable) funInfered.first, abstArrowType));
-				Optional<Substitution> tmp = s.union(funInfered.second);
+				/*Optional<Substitution> tmp = s.union(funInfered.second);
 				if(tmp.isEmpty()) {
 					throw new SubstitutionsCannotBeMergedException(s, funInfered.second);
-				}
+				}*/
+				Optional<Substitution> tmp = Optional.of(s.compose(funInfered.second));
 				
 				return AbstractionApplication.inferResultType(argsInfered.first, argsInfered.second,
 						abstArrowType, tmp.get());
@@ -176,16 +182,12 @@ public class AbstractionApplication extends Application {
 				}
 
 				List<Substitution> substs = l.stream().map(x -> x.second).collect(Collectors.toList()); 
-				Optional<Substitution> finalSubst = Substitution
-						.unionMany(substs);
 				
-				if(finalSubst.isEmpty()) {
-					throw new SubstitutionCollectionCannotBeMerged(substs);
-				}
+				Substitution finalSubst = substs.stream().reduce(Substitution.EMPTY, (agg, s) -> agg.compose(s));
 				
 				Type finalType = RepresentationOr
 						.makeRepresentationOr(l.stream().map(x -> x.first).collect(Collectors.toList()));
-				return new Pair<Type, Substitution>(finalType, finalSubst.get());
+				return new Pair<Type, Substitution>(finalType, finalSubst);
 			}
 
 			throw new AppendableException(funInfered.first.toString() + " is not applicable type!");

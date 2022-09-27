@@ -1,5 +1,6 @@
 package velka.core.expression;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -7,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -121,12 +123,13 @@ public class Tuple extends Expression implements Iterable<Expression> {
 				Pair<Type, Substitution> infered = e.infer(env, typeEnv);
 				types.add(infered.first);
 				
-				Optional<Substitution> opt = s.union(infered.second);
-				if(opt.isEmpty()) {
+				Optional<Substitution> mergeRslt = s.merge(infered.second);
+				
+				if(mergeRslt.isEmpty()) {
 					throw new SubstitutionsCannotBeMergedException(s, infered.second);
 				}
 				
-				s = opt.get();
+				s = mergeRslt.get();
 			}
 			return new Pair<Type, Substitution>(new TypeTuple(types), s);
 
@@ -207,6 +210,16 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	public List<Expression> toList(){
 		return this.stream().collect(Collectors.toList());
 	}
+	
+	/**
+	 * Tuple collector
+	 */
+	public static final Collector<Expression, ArrayList<Expression>, Tuple> toTuple =
+			Collector.of(
+					ArrayList<Expression>::new,
+					ArrayList<Expression>::add,
+					(first, second) -> { first.addAll(second); return first; },
+					(ArrayList<Expression> l) -> new Tuple(l));
 
 	/**
 	 * Empty tuple expression

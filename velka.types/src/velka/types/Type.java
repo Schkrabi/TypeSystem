@@ -150,13 +150,8 @@ public abstract class Type implements Comparable<Type> {
 			if(s.isEmpty()) {
 				return Optional.empty();
 			}
-			Optional<Substitution> opt = agg.union(s.get()); 
 			
-			if(opt.isEmpty()) {
-				return Optional.empty();
-			}
-			
-			agg = opt.get();
+			agg = agg.compose(s.get());
 			base = base.apply(agg);
 		}
 		return Optional.of(agg);

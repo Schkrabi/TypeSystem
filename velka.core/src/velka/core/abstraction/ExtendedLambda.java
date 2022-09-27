@@ -147,10 +147,12 @@ public class ExtendedLambda extends Abstraction {
 			for (Lambda l : this.implementations.keySet()) {
 				Pair<Type, Substitution> p = l.doInferWithArgs(args, creationEnv, applicationEnvironment, typeEnv);
 				types.add(p.first);
-				Optional<Substitution> o = s.union(p.second);
-				if (!o.isPresent()) {
+				
+				Optional<Substitution> opt = s.merge(p.second);
+				if(opt.isEmpty()) {
 					throw new SubstitutionsCannotBeMergedException(s, p.second);
 				}
+				s = opt.get();
 			}
 
 			Type type = RepresentationOr.makeRepresentationOr(types);

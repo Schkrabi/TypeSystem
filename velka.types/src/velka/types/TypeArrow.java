@@ -85,13 +85,17 @@ public class TypeArrow extends Type {
 			TypeArrow o = (TypeArrow) other;
 
 			Optional<Substitution> left = this.ltype.unifyTypeWith(o.ltype);
-			Optional<Substitution> right = this.rtype.unifyTypeWith(o.rtype);
+			if(left.isEmpty()) {
+				return Optional.empty();
+			}
 			
-			if(left.isEmpty() || right.isEmpty()) {
+			Optional<Substitution> right = this.rtype.apply(left.get()).unifyTypeWith(o.rtype.apply(left.get()));
+			
+			if(right.isEmpty()) {
 				return Optional.empty();
 			}
 
-			return left.get().union(right.get());
+			return Optional.of(left.get().compose(right.get()));
 		}
 		return Optional.empty();
 	}
@@ -99,19 +103,23 @@ public class TypeArrow extends Type {
 	@Override
 	public Optional<Substitution> unifyRepresentationWith(Type other) {
 		if (other instanceof TypeVariable || other instanceof RepresentationOr) {
-			return other.unifyRepresentationWith(this);
+			return other.unifyTypeWith(this);
 		}
 		if (other instanceof TypeArrow) {
 			TypeArrow o = (TypeArrow) other;
 
 			Optional<Substitution> left = this.ltype.unifyRepresentationWith(o.ltype);
-			Optional<Substitution> right = this.rtype.unifyRepresentationWith(o.rtype);
+			if(left.isEmpty()) {
+				return Optional.empty();
+			}
 			
-			if(left.isEmpty() || right.isEmpty()) {
+			Optional<Substitution> right = this.rtype.apply(left.get()).unifyRepresentationWith(o.rtype.apply(left.get()));
+			
+			if(right.isEmpty()) {
 				return Optional.empty();
 			}
 
-			return left.get().union(right.get());
+			return Optional.of(left.get().compose(right.get()));
 		}
 		return Optional.empty();
 	}

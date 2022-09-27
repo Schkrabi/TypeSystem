@@ -2,9 +2,9 @@ package velka.core.abstraction;
 
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
+import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
-import velka.types.TypeSetDoesNotUnifyException;
 import velka.types.TypeVariable;
 
 import java.util.Collection;
@@ -24,7 +24,6 @@ import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
 import velka.util.NameGenerator;
 import velka.util.Pair;
-import velka.util.ThrowingBinaryOperator;
 
 /**
  * Expression for interpreted function with various implementations
@@ -73,17 +72,18 @@ public class ExtendedFunction extends ExtendedLambda {
 				Pair<Type, Substitution> p = e.infer(env, typeEnv);
 				s.add(p);
 			}
+			
+			Substitution aggregate = Substitution.EMPTY;
+			for(Pair<Type, Substitution> p : s) {
+				Optional<Substitution> opt = aggregate.merge(p.second);
+				if(opt.isEmpty()) {
+					throw new SubstitutionsCannotBeMergedException(aggregate, p.second);
+				}
+			}
 
 			return new Pair<Type, Substitution>(
 					RepresentationOr.makeRepresentationOr(s.stream().map(x -> x.first).collect(Collectors.toSet())),
-					s.stream().map(x -> x.second).reduce(Substitution.EMPTY,
-							ThrowingBinaryOperator.wrapper((x, y) -> {
-								Optional<Substitution> unifier = x.union(y);
-								if(unifier.isEmpty()) {
-									throw new TypeSetDoesNotUnifyException(s.stream().map(p -> p.first).collect(Collectors.toSet()));
-								}
-								return unifier.get();
-							})));
+					aggregate);
 
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);

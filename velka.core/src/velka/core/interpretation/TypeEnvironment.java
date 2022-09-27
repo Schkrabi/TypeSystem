@@ -333,9 +333,9 @@ public class TypeEnvironment {
 		typeEnvironment.addConstructor(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.constructor, env);
 		
 		//Set Bit Set
-		typeEnvironment.addRepresentation(JavaBitSet.TypeSetBitSet);
-		typeEnvironment.addConstructor(JavaBitSet.TypeSetBitSet, JavaBitSet.constructor, env);
-		typeEnvironment.addConstructor(JavaBitSet.TypeSetBitSet, JavaBitSet.nBitsConstructor, env);
+		typeEnvironment.addRepresentation(TypeAtom.TypeSetBitSet);
+		typeEnvironment.addConstructor(TypeAtom.TypeSetBitSet, JavaBitSet.constructor, env);
+		typeEnvironment.addConstructor(TypeAtom.TypeSetBitSet, JavaBitSet.nBitsConstructor, env);
 
 		// Conversions
 		typeEnvironment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, ConversionOperators.IntNativeToIntRoman);

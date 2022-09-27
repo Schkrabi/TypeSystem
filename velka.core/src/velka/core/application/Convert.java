@@ -1,7 +1,6 @@
 package velka.core.application;
 
 import velka.types.Substitution;
-import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypesDoesNotUnifyException;
 
@@ -64,13 +63,8 @@ public class Convert extends Expression {
 		if (!typeEnv.canConvert(this.from, this.to)) {
 			throw new ConversionException(this.to, this.expression);
 		}
-
-		Optional<Substitution> opt = s.get().union(p.second);
-		if(opt.isEmpty()) {
-			throw new SubstitutionsCannotBeMergedException(s.get(), p.second);
-		}
 		
-		return new Pair<Type, Substitution>(this.to, opt.get());
+		return new Pair<Type, Substitution>(this.to, s.get().compose(p.second));
 	}
 
 	@Override

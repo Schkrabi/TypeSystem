@@ -1,5 +1,6 @@
 package velka.types;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -9,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,6 +32,10 @@ public class Substitution {
 	private final TreeMap<TypeVariable, Type> elements = new TreeMap<TypeVariable, Type>();
 
 	private Substitution() {
+	}
+	
+	public Substitution(Substitution cloned) {
+		this.elements.putAll(cloned.elements);
 	}
 
 	public Substitution(Collection<Pair<TypeVariable, Type>> init) {
@@ -55,6 +61,14 @@ public class Substitution {
 		}
 		return Optional.of(t);
 	}
+	
+	/**
+	 * Gets copy of underlying set of pairs
+	 * @return set of pairs
+	 */
+	public Set<Pair<TypeVariable, Type>> asSet(){
+		return this.elements.entrySet().stream().map(e -> Pair.of(e.getKey(), e.getValue())).collect(Collectors.toSet());
+	}
 
 	/**
 	 * Returns true if this substitution contains substitution for given variable.
@@ -66,52 +80,83 @@ public class Substitution {
 	public boolean containsVariable(TypeVariable v) {
 		return this.elements.containsKey(v);
 	}
-
+	
 	/**
-	 * Composes this substitution with another to new substitution
-	 * @param other substitution
-	 * @return Optinal.Empty if substitutions cannot be merged. Otherwise Optional with merged substitution
+	 * Substitution composition as is defined in J.W.Lloyd: Logic Programming
+	 * @param other other substitution
+	 * @return new instance of Substitution that is composed from this and other
 	 */
-	public Optional<Substitution> union(Substitution other){
+	public Substitution compose(Substitution other) {
+		Substitution composed = new Substitution();
+		
+		for(Map.Entry<TypeVariable, Type> e : this.elements.entrySet()) {
+			TypeVariable v = e.getKey();
+			Type t = e.getValue().apply(other);
+			if(!v.equals(t)) {
+				composed.elements.put(v, t);
+			}
+		}
+		
+		Set<TypeVariable> excludedVariables = this.elements.keySet();
+		for(Map.Entry<TypeVariable, Type> e : other.elements.entrySet()) {
+			if(!excludedVariables.contains(e.getKey())) {
+				composed.elements.put(e.getKey(), e.getValue());
+			}
+		}
+		
+		return composed;
+	}
+	
+	/**
+	 * Creates new substitution, where on each right side of an element is applied the other substitution.
+	 * @param other substitution
+	 * @return new Substitution instance
+	 */
+	protected Substitution apply(Substitution other) {
+		Substitution ret = new Substitution();
+		
+		for(Map.Entry<TypeVariable, Type> e : this.elements.entrySet()) {
+			ret.elements.put(e.getKey(), e.getValue().apply(other));
+		}
+		
+		return ret;
+	}
+	
+	/**
+	 * Finds all common variables between this and other, where right sides of the substitutions are not equal
+	 * @param other substitution
+	 * @return set of TypeVariables
+	 */
+	protected Set<TypeVariable> conflictingVariables(Substitution other){
 		Set<TypeVariable> intersection = new TreeSet<TypeVariable>();
 		intersection.addAll(this.elements.keySet());
 		intersection.retainAll(other.elements.keySet());
-		
-		Substitution unifier = Substitution.EMPTY;
 
-		for (TypeVariable v : intersection) {
-			Optional<Substitution> mgu = Type.unifyTypes(this.get(v).get(), other.get(v).get());
+		return intersection.stream().filter(v -> !this.get(v).equals(other.get(v))).collect(Collectors.toSet());
+	}
+	
+	/**
+	 * Merges this substitution with another to new substitution
+	 * @param other substitution
+	 * @return Optinal.Empty if substitutions cannot be merged. Otherwise Optional with merged substitution
+	 */
+	public Optional<Substitution> merge(Substitution other){
+		Substitution s1 = new Substitution(this);
+		Substitution s2 = new Substitution(other);
+		
+		Set<TypeVariable> conflicting = s1.conflictingVariables(s2);
+		while(!conflicting.isEmpty()) {
+			TypeVariable v = conflicting.stream().findAny().get();
+			Optional<Substitution> mgu = Type.unifyTypes(s1.elements.get(v), s2.elements.get(v));
 			if(mgu.isEmpty()) {
 				return Optional.empty();
 			}
-			
-			Optional<Substitution> optUnifier = unifier.union(mgu.get()); 
-			if(optUnifier.isEmpty()) {
-				return Optional.empty();
-			}
-			
-			unifier = optUnifier.get();
+			s1 = s1.compose(mgu.get());
+			s2 = s2.compose(mgu.get());
+			conflicting = s1.conflictingVariables(s2);
 		}
 		
-		List<Pair<TypeVariable, Type>> l = new LinkedList<Pair<TypeVariable, Type>>();
-		
-		for(Map.Entry<TypeVariable, Type> e : this.elements.entrySet()){
-			TypeVariable var = e.getKey();
-			Type t = e.getValue().apply(unifier);
-			Pair<TypeVariable, Type> p = new Pair<TypeVariable, Type>(var, t);
-			l.add(p);
-		}
-		
-		for(Map.Entry<TypeVariable, Type> e : other.elements.entrySet()){
-			TypeVariable var = e.getKey();
-			Type t = e.getValue().apply(unifier);
-			Pair<TypeVariable, Type> p = new Pair<TypeVariable, Type>(var, t);
-			l.add(p);
-		}
-		
-		Substitution composition = new Substitution(l);
-
-		return Optional.of(composition);
+		return Optional.of(s1.compose(s2));
 	}
 
 	@Override
@@ -215,20 +260,16 @@ public class Substitution {
 	public int hashCode() {
 		return this.elements.hashCode();
 	}
-
-	public static Optional<Substitution> unionMany(Collection<Substitution> substitutions) throws AppendableException {
-		Substitution agg = Substitution.EMPTY;
-		
-		for(Substitution s : substitutions) {
-			Optional<Substitution> opt = agg.union(s);
-			if(opt.isEmpty()) {
-				return Optional.empty();
-			}
-			agg = opt.get();
-		}
-		
-		return Optional.of(agg);
-	}
+	
+	/**
+	 * Substitution collector
+	 */
+	public static final Collector<Pair<TypeVariable, Type>, ArrayList<Pair<TypeVariable, Type>>, Substitution> toSubstitution = 
+	Collector.of(
+			ArrayList<Pair<TypeVariable, Type>>::new,
+			ArrayList<Pair<TypeVariable, Type>>::add,
+			(ArrayList<Pair<TypeVariable, Type>> left, ArrayList<Pair<TypeVariable, Type>> right) -> { left.addAll(right); return left; },
+			(l) -> new Substitution(l));
 
 	/**
 	 * Empty substitution
