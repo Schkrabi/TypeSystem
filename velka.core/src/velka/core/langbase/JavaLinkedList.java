@@ -1589,10 +1589,11 @@ public class JavaLinkedList {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list),
-					ClojureHelper.applyClojureFunction("lazy-seq",
-							Type.addTypeMetaInfo(
-									ClojureHelper.applyClojureFunction("seq", ClojureHelper.getLiteralInnerValue(list)),
-									TypeAtom.TypeListNative)));
+					LitComposite.clojureValueToClojureLiteral(
+							ClojureHelper.applyClojureFunction(
+									"seq", 
+									ClojureHelper.getLiteralInnerValue(list)),
+							TypeAtom.TypeListNative));
 			return code;
 		}
 

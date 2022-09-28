@@ -500,46 +500,46 @@ class TestComplex {
 	void testClojureOperators() throws Exception {
 		
 		
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (+ 21 21))\n"); 
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (* 1 42))\n"); 
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (/ 84 2))\n"); 
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (- 63 21))\n");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (and #t #f))\n"); 
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-and 42 1))\n"); 
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-or 42 1))\n");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (concat \"Hello \" \"World\"))\n"); 
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (equals? 42 \"42\"))\n");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (< 42 42))\n"); 
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (not #t))\n"); 
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (= 42 42))\n");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (or #t #f))\n"); 
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (cons 42 \"42\"))\n");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (car (cons 42 \"42\")))\n"); 
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (cdr (cons 42 \"42\")))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (shr 2 1))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (shl 2 1))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (ushr 2 1))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (ushr -1 10))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-not 6))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-xor 6 5))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (to-str 42))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (str-split \"foo bar baz\" \" \"))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (parse-int \"42\"))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (ddiv 1.5 0.5))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (floor 3.141521))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (int-to-double 42))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (dadd 3.14 3.14))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (dlt 3.14 6.28))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (dlt 3.14 3.14))");
-//		
-//		File tempOut = File.createTempFile("velka_read_test", null);
-//        String content  = "hello world !!";       
-//        Files.writeString(tempOut.toPath(), content);
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (read-file \"" + tempOut.toPath().toString().replace("\\", "/") + "\"))");
-//		tempOut.delete();
-//		
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (mod 5 3))");
-//		TestComplex.assertIntprtAndCompPrintSameValues("(println (= (timestamp) 0))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (+ 21 21))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (* 1 42))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (/ 84 2))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (- 63 21))\n");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (and #t #f))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-and 42 1))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-or 42 1))\n");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (concat \"Hello \" \"World\"))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (equals? 42 \"42\"))\n");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (< 42 42))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (not #t))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (= 42 42))\n");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (or #t #f))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (cons 42 \"42\"))\n");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (car (cons 42 \"42\")))\n"); 
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (cdr (cons 42 \"42\")))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (shr 2 1))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (shl 2 1))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (ushr 2 1))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (ushr -1 10))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-not 6))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (bit-xor 6 5))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (to-str 42))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (str-split \"foo bar baz\" \" \"))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (parse-int \"42\"))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (ddiv 1.5 0.5))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (floor 3.141521))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (int-to-double 42))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (dadd 3.14 3.14))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (dlt 3.14 6.28))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (dlt 3.14 3.14))");
+		
+		File tempOut = File.createTempFile("velka_read_test", null);
+        String content  = "hello world !!";       
+        Files.writeString(tempOut.toPath(), content);
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (read-file \"" + tempOut.toPath().toString().replace("\\", "/") + "\"))");
+		tempOut.delete();
+		
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (mod 5 3))");
+		TestComplex.assertIntprtAndCompPrintSameValues("(println (= (timestamp) 0))");
 		TestComplex.assertIntprtAndCompPrintSameValues(
 				"(println (conversion-cost (lambda ((Int:Native x)) \"foo\") (tuple (construct Int Roman \"IV\"))))");
 		TestComplex.assertIntprtAndCompPrintSameValues(
@@ -1241,6 +1241,7 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 		TestComplex.assertIntprtAndCompPrintSameValues("(construct List JavaLinked)");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToEndSymbol_out.toString() + " (construct List JavaLinked) 42))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToIndexSymbol_out.toString() + " (construct List JavaLinked) 0 42))");
+		
 		TestComplex.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
@@ -1411,7 +1412,22 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(linked-list-iterator-next it)"
-						+ "(println (linked-list-iterator-next (linked-list-iterator-set it 42)))");		
+						+ "(println (linked-list-iterator-next (linked-list-iterator-set it 42)))");
+		
+		assertIntprtAndCompPrintSameValues(
+				"(define to-str-list-native-aux"
+				+ "    (let-type (A)"
+				+ "        (lambda ((List:Native l) (((A) #> String:Native) f-to-str))"
+				+ "            (if (is-list-native-empty l)"
+				+ "                \"\""
+				+ "                (concat "
+				+ "                    (f-to-str (head-list-native l))"
+				+ "                    (concat \" \" (to-str-list-native-aux (tail-list-native l) f-to-str)))))))"
+				+ "(define l1 (construct List JavaLinked))"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
+				+ "(println (to-str-list-native-aux l1 to-str))"
+				);
 	}
 	
 	@Test
