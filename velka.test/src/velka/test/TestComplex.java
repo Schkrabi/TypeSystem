@@ -1364,6 +1364,10 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				+ "(println (" + JavaLinkedList.getSymbol_out + " l 0))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))");
 		TestComplex.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))");
+		assertIntprtAndCompPrintSameValues(
+				"(define l (construct List JavaLinked))\n"
+				+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+				+ "(println (java-linked-list-to-str l))");		
 		
 		assertIntprtAndCompPrintSameValues(
 				"(define l (construct List JavaLinked))\n"
@@ -1373,7 +1377,8 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
-						+ "(println (linked-list-iterator-next (linked-list-iterator-add it 42)))");
+						+ "(println (linked-list-iterator-next (linked-list-iterator-add it 42)))"
+						+ "(println (java-linked-list-to-str l))");
 		
 		assertIntprtAndCompPrintSameValues(
 				"(define l (construct List JavaLinked))\n"
@@ -1406,28 +1411,15 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(linked-list-iterator-next it)"
-						+ "(println (linked-list-iterator-next (linked-list-iterator-remove it)))");
+						+ "(println (linked-list-iterator-next (linked-list-iterator-remove it)))"
+						+ "(println (java-linked-list-to-str l))");
 		assertIntprtAndCompPrintSameValues(
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(linked-list-iterator-next it)"
-						+ "(println (linked-list-iterator-next (linked-list-iterator-set it 42)))");
-		
-		assertIntprtAndCompPrintSameValues(
-				"(define to-str-list-native-aux"
-				+ "    (let-type (A)"
-				+ "        (lambda ((List:Native l) (((A) #> String:Native) f-to-str))"
-				+ "            (if (is-list-native-empty l)"
-				+ "                \"\""
-				+ "                (concat "
-				+ "                    (f-to-str (head-list-native l))"
-				+ "                    (concat \" \" (to-str-list-native-aux (tail-list-native l) f-to-str)))))))"
-				+ "(define l1 (construct List JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(println (to-str-list-native-aux l1 to-str))"
-				);
+						+ "(println (linked-list-iterator-next (linked-list-iterator-set it 42)))"
+						+ "(println (java-linked-list-to-str l))");
 	}
 	
 	@Test

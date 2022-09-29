@@ -19,6 +19,7 @@ import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
+import velka.core.literal.LitString;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -1688,6 +1689,57 @@ public class JavaLinkedList {
 		}
 	};
 	
+	public static final Symbol toStrSymbol = new Symbol("velka-to-str", NAMESPACE);
+	public static final Symbol toStrSymbol_out = new Symbol("java-linked-list-to-str");
+	
+	@VelkaOperator
+	@Description("Returns readable string representation of list.")
+	@Example("(define l (construct List JavaLinked))\n"
+			+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
+			+ "(java-linked-list-to-str l)")
+	@Syntax("(java-linked-list-to-str <list>)")
+	public static final Operator toStr = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String list = "_list";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(list),
+					LitString.clojureStringToClojureLitString(
+							ClojureHelper.applyClojureFunction(
+									".toString",
+									ClojureHelper.getLiteralInnerValue(list))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return toStrSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitComposite list_lc = (LitComposite)args.get(0);
+			LitInteropObject list_io = (LitInteropObject)list_lc.value;
+			LinkedList<?> list = (LinkedList<?>)list_io.javaObject;
+			return new LitString(list.toString());
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(new TypeTuple(TypeListJavaLinked),
+					TypeAtom.TypeStringNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return toStrSymbol_out.toString();
+		}
+		
+	};
+	
 	public static final Symbol listIteratorSymbol = new Symbol("list-iterator", NAMESPACE);
 	public static final Symbol listIteratorSymbol_out = new Symbol("java-linked-list-iterator");
 	
@@ -1773,7 +1825,7 @@ public class JavaLinkedList {
 									ClojureHelper.applyClojureFunction(
 											".add",
 											ClojureHelper.getLiteralInnerValue(listIt),
-											ClojureHelper.getLiteralInnerValue(element)),
+											element),
 									listIt)));
 			return code;
 		}
@@ -2223,7 +2275,7 @@ public class JavaLinkedList {
 									ClojureHelper.applyClojureFunction(
 											".set",
 											ClojureHelper.getLiteralInnerValue(it),
-											ClojureHelper.getLiteralInnerValue(element)),
+											element),
 									it)));
 			return code;
 		}

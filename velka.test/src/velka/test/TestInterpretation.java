@@ -1924,6 +1924,14 @@ class TestInterpretation {
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaLinkedList.addAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
+		
+		testInterpretString(
+				"(define l1 (construct List JavaLinked))\n"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
+				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
+				+ "(" + JavaLinkedList.toStrSymbol_out + " l1)",
+				new LitString("[[42], [42]]"));
+		
 		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
@@ -2133,9 +2141,11 @@ class TestInterpretation {
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
-						+ "(linked-list-iterator-next (linked-list-iterator-add it 42))",
-				li.next());
+						+ "(linked-list-iterator-next (linked-list-iterator-add it 42))"
+						+ "(java-linked-list-to-str l)",
+				new LitString("[[42], [0], [2], [4], [6], [8], [10], [12], [14], [16], [18]]"));
 		
+		li.next();
 		li.remove();
 		testInterpretString(
 				"(define l (construct List JavaLinked))\n"
@@ -2184,9 +2194,11 @@ class TestInterpretation {
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(linked-list-iterator-next it)"
-						+ "(linked-list-iterator-next (linked-list-iterator-remove it))",
-				li.next());
+						+ "(linked-list-iterator-next (linked-list-iterator-remove it))"
+						+ "(java-linked-list-to-str l)",
+				new LitString("[[0], [2], [4], [8], [10], [12], [14], [16], [18]]"));
 		
+		li.next();
 		li.add(new LitInteger(8));
 		li.previous();
 		li.set(new LitInteger(42));
