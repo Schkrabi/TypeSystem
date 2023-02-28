@@ -72,7 +72,7 @@ public final class ConversionOperators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] " + Literal.clojureValueToClojureLiteral(
-					LitString.clojureStringToClojureLitString("(" + RomanNumbers.int2RomanClojure + " (get _x 0))"),
+					LitString.clojureLit("(" + RomanNumbers.int2RomanClojure + " (get _x 0))"),
 					TypeAtom.TypeIntRoman) + ")";
 		}
 
@@ -112,7 +112,7 @@ public final class ConversionOperators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] " + Literal.clojureValueToClojureLiteral(
-					LitString.clojureStringToClojureLitString("(Integer/toString (get _x 0))"), TypeAtom.TypeIntString)
+					LitString.clojureLit("(Integer/toString (get _x 0))"), TypeAtom.TypeIntString)
 					+ ")";
 		}
 
@@ -153,7 +153,7 @@ public final class ConversionOperators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] " + LitInteger
-					.clojureIntToClojureLitInteger("(" + RomanNumbers.roman2intClojure + " (get (get _x 0) 0))") + ")";
+					.clojureLit("(" + RomanNumbers.roman2intClojure + " (get (get _x 0) 0))") + ")";
 		}
 
 		@Override
@@ -194,7 +194,7 @@ public final class ConversionOperators {
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] "
 					+ Literal.clojureValueToClojureLiteral(
-							LitString.clojureStringToClojureLitString(
+							LitString.clojureLit(
 									"(str (" + RomanNumbers.roman2intClojure + " (get (get _x 0) 0)))"),
 							TypeAtom.TypeIntString)
 					+ ")";
@@ -237,7 +237,7 @@ public final class ConversionOperators {
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] " + LitInteger.clojureIntToClojureLitInteger("(Integer/parseInt (get (get _x 0) 0))")
+			return "(fn [_x] " + LitInteger.clojureLit("(Integer/parseInt (get (get _x 0) 0))")
 					+ ")";
 		}
 
@@ -278,7 +278,7 @@ public final class ConversionOperators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			return "(fn [_x] " + Literal.clojureValueToClojureLiteral(
-					LitString.clojureStringToClojureLitString(
+					LitString.clojureLit(
 							"(" + RomanNumbers.int2RomanClojure + " (Integer/parseInt (get (get _x 0) 0)))"),
 					TypeAtom.TypeIntRoman) + ")";
 		}

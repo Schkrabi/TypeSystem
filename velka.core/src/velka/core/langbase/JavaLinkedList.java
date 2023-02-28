@@ -554,7 +554,7 @@ public class JavaLinkedList {
 			String object = "_object";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, object),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 						ClojureHelper.applyClojureFunction(
 								".indexOf",
 								ClojureHelper.getLiteralInnerValue(list),
@@ -682,7 +682,7 @@ public class JavaLinkedList {
 			String object = "_object";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, object),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".lastIndexOf",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -1048,7 +1048,7 @@ public class JavaLinkedList {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".size",
 									ClojureHelper.getLiteralInnerValue(list))));
@@ -1230,11 +1230,12 @@ public class JavaLinkedList {
 
 			return new LitComposite(new LitInteropObject(rslt), JavaLinkedList.TypeListJavaLinked);
 		}
+		
+		private TypeVariable A = new TypeVariable(NameGenerator.next());
+		private TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeVariable B = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(JavaLinkedList.TypeListJavaLinked, new TypeArrow(new TypeTuple(A), B)),
 					JavaLinkedList.TypeListJavaLinked);
@@ -1332,11 +1333,12 @@ public class JavaLinkedList {
 			return new LitComposite(new LitInteropObject(rslt), JavaLinkedList.TypeListJavaLinked);
 		}
 
+		private TypeVariable A = new TypeVariable(NameGenerator.next());
+		private TypeVariable B = new TypeVariable(NameGenerator.next());
+		private TypeVariable C = new TypeVariable(NameGenerator.next());
+		
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeVariable B = new TypeVariable(NameGenerator.next());
-			TypeVariable C = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked,
 					JavaLinkedList.TypeListJavaLinked, new TypeArrow(new TypeTuple(A, B), C)),
 					JavaLinkedList.TypeListJavaLinked);
@@ -1418,12 +1420,14 @@ public class JavaLinkedList {
 
 			return rslt;
 		}
-
+		
+		private TypeVariable A = new TypeVariable(NameGenerator.next());
+		private TypeVariable B = new TypeVariable(NameGenerator.next());
+		
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(
-					new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, JavaLinkedList.TypeListJavaLinked)), A);
+					new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, JavaLinkedList.TypeListJavaLinked)), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1499,12 +1503,15 @@ public class JavaLinkedList {
 
 			return agg;
 		}
+		
+		private TypeVariable A = new TypeVariable(NameGenerator.next());
+		private TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
+			
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(
-					new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, JavaLinkedList.TypeListJavaLinked)), A);
+					new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, JavaLinkedList.TypeListJavaLinked)), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1705,7 +1712,7 @@ public class JavaLinkedList {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list),
-					LitString.clojureStringToClojureLitString(
+					LitString.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".toString",
 									ClojureHelper.getLiteralInnerValue(list))));
@@ -1757,7 +1764,7 @@ public class JavaLinkedList {
 			String index = "_index";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, index),
-					LitComposite.litCompositeHelper(
+					LitComposite.clojureLit(
 							TypeIterator,
 							ClojureHelper.applyClojureFunction(
 									".listIterator",
@@ -2045,7 +2052,7 @@ public class JavaLinkedList {
 			String it = "_iterator";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(it),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".nextIndex",
 									ClojureHelper.getLiteralInnerValue(it))));
@@ -2153,7 +2160,7 @@ public class JavaLinkedList {
 			String it = "_iterator";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(it),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".previousIndex",
 									ClojureHelper.getLiteralInnerValue(it))));

@@ -336,6 +336,10 @@ public class TypeEnvironment {
 		typeEnvironment.addRepresentation(TypeAtom.TypeSetBitSet);
 		typeEnvironment.addConstructor(TypeAtom.TypeSetBitSet, JavaBitSet.constructor, env);
 		typeEnvironment.addConstructor(TypeAtom.TypeSetBitSet, JavaBitSet.nBitsConstructor, env);
+		
+		//Scanner
+		typeEnvironment.addRepresentation(velka.core.langbase.Scanner.TYPE);
+		typeEnvironment.addConstructor(velka.core.langbase.Scanner.TYPE, velka.core.langbase.Scanner.constructor, env);
 
 		// Conversions
 		typeEnvironment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, ConversionOperators.IntNativeToIntRoman);

@@ -96,7 +96,7 @@ public final class Operators {
 			String y = "_y";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(x, y),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction("unchecked-add",
 									ClojureHelper.getLiteralInnerValue(x),
 									ClojureHelper.getLiteralInnerValue(y))));
@@ -142,7 +142,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitInteger.clojureIntToClojureLitInteger("(bit-and (get _x 0) (get _y 0))") + ")";
+			return "(fn [_x _y] " + LitInteger.clojureLit("(bit-and (get _x 0) (get _y 0))") + ")";
 		}
 
 		@Override
@@ -162,7 +162,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_val] " + LitInteger.clojureIntToClojureLitInteger("(bit-not (first _val))") + ")";
+			String code = "(fn [_val] " + LitInteger.clojureLit("(bit-not (first _val))") + ")";
 			return code;
 		}
 
@@ -223,7 +223,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitInteger.clojureIntToClojureLitInteger("(bit-or (get _x 0) (get _y 0))") + ")";
+			return "(fn [_x _y] " + LitInteger.clojureLit("(bit-or (get _x 0) (get _y 0))") + ")";
 		}
 
 		@Override
@@ -244,7 +244,7 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_num _n] "
-					+ LitInteger.clojureIntToClojureLitInteger("(bit-shift-left (first _num) (first _n))") + ")";
+					+ LitInteger.clojureLit("(bit-shift-left (first _num) (first _n))") + ")";
 			return code;
 		}
 
@@ -296,7 +296,7 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_num _n] "
-					+ LitInteger.clojureIntToClojureLitInteger("(bit-shift-right (first _num) (first _n))") + ")";
+					+ LitInteger.clojureLit("(bit-shift-right (first _num) (first _n))") + ")";
 			return code;
 		}
 
@@ -341,7 +341,7 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_val1 _val2] "
-					+ LitInteger.clojureIntToClojureLitInteger("(bit-xor (first _val1) (first _val2))") + ")";
+					+ LitInteger.clojureLit("(bit-xor (first _val1) (first _val2))") + ")";
 			return code;
 		}
 
@@ -601,7 +601,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitString.clojureStringToClojureLitString("(str (get _x 0) (get _y 0))") + ")";
+			return "(fn [_x _y] " + LitString.clojureLit("(str (get _x 0) (get _y 0))") + ")";
 		}
 
 		@Override
@@ -638,7 +638,7 @@ public final class Operators {
 			
 			String code = ClojureHelper.fnHelper(Arrays.asList(fun, arg),
 					ClojureHelper.letHelper(
-							LitInteger.clojureIntToClojureLitInteger(
+							LitInteger.clojureLit(
 									ClojureHelper.applyClojureFunction(
 											"reduce",
 											"+",
@@ -781,7 +781,7 @@ public final class Operators {
 			String y = "_y";
 			String code = ClojureHelper.fnHelper(
 							Arrays.asList(x, y),
-							LitInteger.clojureIntToClojureLitInteger(
+							LitInteger.clojureLit(
 								ClojureHelper.applyClojureFunction("int",
 										ClojureHelper.applyClojureFunction("/",
 												ClojureHelper.getLiteralInnerValue(x),
@@ -812,7 +812,7 @@ public final class Operators {
 			String d2 = "_d2";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(d1, d2), 
-					LitDouble.clojureDoubleToClojureLitDouble("(+ (first " + d1 + ") (first " + d2 + "))"));
+					LitDouble.clojureLit("(+ (first " + d1 + ") (first " + d2 + "))"));
 			return code;
 		}
 
@@ -859,7 +859,7 @@ public final class Operators {
 			String y = "_y";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(x, y), 
-					LitDouble.clojureDoubleToClojureLitDouble("(/ (first " + x + ") (first " + y + "))"));
+					LitDouble.clojureLit("(/ (first " + x + ") (first " + y + "))"));
 			return code;
 		}
 
@@ -1077,7 +1077,7 @@ public final class Operators {
 			String i = "_i";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(i), 
-					LitDouble.clojureDoubleToClojureLitDouble("(double (first " + i + "))"));
+					LitDouble.clojureLit("(double (first " + i + "))"));
 			return code;
 		}
 
@@ -1121,7 +1121,7 @@ public final class Operators {
 			String d = "_d";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(d), 
-					LitInteger.clojureIntToClojureLitInteger("(int (Math/floor (first " + d + ")))"));
+					LitInteger.clojureLit("(int (Math/floor (first " + d + ")))"));
 			return code;
 		}
 
@@ -1364,7 +1364,7 @@ public final class Operators {
 			String j = "_j";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(i, j), 
-					LitInteger.clojureIntToClojureLitInteger(ClojureHelper.applyClojureFunction("mod", 
+					LitInteger.clojureLit(ClojureHelper.applyClojureFunction("mod", 
 							ClojureHelper.getLiteralInnerValue(i),
 							ClojureHelper.getLiteralInnerValue(j))));
 			return code;
@@ -1434,7 +1434,7 @@ public final class Operators {
 			String y = "_y";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(x, y),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction("unchecked-multiply",
 									ClojureHelper.getLiteralInnerValue(x),
 									ClojureHelper.getLiteralInnerValue(y))));
@@ -1536,7 +1536,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_str] " + LitInteger.clojureIntToClojureLitInteger("(Integer/parseInt (first _str))")
+			String code = "(fn [_str] " + LitInteger.clojureLit("(Integer/parseInt (first _str))")
 					+ ")";
 			return code;
 		}
@@ -1612,7 +1612,7 @@ public final class Operators {
 			String str = "_str";
 			return ClojureHelper.fnHelper(Arrays.asList(expr), 
 					ClojureHelper.letHelper(
-							LitInteger.clojureIntToClojureLitInteger(
+							LitInteger.clojureLit(
 								ClojureHelper.applyClojureFunction("second",
 										ClojureHelper.applyClojureFunction("doall",
 												ClojureHelper.clojureVectorHelper(
@@ -1639,7 +1639,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_path] " + LitString.clojureStringToClojureLitString("(slurp (first _path))") + ")";
+			String code = "(fn [_path] " + LitString.clojureLit("(slurp (first _path))") + ")";
 			return code;
 		}
 
@@ -1689,7 +1689,7 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_str _by] (" + ClojureCoreSymbols.tuple2velkaListSymbol_full + " (map (fn [_s] "
-					+ LitString.clojureStringToClojureLitString("_s") + ") "
+					+ LitString.clojureLit("_s") + ") "
 					+ "(clojure.string/split (first _str) (re-pattern (first _by))))))";
 			return code;
 		}
@@ -1763,7 +1763,7 @@ public final class Operators {
 			String y = "_y";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(x, y),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction("unchecked-subtract",
 									ClojureHelper.getLiteralInnerValue(x),
 									ClojureHelper.getLiteralInnerValue(y))));
@@ -1792,7 +1792,7 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = ClojureHelper.fnHelper(Arrays.asList(),
-					LitInteger.clojureIntToClojureLitInteger("(System/currentTimeMillis)"));
+					LitInteger.clojureLit("(System/currentTimeMillis)"));
 			return code;
 		}
 
@@ -1830,7 +1830,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_arg] " + LitString.clojureStringToClojureLitString("(str _arg)") + ")";
+			String code = "(fn [_arg] " + LitString.clojureLit("(str _arg)") + ")";
 			return code;
 		}
 
@@ -1889,7 +1889,7 @@ public final class Operators {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String code = "(fn [_num _n] "
-					+ LitInteger.clojureIntToClojureLitInteger("(unsigned-bit-shift-right (first _num) (first _n))") + ")";
+					+ LitInteger.clojureLit("(unsigned-bit-shift-right (first _num) (first _n))") + ")";
 			return code;
 		}
 

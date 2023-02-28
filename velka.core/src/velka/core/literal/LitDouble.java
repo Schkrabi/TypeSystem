@@ -72,7 +72,7 @@ public class LitDouble extends Literal {
 	 * @param clojureCode code providing double value for literal
 	 * @return clojure code
 	 */
-	public static String clojureDoubleToClojureLitDouble(String clojureCode) {
+	public static String clojureLit(String clojureCode) {
 		return Literal.clojureValueToClojureLiteral(clojureCode, TypeAtom.TypeDoubleNative);
 	}
 }

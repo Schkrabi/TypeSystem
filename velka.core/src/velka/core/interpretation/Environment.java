@@ -244,6 +244,7 @@ public class Environment implements Comparable<Environment> {
 		JavaArrayList.initializeInEnvironment(env);
 		OperatorBankUtil.initializeInEnvironment(JavaLinkedList.class, env);
 		OperatorBankUtil.initializeInEnvironment(JavaBitSet.class, env);
+		OperatorBankUtil.initializeInEnvironment(velka.core.langbase.Scanner.class, env);
 		
 		return env;
 	}

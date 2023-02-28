@@ -71,7 +71,7 @@ public class LitString extends Literal {
 	 * @param clojureCode code providing string value for literal
 	 * @return clojure code
 	 */
-	public static String clojureStringToClojureLitString(String clojureCode) {
+	public static String clojureLit(String clojureCode) {
 		return Literal.clojureValueToClojureLiteral(clojureCode, TypeAtom.TypeStringNative);
 	}
 }

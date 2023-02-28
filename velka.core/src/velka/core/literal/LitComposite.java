@@ -98,7 +98,7 @@ public class LitComposite extends Literal {
 	 * @return string with code
 	 * @throws AppendableException if there is issue with compiling type into clojure
 	 */
-	public static String litCompositeHelper(Type type, String value) throws AppendableException {
+	public static String clojureLit(Type type, String value) throws AppendableException {
 		return ClojureHelper.litCompositeHelper_str(type.clojureTypeRepresentation(), value);
 	}
 }

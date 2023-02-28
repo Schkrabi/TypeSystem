@@ -16,6 +16,7 @@ import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
+import velka.core.langbase.Scanner;
 
 /**
  * Main entry point for testing
@@ -83,7 +84,8 @@ public class Main {
 							JavaLinkedList.class,
 							ListNative.class,
 							ConstructorOperators.class,
-							JavaBitSet.class),
+							JavaBitSet.class,
+							Scanner.class),
 					Paths.get(fileArg));
 			break;
 		case HELP:

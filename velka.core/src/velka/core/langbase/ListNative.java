@@ -954,7 +954,7 @@ public class ListNative {
 													ClojureHelper.applyClojureFunction("map",
 															ClojureHelper.fnHelper(Arrays.asList(arg),
 																	ClojureHelper.applyVelkaFunction(fn,
-																			LitInteger.clojureIntToClojureLitInteger(
+																			LitInteger.clojureLit(
 																					arg))),
 															ClojureHelper.applyClojureFunction("range",
 																	ClojureHelper.getLiteralInnerValue(n)))),
@@ -1079,7 +1079,7 @@ public class ListNative {
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String list = "_list";
-			String code = ClojureHelper.fnHelper(Arrays.asList(list), LitInteger.clojureIntToClojureLitInteger(
+			String code = ClojureHelper.fnHelper(Arrays.asList(list), LitInteger.clojureLit(
 					ClojureHelper.applyClojureFunction("count", ClojureHelper.getLiteralInnerValue(list))));
 
 			return code;

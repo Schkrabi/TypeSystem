@@ -14,7 +14,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -25,14 +24,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import velka.compiler.LangbaseDocumentationGenerator;
-import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.ConstructorOperators;
 import velka.core.abstraction.ConversionOperators;
 import velka.core.abstraction.ExtendedFunction;
 import velka.core.abstraction.ExtendedLambda;
 import velka.core.abstraction.Function;
 import velka.core.abstraction.Lambda;
-import velka.core.abstraction.Operator;
 import velka.core.abstraction.Operators;
 import velka.core.application.AbstractionApplication;
 import velka.core.application.AndExpression;
@@ -73,7 +70,6 @@ import velka.core.literal.LitEnum;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
-import velka.parser.Parser;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.SubstitutionsCannotBeMergedException;
@@ -90,7 +86,7 @@ import velka.util.AppendableException;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 
-class TestInterpretation {
+class TestInterpretation extends VelkaTest{
 
 	@Test
 	@DisplayName("Test String Literal")
@@ -105,14 +101,14 @@ class TestInterpretation {
 			litString.toClojureCode(env, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(litString);
-		TestInterpretation.testDifference(litString, new LitString(" "));
-		TestInterpretation.testDifference(litString, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(litString);
+		this.assertDifference(litString, new LitString(" "));
+		this.assertDifference(litString, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(litString, litString, env, typeEnv);
+		this.assertInterpretationEquals(litString, litString, env, typeEnv);
 
 		Pair<Type, Substitution> p = litString.infer(env, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeStringNative, litString, true);
+		this.assertInference(p, TypeAtom.TypeStringNative, litString, true);
 	}
 
 	@Test
@@ -128,14 +124,14 @@ class TestInterpretation {
 			litInteger.toClojureCode(env, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(litInteger);
-		TestInterpretation.testDifference(litInteger, new LitInteger(0));
-		TestInterpretation.testDifference(litInteger, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(litInteger);
+		this.assertDifference(litInteger, new LitInteger(0));
+		this.assertDifference(litInteger, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(litInteger, litInteger, env, typeEnv);
+		this.assertInterpretationEquals(litInteger, litInteger, env, typeEnv);
 
 		Pair<Type, Substitution> p = litInteger.infer(env, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, litInteger, true);
+		this.assertInference(p, TypeAtom.TypeIntNative, litInteger, true);
 	}
 
 	@Test
@@ -151,28 +147,28 @@ class TestInterpretation {
 			litDouble.toClojureCode(env, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(litDouble);
-		TestInterpretation.testDifference(litDouble, new LitDouble(0));
-		TestInterpretation.testDifference(litDouble, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(litDouble);
+		this.assertDifference(litDouble, new LitDouble(0));
+		this.assertDifference(litDouble, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(litDouble, litDouble, env, typeEnv);
+		this.assertInterpretationEquals(litDouble, litDouble, env, typeEnv);
 
 		Pair<Type, Substitution> p = litDouble.infer(env, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeDoubleNative, litDouble, true);
+		this.assertInference(p, TypeAtom.TypeDoubleNative, litDouble, true);
 	}
 
 	@Test
 	@DisplayName("Test Boolean Literal")
 	public void testLitBoolean() throws AppendableException {
-		TestInterpretation.testReflexivity(LitBoolean.TRUE);
-		TestInterpretation.testDifference(LitBoolean.TRUE, LitBoolean.FALSE);
-		TestInterpretation.testDifference(LitBoolean.FALSE, LitBoolean.TRUE);
-		TestInterpretation.testDifference(LitBoolean.TRUE, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(LitBoolean.TRUE);
+		this.assertDifference(LitBoolean.TRUE, LitBoolean.FALSE);
+		this.assertDifference(LitBoolean.FALSE, LitBoolean.TRUE);
+		this.assertDifference(LitBoolean.TRUE, Expression.EMPTY_EXPRESSION);
 
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		TestInterpretation.testInterpretation(LitBoolean.TRUE, LitBoolean.TRUE, env, typeEnv);
+		this.assertInterpretationEquals(LitBoolean.TRUE, LitBoolean.TRUE, env, typeEnv);
 
 		assertAll(() -> {
 			LitBoolean.TRUE.toString();
@@ -180,7 +176,7 @@ class TestInterpretation {
 		});
 
 		Pair<Type, Substitution> p = LitBoolean.TRUE.infer(env, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, LitBoolean.TRUE, true);
+		this.assertInference(p, TypeAtom.TypeBoolNative, LitBoolean.TRUE, true);
 	}
 
 	@Test
@@ -193,18 +189,18 @@ class TestInterpretation {
 		LitEnum enumValue2 = new LitEnum("value2", type);
 		LitEnum differentEnumValue = new LitEnum("value1", TypeAtom.TypeInt);
 
-		TestInterpretation.testReflexivity(enumValue1);
-		TestInterpretation.testDifference(enumValue1, enumValue2);
-		TestInterpretation.testDifference(enumValue1, differentEnumValue);
-		TestInterpretation.testDifference(enumValue1, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(enumValue1);
+		this.assertDifference(enumValue1, enumValue2);
+		this.assertDifference(enumValue1, differentEnumValue);
+		this.assertDifference(enumValue1, Expression.EMPTY_EXPRESSION);
 
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		TestInterpretation.testInterpretation(enumValue1, enumValue1, env, typeEnv);
+		this.assertInterpretationEquals(enumValue1, enumValue1, env, typeEnv);
 
 		Pair<Type, Substitution> p = enumValue1.infer(env, typeEnv);
-		TestInterpretation.testInference(p, type, enumValue1, true);
+		this.assertInference(p, type, enumValue1, true);
 
 		assertAll(() -> {
 			enumValue1.toString();
@@ -226,18 +222,18 @@ class TestInterpretation {
 		LitComposite composite3 = new LitComposite(
 				new Tuple(Arrays.asList(new LitInteger(42), LitBoolean.TRUE, new LitString("test"))), TypeAtom.TypeInt);
 
-		TestInterpretation.testReflexivity(composite1);
-		TestInterpretation.testDifference(composite1, composite2);
-		TestInterpretation.testDifference(composite1, composite3);
-		TestInterpretation.testDifference(composite1, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(composite1);
+		this.assertDifference(composite1, composite2);
+		this.assertDifference(composite1, composite3);
+		this.assertDifference(composite1, Expression.EMPTY_EXPRESSION);
 
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		TestInterpretation.testInterpretation(composite1, composite1, env, typeEnv);
+		this.assertInterpretationEquals(composite1, composite1, env, typeEnv);
 
 		Pair<Type, Substitution> p = composite1.infer(env, typeEnv);
-		TestInterpretation.testInference(p, type, composite1);
+		this.assertInference(p, type, composite1);
 
 		assertAll(() -> {
 			composite1.toString();
@@ -259,18 +255,18 @@ class TestInterpretation {
 			typeHolder.hashCode();
 		});
 
-		TestInterpretation.testReflexivity(typeHolder);
-		TestInterpretation.testDifference(typeHolder, new TypeHolder(TypeAtom.TypeIntNative));
-		TestInterpretation.testDifference(typeHolder, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(typeHolder);
+		this.assertDifference(typeHolder, new TypeHolder(TypeAtom.TypeIntNative));
+		this.assertDifference(typeHolder, Expression.EMPTY_EXPRESSION);
 
 		Pair<Type, Substitution> p = typeHolder.infer(env, typeEnv);
-		TestInterpretation.testInference(p, TypeTuple.EMPTY_TUPLE, typeHolder, true);
+		this.assertInference(p, TypeTuple.EMPTY_TUPLE, typeHolder, true);
 
 		TypeHolder placeholder = new TypeHolder(TypeAtom.TypeInt, new Symbol("x"));
 		Environment bound = Environment.create(env);
 		bound.put(new Symbol("x"), new LitInteger(42));
 
-		TestInterpretation.testInterpretation(placeholder, new LitInteger(42), bound, typeEnv);
+		this.assertInterpretationEquals(placeholder, new LitInteger(42), bound, typeEnv);
 		assertThrows(AppendableException.class, () -> placeholder.interpret(env, typeEnv));
 
 		TypeHolder placeholder2 = new TypeHolder(TypeAtom.TypeInt, new Symbol("__q"));
@@ -279,7 +275,7 @@ class TestInterpretation {
 
 		Environment bound2 = Environment.create(bound);
 		bound2.put(new Symbol("x"), placeholder);
-		TestInterpretation.testInterpretation(placeholder, new LitInteger(42), bound2, typeEnv);
+		this.assertInterpretationEquals(placeholder, new LitInteger(42), bound2, typeEnv);
 	}
 
 	@Test
@@ -295,21 +291,21 @@ class TestInterpretation {
 			variable.toClojureCode(env, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(variable);
-		TestInterpretation.testDifference(variable, new Symbol("y"));
-		TestInterpretation.testDifference(variable, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(variable);
+		this.assertDifference(variable, new Symbol("y"));
+		this.assertDifference(variable, Expression.EMPTY_EXPRESSION);
 
 		LitInteger value = new LitInteger(128);
 		Environment bound = Environment.create(env);
 		bound.put(variable, value);
 
-		TestInterpretation.testInterpretation(variable, variable, env, typeEnv);
+		this.assertInterpretationEquals(variable, variable, env, typeEnv);
 		Pair<Type, Substitution> p = variable.infer(env, typeEnv);
-		TestInterpretation.testInferenceOfType(p, TypeVariable.class, variable);
+		this.assertInferenceClass(p, TypeVariable.class, variable);
 
-		TestInterpretation.testInterpretation(variable, value, bound, typeEnv);
+		this.assertInterpretationEquals(variable, value, bound, typeEnv);
 		p = variable.infer(bound, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, variable);
+		this.assertInference(p, TypeAtom.TypeIntNative, variable);
 
 		final Environment fault = Environment.create(env);
 		fault.put(variable, new Expression() {
@@ -344,9 +340,9 @@ class TestInterpretation {
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
-		TestInterpretation.testInference(Expression.EMPTY_EXPRESSION.infer(env, typeEnv), TypeTuple.EMPTY_TUPLE,
+		this.assertInference(Expression.EMPTY_EXPRESSION.infer(env, typeEnv), TypeTuple.EMPTY_TUPLE,
 				Expression.EMPTY_EXPRESSION, true);
-		TestInterpretation.testInterpretation(Expression.EMPTY_EXPRESSION, Expression.EMPTY_EXPRESSION, env, typeEnv);
+		this.assertInterpretationEquals(Expression.EMPTY_EXPRESSION, Expression.EMPTY_EXPRESSION, env, typeEnv);
 
 		assertAll(() -> {
 			Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv);
@@ -371,13 +367,13 @@ class TestInterpretation {
 
 		assertThrows(ArrayIndexOutOfBoundsException.class, () -> tuple.get(4));
 
-		TestInterpretation.testReflexivity(tuple);
-		TestInterpretation.testDifference(tuple, Tuple.EMPTY_TUPLE);
-		TestInterpretation.testDifference(tuple, Expression.EMPTY_EXPRESSION);
-		TestInterpretation.testDifference(tuple,
+		this.assertReflexivity(tuple);
+		this.assertDifference(tuple, Tuple.EMPTY_TUPLE);
+		this.assertDifference(tuple, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(tuple,
 				new Tuple(Arrays.asList(tuple.get(0), new LitDouble(3.14), tuple.get(2))));
 
-		TestInterpretation.testInterpretation(tuple, tuple, env, typeEnv);
+		this.assertInterpretationEquals(tuple, tuple, env, typeEnv);
 		Pair<Type, Substitution> p = tuple.infer(env, typeEnv);
 		assertTrue(p.first instanceof TypeTuple);
 		assertEquals(((TypeTuple) p.first).get(0), TypeAtom.TypeIntNative);
@@ -387,10 +383,10 @@ class TestInterpretation {
 		Environment bound = Environment.create(env);
 		bound.put(new Symbol("x"), new LitDouble(3.14));
 
-		TestInterpretation.testInterpretation(tuple,
+		this.assertInterpretationEquals(tuple,
 				new Tuple(Arrays.asList(new LitInteger(128), new LitDouble(3.14), LitBoolean.FALSE)), bound, typeEnv);
 		p = tuple.infer(bound, typeEnv);
-		TestInterpretation.testInference(p,
+		this.assertInference(p,
 				new TypeTuple(
 						Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeDoubleNative, TypeAtom.TypeBoolNative)),
 				tuple);
@@ -420,7 +416,8 @@ class TestInterpretation {
 		}))).infer(env, typeEnv));
 		
 		//Test if cross-used bound variables in tuples are infered correctly
-		Expression e = parseString("(let-type (A) (lambda ((A x)) (tuple (+ x 0) (floor x))))");
+		Expression e = parseString("(let-type (A) (lambda ((A x)) (tuple (+ x 0) (floor x))))")
+				.get(0);
 		
 		assertThrows(SubstitutionsCannotBeMergedException.class, () -> e.infer(env, typeEnv));
 		
@@ -447,12 +444,12 @@ class TestInterpretation {
 			exception.hashCode();
 		});
 
-		TestInterpretation.testReflexivity(exception);
-		TestInterpretation.testDifference(exception, new ExceptionExpr(new LitString("fail")));
-		TestInterpretation.testDifference(exception, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(exception);
+		this.assertDifference(exception, new ExceptionExpr(new LitString("fail")));
+		this.assertDifference(exception, Expression.EMPTY_EXPRESSION);
 
 		Pair<Type, Substitution> p = exception.infer(env, typeEnv);
-		TestInterpretation.testInferenceOfType(p, TypeVariable.class, exception);
+		this.assertInferenceClass(p, TypeVariable.class, exception);
 
 		assertThrows(AppendableException.class, () -> new ExceptionExpr(new Expression() {
 
@@ -493,24 +490,24 @@ class TestInterpretation {
 			defExpression.toClojureCode(top, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(defExpression);
-		TestInterpretation.testDifference(defExpression, new DefineSymbol(new Symbol("e"), new LitDouble(Math.E)));
-		TestInterpretation.testDifference(defExpression, new DefineSymbol(new Symbol("pi"), new LitDouble(3.141521)));
-		TestInterpretation.testDifference(defExpression, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(defExpression);
+		this.assertDifference(defExpression, new DefineSymbol(new Symbol("e"), new LitDouble(Math.E)));
+		this.assertDifference(defExpression, new DefineSymbol(new Symbol("pi"), new LitDouble(3.141521)));
+		this.assertDifference(defExpression, Expression.EMPTY_EXPRESSION);
 
 		Environment env = Environment.create(top);
-		TestInterpretation.testInterpretation(defExpression, Expression.EMPTY_EXPRESSION, env, typeEnv);
+		this.assertInterpretationEquals(defExpression, Expression.EMPTY_EXPRESSION, env, typeEnv);
 		assertTrue(env.containsVariable(new Symbol("pi")));
 
 		Pair<Type, Substitution> p = defExpression.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeTuple.EMPTY_TUPLE, defExpression);
+		this.assertInference(p, TypeTuple.EMPTY_TUPLE, defExpression);
 		//assertNotEquals(p.second, Substitution.EMPTY);
 		//assertNotEquals(p.second.variableStream().findAny().get(), TypeAtom.TypeDoubleNative);
 
-		DefineSymbol recursiveExpression = (DefineSymbol) TestInterpretation
-				.parseString("(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))");
+		DefineSymbol recursiveExpression = (DefineSymbol) this
+				.parseString("(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))").get(0);
 		p = recursiveExpression.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeTuple.EMPTY_TUPLE, recursiveExpression);
+		this.assertInference(p, TypeTuple.EMPTY_TUPLE, recursiveExpression);
 		assertNotEquals(p.second, Substitution.EMPTY);
 
 		assertThrows(AppendableException.class, () -> new DefineSymbol(new Symbol("fail"), new Expression() {
@@ -553,25 +550,26 @@ class TestInterpretation {
 			lambda.toClojureCode(top, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(lambda);
-		TestInterpretation.testDifference(lambda, new Lambda(new Tuple(Arrays.asList(new Symbol("z"), new Symbol("y"))),
+		this.assertReflexivity(lambda);
+		this.assertDifference(lambda, new Lambda(new Tuple(Arrays.asList(new Symbol("z"), new Symbol("y"))),
 				new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)), new Symbol("x")));
-		TestInterpretation.testDifference(lambda, new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
+		this.assertDifference(lambda, new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
 				new TypeTuple(Arrays.asList(TypeAtom.TypeDoubleNative, TypeAtom.TypeIntNative)), new Symbol("x")));
-		TestInterpretation.testDifference(lambda,
+		this.assertDifference(lambda,
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative)),
 						Expression.EMPTY_EXPRESSION));
-		TestInterpretation.testDifference(lambda, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(lambda, Expression.EMPTY_EXPRESSION);
 
 		Expression e = lambda.interpret(top, typeEnv);
 		assertTrue(e instanceof Function);
 
 		Pair<Type, Substitution> p = lambda.infer(top, typeEnv);
-		TestInterpretation.testInferenceOfType(p, TypeArrow.class, lambda);
+		this.assertInferenceClass(p, TypeArrow.class, lambda);
 
 		assertThrows(TypesDoesNotUnifyException.class,
-				() -> TestInterpretation.parseString("(lambda ((String x)) (+ x x))").infer(top, typeEnv));
+				() -> this.parseString("(lambda ((String x)) (+ x x))")
+						.get(0).infer(top, typeEnv));
 	}
 
 	@Test
@@ -591,29 +589,30 @@ class TestInterpretation {
 			function.hashCode();
 		});
 
-		TestInterpretation.testReflexivity(function);
-		TestInterpretation.testDifference(function,
+		this.assertReflexivity(function);
+		this.assertDifference(function,
 				new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeDoubleNative)),
 						new Tuple(Arrays.asList(new Symbol("x"))), new Symbol("bound"), bound));
-		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
+		this.assertDifference(function, new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Symbol("y"))), new Symbol("bound"), bound));
-		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
+		this.assertDifference(function, new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Symbol("x"))), Expression.EMPTY_EXPRESSION, bound));
-		TestInterpretation.testDifference(function, new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
+		this.assertDifference(function, new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Symbol("x"))), new Symbol("bound"), top));
-		TestInterpretation.testDifference(function, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(function, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(function, function, top, typeEnv);
+		this.assertInterpretationEquals(function, function, top, typeEnv);
 
 		Pair<Type, Substitution> p = function.infer(top, typeEnv);
-		TestInterpretation.testInferenceOfType(p, TypeArrow.class, function);
+		this.assertInferenceClass(p, TypeArrow.class, function);
 
 		assertThrows(AppendableException.class,
 				() -> (new Function(new TypeTuple(Arrays.asList(new TypeVariable("x"))),
 						new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION)), new Symbol("y"), top)).infer(top,
 								typeEnv));
-		assertThrows(TypesDoesNotUnifyException.class, () -> TestInterpretation
-				.parseString("(lambda ((String x)) (+ x x))").interpret(top, typeEnv).infer(top, typeEnv));
+		assertThrows(TypesDoesNotUnifyException.class, () -> this
+				.parseString("(lambda ((String x)) (+ x x))")
+					.get(0).interpret(top, typeEnv).infer(top, typeEnv));
 	}
 
 	@Test
@@ -630,15 +629,15 @@ class TestInterpretation {
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new AbstractionApplication(
 								ConversionOperators.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x")))))));
 
-		TestInterpretation.testReflexivity(lambda);
-		TestInterpretation.testDifference(lambda,
+		this.assertReflexivity(lambda);
+		this.assertDifference(lambda,
 				ExtendedLambda.makeExtendedLambda(Arrays.asList(
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Symbol("x")),
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), new AbstractionApplication(
 										ConversionOperators.IntRomanToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))))));
-		TestInterpretation.testDifference(lambda,
+		this.assertDifference(lambda,
 				ExtendedLambda.makeExtendedLambda(Arrays.asList(
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), new Symbol("x")),
@@ -653,7 +652,7 @@ class TestInterpretation {
 						new Lambda(new Tuple(Arrays.asList(new Symbol("y"))),
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new AbstractionApplication(
 										ConversionOperators.IntStringToIntNative, new Tuple(Arrays.asList(new Symbol("x"))))))));
-		TestInterpretation.testDifference(lambda, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(lambda, Expression.EMPTY_EXPRESSION);
 
 		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
@@ -667,7 +666,7 @@ class TestInterpretation {
 
 		Pair<Type, Substitution> p = lambda.infer(top, typeEnv);
 
-		TestInterpretation.testInference(p,
+		this.assertInference(p,
 				RepresentationOr.makeRepresentationOr(Arrays.asList(
 						new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntNative),
 						new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntNative),
@@ -699,20 +698,20 @@ class TestInterpretation {
 
 		ExtendedFunction function = ExtendedFunction.makeExtendedFunction(implementations, bound, typeEnv);
 
-		TestInterpretation.testReflexivity(function);
+		this.assertReflexivity(function);
 
 		List<Function> tmpImpls = new LinkedList<Function>(implementations);
 		tmpImpls.remove(0);
-		TestInterpretation.testDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound, typeEnv));
+		this.assertDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound, typeEnv));
 
 		tmpImpls = new LinkedList<Function>(implementations);
 		tmpImpls.add(new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Symbol("y"))), new Symbol("y"), top));
-		TestInterpretation.testDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound, typeEnv));
+		this.assertDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound, typeEnv));
 
-		TestInterpretation.testDifference(function, ExtendedFunction.makeExtendedFunction(implementations, top, typeEnv));
+		this.assertDifference(function, ExtendedFunction.makeExtendedFunction(implementations, top, typeEnv));
 
-		TestInterpretation.testDifference(function, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(function, Expression.EMPTY_EXPRESSION);
 
 		assertAll(() -> {
 			function.toString();
@@ -720,7 +719,7 @@ class TestInterpretation {
 		});
 
 		Pair<Type, Substitution> p = function.infer(top, typeEnv);
-		TestInterpretation.testInference(p,
+		this.assertInference(p,
 				RepresentationOr.makeRepresentationOr(Arrays.asList(
 						new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman),
 						new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntString))),
@@ -744,18 +743,18 @@ class TestInterpretation {
 						new TypeTuple(Arrays.asList(new TypeVariable("y"))), new Symbol("x")),
 				new Tuple(Arrays.asList(new LitInteger(42))));
 
-		TestInterpretation.testReflexivity(application);
-		TestInterpretation.testDifference(application,
+		this.assertReflexivity(application);
+		this.assertDifference(application,
 				new AbstractionApplication(
 						new Lambda(new Tuple(Arrays.asList(new Symbol("y"))),
 								new TypeTuple(Arrays.asList(new TypeVariable("x"))), new Symbol("x")),
 						new Tuple(Arrays.asList(new LitInteger(42)))));
-		TestInterpretation.testDifference(application,
+		this.assertDifference(application,
 				new AbstractionApplication(
 						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 								new TypeTuple(Arrays.asList(new TypeVariable("y"))), new Symbol("x")),
 						new Tuple(Arrays.asList(new LitInteger(21)))));
-		TestInterpretation.testDifference(application, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(application, Expression.EMPTY_EXPRESSION);
 
 		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
@@ -774,9 +773,9 @@ class TestInterpretation {
 				() -> new AbstractionApplication(Expression.EMPTY_EXPRESSION, Tuple.EMPTY_TUPLE).interpret(top,
 						typeEnv));
 
-		TestInterpretation.testInterpretation(application, new LitInteger(42), top, typeEnv);
+		this.assertInterpretationEquals(application, new LitInteger(42), top, typeEnv);
 		Pair<Type, Substitution> p = application.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, application);
+		this.assertInference(p, TypeAtom.TypeIntNative, application);
 
 		// Test Lexical clojure
 		Environment creation = Environment.create(top);
@@ -788,9 +787,9 @@ class TestInterpretation {
 						new Tuple(Arrays.asList(new Symbol("y"))), new Symbol("x"), creation),
 				new Tuple(Arrays.asList(LitBoolean.TRUE)));
 
-		TestInterpretation.testInterpretation(lexicalClojureTest, new LitInteger(128), evaluation, typeEnv);
+		this.assertInterpretationEquals(lexicalClojureTest, new LitInteger(128), evaluation, typeEnv);
 		p = lexicalClojureTest.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, lexicalClojureTest);
+		this.assertInference(p, TypeAtom.TypeIntNative, lexicalClojureTest);
 
 		// Test autoconvert representations
 		AbstractionApplication autoConRep = new AbstractionApplication(
@@ -800,10 +799,10 @@ class TestInterpretation {
 				// Application(TypeConstructionLambda.IntRomanConstructor,
 				// new Tuple(Arrays.asList(new LitString("V")))))));
 				new Tuple(Arrays.asList(new LitComposite(new LitString("V"), TypeAtom.TypeIntRoman))));
-		TestInterpretation.testInterpretation(autoConRep, new LitComposite(new LitString("5"), TypeAtom.TypeIntString),
+		this.assertInterpretationEquals(autoConRep, new LitComposite(new LitString("5"), TypeAtom.TypeIntString),
 				top, typeEnv);
 		p = autoConRep.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntString, autoConRep);
+		this.assertInference(p, TypeAtom.TypeIntString, autoConRep);
 
 		// Test elambda/efunction comparation
 		ExtendedLambda elambda = ExtendedLambda.makeExtendedLambda(Arrays.asList(
@@ -813,18 +812,18 @@ class TestInterpretation {
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), new Symbol("x"))));
 		AbstractionApplication useString = new AbstractionApplication(elambda, new Tuple(
 				Arrays.asList(new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString))));
-		TestInterpretation.testInterpretation(useString,
+		this.assertInterpretationEquals(useString,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString), top, typeEnv);
 		p = useString.infer(top, typeEnv);
-		TestInterpretation.testInference(p,
+		this.assertInference(p,
 				RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman), useString);
 
 		AbstractionApplication useRoman = new AbstractionApplication(elambda, new Tuple(
 				Arrays.asList(new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman))));
-		TestInterpretation.testInterpretation(useRoman,
+		this.assertInterpretationEquals(useRoman,
 				new LitComposite(new Tuple(Arrays.asList(new LitString("V"))), TypeAtom.TypeIntRoman), top, typeEnv);
 		p = useRoman.infer(top, typeEnv);
-		TestInterpretation.testInference(p,
+		this.assertInference(p,
 				RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman), useRoman);
 
 		assertThrows(AppendableException.class,
@@ -839,9 +838,9 @@ class TestInterpretation {
 		IfExpression ifExprT = new IfExpression(LitBoolean.TRUE, new LitInteger(42), new LitInteger(21));
 		IfExpression ifExprF = new IfExpression(LitBoolean.FALSE, new LitInteger(21), new LitInteger(42));
 
-		TestInterpretation.testReflexivity(ifExprF);
-		TestInterpretation.testDifference(ifExprT, ifExprF);
-		TestInterpretation.testDifference(ifExprT, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(ifExprF);
+		this.assertDifference(ifExprT, ifExprF);
+		this.assertDifference(ifExprT, Expression.EMPTY_EXPRESSION);
 
 		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
@@ -852,11 +851,11 @@ class TestInterpretation {
 			ifExprT.hashCode();
 		});
 
-		TestInterpretation.testInterpretation(ifExprT, new LitInteger(42), top, typeEnv);
-		TestInterpretation.testInterpretation(ifExprF, new LitInteger(42), top, typeEnv);
+		this.assertInterpretationEquals(ifExprT, new LitInteger(42), top, typeEnv);
+		this.assertInterpretationEquals(ifExprF, new LitInteger(42), top, typeEnv);
 
 		Pair<Type, Substitution> p = ifExprT.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, ifExprT);
+		this.assertInference(p, TypeAtom.TypeIntNative, ifExprT);
 	}
 
 	@Test
@@ -865,9 +864,9 @@ class TestInterpretation {
 		AndExpression andExpressionT = new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.TRUE)));
 		AndExpression andExpressionF = new AndExpression(new Tuple(Arrays.asList(LitBoolean.TRUE, LitBoolean.FALSE)));
 
-		TestInterpretation.testReflexivity(andExpressionT);
-		TestInterpretation.testDifference(andExpressionT, andExpressionF);
-		TestInterpretation.testDifference(andExpressionT, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(andExpressionT);
+		this.assertDifference(andExpressionT, andExpressionF);
+		this.assertDifference(andExpressionT, Expression.EMPTY_EXPRESSION);
 
 		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
@@ -878,11 +877,11 @@ class TestInterpretation {
 			andExpressionT.hashCode();
 		});
 
-		TestInterpretation.testInterpretation(andExpressionT, LitBoolean.TRUE, top, typeEnv);
-		TestInterpretation.testInterpretation(andExpressionF, LitBoolean.FALSE, top, typeEnv);
+		this.assertInterpretationEquals(andExpressionT, LitBoolean.TRUE, top, typeEnv);
+		this.assertInterpretationEquals(andExpressionF, LitBoolean.FALSE, top, typeEnv);
 
 		Pair<Type, Substitution> p = andExpressionT.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, andExpressionT);
+		this.assertInference(p, TypeAtom.TypeBoolNative, andExpressionT);
 	}
 
 	@Test
@@ -890,9 +889,9 @@ class TestInterpretation {
 		OrExpression orExpressionT = new OrExpression(new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.TRUE)));
 		OrExpression orExpressionF = new OrExpression(new Tuple(Arrays.asList(LitBoolean.FALSE, LitBoolean.FALSE)));
 
-		TestInterpretation.testReflexivity(orExpressionT);
-		TestInterpretation.testDifference(orExpressionT, orExpressionF);
-		TestInterpretation.testDifference(orExpressionT, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(orExpressionT);
+		this.assertDifference(orExpressionT, orExpressionF);
+		this.assertDifference(orExpressionT, Expression.EMPTY_EXPRESSION);
 
 		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
@@ -903,131 +902,131 @@ class TestInterpretation {
 			orExpressionT.hashCode();
 		});
 
-		TestInterpretation.testInterpretation(orExpressionT, LitBoolean.TRUE, top, typeEnv);
-		TestInterpretation.testInterpretation(orExpressionF, LitBoolean.FALSE, top, typeEnv);
+		this.assertInterpretationEquals(orExpressionT, LitBoolean.TRUE, top, typeEnv);
+		this.assertInterpretationEquals(orExpressionF, LitBoolean.FALSE, top, typeEnv);
 
 		Pair<Type, Substitution> p = orExpressionT.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, orExpressionT);
+		this.assertInference(p, TypeAtom.TypeBoolNative, orExpressionT);
 	}
 
 	@Test
 	@DisplayName("Test Operators")
 	void testOperators() throws AppendableException, IOException {
-		TestInterpretation.testOperator(Operators.Addition,
+		this.assertOperator(Operators.Addition,
 				new Tuple(Arrays.asList(new LitInteger(21), new LitInteger(21))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.BitAnd, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
+		this.assertOperator(Operators.BitAnd, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
 				new LitInteger(0), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.BitOr, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
+		this.assertOperator(Operators.BitOr, new Tuple(Arrays.asList(new LitInteger(1), new LitInteger(2))),
 				new LitInteger(3), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.Car,
+		this.assertOperator(Operators.Car,
 				new Tuple(Arrays.asList(new Tuple(Arrays.asList(new LitInteger(42), new LitString("foo"))))),
 				new LitInteger(42), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.Cdr,
+		this.assertOperator(Operators.Cdr,
 				new Tuple(Arrays.asList(new Tuple(Arrays.asList(new LitInteger(42), new LitString("foo"))))),
 				new LitString("foo"), TypeAtom.TypeStringNative);
-		TestInterpretation.testOperator(Operators.Concantenation,
+		this.assertOperator(Operators.Concantenation,
 				new Tuple(Arrays.asList(new LitString("foo"), new LitString("bar"))), new LitString("foobar"),
 				TypeAtom.TypeStringNative);
-		TestInterpretation.testOperator(Operators.Division,
+		this.assertOperator(Operators.Division,
 				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(2))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.Equals,
+		this.assertOperator(Operators.Equals,
 				new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION, LitBoolean.FALSE)), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.Equals,
+		this.assertOperator(Operators.Equals,
 				new Tuple(Arrays.asList(Expression.EMPTY_EXPRESSION, Expression.EMPTY_EXPRESSION)), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.LesserThan,
+		this.assertOperator(Operators.LesserThan,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(43))), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.LesserThan,
+		this.assertOperator(Operators.LesserThan,
 				new Tuple(Arrays.asList(new LitInteger(43), new LitInteger(42))), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.Multiplication,
+		this.assertOperator(Operators.Multiplication,
 				new Tuple(Arrays.asList(new LitInteger(21), new LitInteger(2))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.Not, new Tuple(Arrays.asList(LitBoolean.TRUE)), LitBoolean.FALSE,
+		this.assertOperator(Operators.Not, new Tuple(Arrays.asList(LitBoolean.TRUE)), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.Not, new Tuple(Arrays.asList(LitBoolean.FALSE)), LitBoolean.TRUE,
+		this.assertOperator(Operators.Not, new Tuple(Arrays.asList(LitBoolean.FALSE)), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.NumericEqual,
+		this.assertOperator(Operators.NumericEqual,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(42))), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.NumericEqual,
+		this.assertOperator(Operators.NumericEqual,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(43))), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.Subtraction,
+		this.assertOperator(Operators.Subtraction,
 				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(42))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.CanUnifyRepresentations,
+		this.assertOperator(Operators.CanUnifyRepresentations,
 				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
 						new TypeSymbol(new TypeVariable(NameGenerator.next())))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.CanUnifyRepresentations,
+		this.assertOperator(Operators.CanUnifyRepresentations,
 				new Tuple(
 						Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.CanUnifyRepresentations,
+		this.assertOperator(Operators.CanUnifyRepresentations,
 				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman))),
 				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.CanUnifyRepresentations, new Tuple(
+		this.assertOperator(Operators.CanUnifyRepresentations, new Tuple(
 				Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeStringNative))),
 				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.CanUnifyTypes,
+		this.assertOperator(Operators.CanUnifyTypes,
 				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
 						new TypeSymbol(new TypeVariable(NameGenerator.next())))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.CanUnifyTypes,
+		this.assertOperator(Operators.CanUnifyTypes,
 				new Tuple(
 						Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.CanUnifyTypes,
+		this.assertOperator(Operators.CanUnifyTypes,
 				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.CanUnifyTypes, new Tuple(
+		this.assertOperator(Operators.CanUnifyTypes, new Tuple(
 				Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeStringNative))),
 				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
 
-		TestInterpretation.testOperator(Operators.IsSameType,
+		this.assertOperator(Operators.IsSameType,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(21))), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.IsSameType,
+		this.assertOperator(Operators.IsSameType,
 				new Tuple(Arrays.asList(new LitInteger(42),
 						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
 				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.IsSameType,
+		this.assertOperator(Operators.IsSameType,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitString("42"))), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
 
-		TestInterpretation.testOperator(Operators.IsSameRepresentation,
+		this.assertOperator(Operators.IsSameRepresentation,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(21))), LitBoolean.TRUE,
 				TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.IsSameRepresentation,
+		this.assertOperator(Operators.IsSameRepresentation,
 				new Tuple(Arrays.asList(new LitInteger(42),
 						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
 				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.IsSameRepresentation,
+		this.assertOperator(Operators.IsSameRepresentation,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitString("42"))), LitBoolean.FALSE,
 				TypeAtom.TypeBoolNative);
 		
-		TestInterpretation.testOperator(Operators.BitShiftRight, new Tuple(new LitInteger(2), new LitInteger(1)),
+		this.assertOperator(Operators.BitShiftRight, new Tuple(new LitInteger(2), new LitInteger(1)),
 				new LitInteger(1), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.BitShiftLeft, new Tuple(new LitInteger(2), new LitInteger(1)),
+		this.assertOperator(Operators.BitShiftLeft, new Tuple(new LitInteger(2), new LitInteger(1)),
 				new LitInteger(4), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.UnsignedBitShiftRight, new Tuple(new LitInteger(2), new LitInteger(1)),
+		this.assertOperator(Operators.UnsignedBitShiftRight, new Tuple(new LitInteger(2), new LitInteger(1)),
 				new LitInteger(1), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.UnsignedBitShiftRight, new Tuple(new LitInteger(-1), new LitInteger(10)), 
+		this.assertOperator(Operators.UnsignedBitShiftRight, new Tuple(new LitInteger(-1), new LitInteger(10)), 
 				new LitInteger(18014398509481983l), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.BitNot, new Tuple(new LitInteger(6)), new LitInteger(-7), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.BitXor, new Tuple(new LitInteger(5), new LitInteger(6)), new LitInteger(3), TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.ToStr, new Tuple(new LitInteger(42)), new LitString("[42]"), TypeAtom.TypeStringNative);
+		this.assertOperator(Operators.BitNot, new Tuple(new LitInteger(6)), new LitInteger(-7), TypeAtom.TypeIntNative);
+		this.assertOperator(Operators.BitXor, new Tuple(new LitInteger(5), new LitInteger(6)), new LitInteger(3), TypeAtom.TypeIntNative);
+		this.assertOperator(Operators.ToStr, new Tuple(new LitInteger(42)), new LitString("[42]"), TypeAtom.TypeStringNative);
 		
 		File tempOut = File.createTempFile("velka_read_test", null);
         String content  = "hello world !!";       
         Files.writeString(tempOut.toPath(), content);
         
-        TestInterpretation.testOperator(
+        this.assertOperator(
         		Operators.ReadFile, 
         		new Tuple(new LitString(tempOut.toPath().toString())), 
         		new LitString(content), 
@@ -1038,32 +1037,32 @@ class TestInterpretation {
         Environment env = Environment.initTopLevelEnvironment();
         TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
         
-        TestInterpretation.testOperator(Operators.StrSplit, 
+        this.assertOperator(Operators.StrSplit, 
         		new Tuple(new LitString("foo bar baz"), 
         		new LitString(" ")),
         		ListNative.makeListNativeExpression(new LitString("foo"), new LitString("bar"), new LitString("baz")).interpret(env, typeEnv), 
         		TypeAtom.TypeListNative);
         
-        TestInterpretation.testOperator(Operators.ParseInt, 
+        this.assertOperator(Operators.ParseInt, 
         		new Tuple(new LitString("42")), new LitInteger(42), TypeAtom.TypeIntNative);
         
-		TestInterpretation.testOperator(Operators.IntToDouble, new Tuple(new LitInteger(42)), new LitDouble(42.0f),
+		this.assertOperator(Operators.IntToDouble, new Tuple(new LitInteger(42)), new LitDouble(42.0f),
 				TypeAtom.TypeDoubleNative);
 		
-		TestInterpretation.testOperator(Operators.Floor, new Tuple(new LitDouble(3.14f)), new LitInteger(3),
+		this.assertOperator(Operators.Floor, new Tuple(new LitDouble(3.14f)), new LitInteger(3),
 				TypeAtom.TypeIntNative);
 		
-		TestInterpretation.testOperator(Operators.DoubleAddition, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), new LitDouble(6.28), TypeAtom.TypeDoubleNative);
-		TestInterpretation.testOperator(Operators.DoubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(6.28)), LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.DoubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		TestInterpretation.testOperator(Operators.Modulo, new Tuple(new LitInteger(5), new LitInteger(3)), new LitInteger(2), TypeAtom.TypeIntNative);
+		this.assertOperator(Operators.DoubleAddition, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), new LitDouble(6.28), TypeAtom.TypeDoubleNative);
+		this.assertOperator(Operators.DoubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(6.28)), LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+		this.assertOperator(Operators.DoubleLesserThan, new Tuple(new LitDouble(3.14), new LitDouble(3.14)), LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+		this.assertOperator(Operators.Modulo, new Tuple(new LitInteger(5), new LitInteger(3)), new LitInteger(2), TypeAtom.TypeIntNative);
 		
-		TestInterpretation.testOperator(Operators.ConversionCost,
+		this.assertOperator(Operators.ConversionCost,
 				new Tuple(new Lambda(new Tuple(new Symbol("x")), new TypeTuple(TypeAtom.TypeIntNative), new LitString("foo")),
 						new Tuple(new LitComposite(new LitString("IV"), TypeAtom.TypeIntRoman))),
 				new LitInteger(1),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testOperator(Operators.ConversionCost,
+		this.assertOperator(Operators.ConversionCost,
 				new Tuple(new Lambda(new Tuple(new Symbol("x")), new TypeTuple(TypeAtom.TypeIntNative), new LitString("foo")),
 						new Tuple(new LitInteger(42))),
 				new LitInteger(0),
@@ -1073,24 +1072,24 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test Conversions")
 	void testConversions() throws AppendableException {
-		TestInterpretation.testConversion(ConversionOperators.IntRomanToIntString,
+		this.assertConversion(ConversionOperators.IntRomanToIntString,
 				new LitComposite(new LitString("V"), TypeAtom.TypeIntRoman),
 				new LitComposite(new LitString("5"), TypeAtom.TypeIntString),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntString));
-		TestInterpretation.testConversion(ConversionOperators.IntRomanToIntNative,
+		this.assertConversion(ConversionOperators.IntRomanToIntNative,
 				new LitComposite(new LitString("V"), TypeAtom.TypeIntRoman), new LitInteger(5),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntNative));
-		TestInterpretation.testConversion(ConversionOperators.IntStringToIntRoman,
+		this.assertConversion(ConversionOperators.IntStringToIntRoman,
 				new LitComposite(new LitString("5"), TypeAtom.TypeIntString),
 				new LitComposite(new LitString("V"), TypeAtom.TypeIntRoman),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntRoman));
-		TestInterpretation.testConversion(ConversionOperators.IntStringToIntNative,
+		this.assertConversion(ConversionOperators.IntStringToIntNative,
 				new LitComposite(new LitString("5"), TypeAtom.TypeIntString), new LitInteger(5),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntNative));
-		TestInterpretation.testConversion(ConversionOperators.IntNativeToIntString, new LitInteger(5),
+		this.assertConversion(ConversionOperators.IntNativeToIntString, new LitInteger(5),
 				new LitComposite(new LitString("5"), TypeAtom.TypeIntString),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntString));
-		TestInterpretation.testConversion(ConversionOperators.IntNativeToIntRoman, new LitInteger(5),
+		this.assertConversion(ConversionOperators.IntNativeToIntRoman, new LitInteger(5),
 				new LitComposite(new LitString("V"), TypeAtom.TypeIntRoman),
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntRoman));
 	}
@@ -1105,7 +1104,7 @@ class TestInterpretation {
 		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);
 
-		TestInterpretation.testInterpretation(e, new LitInteger(84), top, typeEnv);
+		this.assertInterpretationEquals(e, new LitInteger(84), top, typeEnv);
 	}
 
 	@Test
@@ -1167,15 +1166,15 @@ class TestInterpretation {
 			defTypeExpression.toClojureCode(top, cljTypeEnv);
 		});
 
-		TestInterpretation.testReflexivity(defTypeExpression);
-		TestInterpretation.testDifference(defTypeExpression, new DefineType(new TypeName("Test2")));
-		TestInterpretation.testDifference(defTypeExpression, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(defTypeExpression);
+		this.assertDifference(defTypeExpression, new DefineType(new TypeName("Test2")));
+		this.assertDifference(defTypeExpression, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(defTypeExpression, Expression.EMPTY_EXPRESSION, top, typeEnv);
+		this.assertInterpretationEquals(defTypeExpression, Expression.EMPTY_EXPRESSION, top, typeEnv);
 		assertTrue(typeEnv.existsTypeAtom(new TypeAtom(new TypeName("Test"), TypeRepresentation.WILDCARD)));
 
 		Pair<Type, Substitution> p = defTypeExpression.infer(top, typeEnv);
-		TestInterpretation.testInference(p, Expression.EMPTY_EXPRESSION.infer(top, typeEnv).first, defTypeExpression);
+		this.assertInference(p, Expression.EMPTY_EXPRESSION.infer(top, typeEnv).first, defTypeExpression);
 	}
 
 	@Test
@@ -1203,26 +1202,26 @@ class TestInterpretation {
 			defCon.toClojureCode(top, cljTypeEnv);
 		});
 
-		TestInterpretation.testReflexivity(defCon);
-		TestInterpretation.testDifference(defCon,
+		this.assertReflexivity(defCon);
+		this.assertDifference(defCon,
 				new DefineConversion(new TypeAtom(name, TypeRepresentation.STRING), typeAtomWildcard,
 						new Tuple(Arrays.asList(new Symbol("x"))),
 						new LitComposite(new Symbol("y"), typeAtomWildcard)));
-		TestInterpretation.testDifference(defCon,
+		this.assertDifference(defCon,
 				new DefineConversion(typeAtomNative, new TypeAtom(name, TypeRepresentation.STRING),
 						new Tuple(Arrays.asList(new Symbol("x"))),
 						new LitComposite(new Symbol("y"), typeAtomWildcard)));
-		TestInterpretation.testDifference(defCon, new DefineConversion(typeAtomNative, typeAtomWildcard,
+		this.assertDifference(defCon, new DefineConversion(typeAtomNative, typeAtomWildcard,
 				new Tuple(Arrays.asList(new Symbol("y"))), new LitComposite(new Symbol("y"), typeAtomWildcard)));
-		TestInterpretation.testDifference(defCon, new DefineConversion(typeAtomNative, typeAtomWildcard,
+		this.assertDifference(defCon, new DefineConversion(typeAtomNative, typeAtomWildcard,
 				new Tuple(Arrays.asList(new Symbol("x"))), Expression.EMPTY_EXPRESSION));
 
-		TestInterpretation.testDifference(defCon, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(defCon, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(defCon, Expression.EMPTY_EXPRESSION, top, typeEnv);
+		this.assertInterpretationEquals(defCon, Expression.EMPTY_EXPRESSION, top, typeEnv);
 
 		Pair<Type, Substitution> p = defCon.infer(top, typeEnv);
-		TestInterpretation.testInference(p, Expression.EMPTY_EXPRESSION.infer(top, typeEnv).first, defCon);
+		this.assertInference(p, Expression.EMPTY_EXPRESSION.infer(top, typeEnv).first, defCon);
 	}
 
 	@Test
@@ -1244,19 +1243,19 @@ class TestInterpretation {
 			defRep.toClojureCode(top, cljTypeEnv);
 		});
 
-		TestInterpretation.testReflexivity(defRep);
-		TestInterpretation.testDifference(defRep, new DefineRepresentation(TypeName.INT, TypeRepresentation.NATIVE));
-		TestInterpretation.testDifference(defRep, new DefineRepresentation(name, TypeRepresentation.STRING));
-		TestInterpretation.testDifference(defRep, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(defRep);
+		this.assertDifference(defRep, new DefineRepresentation(TypeName.INT, TypeRepresentation.NATIVE));
+		this.assertDifference(defRep, new DefineRepresentation(name, TypeRepresentation.STRING));
+		this.assertDifference(defRep, Expression.EMPTY_EXPRESSION);
 
 		typeEnv.addType(name);
-		TestInterpretation.testInterpretation(defRep, Expression.EMPTY_EXPRESSION, top, typeEnv);
+		this.assertInterpretationEquals(defRep, Expression.EMPTY_EXPRESSION, top, typeEnv);
 
 		assertThrows(AppendableException.class,
 				() -> new DefineRepresentation(name, TypeRepresentation.NATIVE).interpret(top, typeEnv));
 
 		Pair<Type, Substitution> p = defRep.infer(top, typeEnv);
-		TestInterpretation.testInference(p, Expression.EMPTY_EXPRESSION.infer(top, typeEnv).first, defRep);
+		this.assertInference(p, Expression.EMPTY_EXPRESSION.infer(top, typeEnv).first, defRep);
 	}
 
 	@Test
@@ -1284,14 +1283,14 @@ class TestInterpretation {
 			defCon.toClojureCode(top, cljTypeEnv);
 		});
 
-		TestInterpretation.testReflexivity(defCon);
-		TestInterpretation.testDifference(defCon, new DefineConstructor(TypeAtom.TypeIntNative, constructor));
-		TestInterpretation.testDifference(defCon, new DefineConstructor(type, Lambda.identity));
+		this.assertReflexivity(defCon);
+		this.assertDifference(defCon, new DefineConstructor(TypeAtom.TypeIntNative, constructor));
+		this.assertDifference(defCon, new DefineConstructor(type, Lambda.identity));
 
-		TestInterpretation.testInterpretation(defCon, Expression.EMPTY_EXPRESSION, top, typeEnv);
+		this.assertInterpretationEquals(defCon, Expression.EMPTY_EXPRESSION, top, typeEnv);
 
 		Pair<Type, Substitution> p = defCon.infer(top, typeEnv);
-		TestInterpretation.testInference(p, Expression.EMPTY_EXPRESSION.infer(top, typeEnv).first, defCon);
+		this.assertInference(p, Expression.EMPTY_EXPRESSION.infer(top, typeEnv).first, defCon);
 	}
 
 	@Test
@@ -1308,18 +1307,18 @@ class TestInterpretation {
 			construct.toClojureCode(top, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(construct);
-		TestInterpretation.testDifference(construct,
+		this.assertReflexivity(construct);
+		this.assertDifference(construct,
 				new Construct(TypeAtom.TypeIntString, new Tuple(Arrays.asList(new LitString("XLII")))));
-		TestInterpretation.testDifference(construct,
+		this.assertDifference(construct,
 				new Construct(TypeAtom.TypeIntRoman, new Tuple(Arrays.asList(new LitString("XXI")))));
-		TestInterpretation.testDifference(construct, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(construct, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(construct, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
+		this.assertInterpretationEquals(construct, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
 				top, typeEnv);
 
 		Pair<Type, Substitution> p = construct.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntRoman, construct);
+		this.assertInference(p, TypeAtom.TypeIntRoman, construct);
 	}
 
 	@Test
@@ -1337,17 +1336,17 @@ class TestInterpretation {
 			deconstruct.toClojureCode(top, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(deconstruct);
-		TestInterpretation.testDifference(deconstruct, new Deconstruct(
+		this.assertReflexivity(deconstruct);
+		this.assertDifference(deconstruct, new Deconstruct(
 				new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman), TypeAtom.TypeStringNative));
-		TestInterpretation.testDifference(deconstruct,
+		this.assertDifference(deconstruct,
 				new Deconstruct(new LitComposite(new LitString("42"), TypeAtom.TypeIntString), TypeAtom.TypeIntNative));
-		TestInterpretation.testDifference(deconstruct, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(deconstruct, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(deconstruct, new LitString("42"), top, typeEnv);
+		this.assertInterpretationEquals(deconstruct, new LitString("42"), top, typeEnv);
 
 		Pair<Type, Substitution> p = deconstruct.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeStringNative, deconstruct);
+		this.assertInference(p, TypeAtom.TypeStringNative, deconstruct);
 	}
 
 	@Test
@@ -1367,18 +1366,18 @@ class TestInterpretation {
 			canDeconstruct.toClojureCode(top, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(canDeconstruct);
-		TestInterpretation.testDifference(canDeconstruct, new CanDeconstructAs(
+		this.assertReflexivity(canDeconstruct);
+		this.assertDifference(canDeconstruct, new CanDeconstructAs(
 				new LitComposite(new LitString("42"), TypeAtom.TypeIntString), TypeAtom.TypeIntNative));
-		TestInterpretation.testDifference(canDeconstruct,
+		this.assertDifference(canDeconstruct,
 				new CanDeconstructAs(new LitDouble(3.14), TypeAtom.TypeStringNative));
-		TestInterpretation.testDifference(canDeconstruct, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(canDeconstruct, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(canDeconstruct, LitBoolean.TRUE, top, typeEnv);
-		TestInterpretation.testInterpretation(cannotDeconstrut, LitBoolean.FALSE, top, typeEnv);
+		this.assertInterpretationEquals(canDeconstruct, LitBoolean.TRUE, top, typeEnv);
+		this.assertInterpretationEquals(cannotDeconstrut, LitBoolean.FALSE, top, typeEnv);
 
 		Pair<Type, Substitution> p = canDeconstruct.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, canDeconstruct);
+		this.assertInference(p, TypeAtom.TypeBoolNative, canDeconstruct);
 	}
 
 	@Test
@@ -1395,20 +1394,20 @@ class TestInterpretation {
 			convert.toClojureCode(top, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(convert);
-		TestInterpretation.testDifference(convert,
+		this.assertReflexivity(convert);
+		this.assertDifference(convert,
 				new Convert(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, new LitInteger(42)));
-		TestInterpretation.testDifference(convert,
+		this.assertDifference(convert,
 				new Convert(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, new LitInteger(42)));
-		TestInterpretation.testDifference(convert,
+		this.assertDifference(convert,
 				new Convert(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, new LitInteger(21)));
-		TestInterpretation.testDifference(convert, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(convert, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(convert, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
+		this.assertInterpretationEquals(convert, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman),
 				top, typeEnv);
 
 		Pair<Type, Substitution> p = convert.infer(top, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntRoman, convert);
+		this.assertInference(p, TypeAtom.TypeIntRoman, convert);
 	}
 
 	@Test
@@ -1424,81 +1423,81 @@ class TestInterpretation {
 						TypeAtom.TypeListNative),
 				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21), new LitInteger(2)).interpret(env, typeEnv));
 
-		TestInterpretation.testInterpretString("(construct List Native)",
+		this.assertInterpretedStringEquals("(construct List Native)",
 				ListNative.EMPTY_LIST_NATIVE, env, typeEnv);
-		TestInterpretation.testInterpretString("(construct List Native 42 (construct List Native))",
+		this.assertInterpretedStringEquals("(construct List Native 42 (construct List Native))",
 				ListNative.makeListNativeExpression(new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
 
-		TestInterpretation.testInterpretString("(is-list-native-empty (construct List Native))", LitBoolean.TRUE, env,
+		this.assertInterpretedStringEquals("(is-list-native-empty (construct List Native))", LitBoolean.TRUE, env,
 				typeEnv);
-		TestInterpretation.testInterpretString(
+		this.assertInterpretedStringEquals(
 				"(is-list-native-empty (construct List Native 42 (construct List Native)))", LitBoolean.FALSE, env,
 				typeEnv);
 
-		TestInterpretation.testInterpretString("(head-list-native (construct List Native 42 (construct List Native)))",
+		this.assertInterpretedStringEquals("(head-list-native (construct List Native 42 (construct List Native)))",
 				new LitInteger(42), env, typeEnv);
 		assertThrows(UserException.class,
-				() -> TestInterpretation.testInterpretString("(head-list-native (construct List Native))",
+				() -> this.assertInterpretedStringEquals("(head-list-native (construct List Native))",
 						Expression.EMPTY_EXPRESSION, env, typeEnv));
 
-		TestInterpretation.testInterpretString("(tail-list-native (construct List Native 42 (construct List Native)))",
+		this.assertInterpretedStringEquals("(tail-list-native (construct List Native 42 (construct List Native)))",
 				ListNative.EMPTY_LIST_NATIVE, env, typeEnv);
 		assertThrows(UserException.class,
-				() -> TestInterpretation.testInterpretString("(tail-list-native (construct List Native))",
+				() -> this.assertInterpretedStringEquals("(tail-list-native (construct List Native))",
 						Expression.EMPTY_EXPRESSION, env, typeEnv));
 
-		TestInterpretation.testInterpretString(
+		this.assertInterpretedStringEquals(
 				"(map-list-native (lambda (x) (+ x 1)) (construct List Native 42 (construct List Native)))",
 				ListNative.makeListNativeExpression(new LitInteger(43)).interpret(env, typeEnv), env, typeEnv);
 
-		TestInterpretation.testInterpretString(
+		this.assertInterpretedStringEquals(
 				"(map2-list-native + (construct List Native 21 (construct List Native 21 (construct List Native))) (construct List Native 21 (construct List Native 21 (construct List Native))))",
 				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(42)).interpret(env, typeEnv),
 				env, typeEnv);
 
-		TestInterpretation.testInterpretString(
+		this.assertInterpretedStringEquals(
 				"(foldl-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native))))",
 				new LitInteger(3), env, typeEnv);
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretedStringEquals(
 				"(" + ListNative.addToEndSymbol_out + " (construct List Native 21 (construct List Native)) 42)",
 				ListNative.makeListNativeExpression(new LitInteger(21), new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
 		
 		ArrayList<Expression> al = new ArrayList<Expression>();
 		al.add(new LitInteger(42));
 		al.add(new LitInteger(21));
-		TestInterpretation.testInterpretString(
+		this.assertInterpretedStringEquals(
 				"(convert List:Native List:JavaArray (construct List Native 42 (construct List Native 21 (construct List Native))))",
 				new LitComposite(new LitInteropObject(al), JavaArrayList.TypeListJavaArray), env, typeEnv);
 		
 		LinkedList<Expression> ll = new LinkedList<Expression>();
 		ll.add(new LitInteger(42));
 		ll.add(new LitInteger(21));
-		TestInterpretation.testInterpretString(
+		this.assertInterpretedStringEquals(
 				"(convert List:Native List:JavaLinked (construct List Native 42 (construct List Native 21 (construct List Native))))",
 				new LitComposite(new LitInteropObject(ll), JavaLinkedList.TypeListJavaLinked), env, typeEnv);
 				
-		TestInterpretation.testInterpretString("(contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 42)", LitBoolean.TRUE, env, typeEnv);
-		TestInterpretation.testInterpretString("(contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 84)", LitBoolean.FALSE, env, typeEnv);
+		this.assertInterpretedStringEquals("(contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 42)", LitBoolean.TRUE, env, typeEnv);
+		this.assertInterpretedStringEquals("(contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 84)", LitBoolean.FALSE, env, typeEnv);
 		
-		TestInterpretation.testInterpretString("(filter-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
+		this.assertInterpretedStringEquals("(filter-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
 				ListNative.makeListNativeExpression(LitBoolean.TRUE).interpret(env, typeEnv), env, typeEnv);
-		TestInterpretation.testInterpretString("(get-list-native (construct List Native 42 (construct List Native)) 0)", new LitInteger(42), env, typeEnv);
-		TestInterpretation.testInterpretString("(build-list-native 2 (lambda (x) x))", ListNative.makeListNativeExpression(new LitInteger(0), new LitInteger(1)).interpret(env, typeEnv), env, typeEnv);
+		this.assertInterpretedStringEquals("(get-list-native (construct List Native 42 (construct List Native)) 0)", new LitInteger(42), env, typeEnv);
+		this.assertInterpretedStringEquals("(build-list-native 2 (lambda (x) x))", ListNative.makeListNativeExpression(new LitInteger(0), new LitInteger(1)).interpret(env, typeEnv), env, typeEnv);
 		
-		TestInterpretation.testInterpretString("(remove-list-native (build-list-native 2 (lambda (x) x)) 1)", ListNative.makeListNativeExpression(new LitInteger(0)).interpret(env, typeEnv), env, typeEnv);
-		TestInterpretation.testInterpretString("(size-list-native (build-list-native 42 (lambda (x) x)))", new LitInteger(42), env, typeEnv);
-		TestInterpretation.testInterpretString("(append-list-native (build-list-native 1 (lambda (x) 21)) (build-list-native 1 (lambda (x) 42)))", 
+		this.assertInterpretedStringEquals("(remove-list-native (build-list-native 2 (lambda (x) x)) 1)", ListNative.makeListNativeExpression(new LitInteger(0)).interpret(env, typeEnv), env, typeEnv);
+		this.assertInterpretedStringEquals("(size-list-native (build-list-native 42 (lambda (x) x)))", new LitInteger(42), env, typeEnv);
+		this.assertInterpretedStringEquals("(append-list-native (build-list-native 1 (lambda (x) 21)) (build-list-native 1 (lambda (x) 42)))", 
 				ListNative.makeListNativeExpression(new LitInteger(21), new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
 		
-		TestInterpretation.testInterpretString("(reverse-list-native (build-list-native 3 (lambda (x) x)))",
+		this.assertInterpretedStringEquals("(reverse-list-native (build-list-native 3 (lambda (x) x)))",
 				ListNative.makeListNativeExpression(new LitInteger(2), new LitInteger(1), new LitInteger(0))
 						.interpret(env, typeEnv),
 				env, typeEnv);
 		
-		TestInterpretation.testInterpretString("(everyp-list-native (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
+		this.assertInterpretedStringEquals("(everyp-list-native (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
 				LitBoolean.TRUE, env, typeEnv);
-		TestInterpretation.testInterpretString("(everyp-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
+		this.assertInterpretedStringEquals("(everyp-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
 				LitBoolean.FALSE, env, typeEnv);
 	}
 
@@ -1516,14 +1515,14 @@ class TestInterpretation {
 			typeSymbol.toClojureCode(env, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(typeSymbol);
-		TestInterpretation.testDifference(typeSymbol, new TypeSymbol(TypeAtom.TypeBoolNative));
-		TestInterpretation.testDifference(typeSymbol, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(typeSymbol);
+		this.assertDifference(typeSymbol, new TypeSymbol(TypeAtom.TypeBoolNative));
+		this.assertDifference(typeSymbol, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(typeSymbol, typeSymbol, env, typeEnv);
+		this.assertInterpretationEquals(typeSymbol, typeSymbol, env, typeEnv);
 
 		Pair<Type, Substitution> p = typeSymbol.infer(env, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, typeSymbol);
+		this.assertInference(p, TypeAtom.TypeIntNative, typeSymbol);
 	}
 
 	@Test
@@ -1540,24 +1539,24 @@ class TestInterpretation {
 			iof.toClojureCode(env, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(iof);
+		this.assertReflexivity(iof);
 		InstanceOf iof_isStrInt = new InstanceOf(new LitString("foo"), TypeAtom.TypeIntNative);
-		TestInterpretation.testDifference(iof, iof_isStrInt);
+		this.assertDifference(iof, iof_isStrInt);
 		InstanceOf iof_typevar = new InstanceOf(new LitInteger(42), new TypeVariable(NameGenerator.next()));
-		TestInterpretation.testDifference(iof, iof_typevar);
+		this.assertDifference(iof, iof_typevar);
 		InstanceOf iof_otherRepre = new InstanceOf(new LitInteger(42), TypeAtom.TypeIntRoman);
-		TestInterpretation.testDifference(iof, iof_otherRepre);
-		TestInterpretation.testDifference(iof,
+		this.assertDifference(iof, iof_otherRepre);
+		this.assertDifference(iof,
 				new InstanceOfRepresentation(new LitInteger(42), TypeAtom.TypeIntNative));
-		TestInterpretation.testDifference(iof, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(iof, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(iof, LitBoolean.TRUE, env, typeEnv);
-		TestInterpretation.testInterpretation(iof_isStrInt, LitBoolean.FALSE, env, typeEnv);
-		TestInterpretation.testInterpretation(iof_typevar, LitBoolean.TRUE, env, typeEnv);
-		TestInterpretation.testInterpretation(iof_otherRepre, LitBoolean.TRUE, env, typeEnv);
+		this.assertInterpretationEquals(iof, LitBoolean.TRUE, env, typeEnv);
+		this.assertInterpretationEquals(iof_isStrInt, LitBoolean.FALSE, env, typeEnv);
+		this.assertInterpretationEquals(iof_typevar, LitBoolean.TRUE, env, typeEnv);
+		this.assertInterpretationEquals(iof_otherRepre, LitBoolean.TRUE, env, typeEnv);
 
 		Pair<Type, Substitution> p = iof.infer(env, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, iof);
+		this.assertInference(p, TypeAtom.TypeBoolNative, iof);
 	}
 
 	@Test
@@ -1574,26 +1573,26 @@ class TestInterpretation {
 			iofr.toClojureCode(env, typeEnv);
 		});
 
-		TestInterpretation.testReflexivity(iofr);
+		this.assertReflexivity(iofr);
 		InstanceOfRepresentation iofr_isStrInt = new InstanceOfRepresentation(new LitString("foo"),
 				TypeAtom.TypeIntNative);
-		TestInterpretation.testDifference(iofr, iofr_isStrInt);
+		this.assertDifference(iofr, iofr_isStrInt);
 		InstanceOfRepresentation iofr_typevar = new InstanceOfRepresentation(new LitInteger(42),
 				new TypeVariable(NameGenerator.next()));
-		TestInterpretation.testDifference(iofr, iofr_typevar);
+		this.assertDifference(iofr, iofr_typevar);
 		InstanceOfRepresentation iofr_otherRepre = new InstanceOfRepresentation(new LitInteger(42),
 				TypeAtom.TypeIntRoman);
-		TestInterpretation.testDifference(iofr, iofr_otherRepre);
-		TestInterpretation.testDifference(iofr, new InstanceOf(new LitInteger(42), TypeAtom.TypeIntNative));
-		TestInterpretation.testDifference(iofr, Expression.EMPTY_EXPRESSION);
+		this.assertDifference(iofr, iofr_otherRepre);
+		this.assertDifference(iofr, new InstanceOf(new LitInteger(42), TypeAtom.TypeIntNative));
+		this.assertDifference(iofr, Expression.EMPTY_EXPRESSION);
 
-		TestInterpretation.testInterpretation(iofr, LitBoolean.TRUE, env, typeEnv);
-		TestInterpretation.testInterpretation(iofr_isStrInt, LitBoolean.FALSE, env, typeEnv);
-		TestInterpretation.testInterpretation(iofr_typevar, LitBoolean.TRUE, env, typeEnv);
-		TestInterpretation.testInterpretation(iofr_otherRepre, LitBoolean.FALSE, env, typeEnv);
+		this.assertInterpretationEquals(iofr, LitBoolean.TRUE, env, typeEnv);
+		this.assertInterpretationEquals(iofr_isStrInt, LitBoolean.FALSE, env, typeEnv);
+		this.assertInterpretationEquals(iofr_typevar, LitBoolean.TRUE, env, typeEnv);
+		this.assertInterpretationEquals(iofr_otherRepre, LitBoolean.FALSE, env, typeEnv);
 
 		Pair<Type, Substitution> p = iofr.infer(env, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeBoolNative, iofr);
+		this.assertInference(p, TypeAtom.TypeBoolNative, iofr);
 	}
 
 	@Test
@@ -1628,7 +1627,7 @@ class TestInterpretation {
 				new AbstractionApplication(
 						elambda_defaultCostFunction, 
 						args);
-		TestInterpretation.testInterpretation(
+		this.assertInterpretationEquals(
 				app_defCostFunction, 
 				new LitString("Int Native"), 
 				env, 
@@ -1651,7 +1650,7 @@ class TestInterpretation {
 				new AbstractionApplication(
 						elambda_customCostFunction, 
 						args);
-		TestInterpretation.testInterpretation(
+		this.assertInterpretationEquals(
 				app_customCostFunction, 
 				new LitString("Int String"), 
 				env, 
@@ -1681,16 +1680,16 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test Java Array List")
 	void testJavaArrayList() throws Exception {
-		TestInterpretation.testInterpretString("(construct List JavaArray)",
+		this.assertInterpretationEquals("(construct List JavaArray)",
 				new LitComposite(new LitInteropObject(new ArrayList<Object>()), JavaArrayList.TypeListJavaArray));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(construct List JavaArray (build-list-native 2 (lambda (x) x)))", 
 				new LitComposite(
 						new LitInteropObject(new ArrayList<Object>(Arrays.asList(new LitInteger(0), new LitInteger(1)))), 
 						JavaArrayList.TypeListJavaArray));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(construct List JavaArray 42)",
 				new LitComposite(
 						new LitInteropObject(new ArrayList<Object>(42)), JavaArrayList.TypeListJavaArray));
@@ -1698,12 +1697,12 @@ class TestInterpretation {
 		ArrayList<Object> l = new ArrayList<Object>();
 		l.add(new LitInteger(42));
 
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(" + JavaArrayList.addToEndSymbol_out.toString() + " (construct List JavaArray) 42)", LitBoolean.TRUE);
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(" + JavaArrayList.addToIndexSymbol_out.toString() + " (construct List JavaArray) 0 42)",
 				Expression.EMPTY_EXPRESSION);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
@@ -1711,17 +1710,17 @@ class TestInterpretation {
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaArrayList.addAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.containsSymbol_out + " l1 42)",
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.containsSymbol_out + " l1 84)",
 				LitBoolean.FALSE);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
@@ -1730,7 +1729,7 @@ class TestInterpretation {
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaArrayList.containsAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
@@ -1740,59 +1739,59 @@ class TestInterpretation {
 				+ "(" + JavaArrayList.containsAllSymbol_out + " l1 l2)",
 				LitBoolean.FALSE);
 		
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.getSymbol_out + " l1 0)",
 				new LitInteger(1));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.indexOfSymbol_out + " l1 1)",
 				new LitInteger(0));
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.indexOfSymbol_out + " l1 42)",
 				new LitInteger(-1));
 		
-		TestInterpretation.testInterpretString("(" + JavaArrayList.isEmptySymbol_out + " (construct List JavaArray))", 
+		this.assertInterpretationEquals("(" + JavaArrayList.isEmptySymbol_out + " (construct List JavaArray))", 
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.isEmptySymbol_out + " l1)", 
 				LitBoolean.FALSE);
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.lastIndexOfSymbol_out + " l1 1)",
 				new LitInteger(0));
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.lastIndexOfSymbol_out + " l1 42)",
 				new LitInteger(-1));
-		/*TestInterpretation.testInterpretString(
+		/*this.testInterpretString(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
 				+ "(" + JavaArrayList.removeSymbol + " l1 0)", 
 				new LitInteger(1));*/
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.removeSymbol_out + " l1 2)", 
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
@@ -1801,7 +1800,7 @@ class TestInterpretation {
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaArrayList.removeAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
@@ -1811,7 +1810,7 @@ class TestInterpretation {
 				+ "(" + JavaArrayList.removeAllSymbol_out + " l2 l1)",
 				LitBoolean.FALSE);
 		
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
@@ -1821,7 +1820,7 @@ class TestInterpretation {
 				+ "(" + JavaArrayList.retainAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
 		
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
@@ -1830,47 +1829,47 @@ class TestInterpretation {
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaArrayList.retainAllSymbol_out + " l2 l1)",
 				LitBoolean.FALSE);
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.setSymbol_out + " l1 0 2)", 
 				new LitInteger(1));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.sizeSymbol_out + " l1)", 
 				new LitInteger(2));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 84)" 
 				+ "(" + JavaArrayList.sublistSymbol_out + " l1 0 1)", 
 				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
 		
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n" 
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)"  
 				+ "(" + JavaArrayList.mapSymbol_out + " l1 (lambda (x) (* 2 x)))", 
 				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
 		
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
 				+ "(define l2 (construct List JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 21)"
 				+ "(" + JavaArrayList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y)))",
 				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaArrayList.foldlSymbol_out + " + 0 l1)", 
 				new LitInteger(63));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
@@ -1881,7 +1880,7 @@ class TestInterpretation {
 		LinkedList<Expression> converted = new LinkedList<Expression>();
 		converted.add(new LitInteger(42));
 		converted.add(new LitInteger(21));
-		TestInterpretation.testInterpretString("(define l (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l (construct List JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
 				+ "(convert List:JavaArray List:JavaLinked l)", 
@@ -1889,15 +1888,15 @@ class TestInterpretation {
 		
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		TestInterpretation.testInterpretString("(define l (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l (construct List JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
 				+ "(convert List:JavaArray List:Native l)", 
 				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21)).interpret(env, typeEnv));
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(java-array-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(java-array-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
 				LitBoolean.FALSE);
 	}
@@ -1905,18 +1904,18 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test Java Linked List")
 	void testJavaLinkedList() throws Exception {
-		TestInterpretation.testInterpretString("(construct List JavaLinked)",
+		this.assertInterpretationEquals("(construct List JavaLinked)",
 				new LitComposite(new LitInteropObject(new LinkedList<Object>()), JavaLinkedList.TypeListJavaLinked));
 
 		LinkedList<Object> l = new LinkedList<Object>();
 		l.add(new LitInteger(42));
 
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(" + JavaLinkedList.addToEndSymbol_out.toString() + " (construct List JavaLinked) 42)", LitBoolean.TRUE);
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(" + JavaLinkedList.addToIndexSymbol_out.toString() + " (construct List JavaLinked) 0 42)",
 				Expression.EMPTY_EXPRESSION);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
@@ -1925,24 +1924,24 @@ class TestInterpretation {
 				+ "(" + JavaLinkedList.addAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
 		
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.toStrSymbol_out + " l1)",
 				new LitString("[[42], [42]]"));
 		
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.containsSymbol_out + " l1 42)",
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.containsSymbol_out + " l1 84)",
 				LitBoolean.FALSE);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
@@ -1951,7 +1950,7 @@ class TestInterpretation {
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaLinkedList.containsAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
@@ -1961,55 +1960,55 @@ class TestInterpretation {
 				+ "(" + JavaLinkedList.containsAllSymbol_out + " l1 l2)",
 				LitBoolean.FALSE);
 		
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.getSymbol_out + " l1 0)",
 				new LitInteger(1));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.indexOfSymbol_out + " l1 1)",
 				new LitInteger(0));
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.indexOfSymbol_out + " l1 42)",
 				new LitInteger(-1));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(" + JavaLinkedList.isEmptySymbol_out + " (construct List JavaLinked))", 
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.isEmptySymbol_out + " l1)", 
 				LitBoolean.FALSE);
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.lastIndexOfSymbol_out + " l1 1)",
 				new LitInteger(0));
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.lastIndexOfSymbol_out + " l1 42)",
 				new LitInteger(-1));
 
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.removeSymbol_out + " l1 2)", 
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
@@ -2018,7 +2017,7 @@ class TestInterpretation {
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaLinkedList.removeAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
@@ -2028,7 +2027,7 @@ class TestInterpretation {
 				+ "(" + JavaLinkedList.removeAllSymbol_out + " l2 l1)",
 				LitBoolean.FALSE);
 		
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
@@ -2038,7 +2037,7 @@ class TestInterpretation {
 				+ "(" + JavaLinkedList.retainAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
 		
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
@@ -2047,47 +2046,47 @@ class TestInterpretation {
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaLinkedList.retainAllSymbol_out + " l2 l1)",
 				LitBoolean.FALSE);
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.setSymbol_out + " l1 0 2)", 
 				new LitInteger(1));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.sizeSymbol_out + " l1)", 
 				new LitInteger(2));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 84)" 
 				+ "(" + JavaLinkedList.sublistSymbol_out + " l1 0 1)", 
 				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
 		
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n" 
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)"  
 				+ "(" + JavaLinkedList.mapSymbol_out + " l1 (lambda (x) (* 2 x)))", 
 				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
 		
-		TestInterpretation.testInterpretString("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
 				+ "(define l2 (construct List JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 21)"
 				+ "(" + JavaLinkedList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y)))",
 				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaLinkedList.foldlSymbol_out + " + 0 l1)", 
 				new LitInteger(63));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l1 (construct List JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
@@ -2098,22 +2097,22 @@ class TestInterpretation {
 		ArrayList<Expression> converted = new ArrayList<Expression>();
 		converted.add(new LitInteger(42));
 		converted.add(new LitInteger(21));
-		TestInterpretation.testInterpretString("(define l (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l (construct List JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
 				+ "(convert List:JavaLinked List:JavaArray l)", 
 				new LitComposite(new LitInteropObject(converted), JavaArrayList.TypeListJavaArray));
 		
-		TestInterpretation.testInterpretString("(define l (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l (construct List JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
 				+ "(convert List:JavaLinked List:Native l)", 
 				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21)));
 		
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(java-linked-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
 				LitBoolean.FALSE);
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(java-linked-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
 				LitBoolean.TRUE);
 		
@@ -2129,7 +2128,7 @@ class TestInterpretation {
 		ll.add(new LitInteger(16));
 		ll.add(new LitInteger(18));
 		ListIterator<LitInteger> li = ll.listIterator(0);
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))"
 						+ "(linked-list-iterator-next (java-linked-list-iterator l 0))",
@@ -2137,7 +2136,7 @@ class TestInterpretation {
 		
 		li.previous();
 		li.add(new LitInteger(42));
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
@@ -2147,7 +2146,7 @@ class TestInterpretation {
 		
 		li.next();
 		li.remove();
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
@@ -2155,14 +2154,14 @@ class TestInterpretation {
 				li.hasNext() ? LitBoolean.TRUE : LitBoolean.FALSE);
 		
 		li.previous();
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
 						+ "(linked-list-iterator-has-previous it)",
 				li.hasPrevious() ? LitBoolean.TRUE : LitBoolean.FALSE);
 		
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
@@ -2172,7 +2171,7 @@ class TestInterpretation {
 		li.next();
 		li.next();
 		li.next();
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
@@ -2180,7 +2179,7 @@ class TestInterpretation {
 				li.previous());
 		
 		li.next();
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
@@ -2189,7 +2188,7 @@ class TestInterpretation {
 		
 		li.next();
 		li.remove();
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
@@ -2203,7 +2202,7 @@ class TestInterpretation {
 		li.previous();
 		li.set(new LitInteger(42));
 		li.previous();
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define l (construct List JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
@@ -2220,7 +2219,7 @@ class TestInterpretation {
 				new LitInteropObject(bs),
 				TypeAtom.TypeSetBitSet);
 		
-		testInterpretString(
+		assertInterpretationEquals(
 				"(construct Set BitSet)",
 				bitSet);
 		
@@ -2229,32 +2228,32 @@ class TestInterpretation {
 				new LitInteropObject(nbitsBs),
 				TypeAtom.TypeSetBitSet);
 		
-		testInterpretString(
+		assertInterpretationEquals(
 				"(construct Set BitSet 2048)",
 				nBitsBitSet);
 		
 		bs.set(3);
-		testInterpretString(
+		assertInterpretationEquals(
 					"(define s (construct Set BitSet))\n"
 				+ 	"(" + JavaBitSet.setSymbol_out.toString() + " s 3)",
 				bitSet);
-		testInterpretString(
+		assertInterpretationEquals(
 					"(define s (construct Set BitSet))\n"
 				+	"(" + JavaBitSet.setValueSymbol_out.toString() + " s 3 #t)",
 				bitSet);
 		bs.set(2, 5);
-		testInterpretString(
+		assertInterpretationEquals(
 					"(define s (construct Set BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s 2 5)",
 				bitSet);
-		testInterpretString(
+		assertInterpretationEquals(
 					"(define s (construct Set BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalValueSymbol_out.toString() + " s 2 5 #t)",
 				bitSet);
 		
 		nbitsBs.set(4, 7);
 		nbitsBs.and(bs);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s1 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
 			+	"(define s2 (construct Set BitSet))\n"
@@ -2265,7 +2264,7 @@ class TestInterpretation {
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		nbitsBs.andNot(bs);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s1 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
 			+	"(define s2 (construct Set BitSet))\n"
@@ -2273,14 +2272,14 @@ class TestInterpretation {
 			+	"(" + JavaBitSet.andNotSymbol_out.toString() + " s1 s2)",
 			nBitsBitSet);
 		
-		testInterpretString(
+		assertInterpretationEquals(
 					"(define s2 (construct Set BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 				+	"(" + JavaBitSet.cardinalitySymbol_out.toString() + " s2)",
 				new LitInteger(bs.cardinality()));
 		
 		nbitsBs.clear();
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 			+	"(" + JavaBitSet.clearSymbol_out.toString() + " s2)",
@@ -2289,7 +2288,7 @@ class TestInterpretation {
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		nbitsBs.clear(5);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.clearBitIndexSymbol_out.toString() + " s2 5)",
@@ -2298,7 +2297,7 @@ class TestInterpretation {
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		nbitsBs.clear(5, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.clearIntervalSymbol_out.toString() + " s2 5 7)",
@@ -2306,7 +2305,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.cloneSymbol_out.toString() + " s2)",
@@ -2314,7 +2313,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s1 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
 			+	"(define s2 (construct Set BitSet))\n"
@@ -2325,7 +2324,7 @@ class TestInterpretation {
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		nbitsBs.flip(2);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.flipSymbol_out.toString() + " s2 2)",
@@ -2334,7 +2333,7 @@ class TestInterpretation {
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		nbitsBs.flip(2, 5);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.flipIntervalSymbol_out.toString() + " s2 2 5)",
@@ -2342,7 +2341,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.getSymbol_out.toString() + " s2 5)",
@@ -2350,7 +2349,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.getIntervalSymbol_out.toString() + " s2 5 7)",
@@ -2358,7 +2357,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s1 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
 			+	"(define s2 (construct Set BitSet))\n"
@@ -2368,7 +2367,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.isEmptySymbol_out.toString() + " s2)",
@@ -2376,7 +2375,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.lengthSymbol_out.toString() + " s2)",
@@ -2384,7 +2383,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.nextClearBitSymbol_out.toString() + " s2 5)",
@@ -2392,7 +2391,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.nextSetBitSymbol_out.toString() + " s2 0)",
@@ -2400,7 +2399,7 @@ class TestInterpretation {
 		
 		nbitsBs.set(4, 7);
 		nbitsBs.or(bs);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s1 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
 			+	"(define s2 (construct Set BitSet))\n"
@@ -2410,7 +2409,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.previousClearBitSymbol_out.toString() + " s2 5)",
@@ -2418,7 +2417,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.previousSetBitSymbol_out.toString() + " s2 9)",
@@ -2426,7 +2425,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s1 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 2 5)\n"
 			+	"(" + JavaBitSet.sizeSymbol_out.toString() + " s1)",
@@ -2434,7 +2433,7 @@ class TestInterpretation {
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s2 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.strSymbol_out.toString() + " s2)",
@@ -2443,7 +2442,7 @@ class TestInterpretation {
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		nbitsBs.xor(bs);
-		testInterpretString(
+		assertInterpretationEquals(
 				"(define s1 (construct Set BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
 			+	"(define s2 (construct Set BitSet))\n"
@@ -2459,13 +2458,14 @@ class TestInterpretation {
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		assertNotEquals(new LitInteger(0),
-				TestInterpretation.parseString("(timestamp)").interpret(env, typeEnv));
+				this.parseString("(timestamp)")
+					.get(0).interpret(env, typeEnv));
 		
-		TestInterpretation.testInterpretString("(init-logger \"test-log\")", Expression.EMPTY_EXPRESSION);
+		this.assertInterpretationEquals("(init-logger \"test-log\")", Expression.EMPTY_EXPRESSION);
 		Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 		logger.info("test");
 		
-		TestInterpretation.testInterpretString("(log \"test-2\")", Expression.EMPTY_EXPRESSION);
+		this.assertInterpretationEquals("(log \"test-2\")", Expression.EMPTY_EXPRESSION);
 	}
 	
 	@Test
@@ -2487,7 +2487,7 @@ class TestInterpretation {
 				"        (build-list-native-t\n" + 
 				"            1 (lambda ((Int:Native x)) (build-list-native-t x (lambda ((Int:Native y)) y))))";
 		
-		List<Expression> exprs = TestInterpretation.parseString_multipleExpression(code);
+		List<Expression> exprs = this.parseString_multipleExpression(code);
 		for(Expression e : exprs) {
 			e.infer(env, typeEnv);
 			e.interpret(env, typeEnv);
@@ -2502,9 +2502,9 @@ class TestInterpretation {
 		Get get2 = Get.makeGet(t, new LitInteger(1));
 		Get get3 = Get.makeGet(t, new LitComposite(new LitString("0"), TypeAtom.TypeIntString));
 		
-		TestInterpretation.testReflexivity(get);
-		TestInterpretation.testDifference(get, get2);
-		TestInterpretation.testDifference(get, Expression.EMPTY_EXPRESSION);
+		this.assertReflexivity(get);
+		this.assertDifference(get, get2);
+		this.assertDifference(get, Expression.EMPTY_EXPRESSION);
 		
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
@@ -2516,26 +2516,27 @@ class TestInterpretation {
 			get.infer(env, typeEnv);
 		});
 		
-		TestInterpretation.testInterpretation(get, new LitInteger(42), env, typeEnv);
-		TestInterpretation.testInterpretation(get2, new LitString("foo"), env, typeEnv);
-		TestInterpretation.testInterpretation(get3, new LitInteger(42), env, typeEnv);
+		this.assertInterpretationEquals(get, new LitInteger(42), env, typeEnv);
+		this.assertInterpretationEquals(get2, new LitString("foo"), env, typeEnv);
+		this.assertInterpretationEquals(get3, new LitInteger(42), env, typeEnv);
 	}
 	
 	@Test
 	@DisplayName("Test Loop Recur")
 	void testLoopRecur() throws Exception {
-		Expression e = TestInterpretation.parseString("(loop ((x 1)) (if (= x 2) x (recur (+ x 1))))");
+		Expression e = this.parseString("(loop ((x 1)) (if (= x 2) x (recur (+ x 1))))")
+						.get(0);
 		
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		Pair<Type, Substitution> p = e.infer(env, typeEnv);
-		TestInterpretation.testInference(p, TypeAtom.TypeIntNative, e);
+		this.assertInference(p, TypeAtom.TypeIntNative, e);
 		
-		TestInterpretation.testInterpretation(e, new LitInteger(2), env, typeEnv);
+		this.assertInterpretationEquals(e, new LitInteger(2), env, typeEnv);
 		
 		//Testing side effects
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(loop ((x 1) (a (construct List JavaArray))) (if (= x 2) a (let ((z (java-array-list-add-to-end a x))) (recur (+ x 1) a))))",
 				new LitComposite(
 						new LitInteropObject(
@@ -2543,7 +2544,7 @@ class TestInterpretation {
 						JavaArrayList.TypeListJavaArray));
 		
 		//Testing nested loops
-		TestInterpretation.testInterpretString(
+		this.assertInterpretationEquals(
 				"(loop ((x 0) (s \"\")) (if (= x 3) s (recur (+ x 1) (loop ((y 0) (z s)) (if (= y 2) z (recur (+ y 1) (concat z \"a\")))))))",
 				new LitString("aaaaaa"));
 	}
@@ -2551,7 +2552,7 @@ class TestInterpretation {
 	@Test
 	@DisplayName("Test let")
 	void testLet() throws Exception {
-//		TestInterpretation.testInterpretString(
+//		this.testInterpretString(
 //				"(define screw-inference\r\n"
 //				+ "	(extended-lambda\r\n"
 //				+ "		((Int i))\r\n"
@@ -2583,7 +2584,7 @@ class TestInterpretation {
 	@DisplayName("let-type inference")
 	void letTypeInference() throws AppendableException {
 		String code = "(define foo (let-type (A) (lambda ((A a)) a)))" + "(tuple (foo 42) (foo \"bar\"))";
-		List<Expression> l = TestInterpretation.parseString_multipleExpression(code);
+		List<Expression> l = this.parseString_multipleExpression(code);
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
@@ -2591,7 +2592,7 @@ class TestInterpretation {
 		l.get(0).interpret(env, typeEnv);
 		Pair<Type, Substitution> p2 = l.get(1).infer(env, typeEnv);
 
-		TestInterpretation.testInference(p2, new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative),
+		this.assertInference(p2, new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative),
 				l.get(1));
 	}
 	
@@ -2614,17 +2615,17 @@ class TestInterpretation {
 		
 		Extend extend = new Extend(elambda, implementation);
 		
-		testReflexivity(extend);
-		testDifference(extend, 
+		assertReflexivity(extend);
+		assertDifference(extend, 
 				new Extend(Expression.EMPTY_EXPRESSION, implementation));
-		testDifference(extend,
+		assertDifference(extend,
 				new Extend(elambda, Expression.EMPTY_EXPRESSION));
 		
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		Pair<Type, Substitution> p = extend.infer(env, typeEnv);
-		testInference(p, 
+		assertInference(p, 
 				RepresentationOr.makeRepresentationOr(
 						new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeStringNative),
 						new TypeArrow(new TypeTuple(TypeAtom.TypeIntString), TypeAtom.TypeStringNative)), 
@@ -2656,7 +2657,7 @@ class TestInterpretation {
 							  new Tuple(impl, elambda_args)),
 					  env));
 		
-		testInterpretation(
+		assertInterpretationEquals(
 				extend, 
 				ExtendedFunction.makeExtendedFunction(
 						m,
@@ -2671,11 +2672,11 @@ class TestInterpretation {
 				new LitInteger(0));
 		Extend extendWithCost = new Extend(elambda, implementation, costLambda);
 		
-		testReflexivity(extendWithCost);
-		testDifference(extend, extendWithCost);
+		assertReflexivity(extendWithCost);
+		assertDifference(extend, extendWithCost);
 		
 		p = extendWithCost.infer(env, typeEnv);
-		testInference(p, 
+		assertInference(p, 
 				RepresentationOr.makeRepresentationOr(
 						new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeStringNative),
 						new TypeArrow(new TypeTuple(TypeAtom.TypeIntString), TypeAtom.TypeStringNative)), 
@@ -2706,7 +2707,7 @@ class TestInterpretation {
 						new LitInteger(0),
 						env));
 		
-		testInterpretation(
+		assertInterpretationEquals(
 				extendWithCost,
 				ExtendedFunction.makeExtendedFunction(expectedImpls, env),
 				env,
@@ -2714,7 +2715,8 @@ class TestInterpretation {
 		
 		//Test if cross-used type variables inferes correctly (substitution merge)
 		Expression f = parseString(
-				"(let-type (A) (extend (extend (extended-lambda (A)) (lambda ((A x)) (floor x))) (lambda ((A x)) (+ x 1))))");
+				"(let-type (A) (extend (extend (extended-lambda (A)) (lambda ((A x)) (floor x))) (lambda ((A x)) (+ x 1))))")
+				.get(0);
 		assertThrows(TypeSetDoesNotUnifyException.class, () -> f.infer(env, typeEnv));
 	}
 	
@@ -2730,110 +2732,5 @@ class TestInterpretation {
 				ListNative.class,
 				ConstructorOperators.class));
 		assertNotNull(doc);
-	}
-
-	private static Expression parseString(String s) throws AppendableException {
-		List<Expression> l = Parser.read(s); 
-		return l.get(l.size() - 1);
-	}
-	
-	private static List<Expression> parseString_multipleExpression(String s) throws AppendableException{
-		return Parser.read(s);
-	}
-
-	private static void testReflexivity(Expression original) {
-		Expression e = original;
-		assertEquals(original, e);
-		assertEquals(original.hashCode(), original.hashCode());
-		assertEquals(original.compareTo(e), 0);
-	}
-
-	private static void testDifference(Expression original, Expression e) {
-		assertNotEquals(original, e);
-		assertNotEquals(original.compareTo(e), 0);
-	}
-
-	private static void testInference(Pair<Type, Substitution> result, Type expected, Expression infered) {
-		TestInterpretation.testInference(result, expected, infered, false);
-	}
-
-	private static void testInference(Pair<Type, Substitution> p, Type expected, Expression infered,
-			boolean shouldeBeSUbstEmpty) {
-		assertEquals(expected, p.first);
-		if (shouldeBeSUbstEmpty) {
-			assertEquals(Substitution.EMPTY, p.second);
-		}
-	}
-
-	private static void testInferenceOfType(Pair<Type, Substitution> p, Class<? extends Type> expected,
-			Expression infered) {
-		TestInterpretation.testInferenceOfType(p, expected, infered, false);
-	}
-
-	private static void testInferenceOfType(Pair<Type, Substitution> p, Class<? extends Type> expected,
-			Expression infered, boolean shouldBeSubstEmpty) {
-		assertTrue(expected.isInstance(p.first));
-		if (shouldBeSubstEmpty) {
-			assertEquals(p.second, Substitution.EMPTY);
-		}
-	}
-
-	private static void testInterpretation(Expression interpreted, Expression expected, Environment env,
-			TypeEnvironment typeEnv) throws AppendableException {
-		Expression e = interpreted.interpret(env, typeEnv);
-		assertEquals(expected, e);
-	}
-	
-	private static void testInterpretation(Collection<Expression> interpreted, Expression expected, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Expression f = null;
-		for(Expression e : interpreted) {
-			f = e.interpret(env, typeEnv);
-		}
-		assertEquals(expected, f);
-	}
-
-	private static void testOperator(final Operator operator, Tuple args, Expression expectedInterpret,
-			Type expectedInference) throws AppendableException {
-		AbstractionApplication application = new AbstractionApplication(operator, args);
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-
-		TestInterpretation.testInterpretation(application, expectedInterpret, env, typeEnv);
-		Pair<Type, Substitution> p = application.infer(env, typeEnv);
-		if (expectedInference != null) {
-			TestInterpretation.testInference(p, expectedInference, application);
-		}
-
-		assertAll(() -> {
-			operator.toString();
-			operator.toClojureCode(env, typeEnv);
-		});
-	}
-
-	private static void testConversion(Abstraction conversion, Expression argument, Expression expectedInterpret,
-			Type expectedInfer) throws AppendableException {
-		assertAll(() -> {
-			conversion.toString();
-		});
-
-		AbstractionApplication appl = new AbstractionApplication(conversion, new Tuple(Arrays.asList(argument)));
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-
-		TestInterpretation.testInterpretation(appl, expectedInterpret, env, typeEnv);
-		Pair<Type, Substitution> p = conversion.infer(env, typeEnv);
-		TestInterpretation.testInference(p, expectedInfer, conversion);
-	}
-
-	private static void testInterpretString(String interpreted, Expression expected) throws AppendableException {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		TestInterpretation.testInterpretString(interpreted, expected, env, typeEnv);
-	}
-
-	private static void testInterpretString(String interpreted, Expression expected, Environment env,
-			TypeEnvironment typeEnv) throws AppendableException {
-		List<Expression> l = TestInterpretation.parseString_multipleExpression(interpreted);
-		TestInterpretation.testInterpretation(l, expected, env, typeEnv);
 	}
 }

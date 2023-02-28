@@ -647,7 +647,7 @@ public class JavaArrayList {
 			String object = "_object";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, object),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 						ClojureHelper.applyClojureFunction(
 								".indexOf",
 								ClojureHelper.getLiteralInnerValue(list),
@@ -775,7 +775,7 @@ public class JavaArrayList {
 			String object = "_object";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, object),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".lastIndexOf",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -1132,7 +1132,7 @@ public class JavaArrayList {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".size",
 									ClojureHelper.getLiteralInnerValue(list))));
@@ -1314,11 +1314,12 @@ public class JavaArrayList {
 
 			return new LitComposite(new LitInteropObject(rslt), JavaArrayList.TypeListJavaArray);
 		}
+		
+		private TypeVariable A = new TypeVariable(NameGenerator.next());
+		private TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeVariable B = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(JavaArrayList.TypeListJavaArray, new TypeArrow(new TypeTuple(A), B)),
 					JavaArrayList.TypeListJavaArray);
@@ -1415,12 +1416,13 @@ public class JavaArrayList {
 
 			return new LitComposite(new LitInteropObject(rslt), JavaArrayList.TypeListJavaArray);
 		}
+		
+		private TypeVariable A = new TypeVariable(NameGenerator.next());
+		private TypeVariable B = new TypeVariable(NameGenerator.next());
+		private TypeVariable C = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeVariable B = new TypeVariable(NameGenerator.next());
-			TypeVariable C = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray,
 					JavaArrayList.TypeListJavaArray, new TypeArrow(new TypeTuple(A, B), C)),
 					JavaArrayList.TypeListJavaArray);
@@ -1503,11 +1505,12 @@ public class JavaArrayList {
 
 			return rslt;
 		}
+		
+		private TypeVariable A = new TypeVariable(NameGenerator.next());
+		private TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeVariable B = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays
 					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, JavaArrayList.TypeListJavaArray)),
 					A);
@@ -1586,11 +1589,13 @@ public class JavaArrayList {
 			return agg;
 		}
 
+		private TypeVariable A = new TypeVariable(NameGenerator.next());
+		private TypeVariable B = new TypeVariable(NameGenerator.next());
+		
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays
-					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, A)), A), A, JavaArrayList.TypeListJavaArray)),
+					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, JavaArrayList.TypeListJavaArray)),
 					A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}

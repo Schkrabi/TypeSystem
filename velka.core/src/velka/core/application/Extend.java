@@ -180,7 +180,7 @@ public class Extend extends Expression implements Comparable<Expression> {
 		
 		this.isCostFunctionInferingCorrectly(implementationInfered.first, env, typeEnv);
 		
-		return new Pair<Type, Substitution>(type, extendedFunctionInfered.second.compose(implementationInfered.second));
+		return new Pair<Type, Substitution>(type, Substitution.EMPTY);//extendedFunctionInfered.second.compose(implementationInfered.second));
 	}
 
 	/**

@@ -51,7 +51,6 @@ import velka.core.literal.LitComposite;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
-import velka.parser.Parser;
 import velka.parser.exceptions.InvalidNumberOfArgsException;
 import velka.parser.exceptions.UnexpectedExpressionException;
 import velka.types.Type;
@@ -63,7 +62,7 @@ import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
 
-class TestParser {
+class TestParser extends VelkaTest{
 	
 	private static boolean equalsLambdaUpToTypeVariables(Lambda l1, Lambda l2) throws AppendableException {		
 		return Type.unifyTypes(l1.argsType, l2.argsType).isPresent()
@@ -159,9 +158,6 @@ class TestParser {
 		this.testParse("(can-deconstruct-as x Int:Native)",
 				new CanDeconstructAs(new Symbol("x"), TypeAtom.TypeIntNative));
 
-		Lambda ranking = new Lambda(new Tuple(new Symbol("x"), new Symbol("y")),
-				new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeListNative), new LitInteger(1));
-
 		this.testParse("(eapply + (cons 1 2))",
 				new AbstractionApplication(new Symbol("+"), new Tuple(new LitInteger(1), new LitInteger(2))));
 //		this.testParse("(eapply + (cons 1 2) (lambda ((List:Native x) (List:Native y)) 1))",
@@ -183,7 +179,7 @@ class TestParser {
 		Expression expr = new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 				new TypeTuple(Arrays.asList(new TypeVariable("_x"))), new Symbol("y"));
 
-		Expression parsed = parseString(sExpr);
+		Expression parsed = parseString(sExpr).get(0);
 		assertTrue(parsed instanceof Lambda);
 
 		Lambda parsedLambda = (Lambda) parsed;
@@ -191,7 +187,7 @@ class TestParser {
 
 		assertEquals(parsedLambda, expectedLambda);
 
-		assertEquals(parseString("(lambda ((String x) (Int y)) x)"),
+		assertEquals(parseString("(lambda ((String x) (Int y)) x)").get(0),
 				new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeString, TypeAtom.TypeInt)), new Symbol("x")));
 	}
@@ -199,7 +195,7 @@ class TestParser {
 	@Test
 	@DisplayName("Test Extended Lambda")
 	void testElambda() throws AppendableException {
-		Expression parsed = parseString("(extended-lambda (Int))");
+		Expression parsed = parseString("(extended-lambda (Int))").get(0);
 		assertTrue(parsed instanceof ExtendedLambda);
 	}
 
@@ -540,7 +536,8 @@ class TestParser {
 	@Test
 	@DisplayName("Test Let Type")
 	void testLetType() throws AppendableException {
-		Expression e = this.parseString("(let-type (A) (lambda ((A x)) (let-type (A) (lambda ((A y)) x))))");
+		Expression e = this.parseString("(let-type (A) (lambda ((A x)) (let-type (A) (lambda ((A y)) x))))")
+				.get(0);
 
 		TypeVariable outer = (TypeVariable) ((Lambda) e).argsType.get(0);
 		TypeVariable inner = (TypeVariable) ((Lambda) ((Lambda) e).body).argsType.get(0);
@@ -559,7 +556,7 @@ class TestParser {
 	void testLet () throws AppendableException {
 		String letCode = "(let ((a 21) (b 21)) a)";
 		
-		Expression e = this.parseString(letCode);
+		Expression e = this.parseString(letCode).get(0);
 		if(e instanceof AbstractionApplication) {
 			AbstractionApplication apl = (AbstractionApplication)e;
 			Lambda l = (Lambda)apl.fun;
@@ -577,7 +574,7 @@ class TestParser {
 		
 		String letAstCode = "(let* ((a 30) (b 12)) a)";
 		
-		e = this.parseString(letAstCode);
+		e = this.parseString(letAstCode).get(0);
 		if(e instanceof AbstractionApplication) {
 			AbstractionApplication apl = (AbstractionApplication)e;
 			Lambda l = (Lambda)apl.fun;
@@ -606,7 +603,7 @@ class TestParser {
 	@Test
 	@DisplayName("Test Loop Recur")
 	void testLoopRecur() throws AppendableException {
-		Expression e = this.parseString("(loop ((x 10)) 42)");
+		Expression e = this.parseString("(loop ((x 10)) 42)").get(0);
 		
 		Assertions.assertTrue(e instanceof Loop);
 		
@@ -615,7 +612,7 @@ class TestParser {
 		Assertions.assertEquals(l,
 				new Loop(new Tuple(new Symbol("x")), new LitInteger(42), new Tuple(new LitInteger(10))));
 		
-		Expression f = this.parseString("(recur 42)");
+		Expression f = this.parseString("(recur 42)").get(0);
 		
 		Assertions.assertTrue(f instanceof Recur);
 		
@@ -624,13 +621,8 @@ class TestParser {
 		Assertions.assertEquals(r, new Recur(new Tuple(new LitInteger(42))));
 	}
 
-	private Expression parseString(String s) throws AppendableException {
-		List<Expression> l = Parser.read(s); 
-		return l.get(l.size() - 1);
-	}
-
 	private void testParse(String parsedString, Expression expected) throws AppendableException {
-		Expression parsed = this.parseString(parsedString);
+		Expression parsed = this.parseString(parsedString).get(0);
 		assertEquals(expected, parsed);
 	}
 

@@ -291,7 +291,7 @@ public class JavaBitSet {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".cardinality",
 									ClojureHelper.getLiteralInnerValue(set))));
@@ -519,7 +519,7 @@ public class JavaBitSet {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
-					LitComposite.litCompositeHelper(
+					LitComposite.clojureLit(
 							TypeAtom.TypeSetBitSet,
 							ClojureHelper.applyClojureFunction(
 									".clone",
@@ -811,7 +811,7 @@ public class JavaBitSet {
 			String toIndex = "_toIndex";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set, fromIndex, toIndex),
-					LitComposite.litCompositeHelper(
+					LitComposite.clojureLit(
 							TypeAtom.TypeSetBitSet,
 							ClojureHelper.applyClojureFunction(
 									".get",
@@ -983,7 +983,7 @@ public class JavaBitSet {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".length",
 									ClojureHelper.getLiteralInnerValue(set))));
@@ -1034,7 +1034,7 @@ public class JavaBitSet {
 			String fromIndex = "_fromIndex";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set, fromIndex),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".nextClearBit",
 									ClojureHelper.getLiteralInnerValue(set),
@@ -1088,7 +1088,7 @@ public class JavaBitSet {
 			String fromIndex = "_fromIndex";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set, fromIndex),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".nextSetBit",
 									ClojureHelper.getLiteralInnerValue(set),
@@ -1208,7 +1208,7 @@ public class JavaBitSet {
 			String fromIndex = "_fromIndex";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set, fromIndex),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".previousClearBit",
 									ClojureHelper.getLiteralInnerValue(set),
@@ -1262,7 +1262,7 @@ public class JavaBitSet {
 			String fromIndex = "_fromIndex";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set, fromIndex),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".previousSetBit",
 									ClojureHelper.getLiteralInnerValue(set),
@@ -1566,7 +1566,7 @@ public class JavaBitSet {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
-					LitInteger.clojureIntToClojureLitInteger(
+					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".size",
 									ClojureHelper.getLiteralInnerValue(set))));
@@ -1618,7 +1618,7 @@ public class JavaBitSet {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
-					LitString.clojureStringToClojureLitString(
+					LitString.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".toString",
 									ClojureHelper.getLiteralInnerValue(set))));

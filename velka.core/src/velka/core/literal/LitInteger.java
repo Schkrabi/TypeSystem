@@ -69,7 +69,7 @@ public class LitInteger extends Literal {
 	 * @param clojureCode code providing int value for literal
 	 * @return clojure code
 	 */
-	public static String clojureIntToClojureLitInteger(String clojureCode) {
+	public static String clojureLit(String clojureCode) {
 		return Literal.clojureValueToClojureLiteral(clojureCode, TypeAtom.TypeIntNative);
 	}
 }
