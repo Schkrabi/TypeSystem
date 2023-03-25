@@ -1,5 +1,7 @@
 package velka.core.langbase;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -8,8 +10,11 @@ import java.util.ListIterator;
 import java.util.stream.Collectors;
 
 import velka.core.abstraction.Abstraction;
+import velka.core.abstraction.Constructor;
+import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
+import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -55,7 +60,7 @@ import velka.util.annotations.VelkaOperatorBank;
 @VelkaOperatorBank
 @Description("Operators for working with wrapped java.util.LinkedList.") 
 @Header("Linked List")
-public class JavaLinkedList {
+public class JavaLinkedList extends OperatorBank {
 
 	/**
 	 * Clojure namespace symbol for JavaLinkedList
@@ -87,7 +92,7 @@ public class JavaLinkedList {
 	@Description("Constructs empty List:Linked.") 
 	@Name("Construct empty list") 
 	@Syntax("(construct List JavaLinked)")
-	public static final Operator constructor = new Operator() {
+	public static final Constructor constructor = new Constructor() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -136,7 +141,7 @@ public class JavaLinkedList {
 			String e = "_e";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, e),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".add",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -277,7 +282,7 @@ public class JavaLinkedList {
 			String list = "_list";
 			String collection = "_collection";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list, collection),
-					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction(".addAll",
+					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction(".addAll",
 							ClojureHelper.getLiteralInnerValue(list), ClojureHelper.getLiteralInnerValue(collection))));
 
 			return code;
@@ -346,7 +351,7 @@ public class JavaLinkedList {
 			String object = "_object";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, object),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".contains",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -416,7 +421,7 @@ public class JavaLinkedList {
 			String collection = "_collection";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, collection),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".containsAll",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -618,7 +623,7 @@ public class JavaLinkedList {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".isEmpty",
 									ClojureHelper.getLiteralInnerValue(list))));
@@ -751,7 +756,7 @@ public class JavaLinkedList {
 			String o = "_o";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, o),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".remove",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -826,7 +831,7 @@ public class JavaLinkedList {
 			String c = "_c";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, c),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".removeAll",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -904,7 +909,7 @@ public class JavaLinkedList {
 			String c = "_c";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, c),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".retainAll",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -1537,7 +1542,7 @@ public class JavaLinkedList {
 	@Description("Converts List:JavaLinked to List:JavaArray)") 
 	@Example("(linked-list-2-array-list (construct List JavaLinked))") 
 	@Syntax("(linked-list-2-array-list <linked-list>)")
-	public static Operator LinkedListToArrayList = new Operator() {
+	public static Conversion LinkedListToArrayList = new Conversion() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1591,7 +1596,7 @@ public class JavaLinkedList {
 	@Description("Converts List:JavaLinked to List:Native.") 
 	@Example("(linked-list-2-native-list (construct List JavaLinked))") 
 	@Syntax("(linked-list-2-native-list <linked list>)")
-	public static Operator LinkedListToNativeList = new Operator() {
+	public static Conversion LinkedListToNativeList = new Conversion() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1652,7 +1657,7 @@ public class JavaLinkedList {
 			String pred = "_pred";
 			String pred_arg = "_arg";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list, pred),
-					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction("every?",
+					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction("every?",
 							ClojureHelper.fnHelper(Arrays.asList(pred_arg),
 									ClojureHelper
 											.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
@@ -1891,7 +1896,7 @@ public class JavaLinkedList {
 			String it = "_iterator";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(it),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".hasNext",
 									ClojureHelper.getLiteralInnerValue(it))));
@@ -1945,7 +1950,7 @@ public class JavaLinkedList {
 			String it = "_iterator";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(it),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".hasPrevious",
 									ClojureHelper.getLiteralInnerValue(it))));
@@ -2321,4 +2326,37 @@ public class JavaLinkedList {
 			return iteratorSetSymbol_out.toString();
 		}
 	};
+
+	public static final Path VELKA_CLOJURE_LINKEDLIST_PATH = Paths.get("velka", "clojure");
+
+	public static final Path VELKA_CLOJURE_LINKEDLIST_NAME = Paths.get("linkedList.clj");
+
+	@Override
+	public String getNamespace() {
+		return NAMESPACE;
+	}
+
+	@Override
+	public Path getPath() {
+		return VELKA_CLOJURE_LINKEDLIST_PATH;
+	}
+
+	@Override
+	public Path getFileName() {
+		return VELKA_CLOJURE_LINKEDLIST_NAME;
+	}
+
+	@Override
+	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
+		typeEnv.addRepresentation(TypeListJavaLinked);
+	}
+	
+	private static JavaLinkedList instance = null;
+	private JavaLinkedList() {}
+	public static JavaLinkedList singleton() {
+		if(instance == null) {
+			instance = new JavaLinkedList();
+		}
+		return instance;
+	}
 }

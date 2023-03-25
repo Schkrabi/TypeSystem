@@ -3,15 +3,12 @@ package velka.core.interpretation;
 import java.util.HashMap;
 import java.util.Map;
 
-import velka.core.abstraction.ConversionOperators;
-import velka.core.abstraction.Operators;
 import velka.core.exceptions.UnboundVariableException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
-import velka.core.langbase.JavaArrayList;
-import velka.core.langbase.JavaBitSet;
-import velka.core.langbase.JavaLinkedList;
-import velka.core.langbase.ListNative;
+import velka.core.langbase.ConversionOperators;
+import velka.core.langbase.OperatorBank;
+import velka.core.langbase.Operators;
 import velka.core.util.OperatorBankUtil;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
@@ -188,63 +185,10 @@ public class Environment implements Comparable<Environment> {
 
 	public static Environment initTopLevelEnvironment() {
 		Environment env = new Environment();
-		env.put(new Symbol(Operators.Addition.toString()), Operators.Addition);
-		env.put(new Symbol(Operators.Subtraction.toString()), Operators.Subtraction);
-		env.put(new Symbol(Operators.Multiplication.toString()), Operators.Multiplication);
-		env.put(new Symbol(Operators.Division.toString()), Operators.Division);
-		env.put(new Symbol(Operators.NumericEqual.toString()), Operators.NumericEqual);
-		env.put(new Symbol(Operators.LesserThan.toString()), Operators.LesserThan);
-		env.put(new Symbol(Operators.Not.toString()), Operators.Not);
-		env.put(new Symbol(Operators.BitAnd.toString()), Operators.BitAnd);
-		env.put(new Symbol(Operators.BitOr.toString()), Operators.BitOr);
-		env.put(new Symbol(Operators.Concantenation.toString()), Operators.Concantenation);
-		env.put(new Symbol(Operators.Car.toString()), Operators.Car);
-		env.put(new Symbol(Operators.Cdr.toString()), Operators.Cdr);
-		env.put(new Symbol("nil"), Expression.EMPTY_EXPRESSION);
-		env.put(new Symbol(Operators.Equals.toString()), Operators.Equals);
-		env.put(new Symbol(Operators.PrintlnOperator.toString()), Operators.PrintlnOperator);
-		env.put(new Symbol(Operators.CanUnifyRepresentations.toString()), Operators.CanUnifyRepresentations);
-		env.put(new Symbol(Operators.CanUnifyTypes.toString()), Operators.CanUnifyTypes);
-		env.put(new Symbol(Operators.IsSameType.toString()), Operators.IsSameType);
-		env.put(new Symbol(Operators.IsSameRepresentation.toString()), Operators.IsSameRepresentation);
-		env.put(new Symbol(Operators.Timestamp.toString()), Operators.Timestamp);
-		env.put(new Symbol(Operators.InitLogger.toString()), Operators.InitLogger);
-		env.put(new Symbol(Operators.Log.toString()), Operators.Log);
-		env.put(new Symbol(Operators.BitShiftRight.toString()), Operators.BitShiftRight);
-		env.put(new Symbol(Operators.UnsignedBitShiftRight.toString()), Operators.UnsignedBitShiftRight);
-		env.put(new Symbol(Operators.BitShiftLeft.toString()), Operators.BitShiftLeft);
-		env.put(new Symbol(Operators.BitNot.toString()), Operators.BitNot);
-		env.put(new Symbol(Operators.BitXor.toString()), Operators.BitXor);
-		env.put(new Symbol(Operators.ToStr.toString()), Operators.ToStr);
-		env.put(new Symbol(Operators.ReadFile.toString()), Operators.ReadFile);
-		env.put(new Symbol(Operators.StrSplit.toString()), Operators.StrSplit);
-		env.put(new Symbol(Operators.ParseInt.toString()), Operators.ParseInt);
-		env.put(new Symbol(Operators.DoubleDivision.toString()), Operators.DoubleDivision);
-		env.put(new Symbol(Operators.IntToDouble.toString()), Operators.IntToDouble);
-		env.put(new Symbol(Operators.Floor.toString()), Operators.Floor);
-		env.put(new Symbol(Operators.DoubleAddition.toString()), Operators.DoubleAddition);
-		env.put(new Symbol(Operators.DoubleLesserThan.toString()), Operators.DoubleLesserThan);
-		env.put(new Symbol(Operators.Modulo.toString()), Operators.Modulo);
-		env.put(new Symbol(Operators.ConversionCost.toString()), Operators.ConversionCost);
 		
-		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
-				ConversionOperators.IntNativeToIntRoman);
-		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)),
-				ConversionOperators.IntNativeToIntString);
-		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative)),
-				ConversionOperators.IntRomanToIntNative);
-		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString)),
-				ConversionOperators.IntRomanToIntString);
-		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntNative)),
-				ConversionOperators.IntStringToIntNative);
-		env.put(new Symbol(TypeEnvironment.makeConversionName(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)),
-				ConversionOperators.IntStringToIntRoman);
-		
-		ListNative.initializeInEnvironment(env);
-		JavaArrayList.initializeInEnvironment(env);
-		OperatorBankUtil.initializeInEnvironment(JavaLinkedList.class, env);
-		OperatorBankUtil.initializeInEnvironment(JavaBitSet.class, env);
-		OperatorBankUtil.initializeInEnvironment(velka.core.langbase.Scanner.class, env);
+		for(OperatorBank bank : OperatorBank.operatorBanks) {
+			OperatorBankUtil.initializeInEnvironment(bank.getClass(), env);
+		}
 		
 		return env;
 	}

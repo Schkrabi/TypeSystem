@@ -8,24 +8,10 @@ import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 import java.util.List;
 
-import velka.clojure.langbase.VelkaClojureArrayList;
-import velka.clojure.langbase.VelkaClojureConstructors;
-import velka.clojure.langbase.VelkaClojureConversions;
-import velka.clojure.langbase.VelkaClojureLinkedList;
-import velka.clojure.langbase.VelkaClojureList;
-import velka.clojure.langbase.VelkaClojureOperators;
-import velka.core.abstraction.ConstructorOperators;
-import velka.core.abstraction.ConversionOperators;
-import velka.core.abstraction.Operators;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
-import velka.core.langbase.JavaArrayList;
-import velka.core.langbase.JavaBitSet;
-import velka.core.langbase.JavaLinkedList;
-import velka.core.langbase.ListNative;
-import velka.core.langbase.Scanner;
-import velka.core.util.OperatorBankUtil;
+import velka.core.langbase.OperatorBank;
 import velka.types.Type;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
@@ -79,14 +65,10 @@ public class ClojureCodeGenerator {
 
 		sb.append(ClojureHelper.declareNamespace(namespace));
 		sb.append(ClojureHelper.requireNamespace(ClojureCoreSymbols.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(Operators.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(ListNative.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(ConstructorOperators.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(ConversionOperators.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(JavaArrayList.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(JavaLinkedList.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(JavaBitSet.NAMESPACE));
-		sb.append(ClojureHelper.requireNamespace(Scanner.NAMESPACE));
+		
+		for(OperatorBank ob : OperatorBank.operatorBanks) {
+			sb.append(ClojureHelper.requireNamespace(ob.getNamespace()));
+		}
 
 		Iterator<Expression> i = exprs.iterator();
 		while (i.hasNext()) {
@@ -130,11 +112,17 @@ public class ClojureCodeGenerator {
 			TypeEnvironment typeEnv) throws Exception {
 		return ExpressionListToCljFile(dir.resolve(DEFAULT_FILENAME), DEFAULT_NAMESPACE, exprs, env, typeEnv);
 	}
-	
-	private static Path generateFile(Class<?> clazz, String namespace, Path dest) throws IOException {
-		return Files.writeString(dest, OperatorBankUtil.writeDefinitions(clazz, namespace));
-	}
 
+	/**
+	 * Generates .clj code file for given operator bank and directory
+	 * @param operatorBank operator bank instance
+	 * @param directory directory to place the code into
+	 * @throws IOException if write goes awry
+	 */
+	private static void generateOperatorBank(OperatorBank operatorBank, Path directory) throws IOException {
+		Files.createDirectories(directory.resolve(operatorBank.getPath()));
+		operatorBank.generateFile(directory);
+	}
 	
 	public static Path generateClojureProject(Path directory) throws IOException {
 		ClojureCodeGenerator.createDepsEdn(directory);
@@ -145,39 +133,11 @@ public class ClojureCodeGenerator {
 		
 		Files.createDirectories(directory.resolve(VelkaClojureCore.VELKA_CLOJURE_CORE_PATH));
 		Path velkaClojureCore = directory.resolve(VelkaClojureCore.VELKA_CLOJURE_CORE_PATH).resolve(VelkaClojureCore.VELKA_CLOJURE_CORE_NAME);
-		VelkaClojureCore.generateFile(velkaClojureCore);
+		VelkaClojureCore.generateFile(velkaClojureCore);			
 		
-		Files.createDirectories(directory.resolve(VelkaClojureOperators.VELKA_CLOJURE_OPERATORS_PATH));
-		Path velkaClojureOperators = directory.resolve(VelkaClojureOperators.VELKA_CLOJURE_OPERATORS_PATH).resolve(VelkaClojureOperators.VELKA_CLOJURE_OPERAOTRS_NAME);
-		VelkaClojureOperators.generateFile(velkaClojureOperators);		
-		
-		Files.createDirectories(directory.resolve(VelkaClojureList.VELKA_CLOJURE_LIST_PATH));
-		Path velkaClojureList = directory.resolve(VelkaClojureList.VELKA_CLOJURE_LIST_PATH).resolve(VelkaClojureList.VELKA_CLOJURE_LIST_NAME);
-		VelkaClojureList.generateFile(velkaClojureList);
-		
-		Files.createDirectories(directory.resolve(VelkaClojureConstructors.VELKA_CLOJURE_CONSTRUCTORS_PATH));
-		Path velkaClojureConstructors = directory.resolve(VelkaClojureConstructors.RELATIVE_PATH);
-		VelkaClojureConstructors.generateFile(velkaClojureConstructors);
-		
-		Files.createDirectories(directory.resolve(VelkaClojureConversions.VELKA_CLOJURE_CONVERSIONS_PATH));
-		Path velkaClojureConversions = directory.resolve(VelkaClojureConversions.RELATIVE_PATH);
-		VelkaClojureConversions.generateFile(velkaClojureConversions);
-		
-		Files.createDirectories(directory.resolve(VelkaClojureArrayList.VELKA_CLOJURE_ARRAYLIST_PATH));
-		Path velkaClojurArrayList = directory.resolve(VelkaClojureArrayList.RELATIVE_PATH);
-		VelkaClojureArrayList.generateFile(velkaClojurArrayList);
-		
-		Files.createDirectories(directory.resolve(VelkaClojureLinkedList.VELKA_CLOJURE_LINKEDLIST_PATH));
-		Path velkaClojureLinkedList = directory.resolve(VelkaClojureLinkedList.RELATIVE_PATH);
-		generateFile(JavaLinkedList.class, JavaLinkedList.NAMESPACE, velkaClojureLinkedList);
-		
-		Files.createDirectories(directory.resolve(JavaBitSet.VELKA_CLOJURE_BITSET_PATH));
-		Path velkaCloureBitSet = directory.resolve(JavaBitSet.RELATIVE_PATH);
-		generateFile(JavaBitSet.class, JavaBitSet.NAMESPACE, velkaCloureBitSet);
-		
-		Files.createDirectories(directory.resolve(Scanner.VELKA_CLOJURE_SCANNER_PATH));
-		Path velkaClojureScanner = directory.resolve(Scanner.RELATIVE_PATH);
-		generateFile(Scanner.class, Scanner.NAMESPACE, velkaClojureScanner);
+		for(OperatorBank bank : OperatorBank.operatorBanks) {
+			generateOperatorBank(bank, directory);
+		}		
 		
 		Files.createDirectories(directory.resolve(ClojureCodeGenerator.CLASSES_PATH));
 		
@@ -189,8 +149,6 @@ public class ClojureCodeGenerator {
 		sb.append("(require '[clojure.string])\n");
 		sb.append("(ns " + ClojureCoreSymbols.NAMESPACE + " (:gen-class))\n");
 		sb.append(VelkaClojureCore.writeDefinitions());
-		sb.append("\n");
-		//sb.append(ListNative.makeClojureCode(env, typeEnv));
 		sb.append("\n\n");
 		return sb.toString();
 	}
@@ -218,11 +176,11 @@ public class ClojureCodeGenerator {
 		//Default clojure dependencies
 		sb.append("\".\"\n");
 		sb.append("\"./" + VelkaClojureCore.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
-		sb.append("\"./" + VelkaClojureOperators.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
-		sb.append("\"./" + VelkaClojureList.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
-		sb.append("\"./" + VelkaClojureConversions.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
-		sb.append("\"./" + VelkaClojureArrayList.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
-		sb.append("\"./" + VelkaClojureLinkedList.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
+		
+		for(OperatorBank ob : OperatorBank.operatorBanks) {
+			sb.append("\"./" + ob.getRelative().toString().replace('\\', '/') + "\"\n");
+		}
+		
 		//Main source file
 		sb.append("\"./" + ClojureCodeGenerator.DEFAULT_FILE_PROJECT_PATH.toString().replace('\\', '/') + "\"\n");
 		//Velka libs

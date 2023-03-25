@@ -99,7 +99,7 @@ public class OrExpression extends SpecialFormApplication {
 		sb.append(")");
 		
 		
-		return LitBoolean.clojureBooleanToClojureLitBoolean(sb.toString());
+		return LitBoolean.clojureLit(sb.toString());
 	}
 
 	@Override

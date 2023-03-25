@@ -1,4 +1,4 @@
-package velka.core.abstraction;
+package velka.core.langbase;
 
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
@@ -10,11 +10,14 @@ import java.util.logging.XMLFormatter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Optional;
 
+import velka.core.abstraction.Operator;
+import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -54,7 +57,7 @@ import velka.util.annotations.VelkaOperatorBank;
 @VelkaOperatorBank
 @Header("General")
 @Description("General operators for primitive types and utility.")
-public final class Operators {
+public final class Operators extends OperatorBank {
 	
 	/**
 	 * Namespace for velka.clojure.operators
@@ -404,7 +407,7 @@ public final class Operators {
 			String t2 = "_t2";
 			String opt = "_opt";
 			String fn = ClojureHelper.fnHelper(Arrays.asList(t1, t2), ClojureHelper.letHelper(
-					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction(".isPresent", opt)),
+					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction(".isPresent", opt)),
 					new Pair<String, String>(opt, ClojureHelper.applyClojureFunction(
 							"velka.types.Type/unifyRepresentation",
 							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t1),
@@ -463,7 +466,7 @@ public final class Operators {
 			String t2 = "_t2";
 			String opt = "_opt";
 			String fn = ClojureHelper.fnHelper(Arrays.asList(t1, t2), ClojureHelper.letHelper(
-					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction(".isPresent", opt)),
+					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction(".isPresent", opt)),
 					new Pair<String, String>(opt, ClojureHelper.applyClojureFunction(
 							"velka.types.Type/unifyTypes",
 							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t1),
@@ -907,7 +910,7 @@ public final class Operators {
 			String d2 = "_d2";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(d1, d2), 
-					LitBoolean.clojureBooleanToClojureLitBoolean("(< (first " + d1 + ") (first " + d2 + "))"));
+					LitBoolean.clojureLit("(< (first " + d1 + ") (first " + d2 + "))"));
 			
 			return code;
 		}
@@ -977,7 +980,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitBoolean.clojureBooleanToClojureLitBoolean("(= (get _x 0) (get _y 0))") + ")";
+			return "(fn [_x _y] " + LitBoolean.clojureLit("(= (get _x 0) (get _y 0))") + ")";
 		}
 
 		@Override
@@ -1301,7 +1304,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitBoolean.clojureBooleanToClojureLitBoolean("(< (get _x 0) (get _y 0))") + ")";
+			return "(fn [_x _y] " + LitBoolean.clojureLit("(< (get _x 0) (get _y 0))") + ")";
 		}
 
 		@Override
@@ -1475,7 +1478,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] " + LitBoolean.clojureBooleanToClojureLitBoolean("(not (get _x 0))") + ")";
+			return "(fn [_x] " + LitBoolean.clojureLit("(not (get _x 0))") + ")";
 		}
 
 		@Override
@@ -1515,7 +1518,7 @@ public final class Operators {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitBoolean.clojureBooleanToClojureLitBoolean("(= (get _x 0) (get _y 0))") + ")";
+			return "(fn [_x _y] " + LitBoolean.clojureLit("(= (get _x 0) (get _y 0))") + ")";
 		}
 
 		@Override
@@ -1924,4 +1927,65 @@ public final class Operators {
 	
 	public static final String defaultCostFunction = "default-cost-function";
 	public static final String defaultCostFunction_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, defaultCostFunction);
+
+	/**
+	 * Relative path to velka.clojure.operators file
+	 */
+	public static final Path VELKA_CLOJURE_OPERATORS_PATH = Paths.get("velka", "clojure");
+
+	/**
+	 * Name of the velka.clojure.operators file
+	 */
+	public static final Path VELKA_CLOJURE_OPERAOTRS_NAME = Paths.get("operators.clj");
+
+	public static final String defaultCostFunctionDef_fn = "_fn";
+
+	private static final String defaultCostFunctionDef_args = "_args";
+
+	public static final String defaultCostFunctionDef =
+	ClojureHelper.clojureDefnHelper(
+			defaultCostFunction,
+			Arrays.asList(defaultCostFunctionDef_fn),
+				Type.addTypeMetaInfo(
+					ClojureHelper.fnHelper(
+							Arrays.asList("& " + defaultCostFunctionDef_args),
+							ClojureHelper.applyVelkaFunction(
+									conversionCostSym_full,
+									defaultCostFunctionDef_fn,
+									ClojureHelper.tupleHelper_str(defaultCostFunctionDef_args))),
+				new TypeArrow(new TypeVariable(NameGenerator.next()), TypeAtom.TypeIntNative)));
+	@Override
+	public String getNamespace() {
+		return NAMESPACE;
+	}
+	@Override
+	public Path getPath() {
+		return VELKA_CLOJURE_OPERATORS_PATH;
+	}
+	@Override
+	public Path getFileName() {
+		return VELKA_CLOJURE_OPERAOTRS_NAME;
+	}
+	@Override
+	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
+		//No types to initialize
+	}
+	
+	@Override
+	protected String writeDefinitions(Class<?> clazz, String Namespace) {
+		StringBuilder sb = new StringBuilder(super.writeDefinitions(clazz, Namespace));
+		
+		sb.append("\n" + Operators.defaultCostFunctionDef);
+		
+		return sb.toString();
+	}
+	
+	private Operators() {}
+	private static Operators instance = null;
+	public static Operators singleton() {
+		if(instance == null) {
+			instance = new Operators();
+		}
+		return instance;
+	}
 }

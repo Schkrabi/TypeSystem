@@ -1,5 +1,7 @@
 package velka.core.langbase;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,8 +17,11 @@ import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
+import velka.core.abstraction.Constructor;
+import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
+import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -45,7 +50,7 @@ import velka.util.annotations.VelkaOperatorBank;
 @VelkaOperatorBank
 @Description("Operators for working with velka Lists") 
 @Header("List")
-public class ListNative {
+public class ListNative extends OperatorBank{
 
 	/**
 	 * Name of velka.clojure.list namespace
@@ -76,7 +81,7 @@ public class ListNative {
 	@Description("Constructs Empty List:Native.")
 	@Name("Construct Empty List") 
 	@Syntax("(construct List Native)")
-	public static final Operator constructorEmpty = new Operator() {
+	public static final Constructor constructorEmpty = new Constructor() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -112,7 +117,7 @@ public class ListNative {
 	@Description("Constructs new List:Native adding element as head to list.") 
 	@Name("Construct by cons") 
 	@Syntax("(construct List Native <element> <list>)")
-	public static final Operator constructor = new Operator() {
+	public static final Constructor constructor = new Constructor() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -642,7 +647,7 @@ public class ListNative {
 	@Description("Converts List:Native to List:JavaArray.") 
 	@Example("(list-native-2-array-list (build-list-native 5 (lambda (x) x)))") 
 	@Syntax("(list-native-2-array-list <list native>)")
-	public static final Operator ListNativeToArrayListOperator = new Operator() {
+	public static final Conversion ListNativeToArrayListOperator = new Conversion() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -691,7 +696,7 @@ public class ListNative {
 	@Description("Converts List:Native to List:JavaLinked.") 
 	@Example("(list-native-2-linked-list (build-list-native 5 (lambda (x) x)))") 
 	@Syntax("(list-native-2-linked-list <list native>)")
-	public static final Operator ListNativeToLinkedListOperator = new Operator() {
+	public static final Conversion ListNativeToLinkedListOperator = new Conversion() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -758,7 +763,7 @@ public class ListNative {
 			final String element = "_element";
 			final String arg = "_arg";
 			final String code = ClojureHelper.fnHelper(Arrays.asList(list, element),
-					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction("boolean",
+					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction("boolean",
 							ClojureHelper.applyClojureFunction("some",
 									ClojureHelper.fnHelper(Arrays.asList(arg),
 											ClojureHelper.applyClojureFunction("=", arg, element)),
@@ -1233,7 +1238,7 @@ public class ListNative {
 			String pred = "_pred";
 			String pred_arg = "_arg";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list, pred),
-					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction("every?",
+					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction("every?",
 							ClojureHelper.fnHelper(Arrays.asList(pred_arg),
 									ClojureHelper
 											.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
@@ -1278,29 +1283,6 @@ public class ListNative {
 	};
 
 	/**
-	 * Initializes list functions in environment
-	 */
-	public static void initializeInEnvironment(Environment env) {
-
-		env.put(isEmptySymbol_out, isEmpty);
-		env.put(headSymbol_out, headListNativeOperator);
-		env.put(tailSymbol_out, tailListNativeOperator);
-		env.put(mapSymbol_out, mapListNativeOperator);
-		env.put(map2Symbol_out, map2ListNativeOperator);
-		env.put(foldlSymbol_out, foldlListNativeOperator);
-		env.put(addToEndSymbol_out, addToEndOperator);
-		env.put(containsSymbol_out, contains);
-		env.put(filterSymbol_out, filter);
-		env.put(getSymbol_out, get);
-		env.put(buildListSymbol_out, buildList);
-		env.put(removeSymbol_out, remove);
-		env.put(sizeSymbol_out, size);
-		env.put(appendSymbol_out, append);
-		env.put(reverseSymbol_out, reverse);
-		env.put(everypSymbol_out, everyp);
-	}
-
-	/**
 	 * Creates a native list from collection
 	 * 
 	 * @param col collection
@@ -1335,7 +1317,7 @@ public class ListNative {
 	}
 
 	/**
-	 * Converts exprssion into List Native expression
+	 * Converts expression into List Native expression
 	 * 
 	 * @param exprs expression
 	 * @return list native literal (LitComposite instance)
@@ -1397,5 +1379,45 @@ public class ListNative {
 	 */
 	public static String listNativeClojure(String ...members) {
 		return listNativeClojure(Arrays.asList(members));
+	}
+
+	/**
+	 * Relative path to velka.clojure.list file
+	 */
+	public static final Path VELKA_CLOJURE_LIST_PATH = Paths.get("velka", "clojure");
+
+	/**
+	 * Name of the velka.clojure.list file
+	 */
+	public static final Path VELKA_CLOJURE_LIST_NAME = Paths.get("list.clj");
+
+	@Override
+	public String getNamespace() {
+		return NAMESPACE;
+	}
+
+	@Override
+	public Path getPath() {
+		return VELKA_CLOJURE_LIST_PATH;
+	}
+
+	@Override
+	public Path getFileName() {
+		return VELKA_CLOJURE_LIST_NAME;
+	}
+
+	@Override
+	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
+		typeEnv.addType(TypeAtom.TypeList.name);
+		typeEnv.addRepresentation(TypeAtom.TypeListNative);		
+	}
+	
+	private ListNative() {}
+	private static ListNative instance = null;
+	public static ListNative singleton() {
+		if(instance == null) {
+			instance = new ListNative();
+		}
+		return instance;
 	}
 }

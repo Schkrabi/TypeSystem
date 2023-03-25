@@ -7,10 +7,10 @@ import java.util.TreeSet;
 
 import velka.core.abstraction.ExtendedFunction;
 import velka.core.abstraction.Function;
-import velka.core.abstraction.Operators;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.langbase.Operators;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;

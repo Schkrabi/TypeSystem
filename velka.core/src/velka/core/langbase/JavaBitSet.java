@@ -1,13 +1,13 @@
 package velka.core.langbase;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.BitSet;
 
+import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Operator;
+import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -18,11 +18,11 @@ import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
-import velka.core.util.OperatorBankUtil;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
+import velka.types.TypeName;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
@@ -45,7 +45,7 @@ import velka.util.annotations.VelkaOperatorBank;
 @VelkaOperatorBank
 @Description("Operators for working with wrapped java.util.BitSet") 
 @Header("Bit Set")
-public class JavaBitSet {
+public class JavaBitSet extends OperatorBank {
 	
 	/**
 	 * Clojure namespace for JavaArrayList
@@ -59,7 +59,7 @@ public class JavaBitSet {
 	@Description("Constructs empty Set:BitSet.")
 	@Name("Construct Empty bitset")
 	@Syntax("(construct Set BitSet)")
-	public static final Operator constructor = new Operator() {
+	public static final Constructor constructor = new Constructor() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -99,7 +99,7 @@ public class JavaBitSet {
 	@Description("Creates a bit set whose initial size is large enough to explicitly represent bits with indices in the range 0 through nbits-1.")
 	@Name("Construct bit set with capacity")
 	@Syntax("(construct Set BitSet <nbits>)")
-	public static final Operator nBitsConstructor = new Operator() {
+	public static final Constructor nBitsConstructor = new Constructor() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -575,7 +575,7 @@ public class JavaBitSet {
 			String set2 = "_set2";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set1, set2),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".equals",
 									ClojureHelper.getLiteralInnerValue(set1),
@@ -755,7 +755,7 @@ public class JavaBitSet {
 			String index = "_index";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set, index),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 					ClojureHelper.applyClojureFunction(
 							".get",
 							ClojureHelper.getLiteralInnerValue(set),
@@ -872,7 +872,7 @@ public class JavaBitSet {
 			String set2 = "_set2";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set1, set2),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".intersects",
 									ClojureHelper.getLiteralInnerValue(set1),
@@ -931,7 +931,7 @@ public class JavaBitSet {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".isEmpty",
 									ClojureHelper.getLiteralInnerValue(set))));
@@ -1723,8 +1723,34 @@ public class JavaBitSet {
 	public static final Path VELKA_CLOJURE_BITSET_PATH = Paths.get("velka", "clojure");
 	public static final Path VELKA_CLOJURE_BITSET_NAME = Paths.get("bitSet.clj");
 	public static final Path RELATIVE_PATH = VELKA_CLOJURE_BITSET_PATH.resolve(VELKA_CLOJURE_BITSET_NAME);
+
+	@Override
+	public String getNamespace() {
+		return NAMESPACE;
+	}
+
+	@Override
+	public Path getPath() {
+		return VELKA_CLOJURE_BITSET_PATH;
+	}
+
+	@Override
+	public Path getFileName() {
+		return VELKA_CLOJURE_BITSET_NAME;
+	}
+
+	@Override
+	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
+		typeEnv.addType(TypeName.SET);
+		typeEnv.addRepresentation(TypeAtom.TypeSetBitSet);		
+	}
 	
-	public static Path generateFile(Path dest) throws IOException {
-		return Files.writeString(dest, OperatorBankUtil.writeDefinitions(JavaBitSet.class, NAMESPACE));
+	private JavaBitSet() {}
+	private static JavaBitSet instance = null;
+	public static JavaBitSet singleton() {
+		if(instance == null) {
+			instance = new JavaBitSet();
+		}
+		return instance;
 	}
 }

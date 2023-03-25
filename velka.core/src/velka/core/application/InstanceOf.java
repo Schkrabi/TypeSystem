@@ -55,7 +55,7 @@ public class InstanceOf extends Expression {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		String code = LitBoolean.clojureBooleanToClojureLitBoolean(
+		String code = LitBoolean.clojureLit(
 				"(.isPresent (velka.types.Type/unifyTypes "
 				+ "(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " " + this.expression.toClojureCode(env, typeEnv) + ") "
 				+ this.type.clojureTypeRepresentation() + "))"); 

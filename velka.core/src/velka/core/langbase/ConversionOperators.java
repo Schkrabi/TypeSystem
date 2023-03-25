@@ -1,7 +1,11 @@
-package velka.core.abstraction;
+package velka.core.langbase;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
+import velka.core.abstraction.Conversion;
+import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -35,7 +39,7 @@ import velka.util.annotations.VelkaOperatorBank;
 @VelkaOperatorBank
 @Description("Conversions of build-in representations") 
 @Header("General Conversions")
-public final class ConversionOperators {
+public final class ConversionOperators extends OperatorBank{
 	
 	/**
 	 * Namespace 
@@ -49,7 +53,7 @@ public final class ConversionOperators {
 	@Description("Converts integer in native represetation into roman representation. This is shorthand for _(convert Int:Native Int:Roman arg)_.") 
 	@Example("(IntNative2IntRoman 42) ; = \"XLII\"") 
 	@Syntax("(IntNative2IntRoman <arg>)")
-	public static final Operator IntNativeToIntRoman = new Operator() {
+	public static final Conversion IntNativeToIntRoman = new Conversion() {
 	
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -90,7 +94,7 @@ public final class ConversionOperators {
 	@Description("Converts integer in native represetation into string representation. This is shorthand for _(convert Int:Native Int:String arg)_.") 
 	@Example("(IntNative2IntString 42) ; = \"42\"") 
 	@Syntax("(IntNative2IntString <arg>)")
-	public static final Operator IntNativeToIntString = new Operator() {
+	public static final Conversion IntNativeToIntString = new Conversion() {
 	
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -130,7 +134,7 @@ public final class ConversionOperators {
 	@Description("Converts integer in roman represetation into native representation. This is shorthand for _(convert Int:Roman Int:Native arg)_.") 
 	@Example("(IntRoman2IntNative (construct Int Roman \"XLII\")) ; = 42") 
 	@Syntax("(IntRoman2IntNative <arg>)")
-	public static final Operator IntRomanToIntNative = new Operator() {
+	public static final Conversion IntRomanToIntNative = new Conversion() {
 	
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -169,7 +173,7 @@ public final class ConversionOperators {
 	@Description("Converts integer in roman represetation into string representation. This is shorthand for _(convert Int:Roman Int:String arg)_.") 
 	@Example("(IntRoman2IntString (construct Int Roman \"XLII\")) ; = \"42\"") 
 	@Syntax("(IntRoman2IntString <arg>)")
-	public static final Operator IntRomanToIntString = new Operator() {
+	public static final Conversion IntRomanToIntString = new Conversion() {
 	
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -214,7 +218,7 @@ public final class ConversionOperators {
 	@Description("Converts integer in string represetation into native representation. This is shorthand for _(convert Int:String Int:Native arg)_.") 
 	@Example("(IntString2IntNative (construct Int String \"42\")) ; = 42") 
 	@Syntax("(IntString2IntNative <arg>)")
-	public static final Operator IntStringToIntNative = new Operator() {
+	public static final Conversion IntStringToIntNative = new Conversion() {
 	
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -254,7 +258,7 @@ public final class ConversionOperators {
 	@Description("Converts integer in string represetation into roman representation. This is shorthand for _(convert Int:String Int:Roman arg)_.") 
 	@Example("(IntString2IntRoman (construct Int String \"42\")) => \"XLII\"") 
 	@Syntax("(IntString2IntRoman <arg>)")
-	public static final Operator IntStringToIntRoman = new Operator() {
+	public static final Conversion IntStringToIntRoman = new Conversion() {
 	
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -288,5 +292,38 @@ public final class ConversionOperators {
 			return new Symbol("int-string-2-int-roman", NAMESPACE);
 		}
 	};
+
+	public static final Path VELKA_CLOJURE_CONVERSIONS_PATH = Paths.get("velka", "clojure");
+
+	public static final Path VELKA_CLOJURE_CONVERSIONS_NAME = Paths.get("conversions.clj");
+
+	@Override
+	public String getNamespace() {
+		return NAMESPACE;
+	}
+
+	@Override
+	public Path getPath() {
+		return VELKA_CLOJURE_CONVERSIONS_PATH;
+	}
+
+	@Override
+	public Path getFileName() {
+		return VELKA_CLOJURE_CONVERSIONS_NAME;
+	}
+
+	@Override
+	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
+		//No types to initialize		
+	}
+	
+	private ConversionOperators() {}
+	private static ConversionOperators instance = null;
+	public static ConversionOperators singleton() {
+		if(instance == null) {
+			instance = new ConversionOperators();
+		}
+		return instance;
+	}
 
 }

@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import velka.core.abstraction.ConversionOperators;
+import velka.core.langbase.ConversionOperators;
 import velka.core.literal.LitComposite;
 import velka.types.RepresentationOr;
 import velka.types.Type;

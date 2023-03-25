@@ -8,7 +8,6 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import velka.core.abstraction.Abstraction;
-import velka.core.abstraction.ConversionOperators;
 import velka.core.abstraction.Lambda;
 import velka.core.application.AbstractionApplication;
 import velka.core.exceptions.ConversionException;
@@ -21,10 +20,7 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
-import velka.core.langbase.JavaArrayList;
-import velka.core.langbase.JavaBitSet;
-import velka.core.langbase.JavaLinkedList;
-import velka.core.langbase.ListNative;
+import velka.core.langbase.OperatorBank;
 import velka.core.literal.LitComposite;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -136,7 +132,7 @@ public class TypeEnvironment {
 	 * @throws AppendableException if type does not exists or constructor with same
 	 *                             argument types already exists
 	 */
-	private void addPrimitiveConstructor(TypeAtom typeAtom, Environment env) throws AppendableException {
+	public void addPrimitiveConstructor(TypeAtom typeAtom, Environment env) throws AppendableException {
 		this.addConstructor(typeAtom, Lambda.identity, env);
 	}
 
@@ -180,9 +176,9 @@ public class TypeEnvironment {
 		if (!TypeAtom.isSameBasicType(fromType, toType)) {
 			throw new AppendableException("Can only define conversions between representations!");
 		}
-		if (!this.existsTypeAtom(toType)) {
-			throw new UndefinedTypeException(toType.toString());
-		}
+//		if (!this.existsTypeAtom(toType)) {
+//			throw new UndefinedTypeException(toType.toString());
+//		}
 
 		TypeInformation info = this.getTypeInfo(fromType);
 		info.addConversion(toType, conversionConstructor);
@@ -291,70 +287,10 @@ public class TypeEnvironment {
 	 */
 	public static TypeEnvironment initBasicTypes(Environment env) throws AppendableException {
 		TypeEnvironment typeEnvironment = new TypeEnvironment(env);
-
-		// Int
-		typeEnvironment.addType(TypeAtom.TypeInt.name);
-		typeEnvironment.addRepresentation(TypeAtom.TypeIntNative);
-		typeEnvironment.addPrimitiveConstructor(TypeAtom.TypeIntNative, env);
-		typeEnvironment.addRepresentation(TypeAtom.TypeIntRoman);
-		typeEnvironment.addConstructor(TypeAtom.TypeIntRoman, Lambda.makeIdentity(TypeAtom.TypeStringNative), env);
-		typeEnvironment.addRepresentation(TypeAtom.TypeIntString);
-		typeEnvironment.addConstructor(TypeAtom.TypeIntString, Lambda.makeIdentity(TypeAtom.TypeStringNative), env);
-
-		// Bool
-		typeEnvironment.addType(TypeAtom.TypeBool.name);
-		typeEnvironment.addRepresentation(TypeAtom.TypeBoolNative);
-		typeEnvironment.addPrimitiveConstructor(TypeAtom.TypeBoolNative, env);
-
-		// String
-		typeEnvironment.addType(TypeAtom.TypeString.name);
-		typeEnvironment.addRepresentation(TypeAtom.TypeStringNative);
-		typeEnvironment.addPrimitiveConstructor(TypeAtom.TypeStringNative, env);
-
-		// Double
-		typeEnvironment.addType(TypeAtom.TypeDouble.name);
-		typeEnvironment.addRepresentation(TypeAtom.TypeDoubleNative);
-		typeEnvironment.addPrimitiveConstructor(TypeAtom.TypeDoubleNative, env);
-
-		// List
-		typeEnvironment.addType(TypeAtom.TypeList.name);
-		typeEnvironment.addRepresentation(TypeAtom.TypeListNative);
-		typeEnvironment.addConstructor(TypeAtom.TypeListNative, ListNative.constructorEmpty, env);
-		typeEnvironment.addConstructor(TypeAtom.TypeListNative, ListNative.constructor, env);
 		
-		// List Java Array
-		typeEnvironment.addRepresentation(JavaArrayList.TypeListJavaArray);
-		typeEnvironment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructor, env);
-		typeEnvironment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructorFromList, env);
-		typeEnvironment.addConstructor(JavaArrayList.TypeListJavaArray, JavaArrayList.constructorCapacity, env);
-		
-		// List Java Linked
-		typeEnvironment.addRepresentation(JavaLinkedList.TypeListJavaLinked);
-		typeEnvironment.addConstructor(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.constructor, env);
-		
-		//Set Bit Set
-		typeEnvironment.addRepresentation(TypeAtom.TypeSetBitSet);
-		typeEnvironment.addConstructor(TypeAtom.TypeSetBitSet, JavaBitSet.constructor, env);
-		typeEnvironment.addConstructor(TypeAtom.TypeSetBitSet, JavaBitSet.nBitsConstructor, env);
-		
-		//Scanner
-		typeEnvironment.addRepresentation(velka.core.langbase.Scanner.TYPE);
-		typeEnvironment.addConstructor(velka.core.langbase.Scanner.TYPE, velka.core.langbase.Scanner.constructor, env);
-
-		// Conversions
-		typeEnvironment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, ConversionOperators.IntNativeToIntRoman);
-		typeEnvironment.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, ConversionOperators.IntNativeToIntString);
-		typeEnvironment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntNative, ConversionOperators.IntRomanToIntNative);
-		typeEnvironment.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, ConversionOperators.IntRomanToIntString);
-		typeEnvironment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntNative, ConversionOperators.IntStringToIntNative);
-		typeEnvironment.addConversion(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman, ConversionOperators.IntStringToIntRoman);
-		
-		typeEnvironment.addConversion(JavaArrayList.TypeListJavaArray, JavaLinkedList.TypeListJavaLinked, JavaArrayList.ArrayListToLinkedList);
-		typeEnvironment.addConversion(JavaArrayList.TypeListJavaArray, TypeAtom.TypeListNative, JavaArrayList.ArrayListToNativeList);
-		typeEnvironment.addConversion(JavaLinkedList.TypeListJavaLinked, JavaArrayList.TypeListJavaArray, JavaLinkedList.LinkedListToArrayList);
-		typeEnvironment.addConversion(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeListNative, JavaLinkedList.LinkedListToNativeList);
-		typeEnvironment.addConversion(TypeAtom.TypeListNative, JavaArrayList.TypeListJavaArray, ListNative.ListNativeToArrayListOperator);
-		typeEnvironment.addConversion(TypeAtom.TypeListNative, JavaLinkedList.TypeListJavaLinked, ListNative.ListNativeToLinkedListOperator);
+		for(OperatorBank operatorBank : OperatorBank.operatorBanks) {
+			operatorBank.initInTypeEnvironment(env, typeEnvironment);
+		}
 
 		return typeEnvironment;
 	}

@@ -17,7 +17,6 @@ import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
-import velka.util.ClojureHelper;
 import velka.util.Pair;
 import velka.util.annotations.VelkaConstructor;
 import velka.util.annotations.VelkaConversion;
@@ -120,7 +119,7 @@ public class OperatorBankUtil {
 	 * @return Clojure Code
 	 * @throws AppendableException If conversion is badly defined
 	 */
-	private static String conversionDefinition(Operator conversion, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public static String conversionDefinition(Operator conversion, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Pair<Type, Substitution> p = conversion.infer(env, typeEnv);
 		
 		if(!(p.first instanceof TypeArrow)) {
@@ -149,42 +148,5 @@ public class OperatorBankUtil {
 		TypeAtom to = (TypeAtom)ta.rtype;
 		
 		return TypeAtom.addConversionToGlobalTable(from, to, conversion.toClojureCode(env, typeEnv));
-	}
-	
-	/**
-	 * Writes definitions of operator bank file
-	 * @return
-	 */
-	public static String writeDefinitions(Class<?> clazz, String Namespace) {
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append(ClojureHelper.requireNamespace("clojure.string"));
-		sb.append(ClojureHelper.declareNamespace(Namespace));
-		
-		try {
-			List<Operator> operators = OperatorBankUtil.getOperators(clazz);
-		
-			for(Operator operator : operators) {
-				sb.append(Operator.makeOperatorDeclaration(operator));
-			}
-			
-			Environment env = Environment.initTopLevelEnvironment();
-			TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-			
-			for(Operator operator : operators) {
-				sb.append(Operator.makeOperatorDef(operator, env, typeEnv));
-			}
-			
-			List<Operator> conversions = OperatorBankUtil.getConversions(clazz);
-			for(Operator conversion : conversions) {
-				sb.append(conversionDefinition(conversion, env, typeEnv));
-			}
-			
-		} catch (Exception e) {
-			System.err.println("Error generating file for " + clazz.getName() + " :" + e.getMessage());
-			return "";
-		}
-		
-		return sb.toString();
 	}
 }

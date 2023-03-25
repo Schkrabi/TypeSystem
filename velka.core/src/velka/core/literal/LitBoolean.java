@@ -75,7 +75,7 @@ public class LitBoolean extends Literal {
 	 * @param clojureCode code providing bool value for literal
 	 * @return clojure code
 	 */
-	public static String clojureBooleanToClojureLitBoolean(String clojureCode) {
+	public static String clojureLit(String clojureCode) {
 		return Literal.clojureValueToClojureLiteral(clojureCode, TypeAtom.TypeBoolNative);
 	}
 }

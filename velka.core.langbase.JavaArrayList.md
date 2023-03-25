@@ -4,12 +4,12 @@ Operators for working with wrapped java.util.ArrayList.
 ## Table of Contents
 * [constructor(construct List JavaArray)](#velka.core.langbase.JavaArrayList$1)
 * [constructorFromList(construct List JavaArray)](#velka.core.langbase.JavaArrayList$2)
-* [constructorCapacity(velka.core.langbase.JavaArrayList$3@1761e840)](#velka.core.langbase.JavaArrayList$3)
+* [constructorCapacity(velka.core.langbase.JavaArrayList$3@5fe5c6f)](#velka.core.langbase.JavaArrayList$3)
 * [addToEnd(java-array-list-add-to-end)](#velka.core.langbase.JavaArrayList$4)
 * [addToIndex(java-array-list-add-to-index)](#velka.core.langbase.JavaArrayList$5)
 * [addAll(java-array-list-add-all)](#velka.core.langbase.JavaArrayList$6)
 * [contains(java-array-list-contains)](#velka.core.langbase.JavaArrayList$7)
-* [containsAll(java-array-list-contains)](#velka.core.langbase.JavaArrayList$8)
+* [containsAll(java-array-list-contains-all)](#velka.core.langbase.JavaArrayList$8)
 * [get(java-array-list-get)](#velka.core.langbase.JavaArrayList$9)
 * [indexOf(java-array-list-index-of)](#velka.core.langbase.JavaArrayList$10)
 * [isEmpty(java-array-list-is-empty)](#velka.core.langbase.JavaArrayList$11)
@@ -55,7 +55,7 @@ Type Signature:
 ~~~
 
 Construct List:JavaArray from existing list inserting all its elements.
-### <a name="velka.core.langbase.JavaArrayList$3"> constructorCapacity(velka.core.langbase.JavaArrayList$3@1761e840)</a>
+### <a name="velka.core.langbase.JavaArrayList$3"> constructorCapacity(velka.core.langbase.JavaArrayList$3@5fe5c6f)</a>
 Syntax:
 
 ~~~
@@ -81,7 +81,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, SYSGENNAMEafy] -> Bool:Native
+[List:JavaArray, SYSGENNAMEbos] -> Bool:Native
 ~~~
 
 Appends the specified element to the end of list.
@@ -101,7 +101,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, Int:Native, SYSGENNAMEags] -> []
+[List:JavaArray, Int:Native, SYSGENNAMEbpr] -> []
 ~~~
 
 Inserts the specified element at the specified position in list.
@@ -145,7 +145,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, SYSGENNAMEaif] -> Bool:Native
+[List:JavaArray, SYSGENNAMEbro] -> Bool:Native
 ~~~
 
 Returns true if this list contains the specified element.
@@ -155,7 +155,7 @@ Example:
 ~~~
 (java-array-list-contains (construct List JavaArray) 42) ; = #f
 ~~~
-### <a name="velka.core.langbase.JavaArrayList$8"> containsAll(java-array-list-contains)</a>
+### <a name="velka.core.langbase.JavaArrayList$8"> containsAll(java-array-list-contains-all)</a>
 Syntax:
 
 ~~~
@@ -187,7 +187,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, Int:Native] -> SYSGENNAMEajs
+[List:JavaArray, Int:Native] -> SYSGENNAMEbtl
 ~~~
 
 Returns the element at the specified position in this list.
@@ -209,7 +209,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, SYSGENNAMEakm] -> Int:Native
+[List:JavaArray, SYSGENNAMEbuk] -> Int:Native
 ~~~
 
 Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.
@@ -251,7 +251,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, SYSGENNAMEalz] -> Int:Native
+[List:JavaArray, SYSGENNAMEbwh] -> Int:Native
 ~~~
 
 Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.
@@ -273,7 +273,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, SYSGENNAMEamt] -> Bool:Native
+[List:JavaArray, SYSGENNAMEbxg] -> Bool:Native
 ~~~
 
 Removes the first occurrence of the specified element from this list, if it is present.
@@ -349,7 +349,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, Int:Native, SYSGENNAMEaoz] -> SYSGENNAMEaoz
+[List:JavaArray, Int:Native, SYSGENNAMEcab] -> SYSGENNAMEcab
 ~~~
 
 Replaces the element at the specified position in this list with the specified element.
@@ -418,7 +418,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, [SYSGENNAMEe] -> SYSGENNAMEf] -> List:JavaArray
+[List:JavaArray, [SYSGENNAMEg] -> SYSGENNAMEh] -> List:JavaArray
 ~~~
 
 Returns a List:JavaArray consisting of the results of applying the given function to the elements of list.
@@ -441,7 +441,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, List:JavaArray, [SYSGENNAMEg, SYSGENNAMEh] -> SYSGENNAMEi] -> List:JavaArray
+[List:JavaArray, List:JavaArray, [SYSGENNAMEi, SYSGENNAMEj] -> SYSGENNAMEk] -> List:JavaArray
 ~~~
 
 Returns a List:JavaArray consisting of the results of applying the given function to the elements of list1 and list2.
@@ -466,7 +466,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEj, SYSGENNAMEk] -> SYSGENNAMEj, SYSGENNAMEj, List:JavaArray] -> SYSGENNAMEj
+[[SYSGENNAMEl, SYSGENNAMEm] -> SYSGENNAMEl, SYSGENNAMEl, List:JavaArray] -> SYSGENNAMEl
 ~~~
 
 Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the beginning.
@@ -488,7 +488,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEl, SYSGENNAMEm] -> SYSGENNAMEl, SYSGENNAMEl, List:JavaArray] -> SYSGENNAMEl
+[[SYSGENNAMEn, SYSGENNAMEo] -> SYSGENNAMEn, SYSGENNAMEn, List:JavaArray] -> SYSGENNAMEn
 ~~~
 
 Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the end.
@@ -510,7 +510,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, [SYSGENNAMEaud] -> Bool:Native] -> Bool:Native
+[List:JavaArray, [SYSGENNAMEcgo] -> Bool:Native] -> Bool:Native
 ~~~
 
 Returns true if every element of this list returns true for the predicate. Otherwise returns false.

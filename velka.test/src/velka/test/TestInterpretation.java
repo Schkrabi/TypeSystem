@@ -24,13 +24,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import velka.compiler.LangbaseDocumentationGenerator;
-import velka.core.abstraction.ConstructorOperators;
-import velka.core.abstraction.ConversionOperators;
 import velka.core.abstraction.ExtendedFunction;
 import velka.core.abstraction.ExtendedLambda;
 import velka.core.abstraction.Function;
 import velka.core.abstraction.Lambda;
-import velka.core.abstraction.Operators;
 import velka.core.application.AbstractionApplication;
 import velka.core.application.AndExpression;
 import velka.core.application.CanDeconstructAs;
@@ -59,10 +56,13 @@ import velka.core.expression.TypeHolder;
 import velka.core.expression.TypeSymbol;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.langbase.ConstructorOperators;
+import velka.core.langbase.ConversionOperators;
 import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
+import velka.core.langbase.Operators;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
 import velka.core.literal.LitDouble;
@@ -1296,7 +1296,7 @@ class TestInterpretation extends VelkaTest{
 	@Test
 	@DisplayName("Test Construct")
 	void testConstruct() throws AppendableException {
-		Construct construct = new Construct(TypeAtom.TypeIntRoman, new Tuple(Arrays.asList(new LitString("XLII"))));
+		Construct construct = new Construct(TypeAtom.TypeIntRoman, new Tuple(new LitString("XLII")));
 
 		Environment top = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(top);

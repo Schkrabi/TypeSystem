@@ -109,7 +109,7 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(line (scanner-native-next-line s))"
 				+ "(cls (scanner-native-close s)))"
 				+ "line)",
-				new LitString("42 42.0 foo"),
+				new LitString("42 true 42.0 foo"),
 				this.env,
 				this.typeEnv);
 		

@@ -2,7 +2,7 @@
 Operators for working with wrapped java.util.LinkedList.
 
 ## Table of Contents
-* [constructor(velka.core.langbase.JavaLinkedList$1@6c629d6e)](#velka.core.langbase.JavaLinkedList$1)
+* [constructor(velka.core.langbase.JavaLinkedList$1@6979e8cb)](#velka.core.langbase.JavaLinkedList$1)
 * [addToEnd(java-linked-list-add-to-end)](#velka.core.langbase.JavaLinkedList$2)
 * [addToIndex(java-linked-list-add-to-index)](#velka.core.langbase.JavaLinkedList$3)
 * [addAll(java-linked-list-add-all)](#velka.core.langbase.JavaLinkedList$4)
@@ -36,7 +36,7 @@ Operators for working with wrapped java.util.LinkedList.
 * [iteratorSet(linked-list-iterator-set)](#velka.core.langbase.JavaLinkedList$34)
 
 ## Constructors
-### <a name="velka.core.langbase.JavaLinkedList$1"> constructor(velka.core.langbase.JavaLinkedList$1@6c629d6e)</a>
+### <a name="velka.core.langbase.JavaLinkedList$1"> constructor(velka.core.langbase.JavaLinkedList$1@6979e8cb)</a>
 Syntax:
 
 ~~~
@@ -62,7 +62,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEavq] -> Bool:Native
+[List:JavaLinked, SYSGENNAMEcil] -> Bool:Native
 ~~~
 
 Appends the specified element to the end of this list.
@@ -82,7 +82,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, Int:Native, SYSGENNAMEawk] -> []
+[List:JavaLinked, Int:Native, SYSGENNAMEcjk] -> []
 ~~~
 
 Inserts the specified element at the specified position in this list.
@@ -126,7 +126,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEaxx] -> Bool:Native
+[List:JavaLinked, SYSGENNAMEclh] -> Bool:Native
 ~~~
 
 Returns true if this list contains the specified element.
@@ -168,7 +168,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, Int:Native] -> SYSGENNAMEazk
+[List:JavaLinked, Int:Native] -> SYSGENNAMEcne
 ~~~
 
 Returns the element at the specified position in this list.
@@ -190,7 +190,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEbae] -> Int:Native
+[List:JavaLinked, SYSGENNAMEcod] -> Int:Native
 ~~~
 
 Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.
@@ -232,7 +232,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEbbr] -> Int:Native
+[List:JavaLinked, SYSGENNAMEcqa] -> Int:Native
 ~~~
 
 Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.
@@ -254,7 +254,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEbcl] -> Bool:Native
+[List:JavaLinked, SYSGENNAMEcqz] -> Bool:Native
 ~~~
 
 Removes the first occurrence of the specified element from this list, if it is present.
@@ -330,7 +330,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, Int:Native, SYSGENNAMEber] -> SYSGENNAMEber
+[List:JavaLinked, Int:Native, SYSGENNAMEctu] -> SYSGENNAMEctu
 ~~~
 
 Replaces the element at the specified position in this list with the specified element.
@@ -399,7 +399,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, [SYSGENNAMEn] -> SYSGENNAMEo] -> List:JavaLinked
+[List:JavaLinked, [SYSGENNAMEp] -> SYSGENNAMEq] -> List:JavaLinked
 ~~~
 
 Returns a List:JavaLinked consisting of the results of applying the given function to the elements of list.
@@ -422,7 +422,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, List:JavaLinked, [SYSGENNAMEp, SYSGENNAMEq] -> SYSGENNAMEr] -> List:JavaLinked
+[List:JavaLinked, List:JavaLinked, [SYSGENNAMEr, SYSGENNAMEs] -> SYSGENNAMEt] -> List:JavaLinked
 ~~~
 
 Returns a List:JavaLinked consisting of the results of applying the given function to the elements of list1 and list2.
@@ -447,7 +447,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEs, SYSGENNAMEt] -> SYSGENNAMEs, SYSGENNAMEs, List:JavaLinked] -> SYSGENNAMEs
+[[SYSGENNAMEu, SYSGENNAMEv] -> SYSGENNAMEu, SYSGENNAMEu, List:JavaLinked] -> SYSGENNAMEu
 ~~~
 
 Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the beginning.
@@ -469,7 +469,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEu, SYSGENNAMEv] -> SYSGENNAMEu, SYSGENNAMEu, List:JavaLinked] -> SYSGENNAMEu
+[[SYSGENNAMEw, SYSGENNAMEx] -> SYSGENNAMEw, SYSGENNAMEw, List:JavaLinked] -> SYSGENNAMEw
 ~~~
 
 Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the end.
@@ -491,7 +491,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, [SYSGENNAMEbjv] -> Bool:Native] -> Bool:Native
+[List:JavaLinked, [SYSGENNAMEdah] -> Bool:Native] -> Bool:Native
 ~~~
 
 Returns true if every element of this list returns true for the predicate. Otherwise returns false.
@@ -558,7 +558,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[LinkedListIterator:Native, SYSGENNAMEbmb] -> LinkedListIterator:Native
+[LinkedListIterator:Native, SYSGENNAMEddc] -> LinkedListIterator:Native
 ~~~
 
 Inserts the specified element into the list (optional operation).
@@ -627,7 +627,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[LinkedListIterator:Native] -> SYSGENNAMEboh
+[LinkedListIterator:Native] -> SYSGENNAMEdfx
 ~~~
 
 Returns the next element in the list and advances the cursor position.
@@ -673,7 +673,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[LinkedListIterator:Native] -> SYSGENNAMEbpu
+[LinkedListIterator:Native] -> SYSGENNAMEdhu
 ~~~
 
 Returns the previous element in the list and moves the cursor position backwards.
@@ -741,7 +741,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[LinkedListIterator:Native, SYSGENNAMEbsa] -> LinkedListIterator:Native
+[LinkedListIterator:Native, SYSGENNAMEdkp] -> LinkedListIterator:Native
 ~~~
 
 Replaces the last element returned by linked-list-iterator-next or linked-list-iterator-previous() with the specified element (optional operation).

@@ -1,13 +1,14 @@
 package velka.core.langbase;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
+import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Operator;
+import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.exceptions.FallThroughException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -20,7 +21,6 @@ import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
-import velka.core.util.OperatorBankUtil;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -48,10 +48,10 @@ import velka.util.annotations.VelkaOperatorBank;
 @VelkaOperatorBank
 @Description("Operators for working with java.util.Scanner.") 
 @Header("Scanner")
-public class Scanner {
+public class Scanner extends OperatorBank{
 
 	/**
-	 * Clojure namespace for JavaArrayList
+	 * Clojure namespace for Scanner
 	 */
 	public static final String NAMESPACE = "velka.clojure.scanner";
 	
@@ -68,7 +68,7 @@ public class Scanner {
 	@Description("Constructs Scanner:Native.") 
 	@Name("Constructs scanner for reading files.") 
 	@Syntax("(construct Scanner Native <filename>)")
-	public static final Operator constructor = new Operator() {
+	public static final Constructor constructor = new Constructor() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -398,7 +398,7 @@ public class Scanner {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".hasNext",
 									ClojureHelper.getLiteralInnerValue(scanner))));
@@ -451,7 +451,7 @@ public class Scanner {
 			String pattern = "_pattern";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner, pattern),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".hasNext",
 									ClojureHelper.getLiteralInnerValue(scanner),
@@ -507,7 +507,7 @@ public class Scanner {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".hasNextBoolean",
 									ClojureHelper.getLiteralInnerValue(scanner))));
@@ -560,7 +560,7 @@ public class Scanner {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".hasNextDouble",
 									ClojureHelper.getLiteralInnerValue(scanner))));
@@ -612,7 +612,7 @@ public class Scanner {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".hasNextInt",
 									ClojureHelper.getLiteralInnerValue(scanner))));
@@ -666,7 +666,7 @@ public class Scanner {
 			String radix = "_radix";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner, radix),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".hasNextInt",
 									ClojureHelper.getLiteralInnerValue(scanner),
@@ -721,7 +721,7 @@ public class Scanner {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".hasNextLine",
 									ClojureHelper.getLiteralInnerValue(scanner))));
@@ -1290,9 +1290,34 @@ public class Scanner {
 	
 	public static final Path VELKA_CLOJURE_SCANNER_PATH = Paths.get("velka", "clojure");
 	public static final Path VELKA_CLOJURE_SCANNER_NAME = Paths.get("scanner.clj");
-	public static final Path RELATIVE_PATH = VELKA_CLOJURE_SCANNER_PATH.resolve(VELKA_CLOJURE_SCANNER_NAME);
+
+	@Override
+	public String getNamespace() {
+		return NAMESPACE;
+	}
+
+	@Override
+	public Path getPath() {
+		return VELKA_CLOJURE_SCANNER_PATH;
+	}
+
+	@Override
+	public Path getFileName() {
+		return VELKA_CLOJURE_SCANNER_NAME;
+	}
+
+	@Override
+	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
+		typeEnv.addType(TYPE_NAME);
+		typeEnv.addRepresentation(TYPE);		
+	}
 	
-	public static Path generateFile(Path dest) throws IOException {
-		return Files.writeString(dest, OperatorBankUtil.writeDefinitions(Scanner.class, NAMESPACE));
+	private Scanner() {};
+	private static Scanner instance = null;
+	public static Scanner singleton() {
+		if(instance == null) {
+			instance = new Scanner();
+		}
+		return instance;
 	}
 }

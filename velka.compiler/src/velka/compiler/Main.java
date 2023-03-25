@@ -5,17 +5,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import velka.clojure.ClojureCodeGenerator;
-import velka.core.abstraction.ConstructorOperators;
-import velka.core.abstraction.ConversionOperators;
-import velka.core.abstraction.Operators;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.langbase.ConstructorOperators;
+import velka.core.langbase.ConversionOperators;
 import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
+import velka.core.langbase.OperatorBank;
+import velka.core.langbase.Operators;
 import velka.core.langbase.Scanner;
 
 /**
@@ -78,14 +80,7 @@ public class Main {
 			break;
 		case DOCUMENTATION:
 			LangbaseDocumentationGenerator.spitDocStatic(
-					Arrays.asList(Operators.class,
-							ConversionOperators.class,
-							JavaArrayList.class,
-							JavaLinkedList.class,
-							ListNative.class,
-							ConstructorOperators.class,
-							JavaBitSet.class,
-							Scanner.class),
+					OperatorBank.operatorBanks.stream().map(o -> o.getClass()).collect(Collectors.toList()),
 					Paths.get(fileArg));
 			break;
 		case HELP:

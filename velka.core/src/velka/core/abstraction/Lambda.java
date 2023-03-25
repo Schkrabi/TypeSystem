@@ -21,6 +21,7 @@ import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.langbase.Operators;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;

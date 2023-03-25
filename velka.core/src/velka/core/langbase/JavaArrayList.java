@@ -1,5 +1,7 @@
 package velka.core.langbase;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -8,8 +10,11 @@ import java.util.ListIterator;
 import java.util.stream.Collectors;
 
 import velka.core.abstraction.Abstraction;
+import velka.core.abstraction.Constructor;
+import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
+import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -53,7 +58,7 @@ import velka.util.annotations.VelkaOperatorBank;
 @VelkaOperatorBank
 @Description("Operators for working with wrapped java.util.ArrayList.") 
 @Header("Array List")
-public class JavaArrayList {
+public class JavaArrayList extends OperatorBank{
 
 	/**
 	 * Clojure namespace for JavaArrayList
@@ -74,7 +79,7 @@ public class JavaArrayList {
 	@Description("Constructs empty List:JavaArray.") 
 	@Name("Construct Empty List") 
 	@Syntax("(construct List JavaArray)")
-	public static final Operator constructor = new Operator() {
+	public static final Constructor constructor = new Constructor() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -119,7 +124,7 @@ public class JavaArrayList {
 	@Description("Construct List:JavaArray from existing list inserting all its elements.") 
 	@Name("Construct from list") 
 	@Syntax("(construct List JavaArray <list>)")
-	public static Operator constructorFromList = new Operator() {
+	public static Constructor constructorFromList = new Constructor() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -174,7 +179,7 @@ public class JavaArrayList {
 	@Description("Constructs List:JavaArray with specified pre-allocated capacity.") 
 	@Name("Construct with capacity") 
 	@Syntax("(construc List JavaArray <capacity>)")
-	public static Operator constructorCapacity = new Operator() {
+	public static Constructor constructorCapacity = new Constructor() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -234,7 +239,7 @@ public class JavaArrayList {
 			String e = "_e";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, e),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".add",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -371,7 +376,7 @@ public class JavaArrayList {
 			String collection = "_collection";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, collection),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".addAll",
 									ClojureHelper.getLiteralInnerValue(list), 
@@ -443,7 +448,7 @@ public class JavaArrayList {
 			String object = "_object";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, object),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".contains",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -511,7 +516,7 @@ public class JavaArrayList {
 			String collection = "_collection";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, collection),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".containsAll",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -556,7 +561,7 @@ public class JavaArrayList {
 		
 		@Override
 		public String toString() {
-			return containsSymbol_out.toString();
+			return containsAllSymbol_out.toString();
 		}
 
 	};
@@ -711,7 +716,7 @@ public class JavaArrayList {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".isEmpty",
 									ClojureHelper.getLiteralInnerValue(list))));
@@ -842,7 +847,7 @@ public class JavaArrayList {
 			String o = "_o";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, o),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".remove",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -910,7 +915,7 @@ public class JavaArrayList {
 			String c = "_c";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, c),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".removeAll",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -988,7 +993,7 @@ public class JavaArrayList {
 			String c = "_c";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, c),
-					LitBoolean.clojureBooleanToClojureLitBoolean(
+					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".retainAll",
 									ClojureHelper.getLiteralInnerValue(list),
@@ -1622,7 +1627,7 @@ public class JavaArrayList {
 	@Description("Converts List:JavaArray to List:JavaLinked.") 
 	@Example("(array-list-2-linked-list (construct List JavaArray))") 
 	@Syntax("(array-list-2-linked-list <array list>)")
-	public static Operator ArrayListToLinkedList = new Operator() {
+	public static Conversion ArrayListToLinkedList = new Conversion() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1677,7 +1682,7 @@ public class JavaArrayList {
 	@Description("Converts List:JavaArray to List:Native.") 
 	@Example("(array-list-2-native-list (construct List JavaArray))") 
 	@Syntax("(array-list-2-native-list <array list>)")
-	public static Operator ArrayListToNativeList = new Operator() {
+	public static Conversion ArrayListToNativeList = new Conversion() {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
@@ -1740,7 +1745,7 @@ public class JavaArrayList {
 			String pred = "_pred";
 			String pred_arg = "_arg";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list, pred),
-					LitBoolean.clojureBooleanToClojureLitBoolean(ClojureHelper.applyClojureFunction("every?",
+					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction("every?",
 							ClojureHelper.fnHelper(Arrays.asList(pred_arg),
 									ClojureHelper
 											.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
@@ -1812,5 +1817,38 @@ public class JavaArrayList {
 		env.put(everypSymbol_out, everyp);
 		env.put(ArrayListToLinkedListSymbol_out, ArrayListToLinkedList);
 		env.put(ArrayListToNativeListSymbol_out, ArrayListToNativeList);
+	}
+
+	public static final Path VELKA_CLOJURE_ARRAYLIST_PATH = Paths.get("velka", "clojure");
+
+	public static final Path VELKA_CLOJURE_ARRAYLIST_NAME = Paths.get("arrayList.clj");
+
+	@Override
+	public String getNamespace() {
+		return NAMESPACE;
+	}
+
+	@Override
+	public Path getPath() {
+		return VELKA_CLOJURE_ARRAYLIST_PATH;
+	}
+
+	@Override
+	public Path getFileName() {
+		return VELKA_CLOJURE_ARRAYLIST_NAME;
+	}
+
+	@Override
+	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
+		typeEnv.addRepresentation(TypeListJavaArray);
+	}
+	
+	private static JavaArrayList instance = null;
+	private JavaArrayList() {}
+	public static JavaArrayList singleton() {
+		if(instance == null) {
+			instance = new JavaArrayList();
+		}
+		return instance;
 	}
 }

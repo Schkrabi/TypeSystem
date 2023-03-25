@@ -1,5 +1,7 @@
 package velka.util;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -219,7 +221,7 @@ public class ClojureHelper {
 	 * @return
 	 */
 	public static String clojureIfHelper(String conditionCode, String trueCode, String falseCode) {
-		return "(if " + conditionCode + " " + trueCode + " " + falseCode + ")";
+		return applyClojureFunction("if", conditionCode, trueCode, falseCode);
 	}
 	
 	/**
@@ -712,5 +714,89 @@ public class ClojureHelper {
 						exceptionName,
 						catchClause));
 		return code;
+	}
+	
+	/**
+	 * Class to hold method implementation for CloureHelper.proxy method
+	 * @author Mgr. Radomir Skrabal
+	 *
+	 */
+	public static class ProxyImpl {
+		private final Method method;
+		private final List<String> args;
+		private final String implCode;
+		
+		private ProxyImpl(Method method, Collection<String> args, String implCode) {
+			this.method = method;
+			this.args = new ArrayList<String>(args);
+			this.implCode = implCode;
+		}
+		
+		/**
+		 * Creates clojure code of this implementation
+		 * @return clojure code
+		 */
+		public String toClojureCode() {
+			return (new StringBuilder())
+					.append("(")
+					.append(this.method.getName())
+					.append(" ")
+					.append(clojureVectorHelper(this.args))
+					.append(" ")
+					.append(implCode)
+					.append(")")
+					.toString();
+		}
+		
+		/**
+		 * Factory constructor
+		 * @param method implemented method
+		 * @param args argument names of implemented method
+		 * @param implCode code of implemented method
+		 * @return ProxyImpl instance
+		 */
+		public static ProxyImpl of(Method method, Collection<String> args, String implCode) {
+			return new ProxyImpl(method, args, implCode);
+		}
+	}
+	
+	/**
+	 * Creates application of proxy special form implementing java subclasses in clojure
+	 * @param clazz implemented class
+	 * @param superArgs args for super constructor
+	 * @param impls implementations
+	 * @return Clojure code
+	 */
+	public static String proxy(Class<?> clazz, Collection<String> superArgs, ProxyImpl ...impls) {
+		return
+		applyClojureFunction(
+				"proxy",
+				clojureVectorHelper(Arrays.asList(clazz.getName())),
+				clojureVectorHelper(superArgs),
+				Arrays.stream(impls).map(i -> i.toClojureCode()).reduce((x, y) -> x + " " + y).get());
+	
+	}
+	
+	/**
+	 * Creates clojure code to construct java class with given args
+	 * @param clazz constructed class
+	 * @param args arguments
+	 * @return clojure code
+	 */
+	public static String constructJavaClass(Class<?> clazz, Collection<String> args) {
+		return 
+			applyClojureFunction(
+					clazz.getName() + ".",
+					args);
+	}
+	
+	/**
+	 * Creates clojure code to construct java class with given args
+	 * @param clazz constructed class
+	 * @param args arguments
+	 * @return clojure code
+	 */
+	public static String constructJavaClass(Class<?> clazz, String ...args) {
+		return constructJavaClass(clazz, Arrays.asList(args));
 	}
 }
