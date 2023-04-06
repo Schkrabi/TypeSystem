@@ -14,6 +14,7 @@ import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
+import velka.core.application.Application;
 import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -1789,35 +1790,77 @@ public class JavaArrayList extends OperatorBank{
 		}
 	};
 
-	/**
-	 * Initializes values for java array list in environment
-	 * 
-	 * @param env initialized environment
-	 */
-	public static void initializeInEnvironment(Environment env) {
-		env.put(addToEndSymbol_out, addToEnd);
-		env.put(addToIndexSymbol_out, addToIndex);
-		env.put(addAllSymbol_out, addAll);
-		env.put(containsSymbol_out, contains);
-		env.put(containsAllSymbol_out, containsAll);
-		env.put(getSymbol_out, get);
-		env.put(indexOfSymbol_out, indexOf);
-		env.put(isEmptySymbol_out, isEmpty);
-		env.put(lastIndexOfSymbol_out, lastIndexOf);
-		env.put(removeSymbol_out, remove);
-		env.put(removeAllSymbol_out, removeAll);
-		env.put(retainAllSymbol_out, retainAll);
-		env.put(setSymbol_out, set);
-		env.put(sizeSymbol_out, size);
-		env.put(sublistSymbol_out, sublist);
-		env.put(mapSymbol_out, map);
-		env.put(map2Symbol_out, map2);
-		env.put(foldlSymbol_out, foldl);
-		env.put(foldrSymbol_out, foldr);
-		env.put(everypSymbol_out, everyp);
-		env.put(ArrayListToLinkedListSymbol_out, ArrayListToLinkedList);
-		env.put(ArrayListToNativeListSymbol_out, ArrayListToNativeList);
-	}
+	private static final Symbol buildListSymbol = new Symbol("build-list", NAMESPACE);
+	public static final Symbol buildListSymbol_out = new Symbol("java-array-list-build");
+	
+	@VelkaOperator
+	@Description("Builds java array list") 
+	@Example("(java-array-list-build 5 (lambda (x) x))") 
+	@Syntax("(java-array-list-build <n> <build-function>)")
+	public static final Operator buildList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String n = "_n";
+			String buildFun = "_build-fun";
+			String x = "_x";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(n, buildFun),
+					LitComposite.clojureLit(
+							TypeListJavaArray,
+							ClojureHelper.instantiateJavaClass(
+									ArrayList.class,
+									ClojureHelper.applyClojureFunction(
+											"map",
+											ClojureHelper.fnHelper(
+													Arrays.asList(x),
+													ClojureHelper.applyVelkaFunction(
+															buildFun,
+															LitInteger.clojureLit(x))),
+											ClojureHelper.applyClojureFunction(
+													"range",
+													ClojureHelper.getLiteralInnerValue(n))))));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return buildListSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitInteger n = (LitInteger)args.get(0);
+			Expression buildFun = args.get(1);
+			
+			ArrayList<Expression> l = new ArrayList<Expression>((int)n.value);
+			for(int i = 0; i < n.value; i++) {
+				Application appl = new AbstractionApplication(buildFun, new Tuple(new LitInteger(i)));
+				Expression e = appl.interpret(env, typeEnv);
+				l.add(e);
+			}
+			
+			return new LitComposite(new LitInteropObject(l), TypeListJavaArray);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable T = new TypeVariable(NameGenerator.next());
+			Type type = new TypeArrow(new TypeTuple(
+								TypeAtom.TypeIntNative, 
+								new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), T)),
+									TypeListJavaArray);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return buildListSymbol_out.toString();
+		}
+		
+	};
 
 	public static final Path VELKA_CLOJURE_ARRAYLIST_PATH = Paths.get("velka", "clojure");
 
