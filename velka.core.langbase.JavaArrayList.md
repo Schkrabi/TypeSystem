@@ -4,7 +4,7 @@ Operators for working with wrapped java.util.ArrayList.
 ## Table of Contents
 * [constructor(construct List JavaArray)](#velka.core.langbase.JavaArrayList$1)
 * [constructorFromList(construct List JavaArray)](#velka.core.langbase.JavaArrayList$2)
-* [constructorCapacity(velka.core.langbase.JavaArrayList$3@5fe5c6f)](#velka.core.langbase.JavaArrayList$3)
+* [constructorCapacity(velka.core.langbase.JavaArrayList$3@2be94b0f)](#velka.core.langbase.JavaArrayList$3)
 * [addToEnd(java-array-list-add-to-end)](#velka.core.langbase.JavaArrayList$4)
 * [addToIndex(java-array-list-add-to-index)](#velka.core.langbase.JavaArrayList$5)
 * [addAll(java-array-list-add-all)](#velka.core.langbase.JavaArrayList$6)
@@ -25,6 +25,7 @@ Operators for working with wrapped java.util.ArrayList.
 * [foldl(java-array-list-foldl)](#velka.core.langbase.JavaArrayList$21)
 * [foldr(java-array-list-foldr)](#velka.core.langbase.JavaArrayList$22)
 * [everyp(java-array-list-everyp)](#velka.core.langbase.JavaArrayList$25)
+* [buildList(java-array-list-build)](#velka.core.langbase.JavaArrayList$26)
 
 ## Constructors
 ### <a name="velka.core.langbase.JavaArrayList$1"> constructor(construct List JavaArray)</a>
@@ -55,7 +56,7 @@ Type Signature:
 ~~~
 
 Construct List:JavaArray from existing list inserting all its elements.
-### <a name="velka.core.langbase.JavaArrayList$3"> constructorCapacity(velka.core.langbase.JavaArrayList$3@5fe5c6f)</a>
+### <a name="velka.core.langbase.JavaArrayList$3"> constructorCapacity(velka.core.langbase.JavaArrayList$3@2be94b0f)</a>
 Syntax:
 
 ~~~
@@ -81,7 +82,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, SYSGENNAMEbos] -> Bool:Native
+[List:JavaArray, SYSGENNAMEbqq] -> Bool:Native
 ~~~
 
 Appends the specified element to the end of list.
@@ -101,7 +102,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, Int:Native, SYSGENNAMEbpr] -> []
+[List:JavaArray, Int:Native, SYSGENNAMEbrp] -> []
 ~~~
 
 Inserts the specified element at the specified position in list.
@@ -145,7 +146,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, SYSGENNAMEbro] -> Bool:Native
+[List:JavaArray, SYSGENNAMEbtm] -> Bool:Native
 ~~~
 
 Returns true if this list contains the specified element.
@@ -187,7 +188,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, Int:Native] -> SYSGENNAMEbtl
+[List:JavaArray, Int:Native] -> SYSGENNAMEbvj
 ~~~
 
 Returns the element at the specified position in this list.
@@ -209,7 +210,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, SYSGENNAMEbuk] -> Int:Native
+[List:JavaArray, SYSGENNAMEbwi] -> Int:Native
 ~~~
 
 Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.
@@ -251,7 +252,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, SYSGENNAMEbwh] -> Int:Native
+[List:JavaArray, SYSGENNAMEbyf] -> Int:Native
 ~~~
 
 Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.
@@ -273,7 +274,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, SYSGENNAMEbxg] -> Bool:Native
+[List:JavaArray, SYSGENNAMEbze] -> Bool:Native
 ~~~
 
 Removes the first occurrence of the specified element from this list, if it is present.
@@ -349,7 +350,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, Int:Native, SYSGENNAMEcab] -> SYSGENNAMEcab
+[List:JavaArray, Int:Native, SYSGENNAMEcbz] -> SYSGENNAMEcbz
 ~~~
 
 Replaces the element at the specified position in this list with the specified element.
@@ -510,7 +511,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaArray, [SYSGENNAMEcgo] -> Bool:Native] -> Bool:Native
+[List:JavaArray, [SYSGENNAMEcim] -> Bool:Native] -> Bool:Native
 ~~~
 
 Returns true if every element of this list returns true for the predicate. Otherwise returns false.
@@ -522,4 +523,24 @@ Example:
 (java-array-list-add-all l (build-list-native 10 (* 2 x)))
 (java-array-list-everyp l (lambda (x) (= (mod x 2) 0))) ;; = #t
 (java-array-list-everyp l (lambda (x) (= x 1))) ;; = #f
+~~~
+### <a name="velka.core.langbase.JavaArrayList$26"> buildList(java-array-list-build)</a>
+Syntax:
+
+~~~
+(java-array-list-build <n> <build-function>)
+~~~
+
+Type Signature:
+
+~~~
+[Int:Native, [Int:Native] -> SYSGENNAMEcjl] -> List:JavaArray
+~~~
+
+Builds java array list
+
+Example:
+
+~~~
+(java-array-list-build 5 (lambda (x) x))
 ~~~

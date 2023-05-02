@@ -39,6 +39,8 @@ General operators for primitive types and utility.
 * [Timestamp(timestamp)](#velka.core.langbase.Operators$35)
 * [ToStr(to-str)](#velka.core.langbase.Operators$36)
 * [UnsignedBitShiftRight(ushr)](#velka.core.langbase.Operators$37)
+* [typeStr(type-str)](#velka.core.langbase.Operators$38)
+* [representationStr(representation-str)](#velka.core.langbase.Operators$39)
 
 
 
@@ -810,4 +812,44 @@ Example:
 
 ~~~
 (ushr -1 3) ;; = 2305843009213693951
+~~~
+### <a name="velka.core.langbase.Operators$38"> typeStr(type-str)</a>
+Syntax:
+
+~~~
+(type-str <arg>)
+~~~
+
+Type Signature:
+
+~~~
+[SYSGENNAMEaut] -> String:Native
+~~~
+
+Returns string with type of its argument. This is NOT a special form and the argument will be evaluated.
+
+Example:
+
+~~~
+(type-str 1) ;; = "Int:*"
+~~~
+### <a name="velka.core.langbase.Operators$39"> representationStr(representation-str)</a>
+Syntax:
+
+~~~
+(representation-str <arg>)
+~~~
+
+Type Signature:
+
+~~~
+[SYSGENNAMEavs] -> String:Native
+~~~
+
+Returns string with representation of its argument. This is NOT a special form and the argument will be evaluated.
+
+Example:
+
+~~~
+(representation-str 1) ;; = "Int:Native"
 ~~~

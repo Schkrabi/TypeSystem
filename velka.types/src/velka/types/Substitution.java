@@ -132,7 +132,21 @@ public class Substitution {
 		intersection.addAll(this.elements.keySet());
 		intersection.retainAll(other.elements.keySet());
 
-		return intersection.stream().filter(v -> !this.get(v).equals(other.get(v))).collect(Collectors.toSet());
+		return intersection.stream()
+				.filter(v -> !this.get(v).equals(other.get(v)))
+				.filter(v -> { //Have to filter out cases Type:Rep1 x Type:*, which are not equal but not conflicting
+					Type t1 = this.get(v).get();
+					Type t2 = other.get(v).get();					
+					if(t1 instanceof TypeAtom && t2 instanceof TypeAtom) {
+						TypeAtom ta1 = (TypeAtom)t1;
+						TypeAtom ta2 = (TypeAtom)t2;
+						return 	!(	ta1.name.equals(ta2.name)
+								 &&	(	ta1.representation.equals(TypeRepresentation.WILDCARD)
+									||	ta2.representation.equals(TypeRepresentation.WILDCARD)));
+					}
+					return true;
+				})
+				.collect(Collectors.toSet());
 	}
 	
 	/**

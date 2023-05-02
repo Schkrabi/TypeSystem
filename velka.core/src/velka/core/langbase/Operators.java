@@ -1925,6 +1925,108 @@ public final class Operators extends OperatorBank {
 
 	};
 	
+	@VelkaOperator
+	@Description("Returns string with type of its argument. This is NOT a special form and the argument will be evaluated.") 
+	@Example("(type-str 1) ;; = \"Int:*\"") 
+	@Syntax("(type-str <arg>)")
+	public static final Operator typeStr = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String arg = "_arg";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(arg),
+					LitString.clojureLit(
+						ClojureHelper.applyClojureFunction(
+								".toString",
+								ClojureHelper.applyClojureFunction(
+										".removeRepresentationInformation",
+										ClojureHelper.applyClojureFunction(
+												ClojureCoreSymbols.getTypeClojureSymbol_full,
+												arg)))));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-type-str", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			Expression arg = args.get(0);
+			
+			Pair<Type, Substitution> p = arg.infer(env, typeEnv);
+			
+			return new LitString(p.first.removeRepresentationInformation().toString());
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable tv = new TypeVariable(NameGenerator.next());
+			Type type = new TypeArrow(new TypeTuple(tv), TypeAtom.TypeStringNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "type-str";
+		}
+		
+	};
+	
+	@VelkaOperator
+	@Description("Returns string with representation of its argument. This is NOT a special form and the argument will be evaluated.") 
+	@Example("(representation-str 1) ;; = \"Int:Native\"") 
+	@Syntax("(representation-str <arg>)")
+	public static final Operator representationStr = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String arg = "_arg";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(arg),
+					LitString.clojureLit(
+						ClojureHelper.applyClojureFunction(
+								".toString",
+								ClojureHelper.applyClojureFunction(
+										ClojureCoreSymbols.getTypeClojureSymbol_full,
+										arg))));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-representation-str", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+Expression arg = args.get(0);
+			
+			Pair<Type, Substitution> p = arg.infer(env, typeEnv);
+			
+			return new LitString(p.first.toString());
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			TypeVariable tv = new TypeVariable(NameGenerator.next());
+			Type type = new TypeArrow(new TypeTuple(tv), TypeAtom.TypeStringNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "representation-str";
+		}
+		
+	};
+	
 	public static final String defaultCostFunction = "default-cost-function";
 	public static final String defaultCostFunction_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, defaultCostFunction);
 
