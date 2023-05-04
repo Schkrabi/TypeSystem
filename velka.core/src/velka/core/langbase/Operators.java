@@ -2027,6 +2027,59 @@ Expression arg = args.get(0);
 		
 	};
 	
+	@VelkaOperator
+	@Description("Returns a string that is a substring of this string.") 
+	@Example("(substr \"hamburger\" 4 8) ;; = \"urge\"") 
+	@Syntax("(substr <str> <start-index> <end-index>)")
+	public static final Operator substr = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String str = "_str";
+			String bgnIndex = "_bgn-index";
+			String endIndex = "_endIndex";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(str, bgnIndex, endIndex),
+					LitString.clojureLit(
+							ClojureHelper.applyClojureFunction(
+									".substring",
+									ClojureHelper.getLiteralInnerValue(str),
+									ClojureHelper.getLiteralInnerValue(bgnIndex),
+									ClojureHelper.getLiteralInnerValue(endIndex))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-substr", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitString litStr = (LitString)args.get(0);
+			LitInteger bgnIndex = (LitInteger)args.get(1);
+			LitInteger endIndex = (LitInteger)args.get(2);
+			
+			String substr = litStr.value.substring((int)bgnIndex.value, (int)endIndex.value);
+			
+			return new LitString(substr);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(
+					new TypeTuple(TypeAtom.TypeStringNative, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeStringNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "substr";
+		}
+	};
+	
 	public static final String defaultCostFunction = "default-cost-function";
 	public static final String defaultCostFunction_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, defaultCostFunction);
 

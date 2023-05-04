@@ -56,5 +56,16 @@ class TestOperators extends VelkaTest{
 		
 		this.assertIntprtAndCompPrintSameValues("(println (representation-str 42))");
 	}
+	
+	@Test
+	void testSubstr() throws Exception {
+		this.assertInterpretedStringEquals(
+				"(substr \"hamburger\" 4 8)",
+				new LitString("urge"),
+				this.env,
+				this.typeEnv);
+		
+		this.assertIntprtAndCompPrintSameValues("(println (substr \"hamburger\" 4 8))");
+	}
 
 }
