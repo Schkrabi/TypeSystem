@@ -2,7 +2,7 @@
 Operators for working with wrapped java.util.LinkedList.
 
 ## Table of Contents
-* [constructor(velka.core.langbase.JavaLinkedList$1@d70c109)](#velka.core.langbase.JavaLinkedList$1)
+* [constructor(velka.core.langbase.JavaLinkedList$1@50675690)](#velka.core.langbase.JavaLinkedList$1)
 * [addToEnd(java-linked-list-add-to-end)](#velka.core.langbase.JavaLinkedList$2)
 * [addToIndex(java-linked-list-add-to-index)](#velka.core.langbase.JavaLinkedList$3)
 * [addAll(java-linked-list-add-all)](#velka.core.langbase.JavaLinkedList$4)
@@ -36,7 +36,7 @@ Operators for working with wrapped java.util.LinkedList.
 * [iteratorSet(linked-list-iterator-set)](#velka.core.langbase.JavaLinkedList$34)
 
 ## Constructors
-### <a name="velka.core.langbase.JavaLinkedList$1"> constructor(velka.core.langbase.JavaLinkedList$1@d70c109)</a>
+### <a name="velka.core.langbase.JavaLinkedList$1"> constructor(velka.core.langbase.JavaLinkedList$1@50675690)</a>
 Syntax:
 
 ~~~
@@ -62,7 +62,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEcli] -> Bool:Native
+[List:JavaLinked, SYSGENNAMEcne] -> Bool:Native
 ~~~
 
 Appends the specified element to the end of this list.
@@ -82,7 +82,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, Int:Native, SYSGENNAMEcmh] -> []
+[List:JavaLinked, Int:Native, SYSGENNAMEcod] -> []
 ~~~
 
 Inserts the specified element at the specified position in this list.
@@ -126,7 +126,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEcoe] -> Bool:Native
+[List:JavaLinked, SYSGENNAMEcqa] -> Bool:Native
 ~~~
 
 Returns true if this list contains the specified element.
@@ -168,7 +168,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, Int:Native] -> SYSGENNAMEcqb
+[List:JavaLinked, Int:Native] -> SYSGENNAMEcrx
 ~~~
 
 Returns the element at the specified position in this list.
@@ -190,7 +190,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEcra] -> Int:Native
+[List:JavaLinked, SYSGENNAMEcsw] -> Int:Native
 ~~~
 
 Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.
@@ -232,7 +232,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEcsx] -> Int:Native
+[List:JavaLinked, SYSGENNAMEcut] -> Int:Native
 ~~~
 
 Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.
@@ -254,7 +254,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, SYSGENNAMEctw] -> Bool:Native
+[List:JavaLinked, SYSGENNAMEcvs] -> Bool:Native
 ~~~
 
 Removes the first occurrence of the specified element from this list, if it is present.
@@ -330,7 +330,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, Int:Native, SYSGENNAMEcwr] -> SYSGENNAMEcwr
+[List:JavaLinked, Int:Native, SYSGENNAMEcyn] -> SYSGENNAMEcyn
 ~~~
 
 Replaces the element at the specified position in this list with the specified element.
@@ -491,7 +491,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:JavaLinked, [SYSGENNAMEdde] -> Bool:Native] -> Bool:Native
+[List:JavaLinked, [SYSGENNAMEdfa] -> Bool:Native] -> Bool:Native
 ~~~
 
 Returns true if every element of this list returns true for the predicate. Otherwise returns false.
@@ -558,7 +558,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[LinkedListIterator:Native, SYSGENNAMEdfz] -> LinkedListIterator:Native
+[LinkedListIterator:Native, SYSGENNAMEdhv] -> LinkedListIterator:Native
 ~~~
 
 Inserts the specified element into the list (optional operation).
@@ -627,7 +627,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[LinkedListIterator:Native] -> SYSGENNAMEdiu
+[LinkedListIterator:Native] -> SYSGENNAMEdkq
 ~~~
 
 Returns the next element in the list and advances the cursor position.
@@ -673,7 +673,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[LinkedListIterator:Native] -> SYSGENNAMEdkr
+[LinkedListIterator:Native] -> SYSGENNAMEdmn
 ~~~
 
 Returns the previous element in the list and moves the cursor position backwards.
@@ -741,7 +741,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[LinkedListIterator:Native, SYSGENNAMEdnm] -> LinkedListIterator:Native
+[LinkedListIterator:Native, SYSGENNAMEdpi] -> LinkedListIterator:Native
 ~~~
 
 Replaces the last element returned by linked-list-iterator-next or linked-list-iterator-previous() with the specified element (optional operation).

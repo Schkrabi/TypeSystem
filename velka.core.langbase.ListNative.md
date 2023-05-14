@@ -2,8 +2,8 @@
 Operators for working with velka Lists
 
 ## Table of Contents
-* [constructorEmpty(velka.core.langbase.ListNative$1@763d9750)](#velka.core.langbase.ListNative$1)
-* [constructor(velka.core.langbase.ListNative$2@5c0369c4)](#velka.core.langbase.ListNative$2)
+* [constructorEmpty(velka.core.langbase.ListNative$1@2be94b0f)](#velka.core.langbase.ListNative$1)
+* [constructor(velka.core.langbase.ListNative$2@d70c109)](#velka.core.langbase.ListNative$2)
 * [isEmpty(is-list-native-empty)](#velka.core.langbase.ListNative$3)
 * [headListNativeOperator(head-list-native)](#velka.core.langbase.ListNative$4)
 * [tailListNativeOperator(tail-list-native)](#velka.core.langbase.ListNative$5)
@@ -22,7 +22,7 @@ Operators for working with velka Lists
 * [everyp(everyp-list-native)](#velka.core.langbase.ListNative$20)
 
 ## Constructors
-### <a name="velka.core.langbase.ListNative$1"> constructorEmpty(velka.core.langbase.ListNative$1@763d9750)</a>
+### <a name="velka.core.langbase.ListNative$1"> constructorEmpty(velka.core.langbase.ListNative$1@2be94b0f)</a>
 Syntax:
 
 ~~~
@@ -36,7 +36,7 @@ Type Signature:
 ~~~
 
 Constructs Empty List:Native.
-### <a name="velka.core.langbase.ListNative$2"> constructor(velka.core.langbase.ListNative$2@5c0369c4)</a>
+### <a name="velka.core.langbase.ListNative$2"> constructor(velka.core.langbase.ListNative$2@d70c109)</a>
 Syntax:
 
 ~~~
@@ -46,7 +46,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[SYSGENNAMEaxp, List:Native] -> List:Native
+[SYSGENNAMEazl, List:Native] -> List:Native
 ~~~
 
 Constructs new List:Native adding element as head to list.
@@ -82,7 +82,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native] -> SYSGENNAMEazm
+[List:Native] -> SYSGENNAMEbbi
 ~~~
 
 Returns first element in this list.
@@ -122,7 +122,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEbbj] -> SYSGENNAMEbbk, List:Native] -> List:Native
+[[SYSGENNAMEbdf] -> SYSGENNAMEbdg, List:Native] -> List:Native
 ~~~
 
 Returns a List:Native consisting of the results of applying the given function to the elements of list.
@@ -144,7 +144,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEbcj, SYSGENNAMEbck] -> SYSGENNAMEbcl, List:Native, List:Native] -> List:Native
+[[SYSGENNAMEbef, SYSGENNAMEbeg] -> SYSGENNAMEbeh, List:Native, List:Native] -> List:Native
 ~~~
 
 Returns a List:Native consisting of the results of applying the given function to the elements of list1 and list2.
@@ -167,7 +167,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[[SYSGENNAMEbdk, SYSGENNAMEbdl] -> SYSGENNAMEbdk, SYSGENNAMEbdk, List:Native] -> SYSGENNAMEbdk
+[[SYSGENNAMEbfg, SYSGENNAMEbfh] -> SYSGENNAMEbfg, SYSGENNAMEbfg, List:Native] -> SYSGENNAMEbfg
 ~~~
 
 Performs a reduction on the elements of list, using the terminator value and an associative accumulation function, and returns the reduced value. Processes list from the beginning.
@@ -187,7 +187,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native, SYSGENNAMEbek] -> List:Native
+[List:Native, SYSGENNAMEbgg] -> List:Native
 ~~~
 
 Creates new list with appended the specified element to the end of list.
@@ -207,7 +207,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native, SYSGENNAMEbfj] -> Bool:Native
+[List:Native, SYSGENNAMEbhf] -> Bool:Native
 ~~~
 
 Returns true if this list contains the specified element.
@@ -228,7 +228,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native, [SYSGENNAMEbgi] -> Bool:Native] -> List:Native
+[List:Native, [SYSGENNAMEbie] -> Bool:Native] -> List:Native
 ~~~
 
 Returns new List:Native containing only those elements of list, for which predicate returns true.
@@ -248,7 +248,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native, Int:Native] -> SYSGENNAMEbhh
+[List:Native, Int:Native] -> SYSGENNAMEbjd
 ~~~
 
 Returns the element at the specified position in this list.
@@ -268,7 +268,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[Int:Native, [Int:Native] -> SYSGENNAMEbig] -> List:Native
+[Int:Native, [Int:Native] -> SYSGENNAMEbkc] -> List:Native
 ~~~
 
 Creates a List:Native of n elements by applying function to the integers from 0 to (- n 1) in order.
@@ -369,7 +369,7 @@ Syntax:
 Type Signature:
 
 ~~~
-[List:Native, [SYSGENNAMEbmx] -> Bool:Native] -> Bool:Native
+[List:Native, [SYSGENNAMEbot] -> Bool:Native] -> Bool:Native
 ~~~
 
 Returns true if every element of this list returns true for the predicate. Otherwise returns false.

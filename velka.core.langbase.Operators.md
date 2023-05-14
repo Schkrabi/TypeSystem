@@ -41,6 +41,8 @@ General operators for primitive types and utility.
 * [UnsignedBitShiftRight(ushr)](#velka.core.langbase.Operators$37)
 * [typeStr(type-str)](#velka.core.langbase.Operators$38)
 * [representationStr(representation-str)](#velka.core.langbase.Operators$39)
+* [substr(substr)](#velka.core.langbase.Operators$40)
+* [strlen(strlen)](#velka.core.langbase.Operators$41)
 
 
 
@@ -852,4 +854,44 @@ Example:
 
 ~~~
 (representation-str 1) ;; = "Int:Native"
+~~~
+### <a name="velka.core.langbase.Operators$40"> substr(substr)</a>
+Syntax:
+
+~~~
+(substr <str> <start-index> <end-index>)
+~~~
+
+Type Signature:
+
+~~~
+[String:Native, Int:Native, Int:Native] -> String:Native
+~~~
+
+Returns a string that is a substring of this string.
+
+Example:
+
+~~~
+(substr "hamburger" 4 8) ;; = "urge"
+~~~
+### <a name="velka.core.langbase.Operators$41"> strlen(strlen)</a>
+Syntax:
+
+~~~
+(strlen <str>)
+~~~
+
+Type Signature:
+
+~~~
+[String:Native] -> Int:Native
+~~~
+
+Returns the length of this string. The length is equal to the number of Unicode code units in the string.
+
+Example:
+
+~~~
+(strlen "hamburger") ;; = 9
 ~~~

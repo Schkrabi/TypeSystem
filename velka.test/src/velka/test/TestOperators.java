@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
 
 class TestOperators extends VelkaTest{
@@ -66,6 +67,17 @@ class TestOperators extends VelkaTest{
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues("(println (substr \"hamburger\" 4 8))");
+	}
+	
+	@Test
+	void testStrlen() throws Exception {
+		this.assertInterpretedStringEquals(
+				"(strlen \"foo\")",
+				new LitInteger(3),
+				this.env,
+				this.typeEnv);
+		
+		this.assertIntprtAndCompPrintSameValues("(println (strlen \"foo\"))");
 	}
 
 }

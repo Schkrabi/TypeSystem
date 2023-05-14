@@ -2080,6 +2080,49 @@ Expression arg = args.get(0);
 		}
 	};
 	
+	@VelkaOperator
+	@Description("Returns the length of this string. The length is equal to the number of Unicode code units in the string.") 
+	@Example("(strlen \"hamburger\") ;; = 9") 
+	@Syntax("(strlen <str>)")
+	public static final Operator strlen = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			String str = "_str";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(str),
+					LitInteger.clojureLit(
+							ClojureHelper.applyClojureFunction(
+									".length",
+									ClojureHelper.getLiteralInnerValue(str))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-strlen", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			LitString litStr = (LitString)args.get(0);
+			return new LitInteger(litStr.value.length());
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			Type type = new TypeArrow(
+					new TypeTuple(TypeAtom.TypeStringNative), TypeAtom.TypeIntNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "strlen";
+		}
+	};
+	
 	public static final String defaultCostFunction = "default-cost-function";
 	public static final String defaultCostFunction_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, defaultCostFunction);
 
