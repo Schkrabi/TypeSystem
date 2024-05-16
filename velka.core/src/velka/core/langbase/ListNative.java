@@ -80,7 +80,7 @@ public class ListNative extends OperatorBank{
 	@VelkaConstructor
 	@Description("Constructs Empty List:Native.")
 	@Name("Construct Empty List") 
-	@Syntax("(construct List Native)")
+	@Syntax("(construct List:Native)")
 	public static final Constructor constructorEmpty = new Constructor() {
 
 		@Override
@@ -116,7 +116,7 @@ public class ListNative extends OperatorBank{
 	@VelkaConstructor
 	@Description("Constructs new List:Native adding element as head to list.") 
 	@Name("Construct by cons") 
-	@Syntax("(construct List Native <element> <list>)")
+	@Syntax("(construct List:Native <element> <list>)")
 	public static final Constructor constructor = new Constructor() {
 
 		@Override
@@ -171,7 +171,7 @@ public class ListNative extends OperatorBank{
 	 */
 	@VelkaOperator
 	@Description("Returns _true_ if list is empty. Returns _false_ otherwise.") 
-	@Example("(is-list-native-empty (construct List Native)) ;; = #t") 
+	@Example("(is-list-native-empty (construct List:Native)) ;; = #t") 
 	@Syntax("(is-list-native-empty <list>)")
 	public static final Operator isEmpty = new Operator() {
 
@@ -586,7 +586,7 @@ public class ListNative extends OperatorBank{
 	 */
 	@VelkaOperator
 	@Description("Creates new list with appended the specified element to the end of list.") 
-	@Example("(add-to-end-list-native (construct List Native) 42) ;; = (42)") 
+	@Example("(add-to-end-list-native (construct List:Native) 42) ;; = (42)") 
 	@Syntax("(add-to-end-list-native <list> <element>)")
 	public static final Operator addToEndOperator = new Operator() {
 

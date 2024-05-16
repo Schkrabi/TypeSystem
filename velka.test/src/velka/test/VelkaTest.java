@@ -52,8 +52,8 @@ public class VelkaTest {
 	private static String os = System.getProperty("os.name").toLowerCase();
 	public static boolean IS_WINDOWS = (os.indexOf("win") >= 0);
 	public static boolean IS_UNIX = (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") > 0);
-	protected static final Path velkaUtilJar = Paths.get("C:", "Users", "r.skrabal", "Documents", "Mine", "Java", "TypeSystem", "lib", "velka.util.jar");
-	protected static final Path velkaTypesJar = Paths.get("C:", "Users", "r.skrabal", "Documents", "Mine", "Java", "TypeSystem", "lib", "velka.types.jar");
+	protected static final Path velkaUtilJar = Paths.get("C:", "Users", "r.skrabal", "Documents", "private-r.skrabal", "Java", "TypeSystem", "lib", "velka.util.jar");
+	protected static final Path velkaTypesJar = Paths.get("C:", "Users", "r.skrabal", "Documents", "private-r.skrabal", "Java", "TypeSystem", "lib", "velka.types.jar");
 
 	@BeforeAll
 	static void setupTest() throws IOException {

@@ -58,7 +58,7 @@ public class JavaBitSet extends OperatorBank {
 	@VelkaConstructor
 	@Description("Constructs empty Set:BitSet.")
 	@Name("Construct Empty bitset")
-	@Syntax("(construct Set BitSet)")
+	@Syntax("(construct Set:BitSet)")
 	public static final Constructor constructor = new Constructor() {
 
 		@Override
@@ -98,7 +98,7 @@ public class JavaBitSet extends OperatorBank {
 	@VelkaConstructor
 	@Description("Creates a bit set whose initial size is large enough to explicitly represent bits with indices in the range 0 through nbits-1.")
 	@Name("Construct bit set with capacity")
-	@Syntax("(construct Set BitSet <nbits>)")
+	@Syntax("(construct Set:BitSet <nbits>)")
 	public static final Constructor nBitsConstructor = new Constructor() {
 
 		@Override
@@ -148,9 +148,9 @@ public class JavaBitSet extends OperatorBank {
 	 */
 	@VelkaOperator
 	@Description("Performs a logical AND of this target bit set with the argument bit set.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(define s2 (construct Set BitSet))\n"
+					+ "(define s2 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-and s1 s2)") 
 	@Syntax("(bit-set-and <set1> <set2>)")
@@ -214,9 +214,9 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Clears all of the bits in this BitSet whose corresponding bit is set in the specified BitSet.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(define s2 (construct Set BitSet))\n"
+					+ "(define s2 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-and-not s1 s2)") 
 	@Syntax("(bit-set-and-not <set1> <set2>)")
@@ -280,7 +280,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Returns the number of bits set to true in this BitSet.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-cardinality s1)") 
 	@Syntax("(bit-set-cardinality <set>)")
@@ -335,7 +335,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Sets all of the bits in this BitSet to false.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-clear s1)") 
 	@Syntax("(bit-set-clear <set>)")
@@ -389,7 +389,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Sets the bit specified by the index to false.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-clear-bit-index s1 3)") 
 	@Syntax("(bit-set-clear-bit-index <set> <index>)")
@@ -447,7 +447,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Sets the bits from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to false.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-clear-interval s1 2 4)") 
 	@Syntax("(bit-set-clear-interval <set> <fromIndex> <toIndex>)")
@@ -508,7 +508,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Cloning this BitSet produces a new BitSet that is equal to it.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-clone s1)")
 	@Syntax("(bit-set-clone <set>)")
@@ -561,9 +561,9 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Compares this object against the specified object.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(define s2 (construct Set BitSet))\n"
+					+ "(define s2 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-equalp s1 s2)")
 	@Syntax("(bit-set-equalp <set1> <set2>)")
@@ -622,7 +622,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Sets the bit at the specified index to the complement of its current value.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-flip s1 3)")
 	@Syntax("(bit-set-flip <set> <bitIndex>)")
 	public static final Operator flip = new Operator() {
@@ -681,7 +681,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Sets each bit from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to the complement of its current value.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-flip-interval s1 3 5)")
 	@Syntax("(bit-set-flip-interval <set> <fromIndex> <toIndex>)")
 	public static final Operator flipInterval = new Operator() {
@@ -743,7 +743,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Returns the value of the bit with the specified index.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-get s1 3)") 
 	@Syntax("(bit-set-get <set> <index>)")
@@ -798,7 +798,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Returns a new BitSet composed of bits from this BitSet from fromIndex (inclusive) to toIndex (exclusive).") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-get-interval s1 2 4)") 
 	@Syntax("(bit-set-get-interval <set> <fromIndex> <toIndex>)")
@@ -858,9 +858,9 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Returns true if the specified BitSet has any bits set to true that are also set to true in this BitSet.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(define s2 (construct Set BitSet))\n"
+					+ "(define s2 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-intersects s1 s2)") 
 	@Syntax("(bit-set-intersects <set1> <set2>)")
@@ -919,7 +919,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Returns true if this BitSet contains no bits that are set to true.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-is-empty s1)\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-is-empty s1)") 
@@ -972,7 +972,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Returns the \"logical size\" of this BitSet: the index of the highest set bit in the BitSet plus one.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-length s1);; = 5") 
 	@Syntax("(bit-set-length <set>)")
@@ -1132,9 +1132,9 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Performs a logical OR of this bit set with the bit set argument.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(define s2 (construct Set BitSet))\n"
+					+ "(define s2 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-or s1 s2)") 
 	@Syntax("(bit-set-or <set1> <set2>)")
@@ -1306,7 +1306,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Sets the bit at the specified index to true.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set s1 3)") 
 	@Syntax("(bit-set-set <set> <bitIndex>)")
 	public static final Operator set = new Operator() {
@@ -1365,7 +1365,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Sets the bit at the specified index to the specified value.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-value s1 3 #t)") 
 	@Syntax("(bit-set-set-value <set> <bitIndex> <value>)")
 	public static final Operator setValue = new Operator() {
@@ -1427,7 +1427,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Sets the bits from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to true.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 3 5)") 
 	@Syntax("(bit-set-set-interval <set> <fromIndex> <toIndex>)")
 	public static final Operator setInterval = new Operator() {
@@ -1489,7 +1489,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Sets the bits from the specified fromIndex (inclusive) to the specified toIndex (exclusive) to the specified value.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval-value s1 3 5 #f)") 
 	@Syntax("(bit-set-set-interval-value <set> <fromIndex> <toIndex> <value>)")	
 	public static final Operator setIntervalValue = new Operator() {
@@ -1555,7 +1555,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Returns the number of bits of space actually in use by this BitSet to represent bit values.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 3 5)\n"
 					+ "(bit-set-size s1)") 
 	@Syntax("(bit-set-size <set>)")
@@ -1607,7 +1607,7 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Returns a string representation of this bit set.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 3 5)\n"
 					+ "(bit-set-str s1)") 
 	@Syntax("(bit-set-str <set>)")
@@ -1659,9 +1659,9 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Performs a logical XOR of this bit set with the bit set argument.") 
-	@Example("(define s1 (construct Set BitSet))\n"
+	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 0 5)\n"
-					+ "(define s2 (construct Set BitSet))\n"
+					+ "(define s2 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-xor s1 s2)") 
 	@Syntax("(bit-set-xor <set1> <set2>)")

@@ -5,9 +5,11 @@ import java.util.Optional;
 
 import velka.core.abstraction.Lambda;
 import velka.core.expression.Expression;
+import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.literal.LitInteger;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -15,6 +17,7 @@ import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.TypesDoesNotUnifyException;
 import velka.util.AppendableException;
+import velka.util.NameGenerator;
 import velka.util.Pair;
 
 /**
@@ -47,6 +50,8 @@ public class DefineConversion extends Expression {
 	 */
 	public final Expression body;
 	
+	/** Conversion cost */
+	public final Expression cost;
 
 	public DefineConversion(TypeAtom fromType, TypeAtom toType, Tuple args, Expression body) {
 		super();
@@ -54,6 +59,16 @@ public class DefineConversion extends Expression {
 		this.to = toType;
 		this.args = args;
 		this.body = body;
+		this.cost = new Lambda(new Tuple(new Symbol(NameGenerator.next())), new TypeTuple(this.from), new LitInteger(1));
+	}
+	
+	public DefineConversion(TypeAtom fromType, TypeAtom toType, Tuple args, Expression body, Expression cost) {
+		super();
+		this.from = fromType;
+		this.to = toType;
+		this.args = args;
+		this.body = body;
+		this.cost = cost;
 	}
 
 	@Override

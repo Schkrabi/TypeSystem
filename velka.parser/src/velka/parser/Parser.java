@@ -2,7 +2,6 @@ package velka.parser;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.antlr.v4.runtime.CharStream;
@@ -14,9 +13,6 @@ import org.antlr.v4.runtime.TokenStream;
 import velka.core.expression.Expression;
 import velka.parser.antlr.VelkaLexer;
 import velka.parser.antlr.VelkaParser;
-import velka.parser.antlr.SemanticNode;
-import velka.parser.antlr.VelkaParser.ExprsContext;
-import velka.parser.semantic.SemanticParser;
 import velka.util.AppendableException;
 
 /**
@@ -36,8 +32,8 @@ public class Parser {
 	 * @throws AppendableException
 	 */
 	public static List<Expression> read(InputStream in) throws IOException, AppendableException {
-		ExprsContext exprsContext = parseCharStream(CharStreams.fromStream(in));		
-		return tokenParse(exprsContext);
+		var exprsContext = parseCharStream(CharStreams.fromStream(in));		
+		return exprsContext.val;
 	}
 	
 	/**
@@ -49,8 +45,8 @@ public class Parser {
 	 * @throws AppendableException
 	 */
 	public static List<Expression> read(String in) throws RecognitionException, AppendableException {
-		ExprsContext exprsContext = parseCharStream(CharStreams.fromString(in));
-		return tokenParse(exprsContext);
+		var exprsContext = parseCharStream(CharStreams.fromString(in));
+		return exprsContext.val;
 	}
 	
 	/**
@@ -61,26 +57,9 @@ public class Parser {
 	 * @throws RecognitionException
 	 * @throws AppendableException
 	 */
-	private static ExprsContext parseCharStream(CharStream charStream) throws RecognitionException, AppendableException {
+	private static velka.parser.antlr.VelkaParser.ProgramContext parseCharStream(CharStream charStream) throws RecognitionException, AppendableException {
 		TokenStream tokens = new CommonTokenStream(new VelkaLexer(charStream));
 		VelkaParser parser = new VelkaParser(tokens);
-		return parser.exprs();
-	}
-	
-	/**
-	 * Second parsing phase parses stream of tokens into list of expressions
-	 * 
-	 * @param exprsContext
-	 * @return
-	 * @throws AppendableException
-	 */
-	private static List<Expression> tokenParse(ExprsContext exprsContext) throws AppendableException{
-		List<Expression> exprs = new ArrayList<Expression>();
-		
-		for (SemanticNode s : exprsContext.val) {
-			exprs.add(SemanticParser.parseNode(s));
-		}
-	
-		return exprs;
+		return parser.program();
 	}
 }

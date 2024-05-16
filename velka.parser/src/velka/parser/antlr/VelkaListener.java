@@ -1,5 +1,19 @@
-// Generated from Scheme.g by ANTLR 4.7.2
+// Generated from ./Velka.g4 by ANTLR 4.13.1
 package velka.parser.antlr;
+
+import velka.core.abstraction.*;
+import velka.core.application.*;
+import velka.core.expression.*;
+import velka.core.literal.*;
+import velka.types.*;
+import velka.util.NameGenerator;
+
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
+import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
@@ -9,15 +23,15 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
  */
 public interface VelkaListener extends ParseTreeListener {
 	/**
-	 * Enter a parse tree produced by {@link VelkaParser#exprs}.
+	 * Enter a parse tree produced by {@link VelkaParser#program}.
 	 * @param ctx the parse tree
 	 */
-	void enterExprs(VelkaParser.ExprsContext ctx);
+	void enterProgram(VelkaParser.ProgramContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link VelkaParser#exprs}.
+	 * Exit a parse tree produced by {@link VelkaParser#program}.
 	 * @param ctx the parse tree
 	 */
-	void exitExprs(VelkaParser.ExprsContext ctx);
+	void exitProgram(VelkaParser.ProgramContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link VelkaParser#expr}.
 	 * @param ctx the parse tree
@@ -29,15 +43,45 @@ public interface VelkaListener extends ParseTreeListener {
 	 */
 	void exitExpr(VelkaParser.ExprContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link VelkaParser#seq}.
+	 * Enter a parse tree produced by {@link VelkaParser#argument_list}.
 	 * @param ctx the parse tree
 	 */
-	void enterSeq(VelkaParser.SeqContext ctx);
+	void enterArgument_list(VelkaParser.Argument_listContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link VelkaParser#seq}.
+	 * Exit a parse tree produced by {@link VelkaParser#argument_list}.
 	 * @param ctx the parse tree
 	 */
-	void exitSeq(VelkaParser.SeqContext ctx);
+	void exitArgument_list(VelkaParser.Argument_listContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link VelkaParser#bind}.
+	 * @param ctx the parse tree
+	 */
+	void enterBind(VelkaParser.BindContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link VelkaParser#bind}.
+	 * @param ctx the parse tree
+	 */
+	void exitBind(VelkaParser.BindContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link VelkaParser#bind_list}.
+	 * @param ctx the parse tree
+	 */
+	void enterBind_list(VelkaParser.Bind_listContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link VelkaParser#bind_list}.
+	 * @param ctx the parse tree
+	 */
+	void exitBind_list(VelkaParser.Bind_listContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link VelkaParser#special_form}.
+	 * @param ctx the parse tree
+	 */
+	void enterSpecial_form(VelkaParser.Special_formContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link VelkaParser#special_form}.
+	 * @param ctx the parse tree
+	 */
+	void exitSpecial_form(VelkaParser.Special_formContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link VelkaParser#atom}.
 	 * @param ctx the parse tree
@@ -49,23 +93,63 @@ public interface VelkaListener extends ParseTreeListener {
 	 */
 	void exitAtom(VelkaParser.AtomContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link VelkaParser#pair}.
+	 * Enter a parse tree produced by {@link VelkaParser#application}.
 	 * @param ctx the parse tree
 	 */
-	void enterPair(VelkaParser.PairContext ctx);
+	void enterApplication(VelkaParser.ApplicationContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link VelkaParser#pair}.
+	 * Exit a parse tree produced by {@link VelkaParser#application}.
 	 * @param ctx the parse tree
 	 */
-	void exitPair(VelkaParser.PairContext ctx);
+	void exitApplication(VelkaParser.ApplicationContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link VelkaParser#arrow}.
+	 * Enter a parse tree produced by {@link VelkaParser#type}.
 	 * @param ctx the parse tree
 	 */
-	void enterArrow(VelkaParser.ArrowContext ctx);
+	void enterType(VelkaParser.TypeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link VelkaParser#arrow}.
+	 * Exit a parse tree produced by {@link VelkaParser#type}.
 	 * @param ctx the parse tree
 	 */
-	void exitArrow(VelkaParser.ArrowContext ctx);
+	void exitType(VelkaParser.TypeContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link VelkaParser#type_arrow}.
+	 * @param ctx the parse tree
+	 */
+	void enterType_arrow(VelkaParser.Type_arrowContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link VelkaParser#type_arrow}.
+	 * @param ctx the parse tree
+	 */
+	void exitType_arrow(VelkaParser.Type_arrowContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link VelkaParser#type_atom}.
+	 * @param ctx the parse tree
+	 */
+	void enterType_atom(VelkaParser.Type_atomContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link VelkaParser#type_atom}.
+	 * @param ctx the parse tree
+	 */
+	void exitType_atom(VelkaParser.Type_atomContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link VelkaParser#representation_atom}.
+	 * @param ctx the parse tree
+	 */
+	void enterRepresentation_atom(VelkaParser.Representation_atomContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link VelkaParser#representation_atom}.
+	 * @param ctx the parse tree
+	 */
+	void exitRepresentation_atom(VelkaParser.Representation_atomContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link VelkaParser#type_tuple}.
+	 * @param ctx the parse tree
+	 */
+	void enterType_tuple(VelkaParser.Type_tupleContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link VelkaParser#type_tuple}.
+	 * @param ctx the parse tree
+	 */
+	void exitType_tuple(VelkaParser.Type_tupleContext ctx);
 }

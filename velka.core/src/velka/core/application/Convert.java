@@ -40,7 +40,7 @@ public class Convert extends Expression {
 	 * Converted expression
 	 */
 	public final Expression expression;
-
+	
 	public Convert(Type from, Type to, Expression expression) {
 		this.from = from;
 		this.to = to;

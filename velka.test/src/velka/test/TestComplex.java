@@ -78,38 +78,36 @@ class TestComplex extends VelkaTest {
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		this.assertInterpretedStringEquals(
-				"(type Name)" 
-				+ "(representation Unstructured Name)"
-				+ "(constructor Name Unstructured ((String:Native x)) x)" + "(representation Structured Name)"
-				+ "(constructor Name Structured ((String:Native x) (String:Native y)) (cons x y))"
+				"(constructor Name:Unstructured ((String:Native x)) x)" 
+				+ "(constructor Name:Structured ((String:Native x) (String:Native y)) (tuple x y))"
 				+ "((extend (extend (extended-lambda (Name)) "
 					+ "(lambda ((Name:Unstructured x)) \"unstructured\")) "
 					+ "(lambda ((Name:Structured x)) \"structured\")) "
-						+ "(construct Name Unstructured \"Jan Novak\"))",
+						+ "(construct Name:Unstructured \"Jan Novak\"))",
 				new LitString("unstructured"), env, typeEnv);
 
 		this.assertInterpretedStringEquals(
 				"((extend (extend (extended-lambda (Name)) "
 					+ "(lambda ((Name:Unstructured x)) \"unstructured\")) "
 					+ "(lambda ((Name:Structured x)) \"structured\")) "
-						+ "(construct Name Structured \"Jan\" \"Novak\"))",
+						+ "(construct Name:Structured \"Jan\" \"Novak\"))",
 				new LitString("structured"), env, typeEnv);
 
 		this.assertInterpretedStringEquals(
-				"(conversion Name:Structured Name:Unstructured ((Name:Structured x)) (construct Name Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))"
-						+ "((lambda ((Name:Unstructured x)) x) (construct Name Structured \"Jan\" \"Novak\"))",
+				"(conversion Name:Structured Name:Unstructured (x) (construct Name:Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))"
+						+ "((lambda ((Name:Unstructured x)) x) (construct Name:Structured \"Jan\" \"Novak\"))",
 				new LitComposite(new LitString("JanNovak"),
 						new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured"))),
 				env, typeEnv);
 
 		this.assertIntprtAndCompPrintSameValues(
-				"(println ((lambda ((String:Native x) (Int:String y)) x) \"test\" (construct Int String \"1984\")))");
+				"(println ((lambda ((String:Native x) (Int:String y)) x) \"test\" (construct Int:String \"1984\")))");
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(println "
 				+ "((extend (extended-lambda (Bool Int Int)) "
 						+ "(lambda ((Bool:Native x) (Int:String y) (Int:String z)) (if x z y))) "
-						+ "#f (construct Int Roman \"XLII\") 66))");
+						+ "#f (construct Int:Roman \"XLII\") 66))");
 	}
 
 	@Test
@@ -125,9 +123,9 @@ class TestComplex extends VelkaTest {
 		final LitComposite emptyList = new LitComposite(Expression.EMPTY_EXPRESSION, linkedList);
 
 		this.assertInterpretedStringEquals(
-				"(representation Linked List)" + "(constructor List Linked (x (List l)) (cons x l))"
-						+ "(constructor List Linked () ())"
-						+ "(construct List Linked 1 (construct List Linked 2 (construct List Linked)))",
+				"(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))"
+						+ "(constructor List:Linked () nil)"
+						+ "(construct List:Linked 1 (construct List:Linked 2 (construct List:Linked)))",
 				new LitComposite(
 						new Tuple(Arrays.asList(new LitInteger(1),
 								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
@@ -136,19 +134,19 @@ class TestComplex extends VelkaTest {
 
 		this.assertInterpretedStringEquals("(define fcons (lambda (x y) (lambda (f) (f x y))))"
 				+ "(define fcar (lambda (p) (p (lambda (x y) x))))" + "(define fcdr (lambda (p) (p (lambda (x y) y))))"
-				+ "(representation Functional List)" + "(constructor List Functional (x (List l)) (fcons x l))"
-				+ "(constructor List Functional () ())", Expression.EMPTY_EXPRESSION, env, typeEnv);
+				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))"
+				+ "(constructor List:Functional () nil)", Expression.EMPTY_EXPRESSION, env, typeEnv);
 
 		final LitComposite xlii = new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman);
 		final LitComposite fortyTwoStr = new LitComposite(new LitString("42"), TypeAtom.TypeIntString);
 		final LitInteger fortyTwo = new LitInteger(42);
 
 		this.assertInterpretedStringEquals(
-				"(define x (construct List Linked (construct Int Roman \"XLII\") (construct List Linked (construct Int String \"42\") (construct List Linked 42 (construct List Linked)))))",
+				"(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
 
 		this.assertInterpretedStringEquals(
-				"(define y (construct List Functional (construct Int Roman \"XLII\") (construct List Functional (construct Int String \"42\") (construct List Functional 42 (construct List Functional)))))",
+				"(define y (construct List:Functional (construct Int:Roman \"XLII\") (construct List:Functional (construct Int:String \"42\") (construct List:Functional 42 (construct List:Functional)))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
 		this.assertInterpretedStringEquals(
 					"(define is-list-empty (extended-lambda (List)))"
@@ -157,8 +155,8 @@ class TestComplex extends VelkaTest {
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
 		this.assertInterpretedStringEquals("(is-list-empty x)", LitBoolean.FALSE, env, typeEnv);
 		this.assertInterpretedStringEquals("(is-list-empty y)", LitBoolean.FALSE, env, typeEnv);
-		this.assertInterpretedStringEquals("(is-list-empty (construct List Linked))", LitBoolean.TRUE, env, typeEnv);
-		this.assertInterpretedStringEquals("(is-list-empty (construct List Functional))", LitBoolean.TRUE, env, typeEnv);
+		this.assertInterpretedStringEquals("(is-list-empty (construct List:Linked))", LitBoolean.TRUE, env, typeEnv);
+		this.assertInterpretedStringEquals("(is-list-empty (construct List:Functional))", LitBoolean.TRUE, env, typeEnv);
 
 		this.assertInterpretedStringEquals(
 					"(define head-list (extended-lambda (List)))"
@@ -187,8 +185,8 @@ class TestComplex extends VelkaTest {
 		this.assertInterpretedStringEquals("(head-list (tail-list y))", fortyTwoStr, env, typeEnv);
 
 		this.assertInterpretedStringEquals(
-				"(define build-list-aux (lambda (i n f) " + "(if (= i n) " + "(construct List Linked)"
-						+ "(construct List Linked (f i) (build-list-aux (+ i 1) n f)))))"
+				"(define build-list-aux (lambda (i n f) " + "(if (= i n) " + "(construct List:Linked)"
+						+ "(construct List:Linked (f i) (build-list-aux (+ i 1) n f)))))"
 						+ "(build-list-aux 0 2 (lambda (x) (+ x 1)))",
 				new LitComposite(
 						new Tuple(Arrays.asList(new LitInteger(1),
@@ -208,12 +206,12 @@ class TestComplex extends VelkaTest {
 					"(define append-list (let-type (A) (extended-lambda (List A))))"
 				+	"(define append-list (let-type (A) (extend append-list (lambda ((List:Linked l) (A x)) "
 							+	"(if (is-list-empty l) "
-								+	"(construct List Linked x (construct List Linked)) "
-								+	"(construct List Linked (head-list l) (append-list (tail-list l) x)))))))"
+								+	"(construct List:Linked x (construct List:Linked)) "
+								+	"(construct List:Linked (head-list l) (append-list (tail-list l) x)))))))"
 				+	"(define append-list (let-type (A) (extend append-list (lambda ((List:Functional l) (A x)) "
 							+	"(if (is-list-empty l) "
-								+	"(construct List Functional x (construct List Functional)) "
-								+	"(construct List Functional (head-list l) (append-list (tail-list l) x)))))))",
+								+	"(construct List:Functional x (construct List:Functional)) "
+								+	"(construct List:Functional (head-list l) (append-list (tail-list l) x)))))))",
 				Expression.EMPTY_EXPRESSION, env, typeEnv);
 
 		this
@@ -240,10 +238,10 @@ class TestComplex extends VelkaTest {
 		this.assertInterpretedStringEquals(
 					"(extend (extend (extended-lambda (List)) "
 						+	"(lambda ((List:Linked l)) (if (can-deconstruct-as l ()) "
-							+	"(construct List Linked) "
+							+	"(construct List:Linked) "
 							+	"(append-list (reverse-list (tail-list l)) (head-list l))))) "
 						+	"(lambda ((List:Functional l)) (if (can-deconstruct-as l ()) "
-							+	"(construct List Functional) "
+							+	"(construct List:Functional) "
 							+	"(append-list (reverse-list (tail-list l)) (head-list l)))))",
 				ExtendedFunction.makeExtendedFunction(Arrays.asList(
 						new Function(new TypeTuple(Arrays.asList(linkedList)),
@@ -289,7 +287,7 @@ class TestComplex extends VelkaTest {
 				env, typeEnv);
 
 		this.assertInterpretedStringEquals("(define reverse-list (lambda ((List l)) "
-						+ "(if (is-list-empty l) " + "(construct List Linked) "
+						+ "(if (is-list-empty l) " + "(construct List:Linked) "
 						+ "(append-list (reverse-list (tail-list l)) (head-list l)))))" + "(reverse-list x)",
 				new LitComposite(
 						new Tuple(Arrays.asList(fortyTwo,
@@ -311,37 +309,34 @@ class TestComplex extends VelkaTest {
 		this.assertInterpretedStringEquals(
 				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
 					+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
-					+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int String \"21\") (construct Int String \"21\")))) "
+					+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int:String \"21\") (construct Int:String \"21\")))) "
 					+ "+)",
 				new LitInteger(42), env, typeEnv);
 		this.assertInterpretedStringEquals(
 				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
 				+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
-				+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int String \"21\") (construct Int String \"21\")))) "
-				+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))",
+				+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int:String \"21\") (construct Int:String \"21\")))) "
+				+ "(lambda ((Int:String x) (Int:String y)) (construct Int:String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))",
 				new LitComposite(new LitString("2121"), TypeAtom.TypeIntString), env, typeEnv);
 		this.assertInterpretedStringEquals(
-				"(let-type (A B) ((lambda ((A x) (B y)) (cons x y)) 42 (construct Int String  \"42\")))",
+				"(let-type (A B) ((lambda ((A x) (B y)) (tuple x y)) 42 (construct Int:String  \"42\")))",
 				new Tuple(Arrays.asList(new LitInteger(42),
 						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
 				env, typeEnv);
 
 		this.assertIntprtAndCompPrintSameValues(
-				"(type Name) " 
-				+ "(representation Unstructured Name) "
-				+ "(constructor Name Unstructured ((String:Native x)) x) " 
-				+ "(representation Structured Name) "
-				+ "(constructor Name Structured ((String:Native x) (String:Native y)) (cons x y)) "
+				"(constructor Name:Unstructured ((String:Native x)) x) " 
+				+ "(constructor Name:Structured ((String:Native x) (String:Native y)) (tuple x y)) "
 				+ "(println "
 					+ "((extend (extended-lambda (Name)) "
 						+ "(lambda ((Name:Unstructured x)) \"unstructured\"))"
-					+ "(construct Name Unstructured \"Jan Novak\")))"
+					+ "(construct Name:Unstructured \"Jan Novak\")))"
 				+ "(println "
 					+ "((extend (extended-lambda (Name)) "
 						+ "(lambda ((Name:Structured x)) \"structured\")) "
-					+ "(construct Name Structured \"Jan\" \"Novak\")))"
-				+ "(conversion Name:Structured Name:Unstructured ((Name:Structured x)) (construct Name Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))\n"
-				+ "(println ((lambda ((Name:Unstructured x)) x) (construct Name Structured \"Jan\" \"Novak\")))");
+					+ "(construct Name:Structured \"Jan\" \"Novak\")))"
+				+ "(conversion Name:Structured Name:Unstructured (x) (construct Name:Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))\n"
+				+ "(println ((lambda ((Name:Unstructured x)) x) (construct Name:Structured \"Jan\" \"Novak\")))");
 	}
 
 	@Test
@@ -355,7 +350,7 @@ class TestComplex extends VelkaTest {
 		this.assertIntprtAndCompPrintSameValues("(println #t)");
 		this.assertIntprtAndCompPrintSameValues("(println #f)");
 		this.assertIntprtAndCompPrintSameValues("(println \"Hello World\")");
-		this.assertIntprtAndCompPrintSameValues("(println (construct Int Roman \"XLII\"))");
+		this.assertIntprtAndCompPrintSameValues("(println (construct Int:Roman \"XLII\"))");
 
 		this.assertCompiledCodeEquals("variable", "variable", env, typeEnv);
 	}
@@ -370,27 +365,24 @@ class TestComplex extends VelkaTest {
 		this.assertIntprtAndCompPrintSameValues("(println ((lambda ((Int:Native x) (Int:Native y)) x) 42 21))");
 		this.assertIntprtAndCompPrintSameValues("(println (if #t 42 21))");
 		this.assertIntprtAndCompPrintSameValues(
-				"(println (if #t (construct Int Roman \"XLII\") (construct Int String \"42\")))");
-		this.assertIntprtAndCompPrintSameValues("(println (cons 21 21))");
+				"(println (if #t (construct Int:Roman \"XLII\") (construct Int:String \"42\")))");
+		this.assertIntprtAndCompPrintSameValues("(println (tuple 21 21))");
 		this.assertCompile("(error \"error msg\")", env, typeEnv);
 		this.assertIntprtAndCompPrintSameValues("(println (and #t #f))");
 		this.assertIntprtAndCompPrintSameValues("(println (or #t #f))");
 		this.assertIntprtAndCompPrintSameValues("(define answer 42)" + "(println answer)");
 
 		this.assertIntprtAndCompPrintSameValues(
-				"(type Name2)" 
-				+ "(representation Structured Name2)"
-				+ "(constructor Name2 Structured ((String:Native x) (String:Native y)) (cons x y))"
-				+ "(representation Unstructured Name2)" 
-				+ "(constructor Name2 Unstructured ((String:Native x)) x)"
+				"(constructor Name2:Structured ((String:Native x) (String:Native y)) (tuple x y))"
+				+ "(constructor Name2:Unstructured ((String:Native x)) x)"
 				+ "(conversion Name2:Structured Name2:Unstructured"
-				+ "((Name2:Structured x)) (construct Name2 Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))"
-				+ "(println ((lambda ((Name2:Unstructured x)) x) (construct Name2 Structured \"Jan\" \"Novak\")))"
+				+ "(x) (construct Name2:Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))"
+				+ "(println ((lambda ((Name2:Unstructured x)) x) (construct Name2:Structured \"Jan\" \"Novak\")))"
 				+ "(println "
 					+"((extend (extend (extended-lambda (Int)) "
 						+ "(lambda ((Int:Native x)) \"Native\")) "
 						+ "(lambda ((Int:String x)) \"String\")) "
-					+ "(construct Int String \"42\")))");
+					+ "(construct Int:String \"42\")))");
 	}
 
 	@Test
@@ -411,9 +403,9 @@ class TestComplex extends VelkaTest {
 		this.assertIntprtAndCompPrintSameValues("(println (not #t))\n"); 
 		this.assertIntprtAndCompPrintSameValues("(println (= 42 42))\n");
 		this.assertIntprtAndCompPrintSameValues("(println (or #t #f))\n"); 
-		this.assertIntprtAndCompPrintSameValues("(println (cons 42 \"42\"))\n");
-		this.assertIntprtAndCompPrintSameValues("(println (car (cons 42 \"42\")))\n"); 
-		this.assertIntprtAndCompPrintSameValues("(println (cdr (cons 42 \"42\")))");
+		this.assertIntprtAndCompPrintSameValues("(println (tuple 42 \"42\"))\n");
+		this.assertIntprtAndCompPrintSameValues("(println (car (tuple 42 \"42\")))\n"); 
+		this.assertIntprtAndCompPrintSameValues("(println (cdr (tuple 42 \"42\")))");
 		this.assertIntprtAndCompPrintSameValues("(println (shr 2 1))");
 		this.assertIntprtAndCompPrintSameValues("(println (shl 2 1))");
 		this.assertIntprtAndCompPrintSameValues("(println (ushr 2 1))");
@@ -439,9 +431,9 @@ class TestComplex extends VelkaTest {
 		this.assertIntprtAndCompPrintSameValues("(println (mod 5 3))");
 		this.assertIntprtAndCompPrintSameValues("(println (= (timestamp) 0))");
 		this.assertIntprtAndCompPrintSameValues(
-				"(println (conversion-cost (lambda ((Int:Native x)) \"foo\") (tuple (construct Int Roman \"IV\"))))");
+				"(println (conversion-cost (lambda (x) \"foo\") (tuple (construct Int:Roman \"IV\"))))");
 		this.assertIntprtAndCompPrintSameValues(
-				"(println (conversion-cost (lambda ((Int:Native x)) \"foo\") (tuple 42)))");
+				"(println (conversion-cost (lambda (x) \"foo\") (tuple 42)))");
 	}
 
 	@Test
@@ -466,10 +458,10 @@ class TestComplex extends VelkaTest {
 
 		this.assertIntprtAndCompPrintSameValues(
 				"(println (convert Int:Native Int:String 42))\n" + "(println (convert Int:Native Int:Roman 42))\n"
-						+ "(println (convert Int:String Int:Native (construct Int String \"42\")))\n"
-						+ "(println (convert Int:String Int:Roman (construct Int String \"42\")))\n"
-						+ "(println (convert Int:Roman Int:Native (construct Int Roman \"XLII\")))\n"
-						+ "(println (convert Int:Roman Int:String (construct Int Roman \"XLII\")))");
+						+ "(println (convert Int:String Int:Native (construct Int:String \"42\")))\n"
+						+ "(println (convert Int:String Int:Roman (construct Int:String \"42\")))\n"
+						+ "(println (convert Int:Roman Int:Native (construct Int:Roman \"XLII\")))\n"
+						+ "(println (convert Int:Roman Int:String (construct Int:Roman \"XLII\")))");
 	}
 
 	@Test
@@ -479,22 +471,19 @@ class TestComplex extends VelkaTest {
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 
 		// List
-		this.assertCompile("(type List2)", env, typeEnv);
-		this.assertCompile("(representation Linked List2)", env, typeEnv);
-		this.assertCompiledCodeEquals("(constructor List2 Linked (x (List2 l)) (cons x l))", "", env, typeEnv);
-		this.assertCompiledCodeEquals("(constructor List2 Linked () ())", "", env, typeEnv);
-		this.assertCompile("(representation Functional List2)", env, typeEnv);
+		this.assertCompiledCodeEquals("(let-type (A) (constructor List2:Linked ((A x) (List2 l)) (tuple x l)))", "", env, typeEnv);
+		this.assertCompiledCodeEquals("(constructor List2:Linked () nil)", "", env, typeEnv);
 		this.assertCompile("(define fcons (lambda (x y) (lambda (f) (f x y))))", env, typeEnv);
 		this.assertCompile("(define fcar (lambda (p) (p (lambda (x y) x))))", env, typeEnv);
-		this.assertCompiledCodeEquals("(constructor List2 Functional (x (List2 l)) (fcons x l))", "", env, typeEnv);
-		this.assertCompiledCodeEquals("(constructor List2 Functional () ())", "", env, typeEnv);
+		this.assertCompiledCodeEquals("(let-type (A) (constructor List2:Functional ((A x) (List2 l)) (fcons x l)))", "", env, typeEnv);
+		this.assertCompiledCodeEquals("(constructor List2:Functional () nil)", "", env, typeEnv);
 
 		this.assertCompile(
-				"(define x (construct List2 Linked (construct Int Roman \"XLII\") (construct List2 Linked (construct Int String \"42\") (construct List2 Linked 42 (construct List2 Linked)))))",
+				"(define x (construct List2:Linked (construct Int:Roman \"XLII\") (construct List2:Linked (construct Int:String \"42\") (construct List2:Linked 42 (construct List2:Linked)))))",
 				env, typeEnv);
 
 		this.assertCompile(
-				"(define y (construct List2 Functional (construct Int Roman \"XLII\") (construct List2 Functional (construct Int String \"42\") (construct List2 Functional 42 (construct List2 Functional)))))",
+				"(define y (construct List2:Functional (construct Int:Roman \"XLII\") (construct List2:Functional (construct Int:String \"42\") (construct List2:Functional 42 (construct List2:Functional)))))",
 				env, typeEnv);
 		
 		this.assertCompile(
@@ -529,18 +518,18 @@ class TestComplex extends VelkaTest {
 		// return a different representation.
 		// But on what would I base the representation?
 		this.assertCompile(
-				"(define build-list2-aux (lambda (i n f) (if (= i n) (construct List2 Linked) (construct List2 Linked (f i) (build-list2-aux (+ i 1) n f)))))",
+				"(define build-list2-aux (lambda (i n f) (if (= i n) (construct List2:Linked) (construct List2:Linked (f i) (build-list2-aux (+ i 1) n f)))))",
 				env, typeEnv);
 
 		this.assertCompile("(define build-list2 (lambda (n f) (build-list2-aux 0 n f)))", env,
 				typeEnv);
 
-		this.assertCompile("(define append-list2 (lambda ((List2 l) x) \n"
-				+ "(if (can-deconstruct-as l ()) (construct List2 Linked x (construct List2 Linked)) (construct List2 Linked (head-list2 l) (append-list2 (tail-list2 l) x)))))",
+		this.assertCompile("(let-type (A) (define append-list2 (lambda ((List2 l) (A x)) \n"
+				+ "(if (can-deconstruct-as l ()) (construct List2:Linked x (construct List2:Linked)) (construct List2:Linked (head-list2 l) (append-list2 (tail-list2 l) x))))))",
 				env, typeEnv);
 
 		this.assertCompile(
-				"(define reverse-list2 (lambda ((List2 l)) (if (can-deconstruct-as l ()) (construct List2 Linked) (append-list2 (reverse-list2 (tail-list2 l)) (head-list2 l)))))",
+				"(define reverse-list2 (lambda ((List2 l)) (if (can-deconstruct-as l ()) (construct List2:Linked) (append-list2 (reverse-list2 (tail-list2 l)) (head-list2 l)))))",
 				env, typeEnv);
 
 		this.assertCompile("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)", env,
@@ -548,67 +537,65 @@ class TestComplex extends VelkaTest {
 		this.assertCompile(
 				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
 					+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
-					+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int String \"21\") (construct Int String \"21\")))) "
+					+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int:String \"21\") (construct Int:String \"21\")))) "
 					+ "+)",
 				env, typeEnv);
 		this.assertCompile(
 				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
 						+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
-						+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int String \"21\") (construct Int String \"21\")))) "
-						+ "(lambda ((Int:String x) (Int:String y)) (construct Int String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))",
+						+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int:String \"21\") (construct Int:String \"21\")))) "
+						+ "(lambda ((Int:String x) (Int:String y)) (construct Int:String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))",
 				env, typeEnv);
 
 		this.assertCompile(
-				"(let-type (A B) ((lambda ((A x) (B y)) (cons x y)) 42 (construct Int String  \"42\")))", env, typeEnv);
+				"(let-type (A B) ((lambda ((A x) (B y)) (tuple x y)) 42 (construct Int:String  \"42\")))", env, typeEnv);
 
 		this.assertCompile(
 				"(let-type (A) (extend (extend (extended-lambda (List2 A)) "
 					+ "(lambda ((List2:Linked l) (A x)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2 Linked x (construct List2 Linked)) "
-						+ "(construct List2 Linked (head-list l) (append-list (tail-list l) x))))) "
+						+ "(construct List2:Linked x (construct List2:Linked)) "
+						+ "(construct List2:Linked (head-list l) (append-list (tail-list l) x))))) "
 					+ "(lambda ((List:Functional l) (A x)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2 Functional x (construct List2 Functional))"
-						+ "(construct List2 Functional (head-list l) (append-list (tail-list l) x))))))",
+						+ "(construct List2:Functional x (construct List2:Functional))"
+						+ "(construct List2:Functional (head-list l) (append-list (tail-list l) x))))))",
 				env, typeEnv);
 
 		this.assertCompile(
 				"(extend (extend (extended-lambda (List2)) "
 					+ "(lambda ((List2:Linked l)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2 Linked) "
+						+ "(construct List2:Linked) "
 						+ "(append-list (reverse-list (tail-list l)) (head-list l))))) "
 					+ "(lambda ((List2:Functional l)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2 Functional) "
+						+ "(construct List2:Functional) "
 						+ "(append-list (reverse-list (tail-list l)) (head-list l)))))",
 				env, typeEnv);
 
 		this.assertCompile(
 				"(let-type (A B) (extend (extend (extended-lambda (((A) #> B) List2)) "
 					+ "(lambda ((((A) #> B) f) (List2:Linked l)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2 Linked) "
-						+ "(construct List2 Linked (f (head-list l)) (map-list f (tail-list l)))))) "
+						+ "(construct List2:Linked) "
+						+ "(construct List2:Linked (f (head-list l)) (map-list f (tail-list l)))))) "
 					+ "(lambda ((((A) #> B) f) (List2:Functional l)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2 Functional) "
-						+ "(construct List2 Functional (f (head-list l)) (map-list f (tail-list l)))))))",
+						+ "(construct List2:Functional) "
+						+ "(construct List2:Functional (f (head-list l)) (map-list f (tail-list l)))))))",
 				env, typeEnv);
 
-		this.assertCompile("(println (cons 42 \"42\"))", env, typeEnv);
+		this.assertCompile("(println (tuple 42 \"42\"))", env, typeEnv);
 
 		this.assertIntprtAndCompPrintSameValues(
 				";;List is now already defined internal type, so we omit it\n"
-				+ "(representation Linked List)\n"
-				+ "(constructor List Linked (x (List l)) (cons x l))\n" 
-				+ "(constructor List Linked () ())\n" + "\n"
+				+ "(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))\n" 
+				+ "(constructor List:Linked () nil)\n" + "\n"
 				+ "(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
 				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
 				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" 
 				+ "(define z (fcons 1 2))\n"
 				+ "(println (fcar z))\n" 
 				+ "(println (fcdr z))\n" 
-				+ "(representation Functional List)\n"
-				+ "(constructor List Functional (x (List l)) (fcons x l))\n" 
-				+ "(constructor List Functional () ())\n"
-				+ "(define x (construct List Linked (construct Int Roman \"XLII\") (construct List Linked (construct Int String \"42\") (construct List Linked 42 (construct List Linked)))))\n"
-				+ "(define y (construct List Functional (construct Int Roman \"XLII\") (construct List Functional (construct Int String \"42\") (construct List Functional 42 (construct List Functional)))))\n"
+				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))\n" 
+				+ "(constructor List:Functional () nil)\n"
+				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n"
+				+ "(define y (construct List:Functional (construct Int:Roman \"XLII\") (construct List:Functional (construct Int:String \"42\") (construct List:Functional 42 (construct List:Functional)))))\n"
 				+ "(println x)\n" 
 				+ "(define is-list-empty "
 					+ "(extend (extend (extended-lambda (List)) "
@@ -616,11 +603,11 @@ class TestComplex extends VelkaTest {
 						+ "(lambda ((List:Functional l)) (can-deconstruct-as l ()))))"
 				+ "(println (is-list-empty x))" 
 				+ "(println (is-list-empty y))"
-				+ "(println (is-list-empty (construct List Linked)))\n"
-				+ "(println (is-list-empty (construct List Functional)))\n"
+				+ "(println (is-list-empty (construct List:Linked)))\n"
+				+ "(println (is-list-empty (construct List:Functional)))\n"
 				+ "(println (is-list-empty (let-type (A) (cdr (deconstruct x (A List:Linked))))))\n"
 				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct y ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
-				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct (construct List Functional 42 (construct List Functional)) ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
+				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct (construct List:Functional 42 (construct List:Functional)) ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
 				+ "(define head-list (let-type (A B) "
 					+ "(extend (extend (extended-lambda (List)) "
 						+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
@@ -643,27 +630,27 @@ class TestComplex extends VelkaTest {
 				+ "(println (head-list (tail-list y))) "
 				+ "(define build-list-aux (lambda (i n f) " 
 					+ "(if (= i n) "
-						+ "(construct List Linked) "
-						+ "(construct List Linked (f i) (build-list-aux (+ i 1) n f))))) "
+						+ "(construct List:Linked) "
+						+ "(construct List:Linked (f i) (build-list-aux (+ i 1) n f))))) "
 				+ "(println (build-list-aux 0 5 (lambda (x) (+ x 1)))) "
 				+ "(define build-list (lambda (n f) (build-list-aux 0 n f))) "
 				+ "(println (build-list 5 (lambda (x) (+ x 1)))) " 
 				+ "(define append-list (let-type (A) "
 					+ "(extend (extend (extended-lambda (List A)) "
 						+ "(lambda ((List:Linked l) (A x)) (if (is-list-empty l) "
-							+ "(construct List Linked x (construct List Linked)) "
-							+ "(construct List Linked (head-list l) (append-list (tail-list l) x))))) "
+							+ "(construct List:Linked x (construct List:Linked)) "
+							+ "(construct List:Linked (head-list l) (append-list (tail-list l) x))))) "
 						+ "(lambda ((List:Functional l) (A x)) (if (is-list-empty l) "
-							+ "(construct List Functional x (construct List Functional)) "
-							+ "(construct List Functional (head-list l) (append-list (tail-list l) x))))))) "
+							+ "(construct List:Functional x (construct List:Functional)) "
+							+ "(construct List:Functional (head-list l) (append-list (tail-list l) x))))))) "
 				+ "(println (append-list x 21)) "
 				+ "(define reverse-list "
 					+ "(extend (extend (extended-lambda (List)) "
 						+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
-							+ "(construct List Linked) "
+							+ "(construct List:Linked) "
 							+ "(append-list (reverse-list (tail-list l)) (head-list l))))) "
 						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
-							+ "(construct List Functional) "
+							+ "(construct List:Functional) "
 							+ "(append-list (reverse-list (tail-list l)) (head-list l)))))) "
 				+ "(println (reverse-list x)) " 
 				+ "(println (head-list (reverse-list y)))");
@@ -736,11 +723,11 @@ class TestComplex extends VelkaTest {
 	@DisplayName("Test clojure is-same-type and is-same-representation")
 	void testClojureIsSameType() throws Exception {
 		this.assertIntprtAndCompPrintSameValues("(is-same-type 42 42)");
-		this.assertIntprtAndCompPrintSameValues("(is-same-type 42 (construct Int String \"42\"))");
+		this.assertIntprtAndCompPrintSameValues("(is-same-type 42 (construct Int:String \"42\"))");
 		this.assertIntprtAndCompPrintSameValues("(is-same-type 42 \"42\")");
 
 		this.assertIntprtAndCompPrintSameValues("(is-same-representation 42 42)");
-		this.assertIntprtAndCompPrintSameValues("(is-same-representation 42 (construct Int String \"42\"))");
+		this.assertIntprtAndCompPrintSameValues("(is-same-representation 42 (construct Int:String \"42\"))");
 		this.assertIntprtAndCompPrintSameValues("(is-same-representation 42 \"42\")");
 	}
 	
@@ -963,62 +950,62 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 	@Test
 	@DisplayName("Test List Native Clojure")
 	void testListNativeClojure() throws Exception {
-		this.assertIntprtAndCompPrintSameValues("(println (construct List Native))");
-		this.assertIntprtAndCompPrintSameValues("(println (construct List Native 42 (construct List Native)))");
-		this.assertIntprtAndCompPrintSameValues("(println (is-list-native-empty (construct List Native)))");
-		this.assertIntprtAndCompPrintSameValues("(println (is-list-native-empty (construct List Native 42 (construct List Native))))");
-		this.assertIntprtAndCompPrintSameValues("(println (head-list-native (construct List Native 42 (construct List Native))))");
-		//this.assertIntprtAndCompPrintSameValues("(println (head-list-native (construct List Native)))");
-		this.assertIntprtAndCompPrintSameValues("(println (tail-list-native (construct List Native 42 (construct List Native))))");
-		//TestComplex.assertIntprtAndCompPrintSameValues("(println (tail-list-native (construct List Native)))");
-		this.assertIntprtAndCompPrintSameValues("(println (map-list-native (lambda (x) (+ x 1)) (construct List Native 42 (construct List Native))))");
-		this.assertIntprtAndCompPrintSameValues("(println (map2-list-native + (construct List Native 21 (construct List Native 21 (construct List Native))) (construct List Native 21 (construct List Native 21 (construct List Native)))))");
-		this.assertIntprtAndCompPrintSameValues("(println (foldl-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native)))))");
+		this.assertIntprtAndCompPrintSameValues("(println (construct List:Native))");
+		this.assertIntprtAndCompPrintSameValues("(println (construct List:Native 42 (construct List:Native)))");
+		this.assertIntprtAndCompPrintSameValues("(println (is-list-native-empty (construct List:Native)))");
+		this.assertIntprtAndCompPrintSameValues("(println (is-list-native-empty (construct List:Native 42 (construct List:Native))))");
+		this.assertIntprtAndCompPrintSameValues("(println (head-list-native (construct List:Native 42 (construct List:Native))))");
+		//this.assertIntprtAndCompPrintSameValues("(println (head-list-native (construct List:Native)))");
+		this.assertIntprtAndCompPrintSameValues("(println (tail-list-native (construct List:Native 42 (construct List:Native))))");
+		//TestComplex.assertIntprtAndCompPrintSameValues("(println (tail-list-native (construct List:Native)))");
+		this.assertIntprtAndCompPrintSameValues("(println (map-list-native (lambda (x) (+ x 1)) (construct List:Native 42 (construct List:Native))))");
+		this.assertIntprtAndCompPrintSameValues("(println (map2-list-native + (construct List:Native 21 (construct List:Native 21 (construct List:Native))) (construct List:Native 21 (construct List:Native 21 (construct List:Native)))))");
+		this.assertIntprtAndCompPrintSameValues("(println (foldl-list-native + 0 (construct List:Native 1 (construct List:Native 2 (construct List:Native)))))");
 		
-		this.assertIntprtAndCompPrintSameValues("(println (" + ListNative.headSymbol_out + "(" + ListNative.addToEndSymbol_out + " (construct List Native 21 (construct List Native)) 42)))");
+		this.assertIntprtAndCompPrintSameValues("(println (" + ListNative.headSymbol_out + "(" + ListNative.addToEndSymbol_out + " (construct List:Native 21 (construct List:Native)) 42)))");
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(define l (convert List:Native List:JavaArray (construct List Native 42 (construct List Native 21 (construct List Native)))))"
+				"(define l (convert List:Native List:JavaArray (construct List:Native 42 (construct List:Native 21 (construct List:Native)))))"
 				+ "(println (" + JavaArrayList.getSymbol_out + " l 0))");
 		this.assertIntprtAndCompPrintSameValues(
-				"(define l (convert List:Native List:JavaLinked (construct List Native 42 (construct List Native 21 (construct List Native)))))"
+				"(define l (convert List:Native List:JavaLinked (construct List:Native 42 (construct List:Native 21 (construct List:Native)))))"
 				+ "(println (" + JavaLinkedList.getSymbol_out + " l 0))");
 		
-		this.assertIntprtAndCompPrintSameValues("(println (contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 42))");
-		this.assertIntprtAndCompPrintSameValues("(println (contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 84))");
-		this.assertIntprtAndCompPrintSameValues("(println (filter-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x)))");
-		this.assertIntprtAndCompPrintSameValues("(println (get-list-native (construct List Native 42 (construct List Native)) 0))");
+		this.assertIntprtAndCompPrintSameValues("(println (contains-list-native (construct List:Native 42 (construct List:Native 21 (construct List:Native))) 42))");
+		this.assertIntprtAndCompPrintSameValues("(println (contains-list-native (construct List:Native 42 (construct List:Native 21 (construct List:Native))) 84))");
+		this.assertIntprtAndCompPrintSameValues("(println (filter-list-native (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x)))");
+		this.assertIntprtAndCompPrintSameValues("(println (get-list-native (construct List:Native 42 (construct List:Native)) 0))");
 		this.assertIntprtAndCompPrintSameValues("(println (build-list-native 2 (lambda (x) x)))");
 		this.assertIntprtAndCompPrintSameValues("(println (remove-list-native (build-list-native 2 (lambda (x) x)) 1))");
 		this.assertIntprtAndCompPrintSameValues("(println (size-list-native (build-list-native 42 (lambda (x) x))))");
 		this.assertIntprtAndCompPrintSameValues("(println (append-list-native (build-list-native 1 (lambda (x) 21)) (build-list-native 1 (lambda (x) 42))))");
 		this.assertIntprtAndCompPrintSameValues("(println (reverse-list-native (build-list-native 3 (lambda (x) x))))");
-		this.assertIntprtAndCompPrintSameValues("(everyp-list-native (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))");
-		this.assertIntprtAndCompPrintSameValues("(everyp-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))");
+		this.assertIntprtAndCompPrintSameValues("(everyp-list-native (construct List:Native #t (construct List:Native #t (construct List:Native))) (lambda (x) x))");
+		this.assertIntprtAndCompPrintSameValues("(everyp-list-native (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))");
 	}
 	
 	@Test
 	@DisplayName("Test Java Array List Clojure")
 	void testJavaArrayListClojure() throws Exception {
-		this.assertIntprtAndCompPrintSameValues("(construct List JavaArray)");
-		this.assertIntprtAndCompPrintSameValues("(construct List JavaArray (build-list-native 2 (lambda (x) x)))");
-		this.assertIntprtAndCompPrintSameValues("(construct List JavaArray 42)");
-		this.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToEndSymbol_out.toString() + " (construct List JavaArray) 42))");
-		this.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToIndexSymbol_out.toString() + " (construct List JavaArray) 0 42))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertIntprtAndCompPrintSameValues("(construct List:JavaArray)");
+		this.assertIntprtAndCompPrintSameValues("(construct List:JavaArray (build-list-native 2 (lambda (x) x)))");
+		this.assertIntprtAndCompPrintSameValues("(construct List:JavaArray 42)");
+		this.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToEndSymbol_out.toString() + " (construct List:JavaArray) 42))");
+		this.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToIndexSymbol_out.toString() + " (construct List:JavaArray) 0 42))");
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
 				+ "(println (" + JavaArrayList.addAllSymbol_out + " l1 l2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(println (" + JavaArrayList.containsSymbol_out + " l1 42))"
 				+ "(println (" + JavaArrayList.containsSymbol_out + " l1 84))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
@@ -1026,52 +1013,52 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
 				+ "(println (" + JavaArrayList.containsAllSymbol_out + " l1 l2))"
 				+ "(println (" + JavaArrayList.containsAllSymbol_out + " l2 l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(println (" + JavaArrayList.getSymbol_out + " l1 0))");
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaArrayList.indexOfSymbol_out + " l1 1))"
 				+ "(println (" + JavaArrayList.indexOfSymbol_out + " l1 42))");
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(println (" + JavaArrayList.isEmptySymbol_out + " (construct List JavaArray)))");
+				"(println (" + JavaArrayList.isEmptySymbol_out + " (construct List:JavaArray)))");
 		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaArrayList.isEmptySymbol_out + " l1))");
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaArrayList.lastIndexOfSymbol_out + " l1 1))"
 				+ "(println (" + JavaArrayList.lastIndexOfSymbol_out + " l1 42))");
 		/*
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
 				+ "(println (" + JavaArrayList.removeSymbol + " l1 0))");
 				*/
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaArrayList.removeSymbol_out + " l1 2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
 				+ "(println (" + JavaArrayList.removeAllSymbol_out + " l1 l2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
@@ -1079,27 +1066,27 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
 				+ "(println (" + JavaArrayList.retainAllSymbol_out + " l1 l2))"
 				+ "(println (" + JavaArrayList.retainAllSymbol_out + " l2 l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaArrayList.setSymbol_out + " l1 0 2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaArrayList.sizeSymbol_out + " l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 84)" 
 				+ "(define l2 (" + JavaArrayList.sublistSymbol_out + " l1 0 1))"
 				+ "(println (" + JavaArrayList.getSymbol_out + " l2 0))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 84)" 
 				+ "(define l2 (" + JavaArrayList.mapSymbol_out + " l1 (lambda (x) (* x 2))))"
 				+ "(println (" + JavaArrayList.getSymbol_out + " l2 0))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
@@ -1109,51 +1096,51 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				+ "(define l3 (" + JavaArrayList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y))))"
 				+ "(println (" + JavaArrayList.getSymbol_out + " l3 0))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
 				+ "(println (" + JavaArrayList.foldlSymbol_out + " + 0 l1))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaArray))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 4)"
 				+ "(println (" + JavaArrayList.foldrSymbol_out + " / 16 l1))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l (construct List JavaArray))\n"
+		this.assertIntprtAndCompPrintSameValues("(define l (construct List:JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
 				+ "(println (" + JavaLinkedList.getSymbol_out + " (convert List:JavaArray List:JavaLinked l) 0))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l (construct List JavaArray))\n"
+		this.assertIntprtAndCompPrintSameValues("(define l (construct List:JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
 				+ "(println (head-list-native (convert List:JavaArray List:Native l)))");
-		this.assertIntprtAndCompPrintSameValues("(java-array-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))");
-		this.assertIntprtAndCompPrintSameValues("(java-array-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))");
+		this.assertIntprtAndCompPrintSameValues("(java-array-list-everyp (construct List:Native #t (construct List:Native #t (construct List:Native))) (lambda (x) x))");
+		this.assertIntprtAndCompPrintSameValues("(java-array-list-everyp (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))");
 	}
 	
 	@Test
 	@DisplayName("Test Java Linked List Clojure")
 	void testJavaLinkedListClojure() throws Exception {
-		this.assertIntprtAndCompPrintSameValues("(construct List JavaLinked)");
-		this.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToEndSymbol_out.toString() + " (construct List JavaLinked) 42))");
-		this.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToIndexSymbol_out.toString() + " (construct List JavaLinked) 0 42))");
+		this.assertIntprtAndCompPrintSameValues("(construct List:JavaLinked)");
+		this.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToEndSymbol_out.toString() + " (construct List:JavaLinked) 42))");
+		this.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToIndexSymbol_out.toString() + " (construct List:JavaLinked) 0 42))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
 				+ "(println (" + JavaLinkedList.addAllSymbol_out + " l1 l2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(println (" + JavaLinkedList.containsSymbol_out + " l1 42))"
 				+ "(println (" + JavaLinkedList.containsSymbol_out + " l1 84))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
@@ -1161,39 +1148,39 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
 				+ "(println (" + JavaLinkedList.containsAllSymbol_out + " l1 l2))"
 				+ "(println (" + JavaLinkedList.containsAllSymbol_out + " l2 l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(println (" + JavaLinkedList.getSymbol_out + " l1 0))");
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaLinkedList.indexOfSymbol_out + " l1 1))"
 				+ "(println (" + JavaLinkedList.indexOfSymbol_out + " l1 42))");
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(println (" + JavaLinkedList.isEmptySymbol_out + " (construct List JavaLinked)))");
+				"(println (" + JavaLinkedList.isEmptySymbol_out + " (construct List:JavaLinked)))");
 		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaLinkedList.isEmptySymbol_out + " l1))");
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaLinkedList.lastIndexOfSymbol_out + " l1 1))"
 				+ "(println (" + JavaLinkedList.lastIndexOfSymbol_out + " l1 42))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaLinkedList.removeSymbol_out + " l1 2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
@@ -1201,8 +1188,8 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
 				+ "(println (" + JavaLinkedList.removeAllSymbol_out + " l1 l2))"
 				+ "(println (" + JavaLinkedList.removeAllSymbol_out + " l2 l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
@@ -1210,27 +1197,27 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
 				+ "(println (" + JavaLinkedList.retainAllSymbol_out + " l1 l2))"
 				+ "(println (" + JavaLinkedList.retainAllSymbol_out + " l2 l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaLinkedList.setSymbol_out + " l1 0 2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(println (" + JavaLinkedList.sizeSymbol_out + " l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 84)" 
 				+ "(define l2 (" + JavaLinkedList.sublistSymbol_out + " l1 0 1))"
 				+ "(println (" + JavaLinkedList.getSymbol_out + " l2 0))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 84)" 
 				+ "(define l2 (" + JavaLinkedList.mapSymbol_out + " l1 (lambda (x) (* x 2))))"
 				+ "(println (" + JavaLinkedList.getSymbol_out + " l2 0))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
@@ -1240,79 +1227,79 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				+ "(define l3 (" + JavaLinkedList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y))))"
 				+ "(println (" + JavaLinkedList.getSymbol_out + " l3 0))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
 				+ "(println (" + JavaLinkedList.foldlSymbol_out + " + 0 l1))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List JavaLinked))\n" 
+		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 4)"
 				+ "(println (" + JavaLinkedList.foldrSymbol_out + " / 16 l1))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l (construct List JavaLinked))\n"
+		this.assertIntprtAndCompPrintSameValues("(define l (construct List:JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
 				+ "(println (" + JavaArrayList.getSymbol_out + " (convert List:JavaLinked List:JavaArray l) 0))");
 		
-		this.assertIntprtAndCompPrintSameValues("(define l (construct List JavaLinked))\n"
+		this.assertIntprtAndCompPrintSameValues("(define l (construct List:JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
 				+ "(println (" + JavaLinkedList.getSymbol_out + " l 0))");
-		this.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))");
-		this.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))");
+		this.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List:Native #t (construct List:Native #t (construct List:Native))) (lambda (x) x))");
+		this.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))");
 		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 				+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 				+ "(println (java-linked-list-to-str l))");		
 		
 		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))"
 						+ "(println (linked-list-iterator-next (java-linked-list-iterator l 0)))");
 		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
 						+ "(println (linked-list-iterator-next (linked-list-iterator-add it 42)))"
 						+ "(println (java-linked-list-to-str l))");
 		
 		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
 						+ "(println (linked-list-iterator-has-next it))");
 		
 		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
 						+ "(println (linked-list-iterator-has-previous it))");
 		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
 						+ "(println (linked-list-iterator-next-index it))");
 		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(println (linked-list-iterator-previous it))");
 		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(println (linked-list-iterator-previous-index it))");
 		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(linked-list-iterator-next it)"
 						+ "(println (linked-list-iterator-next (linked-list-iterator-remove it)))"
 						+ "(println (java-linked-list-to-str l))");
 		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(linked-list-iterator-next it)"
@@ -1323,122 +1310,122 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 	@Test
 	@DisplayName("Test Java Bit Set")
 	void testJavaBitSet() throws Exception {
-		this.assertIntprtAndCompPrintSameValues("(println (bit-set-str (construct Set BitSet)))");
-		this.assertIntprtAndCompPrintSameValues("(println (bit-set-str (construct Set BitSet 2048)))");
+		this.assertIntprtAndCompPrintSameValues("(println (bit-set-str (construct Set:BitSet)))");
+		this.assertIntprtAndCompPrintSameValues("(println (bit-set-str (construct Set:BitSet 2048)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s (construct Set BitSet))\n"
+					"(define s (construct Set:BitSet))\n"
 				+ 	"(println (bit-set-str (" + JavaBitSet.setSymbol_out.toString() + " s 3)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s (construct Set BitSet))\n"
+					"(define s (construct Set:BitSet))\n"
 				+	"(println (bit-set-str (" + JavaBitSet.setValueSymbol_out.toString() + " s 3 #t)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s (construct Set BitSet))\n"
+					"(define s (construct Set:BitSet))\n"
 				+	"(println (bit-set-str (" + JavaBitSet.setIntervalSymbol_out.toString() + " s 2 5)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s (construct Set BitSet))\n"
+					"(define s (construct Set:BitSet))\n"
 				+	"(println (bit-set-str (" + JavaBitSet.setIntervalValueSymbol_out.toString() + " s 2 5 #t)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s1 (construct Set BitSet))\n"
+					"(define s1 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-				+	"(define s2 (construct Set BitSet))\n"
+				+	"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 				+	"(println (bit-set-str (" + JavaBitSet.andSymbol_out.toString() + " s1 s2)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s1 (construct Set BitSet))\n"
+					"(define s1 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-				+	"(define s2 (construct Set BitSet))\n"
+				+	"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 				+	"(println (bit-set-str (" + JavaBitSet.andNotSymbol_out.toString() + " s1 s2)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 				+	"(println (" + JavaBitSet.cardinalitySymbol_out.toString() + " s2))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 				+	"(println (bit-set-str (" + JavaBitSet.clearSymbol_out.toString() + " s2)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (bit-set-str (" + JavaBitSet.clearBitIndexSymbol_out.toString() + " s2 5)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (bit-set-str (" + JavaBitSet.clearIntervalSymbol_out.toString() + " s2 5 7)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (bit-set-str (" + JavaBitSet.cloneSymbol_out.toString() + " s2)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s1 (construct Set BitSet))\n"
+					"(define s1 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-				+	"(define s2 (construct Set BitSet))\n"
+				+	"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 				+	"(println (" + JavaBitSet.equalsSymbol_out.toString() + " s1 s2))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (bit-set-str (" + JavaBitSet.flipSymbol_out.toString() + " s2 2)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (bit-set-str (" + JavaBitSet.flipIntervalSymbol_out.toString() + " s2 2 5)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (" + JavaBitSet.getSymbol_out.toString() + " s2 5))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (bit-set-str (" + JavaBitSet.getIntervalSymbol_out.toString() + " s2 5 7)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s1 (construct Set BitSet))\n"
+					"(define s1 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-				+	"(define s2 (construct Set BitSet))\n"
+				+	"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 				+	"(println (" + JavaBitSet.intersectsSymbol_out.toString() + " s1 s2))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (" + JavaBitSet.isEmptySymbol_out.toString() + " s2))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (" + JavaBitSet.lengthSymbol_out.toString() + " s2))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (" + JavaBitSet.nextClearBitSymbol_out.toString() + " s2 5))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (" + JavaBitSet.nextSetBitSymbol_out.toString() + " s2 0))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s1 (construct Set BitSet))\n"
+					"(define s1 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-				+	"(define s2 (construct Set BitSet))\n"
+				+	"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 				+	"(println (bit-set-str (" + JavaBitSet.orSymbol_out.toString() + " s1 s2)))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (" + JavaBitSet.previousClearBitSymbol_out.toString() + " s2 5))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (" + JavaBitSet.previousSetBitSymbol_out.toString() + " s2 9))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s1 (construct Set BitSet))\n"
+					"(define s1 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 2 5)\n"
 				+	"(println (" + JavaBitSet.sizeSymbol_out.toString() + " s1))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 				+	"(println (" + JavaBitSet.strSymbol_out.toString() + " s2))");
 		this.assertIntprtAndCompPrintSameValues(
-					"(define s1 (construct Set BitSet))\n"
+					"(define s1 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-				+	"(define s2 (construct Set BitSet))\n"
+				+	"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 				+	"(println (bit-set-str (" + JavaBitSet.xorSymbol_out.toString() + " s1 s2)))");
 	}
@@ -1457,7 +1444,7 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 	@Test
 	@DisplayName("Test Get")
 	void testGet() throws Exception {
-		this.assertIntprtAndCompPrintSameValues("(println (get (cons 42 \"foo\") 0))");
+		this.assertIntprtAndCompPrintSameValues("(println (get (tuple 42 \"foo\") 0))");
 	}
 	
 	@Test
@@ -1499,7 +1486,7 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 	@DisplayName("Test Loop Recur")
 	void testLoopRecur() throws Exception {
 		this.assertIntprtAndCompPrintSameValues("(println (loop ((x 1)) (if (= x 2) x (recur (+ x 1)))))");
-		this.assertIntprtAndCompPrintSameValues("(println (loop ((x 1) (a (construct List JavaArray))) (if (= x 2) a (recur (+ x 1) (cdr (tuple (java-array-list-add-to-end a x) a))))))");
+		this.assertIntprtAndCompPrintSameValues("(println (loop ((x 1) (a (construct List:JavaArray))) (if (= x 2) a (recur (+ x 1) (cdr (tuple (java-array-list-add-to-end a x) a))))))");
 		this.assertIntprtAndCompPrintSameValues("(println (loop ((x 0) (s \"\")) (if (= x 3) s (recur (+ x 1) (loop ((y 0) (z s)) (if (= y 2) z (recur (+ y 1) (concat z \"a\"))))))))");
 	}
 	
@@ -1511,7 +1498,7 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				+ "(extended-lambda (Int)) "
 					+ "(lambda ((Int:Native x)) \"foo\")) "
 					+ "(lambda ((Int:Roman x)) \"bar\")) "
-				+ "(construct Int Roman \"X\")))");
+				+ "(construct Int:Roman \"X\")))");
 		assertIntprtAndCompPrintSameValues(
 				"(println ((extend (extend "
 				+ "(extended-lambda (Int)) "

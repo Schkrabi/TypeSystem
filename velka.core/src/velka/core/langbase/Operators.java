@@ -1827,7 +1827,7 @@ public final class Operators extends OperatorBank {
 	 */
 	@VelkaOperator
 	@Description("Returns readable representation of its argument.")
-	@Example(">(to-str 42)\n" + "\"42\"\n" + ">(to-str (construct List Native))\n" + "\"[]\"")
+	@Example(">(to-str 42)\n" + "\"42\"\n" + ">(to-str (construct List:Native))\n" + "\"[]\"")
 	@Syntax("(to-str <expr>)")
 	public static final Operator ToStr = new Operator() {
 

@@ -75,7 +75,7 @@ class TestVelkaScanner extends VelkaTest {
 
 	@Test
 	void testConstructor() throws IOException, AppendableException {
-		Expression parsed = this.parseString("(construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\")").get(0);
+		Expression parsed = this.parseString("(construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\")").get(0);
 		Expression e = parsed.interpret(env, typeEnv);
 
 		assertTrue(e instanceof LitComposite);
@@ -105,7 +105,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testNextLine() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(line (scanner-native-next-line s))"
 				+ "(cls (scanner-native-close s)))"
 				+ "line)",
@@ -114,7 +114,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(line (scanner-native-next-line s))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println line))");
@@ -134,7 +134,7 @@ class TestVelkaScanner extends VelkaTest {
 		s.close();
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(del (scanner-native-delimiter s))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println del))");		
@@ -143,7 +143,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testFindInLine() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(found (scanner-native-find-in-line s \"foo\"))"
 				+ "(cls (scanner-native-close s)))"
 				+ "found)",
@@ -152,7 +152,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(found (scanner-native-find-in-line s \"foo\"))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println found))");
@@ -161,7 +161,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testFindWithinHorzon() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(found (" + Scanner.findWithinHorizonSymbol_out.toString() + " s \"foo\" 42))"
 				+ "(cls (scanner-native-close s)))"
 				+ "found)",
@@ -170,7 +170,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(found (" + Scanner.findWithinHorizonSymbol_out.toString() + " s \"foo\" 42))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println found))");
@@ -179,7 +179,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testHasNext() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.hasNextSymbol_out.toString() + " s))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -188,7 +188,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.hasNextSymbol_out.toString() + " s))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -197,7 +197,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testHasNextPattern() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.hasNextPatternSymbol_out.toString() + " s \"foo\"))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -206,7 +206,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.hasNextPatternSymbol_out.toString() + " s \"foo\"))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -215,7 +215,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testHasNextBoolean() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.hasNextBooleanSymbol_out.toString() + " s))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -224,7 +224,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.hasNextBooleanSymbol_out.toString() + " s))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -233,7 +233,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testHasNextDouble() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.hasNextDoubleSymbol_out.toString() + " s))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -242,7 +242,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.hasNextDoubleSymbol_out.toString() + " s))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -251,7 +251,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testHasNextInt() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.hasNextIntSymbol_out.toString() + " s))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -260,7 +260,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.hasNextIntSymbol_out.toString() + " s))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -269,7 +269,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test 
 	void testHasNextIntRadix() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.hasNextIntRadixSymbol_out.toString() + " s 8))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -278,7 +278,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.hasNextIntRadixSymbol_out.toString() + " s 8))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -287,7 +287,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testHasNextLine() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.hasNextLineSymbol_out.toString() + " s))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -296,7 +296,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.hasNextLineSymbol_out.toString() + " s))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -305,7 +305,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testNext() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.nextSymbol_out.toString() + " s))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -314,7 +314,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.nextSymbol_out.toString() + " s))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -323,7 +323,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testNextPattern() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.nextPatternSymbol_out.toString() + " s \"\\d*\"))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -332,7 +332,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.nextPatternSymbol_out.toString() + " s \"[0-9]*\"))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -341,7 +341,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testNextBool() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(a (" + Scanner.nextSymbol_out + " s))"
 				+ "(rslt (" + Scanner.nextBoolSymbol_out.toString() + " s))"
 				+ "(cls (scanner-native-close s)))"
@@ -351,7 +351,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(a (" + Scanner.nextSymbol_out + " s))"
 						+ "(rslt (" + Scanner.nextBoolSymbol_out.toString() + " s))"
 						+ "(cls (scanner-native-close s)))"
@@ -361,7 +361,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testNextDouble() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.nextDoubleSymbol_out.toString() + " s))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -370,7 +370,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.nextDoubleSymbol_out.toString() + " s))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -379,7 +379,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testNextInt() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.nextIntSymbol_out.toString() + " s))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -388,7 +388,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.nextIntSymbol_out.toString() + " s))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -397,7 +397,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testRadix() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.radixSymbol_out.toString() + " s))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -406,7 +406,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.radixSymbol_out.toString() + " s))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -415,7 +415,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testReset() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(s (" + Scanner.useRadixSymbol_out.toString() + " s 8))"
 				+ "(s (" + Scanner.resetSymbol_out.toString() + " s))"
 				+ "(rslt (" + Scanner.radixSymbol_out.toString() + " s))"
@@ -426,7 +426,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(s (" + Scanner.useRadixSymbol_out.toString() + " s 8))"
 						+ "(s (" + Scanner.resetSymbol_out.toString() + " s))"
 						+ "(rslt (" + Scanner.radixSymbol_out.toString() + " s))"
@@ -437,7 +437,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testSkip() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(rslt (" + Scanner.nextSymbol_out.toString() + " (" + Scanner.skipSymbol_out.toString() + " s \"[0-9]*\")))"
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
@@ -446,7 +446,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(rslt (" + Scanner.nextSymbol_out.toString() + " (" + Scanner.skipSymbol_out.toString() + " s \"[0-9]*\")))"
 						+ "(cls (scanner-native-close s)))"
 						+ "(println rslt))");
@@ -455,7 +455,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testUseRadix() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 				+ "(s (" +  Scanner.useRadixSymbol_out.toString() + " s 8))"
 				+ "(rslt (" + Scanner.radixSymbol_out.toString() + " s))"
 				+ "(cls (scanner-native-close s)))"
@@ -465,7 +465,7 @@ class TestVelkaScanner extends VelkaTest {
 				this.typeEnv);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((s (construct Scanner Native \"" + this.pathToStr(scannedFilePath) + "\"))"
+				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
 						+ "(s (" +  Scanner.useRadixSymbol_out.toString() + " s 8))"
 						+ "(rslt (" + Scanner.radixSymbol_out.toString() + " s))"
 						+ "(cls (scanner-native-close s)))"

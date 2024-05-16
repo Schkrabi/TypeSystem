@@ -65,9 +65,17 @@ public class TypeEnvironment {
 	 * @throws UndefinedTypeException if this type has no type information
 	 */
 	private TypeInformation getTypeInfo(TypeAtom typeAtom) throws UndefinedTypeException {
-		if (!this.typeInfo.containsKey(typeAtom)) {
-			throw new UndefinedTypeException(typeAtom.toString());
+		var typeInfo = this.typeInfo.get(typeAtom);
+		if(typeInfo == null) {
+			try {
+				this.addRepresentation(typeAtom);
+			} catch (DuplicateTypeDefinitionException e) {
+				// Unlikely
+				throw new RuntimeException(e);
+			}
+			typeInfo = this.typeInfo.get(typeAtom);
 		}
+		
 		return this.typeInfo.get(typeAtom);
 	}
 

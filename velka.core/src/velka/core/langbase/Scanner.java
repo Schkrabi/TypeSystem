@@ -67,7 +67,7 @@ public class Scanner extends OperatorBank{
 	@VelkaConstructor
 	@Description("Constructs Scanner:Native.") 
 	@Name("Constructs scanner for reading files.") 
-	@Syntax("(construct Scanner Native <filename>)")
+	@Syntax("(construct Scanner:Native <filename>)")
 	public static final Constructor constructor = new Constructor() {
 
 		@Override
@@ -112,7 +112,7 @@ public class Scanner extends OperatorBank{
 		
 		@Override
 		public String toString() {
-			return "construct Scanner Native";
+			return "construct Scanner:Native";
 		}
 		
 	};
@@ -122,7 +122,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Closes scanner.") 
-	@Example("(scanner-native-close (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-close (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-close <scanner>)")
 	public static final Operator close = new Operator() {
 
@@ -170,7 +170,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Advances scanner past the current line and returns the input that was skipped.") 
-	@Example("(scanner-native-next-line (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-next-line (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-next-line <scanner>)")
 	public static final Operator nextLine = new Operator() {
 
@@ -222,7 +222,7 @@ public class Scanner extends OperatorBank{
 	
 //	@VelkaOperator
 	@Description("Returns the string representation of Pattern this Scanner is currently using to match delimiters.") 
-	@Example("(scanner-native-delimiter (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-delimiter (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-delimiter <scanner>)")
 	public static final Operator delimiter = new Operator() {
 
@@ -274,7 +274,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Attempts to find the next occurrence of a pattern constructed from the specified string, ignoring delimiters.") 
-	@Example("(scanner-native-find-in-line (construct Scanner Native \"test-file\") \"a*b\")") 
+	@Example("(scanner-native-find-in-line (construct Scanner:Native \"test-file\") \"a*b\")") 
 	@Syntax("(scanner-native-find-in-line <scanner> <pattern>)")
 	public static final Operator findInLine = new Operator() {
 
@@ -330,7 +330,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Attempts to find the next occurrence of a pattern constructed from the specified string, ignoring delimiters.") 
-	@Example("(scanner-native-find-within-horizon (construct Scanner Native \"test-file\") \"a*b\" 42)") 
+	@Example("(scanner-native-find-within-horizon (construct Scanner:Native \"test-file\") \"a*b\" 42)") 
 	@Syntax("(scanner-native-find-within-horizon <scanner> <pattern> <horizon>)")
 	public static final Operator findWithinHorizon = new Operator() {
 
@@ -389,7 +389,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Attempts to find the next occurrence of a pattern constructed from the specified string, ignoring delimiters.") 
-	@Example("(scanner-native-find-within-horizon (construct Scanner Native \"test-file\") \"a*b\" 42)") 
+	@Example("(scanner-native-find-within-horizon (construct Scanner:Native \"test-file\") \"a*b\" 42)") 
 	@Syntax("(scanner-native-find-within-horizon <scanner>)")
 	public static final Operator hasNext = new Operator() {
 
@@ -441,7 +441,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Returns true if the next token matches the pattern constructed from the specified string.") 
-	@Example("(scanner-native-has-next-pattern (construct Scanner Native \"test-file\") \"a*b\")") 
+	@Example("(scanner-native-has-next-pattern (construct Scanner:Native \"test-file\") \"a*b\")") 
 	@Syntax("(scanner-native-has-next-pattern <scanner> <pattern>)")
 	public static final Operator hasNextPattern = new Operator() {
 
@@ -498,7 +498,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Returns true if the next token in this scanner's input can be interpreted as a boolean value using a case insensitive pattern created from the string \"true|false\".") 
-	@Example("(scanner-native-has-next-boolean (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-has-next-boolean (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-has-next-boolean <scanner>)")
 	public static final Operator hasNextBoolean = new Operator() {
 
@@ -551,7 +551,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Returns true if the next token in this scanner's input can be interpreted as a double value using the scanner-native-next-double function.") 
-	@Example("(scanner-native-has-next-double (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-has-next-double (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-has-next-double <scanner>)")
 	public static final Operator hasNextDouble = new Operator() {
 
@@ -603,7 +603,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Returns true if the next token in this scanner's input can be interpreted as an int value in the default radix using the scanner-native-next-int function.") 
-	@Example("(scanner-native-has-next-int (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-has-next-int (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-has-next-int <scanner>)")	
 	public static final Operator hasNextInt = new Operator() {
 
@@ -656,7 +656,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Returns true if the next token in this scanner's input can be interpreted as an int value in the specified radix using the next-int-radix function.") 
-	@Example("(scanner-native-has-next-int-radix (construct Scanner Native \"test-file\" 16))") 
+	@Example("(scanner-native-has-next-int-radix (construct Scanner:Native \"test-file\" 16))") 
 	@Syntax("(scanner-native-has-next-int-radix <scanner> <radix>)")	
 	public static final Operator hasNextIntRadix = new Operator() {
 
@@ -712,7 +712,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Returns true if there is another line in the input of this scanner.") 
-	@Example("(scanner-native-has-next-line (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-has-next-line (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-has-next-line <scanner>)")
 	public static final Operator hasNextLine = new Operator() {
 
@@ -765,7 +765,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Finds and returns the next complete token from this scanner.") 
-	@Example("(scanner-native-next (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-next (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-next <scanner>)")
 	public static final Operator next = new Operator() {
 
@@ -815,7 +815,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Returns the next token if it matches the pattern constructed from the specified string.") 
-	@Example("(scanner-native-next-pattern (construct Scanner Native \"test-file\") \"a*b\")") 
+	@Example("(scanner-native-next-pattern (construct Scanner:Native \"test-file\") \"a*b\")") 
 	@Syntax("(scanner-native-next-pattern <scanner> <pattern>)")
 	public static final Operator nextPattern = new Operator() {
 
@@ -869,7 +869,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Scans the next token of the input into a boolean value and returns that value.") 
-	@Example("(scanner-native-next-bool (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-next-bool (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-next-bool <scanner>)")
 	public static final Operator nextBool = new Operator() {
 
@@ -922,7 +922,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Scans the next token of the input as a double.") 
-	@Example("(scanner-native-next-double (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-next-double (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-next-double <scanner>)")
 	public static final Operator nextDouble = new Operator() {
 
@@ -973,7 +973,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Scans the next token of the input as an int.") 
-	@Example("(scanner-native-next-int (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-next-int (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-next-int <scanner>)")
 	public static final Operator nextInt = new Operator() {
 
@@ -1023,7 +1023,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Returns this scanner's default radix.") 
-	@Example("(scanner-native-radix (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-radix (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-radix <scanner>)")
 	public static final Operator radix = new Operator() {
 
@@ -1073,7 +1073,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Resets this scanner.") 
-	@Example("(scanner-native-reset (construct Scanner Native \"test-file\"))") 
+	@Example("(scanner-native-reset (construct Scanner:Native \"test-file\"))") 
 	@Syntax("(scanner-native-reset <scanner>)")
 	public static final Operator reset = new Operator() {
 
@@ -1125,7 +1125,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Skips input that matches a pattern constructed from the specified string.") 
-	@Example("(scanner-native-skip (construct Scanner Native \"test-file\") \"a*b\")") 
+	@Example("(scanner-native-skip (construct Scanner:Native \"test-file\") \"a*b\")") 
 	@Syntax("(scanner-native-skip <scanner> <pattern>)")
 	public static final Operator skip = new Operator() {
 
@@ -1182,7 +1182,7 @@ public class Scanner extends OperatorBank{
 	
 	//@VelkaOperator
 	@Description("Sets this scanner's delimiting pattern to a pattern constructed from the specified String.") 
-	@Example("(scanner-native-use-delimiter (construct Scanner Native \"test-file\") \"a\")") 
+	@Example("(scanner-native-use-delimiter (construct Scanner:Native \"test-file\") \"a\")") 
 	@Syntax("(scanner-native-use-delimiter <scanner> <delimiter>)")
 	public static final Operator useDelimiter = new Operator() {
 
@@ -1238,7 +1238,7 @@ public class Scanner extends OperatorBank{
 	
 	@VelkaOperator
 	@Description("Sets this scanner's default radix to the specified radix.") 
-	@Example("(scanner-native-use-radix (construct Scanner Native \"test-file\") \"a\")") 
+	@Example("(scanner-native-use-radix (construct Scanner:Native \"test-file\") \"a\")") 
 	@Syntax("(scanner-native-use-radix <scanner> <delimiter>)")
 	public static final Operator useRadix = new Operator() {
 

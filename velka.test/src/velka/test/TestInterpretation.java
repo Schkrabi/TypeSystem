@@ -1423,66 +1423,66 @@ class TestInterpretation extends VelkaTest{
 						TypeAtom.TypeListNative),
 				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21), new LitInteger(2)).interpret(env, typeEnv));
 
-		this.assertInterpretedStringEquals("(construct List Native)",
+		this.assertInterpretedStringEquals("(construct List:Native)",
 				ListNative.EMPTY_LIST_NATIVE, env, typeEnv);
-		this.assertInterpretedStringEquals("(construct List Native 42 (construct List Native))",
+		this.assertInterpretedStringEquals("(construct List:Native 42 (construct List:Native))",
 				ListNative.makeListNativeExpression(new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
 
-		this.assertInterpretedStringEquals("(is-list-native-empty (construct List Native))", LitBoolean.TRUE, env,
+		this.assertInterpretedStringEquals("(is-list-native-empty (construct List:Native))", LitBoolean.TRUE, env,
 				typeEnv);
 		this.assertInterpretedStringEquals(
-				"(is-list-native-empty (construct List Native 42 (construct List Native)))", LitBoolean.FALSE, env,
+				"(is-list-native-empty (construct List:Native 42 (construct List:Native)))", LitBoolean.FALSE, env,
 				typeEnv);
 
-		this.assertInterpretedStringEquals("(head-list-native (construct List Native 42 (construct List Native)))",
+		this.assertInterpretedStringEquals("(head-list-native (construct List:Native 42 (construct List:Native)))",
 				new LitInteger(42), env, typeEnv);
 		assertThrows(UserException.class,
-				() -> this.assertInterpretedStringEquals("(head-list-native (construct List Native))",
+				() -> this.assertInterpretedStringEquals("(head-list-native (construct List:Native))",
 						Expression.EMPTY_EXPRESSION, env, typeEnv));
 
-		this.assertInterpretedStringEquals("(tail-list-native (construct List Native 42 (construct List Native)))",
+		this.assertInterpretedStringEquals("(tail-list-native (construct List:Native 42 (construct List:Native)))",
 				ListNative.EMPTY_LIST_NATIVE, env, typeEnv);
 		assertThrows(UserException.class,
-				() -> this.assertInterpretedStringEquals("(tail-list-native (construct List Native))",
+				() -> this.assertInterpretedStringEquals("(tail-list-native (construct List:Native))",
 						Expression.EMPTY_EXPRESSION, env, typeEnv));
 
 		this.assertInterpretedStringEquals(
-				"(map-list-native (lambda (x) (+ x 1)) (construct List Native 42 (construct List Native)))",
+				"(map-list-native (lambda (x) (+ x 1)) (construct List:Native 42 (construct List:Native)))",
 				ListNative.makeListNativeExpression(new LitInteger(43)).interpret(env, typeEnv), env, typeEnv);
 
 		this.assertInterpretedStringEquals(
-				"(map2-list-native + (construct List Native 21 (construct List Native 21 (construct List Native))) (construct List Native 21 (construct List Native 21 (construct List Native))))",
+				"(map2-list-native + (construct List:Native 21 (construct List:Native 21 (construct List:Native))) (construct List:Native 21 (construct List:Native 21 (construct List:Native))))",
 				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(42)).interpret(env, typeEnv),
 				env, typeEnv);
 
 		this.assertInterpretedStringEquals(
-				"(foldl-list-native + 0 (construct List Native 1 (construct List Native 2 (construct List Native))))",
+				"(foldl-list-native + 0 (construct List:Native 1 (construct List:Native 2 (construct List:Native))))",
 				new LitInteger(3), env, typeEnv);
 		
 		this.assertInterpretedStringEquals(
-				"(" + ListNative.addToEndSymbol_out + " (construct List Native 21 (construct List Native)) 42)",
+				"(" + ListNative.addToEndSymbol_out + " (construct List:Native 21 (construct List:Native)) 42)",
 				ListNative.makeListNativeExpression(new LitInteger(21), new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
 		
 		ArrayList<Expression> al = new ArrayList<Expression>();
 		al.add(new LitInteger(42));
 		al.add(new LitInteger(21));
 		this.assertInterpretedStringEquals(
-				"(convert List:Native List:JavaArray (construct List Native 42 (construct List Native 21 (construct List Native))))",
+				"(convert List:Native List:JavaArray (construct List:Native 42 (construct List:Native 21 (construct List:Native))))",
 				new LitComposite(new LitInteropObject(al), JavaArrayList.TypeListJavaArray), env, typeEnv);
 		
 		LinkedList<Expression> ll = new LinkedList<Expression>();
 		ll.add(new LitInteger(42));
 		ll.add(new LitInteger(21));
 		this.assertInterpretedStringEquals(
-				"(convert List:Native List:JavaLinked (construct List Native 42 (construct List Native 21 (construct List Native))))",
+				"(convert List:Native List:JavaLinked (construct List:Native 42 (construct List:Native 21 (construct List:Native))))",
 				new LitComposite(new LitInteropObject(ll), JavaLinkedList.TypeListJavaLinked), env, typeEnv);
 				
-		this.assertInterpretedStringEquals("(contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 42)", LitBoolean.TRUE, env, typeEnv);
-		this.assertInterpretedStringEquals("(contains-list-native (construct List Native 42 (construct List Native 21 (construct List Native))) 84)", LitBoolean.FALSE, env, typeEnv);
+		this.assertInterpretedStringEquals("(contains-list-native (construct List:Native 42 (construct List:Native 21 (construct List:Native))) 42)", LitBoolean.TRUE, env, typeEnv);
+		this.assertInterpretedStringEquals("(contains-list-native (construct List:Native 42 (construct List:Native 21 (construct List:Native))) 84)", LitBoolean.FALSE, env, typeEnv);
 		
-		this.assertInterpretedStringEquals("(filter-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
+		this.assertInterpretedStringEquals("(filter-list-native (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))",
 				ListNative.makeListNativeExpression(LitBoolean.TRUE).interpret(env, typeEnv), env, typeEnv);
-		this.assertInterpretedStringEquals("(get-list-native (construct List Native 42 (construct List Native)) 0)", new LitInteger(42), env, typeEnv);
+		this.assertInterpretedStringEquals("(get-list-native (construct List:Native 42 (construct List:Native)) 0)", new LitInteger(42), env, typeEnv);
 		this.assertInterpretedStringEquals("(build-list-native 2 (lambda (x) x))", ListNative.makeListNativeExpression(new LitInteger(0), new LitInteger(1)).interpret(env, typeEnv), env, typeEnv);
 		
 		this.assertInterpretedStringEquals("(remove-list-native (build-list-native 2 (lambda (x) x)) 1)", ListNative.makeListNativeExpression(new LitInteger(0)).interpret(env, typeEnv), env, typeEnv);
@@ -1495,9 +1495,9 @@ class TestInterpretation extends VelkaTest{
 						.interpret(env, typeEnv),
 				env, typeEnv);
 		
-		this.assertInterpretedStringEquals("(everyp-list-native (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
+		this.assertInterpretedStringEquals("(everyp-list-native (construct List:Native #t (construct List:Native #t (construct List:Native))) (lambda (x) x))",
 				LitBoolean.TRUE, env, typeEnv);
-		this.assertInterpretedStringEquals("(everyp-list-native (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
+		this.assertInterpretedStringEquals("(everyp-list-native (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))",
 				LitBoolean.FALSE, env, typeEnv);
 	}
 
@@ -1680,17 +1680,17 @@ class TestInterpretation extends VelkaTest{
 	@Test
 	@DisplayName("Test Java Array List")
 	void testJavaArrayList() throws Exception {
-		this.assertInterpretationEquals("(construct List JavaArray)",
+		this.assertInterpretationEquals("(construct List:JavaArray)",
 				new LitComposite(new LitInteropObject(new ArrayList<Object>()), JavaArrayList.TypeListJavaArray));
 		
 		this.assertInterpretationEquals(
-				"(construct List JavaArray (build-list-native 2 (lambda (x) x)))", 
+				"(construct List:JavaArray (build-list-native 2 (lambda (x) x)))", 
 				new LitComposite(
 						new LitInteropObject(new ArrayList<Object>(Arrays.asList(new LitInteger(0), new LitInteger(1)))), 
 						JavaArrayList.TypeListJavaArray));
 		
 		this.assertInterpretationEquals(
-				"(construct List JavaArray 42)",
+				"(construct List:JavaArray 42)",
 				new LitComposite(
 						new LitInteropObject(new ArrayList<Object>(42)), JavaArrayList.TypeListJavaArray));
 
@@ -1698,30 +1698,30 @@ class TestInterpretation extends VelkaTest{
 		l.add(new LitInteger(42));
 
 		this.assertInterpretationEquals(
-				"(" + JavaArrayList.addToEndSymbol_out.toString() + " (construct List JavaArray) 42)", LitBoolean.TRUE);
+				"(" + JavaArrayList.addToEndSymbol_out.toString() + " (construct List:JavaArray) 42)", LitBoolean.TRUE);
 		this.assertInterpretationEquals(
-				"(" + JavaArrayList.addToIndexSymbol_out.toString() + " (construct List JavaArray) 0 42)",
+				"(" + JavaArrayList.addToIndexSymbol_out.toString() + " (construct List:JavaArray) 0 42)",
 				Expression.EMPTY_EXPRESSION);
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaArrayList.addAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.containsSymbol_out + " l1 42)",
 				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaArrayList.containsSymbol_out + " l1 84)",
 				LitBoolean.FALSE);
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
@@ -1729,8 +1729,8 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaArrayList.containsAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
@@ -1739,60 +1739,60 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaArrayList.containsAllSymbol_out + " l1 l2)",
 				LitBoolean.FALSE);
 		
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.getSymbol_out + " l1 0)",
 				new LitInteger(1));
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.indexOfSymbol_out + " l1 1)",
 				new LitInteger(0));
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.indexOfSymbol_out + " l1 42)",
 				new LitInteger(-1));
 		
-		this.assertInterpretationEquals("(" + JavaArrayList.isEmptySymbol_out + " (construct List JavaArray))", 
+		this.assertInterpretationEquals("(" + JavaArrayList.isEmptySymbol_out + " (construct List:JavaArray))", 
 				LitBoolean.TRUE);
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.isEmptySymbol_out + " l1)", 
 				LitBoolean.FALSE);
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.lastIndexOfSymbol_out + " l1 1)",
 				new LitInteger(0));
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.lastIndexOfSymbol_out + " l1 42)",
 				new LitInteger(-1));
 		/*this.testInterpretString(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
 				+ "(" + JavaArrayList.removeSymbol + " l1 0)", 
 				new LitInteger(1));*/
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.removeSymbol_out + " l1 2)", 
 				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
@@ -1800,8 +1800,8 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaArrayList.removeAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
@@ -1810,8 +1810,8 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaArrayList.removeAllSymbol_out + " l2 l1)",
 				LitBoolean.FALSE);
 		
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
@@ -1820,8 +1820,8 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaArrayList.retainAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
 		
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
@@ -1830,47 +1830,47 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaArrayList.retainAllSymbol_out + " l2 l1)",
 				LitBoolean.FALSE);
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.setSymbol_out + " l1 0 2)", 
 				new LitInteger(1));
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaArrayList.sizeSymbol_out + " l1)", 
 				new LitInteger(2));
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 84)" 
 				+ "(" + JavaArrayList.sublistSymbol_out + " l1 0 1)", 
 				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
 		
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n" 
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)"  
 				+ "(" + JavaArrayList.mapSymbol_out + " l1 (lambda (x) (* 2 x)))", 
 				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
 		
-		this.assertInterpretationEquals("(define l1 (construct List JavaArray))\n"
-				+ "(define l2 (construct List JavaArray))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
+				+ "(define l2 (construct List:JavaArray))"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 21)"
 				+ "(" + JavaArrayList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y)))",
 				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaArrayList.foldlSymbol_out + " + 0 l1)", 
 				new LitInteger(63));
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaArray))\n" 
+				"(define l1 (construct List:JavaArray))\n" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 4)"
@@ -1880,7 +1880,7 @@ class TestInterpretation extends VelkaTest{
 		LinkedList<Expression> converted = new LinkedList<Expression>();
 		converted.add(new LitInteger(42));
 		converted.add(new LitInteger(21));
-		this.assertInterpretationEquals("(define l (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l (construct List:JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
 				+ "(convert List:JavaArray List:JavaLinked l)", 
@@ -1888,35 +1888,35 @@ class TestInterpretation extends VelkaTest{
 		
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		this.assertInterpretationEquals("(define l (construct List JavaArray))\n"
+		this.assertInterpretationEquals("(define l (construct List:JavaArray))\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
 				+ "(convert List:JavaArray List:Native l)", 
 				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21)).interpret(env, typeEnv));
 		this.assertInterpretationEquals(
-				"(java-array-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
+				"(java-array-list-everyp (construct List:Native #t (construct List:Native #t (construct List:Native))) (lambda (x) x))",
 				LitBoolean.TRUE);
 		this.assertInterpretationEquals(
-				"(java-array-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
+				"(java-array-list-everyp (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))",
 				LitBoolean.FALSE);
 	}
 	
 	@Test
 	@DisplayName("Test Java Linked List")
 	void testJavaLinkedList() throws Exception {
-		this.assertInterpretationEquals("(construct List JavaLinked)",
+		this.assertInterpretationEquals("(construct List:JavaLinked)",
 				new LitComposite(new LitInteropObject(new LinkedList<Object>()), JavaLinkedList.TypeListJavaLinked));
 
 		LinkedList<Object> l = new LinkedList<Object>();
 		l.add(new LitInteger(42));
 
 		this.assertInterpretationEquals(
-				"(" + JavaLinkedList.addToEndSymbol_out.toString() + " (construct List JavaLinked) 42)", LitBoolean.TRUE);
+				"(" + JavaLinkedList.addToEndSymbol_out.toString() + " (construct List:JavaLinked) 42)", LitBoolean.TRUE);
 		this.assertInterpretationEquals(
-				"(" + JavaLinkedList.addToIndexSymbol_out.toString() + " (construct List JavaLinked) 0 42)",
+				"(" + JavaLinkedList.addToIndexSymbol_out.toString() + " (construct List:JavaLinked) 0 42)",
 				Expression.EMPTY_EXPRESSION);
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
@@ -1925,24 +1925,24 @@ class TestInterpretation extends VelkaTest{
 				LitBoolean.TRUE);
 		
 		assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n"
+				"(define l1 (construct List:JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.toStrSymbol_out + " l1)",
 				new LitString("[[42], [42]]"));
 		
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.containsSymbol_out + " l1 42)",
 				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
 				+ "(" + JavaLinkedList.containsSymbol_out + " l1 84)",
 				LitBoolean.FALSE);
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
@@ -1950,8 +1950,8 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaLinkedList.containsAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
@@ -1960,56 +1960,56 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaLinkedList.containsAllSymbol_out + " l1 l2)",
 				LitBoolean.FALSE);
 		
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.getSymbol_out + " l1 0)",
 				new LitInteger(1));
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.indexOfSymbol_out + " l1 1)",
 				new LitInteger(0));
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.indexOfSymbol_out + " l1 42)",
 				new LitInteger(-1));
 		
 		this.assertInterpretationEquals(
-				"(" + JavaLinkedList.isEmptySymbol_out + " (construct List JavaLinked))", 
+				"(" + JavaLinkedList.isEmptySymbol_out + " (construct List:JavaLinked))", 
 				LitBoolean.TRUE);
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.isEmptySymbol_out + " l1)", 
 				LitBoolean.FALSE);
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.lastIndexOfSymbol_out + " l1 1)",
 				new LitInteger(0));
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.lastIndexOfSymbol_out + " l1 42)",
 				new LitInteger(-1));
 
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.removeSymbol_out + " l1 2)", 
 				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
@@ -2017,8 +2017,8 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
 				+ "(" + JavaLinkedList.removeAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
@@ -2027,8 +2027,8 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaLinkedList.removeAllSymbol_out + " l2 l1)",
 				LitBoolean.FALSE);
 		
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
@@ -2037,8 +2037,8 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaLinkedList.retainAllSymbol_out + " l1 l2)",
 				LitBoolean.TRUE);
 		
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
@@ -2047,47 +2047,47 @@ class TestInterpretation extends VelkaTest{
 				+ "(" + JavaLinkedList.retainAllSymbol_out + " l2 l1)",
 				LitBoolean.FALSE);
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.setSymbol_out + " l1 0 2)", 
 				new LitInteger(1));
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
 				+ "(" + JavaLinkedList.sizeSymbol_out + " l1)", 
 				new LitInteger(2));
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 84)" 
 				+ "(" + JavaLinkedList.sublistSymbol_out + " l1 0 1)", 
 				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
 		
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n" 
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)"  
 				+ "(" + JavaLinkedList.mapSymbol_out + " l1 (lambda (x) (* 2 x)))", 
 				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
 		
-		this.assertInterpretationEquals("(define l1 (construct List JavaLinked))\n"
-				+ "(define l2 (construct List JavaLinked))"
+		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
+				+ "(define l2 (construct List:JavaLinked))"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 21)"
 				+ "(" + JavaLinkedList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y)))",
 				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
 				+ "(" + JavaLinkedList.foldlSymbol_out + " + 0 l1)", 
 				new LitInteger(63));
 		
 		this.assertInterpretationEquals(
-				"(define l1 (construct List JavaLinked))\n" 
+				"(define l1 (construct List:JavaLinked))\n" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 4)"
@@ -2097,23 +2097,23 @@ class TestInterpretation extends VelkaTest{
 		ArrayList<Expression> converted = new ArrayList<Expression>();
 		converted.add(new LitInteger(42));
 		converted.add(new LitInteger(21));
-		this.assertInterpretationEquals("(define l (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l (construct List:JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
 				+ "(convert List:JavaLinked List:JavaArray l)", 
 				new LitComposite(new LitInteropObject(converted), JavaArrayList.TypeListJavaArray));
 		
-		this.assertInterpretationEquals("(define l (construct List JavaLinked))\n"
+		this.assertInterpretationEquals("(define l (construct List:JavaLinked))\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
 				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
 				+ "(convert List:JavaLinked List:Native l)", 
 				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21)));
 		
 		this.assertInterpretationEquals(
-				"(java-linked-list-everyp (construct List Native #t (construct List Native #f (construct List Native))) (lambda (x) x))",
+				"(java-linked-list-everyp (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))",
 				LitBoolean.FALSE);
 		this.assertInterpretationEquals(
-				"(java-linked-list-everyp (construct List Native #t (construct List Native #t (construct List Native))) (lambda (x) x))",
+				"(java-linked-list-everyp (construct List:Native #t (construct List:Native #t (construct List:Native))) (lambda (x) x))",
 				LitBoolean.TRUE);
 		
 		LinkedList<LitInteger> ll = new LinkedList<LitInteger>();
@@ -2129,7 +2129,7 @@ class TestInterpretation extends VelkaTest{
 		ll.add(new LitInteger(18));
 		ListIterator<LitInteger> li = ll.listIterator(0);
 		this.assertInterpretationEquals(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))"
 						+ "(linked-list-iterator-next (java-linked-list-iterator l 0))",
 				li.next());
@@ -2137,7 +2137,7 @@ class TestInterpretation extends VelkaTest{
 		li.previous();
 		li.add(new LitInteger(42));
 		this.assertInterpretationEquals(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
 						+ "(linked-list-iterator-next (linked-list-iterator-add it 42))"
@@ -2147,7 +2147,7 @@ class TestInterpretation extends VelkaTest{
 		li.next();
 		li.remove();
 		assertInterpretationEquals(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
 						+ "(linked-list-iterator-has-next it)",
@@ -2155,14 +2155,14 @@ class TestInterpretation extends VelkaTest{
 		
 		li.previous();
 		assertInterpretationEquals(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
 						+ "(linked-list-iterator-has-previous it)",
 				li.hasPrevious() ? LitBoolean.TRUE : LitBoolean.FALSE);
 		
 		assertInterpretationEquals(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 0))\n"
 						+ "(linked-list-iterator-next-index it)",
@@ -2172,7 +2172,7 @@ class TestInterpretation extends VelkaTest{
 		li.next();
 		li.next();
 		assertInterpretationEquals(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(linked-list-iterator-previous it)",
@@ -2180,7 +2180,7 @@ class TestInterpretation extends VelkaTest{
 		
 		li.next();
 		assertInterpretationEquals(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(linked-list-iterator-previous-index it)",
@@ -2189,7 +2189,7 @@ class TestInterpretation extends VelkaTest{
 		li.next();
 		li.remove();
 		assertInterpretationEquals(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(linked-list-iterator-next it)"
@@ -2203,7 +2203,7 @@ class TestInterpretation extends VelkaTest{
 		li.set(new LitInteger(42));
 		li.previous();
 		assertInterpretationEquals(
-				"(define l (construct List JavaLinked))\n"
+				"(define l (construct List:JavaLinked))\n"
 						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 						+ "(define it (java-linked-list-iterator l 3))\n"
 						+ "(linked-list-iterator-next it)"
@@ -2220,7 +2220,7 @@ class TestInterpretation extends VelkaTest{
 				TypeAtom.TypeSetBitSet);
 		
 		assertInterpretationEquals(
-				"(construct Set BitSet)",
+				"(construct Set:BitSet)",
 				bitSet);
 		
 		BitSet nbitsBs = new BitSet(2048);
@@ -2229,34 +2229,34 @@ class TestInterpretation extends VelkaTest{
 				TypeAtom.TypeSetBitSet);
 		
 		assertInterpretationEquals(
-				"(construct Set BitSet 2048)",
+				"(construct Set:BitSet 2048)",
 				nBitsBitSet);
 		
 		bs.set(3);
 		assertInterpretationEquals(
-					"(define s (construct Set BitSet))\n"
+					"(define s (construct Set:BitSet))\n"
 				+ 	"(" + JavaBitSet.setSymbol_out.toString() + " s 3)",
 				bitSet);
 		assertInterpretationEquals(
-					"(define s (construct Set BitSet))\n"
+					"(define s (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setValueSymbol_out.toString() + " s 3 #t)",
 				bitSet);
 		bs.set(2, 5);
 		assertInterpretationEquals(
-					"(define s (construct Set BitSet))\n"
+					"(define s (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s 2 5)",
 				bitSet);
 		assertInterpretationEquals(
-					"(define s (construct Set BitSet))\n"
+					"(define s (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalValueSymbol_out.toString() + " s 2 5 #t)",
 				bitSet);
 		
 		nbitsBs.set(4, 7);
 		nbitsBs.and(bs);
 		assertInterpretationEquals(
-				"(define s1 (construct Set BitSet))\n"
+				"(define s1 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-			+	"(define s2 (construct Set BitSet))\n"
+			+	"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 			+	"(" + JavaBitSet.andSymbol_out.toString() + " s1 s2)",
 			nBitsBitSet);
@@ -2265,22 +2265,22 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.set(4, 7);
 		nbitsBs.andNot(bs);
 		assertInterpretationEquals(
-				"(define s1 (construct Set BitSet))\n"
+				"(define s1 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-			+	"(define s2 (construct Set BitSet))\n"
+			+	"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 			+	"(" + JavaBitSet.andNotSymbol_out.toString() + " s1 s2)",
 			nBitsBitSet);
 		
 		assertInterpretationEquals(
-					"(define s2 (construct Set BitSet))\n"
+					"(define s2 (construct Set:BitSet))\n"
 				+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 				+	"(" + JavaBitSet.cardinalitySymbol_out.toString() + " s2)",
 				new LitInteger(bs.cardinality()));
 		
 		nbitsBs.clear();
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 			+	"(" + JavaBitSet.clearSymbol_out.toString() + " s2)",
 			nBitsBitSet);
@@ -2289,7 +2289,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.set(4, 7);
 		nbitsBs.clear(5);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.clearBitIndexSymbol_out.toString() + " s2 5)",
 			nBitsBitSet);
@@ -2298,7 +2298,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.set(4, 7);
 		nbitsBs.clear(5, 7);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.clearIntervalSymbol_out.toString() + " s2 5 7)",
 			nBitsBitSet);
@@ -2306,7 +2306,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.cloneSymbol_out.toString() + " s2)",
 			nBitsBitSet);
@@ -2314,9 +2314,9 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s1 (construct Set BitSet))\n"
+				"(define s1 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-			+	"(define s2 (construct Set BitSet))\n"
+			+	"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 			+	"(" + JavaBitSet.equalsSymbol_out.toString() + " s1 s2)",
 			LitBoolean.FALSE);
@@ -2325,7 +2325,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.set(4, 7);
 		nbitsBs.flip(2);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.flipSymbol_out.toString() + " s2 2)",
 			nBitsBitSet);
@@ -2334,7 +2334,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.set(4, 7);
 		nbitsBs.flip(2, 5);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.flipIntervalSymbol_out.toString() + " s2 2 5)",
 			nBitsBitSet);
@@ -2342,7 +2342,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.getSymbol_out.toString() + " s2 5)",
 			nbitsBs.get(5) ? LitBoolean.TRUE : LitBoolean.FALSE);
@@ -2350,7 +2350,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.getIntervalSymbol_out.toString() + " s2 5 7)",
 			new LitComposite(new LitInteropObject(nbitsBs.get(5, 7)), TypeAtom.TypeSetBitSet));
@@ -2358,9 +2358,9 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s1 (construct Set BitSet))\n"
+				"(define s1 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-			+	"(define s2 (construct Set BitSet))\n"
+			+	"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 			+	"(" + JavaBitSet.intersectsSymbol_out.toString() + " s1 s2)",
 			nbitsBs.intersects(bs) ? LitBoolean.TRUE : LitBoolean.FALSE);
@@ -2368,7 +2368,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.isEmptySymbol_out.toString() + " s2)",
 			nbitsBs.isEmpty() ? LitBoolean.TRUE : LitBoolean.FALSE);
@@ -2376,7 +2376,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.lengthSymbol_out.toString() + " s2)",
 			new LitInteger(nbitsBs.length()));
@@ -2384,7 +2384,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.nextClearBitSymbol_out.toString() + " s2 5)",
 			new LitInteger(nbitsBs.nextClearBit(5)));
@@ -2392,7 +2392,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.nextSetBitSymbol_out.toString() + " s2 0)",
 			new LitInteger(nbitsBs.nextSetBit(0)));
@@ -2400,9 +2400,9 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.set(4, 7);
 		nbitsBs.or(bs);
 		assertInterpretationEquals(
-				"(define s1 (construct Set BitSet))\n"
+				"(define s1 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-			+	"(define s2 (construct Set BitSet))\n"
+			+	"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 			+	"(" + JavaBitSet.orSymbol_out.toString() + " s1 s2)",
 			nBitsBitSet);
@@ -2410,7 +2410,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.previousClearBitSymbol_out.toString() + " s2 5)",
 			new LitInteger(nbitsBs.previousClearBit(5)));
@@ -2418,7 +2418,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.previousSetBitSymbol_out.toString() + " s2 9)",
 			new LitInteger(nbitsBs.previousSetBit(9)));
@@ -2426,7 +2426,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s1 (construct Set BitSet))\n"
+				"(define s1 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 2 5)\n"
 			+	"(" + JavaBitSet.sizeSymbol_out.toString() + " s1)",
 			new LitInteger(bs.size()));
@@ -2434,7 +2434,7 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
 		assertInterpretationEquals(
-				"(define s2 (construct Set BitSet))\n"
+				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.strSymbol_out.toString() + " s2)",
 			new LitString(nbitsBs.toString()));
@@ -2443,9 +2443,9 @@ class TestInterpretation extends VelkaTest{
 		nbitsBs.set(4, 7);
 		nbitsBs.xor(bs);
 		assertInterpretationEquals(
-				"(define s1 (construct Set BitSet))\n"
+				"(define s1 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s1 4 7)\n"
-			+	"(define s2 (construct Set BitSet))\n"
+			+	"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 2 5)\n"
 			+	"(" + JavaBitSet.xorSymbol_out.toString() + " s1 s2)",
 			nBitsBitSet);
@@ -2478,8 +2478,8 @@ class TestInterpretation extends VelkaTest{
 				"            (let-type (A)\n" + 
 				"                (lambda ((Int:Native n) (((Int:Native) #> A) f) (Int:Native i))\n" + 
 				"                    (if (< i n)\n" + 
-				"                        (construct List Native (f i) (build-list-native-aux n f (+ i 1)))\n" + 
-				"                        (construct List Native)))))\n" + 
+				"                        (construct List:Native (f i) (build-list-native-aux n f (+ i 1)))\n" + 
+				"                        (construct List:Native)))))\n" + 
 				"        (define build-list-native-t\n" + 
 				"            (let-type (A)\n" + 
 				"                (lambda ((Int:Native n) (((Int:Native) #> A) f))\n" + 
@@ -2537,7 +2537,7 @@ class TestInterpretation extends VelkaTest{
 		
 		//Testing side effects
 		this.assertInterpretationEquals(
-				"(loop ((x 1) (a (construct List JavaArray))) (if (= x 2) a (let ((z (java-array-list-add-to-end a x))) (recur (+ x 1) a))))",
+				"(loop ((x 1) (a (construct List:JavaArray))) (if (= x 2) a (let ((z (java-array-list-add-to-end a x))) (recur (+ x 1) a))))",
 				new LitComposite(
 						new LitInteropObject(
 								new ArrayList<Expression>(Arrays.asList(new LitInteger(1)))),
