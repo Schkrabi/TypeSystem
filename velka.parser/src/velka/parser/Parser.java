@@ -2,6 +2,7 @@ package velka.parser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.List;
 
 import org.antlr.v4.runtime.CharStream;
@@ -22,6 +23,12 @@ import velka.util.AppendableException;
  */
 public class Parser {
 
+	/** Entrypoint for reader */
+	public static List<Expression> read(Reader in) throws IOException, AppendableException {
+		var exprsContext = parseCharStream(CharStreams.fromReader(in));
+		return exprsContext.val;
+	}
+	
 	/**
 	 * Reads and parses input stream into List of expressions
 	 * 
