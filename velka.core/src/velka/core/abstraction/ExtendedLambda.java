@@ -308,8 +308,12 @@ public class ExtendedLambda extends Abstraction {
 			
 			String implCode = l.toClojureFn(env, typeEnv);
 			String costFnCode = ex.toClojureCode(env, typeEnv);
+			var p = l.infer(env, typeEnv);
 			
-			String implWithCostCode = ClojureHelper.setCostFunction(implCode, costFnCode);
+			String implWithCostCode = ClojureHelper.setCostAndType(
+					implCode, 
+					costFnCode, 
+					p.first.clojureTypeRepresentation());
 			
 			implCodes.add(implWithCostCode);
 		}

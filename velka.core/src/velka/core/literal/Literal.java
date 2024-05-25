@@ -40,7 +40,7 @@ public abstract class Literal extends Expression {
 	 * @return clojure code
 	 */
 	public static String clojureValueToClojureLiteral(String clojureValue, Type type) {
-		return Type.addTypeMetaInfo("[" + clojureValue + "]", type);
+		return clojureValue;
 	}
 	
 	@Override

@@ -48,7 +48,7 @@ public class LitComposite extends Literal {
 
 	@Override
 	public String valueToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return this.value.toClojureCode(env, typeEnv);
+		return LitComposite.clojureLit(this.composedType, this.value.toClojureCode(env, typeEnv));
 	}
 
 	@Override
@@ -81,7 +81,11 @@ public class LitComposite extends Literal {
 	public String toString() {
 		if(this.composedType == TypeAtom.TypeListNative) {
 			LitInteropObject intObj = (LitInteropObject)this.value;
-			return "[" + ListNative.toStringListNative((List<Expression>)intObj.javaObject) + "]";
+			return ListNative.toStringListNative((List<Expression>)intObj.javaObject);
+		}
+		if(this.composedType == TypeAtom.TypeIntRoman
+			|| this.composedType == TypeAtom.TypeIntString) {
+			return "[" + this.value.toString() + "]";
 		}
 		
 		return "[" + this.value.toString() + "]";

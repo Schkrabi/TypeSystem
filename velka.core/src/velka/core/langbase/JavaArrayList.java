@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
 
@@ -29,8 +30,6 @@ import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
-import velka.types.TypeName;
-import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
@@ -66,11 +65,6 @@ public class JavaArrayList extends OperatorBank{
 	 */
 	public static final String NAMESPACE = "velka.clojure.arrayList";
 
-	/**
-	 * Type of java array list in velka
-	 */
-	public static final TypeAtom TypeListJavaArray = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaArray"));
-
 	public static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
 
 	/**
@@ -92,13 +86,13 @@ public class JavaArrayList extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Expression e = new LitInteropObject(new ArrayList<Object>());
+			Expression e = new LitInteropObject(new ArrayList<Object>(), TypeAtom.TypeListJavaArray);
 			return e;
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(TypeTuple.EMPTY_TUPLE, JavaArrayList.TypeListJavaArray);
+			TypeArrow type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeListJavaArray);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -132,7 +126,7 @@ public class JavaArrayList extends OperatorBank{
 			final String list = "_list";
 			final String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					ClojureHelper.applyClojureFunction("java.util.ArrayList.",
-							ClojureHelper.applyClojureFunction("doall", ClojureHelper.getLiteralInnerValue(list))));
+							ClojureHelper.applyClojureFunction("doall", list)));
 
 			return code;
 		}
@@ -149,19 +143,18 @@ public class JavaArrayList extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			LitComposite lit = (LitComposite) args.get(0);
-			LitInteropObject interop = (LitInteropObject) lit.value;
+			LitInteropObject interop = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
 
 			ArrayList<Expression> al = new ArrayList<Expression>(l);
 
-			return new LitInteropObject(al);
+			return new LitInteropObject(al, TypeAtom.TypeListJavaArray);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), JavaArrayList.TypeListJavaArray);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeListJavaArray);
 
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -189,9 +182,7 @@ public class JavaArrayList extends OperatorBank{
 					Arrays.asList(capacity), 
 					ClojureHelper.applyClojureFunction(
 							"java.util.ArrayList.", 
-							ClojureHelper.applyClojureFunction(
-									"first", 
-									capacity)));
+							capacity));
 
 			return code;
 		}
@@ -207,12 +198,12 @@ public class JavaArrayList extends OperatorBank{
 
 			ArrayList<Expression> al = new ArrayList<Expression>((int) lit.value);
 
-			return new LitInteropObject(al);
+			return new LitInteropObject(al, TypeAtom.TypeListJavaArray);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), JavaArrayList.TypeListJavaArray);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeListJavaArray);
 
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -243,7 +234,7 @@ public class JavaArrayList extends OperatorBank{
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".add",
-									ClojureHelper.getLiteralInnerValue(list),
+									list,
 									e)));
 			return code;
 		}
@@ -251,9 +242,9 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 			Expression e = args.get(1);
 
 			@SuppressWarnings("unchecked")
@@ -266,7 +257,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeBoolNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray, A), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -311,8 +302,8 @@ public class JavaArrayList extends OperatorBank{
 									ClojureHelper.clojureVectorHelper(
 											ClojureHelper.applyClojureFunction(
 													".add",
-													ClojureHelper.getLiteralInnerValue(list),
-													ClojureHelper.getLiteralInnerValue(index),
+													list,
+													index,
 													e),
 											Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv)))));
 			return code;
@@ -321,9 +312,9 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			LitInteger index = (LitInteger) args.get(1);
 
@@ -339,7 +330,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative, A),
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray, TypeAtom.TypeIntNative, A),
 					TypeTuple.EMPTY_TUPLE);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -380,8 +371,8 @@ public class JavaArrayList extends OperatorBank{
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".addAll",
-									ClojureHelper.getLiteralInnerValue(list), 
-									ClojureHelper.getLiteralInnerValue(collection))));
+									list, 
+									collection)));
 
 			return code;
 		}
@@ -389,12 +380,11 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
-			LitComposite lc2 = (LitComposite) args.get(1);
-			LitInteropObject collection = (LitInteropObject) lc2.value;
+			LitInteropObject collection = (LitInteropObject) args.get(1);
 
 			@SuppressWarnings("unchecked")
 			ArrayList<Object> l = (ArrayList<Object>) list.javaObject;
@@ -411,7 +401,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, JavaArrayList.TypeListJavaArray),
+					new TypeTuple(TypeAtom.TypeListJavaArray, TypeAtom.TypeListJavaArray),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -452,7 +442,7 @@ public class JavaArrayList extends OperatorBank{
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".contains",
-									ClojureHelper.getLiteralInnerValue(list),
+									list,
 									object)));
 			return code;
 		}
@@ -460,9 +450,9 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			@SuppressWarnings("unchecked")
 			ArrayList<Object> l = (ArrayList<Object>) list.javaObject;
@@ -479,7 +469,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeBoolNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray, A), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -520,20 +510,19 @@ public class JavaArrayList extends OperatorBank{
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".containsAll",
-									ClojureHelper.getLiteralInnerValue(list),
-									ClojureHelper.getLiteralInnerValue(collection))));
+									list,
+									collection)));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
-			LitComposite lc2 = (LitComposite) args.get(1);
-			LitInteropObject collection = (LitInteropObject) lc2.value;
+			LitInteropObject collection = (LitInteropObject) args.get(1);
 
 			@SuppressWarnings("unchecked")
 			ArrayList<Object> l = (ArrayList<Object>) list.javaObject;
@@ -550,7 +539,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, JavaArrayList.TypeListJavaArray),
+					new TypeTuple(TypeAtom.TypeListJavaArray, TypeAtom.TypeListJavaArray),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -591,17 +580,17 @@ public class JavaArrayList extends OperatorBank{
 					Arrays.asList(list, index),
 					ClojureHelper.applyClojureFunction(
 							".get",
-							ClojureHelper.getLiteralInnerValue(list),
-							ClojureHelper.getLiteralInnerValue(index)));
+							list,
+							index));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			LitInteger index = (LitInteger) args.get(1);
 
@@ -614,7 +603,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative), A);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray, TypeAtom.TypeIntNative), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -656,7 +645,7 @@ public class JavaArrayList extends OperatorBank{
 					LitInteger.clojureLit(
 						ClojureHelper.applyClojureFunction(
 								".indexOf",
-								ClojureHelper.getLiteralInnerValue(list),
+								list,
 								object)));
 			return code;
 		}
@@ -664,9 +653,9 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			Expression e = args.get(1);
 
@@ -681,7 +670,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -720,16 +709,16 @@ public class JavaArrayList extends OperatorBank{
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".isEmpty",
-									ClojureHelper.getLiteralInnerValue(list))));
+									list)));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			@SuppressWarnings("unchecked")
 			ArrayList<Expression> l = (ArrayList<Expression>) list.javaObject;
@@ -742,7 +731,7 @@ public class JavaArrayList extends OperatorBank{
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray), TypeAtom.TypeBoolNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -784,7 +773,7 @@ public class JavaArrayList extends OperatorBank{
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".lastIndexOf",
-									ClojureHelper.getLiteralInnerValue(list),
+									list,
 									object)));
 			return code;
 		}
@@ -792,9 +781,9 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			Expression e = args.get(1);
 
@@ -809,7 +798,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -851,7 +840,7 @@ public class JavaArrayList extends OperatorBank{
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".remove",
-									ClojureHelper.getLiteralInnerValue(list),
+									list,
 									o)));
 			return code;
 		}
@@ -859,9 +848,9 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			Expression o = args.get(1);
 
@@ -877,7 +866,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, A), TypeAtom.TypeBoolNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray, A), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -919,8 +908,8 @@ public class JavaArrayList extends OperatorBank{
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".removeAll",
-									ClojureHelper.getLiteralInnerValue(list),
-									ClojureHelper.getLiteralInnerValue(c))));
+									list,
+									c)));
 			return code;
 		}
 
@@ -928,14 +917,12 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
-			// Need to extract LitComposite carrying type info first
-			LitComposite lc2 = (LitComposite) args.get(1);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject ec = (LitInteropObject) lc2.value;
+			LitInteropObject ec = (LitInteropObject) args.get(1);
 
 			@SuppressWarnings("rawtypes")
 			ArrayList al = (ArrayList) list.javaObject;
@@ -951,7 +938,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, JavaArrayList.TypeListJavaArray),
+					new TypeTuple(TypeAtom.TypeListJavaArray, TypeAtom.TypeListJavaArray),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -997,8 +984,8 @@ public class JavaArrayList extends OperatorBank{
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".retainAll",
-									ClojureHelper.getLiteralInnerValue(list),
-									ClojureHelper.getLiteralInnerValue(c))));
+									list,
+									c)));
 			return code;
 		}
 
@@ -1006,14 +993,12 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
-			// Need to extract LitComposite carrying type info first
-			LitComposite lc2 = (LitComposite) args.get(1);
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject ec = (LitInteropObject) lc2.value;
+			LitInteropObject ec = (LitInteropObject) args.get(1);
 
 			@SuppressWarnings("rawtypes")
 			ArrayList al = (ArrayList) list.javaObject;
@@ -1029,7 +1014,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, JavaArrayList.TypeListJavaArray),
+					new TypeTuple(TypeAtom.TypeListJavaArray, TypeAtom.TypeListJavaArray),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -1074,8 +1059,8 @@ public class JavaArrayList extends OperatorBank{
 					Arrays.asList(list, index, element),
 					ClojureHelper.applyClojureFunction(
 							".set",
-							ClojureHelper.getLiteralInnerValue(list),
-							ClojureHelper.getLiteralInnerValue(index),
+							list,
+							index,
 							element));
 			return code;
 		}
@@ -1084,9 +1069,9 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			LitInteger index = (LitInteger) args.get(1);
 			Expression element = args.get(2);
@@ -1099,7 +1084,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative, A),
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray, TypeAtom.TypeIntNative, A),
 					A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -1141,16 +1126,16 @@ public class JavaArrayList extends OperatorBank{
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".size",
-									ClojureHelper.getLiteralInnerValue(list))));
+									list)));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			@SuppressWarnings("unchecked")
 			ArrayList<Expression> al = (ArrayList<Expression>) list.javaObject;
@@ -1162,7 +1147,7 @@ public class JavaArrayList extends OperatorBank{
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1208,19 +1193,19 @@ public class JavaArrayList extends OperatorBank{
 									"java.util.ArrayList.",
 									ClojureHelper.applyClojureFunction(
 											".subList",
-											ClojureHelper.getLiteralInnerValue(list),
-											ClojureHelper.getLiteralInnerValue(from),
-											ClojureHelper.getLiteralInnerValue(to))),
-							JavaArrayList.TypeListJavaArray));
+											list,
+											from,
+											to)),
+							TypeAtom.TypeListJavaArray));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			LitInteger from = (LitInteger) args.get(1);
 			LitInteger to = (LitInteger) args.get(2);
@@ -1230,14 +1215,14 @@ public class JavaArrayList extends OperatorBank{
 
 			ArrayList<Expression> sublist = new ArrayList<Expression>(al.subList((int) from.value, (int) to.value));
 
-			return new LitComposite(new LitInteropObject(sublist), JavaArrayList.TypeListJavaArray);
+			return new LitInteropObject(sublist, TypeAtom.TypeListJavaArray);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					JavaArrayList.TypeListJavaArray);
+					new TypeTuple(TypeAtom.TypeListJavaArray, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeListJavaArray);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1287,8 +1272,8 @@ public class JavaArrayList extends OperatorBank{
 													ClojureHelper.applyVelkaFunction(
 															abst,
 															e)),
-											ClojureHelper.getLiteralInnerValue(list))),
-							JavaArrayList.TypeListJavaArray));
+											list)),
+							TypeAtom.TypeListJavaArray));
 		
 			return code;
 		}
@@ -1296,9 +1281,9 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			Abstraction abst = (Abstraction) args.get(1);
 
@@ -1318,7 +1303,7 @@ public class JavaArrayList extends OperatorBank{
 				throw re;
 			}
 
-			return new LitComposite(new LitInteropObject(rslt), JavaArrayList.TypeListJavaArray);
+			return new LitInteropObject(rslt, TypeAtom.TypeListJavaArray);
 		}
 		
 		private TypeVariable A = new TypeVariable(NameGenerator.next());
@@ -1327,8 +1312,8 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaArrayList.TypeListJavaArray, new TypeArrow(new TypeTuple(A), B)),
-					JavaArrayList.TypeListJavaArray);
+					new TypeTuple(TypeAtom.TypeListJavaArray, new TypeArrow(new TypeTuple(A), B)),
+					TypeAtom.TypeListJavaArray);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1383,9 +1368,9 @@ public class JavaArrayList extends OperatorBank{
 															abst,
 															e1,
 															e2)),
-											ClojureHelper.getLiteralInnerValue(list1),
-											ClojureHelper.getLiteralInnerValue(list2))),
-							JavaArrayList.TypeListJavaArray));
+											list1,
+											list2)),
+							TypeAtom.TypeListJavaArray));
 
 			return code;
 		}
@@ -1393,9 +1378,9 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			LitComposite lc2 = (LitComposite) args.get(1);
 			LitInteropObject list2 = (LitInteropObject) lc2.value;
@@ -1420,7 +1405,7 @@ public class JavaArrayList extends OperatorBank{
 				rslt.add(appl.interpret(env, typeEnv));
 			}
 
-			return new LitComposite(new LitInteropObject(rslt), JavaArrayList.TypeListJavaArray);
+			return new LitInteropObject(rslt,TypeAtom.TypeListJavaArray);
 		}
 		
 		private TypeVariable A = new TypeVariable(NameGenerator.next());
@@ -1429,9 +1414,9 @@ public class JavaArrayList extends OperatorBank{
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray,
-					JavaArrayList.TypeListJavaArray, new TypeArrow(new TypeTuple(A, B), C)),
-					JavaArrayList.TypeListJavaArray);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray,
+					TypeAtom.TypeListJavaArray, new TypeArrow(new TypeTuple(A, B), C)),
+					TypeAtom.TypeListJavaArray);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1482,7 +1467,7 @@ public class JavaArrayList extends OperatorBank{
 											agg,
 											element)),
 							term,
-							ClojureHelper.getLiteralInnerValue(list)));
+							list));
 			return code;
 		}
 
@@ -1518,7 +1503,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays
-					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, JavaArrayList.TypeListJavaArray)),
+					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, TypeAtom.TypeListJavaArray)),
 					A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -1571,7 +1556,7 @@ public class JavaArrayList extends OperatorBank{
 							term,
 							ClojureHelper.applyClojureFunction(
 									"reverse",
-									ClojureHelper.getLiteralInnerValue(list))));
+									list)));
 			return code;
 		}
 
@@ -1601,7 +1586,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays
-					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, JavaArrayList.TypeListJavaArray)),
+					.asList(new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, TypeAtom.TypeListJavaArray)),
 					A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -1638,26 +1623,25 @@ public class JavaArrayList extends OperatorBank{
 					LitComposite.clojureValueToClojureLiteral(
 							ClojureHelper.applyClojureFunction(
 									"java.util.LinkedList.",
-									ClojureHelper.getLiteralInnerValue(list)),
-							 JavaLinkedList.TypeListJavaLinked));
+									list),
+							 TypeAtom.TypeListJavaLinked));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			LitComposite lc = (LitComposite) args.get(0);
-			LitInteropObject lio = (LitInteropObject) lc.value;
+			
+			LitInteropObject lio = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
 			ArrayList<Expression> l = (ArrayList<Expression>) lio.javaObject;
 
-			return new LitComposite(new LitInteropObject(new LinkedList<Expression>(l)),
-					JavaLinkedList.TypeListJavaLinked);
+			return new LitInteropObject(new LinkedList<Expression>(l), TypeAtom.TypeListJavaArray);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray),
-					JavaLinkedList.TypeListJavaLinked);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray),
+					TypeAtom.TypeListJavaLinked);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1694,26 +1678,26 @@ public class JavaArrayList extends OperatorBank{
 							LitComposite.clojureValueToClojureLiteral(
 									ClojureHelper.applyClojureFunction("lazy-seq",
 											ClojureHelper.applyClojureFunction("seq",
-													ClojureHelper.getLiteralInnerValue(list))),
+													list)),
 									TypeAtom.TypeListNative));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			LitComposite lc = (LitComposite) args.get(0);
-			LitInteropObject lio = (LitInteropObject) lc.value;
+			
+			var lio = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			ArrayList<Expression> l = (ArrayList<Expression>) lio.javaObject;
 
 			LinkedList<Expression> ll = new LinkedList<Expression>(l);
 
-			return new LitComposite(new LitInteropObject(ll), TypeAtom.TypeListNative);
+			return new LitInteropObject(ll, TypeAtom.TypeListJavaArray);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaArrayList.TypeListJavaArray), TypeAtom.TypeListNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaArray), TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1748,9 +1732,8 @@ public class JavaArrayList extends OperatorBank{
 			String code = ClojureHelper.fnHelper(Arrays.asList(list, pred),
 					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction("every?",
 							ClojureHelper.fnHelper(Arrays.asList(pred_arg),
-									ClojureHelper
-											.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
-							ClojureHelper.getLiteralInnerValue(list))));
+									ClojureHelper.applyVelkaFunction(pred, pred_arg)),
+							list)));
 			return code;
 		}
 
@@ -1783,7 +1766,7 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeListJavaArray, new TypeArrow(
+					new TypeTuple(TypeAtom.TypeListJavaArray, new TypeArrow(
 							new TypeTuple(new TypeVariable(NameGenerator.next())), TypeAtom.TypeBoolNative)),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -1806,8 +1789,6 @@ public class JavaArrayList extends OperatorBank{
 			String x = "_x";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(n, buildFun),
-					LitComposite.clojureLit(
-							TypeListJavaArray,
 							ClojureHelper.instantiateJavaClass(
 									ArrayList.class,
 									ClojureHelper.applyClojureFunction(
@@ -1819,7 +1800,7 @@ public class JavaArrayList extends OperatorBank{
 															LitInteger.clojureLit(x))),
 											ClojureHelper.applyClojureFunction(
 													"range",
-													ClojureHelper.getLiteralInnerValue(n))))));
+													n))));
 			
 			return code;
 		}
@@ -1842,7 +1823,7 @@ public class JavaArrayList extends OperatorBank{
 				l.add(e);
 			}
 			
-			return new LitComposite(new LitInteropObject(l), TypeListJavaArray);
+			return new LitInteropObject(l, TypeAtom.TypeListJavaArray);
 		}
 
 		@Override
@@ -1851,7 +1832,7 @@ public class JavaArrayList extends OperatorBank{
 			Type type = new TypeArrow(new TypeTuple(
 								TypeAtom.TypeIntNative, 
 								new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), T)),
-									TypeListJavaArray);
+									TypeAtom.TypeListJavaArray);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1883,7 +1864,7 @@ public class JavaArrayList extends OperatorBank{
 
 	@Override
 	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
-		typeEnv.addRepresentation(TypeListJavaArray);
+		typeEnv.addRepresentation(TypeAtom.TypeListJavaArray);
 	}
 	
 	private static JavaArrayList instance = null;
@@ -1893,5 +1874,9 @@ public class JavaArrayList extends OperatorBank{
 			instance = new JavaArrayList();
 		}
 		return instance;
+	}
+	
+	public static Expression of(Expression ...vals) {
+		return new LitInteropObject(new ArrayList<Expression>(List.of(vals)), TypeAtom.TypeListJavaArray);
 	}
 }

@@ -31,6 +31,7 @@ import velka.core.application.Get;
 import velka.core.application.IfExpression;
 import velka.core.application.InstanceOf;
 import velka.core.application.InstanceOfRepresentation;
+import velka.core.application.Let;
 import velka.core.application.Loop;
 import velka.core.application.OrExpression;
 import velka.core.application.Recur;
@@ -56,6 +57,7 @@ import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
+import velka.util.Pair;
 
 class TestParser extends VelkaTest{
 	
@@ -259,47 +261,11 @@ class TestParser extends VelkaTest{
 		String letCode = "(let ((a 21) (b 21)) a)";
 		
 		Expression e = this.parseString(letCode).get(0);
-		if(e instanceof AbstractionApplication) {
-			AbstractionApplication apl = (AbstractionApplication)e;
-			Lambda l = (Lambda)apl.fun;
-			if(!TestParser.equalsLambdaUpToTypeVariables(l, new Lambda(new Tuple(new Symbol("a"), new Symbol("b")),
-					new TypeTuple(new TypeVariable("A"), new TypeVariable("B")), new Symbol("a")))) {
-				Assertions.fail("Fail on " + letCode + " got " + e.toString());
-			}
-			
-			Tuple args = (Tuple)apl.args;
-			Assertions.assertEquals(new Tuple(new LitInteger(21), new LitInteger(21)), args);
-		}
-		else {
-			Assertions.fail("Fail on " + letCode + " got " + e.toString());
-		}
 		
-		String letAstCode = "(let* ((a 30) (b 12)) a)";
-		
-		e = this.parseString(letAstCode).get(0);
-		if(e instanceof AbstractionApplication) {
-			AbstractionApplication apl = (AbstractionApplication)e;
-			Lambda l = (Lambda)apl.fun;
-			
-			if(l.body instanceof AbstractionApplication) {
-				AbstractionApplication apl2 = (AbstractionApplication)l.body;
-				Lambda l2 = (Lambda)apl2.fun;
-				if(!TestParser.equalsLambdaUpToTypeVariables(l2, new Lambda(new Tuple(new Symbol("b")), new TypeTuple(new TypeVariable("B")), new Symbol("a")))) {
-					Assertions.fail("Fail on " + letAstCode + " got " + e.toString());
-				}
-				
-				Tuple args2 = (Tuple)apl2.args;
-				Assertions.assertEquals(new Tuple(new LitInteger(12)), args2);
-				
-			} else {
-				Assertions.fail("Fail on " + letAstCode + " got " + l.body.toString());
-			}
-			
-			Assertions.assertEquals(new Tuple(new Symbol("a")), l.args);
-			Assertions.assertEquals(new Tuple(new LitInteger(30)), apl.args);
-		} else {
-			Assertions.fail("Fail on " + letAstCode + " got " + e.toString());
-		}
+		assertEquals(new Let(new Symbol("a"),
+				Pair.of(new Symbol("a"), new LitInteger(21)),
+				Pair.of(new Symbol("b"), new LitInteger(21))),
+				e);
 	}
 	
 	@Test

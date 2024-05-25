@@ -1,5 +1,6 @@
 package velka.util;
 
+
 public class ClojureCoreSymbols {
 
 	/**
@@ -147,4 +148,7 @@ public class ClojureCoreSymbols {
 	 * Fully qualified symbol for get-cost-function clojure function
 	 */
 	public static final String getCostFunction_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, getCostFunction);
+	
+	public static final String canDeconstructAs = "can-deconstruct-as";
+	public static final String canDeconstructAs_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, canDeconstructAs);
 }

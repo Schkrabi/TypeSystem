@@ -1,7 +1,7 @@
 package velka.core.application;
 
-import java.util.Iterator;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
@@ -15,6 +15,7 @@ import velka.types.TypeAtom;
 import velka.types.TypesDoesNotUnifyException;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 
 /**
@@ -78,28 +79,23 @@ public class OrExpression extends SpecialFormApplication {
 	
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		StringBuilder sb = new StringBuilder();
-		sb.append("(or ");
-		
-		Iterator<Expression> i = ((Tuple)this.args).iterator();
-		while (i.hasNext()) {
-			Expression e = i.next();
-			sb.append("(first (");
-			sb.append(ClojureCoreSymbols.convertClojureSymbol_full);
-			sb.append(" ");
-			sb.append(TypeAtom.TypeBoolNative.clojureTypeRepresentation());
-			sb.append(" \n");
-			sb.append(e.toClojureCode(env, typeEnv));
-			sb.append("))");
-			if (i.hasNext()) {
-				sb.append(" \n");
+		var as = (Tuple)this.args;
+		var al = as.stream().map(e -> {
+			try {
+			var t = e.infer(env, typeEnv).first;
+			if(t.equals(TypeAtom.TypeBoolNative)) {
+				return e.toClojureCode(env, typeEnv);
 			}
-		}
+			return ClojureHelper.applyClojureFunction(
+					ClojureCoreSymbols.convertClojureSymbol_full, 
+					TypeAtom.TypeBoolNative.clojureTypeRepresentation(),
+					e.toClojureCode(env, typeEnv));
+			} catch(AppendableException ex) {
+				throw new RuntimeException(ex);
+			}
+		}).collect(Collectors.toList());
 		
-		sb.append(")");
-		
-		
-		return LitBoolean.clojureLit(sb.toString());
+		return ClojureHelper.applyClojureFunction("or", al);
 	}
 
 	@Override

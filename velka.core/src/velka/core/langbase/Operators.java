@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 import velka.core.abstraction.Operator;
@@ -21,7 +22,6 @@ import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
-import velka.core.expression.TypeSymbol;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
@@ -95,16 +95,16 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String x = "_x";
-			String y = "_y";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(x, y),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction("unchecked-add",
-									ClojureHelper.getLiteralInnerValue(x),
-									ClojureHelper.getLiteralInnerValue(y))));
+//			String x = "_x";
+//			String y = "_y";
+//			String code = ClojureHelper.fnHelper(
+//					Arrays.asList(x, y),
+//					LitInteger.clojureLit(
+//							ClojureHelper.applyClojureFunction("unchecked-add",
+//									ClojureHelper.getLiteralInnerValue(x),
+//									ClojureHelper.getLiteralInnerValue(y))));
 			
-			return code;
+			return "unchecked-add";
 		}
 
 		@Override
@@ -145,7 +145,8 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitInteger.clojureLit("(bit-and (get _x 0) (get _y 0))") + ")";
+			//return "(fn [_x _y] " + LitInteger.clojureLit("(bit-and (get _x 0) (get _y 0))") + ")";
+			return "bit-and";
 		}
 
 		@Override
@@ -165,8 +166,8 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_val] " + LitInteger.clojureLit("(bit-not (first _val))") + ")";
-			return code;
+//			String code = "(fn [_val] " + LitInteger.clojureLit("(bit-not (first _val))") + ")";
+			return "bit-not";
 		}
 
 		@Override
@@ -226,7 +227,8 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitInteger.clojureLit("(bit-or (get _x 0) (get _y 0))") + ")";
+			//return "(fn [_x _y] " + LitInteger.clojureLit("(bit-or (get _x 0) (get _y 0))") + ")";
+			return "bit-or";
 		}
 
 		@Override
@@ -246,9 +248,10 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_num _n] "
-					+ LitInteger.clojureLit("(bit-shift-left (first _num) (first _n))") + ")";
-			return code;
+//			String code = "(fn [_num _n] "
+//					+ LitInteger.clojureLit("(bit-shift-left (first _num) (first _n))") + ")";
+//			return code;
+			return "bit-shift-left";
 		}
 
 		@Override
@@ -298,9 +301,10 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_num _n] "
-					+ LitInteger.clojureLit("(bit-shift-right (first _num) (first _n))") + ")";
-			return code;
+//			String code = "(fn [_num _n] "
+//					+ LitInteger.clojureLit("(bit-shift-right (first _num) (first _n))") + ")";
+//			return code;
+			return "bit-shift-right";
 		}
 
 		@Override
@@ -343,9 +347,10 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_val1 _val2] "
-					+ LitInteger.clojureLit("(bit-xor (first _val1) (first _val2))") + ")";
-			return code;
+//			String code = "(fn [_val1 _val2] "
+//					+ LitInteger.clojureLit("(bit-xor (first _val1) (first _val2))") + ")";
+//			return code;
+			return "bit-xor";
 		}
 
 		@Override
@@ -376,122 +381,122 @@ public final class Operators extends OperatorBank {
 		}
 	};
 	
-	/**
-	 * can-unify-representations operator
-	 */
-	@VelkaOperator
-	@Description("Returns _true_ if representations carried by _arg1_ and _arg2_ can be unified. "
-			+ "Otherwise returns _false_. " 
-			+ "This operator works on level of representations, meaning for example " 
-			+ "_Int:Native_ and _Int:String_ cannot unify and type symbols carriing them will yield _false_ on application of the operator.\n\n"
-			+ "For type level variant see [can-unify-types](#canUnifyTypes).") 
-	@Example("(can-unify-representations 42 42) ;; = #t\n"
-			+ "(can-unify-representations 42 (construct Int String \"42\"))") 
-	@Syntax("(can-unify-representations <arg1> <arg2>)")
-	public static final Operator CanUnifyRepresentations = new Operator() {
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeSymbol t1 = (TypeSymbol) args.get(0);
-			TypeSymbol t2 = (TypeSymbol) args.get(1);
-
-			if(Type.unifyRepresentation(t1.type, t2.type).isPresent()) {
-				return LitBoolean.TRUE;
-			}
-			return LitBoolean.FALSE;
-		}
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-
-			String t1 = "_t1";
-			String t2 = "_t2";
-			String opt = "_opt";
-			String fn = ClojureHelper.fnHelper(Arrays.asList(t1, t2), ClojureHelper.letHelper(
-					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction(".isPresent", opt)),
-					new Pair<String, String>(opt, ClojureHelper.applyClojureFunction(
-							"velka.types.Type/unifyRepresentation",
-							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t1),
-							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t2)))));
-
-			return fn;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return new Pair<Type, Substitution>(new TypeArrow(new TypeTuple(
-					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))),
-					TypeAtom.TypeBoolNative), Substitution.EMPTY);
-		}
-
-		@Override
-		public String toString() {
-			return "can-unify-representations";
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-can-unify-representations", NAMESPACE);
-		}
-	};
-
-	/**
-	 * can-unify-types operator
-	 */
-	@VelkaOperator
-	@Description("Returns _true_ if types carried by _arg1_ and _arg2_ can be unified. " 
-					+ "Otherwise returns _false_. This operator works on level of types, not taking type " 
-					+ "representations into account. Meaning for example _Int:Native_ and _Int:String_ can unify " 
-					+ "and type symbols carriing them will yield _true_ on application of the operator. \n\n"
-					+ "For representation level variant see [can-unify-representations](#canUnifyRepresentations).") 
-	@Example("(can-unify-types 42 (construct Int String \"42\")) ;; = #t)\n"
-					+ "(can-unify-types 42 \"42\") ;; = #f") 
-	@Syntax("(can-unify-types <arg1> <arg2>)")
-	public static final Operator CanUnifyTypes = new Operator() {
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeSymbol t1 = (TypeSymbol) args.get(0);
-			TypeSymbol t2 = (TypeSymbol) args.get(1);
-
-			if(Type.unifyTypes(t1.type, t2.type).isPresent()) {
-				return LitBoolean.TRUE;
-			}
-			return LitBoolean.FALSE;
-		}
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-
-			String t1 = "_t1";
-			String t2 = "_t2";
-			String opt = "_opt";
-			String fn = ClojureHelper.fnHelper(Arrays.asList(t1, t2), ClojureHelper.letHelper(
-					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction(".isPresent", opt)),
-					new Pair<String, String>(opt, ClojureHelper.applyClojureFunction(
-							"velka.types.Type/unifyTypes",
-							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t1),
-							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t2)))));
-
-			return fn;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return new Pair<Type, Substitution>(new TypeArrow(new TypeTuple(
-					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))),
-					TypeAtom.TypeBoolNative), Substitution.EMPTY);
-		}
-
-		@Override
-		public String toString() {
-			return "can-unify-types";
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-can-unify-types", NAMESPACE);
-		}
-	};
+//	/**
+//	 * can-unify-representations operator
+//	 */
+//	@VelkaOperator
+//	@Description("Returns _true_ if representations carried by _arg1_ and _arg2_ can be unified. "
+//			+ "Otherwise returns _false_. " 
+//			+ "This operator works on level of representations, meaning for example " 
+//			+ "_Int:Native_ and _Int:String_ cannot unify and type symbols carriing them will yield _false_ on application of the operator.\n\n"
+//			+ "For type level variant see [can-unify-types](#canUnifyTypes).") 
+//	@Example("(can-unify-representations 42 42) ;; = #t\n"
+//			+ "(can-unify-representations 42 (construct Int String \"42\"))") 
+//	@Syntax("(can-unify-representations <arg1> <arg2>)")
+//	public static final Operator CanUnifyRepresentations = new Operator() {
+//		@Override
+//		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+//			TypeSymbol t1 = (TypeSymbol) args.get(0);
+//			TypeSymbol t2 = (TypeSymbol) args.get(1);
+//
+//			if(Type.unifyRepresentation(t1.type, t2.type).isPresent()) {
+//				return LitBoolean.TRUE;
+//			}
+//			return LitBoolean.FALSE;
+//		}
+//
+//		@Override
+//		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+//
+//			String t1 = "_t1";
+//			String t2 = "_t2";
+//			String opt = "_opt";
+//			String fn = ClojureHelper.fnHelper(Arrays.asList(t1, t2), ClojureHelper.letHelper(
+//					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction(".isPresent", opt)),
+//					new Pair<String, String>(opt, ClojureHelper.applyClojureFunction(
+//							"velka.types.Type/unifyRepresentation",
+//							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t1),
+//							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t2)))));
+//
+//			return fn;
+//		}
+//
+//		@Override
+//		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+//			return new Pair<Type, Substitution>(new TypeArrow(new TypeTuple(
+//					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))),
+//					TypeAtom.TypeBoolNative), Substitution.EMPTY);
+//		}
+//
+//		@Override
+//		public String toString() {
+//			return "can-unify-representations";
+//		}
+//
+//		@Override
+//		public Symbol getClojureSymbol() {
+//			return new Symbol("velka-can-unify-representations", NAMESPACE);
+//		}
+//	};
+//
+//	/**
+//	 * can-unify-types operator
+//	 */
+//	@VelkaOperator
+//	@Description("Returns _true_ if types carried by _arg1_ and _arg2_ can be unified. " 
+//					+ "Otherwise returns _false_. This operator works on level of types, not taking type " 
+//					+ "representations into account. Meaning for example _Int:Native_ and _Int:String_ can unify " 
+//					+ "and type symbols carriing them will yield _true_ on application of the operator. \n\n"
+//					+ "For representation level variant see [can-unify-representations](#canUnifyRepresentations).") 
+//	@Example("(can-unify-types 42 (construct Int String \"42\")) ;; = #t)\n"
+//					+ "(can-unify-types 42 \"42\") ;; = #f") 
+//	@Syntax("(can-unify-types <arg1> <arg2>)")
+//	public static final Operator CanUnifyTypes = new Operator() {
+//
+//		@Override
+//		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+//			TypeSymbol t1 = (TypeSymbol) args.get(0);
+//			TypeSymbol t2 = (TypeSymbol) args.get(1);
+//
+//			if(Type.unifyTypes(t1.type, t2.type).isPresent()) {
+//				return LitBoolean.TRUE;
+//			}
+//			return LitBoolean.FALSE;
+//		}
+//
+//		@Override
+//		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+//
+//			String t1 = "_t1";
+//			String t2 = "_t2";
+//			String opt = "_opt";
+//			String fn = ClojureHelper.fnHelper(Arrays.asList(t1, t2), ClojureHelper.letHelper(
+//					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction(".isPresent", opt)),
+//					new Pair<String, String>(opt, ClojureHelper.applyClojureFunction(
+//							"velka.types.Type/unifyTypes",
+//							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t1),
+//							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, t2)))));
+//
+//			return fn;
+//		}
+//
+//		@Override
+//		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+//			return new Pair<Type, Substitution>(new TypeArrow(new TypeTuple(
+//					Arrays.asList(new TypeVariable(NameGenerator.next()), new TypeVariable(NameGenerator.next()))),
+//					TypeAtom.TypeBoolNative), Substitution.EMPTY);
+//		}
+//
+//		@Override
+//		public String toString() {
+//			return "can-unify-types";
+//		}
+//
+//		@Override
+//		public Symbol getClojureSymbol() {
+//			return new Symbol("velka-can-unify-types", NAMESPACE);
+//		}
+//	};
 	
 	/**
 	 * car operator
@@ -523,7 +528,8 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] (first _x))";
+			//return "(fn [_x] (first _x))";
+			return "first";
 		}
 
 		@Override
@@ -563,7 +569,8 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] (second _x))";
+			//return "(fn [_x] (second _x))";
+			return "second";
 		}
 
 		@Override
@@ -604,7 +611,8 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitString.clojureLit("(str (get _x 0) (get _y 0))") + ")";
+			//return "(fn [_x _y] " + LitString.clojureLit("(str (get _x 0) (get _y 0))") + ")";
+			return "str";
 		}
 
 		@Override
@@ -780,17 +788,18 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String x = "_x";
-			String y = "_y";
-			String code = ClojureHelper.fnHelper(
-							Arrays.asList(x, y),
-							LitInteger.clojureLit(
-								ClojureHelper.applyClojureFunction("int",
-										ClojureHelper.applyClojureFunction("/",
-												ClojureHelper.getLiteralInnerValue(x),
-												ClojureHelper.getLiteralInnerValue(y)))));
-			
-			return code;
+//			String x = "_x";
+//			String y = "_y";
+//			String code = ClojureHelper.fnHelper(
+//							Arrays.asList(x, y),
+//							LitInteger.clojureLit(
+//								ClojureHelper.applyClojureFunction("int",
+//										ClojureHelper.applyClojureFunction("/",
+//												ClojureHelper.getLiteralInnerValue(x),
+//												ClojureHelper.getLiteralInnerValue(y)))));
+//			
+//			return code;
+			return "/";
 		}
 
 		@Override
@@ -811,12 +820,13 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String d1 = "_d1";
-			String d2 = "_d2";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(d1, d2), 
-					LitDouble.clojureLit("(+ (first " + d1 + ") (first " + d2 + "))"));
-			return code;
+//			String d1 = "_d1";
+//			String d2 = "_d2";
+//			String code = ClojureHelper.fnHelper(
+//					Arrays.asList(d1, d2), 
+//					LitDouble.clojureLit("(+ (first " + d1 + ") (first " + d2 + "))"));
+//			return code;
+			return "+";
 		}
 
 		@Override
@@ -858,12 +868,13 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String x = "_x";
-			String y = "_y";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(x, y), 
-					LitDouble.clojureLit("(/ (first " + x + ") (first " + y + "))"));
-			return code;
+//			String x = "_x";
+//			String y = "_y";
+//			String code = ClojureHelper.fnHelper(
+//					Arrays.asList(x, y), 
+//					LitDouble.clojureLit("(/ (first " + x + ") (first " + y + "))"));
+//			return code;
+			return "/";
 		}
 
 		@Override
@@ -906,13 +917,14 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String d1 = "_d1";
-			String d2 = "_d2";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(d1, d2), 
-					LitBoolean.clojureLit("(< (first " + d1 + ") (first " + d2 + "))"));
-			
-			return code;
+//			String d1 = "_d1";
+//			String d2 = "_d2";
+//			String code = ClojureHelper.fnHelper(
+//					Arrays.asList(d1, d2), 
+//					LitBoolean.clojureLit("(< (first " + d1 + ") (first " + d2 + "))"));
+//			
+//			return code;
+			return "<";
 		}
 
 		@Override
@@ -980,7 +992,8 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitBoolean.clojureLit("(= (get _x 0) (get _y 0))") + ")";
+			//return "(fn [_x _y] " + LitBoolean.clojureLit("(= (get _x 0) (get _y 0))") + ")";
+			return  "=";
 		}
 
 		@Override
@@ -1002,17 +1015,29 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_name] "
-					+ "(let [logger (java.util.logging.Logger/getLogger java.util.logging.Logger/GLOBAL_LOGGER_NAME) "
-					+ "rootLogger (java.util.logging.Logger/getLogger \"\") "
-					+ "consoleHandler (first (.getHandlers rootLogger))] " + "(first (doall ["
-					+ Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv) + " "
-					+ "(if (instance? java.util.logging.ConsoleHandler consoleHandler) "
-					+ "(.removeHandler rootLogger consoleHandler) " + "nil) "
-					+ "(.setLevel logger java.util.logging.Level/INFO) "
-					+ "(let [file (java.util.logging.FileHandler. (first _name)) "
-					+ "formatter (java.util.logging.XMLFormatter.)] " + "(doall [(.setFormatter file formatter) "
-					+ "(.addHandler logger file)]))]))))";
+			String name = "_name", logger = "_looger", rootLogger = "_rootLogger", consoleHandler = "_consolehandler", file = "_file", formatter = "_formatter";
+			String code = 
+					ClojureHelper.fnHelper(List.of(name),
+							ClojureHelper.letHelper(
+									ClojureHelper.applyClojureFunction("first", 
+											ClojureHelper.applyClojureFunction("doall", 
+													ClojureHelper.clojureVectorHelper(
+															ClojureHelper.clojureIfHelper(
+																	ClojureHelper.applyClojureFunction("instance?", "java.util.logging.ConsoleHandler", consoleHandler), 
+																	ClojureHelper.applyClojureFunction(".removeHandler", rootLogger, consoleHandler), 
+																	"nil"),
+															ClojureHelper.applyClojureFunction(".setLevel", logger, "java.util.logging.Level/INFO"),
+															ClojureHelper.letHelper(
+																	ClojureHelper.applyClojureFunction("doall", 
+																			ClojureHelper.clojureVectorHelper(
+																					ClojureHelper.applyClojureFunction(".setFormatter", file, formatter),
+																					ClojureHelper.applyClojureFunction(".addHandler", logger, file))), 
+																	Pair.of(file, ClojureHelper.applyClojureFunction("java.util.logging.FileHandler.", name)),
+																	Pair.of(formatter, ClojureHelper.applyClojureFunction("java.util.logging.XMLFormatter.")))))), 
+									Pair.of(logger, ClojureHelper.applyClojureFunction("java.util.logging.Logger/getLogger", "java.util.logging.Logger/GLOBAL_LOGGER_NAME")),
+									Pair.of(rootLogger, ClojureHelper.applyClojureFunction("java.util.logging.Logger/getLogger", ClojureHelper.stringHelper(""))),
+									Pair.of(consoleHandler, ClojureHelper.applyClojureFunction("first", 
+											ClojureHelper.applyClojureFunction(".getHandlers", rootLogger)))));
 
 			return code;
 		}
@@ -1077,11 +1102,12 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String i = "_i";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(i), 
-					LitDouble.clojureLit("(double (first " + i + "))"));
-			return code;
+//			String i = "_i";
+//			String code = ClojureHelper.fnHelper(
+//					Arrays.asList(i), 
+//					LitDouble.clojureLit("(double (first " + i + "))"));
+//			return code;
+			return "double";
 		}
 
 		@Override
@@ -1121,11 +1147,12 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String d = "_d";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(d), 
-					LitInteger.clojureLit("(int (Math/floor (first " + d + ")))"));
-			return code;
+//			String d = "_d";
+//			String code = ClojureHelper.fnHelper(
+//					Arrays.asList(d),					
+//					LitInteger.clojureLit("(int (Math/floor (first " + d + ")))"));
+//			return code;
+			return "int";
 		}
 
 		@Override
@@ -1182,13 +1209,12 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-
-			String fn = "(fn [e1 e2] (let [opt (velka.types.Type/unifyRepresentation " + 
-							"(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " e1) " +
-							"(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " e2))] " +
-								"(if (.isPresent opt) " + 
-									LitBoolean.TRUE.toClojureCode(env, typeEnv) +
-									LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))"; 
+			String e1 = "e1", e2 = "e2", opt = "opt";
+			String fn = ClojureHelper.fnHelper(List.of(e1, e2),
+						ClojureHelper.letHelper(ClojureHelper.applyClojureFunction(".isPresent", opt), 
+								Pair.of(opt, ClojureHelper.applyClojureFunction("velka.types.Type/unifyRepresentation", 
+										ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, e1),
+										ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, e2))))); 
 
 			return fn;
 		}
@@ -1241,13 +1267,12 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-
-			String fn = "(fn [e1 e2] (let [opt (velka.types.Type/unifyTypes " + 
-							"(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " e1) " +
-							"(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " e2))] " +
-								"(if (.isPresent opt) " + 
-									LitBoolean.TRUE.toClojureCode(env, typeEnv) +
-									LitBoolean.FALSE.toClojureCode(env, typeEnv) + ")))";
+			String e1 = "e1", e2 = "e2", opt = "opt";
+			String fn = ClojureHelper.fnHelper(List.of(e1, e2),
+					ClojureHelper.letHelper(ClojureHelper.applyClojureFunction(".isPresent", opt), 
+							Pair.of(opt, ClojureHelper.applyClojureFunction("velka.types.Type/unifyTypes", 
+									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, e1),
+									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, e2)))));  
 
 			return fn;
 		}
@@ -1277,7 +1302,7 @@ public final class Operators extends OperatorBank {
 	 * Lesser than (<) operator
 	 */
 	@VelkaOperator
-	@Description("Returns _true_ if frist argument is lesser than second argument. Returns _false_ otherwise.") 
+	@Description("Returns _true_ if first argument is lesser than second argument. Returns _false_ otherwise.") 
 	@Example("(< 42 1) ; = #f") 
 	@Syntax("(< <arg1> <arg2>)")
 	public static final Operator LesserThan = new Operator() {
@@ -1304,7 +1329,7 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitBoolean.clojureLit("(< (get _x 0) (get _y 0))") + ")";
+			return "<";
 		}
 
 		@Override
@@ -1324,8 +1349,15 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_msg] (first (doall [" + Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv) + " "
-					+ "(.info (java.util.logging.Logger/getLogger java.util.logging.Logger/GLOBAL_LOGGER_NAME) (first _msg))])))";
+			String msg = "_msg";
+			String code = ClojureHelper.fnHelper(List.of(msg),
+					ClojureHelper.applyClojureFunction("first",
+							ClojureHelper.applyClojureFunction("doall", 
+									ClojureHelper.clojureVectorHelper(
+											Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv),
+											ClojureHelper.applyClojureFunction(".info", 
+													ClojureHelper.applyClojureFunction("java.util.logging.Logger/getLogger", "java.util.logging.Logger/GLOBAL_LOGGER_NAME"),
+													msg)))));
 			return code;
 		}
 
@@ -1363,14 +1395,15 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String i = "_i";
-			String j = "_j";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(i, j), 
-					LitInteger.clojureLit(ClojureHelper.applyClojureFunction("mod", 
-							ClojureHelper.getLiteralInnerValue(i),
-							ClojureHelper.getLiteralInnerValue(j))));
-			return code;
+//			String i = "_i";
+//			String j = "_j";
+//			String code = ClojureHelper.fnHelper(
+//					Arrays.asList(i, j), 
+//					LitInteger.clojureLit(ClojureHelper.applyClojureFunction("mod", 
+//							ClojureHelper.getLiteralInnerValue(i),
+//							ClojureHelper.getLiteralInnerValue(j))));
+//			return code;
+			return "mod";
 		}
 
 		@Override
@@ -1433,16 +1466,17 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String x = "_x";
-			String y = "_y";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(x, y),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction("unchecked-multiply",
-									ClojureHelper.getLiteralInnerValue(x),
-									ClojureHelper.getLiteralInnerValue(y))));
-			
-			return code;
+//			String x = "_x";
+//			String y = "_y";
+//			String code = ClojureHelper.fnHelper(
+//					Arrays.asList(x, y),
+//					LitInteger.clojureLit(
+//							ClojureHelper.applyClojureFunction("unchecked-multiply",
+//									ClojureHelper.getLiteralInnerValue(x),
+//									ClojureHelper.getLiteralInnerValue(y))));
+//			
+//			return code;
+			return "unchecked-multiply";
 		}
 
 		@Override
@@ -1478,7 +1512,8 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] " + LitBoolean.clojureLit("(not (get _x 0))") + ")";
+			//return "(fn [_x] " + LitBoolean.clojureLit("(not (get _x 0))") + ")";
+			return "not";
 		}
 
 		@Override
@@ -1518,7 +1553,8 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x _y] " + LitBoolean.clojureLit("(= (get _x 0) (get _y 0))") + ")";
+			//return "(fn [_x _y] " + LitBoolean.clojureLit("(= (get _x 0) (get _y 0))") + ")";
+			return "=";
 		}
 
 		@Override
@@ -1539,9 +1575,11 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_str] " + LitInteger.clojureLit("(Integer/parseInt (first _str))")
-					+ ")";
-			return code;
+//			String code = "(fn [_str] " + LitInteger.clojureLit("(Integer/parseInt (first _str))")
+//					+ ")";
+//			return code;
+			String arg = "_arg";
+			return ClojureHelper.fnHelper(List.of(arg), ClojureHelper.applyClojureFunction("Integer/parseInt", arg));
 		}
 
 		@Override
@@ -1594,6 +1632,11 @@ public final class Operators extends OperatorBank {
 			Expression arg = (Expression) args.get(0);
 
 			String s = arg.toString();
+			if(arg instanceof LitInteropObject
+					&& ((LitInteropObject)arg).type.equals(TypeAtom.TypeListNative)) {
+				s = s.replace('[', '(').replace(']', ')').replace(",", "");
+			}
+			
 			System.out.println(s);
 
 			return new LitInteger(s.length());
@@ -1642,8 +1685,9 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_path] " + LitString.clojureLit("(slurp (first _path))") + ")";
-			return code;
+//			String code = "(fn [_path] " + LitString.clojureLit("(slurp (first _path))") + ")";
+//			return code;
+			return "slurp";
 		}
 
 		@Override
@@ -1691,10 +1735,12 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_str _by] (" + ClojureCoreSymbols.tuple2velkaListSymbol_full + " (map (fn [_s] "
-					+ LitString.clojureLit("_s") + ") "
-					+ "(clojure.string/split (first _str) (re-pattern (first _by))))))";
-			return code;
+			String str = "_str", by = "_by";
+			return ClojureHelper.fnHelper(List.of(str, by),
+					ListNative.listNativeClojure(
+						ClojureHelper.applyClojureFunction("clojure.string/split", 
+								str, 
+								ClojureHelper.applyClojureFunction("re-pattern", by))));
 		}
 
 		@Override
@@ -1709,7 +1755,7 @@ public final class Operators extends OperatorBank {
 				l.add(ls);
 			}
 
-			return new LitComposite(new LitInteropObject(l), TypeAtom.TypeListNative);
+			return new LitInteropObject(l, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -1762,16 +1808,17 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String x = "_x";
-			String y = "_y";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(x, y),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction("unchecked-subtract",
-									ClojureHelper.getLiteralInnerValue(x),
-									ClojureHelper.getLiteralInnerValue(y))));
-			
-			return code;
+//			String x = "_x";
+//			String y = "_y";
+//			String code = ClojureHelper.fnHelper(
+//					Arrays.asList(x, y),
+//					LitInteger.clojureLit(
+//							ClojureHelper.applyClojureFunction("unchecked-subtract",
+//									ClojureHelper.getLiteralInnerValue(x),
+//									ClojureHelper.getLiteralInnerValue(y))));
+//			
+//			return code;
+			return "unchecked-subtract";
 		}
 
 		@Override
@@ -1784,7 +1831,7 @@ public final class Operators extends OperatorBank {
 	
 	
 	/**
-	 * Operator for current nano timestamp
+	 * Operator for current timestamp
 	 */
 	@VelkaOperator
 	@Description("Returns current System/currentTimeMillis wrapped from java.") 
@@ -1794,9 +1841,10 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = ClojureHelper.fnHelper(Arrays.asList(),
-					LitInteger.clojureLit("(System/currentTimeMillis)"));
-			return code;
+//			String code = ClojureHelper.fnHelper(Arrays.asList(),
+//					LitInteger.clojureLit("(System/currentTimeMillis)"));
+//			return code;
+			return ClojureHelper.fnHelper(List.of(), ClojureHelper.applyClojureFunction("System/currentTimeMillis"));
 		}
 
 		@Override
@@ -1833,8 +1881,9 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_arg] " + LitString.clojureLit("(str _arg)") + ")";
-			return code;
+//			String code = "(fn [_arg] " + LitString.clojureLit("(str _arg)") + ")";
+//			return code;
+			return "str";
 		}
 
 		@Override
@@ -1891,9 +1940,10 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String code = "(fn [_num _n] "
-					+ LitInteger.clojureLit("(unsigned-bit-shift-right (first _num) (first _n))") + ")";
-			return code;
+//			String code = "(fn [_num _n] "
+//					+ LitInteger.clojureLit("(unsigned-bit-shift-right (first _num) (first _n))") + ")";
+//			return code;
+			return "unsigned-bit-shift-right";
 		}
 
 		@Override
@@ -2043,9 +2093,9 @@ Expression arg = args.get(0);
 					LitString.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".substring",
-									ClojureHelper.getLiteralInnerValue(str),
-									ClojureHelper.getLiteralInnerValue(bgnIndex),
-									ClojureHelper.getLiteralInnerValue(endIndex))));
+									str,
+									bgnIndex,
+									endIndex)));
 			return code;
 		}
 
@@ -2094,7 +2144,7 @@ Expression arg = args.get(0);
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".length",
-									ClojureHelper.getLiteralInnerValue(str))));
+									str)));
 			return code;
 		}
 

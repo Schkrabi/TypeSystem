@@ -21,13 +21,16 @@ public class LitInteropObject extends Literal {
 
 	public static final TypeAtom TypeJavaObject = new TypeAtom(new TypeName("TypeJavaObject"), TypeRepresentation.NATIVE);
 	
+	public final TypeAtom type;
+	
 	/**
 	 * Carried object
 	 */
 	public final Object javaObject;
 
-	public LitInteropObject(Object javaObject) {
+	public LitInteropObject(Object javaObject, TypeAtom type) {
 		this.javaObject = javaObject;
+		this.type = type;
 	}
 
 	@Override
@@ -43,7 +46,7 @@ public class LitInteropObject extends Literal {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return new Pair<Type, Substitution>(TypeJavaObject, Substitution.EMPTY);
+		return new Pair<Type, Substitution>(this.type, Substitution.EMPTY);
 	}
 
 	@Override

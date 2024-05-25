@@ -240,36 +240,12 @@ special_form returns [Expression val]
 	  'let' 
 	  bind_list { var ll = $bind_list.val; }
 	  expr      { var e = $expr.val; }
-	  ')'       {
-					var symbols = new ArrayList<Symbol>();
-					var es = new ArrayList<Expression>();
-					var ts = new ArrayList<Type>();
-					ll.stream().forEach(p -> {
-												symbols.add(p.first);
-												es.add(p.second);
-												ts.add(new TypeVariable(NameGenerator.next()));
-											 });
-					$val = new AbstractionApplication(
-								new Lambda(new Tuple(symbols), new TypeTuple(ts), e),
-								new Tuple(es));
-	            }
+	  ')'       { $val = new Let(e, ll); }
 	| '(' 
 	  'let*' 
 	  bind_list { var ll = $bind_list.val; }
 	  expr      { var e = $expr.val; } 
-	  ')'       {
-					var i = ll.listIterator(ll.size());
-					while(i.hasPrevious()) {
-						velka.util.Pair<Symbol, Expression> p = i.previous();
-						Lambda l = new Lambda(
-									new Tuple(p.first),
-									new TypeTuple(new TypeVariable(NameGenerator.next())),
-									e);
-						e = new AbstractionApplication(l, new Tuple(p.second));
-					}
-					
-					$val = e;
-	            }
+	  ')'       { $val = new Let(e, ll); }
 	| '('
   	  'let-type' 
 	  '('     { var s = new HashSet<String>(); }

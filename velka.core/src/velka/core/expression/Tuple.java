@@ -253,4 +253,9 @@ public class Tuple extends Expression implements Iterable<Expression> {
 		}
 		return new Tuple(l);
 	}
+	
+	/** Creates new instance of an array with elements of the tuple */
+	public Expression[] toArray() {
+		return this.values.toArray(Expression[]::new);
+	}
 }

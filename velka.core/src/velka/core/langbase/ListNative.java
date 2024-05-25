@@ -60,8 +60,8 @@ public class ListNative extends OperatorBank{
 	/**
 	 * Empty list native
 	 */
-	public static final LitComposite EMPTY_LIST_NATIVE = new LitComposite(
-			new LitInteropObject(new LinkedList<Expression>()), TypeAtom.TypeListNative);
+	public static final Expression EMPTY_LIST_NATIVE = 
+			new LitInteropObject(new LinkedList<Expression>(), TypeAtom.TypeListNative);
 
 	/**
 	 * Clojure code for empty list
@@ -97,7 +97,7 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return new LitInteropObject(new LinkedList<Expression>());
+			return new LitInteropObject(new LinkedList<Expression>(), TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -125,7 +125,7 @@ public class ListNative extends OperatorBank{
 			String rest = "_rest";
 			String code = ClojureHelper.fnHelper(Arrays.asList(val, rest),
 					ClojureHelper.applyClojureFunction("lazy-seq", Type.addTypeMetaInfo(
-							ClojureHelper.applyClojureFunction("cons", val, ClojureHelper.getLiteralInnerValue(rest)),
+							ClojureHelper.applyClojureFunction("cons", val, rest),
 							TypeAtom.TypeListNative)));
 			return code;
 		}
@@ -138,8 +138,7 @@ public class ListNative extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression val = args.get(0);
-			LitComposite rest = (LitComposite) args.get(1);
-			LitInteropObject interop = (LitInteropObject) rest.value;
+			LitInteropObject interop = (LitInteropObject) args.get(1);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
 
@@ -147,7 +146,7 @@ public class ListNative extends OperatorBank{
 			ll.add(val);
 			ll.addAll(l);
 
-			return new LitInteropObject(ll);
+			return new LitInteropObject(ll, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -180,7 +179,7 @@ public class ListNative extends OperatorBank{
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					ClojureHelper.clojureIfHelper(
-							ClojureHelper.applyClojureFunction("empty?", ClojureHelper.getLiteralInnerValue(list)),
+							ClojureHelper.applyClojureFunction("empty?", list),
 							LitBoolean.TRUE.toClojureCode(env, typeEnv), LitBoolean.FALSE.toClojureCode(env, typeEnv)));
 			return code;
 		}
@@ -197,11 +196,7 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			LitComposite list = ((LitComposite) args.get(0));
-			if(!(list.value instanceof LitInteropObject)) {
-				System.err.println("err");
-			}
-			LitInteropObject interop = (LitInteropObject) list.value;
+			LitInteropObject interop = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
 
@@ -242,9 +237,9 @@ public class ListNative extends OperatorBank{
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					ClojureHelper.clojureIfHelper(
-							ClojureHelper.applyClojureFunction("empty?", ClojureHelper.getLiteralInnerValue(list)),
+							ClojureHelper.applyClojureFunction("empty?", list),
 							ClojureHelper.errorHelper(ClojureHelper.stringHelper(errorMsg)),
-							ClojureHelper.applyClojureFunction("first", ClojureHelper.getLiteralInnerValue(list))));
+							ClojureHelper.applyClojureFunction("first", list)));
 			return code;
 		}
 
@@ -260,8 +255,8 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			LitComposite list = ((LitComposite) args.get(0));
-			LitInteropObject interop = (LitInteropObject) list.value;
+			
+			LitInteropObject interop = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
 
@@ -303,10 +298,10 @@ public class ListNative extends OperatorBank{
 							ClojureHelper.applyClojureFunction("lazy-seq",
 									ClojureHelper.clojureIfHelper(
 											ClojureHelper.applyClojureFunction("empty?",
-													ClojureHelper.getLiteralInnerValue(list)),
+													list),
 											ClojureHelper.errorHelper(ClojureHelper.stringHelper(errorMsg)),
 											ClojureHelper.applyClojureFunction("rest",
-													ClojureHelper.getLiteralInnerValue(list)))),
+													list))),
 							TypeAtom.TypeListNative));
 			return code;
 		}
@@ -323,8 +318,8 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			LitComposite list = ((LitComposite) args.get(0));
-			LitInteropObject interop = (LitInteropObject) list.value;
+			
+			LitInteropObject interop = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
 
@@ -333,7 +328,7 @@ public class ListNative extends OperatorBank{
 			}
 
 			LinkedList<Expression> ll = new LinkedList<Expression>(l.subList(1, l.size()));
-			return new LitComposite(new LitInteropObject(ll), TypeAtom.TypeListNative);
+			return new LitInteropObject(ll, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -374,7 +369,7 @@ public class ListNative extends OperatorBank{
 											ClojureHelper.applyClojureFunction("map",
 													ClojureHelper.fnHelper(Arrays.asList(arg),
 															ClojureHelper.applyVelkaFunction(fn, arg)),
-													ClojureHelper.getLiteralInnerValue(list))),
+													list)),
 									TypeAtom.TypeListNative));
 			return code;
 		}
@@ -392,8 +387,7 @@ public class ListNative extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression f = args.get(0);
-			LitComposite list = ((LitComposite) args.get(1));
-			LitInteropObject interop = (LitInteropObject) list.value;
+			LitInteropObject interop = (LitInteropObject) args.get(1);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
 
@@ -405,7 +399,7 @@ public class ListNative extends OperatorBank{
 				agg.add(res);
 			}
 
-			return new LitComposite(new LitInteropObject(agg), TypeAtom.TypeListNative);
+			return new LitInteropObject(agg, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -454,8 +448,8 @@ public class ListNative extends OperatorBank{
 											ClojureHelper.applyClojureFunction("map",
 													ClojureHelper.fnHelper(Arrays.asList(arg1, arg2),
 															ClojureHelper.applyVelkaFunction(fn, arg1, arg2)),
-													ClojureHelper.getLiteralInnerValue(list1),
-													ClojureHelper.getLiteralInnerValue(list2))),
+													list1,
+													list2)),
 									TypeAtom.TypeListNative));
 			return code;
 		}
@@ -473,12 +467,12 @@ public class ListNative extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression f = args.get(0);
+			var iOp1 = (LitInteropObject) args.get(1);
+			var iOp2 = (LitInteropObject) args.get(2);
+			
+			LinkedList<Expression> l1 = (LinkedList<Expression>) iOp1.javaObject;
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l1 = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(1)).value).javaObject);
-			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l2 = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(2)).value).javaObject);
+			LinkedList<Expression> l2 = (LinkedList<Expression>) iOp2.javaObject;
 
 			LinkedList<Expression> agg = new LinkedList<Expression>();
 
@@ -493,7 +487,7 @@ public class ListNative extends OperatorBank{
 				agg.add(ret);
 			}
 
-			return new LitComposite(new LitInteropObject(agg), TypeAtom.TypeListNative);
+			return new LitInteropObject(agg, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -534,7 +528,7 @@ public class ListNative extends OperatorBank{
 					ClojureHelper.applyClojureFunction("reduce",
 							ClojureHelper.fnHelper(Arrays.asList(arg1, arg2),
 									ClojureHelper.applyVelkaFunction(fn, arg1, arg2)),
-							terminator, ClojureHelper.getLiteralInnerValue(list)));
+							terminator, list));
 			return code;
 		}
 
@@ -552,9 +546,9 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Expression f = args.get(0);
 			Expression term = args.get(1);
+			var iOp = (LitInteropObject)args.get(2);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(2)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
 
 			for (Expression e : l) {
 				AbstractionApplication appl = new AbstractionApplication(f, new Tuple(term, e));
@@ -599,7 +593,7 @@ public class ListNative extends OperatorBank{
 					LitComposite.clojureValueToClojureLiteral(
 							ClojureHelper.applyClojureFunction("lazy-seq",
 									ClojureHelper.applyClojureFunction("concat",
-											ClojureHelper.getLiteralInnerValue(list), Type
+											list, Type
 													.addTypeMetaInfo("'(" + element + ")", TypeAtom.TypeListNative))),
 							TypeAtom.TypeListNative));
 			return code;
@@ -617,15 +611,15 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
 			Expression e = args.get(1);
 
 			LinkedList<Expression> ll = new LinkedList<Expression>(l);
 			ll.add(e);
 
-			return new LitComposite(new LitInteropObject(ll), TypeAtom.TypeListNative);
+			return new LitInteropObject(ll, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -656,8 +650,8 @@ public class ListNative extends OperatorBank{
 					.fnHelper(Arrays.asList(list),
 							LitComposite.clojureValueToClojureLiteral(
 									ClojureHelper.applyClojureFunction("java.util.ArrayList.",
-											ClojureHelper.getLiteralInnerValue(list)),
-									JavaArrayList.TypeListJavaArray));
+											list),
+									TypeAtom.TypeListJavaArray));
 			return code;
 		}
 
@@ -673,17 +667,17 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
 			ArrayList<Expression> a = new ArrayList<Expression>(l);
 
-			return new LitComposite(new LitInteropObject(a), JavaArrayList.TypeListJavaArray);
+			return new LitInteropObject(a, TypeAtom.TypeListJavaArray);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), JavaArrayList.TypeListJavaArray);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeListJavaArray);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -705,8 +699,8 @@ public class ListNative extends OperatorBank{
 					.fnHelper(Arrays.asList(list),
 							LitComposite.clojureValueToClojureLiteral(
 									ClojureHelper.applyClojureFunction("java.util.LinkedList.",
-											ClojureHelper.getLiteralInnerValue(list)),
-									JavaArrayList.TypeListJavaArray));
+											list),
+									TypeAtom.TypeListJavaLinked));
 			return code;
 		}
 
@@ -722,17 +716,17 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
 			LinkedList<Expression> a = new LinkedList<Expression>(l);
 
-			return new LitComposite(new LitInteropObject(a), JavaLinkedList.TypeListJavaLinked);
+			return new LitInteropObject(a, TypeAtom.TypeListJavaLinked);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), JavaLinkedList.TypeListJavaLinked);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeListJavaLinked);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -767,7 +761,7 @@ public class ListNative extends OperatorBank{
 							ClojureHelper.applyClojureFunction("some",
 									ClojureHelper.fnHelper(Arrays.asList(arg),
 											ClojureHelper.applyClojureFunction("=", arg, element)),
-									ClojureHelper.getLiteralInnerValue(list)))));
+									list))));
 			return code;
 		}
 
@@ -783,9 +777,9 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
 			Expression element = args.get(1);
 
 			if (l.contains(element)) {
@@ -825,9 +819,9 @@ public class ListNative extends OperatorBank{
 											ClojureHelper.applyClojureFunction("lazy-seq",
 													ClojureHelper.applyClojureFunction("filter",
 															ClojureHelper.fnHelper(Arrays.asList(arg),
-																	ClojureHelper.getLiteralInnerValue(ClojureHelper
-																			.applyVelkaFunction(pred, arg))),
-															ClojureHelper.getLiteralInnerValue(list))),
+																	ClojureHelper
+																			.applyVelkaFunction(pred, arg)),
+															list)),
 											TypeAtom.TypeListNative));
 			return code;
 		}
@@ -844,9 +838,9 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
 			Expression pred = args.get(1);
 
 			LinkedList<Expression> aux = new LinkedList<Expression>();
@@ -859,7 +853,7 @@ public class ListNative extends OperatorBank{
 				}
 			}
 
-			return new LitComposite(new LitInteropObject(aux), TypeAtom.TypeListNative);
+			return new LitInteropObject(aux, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -898,7 +892,7 @@ public class ListNative extends OperatorBank{
 			String list = "_list";
 			String index = "_index";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list, index), ClojureHelper.applyClojureFunction("nth",
-					ClojureHelper.getLiteralInnerValue(list), ClojureHelper.getLiteralInnerValue(index)));
+					list, index));
 
 			return code;
 		}
@@ -915,9 +909,9 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
 			LitInteger index = (LitInteger) args.get(1);
 
 			if (index.value >= l.size()) {
@@ -962,7 +956,7 @@ public class ListNative extends OperatorBank{
 																			LitInteger.clojureLit(
 																					arg))),
 															ClojureHelper.applyClojureFunction("range",
-																	ClojureHelper.getLiteralInnerValue(n)))),
+																	n))),
 											TypeAtom.TypeListNative));
 
 			return code;
@@ -993,7 +987,7 @@ public class ListNative extends OperatorBank{
 				l.add(expr);
 			}
 
-			return new LitComposite(new LitInteropObject(l), TypeAtom.TypeListNative);
+			return new LitInteropObject(l, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -1031,7 +1025,7 @@ public class ListNative extends OperatorBank{
 															ClojureHelper.fnHelper(Arrays.asList(arg),
 																	ClojureHelper.applyClojureFunction("not=", arg,
 																			element)),
-															ClojureHelper.getLiteralInnerValue(list))),
+															list)),
 											TypeAtom.TypeListNative));
 			return code;
 		}
@@ -1048,15 +1042,15 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
 			Expression e = args.get(1);
 
 			LinkedList<Expression> ll = new LinkedList<Expression>(l);
 			ll.remove(e);
 
-			return new LitComposite(new LitInteropObject(ll), TypeAtom.TypeListNative);
+			return new LitInteropObject(ll, TypeAtom.TypeListNative);
 		}
 
 		/**
@@ -1085,7 +1079,7 @@ public class ListNative extends OperatorBank{
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list), LitInteger.clojureLit(
-					ClojureHelper.applyClojureFunction("count", ClojureHelper.getLiteralInnerValue(list))));
+					ClojureHelper.applyClojureFunction("count", list)));
 
 			return code;
 		}
@@ -1102,9 +1096,9 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
 
 			return new LitInteger(l.size());
 		}
@@ -1132,7 +1126,7 @@ public class ListNative extends OperatorBank{
 			String list2 = "_list2";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list1, list2), LitComposite.clojureValueToClojureLiteral(
 					ClojureHelper.applyClojureFunction("lazy-seq", ClojureHelper.applyClojureFunction("concat",
-							ClojureHelper.getLiteralInnerValue(list1), ClojureHelper.getLiteralInnerValue(list2))),
+							list1, list2)),
 					TypeAtom.TypeListNative));
 			return code;
 		}
@@ -1149,17 +1143,17 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var iOp1 = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l0 = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l0 = (LinkedList<Expression>) iOp1.javaObject;
+			var iOp2 = (LitInteropObject)args.get(1);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l1 = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(1)).value).javaObject);
+			LinkedList<Expression> l1 = (LinkedList<Expression>) iOp2.javaObject;
 
 			LinkedList<Expression> aux = new LinkedList<Expression>(l0);
 			aux.addAll(l1);
 
-			return new LitComposite(new LitInteropObject(aux), TypeAtom.TypeListNative);
+			return new LitInteropObject(aux, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -1185,7 +1179,7 @@ public class ListNative extends OperatorBank{
 			String list = "list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					LitComposite.clojureValueToClojureLiteral(
-							ClojureHelper.applyClojureFunction("reverse", ClojureHelper.getLiteralInnerValue(list)),
+							ClojureHelper.applyClojureFunction("reverse", list),
 							TypeAtom.TypeListNative));
 			return code;
 		}
@@ -1202,16 +1196,16 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
 			ListIterator<Expression> li = l.listIterator(l.size());
 			List<Expression> r = new LinkedList<Expression>();
 			while (li.hasPrevious()) {
 				r.add(li.previous());
 			}
 
-			return new LitComposite(new LitInteropObject(r), TypeAtom.TypeListNative);
+			return new LitInteropObject(r, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -1240,9 +1234,8 @@ public class ListNative extends OperatorBank{
 			String code = ClojureHelper.fnHelper(Arrays.asList(list, pred),
 					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction("every?",
 							ClojureHelper.fnHelper(Arrays.asList(pred_arg),
-									ClojureHelper
-											.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
-							ClojureHelper.getLiteralInnerValue(list))));
+									ClojureHelper.applyVelkaFunction(pred, pred_arg)),
+							list)));
 			return code;
 		}
 
@@ -1258,9 +1251,9 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
 			Expression pred = args.get(1);
 
 			Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(expr -> {
@@ -1299,9 +1292,9 @@ public class ListNative extends OperatorBank{
 	 * @param t converted tuple
 	 * @return LitComposite object containing native list
 	 */
-	public static LitComposite tupleToListNative(Tuple t) {
-		return new LitComposite(
-				new LitInteropObject(new LinkedList<Expression>(t.stream().collect(Collectors.toList()))),
+	public static Expression tupleToListNative(Tuple t) {
+		return 
+				new LitInteropObject(new LinkedList<Expression>(t.stream().collect(Collectors.toList())),
 				TypeAtom.TypeListNative);
 	}
 
@@ -1313,7 +1306,7 @@ public class ListNative extends OperatorBank{
 	 */
 	public static Expression makeListNativeExpression(List<Expression> l) {
 		LinkedList<Expression> ll = new LinkedList<Expression>(l);
-		return new LitComposite(new LitInteropObject(ll), TypeAtom.TypeListNative);
+		return new LitInteropObject(ll, TypeAtom.TypeListNative);
 	}
 
 	/**
@@ -1322,7 +1315,7 @@ public class ListNative extends OperatorBank{
 	 * @param exprs expression
 	 * @return list native literal (LitComposite instance)
 	 */
-	public static Expression makeListNativeExpression(Expression... exprs) {
+	public static Expression of(Expression... exprs) {
 		return makeListNativeExpression(Arrays.asList(exprs));
 	}
 
@@ -1358,6 +1351,11 @@ public class ListNative extends OperatorBank{
 		sb.append(")");
 		return sb.toString();
 	}
+	
+	public static String listNativeClojure(String clojureCode) {
+		String code = ClojureHelper.applyClojureFunction("lazy-seq", clojureCode);
+		return LitComposite.clojureValueToClojureLiteral(code, TypeAtom.TypeListNative);
+	}
 
 	/**
 	 * Creates code for ListNative value in clojure
@@ -1365,11 +1363,8 @@ public class ListNative extends OperatorBank{
 	 * @return code for list native
 	 */
 	public static String listNativeClojure(Collection<String> members) {
-		String code = ClojureHelper.applyClojureFunction(
-				"lazy-seq",
-				ClojureHelper.applyClojureFunction("list", members));
-		
-		return LitComposite.clojureValueToClojureLiteral(code, TypeAtom.TypeListNative);
+		String code =  listNativeClojure(ClojureHelper.applyClojureFunction("list", members));
+		return code;
 	}
 	
 	/**

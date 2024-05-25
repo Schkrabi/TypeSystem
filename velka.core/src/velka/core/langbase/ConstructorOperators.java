@@ -3,6 +3,7 @@ package velka.core.langbase;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
 
 import velka.core.abstraction.Constructor;
 import velka.core.exceptions.DuplicateTypeDefinitionException;
@@ -12,6 +13,7 @@ import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
+import velka.core.literal.LitComposite;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
@@ -22,6 +24,7 @@ import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 import velka.util.annotations.Description;
 import velka.util.annotations.Header;
@@ -67,7 +70,7 @@ public final class ConstructorOperators extends OperatorBank {
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] (identity _x))";
+			return "identity";
 		}
 	
 		@Override
@@ -129,7 +132,7 @@ public final class ConstructorOperators extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitString arg = (LitString) args.get(0);
-			return arg;
+			return new LitComposite(arg, TypeAtom.TypeIntString);
 		}
 	
 		@Override
@@ -145,7 +148,8 @@ public final class ConstructorOperators extends OperatorBank {
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "identity";
+			String arg = "_arg";
+			return ClojureHelper.fnHelper(List.of(arg), LitComposite.clojureLit(TypeAtom.TypeIntString, arg));
 		}
 	
 		@Override
@@ -165,7 +169,7 @@ public final class ConstructorOperators extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			LitString arg = (LitString) args.get(0);
-			return arg;
+			return new LitComposite(arg, TypeAtom.TypeIntRoman);
 		}
 	
 		@Override
@@ -181,7 +185,8 @@ public final class ConstructorOperators extends OperatorBank {
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "identity";
+			String arg = "_arg";
+			return ClojureHelper.fnHelper(List.of(arg), LitComposite.clojureLit(TypeAtom.TypeIntRoman, arg));
 		}
 	
 		@Override
@@ -217,7 +222,7 @@ public final class ConstructorOperators extends OperatorBank {
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] (identity _x))";
+			return "identity";
 		}
 	
 		@Override
@@ -257,7 +262,7 @@ public final class ConstructorOperators extends OperatorBank {
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] (identity _x))";
+			return "identity";
 		}
 	
 		@Override
@@ -296,7 +301,7 @@ public final class ConstructorOperators extends OperatorBank {
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] (identity _x))";
+			return "identity";
 		}
 	
 		@Override
@@ -336,7 +341,7 @@ public final class ConstructorOperators extends OperatorBank {
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] (identity _x))";
+			return "identity";
 		}
 	
 		@Override
@@ -374,7 +379,7 @@ public final class ConstructorOperators extends OperatorBank {
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] (identity _x))";
+			return "identity";
 		}
 	
 		@Override
@@ -413,7 +418,7 @@ public final class ConstructorOperators extends OperatorBank {
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] (identity _x))";
+			return "identity";
 		}
 	
 		@Override

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
 
@@ -29,8 +30,6 @@ import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
-import velka.types.TypeName;
-import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
@@ -67,21 +66,6 @@ public class JavaLinkedList extends OperatorBank {
 	 */
 	public static final String NAMESPACE = "velka.clojure.linkedList";
 
-	/**
-	 * Type of java linked list in velka
-	 */
-	public final static TypeAtom TypeListJavaLinked = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaLinked"));
-	
-	/**
-	 * Type name for list iterator
-	 */
-	public final static TypeName TypeNameIterator = new TypeName("LinkedListIterator");
-	
-	/**
-	 * Type for list iterator
-	 */
-	public final static TypeAtom TypeIterator = new TypeAtom(TypeNameIterator, TypeRepresentation.NATIVE);
-
 	private static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
 	public static final Symbol constructorSymbol_out = new Symbol("construct-linked-list");
 
@@ -104,13 +88,13 @@ public class JavaLinkedList extends OperatorBank {
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Expression e = new LitInteropObject(new LinkedList<Object>());
+			Expression e = new LitInteropObject(new LinkedList<Object>(), TypeAtom.TypeListJavaLinked);
 			return e;
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(TypeTuple.EMPTY_TUPLE, JavaLinkedList.TypeListJavaLinked);
+			TypeArrow type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeListJavaLinked);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -144,7 +128,7 @@ public class JavaLinkedList extends OperatorBank {
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".add",
-									ClojureHelper.getLiteralInnerValue(list),
+									list,
 									e)));
 			return code;
 		}
@@ -152,9 +136,9 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 			Expression e = args.get(1);
 
 			@SuppressWarnings("unchecked")
@@ -167,7 +151,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A),
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -213,8 +197,8 @@ public class JavaLinkedList extends OperatorBank {
 									ClojureHelper.clojureVectorHelper(
 											ClojureHelper.applyClojureFunction(
 													".add",
-													ClojureHelper.getLiteralInnerValue(list),
-													ClojureHelper.getLiteralInnerValue(index),
+													list,
+													index,
 													e),
 											Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv)))));
 			return code;
@@ -223,9 +207,9 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			LitInteger index = (LitInteger) args.get(1);
 
@@ -241,7 +225,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
 					TypeTuple.EMPTY_TUPLE);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -283,7 +267,7 @@ public class JavaLinkedList extends OperatorBank {
 			String collection = "_collection";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list, collection),
 					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction(".addAll",
-							ClojureHelper.getLiteralInnerValue(list), ClojureHelper.getLiteralInnerValue(collection))));
+							list, collection)));
 
 			return code;
 		}
@@ -291,12 +275,12 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
-			LitComposite lc2 = (LitComposite) args.get(1);
-			LitInteropObject collection = (LitInteropObject) lc2.value;
+			
+			LitInteropObject collection = (LitInteropObject) args.get(1);
 
 			@SuppressWarnings("unchecked")
 			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
@@ -313,7 +297,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.TypeListJavaLinked),
+					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -354,7 +338,7 @@ public class JavaLinkedList extends OperatorBank {
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".contains",
-									ClojureHelper.getLiteralInnerValue(list),
+									list,
 									object)));
 			return code;
 		}
@@ -362,9 +346,9 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			@SuppressWarnings("unchecked")
 			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
@@ -381,7 +365,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A),
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -424,20 +408,20 @@ public class JavaLinkedList extends OperatorBank {
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".containsAll",
-									ClojureHelper.getLiteralInnerValue(list),
-									ClojureHelper.getLiteralInnerValue(collection))));
+									list,
+									collection)));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
-			LitComposite lc2 = (LitComposite) args.get(1);
-			LitInteropObject collection = (LitInteropObject) lc2.value;
+			
+			LitInteropObject collection = (LitInteropObject) args.get(1);
 
 			@SuppressWarnings("unchecked")
 			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
@@ -454,7 +438,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.TypeListJavaLinked),
+					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -496,8 +480,8 @@ public class JavaLinkedList extends OperatorBank {
 					Arrays.asList(list, index),
 					ClojureHelper.applyClojureFunction(
 							".get",
-							ClojureHelper.getLiteralInnerValue(list),
-							ClojureHelper.getLiteralInnerValue(index)));
+							list,
+							index));
 			
 			return code;
 		}
@@ -505,9 +489,9 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			LitInteger index = (LitInteger) args.get(1);
 
@@ -520,7 +504,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative), A);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -562,7 +546,7 @@ public class JavaLinkedList extends OperatorBank {
 					LitInteger.clojureLit(
 						ClojureHelper.applyClojureFunction(
 								".indexOf",
-								ClojureHelper.getLiteralInnerValue(list),
+								list,
 								object)));
 			return code;
 		}
@@ -570,9 +554,9 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			Expression e = args.get(1);
 
@@ -587,7 +571,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -626,16 +610,16 @@ public class JavaLinkedList extends OperatorBank {
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".isEmpty",
-									ClojureHelper.getLiteralInnerValue(list))));
+									list)));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) list.javaObject;
@@ -648,7 +632,7 @@ public class JavaLinkedList extends OperatorBank {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked), TypeAtom.TypeBoolNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -690,7 +674,7 @@ public class JavaLinkedList extends OperatorBank {
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".lastIndexOf",
-									ClojureHelper.getLiteralInnerValue(list),
+									list,
 									object)));
 			return code;
 		}
@@ -698,9 +682,9 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			Expression e = args.get(1);
 
@@ -715,7 +699,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -759,7 +743,7 @@ public class JavaLinkedList extends OperatorBank {
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".remove",
-									ClojureHelper.getLiteralInnerValue(list),
+									list,
 									o)));
 			return code;
 		}
@@ -767,9 +751,9 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			Expression o = args.get(1);
 
@@ -785,7 +769,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, A),
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A),
 					TypeAtom.TypeBoolNative);
 			;
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -834,8 +818,8 @@ public class JavaLinkedList extends OperatorBank {
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".removeAll",
-									ClojureHelper.getLiteralInnerValue(list),
-									ClojureHelper.getLiteralInnerValue(c))));
+									list,
+									c)));
 			return code;
 		}
 
@@ -843,14 +827,14 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc2 = (LitComposite) args.get(1);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject ec = (LitInteropObject) lc2.value;
+			LitInteropObject ec = (LitInteropObject) args.get(1);
 
 			@SuppressWarnings("rawtypes")
 			LinkedList al = (LinkedList) list.javaObject;
@@ -866,7 +850,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.TypeListJavaLinked),
+					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -912,8 +896,8 @@ public class JavaLinkedList extends OperatorBank {
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".retainAll",
-									ClojureHelper.getLiteralInnerValue(list),
-									ClojureHelper.getLiteralInnerValue(c))));
+									list,
+									c)));
 			
 			return code;
 		}
@@ -922,14 +906,14 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc2 = (LitComposite) args.get(1);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject ec = (LitInteropObject) lc2.value;
+			LitInteropObject ec = (LitInteropObject) args.get(1);
 
 			@SuppressWarnings("rawtypes")
 			LinkedList al = (LinkedList) list.javaObject;
@@ -945,7 +929,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaLinkedList.TypeListJavaLinked, JavaLinkedList.TypeListJavaLinked),
+					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -990,8 +974,8 @@ public class JavaLinkedList extends OperatorBank {
 					Arrays.asList(list, index, element),
 					ClojureHelper.applyClojureFunction(
 							".set",
-							ClojureHelper.getLiteralInnerValue(list),
-							ClojureHelper.getLiteralInnerValue(index),
+							list,
+							index,
 							element));
 			return code;
 		}
@@ -1000,9 +984,9 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			LitInteger index = (LitInteger) args.get(1);
 			Expression element = args.get(2);
@@ -1015,7 +999,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
 					A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -1056,16 +1040,16 @@ public class JavaLinkedList extends OperatorBank {
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".size",
-									ClojureHelper.getLiteralInnerValue(list))));
+									list)));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
@@ -1077,7 +1061,7 @@ public class JavaLinkedList extends OperatorBank {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked), TypeAtom.TypeIntNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1123,19 +1107,19 @@ public class JavaLinkedList extends OperatorBank {
 									"java.util.LinkedList.",
 									ClojureHelper.applyClojureFunction(
 											".subList",
-											ClojureHelper.getLiteralInnerValue(list),
-											ClojureHelper.getLiteralInnerValue(from),
-											ClojureHelper.getLiteralInnerValue(to))),
-							JavaLinkedList.TypeListJavaLinked));
+											list,
+											from,
+											to)),
+							TypeAtom.TypeListJavaLinked));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			LitInteger from = (LitInteger) args.get(1);
 			LitInteger to = (LitInteger) args.get(2);
@@ -1145,14 +1129,14 @@ public class JavaLinkedList extends OperatorBank {
 
 			LinkedList<Expression> sublist = new LinkedList<Expression>(al.subList((int) from.value, (int) to.value));
 
-			return new LitComposite(new LitInteropObject(sublist), JavaLinkedList.TypeListJavaLinked);
+			return new LitInteropObject(sublist, TypeAtom.TypeListJavaLinked);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaLinkedList.TypeListJavaLinked, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					JavaLinkedList.TypeListJavaLinked);
+					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+					TypeAtom.TypeListJavaLinked);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1203,17 +1187,17 @@ public class JavaLinkedList extends OperatorBank {
 													ClojureHelper.applyVelkaFunction(
 															abst,
 															e)),
-											ClojureHelper.getLiteralInnerValue(list))),
-							JavaLinkedList.TypeListJavaLinked));
+											list)),
+							TypeAtom.TypeListJavaLinked));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
 			Abstraction abst = (Abstraction) args.get(1);
 
@@ -1233,7 +1217,7 @@ public class JavaLinkedList extends OperatorBank {
 				throw re;
 			}
 
-			return new LitComposite(new LitInteropObject(rslt), JavaLinkedList.TypeListJavaLinked);
+			return new LitInteropObject(rslt, TypeAtom.TypeListJavaLinked);
 		}
 		
 		private TypeVariable A = new TypeVariable(NameGenerator.next());
@@ -1242,8 +1226,8 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(
-					new TypeTuple(JavaLinkedList.TypeListJavaLinked, new TypeArrow(new TypeTuple(A), B)),
-					JavaLinkedList.TypeListJavaLinked);
+					new TypeTuple(TypeAtom.TypeListJavaLinked, new TypeArrow(new TypeTuple(A), B)),
+					TypeAtom.TypeListJavaLinked);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1299,21 +1283,21 @@ public class JavaLinkedList extends OperatorBank {
 															abst,
 															e1,
 															e2)),
-											ClojureHelper.getLiteralInnerValue(list1),
-											ClojureHelper.getLiteralInnerValue(list2))),
-							JavaLinkedList.TypeListJavaLinked));
+											list1,
+											list2)),
+							TypeAtom.TypeListJavaLinked));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
-			LitComposite lc = (LitComposite) args.get(0);
+			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) lc.value;
+			LitInteropObject list = (LitInteropObject) args.get(0);
 
-			LitComposite lc2 = (LitComposite) args.get(1);
-			LitInteropObject list2 = (LitInteropObject) lc2.value;
+			
+			LitInteropObject list2 = (LitInteropObject) args.get(1);
 
 			Abstraction abst = (Abstraction) args.get(2);
 
@@ -1335,7 +1319,7 @@ public class JavaLinkedList extends OperatorBank {
 				rslt.add(appl.interpret(env, typeEnv));
 			}
 
-			return new LitComposite(new LitInteropObject(rslt), JavaLinkedList.TypeListJavaLinked);
+			return new LitInteropObject(rslt, TypeAtom.TypeListJavaLinked);
 		}
 
 		private TypeVariable A = new TypeVariable(NameGenerator.next());
@@ -1344,9 +1328,9 @@ public class JavaLinkedList extends OperatorBank {
 		
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked,
-					JavaLinkedList.TypeListJavaLinked, new TypeArrow(new TypeTuple(A, B), C)),
-					JavaLinkedList.TypeListJavaLinked);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked,
+					TypeAtom.TypeListJavaLinked, new TypeArrow(new TypeTuple(A, B), C)),
+					TypeAtom.TypeListJavaLinked);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1396,7 +1380,7 @@ public class JavaLinkedList extends OperatorBank {
 											agg,
 											element)),
 							term,
-							ClojureHelper.getLiteralInnerValue(list)));
+							list));
 			return code;
 		}
 
@@ -1404,8 +1388,7 @@ public class JavaLinkedList extends OperatorBank {
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Abstraction abst = (Abstraction) args.get(0);
 			Expression terminator = args.get(1);
-			LitComposite lc = (LitComposite) args.get(2);
-			LitInteropObject io = (LitInteropObject) lc.value;
+			LitInteropObject io = (LitInteropObject) args.get(2);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> list = (LinkedList<Expression>) io.javaObject;
 
@@ -1432,7 +1415,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(
-					new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, JavaLinkedList.TypeListJavaLinked)), A);
+					new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, TypeAtom.TypeListJavaLinked)), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1485,7 +1468,7 @@ public class JavaLinkedList extends OperatorBank {
 							term,
 							ClojureHelper.applyClojureFunction(
 									"reverse",
-									ClojureHelper.getLiteralInnerValue(list))));
+									list)));
 			return code;
 		}
 
@@ -1493,8 +1476,7 @@ public class JavaLinkedList extends OperatorBank {
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Abstraction abst = (Abstraction) args.get(0);
 			Expression terminator = args.get(1);
-			LitComposite lc = (LitComposite) args.get(2);
-			LitInteropObject io = (LitInteropObject) lc.value;
+			LitInteropObject io = (LitInteropObject) args.get(2);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> list = (LinkedList<Expression>) io.javaObject;
 
@@ -1516,7 +1498,7 @@ public class JavaLinkedList extends OperatorBank {
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(
-					new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, JavaLinkedList.TypeListJavaLinked)), A);
+					new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, TypeAtom.TypeListJavaLinked)), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1549,29 +1531,26 @@ public class JavaLinkedList extends OperatorBank {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list),
-					LitComposite.clojureValueToClojureLiteral(
-							ClojureHelper.applyClojureFunction(
+						ClojureHelper.applyClojureFunction(
 									"java.util.ArrayList.",
-									ClojureHelper.getLiteralInnerValue(list)),
-							JavaArrayList.TypeListJavaArray));
+									list));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			LitComposite lc = (LitComposite) args.get(0);
-			LitInteropObject lio = (LitInteropObject) lc.value;
+			
+			LitInteropObject lio = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) lio.javaObject;
 
-			return new LitComposite(new LitInteropObject(new ArrayList<Expression>(l)),
-					JavaArrayList.TypeListJavaArray);
+			return new LitInteropObject(new ArrayList<Expression>(l), TypeAtom.TypeListJavaArray);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked),
-					JavaArrayList.TypeListJavaArray);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked),
+					TypeAtom.TypeListJavaArray);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1605,26 +1584,26 @@ public class JavaLinkedList extends OperatorBank {
 					LitComposite.clojureValueToClojureLiteral(
 							ClojureHelper.applyClojureFunction(
 									"seq", 
-									ClojureHelper.getLiteralInnerValue(list)),
+									list),
 							TypeAtom.TypeListNative));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			LitComposite lc = (LitComposite) args.get(0);
-			LitInteropObject lio = (LitInteropObject) lc.value;
+			
+			LitInteropObject lio = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) lio.javaObject;
 
 			LinkedList<Expression> ll = new LinkedList<Expression>(l);
 
-			return new LitComposite(new LitInteropObject(ll), TypeAtom.TypeListNative);
+			return new LitInteropObject(ll, TypeAtom.TypeListJavaLinked);
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(JavaLinkedList.TypeListJavaLinked), TypeAtom.TypeListNative);
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked), TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
@@ -1659,9 +1638,8 @@ public class JavaLinkedList extends OperatorBank {
 			String code = ClojureHelper.fnHelper(Arrays.asList(list, pred),
 					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction("every?",
 							ClojureHelper.fnHelper(Arrays.asList(pred_arg),
-									ClojureHelper
-											.getLiteralInnerValue(ClojureHelper.applyVelkaFunction(pred, pred_arg))),
-							ClojureHelper.getLiteralInnerValue(list))));
+									ClojureHelper.applyVelkaFunction(pred, pred_arg)),
+							list)));
 			return code;
 		}
 
@@ -1677,9 +1655,9 @@ public class JavaLinkedList extends OperatorBank {
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			var lio = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) (((LitInteropObject) ((LitComposite) args
-					.get(0)).value).javaObject);
+			LinkedList<Expression> l = (LinkedList<Expression>) lio.javaObject;
 			Expression pred = args.get(1);
 
 			Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(expr -> {
@@ -1694,7 +1672,7 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeListJavaLinked, new TypeArrow(
+					new TypeTuple(TypeAtom.TypeListJavaLinked, new TypeArrow(
 							new TypeTuple(new TypeVariable(NameGenerator.next())), TypeAtom.TypeBoolNative)),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -1720,7 +1698,7 @@ public class JavaLinkedList extends OperatorBank {
 					LitString.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".toString",
-									ClojureHelper.getLiteralInnerValue(list))));
+									list)));
 			return code;
 		}
 
@@ -1732,15 +1710,15 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite list_lc = (LitComposite)args.get(0);
-			LitInteropObject list_io = (LitInteropObject)list_lc.value;
+			
+			LitInteropObject list_io = (LitInteropObject)args.get(0);
 			LinkedList<?> list = (LinkedList<?>)list_io.javaObject;
 			return new LitString(list.toString());
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(new TypeTuple(TypeListJavaLinked),
+			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked),
 					TypeAtom.TypeStringNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1754,7 +1732,6 @@ public class JavaLinkedList extends OperatorBank {
 	
 	public static final Symbol listIteratorSymbol = new Symbol("list-iterator", NAMESPACE);
 	public static final Symbol listIteratorSymbol_out = new Symbol("java-linked-list-iterator");
-	
 	@VelkaOperator
 	@Description("Returns a list-iterator of the elements in this list (in proper sequence), starting at the specified position in the list.") 
 	@Example("(define l (construct List:JavaLinked))\n"
@@ -1762,48 +1739,44 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(java-linked-list-iterator l 0)") 
 	@Syntax("(java-linked-list-iterator <list> <index>)")
 	public static final Operator listIterator = new Operator() {
-
+	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			String list = "_list";
 			String index = "_index";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list, index),
-					LitComposite.clojureLit(
-							TypeIterator,
 							ClojureHelper.applyClojureFunction(
 									".listIterator",
-									ClojureHelper.getLiteralInnerValue(list),
-									ClojureHelper.getLiteralInnerValue(index))));
+									list,
+									index));
 			return code;
 		}
-
+	
 		@Override
 		public Symbol getClojureSymbol() {
 			return listIteratorSymbol;
 		}
-
+	
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite list_lc = (LitComposite)args.get(0);
-			LitInteropObject list_io = (LitInteropObject)list_lc.value;
+			
+			LitInteropObject list_io = (LitInteropObject)args.get(0);
 			LinkedList<?> list = (LinkedList<?>)list_io.javaObject;
 			
 			LitInteger index = (LitInteger)args.get(1);
 			
 			ListIterator<?> li = list.listIterator((int) index.value);
 			
-			return new LitComposite(
-					new LitInteropObject(li),
-					TypeIterator);
+			return new LitInteropObject(li, TypeAtom.TypeListIterator);
 		}
-
+	
 		@Override
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			Type type = new TypeArrow(
-					new TypeTuple(TypeListJavaLinked, TypeAtom.TypeIntNative),
-					TypeIterator);
+					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative),
+					TypeAtom.TypeListIterator);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
@@ -1813,520 +1786,6 @@ public class JavaLinkedList extends OperatorBank {
 		}
 	};
 	
-	public static final Symbol iteratorAddSymbol = new Symbol("iterator-add", NAMESPACE);
-	public static final Symbol iteratorAddSymbol_out = new Symbol("linked-list-iterator-add");
-	
-	@VelkaOperator
-	@Description("Inserts the specified element into the list (optional operation).") 
-	@Example("(define l (construct List:JavaLinked))\n"
-					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-					+ "(define it (java-linked-list-iterator l 0))\n"
-					+ "(linked-list-iterator-add it 42)") 
-	@Syntax("(linked-list-iterator-add <list-iterator> <element>)")
-	public static final Operator iteratorAdd = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String listIt = "_list-iterator";
-			String element = "_element";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(listIt, element),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".add",
-											ClojureHelper.getLiteralInnerValue(listIt),
-											element),
-									listIt)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return iteratorAddSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
-				throws AppendableException {
-			LitComposite it_lc = (LitComposite)args.get(0);
-			LitInteropObject it_io = (LitInteropObject)it_lc.value;
-			@SuppressWarnings("unchecked")
-			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
-			
-			Expression e = args.get(1);
-			
-			it.add(e);
-			
-			return it_lc;
-		}
-		
-		
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(
-					new TypeTuple(TypeIterator, A),
-					TypeIterator);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return iteratorAddSymbol_out.toString();
-		}
-	};
-	
-	public static final Symbol iteratorHasNextSymbol = new Symbol("has-next", NAMESPACE);
-	public static final Symbol iteratorHasNextSymbol_out = new Symbol("linked-list-iterator-has-next");
-	
-	@VelkaOperator
-	@Description("Returns true if this list iterator has more elements when traversing the list in the forward direction.") 
-	@Example("(define l (construct List:JavaLinked))\n"
-					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-					+ "(define it (java-linked-list-iterator l 0))\n"
-					+ "(linked-list-iterator-has-next it)") 
-	@Syntax("(linked-list-iterator-has-next <list iterator>)")
-	public static final Operator iteratorHasNext = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String it = "_iterator";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(it),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".hasNext",
-									ClojureHelper.getLiteralInnerValue(it))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return iteratorHasNextSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
-				throws AppendableException {
-			LitComposite it_lc = (LitComposite)args.get(0);
-			LitInteropObject it_io = (LitInteropObject)it_lc.value;
-			@SuppressWarnings("unchecked")
-			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
-			
-			return it.hasNext() ? LitBoolean.TRUE : LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeIterator),
-					TypeAtom.TypeBoolNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return iteratorHasNextSymbol_out.toString();
-		}
-	};
-	
-	public static final Symbol iteratorHasPreviousSymbol = new Symbol("has-previous", NAMESPACE);
-	public static final Symbol iteratorHasPreviousSymbol_out = new Symbol("linked-list-iterator-has-previous");
-	
-	@VelkaOperator
-	@Description("Returns true if this list iterator has more elements when traversing the list in the reverse direction.") 
-	@Example("(define l (construct List:JavaLinked))\n"
-					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-					+ "(define it (java-linked-list-iterator l 0))\n"
-					+ "(linked-list-iterator-has-previous it)") 
-	@Syntax("linked-list-iterator-has-previous <iterator>)")
-	public static final Operator iteratorHasPrevious = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String it = "_iterator";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(it),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".hasPrevious",
-									ClojureHelper.getLiteralInnerValue(it))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return iteratorHasPreviousSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
-				throws AppendableException {
-			LitComposite it_lc = (LitComposite)args.get(0);
-			LitInteropObject it_io = (LitInteropObject)it_lc.value;
-			@SuppressWarnings("unchecked")
-			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
-			
-			return it.hasPrevious() ? LitBoolean.TRUE : LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeIterator),
-					TypeAtom.TypeBoolNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return iteratorHasPreviousSymbol_out.toString();
-		}
-	};
-	
-	public static final Symbol iteratorNextSymbol = new Symbol("iterator-next", NAMESPACE);
-	public static final Symbol iteratorNextSymbol_out = new Symbol("linked-list-iterator-next");
-	
-	@VelkaOperator
-	@Description("Returns the next element in the list and advances the cursor position.") 
-	@Example("(define l (construct List:JavaLinked))\n"
-					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-					+ "(define it (java-linked-list-iterator l 0))\n"
-					+ "(linked-list-iterator-next it)") 
-	@Syntax("(linked-list-iterator-next <iterator>)")
-	public static final Operator iteratorNext = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String it = "_iterator";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(it),
-					ClojureHelper.applyClojureFunction(
-							".next",
-							ClojureHelper.getLiteralInnerValue(it)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return iteratorNextSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
-				throws AppendableException {
-			LitComposite it_lc = (LitComposite)args.get(0);
-			LitInteropObject it_io = (LitInteropObject)it_lc.value;
-			@SuppressWarnings("unchecked")
-			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
-			return it.next();
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(
-					new TypeTuple(TypeIterator),
-					A);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return iteratorNextSymbol_out.toString();
-		}
-	};
-	
-	public static final Symbol iteratorNextIndexSymbol = new Symbol("next-index", NAMESPACE);
-	public static final Symbol iteratorNextIndexSymbol_out = new Symbol("linked-list-iterator-next-index");
-	
-	@VelkaOperator
-	@Description("Returns the index of the element that would be returned by a subsequent call to linked-list-iterator-next.") 
-	@Example("(define l (construct List:JavaLinked))\n"
-					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-					+ "(define it (java-linked-list-iterator l 0))\n"
-					+ "(linked-list-iterator-next-index it)") 
-	@Syntax("(linked-list-iterator-next-index <iterator>)")
-	public static final Operator iteratorNextIndex = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String it = "_iterator";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(it),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".nextIndex",
-									ClojureHelper.getLiteralInnerValue(it))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return iteratorNextIndexSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
-				throws AppendableException {
-			LitComposite it_lc = (LitComposite)args.get(0);
-			LitInteropObject it_io = (LitInteropObject)it_lc.value;
-			@SuppressWarnings("unchecked")
-			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
-			
-			int index = it.nextIndex();
-			return new LitInteger(index);			
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeIterator),
-					TypeAtom.TypeIntNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return iteratorNextIndexSymbol_out.toString();
-		}
-	};
-	
-	public static final Symbol iteratorPreviousSymbol = new Symbol("iterator-previous", NAMESPACE);
-	public static final Symbol iteratorPreviousSymbol_out = new Symbol("linked-list-iterator-previous");
-	
-	@VelkaOperator
-	@Description("Returns the previous element in the list and moves the cursor position backwards.") 
-	@Example("(define l (construct List:JavaLinked))\n"
-					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-					+ "(define it (java-linked-list-iterator l 3))\n"
-					+ "(linked-list-iterator-previous it)") 
-	@Syntax("(linked-list-iterator-previous <iterator>)")
-	public static final Operator iteratorPrevious = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String it = "_iterator";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(it),
-					ClojureHelper.applyClojureFunction(
-							".previous",
-							ClojureHelper.getLiteralInnerValue(it)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return iteratorPreviousSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
-				throws AppendableException {
-			LitComposite it_lc = (LitComposite)args.get(0);
-			LitInteropObject it_io = (LitInteropObject)it_lc.value;
-			@SuppressWarnings("unchecked")
-			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
-			return it.previous();
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(
-					new TypeTuple(TypeIterator),
-					A);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return iteratorPreviousSymbol_out.toString();
-		}
-	};
-	
-	public static final Symbol iteratorPreviousIndexSymbol = new Symbol("previous-index", NAMESPACE);
-	public static final Symbol iteratorPreviousIndexSymbol_out = new Symbol("linked-list-iterator-previous-index");
-	
-	@VelkaOperator
-	@Description("Returns the index of the element that would be returned by a subsequent call to linked-list-iterator-previous.") 
-	@Example("(define l (construct List:JavaLinked))\n"
-					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-					+ "(define it (java-linked-list-iterator l 3))\n"
-					+ "(linked-list-iterator-previous-index it)") 
-	@Syntax("(linked-list-iterator-previous-index <iterator>)")
-	public static final Operator iteratorPreviousIndex = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String it = "_iterator";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(it),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".previousIndex",
-									ClojureHelper.getLiteralInnerValue(it))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return iteratorPreviousIndexSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
-				throws AppendableException {
-			LitComposite it_lc = (LitComposite)args.get(0);
-			LitInteropObject it_io = (LitInteropObject)it_lc.value;
-			@SuppressWarnings("unchecked")
-			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
-			
-			int index = it.previousIndex();
-			return new LitInteger(index);			
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeIterator),
-					TypeAtom.TypeIntNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return iteratorPreviousIndexSymbol_out.toString();
-		}
-	};
-	
-	public static final Symbol iteratorRemoveSymbol = new Symbol("iterator-remove", NAMESPACE);
-	public static final Symbol iteratorRemoveSymbol_out = new Symbol("linked-list-iterator-remove");
-	
-	@VelkaOperator
-	@Description("Removes from the list the last element that was returned by linked-list-iterator-next or linked-list-iterator-next (optional operation).") 
-	@Example("(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-			+ "(define it (java-linked-list-iterator l 3))\n"
-			+ "(linked-list-iterator-next it)"
-			+ "(linked-list-iterator-next (linked-list-iterator-remove it))") 
-	@Syntax("(linked-list-iterator-remove <iterator>)")
-	public static final Operator iteratorRemove = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String it = "_iterator";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(it),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".remove",
-											ClojureHelper.getLiteralInnerValue(it)),
-									it)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return iteratorRemoveSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
-				throws AppendableException {
-			LitComposite it_lc = (LitComposite)args.get(0);
-			LitInteropObject it_io = (LitInteropObject)it_lc.value;
-			@SuppressWarnings("unchecked")
-			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
-			
-			it.remove();
-			
-			return it_lc;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeIterator),
-					TypeIterator);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return iteratorRemoveSymbol_out.toString();
-		}
-	};
-	
-	public static final Symbol iteratorSetSymbol = new Symbol("iterator-set", NAMESPACE);
-	public static final Symbol iteratorSetSymbol_out = new Symbol("linked-list-iterator-set");
-	
-	@VelkaOperator
-	@Description("Replaces the last element returned by linked-list-iterator-next or linked-list-iterator-previous() with the specified element (optional operation).") 
-	@Example("(define l (construct List:JavaLinked))\n"
-					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-					+ "(define it (java-linked-list-iterator l 3))\n"
-					+ "(linked-list-iterator-next it)"
-					+ "(linked-list-iterator-set it 42)") 
-	@Syntax("(linked-list-iterator-remove <iterator> <element>)")
-	public static final Operator iteratorSet = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			String it = "_iterator";
-			String element = "_element";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(it, element),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".set",
-											ClojureHelper.getLiteralInnerValue(it),
-											element),
-									it)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return iteratorSetSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
-				throws AppendableException {
-			LitComposite it_lc = (LitComposite)args.get(0);
-			LitInteropObject it_io = (LitInteropObject)it_lc.value;
-			@SuppressWarnings("unchecked")
-			ListIterator<Expression> it = (ListIterator<Expression>)it_io.javaObject;
-			
-			Expression e = args.get(1);
-			
-			it.set(e);
-			
-			return it_lc;
-		}		
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(
-					new TypeTuple(TypeIterator, A),
-					TypeIterator);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return iteratorSetSymbol_out.toString();
-		}
-	};
-
 	public static final Path VELKA_CLOJURE_LINKEDLIST_PATH = Paths.get("velka", "clojure");
 
 	public static final Path VELKA_CLOJURE_LINKEDLIST_NAME = Paths.get("linkedList.clj");
@@ -2348,7 +1807,7 @@ public class JavaLinkedList extends OperatorBank {
 
 	@Override
 	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
-		typeEnv.addRepresentation(TypeListJavaLinked);
+		typeEnv.addRepresentation(TypeAtom.TypeListJavaLinked);
 	}
 	
 	private static JavaLinkedList instance = null;
@@ -2358,5 +1817,9 @@ public class JavaLinkedList extends OperatorBank {
 			instance = new JavaLinkedList();
 		}
 		return instance;
+	}
+	
+	public static Expression of(Expression ...vals) {
+		return new LitInteropObject(new LinkedList<Expression>(List.of(vals)), TypeAtom.TypeListJavaLinked);
 	}
 }

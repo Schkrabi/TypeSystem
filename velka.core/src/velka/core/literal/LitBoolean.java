@@ -32,7 +32,7 @@ public class LitBoolean extends Literal {
 
 	@Override
 	public String toString() {
-		return "[" + Boolean.toString(this.value) + "]";
+		return Boolean.toString(this.value);
 	}
 
 	public static final LitBoolean TRUE = new LitBoolean(true);

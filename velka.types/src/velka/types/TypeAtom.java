@@ -20,10 +20,7 @@ public class TypeAtom extends TerminalType {
 
 	public final TypeName name;
 	public final TypeRepresentation representation;
-	/**
-	 * Type of Set:BitSet in Velka
-	 */
-	public static final TypeAtom TypeSetBitSet = new TypeAtom(TypeName.SET, new TypeRepresentation("BitSet"));
+	
 
 	public TypeAtom(TypeName name, TypeRepresentation representation) {
 		this.name = name;
@@ -145,39 +142,154 @@ public class TypeAtom extends TerminalType {
 	/**
 	 * Type of Bool
 	 */
-	public static final TypeAtom TypeBool = new TypeAtom(TypeName.BOOL, TypeRepresentation.WILDCARD) ;
-	public static final TypeAtom TypeBoolNative = new TypeAtom(TypeName.BOOL, TypeRepresentation.NATIVE);
+	public static final TypeAtom TypeBool = new TypeAtom(TypeName.BOOL, TypeRepresentation.WILDCARD) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeBool";
+		}
+	};
+	public static final TypeAtom TypeBoolNative = new TypeAtom(TypeName.BOOL, TypeRepresentation.NATIVE) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeBoolNative";
+		}
+	};
 
 	/**
 	 * Type of Integer
 	 */
-	public static final TypeAtom TypeInt = new TypeAtom(TypeName.INT, TypeRepresentation.WILDCARD);
-	public static final TypeAtom TypeIntNative = new TypeAtom(TypeName.INT, TypeRepresentation.NATIVE);
-	public static final TypeAtom TypeIntString = new TypeAtom(TypeName.INT, TypeRepresentation.STRING);
-	public static final TypeAtom TypeIntRoman = new TypeAtom(TypeName.INT, TypeRepresentation.ROMAN);
+	public static final TypeAtom TypeInt = new TypeAtom(TypeName.INT, TypeRepresentation.WILDCARD){
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeInt";
+		}
+	};
+	public static final TypeAtom TypeIntNative = new TypeAtom(TypeName.INT, TypeRepresentation.NATIVE) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeIntNative";
+		}
+	};
+	public static final TypeAtom TypeIntString = new TypeAtom(TypeName.INT, TypeRepresentation.STRING) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeIntString";
+		}
+	};
+	public static final TypeAtom TypeIntRoman = new TypeAtom(TypeName.INT, TypeRepresentation.ROMAN) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeIntRoman";
+		}
+	};
 
 	/**
 	 * Type of String
 	 */
-	public static final TypeAtom TypeString = new TypeAtom(TypeName.STRING, TypeRepresentation.WILDCARD);
-	public static final TypeAtom TypeStringNative = new TypeAtom(TypeName.STRING, TypeRepresentation.NATIVE);
+	public static final TypeAtom TypeString = new TypeAtom(TypeName.STRING, TypeRepresentation.WILDCARD) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeString";
+		}
+	};
+	public static final TypeAtom TypeStringNative = new TypeAtom(TypeName.STRING, TypeRepresentation.NATIVE) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeStringNative";
+		}
+	};
 
 	/**
 	 * Type of Double
 	 */
-	public static final TypeAtom TypeDouble = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.WILDCARD);
-	public static final TypeAtom TypeDoubleNative = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.NATIVE);
+	public static final TypeAtom TypeDouble = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.WILDCARD) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeDouble";
+		}
+	};
+	public static final TypeAtom TypeDoubleNative = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.NATIVE) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeDoubleNative";
+		}
+	};
 
 	/**
 	 * Type of List
 	 */
-	public static final TypeAtom TypeList = new TypeAtom(TypeName.LIST, TypeRepresentation.WILDCARD);
-	public static final TypeAtom TypeListNative = new TypeAtom(TypeName.LIST, TypeRepresentation.NATIVE);
+	public static final TypeAtom TypeList = new TypeAtom(TypeName.LIST, TypeRepresentation.WILDCARD) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeList";
+		}
+	};
+	public static final TypeAtom TypeListNative = new TypeAtom(TypeName.LIST, TypeRepresentation.NATIVE) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeListNative";
+		}
+	};
 	
 	/**
 	 * Type of Set
 	 */
-	public static final TypeAtom TypeSet = new TypeAtom(TypeName.SET, TypeRepresentation.WILDCARD);
+	public static final TypeAtom TypeSet = new TypeAtom(TypeName.SET, TypeRepresentation.WILDCARD) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeSet";
+		}
+	};
+	
+	public static final TypeAtom TypeMapTree = new TypeAtom(new TypeName("Map"), new TypeRepresentation("Tree")) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeMapTree";
+		}
+	};
+	
+	public static final TypeAtom TypeScannerNative = new TypeAtom(new TypeName("Scanner"), TypeRepresentation.NATIVE)  {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeScannerNative";
+		}
+	};
+	/**
+	 * Type for list iterator
+	 */
+	public final static TypeAtom TypeListIterator = new TypeAtom(new TypeName("ListIterator"), TypeRepresentation.NATIVE) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeListIterator";
+		}
+	};
+	/**
+	 * Type of java linked list in velka
+	 */
+	public final static TypeAtom TypeListJavaLinked = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaLinked")) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeListJavaLinked";
+		}
+	};
+	/**
+	 * Type of java array list in velka
+	 */
+	public static final TypeAtom TypeListJavaArray = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaArray")) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeListJavaArray";
+		}
+	};
+	/**
+	 * Type of Set:BitSet in Velka
+	 */
+	public static final TypeAtom TypeSetBitSet = new TypeAtom(TypeName.SET, new TypeRepresentation("BitSet")) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeSetBitSet";
+		}
+	};
 	
 	/**
 	 * Type of TypeSymbol

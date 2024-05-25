@@ -5,8 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
+import java.util.TreeMap;
 
+import velka.core.application.CanDeconstructAs;
 import velka.core.langbase.ConversionOperators;
+import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
 import velka.types.RepresentationOr;
 import velka.types.Type;
@@ -43,8 +47,20 @@ public class VelkaClojureCore {
 	 */
 	public static String getTypeClojureDef = 
 			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.getTypeClojureSymbol, Arrays.asList(getTypeClojure_expr), 
-					ClojureHelper.applyClojureFunction(":lang-type", 
-							ClojureHelper.applyClojureFunction("meta", getTypeClojure_expr)));
+					ClojureHelper.condHelper(
+							Pair.of(ClojureHelper.applyClojureFunction("integer?", getTypeClojure_expr), TypeAtom.TypeIntNative.clojureTypeRepresentation()),
+							Pair.of(ClojureHelper.applyClojureFunction("boolean?", getTypeClojure_expr), TypeAtom.TypeBoolNative.clojureTypeRepresentation()),
+							Pair.of(ClojureHelper.applyClojureFunction("double?", getTypeClojure_expr), TypeAtom.TypeDoubleNative.clojureTypeRepresentation()),
+							Pair.of(ClojureHelper.applyClojureFunction("string?", getTypeClojure_expr), TypeAtom.TypeStringNative.clojureTypeRepresentation()),
+							Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.ArrayList.class.getName(), getTypeClojure_expr), TypeAtom.TypeListJavaArray.clojureTypeRepresentation()),
+							Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.LinkedList.class.getName(), getTypeClojure_expr), TypeAtom.TypeListJavaLinked.clojureTypeRepresentation()),
+							Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.BitSet.class.getName(), getTypeClojure_expr), TypeAtom.TypeSetBitSet.clojureTypeRepresentation()),
+							Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.TreeMap.class.getName(), getTypeClojure_expr), velka.types.TypeAtom.TypeMapTree.clojureTypeRepresentation()),
+							Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.Scanner.class.getName(), getTypeClojure_expr), velka.types.TypeAtom.TypeScannerNative.clojureTypeRepresentation()),
+							Pair.of(ClojureHelper.applyClojureFunction("instance?", "clojure.lang.LazySeq", getTypeClojure_expr), TypeAtom.TypeListNative.clojureTypeRepresentation()),
+							Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.ListIterator.class.getName(), getTypeClojure_expr), TypeAtom.TypeListIterator.clojureTypeRepresentation()),
+							Pair.of(":else", ClojureHelper.applyClojureFunction(":lang-type", 
+									ClojureHelper.applyClojureFunction("meta", getTypeClojure_expr)))));
 	
 	private static final String ListNativeToTuple_list = "_list";
 	/**
@@ -53,7 +69,7 @@ public class VelkaClojureCore {
 	public static String listNativeToTuple =	
 			ClojureHelper
 					.clojureDefnHelper(ClojureCoreSymbols.listNativeToTuple, Arrays.asList(ListNativeToTuple_list),
-							ClojureHelper.tupleHelper_str(ClojureHelper.getLiteralInnerValue(ListNativeToTuple_list)));
+							ClojureHelper.tupleHelper_str(ListNativeToTuple_list));
 	
 	
 	private static final String tuple2velkaList_tuple = "_tuple";
@@ -480,18 +496,17 @@ public class VelkaClojureCore {
 																			Arrays.asList(eapply_fn_i),
 																			ClojureHelper.clojureVectorHelper(
 																					eapply_fn_i,
-																					ClojureHelper.getLiteralInnerValue(
-																						ClojureHelper.applyVelkaFunction_argsTuple(
-																								ClojureHelper.applyClojureFunction(
-																										"if",
-																										ClojureHelper.applyClojureFunction(
-																												"nil?",
-																												eapply_costF),
-																										ClojureHelper.applyClojureFunction(
-																												ClojureCoreSymbols.getCostFunction_full,
-																												eapply_fn_i),
-																										eapply_costF),
-																								eapply_args)))),
+																					ClojureHelper.applyVelkaFunction_argsTuple(
+																							ClojureHelper.applyClojureFunction(
+																									"if",
+																									ClojureHelper.applyClojureFunction(
+																											"nil?",
+																											eapply_costF),
+																									ClojureHelper.applyClojureFunction(
+																											ClojureCoreSymbols.getCostFunction_full,
+																											eapply_fn_i),
+																									eapply_costF),
+																							eapply_args))),
 																	eapply_abstr)))),
 									new Pair<String, String>(
 											":else",
@@ -537,14 +552,14 @@ public class VelkaClojureCore {
 																			"velka.types.TypeAtom/TypeIntNative")), 
 															ClojureHelper.clojureIfHelper(
 																	ClojureHelper.applyClojureFunction("=", langPstrClojureDef_level, "0"), 
-																	ClojureHelper.applyClojureFunction("pr-str", ClojureHelper.getLiteralInnerValue(langPstrClojureDef_expr)), 
-																	ClojureHelper.getLiteralInnerValue(langPstrClojureDef_expr))),
+																	ClojureHelper.applyClojureFunction("pr-str", langPstrClojureDef_expr), 
+																	langPstrClojureDef_expr)),
 													new Pair<String, String>(
 															ClojureHelper.applyClojureFunction("=",
 																	langPstrClojureDef_type,
 																	"velka.types.TypeAtom/TypeSetBitSet"),
 															ClojureHelper.applyClojureFunction(".toString",
-																	ClojureHelper.getLiteralInnerValue(langPstrClojureDef_expr))),
+																	langPstrClojureDef_expr)),
 													new Pair<String, String>(
 															ClojureHelper.applyClojureFunction("=", 
 																	langPstrClojureDef_type, "velka.types.TypeTuple/EMPTY_TUPLE"), 
@@ -575,7 +590,7 @@ public class VelkaClojureCore {
 																	langPstrClojureDef_type,
 																	TypeAtom.class.getCanonicalName()), 
 															ClojureHelper.applyClojureFunction(langPstrClojureDef_aux, 
-																	ClojureHelper.getLiteralInnerValue(langPstrClojureDef_expr),
+																	langPstrClojureDef_expr,
 																	langPstrClojureDef_level)),
 													new Pair<String, String>(
 															":else",
@@ -614,6 +629,21 @@ public class VelkaClojureCore {
 							ClojureHelper.applyClojureFunction(
 									"meta",
 									getCostFunctionDef_fun)));
+	
+	private static final String arg = "_arg";
+	private static final String type = "_type";
+	public static final String canDeconstructAsDef =
+			ClojureHelper.clojureDefnHelper(
+					ClojureCoreSymbols.canDeconstructAs, 
+					List.of(arg, type), 
+					ClojureHelper.clojureIfHelper(
+							ClojureHelper.applyClojureFunction("vector?", arg),
+							ClojureHelper.applyClojureFunction(".isPresent", 
+									ClojureHelper.applyClojureFunction("velka.types.Type/unifyRepresentation", 
+											type,
+											ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full,
+													ClojureHelper.applyClojureFunction("first", arg)))),
+							"false"));
 
 	/**
 	 * Generates clojure code for definitions of velka.clojure.core namespace
@@ -644,6 +674,7 @@ public class VelkaClojureCore {
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.eapplyClojureSymbol));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.asFunctionClojure));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.getCostFunction));
+		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.canDeconstructAs));
 	
 		// Definitions
 		sb.append(type2typeSymbolDef);
@@ -669,6 +700,8 @@ public class VelkaClojureCore {
 		sb.append(convertClojureDef);
 		sb.append("\n");
 		sb.append(eapplyClojureDef);
+		sb.append("\n");
+		sb.append(canDeconstructAsDef);
 		sb.append("\n");
 //		sb.append("(def lang-pstr" + "(fn [exp]" + "(letfn [(lang-pstr-aux [exp level]"
 //				+ "(let [type (:lang-type (meta exp))]" + "(cond" + "(or"

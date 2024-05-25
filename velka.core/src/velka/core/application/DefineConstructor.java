@@ -4,6 +4,7 @@ import velka.core.abstraction.Lambda;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.literal.LitComposite;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -35,7 +36,8 @@ public class DefineConstructor extends Expression {
 
 	public DefineConstructor(TypeAtom constructedType, Lambda constructionLambda) {
 		this.constructedType = constructedType;
-		this.constructionLambda = constructionLambda;
+		this.constructionLambda = new Lambda(constructionLambda.args, constructionLambda.argsType,
+				new LitComposite(constructionLambda.body, constructedType)); 
 	}
 
 	@Override

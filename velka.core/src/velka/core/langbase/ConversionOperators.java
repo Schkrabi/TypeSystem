@@ -3,6 +3,7 @@ package velka.core.langbase;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
 
 import velka.core.abstraction.Conversion;
 import velka.core.exceptions.DuplicateTypeDefinitionException;
@@ -21,6 +22,7 @@ import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 import velka.util.RomanNumbers;
 import velka.util.annotations.Description;
@@ -75,9 +77,14 @@ public final class ConversionOperators extends OperatorBank{
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] " + Literal.clojureValueToClojureLiteral(
-					LitString.clojureLit("(" + RomanNumbers.int2RomanClojure + " (get _x 0))"),
-					TypeAtom.TypeIntRoman) + ")";
+			String arg = "_arg";
+			return ClojureHelper.fnHelper(
+					List.of(arg),
+					LitComposite.clojureLit(
+							TypeAtom.TypeIntRoman, 
+							ClojureHelper.applyClojureFunction(
+									RomanNumbers.int2RomanClojure, 
+									arg)));
 		}
 
 		@Override
@@ -115,9 +122,14 @@ public final class ConversionOperators extends OperatorBank{
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] " + Literal.clojureValueToClojureLiteral(
-					LitString.clojureLit("(Integer/toString (get _x 0))"), TypeAtom.TypeIntString)
-					+ ")";
+			String arg = "_arg";
+			return ClojureHelper.fnHelper(
+					List.of(arg),
+					LitComposite.clojureLit(
+							TypeAtom.TypeIntString, 
+							ClojureHelper.applyClojureFunction(
+									"Integer/toString", 
+									arg)));
 		}
 
 		@Override
@@ -156,8 +168,14 @@ public final class ConversionOperators extends OperatorBank{
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] " + LitInteger
-					.clojureLit("(" + RomanNumbers.roman2intClojure + " (get (get _x 0) 0))") + ")";
+			String arg = "_arg";
+			return ClojureHelper.fnHelper(
+					List.of(arg),
+					ClojureHelper.applyClojureFunction(
+						RomanNumbers.roman2intClojure, 
+						ClojureHelper.applyClojureFunction(
+								"first", 
+								arg)));
 		}
 
 		@Override
@@ -196,12 +214,16 @@ public final class ConversionOperators extends OperatorBank{
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] "
-					+ Literal.clojureValueToClojureLiteral(
-							LitString.clojureLit(
-									"(str (" + RomanNumbers.roman2intClojure + " (get (get _x 0) 0)))"),
-							TypeAtom.TypeIntString)
-					+ ")";
+			String arg = "_arg";
+			return ClojureHelper.fnHelper(
+					List.of(arg),
+					LitComposite.clojureLit(
+							TypeAtom.TypeIntString, 
+							ClojureHelper.applyClojureFunction(
+								"Integer/toString",
+								ClojureHelper.applyClojureFunction(
+										RomanNumbers.roman2intClojure, 
+										ClojureHelper.applyClojureFunction("first", arg)))));
 		}
 
 		@Override
@@ -241,8 +263,14 @@ public final class ConversionOperators extends OperatorBank{
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] " + LitInteger.clojureLit("(Integer/parseInt (get (get _x 0) 0))")
-					+ ")";
+			String arg = "_arg";
+			return ClojureHelper.fnHelper(
+					List.of(arg),
+					ClojureHelper.applyClojureFunction(
+						"Integer/parseInt", 
+						ClojureHelper.applyClojureFunction(
+								"first", 
+								arg)));
 		}
 
 		@Override
@@ -281,10 +309,16 @@ public final class ConversionOperators extends OperatorBank{
 	
 		@Override
 		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-			return "(fn [_x] " + Literal.clojureValueToClojureLiteral(
-					LitString.clojureLit(
-							"(" + RomanNumbers.int2RomanClojure + " (Integer/parseInt (get (get _x 0) 0)))"),
-					TypeAtom.TypeIntRoman) + ")";
+			String arg = "_arg";
+			return ClojureHelper.fnHelper(
+					List.of(arg),
+					LitComposite.clojureLit(
+							TypeAtom.TypeIntString, 
+							ClojureHelper.applyClojureFunction(
+									RomanNumbers.int2RomanClojure, 
+									ClojureHelper.applyClojureFunction(
+											"Integer/parseInt",
+											ClojureHelper.applyClojureFunction("first", arg)))));
 		}
 
 		@Override

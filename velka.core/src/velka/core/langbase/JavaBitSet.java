@@ -77,7 +77,7 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			Expression e = new LitInteropObject(new BitSet());
+			Expression e = new LitInteropObject(new BitSet(), TypeAtom.TypeSetBitSet);
 			return e;
 		}
 
@@ -108,7 +108,7 @@ public class JavaBitSet extends OperatorBank {
 							Arrays.asList(nbits),
 							ClojureHelper.applyClojureFunction(
 									"java.util.BitSet.",
-									ClojureHelper.getLiteralInnerValue(nbits)));
+									nbits));
 			return code;
 		}
 
@@ -121,7 +121,7 @@ public class JavaBitSet extends OperatorBank {
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
 			LitInteger nbits = (LitInteger)args.get(0);
-			Expression e = new LitInteropObject(new BitSet((int) nbits.value));
+			Expression e = new LitInteropObject(new BitSet((int) nbits.value), TypeAtom.TypeSetBitSet);
 			return e;
 		}
 
@@ -167,8 +167,8 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 								ClojureHelper.applyClojureFunction(
 										".and",
-										ClojureHelper.getLiteralInnerValue(set1),
-										ClojureHelper.getLiteralInnerValue(set2)),
+										set1,
+										set2),
 								set1)));
 			return code;
 		}
@@ -181,18 +181,18 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
 			
-			LitComposite lc2 = (LitComposite)args.get(1);
-			LitInteropObject set2 = (LitInteropObject)lc2.value;
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
+			
+			
+			LitInteropObject set2 = (LitInteropObject)args.get(1);
 			
 			BitSet bSet1 = (BitSet)set1.javaObject;
 			BitSet bSet2 = (BitSet)set2.javaObject;
 			
 			bSet1.and(bSet2);
 			
-			return lc1;
+			return set1;
 		}
 
 		@Override
@@ -233,8 +233,8 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 								ClojureHelper.applyClojureFunction(
 										".andNot",
-										ClojureHelper.getLiteralInnerValue(set1),
-										ClojureHelper.getLiteralInnerValue(set2)),
+										set1,
+										set2),
 								set1)));
 			return code;
 		}
@@ -247,18 +247,18 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
 			
-			LitComposite lc2 = (LitComposite)args.get(1);
-			LitInteropObject set2 = (LitInteropObject)lc2.value;
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
+			
+			
+			LitInteropObject set2 = (LitInteropObject)args.get(1);
 			
 			BitSet bSet1 = (BitSet)set1.javaObject;
 			BitSet bSet2 = (BitSet)set2.javaObject;
 			
 			bSet1.andNot(bSet2);
 			
-			return lc1;
+			return set1;
 		}
 
 		@Override
@@ -294,7 +294,7 @@ public class JavaBitSet extends OperatorBank {
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".cardinality",
-									ClojureHelper.getLiteralInnerValue(set))));
+									set)));
 			return code;
 		}
 
@@ -306,8 +306,8 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc = (LitComposite)args.get(0);
-			LitInteropObject set = (LitInteropObject)lc.value;
+			
+			LitInteropObject set = (LitInteropObject)args.get(0);
 			
 			BitSet bSet = (BitSet)set.javaObject;
 			
@@ -352,7 +352,7 @@ public class JavaBitSet extends OperatorBank {
 									ClojureHelper.clojureVectorHelper(
 											ClojureHelper.applyClojureFunction(
 													".clear",
-													ClojureHelper.getLiteralInnerValue(set)),
+													set),
 											set)));
 			return code;
 		}
@@ -365,11 +365,11 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc = (LitComposite)args.get(0);
-			LitInteropObject set = (LitInteropObject)lc.value;
+			
+			LitInteropObject set = (LitInteropObject)args.get(0);
 			BitSet bSet = (BitSet)set.javaObject;
 			bSet.clear();
-			return lc;
+			return set;
 		}
 
 		@Override
@@ -406,8 +406,8 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 									ClojureHelper.applyClojureFunction(
 											".clear",
-											ClojureHelper.getLiteralInnerValue(set),
-											ClojureHelper.getLiteralInnerValue(bitIndex)),
+											set,
+											bitIndex),
 									set)));
 			return code;
 		}
@@ -420,12 +420,12 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc = (LitComposite)args.get(0);
-			LitInteropObject set = (LitInteropObject)lc.value;
+			
+			LitInteropObject set = (LitInteropObject)args.get(0);
 			LitInteger bitIndex = (LitInteger)args.get(1);
 			BitSet bSet = (BitSet)set.javaObject;
 			bSet.clear((int)bitIndex.value);
-			return lc;
+			return set;
 		}
 
 		@Override
@@ -465,9 +465,9 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 									ClojureHelper.applyClojureFunction(
 											".clear",
-											ClojureHelper.getLiteralInnerValue(set),
-											ClojureHelper.getLiteralInnerValue(fromIndex),
-											ClojureHelper.getLiteralInnerValue(toIndex)),
+											set,
+											fromIndex,
+											toIndex),
 									set)));
 			return code;
 		}
@@ -480,13 +480,13 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc = (LitComposite)args.get(0);
-			LitInteropObject set = (LitInteropObject)lc.value;
+			
+			LitInteropObject set = (LitInteropObject)args.get(0);
 			LitInteger fromIndex = (LitInteger)args.get(1);
 			LitInteger toIndex = (LitInteger)args.get(2);
 			BitSet bSet = (BitSet)set.javaObject;
 			bSet.clear((int)fromIndex.value, (int)toIndex.value);
-			return lc;
+			return set;
 		}
 
 		@Override
@@ -519,11 +519,9 @@ public class JavaBitSet extends OperatorBank {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
-					LitComposite.clojureLit(
-							TypeAtom.TypeSetBitSet,
 							ClojureHelper.applyClojureFunction(
 									".clone",
-									ClojureHelper.getLiteralInnerValue(set))));
+									set));
 			return code;
 		}
 
@@ -535,10 +533,10 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc = (LitComposite)args.get(0);
-			LitInteropObject set = (LitInteropObject)lc.value;
+			
+			LitInteropObject set = (LitInteropObject)args.get(0);
 			BitSet bSet = (BitSet)set.javaObject;
-			return new LitComposite(new LitInteropObject(bSet.clone()), TypeAtom.TypeSetBitSet);
+			return new LitInteropObject(bSet.clone(), TypeAtom.TypeSetBitSet);
 		}
 
 		@Override
@@ -578,8 +576,8 @@ public class JavaBitSet extends OperatorBank {
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".equals",
-									ClojureHelper.getLiteralInnerValue(set1),
-									ClojureHelper.getLiteralInnerValue(set2))));
+									set1,
+									set2)));
 			return code;
 		}
 
@@ -591,11 +589,11 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
 			
-			LitComposite lc2 = (LitComposite)args.get(1);
-			LitInteropObject set2 = (LitInteropObject)lc2.value;
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
+			
+			
+			LitInteropObject set2 = (LitInteropObject)args.get(1);
 			
 			BitSet bSet1 = (BitSet)set1.javaObject;
 			BitSet bSet2 = (BitSet)set2.javaObject;
@@ -638,8 +636,8 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 									ClojureHelper.applyClojureFunction(
 											".flip",
-											ClojureHelper.getLiteralInnerValue(set),
-											ClojureHelper.getLiteralInnerValue(bitIndex)),
+											set,
+											bitIndex),
 									set)));
 			return code;
 		}
@@ -652,14 +650,14 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc = (LitComposite)args.get(0);
-			LitInteropObject set = (LitInteropObject)lc.value;
+			
+			LitInteropObject set = (LitInteropObject)args.get(0);
 			BitSet bSet = (BitSet)set.javaObject;
 			
 			LitInteger bitIndex = (LitInteger)args.get(1);
 			
 			bSet.flip((int)bitIndex.value);
-			return lc;
+			return set;
 		}
 
 		@Override
@@ -698,9 +696,9 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 									ClojureHelper.applyClojureFunction(
 											".flip",
-											ClojureHelper.getLiteralInnerValue(set),
-											ClojureHelper.getLiteralInnerValue(fromIndex),
-											ClojureHelper.getLiteralInnerValue(toIndex)),
+											set,
+											fromIndex,
+											toIndex),
 									set)));
 			return code;
 		}
@@ -713,15 +711,15 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc = (LitComposite)args.get(0);
-			LitInteropObject set = (LitInteropObject)lc.value;
+			
+			LitInteropObject set = (LitInteropObject)args.get(0);
 			BitSet bSet = (BitSet)set.javaObject;
 			
 			LitInteger fromIndex = (LitInteger)args.get(1);
 			LitInteger toIndex = (LitInteger)args.get(2);
 			
 			bSet.flip((int)fromIndex.value, (int)toIndex.value);
-			return lc;
+			return set;
 		}
 
 		@Override
@@ -758,8 +756,8 @@ public class JavaBitSet extends OperatorBank {
 					LitBoolean.clojureLit(
 					ClojureHelper.applyClojureFunction(
 							".get",
-							ClojureHelper.getLiteralInnerValue(set),
-							ClojureHelper.getLiteralInnerValue(index))));
+							set,
+							index)));
 			return code;
 		}
 
@@ -771,8 +769,8 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc = (LitComposite)args.get(0);
-			LitInteropObject set = (LitInteropObject)lc.value;
+			
+			LitInteropObject set = (LitInteropObject)args.get(0);
 			BitSet bSet = (BitSet)set.javaObject;
 			
 			LitInteger index = (LitInteger)args.get(1);
@@ -811,13 +809,11 @@ public class JavaBitSet extends OperatorBank {
 			String toIndex = "_toIndex";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set, fromIndex, toIndex),
-					LitComposite.clojureLit(
-							TypeAtom.TypeSetBitSet,
 							ClojureHelper.applyClojureFunction(
 									".get",
-									ClojureHelper.getLiteralInnerValue(set),
-									ClojureHelper.getLiteralInnerValue(fromIndex),
-									ClojureHelper.getLiteralInnerValue(toIndex))));
+									set,
+									fromIndex,
+									toIndex));
 			return code;
 		}
 
@@ -829,13 +825,13 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc = (LitComposite)args.get(0);
-			LitInteropObject set = (LitInteropObject)lc.value;
+			
+			LitInteropObject set = (LitInteropObject)args.get(0);
 			BitSet bSet = (BitSet)set.javaObject;
 			
 			LitInteger fromIndex = (LitInteger)args.get(1);
 			LitInteger toIndex = (LitInteger)args.get(2);
-			return new LitComposite(new LitInteropObject(bSet.get((int) fromIndex.value, (int) toIndex.value)),
+			return new LitInteropObject(bSet.get((int) fromIndex.value, (int) toIndex.value),
 					TypeAtom.TypeSetBitSet);
 		}
 
@@ -875,8 +871,8 @@ public class JavaBitSet extends OperatorBank {
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".intersects",
-									ClojureHelper.getLiteralInnerValue(set1),
-									ClojureHelper.getLiteralInnerValue(set2))));
+									set1,
+									set2)));
 			return code;
 		}
 
@@ -888,11 +884,11 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
 			
-			LitComposite lc2 = (LitComposite)args.get(1);
-			LitInteropObject set2 = (LitInteropObject)lc2.value;
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
+			
+			
+			LitInteropObject set2 = (LitInteropObject)args.get(1);
 			
 			BitSet bSet1 = (BitSet)set1.javaObject;
 			BitSet bSet2 = (BitSet)set2.javaObject;
@@ -934,7 +930,7 @@ public class JavaBitSet extends OperatorBank {
 					LitBoolean.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".isEmpty",
-									ClojureHelper.getLiteralInnerValue(set))));
+									set)));
 			return code;
 		}
 
@@ -946,8 +942,8 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			BitSet bSet1 = (BitSet)set1.javaObject;
 			return bSet1.isEmpty() ? LitBoolean.TRUE : LitBoolean.FALSE;
@@ -986,7 +982,7 @@ public class JavaBitSet extends OperatorBank {
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".length",
-									ClojureHelper.getLiteralInnerValue(set))));
+									set)));
 			return code;
 		}
 
@@ -998,8 +994,8 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			BitSet bSet1 = (BitSet)set1.javaObject;
 			return new LitInteger(bSet1.length());
@@ -1037,8 +1033,8 @@ public class JavaBitSet extends OperatorBank {
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".nextClearBit",
-									ClojureHelper.getLiteralInnerValue(set),
-									ClojureHelper.getLiteralInnerValue(fromIndex))));
+									set,
+									fromIndex)));
 			return code;
 		}
 
@@ -1050,8 +1046,8 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			LitInteger fromIndex = (LitInteger)args.get(1);
 			
@@ -1091,8 +1087,8 @@ public class JavaBitSet extends OperatorBank {
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".nextSetBit",
-									ClojureHelper.getLiteralInnerValue(set),
-									ClojureHelper.getLiteralInnerValue(fromIndex))));
+									set,
+									fromIndex)));
 			return code;
 		}
 
@@ -1104,8 +1100,8 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			LitInteger fromIndex = (LitInteger)args.get(1);
 			
@@ -1151,8 +1147,8 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 									ClojureHelper.applyClojureFunction(
 											".or",
-											ClojureHelper.getLiteralInnerValue(set1),
-											ClojureHelper.getLiteralInnerValue(set2)),
+											set1,
+											set2),
 									set1)));
 			return code;
 		}
@@ -1165,18 +1161,18 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
 			
-			LitComposite lc2 = (LitComposite)args.get(1);
-			LitInteropObject set2 = (LitInteropObject)lc2.value;
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
+			
+			
+			LitInteropObject set2 = (LitInteropObject)args.get(1);
 			
 			BitSet bSet1 = (BitSet)set1.javaObject;
 			BitSet bSet2 = (BitSet)set2.javaObject;
 			
 			bSet1.or(bSet2);
 			
-			return lc1;
+			return set1;
 		}
 
 		@Override
@@ -1211,8 +1207,8 @@ public class JavaBitSet extends OperatorBank {
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".previousClearBit",
-									ClojureHelper.getLiteralInnerValue(set),
-									ClojureHelper.getLiteralInnerValue(fromIndex))));
+									set,
+									fromIndex)));
 			return code;
 		}
 
@@ -1224,8 +1220,8 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			LitInteger fromIndex = (LitInteger)args.get(1);
 			
@@ -1265,8 +1261,8 @@ public class JavaBitSet extends OperatorBank {
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".previousSetBit",
-									ClojureHelper.getLiteralInnerValue(set),
-									ClojureHelper.getLiteralInnerValue(fromIndex))));
+									set,
+									fromIndex)));
 			return code;
 		}
 
@@ -1278,8 +1274,8 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			LitInteger fromIndex = (LitInteger)args.get(1);
 			
@@ -1322,8 +1318,8 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 									ClojureHelper.applyClojureFunction(
 											".set",
-											ClojureHelper.getLiteralInnerValue(set),
-											ClojureHelper.getLiteralInnerValue(bitIndex)),
+											set,
+											bitIndex),
 									set)));
 			return code;
 		}
@@ -1336,14 +1332,14 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			LitInteger bitIndex = (LitInteger)args.get(1);
 			
 			BitSet s = (BitSet)set1.javaObject;
 			s.set((int)bitIndex.value);
-			return lc1;
+			return set1;
 		}
 
 		@Override
@@ -1382,9 +1378,9 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 									ClojureHelper.applyClojureFunction(
 											".set",
-											ClojureHelper.getLiteralInnerValue(set),
-											ClojureHelper.getLiteralInnerValue(bitIndex),
-											ClojureHelper.getLiteralInnerValue(value)),
+											set,
+											bitIndex,
+											value),
 									set)));
 			return code;
 		}
@@ -1397,15 +1393,15 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			LitInteger bitIndex = (LitInteger)args.get(1);
 			LitBoolean value = (LitBoolean)args.get(2);
 			
 			BitSet s = (BitSet)set1.javaObject;
 			s.set((int)bitIndex.value, value.value);
-			return lc1;
+			return set1;
 		}
 
 		@Override
@@ -1444,9 +1440,9 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 									ClojureHelper.applyClojureFunction(
 											".set",
-											ClojureHelper.getLiteralInnerValue(set),
-											ClojureHelper.getLiteralInnerValue(fromIndex),
-											ClojureHelper.getLiteralInnerValue(toIndex)),
+											set,
+											fromIndex,
+											toIndex),
 									set)));
 			return code;
 		}
@@ -1459,15 +1455,15 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			LitInteger fromIndex = (LitInteger)args.get(1);
 			LitInteger toIndex = (LitInteger)args.get(2);
 			
 			BitSet s = (BitSet)set1.javaObject;
 			s.set((int)fromIndex.value, (int)toIndex.value);
-			return lc1;
+			return set1;
 		}
 
 		@Override
@@ -1507,10 +1503,10 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 									ClojureHelper.applyClojureFunction(
 											".set",
-											ClojureHelper.getLiteralInnerValue(set),
-											ClojureHelper.getLiteralInnerValue(fromIndex),
-											ClojureHelper.getLiteralInnerValue(toIndex),
-											ClojureHelper.getLiteralInnerValue(value)),
+											set,
+											fromIndex,
+											toIndex,
+											value),
 									set)));
 			return code;
 		}
@@ -1523,8 +1519,8 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			LitInteger fromIndex = (LitInteger)args.get(1);
 			LitInteger toIndex = (LitInteger)args.get(2);
@@ -1533,7 +1529,7 @@ public class JavaBitSet extends OperatorBank {
 			
 			LitBoolean value = (LitBoolean)args.get(3);
 			s.set((int)fromIndex.value, (int)toIndex.value, (boolean)value.value);
-			return lc1;
+			return set1;
 		}
 
 		@Override
@@ -1569,7 +1565,7 @@ public class JavaBitSet extends OperatorBank {
 					LitInteger.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".size",
-									ClojureHelper.getLiteralInnerValue(set))));
+									set)));
 			return code;
 		}
 
@@ -1581,8 +1577,8 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			BitSet s = (BitSet)set1.javaObject;
 			return new LitInteger(s.size());
@@ -1621,7 +1617,7 @@ public class JavaBitSet extends OperatorBank {
 					LitString.clojureLit(
 							ClojureHelper.applyClojureFunction(
 									".toString",
-									ClojureHelper.getLiteralInnerValue(set))));
+									set)));
 			return code;
 		}
 
@@ -1633,8 +1629,8 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
+			
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
 			
 			BitSet s = (BitSet)set1.javaObject;
 			return new LitString(s.toString());
@@ -1678,8 +1674,8 @@ public class JavaBitSet extends OperatorBank {
 							ClojureHelper.clojureVectorHelper(
 								ClojureHelper.applyClojureFunction(
 										".xor",
-										ClojureHelper.getLiteralInnerValue(set1),
-										ClojureHelper.getLiteralInnerValue(set2)),
+										set1,
+										set2),
 								set1)));
 			return code;
 		}
@@ -1692,18 +1688,18 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
 				throws AppendableException {
-			LitComposite lc1 = (LitComposite)args.get(0);
-			LitInteropObject set1 = (LitInteropObject)lc1.value;
 			
-			LitComposite lc2 = (LitComposite)args.get(1);
-			LitInteropObject set2 = (LitInteropObject)lc2.value;
+			LitInteropObject set1 = (LitInteropObject)args.get(0);
+			
+			
+			LitInteropObject set2 = (LitInteropObject)args.get(1);
 			
 			BitSet bSet1 = (BitSet)set1.javaObject;
 			BitSet bSet2 = (BitSet)set2.javaObject;
 			
 			bSet1.xor(bSet2);
 			
-			return lc1;
+			return set1;
 		}
 
 		@Override

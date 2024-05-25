@@ -489,14 +489,14 @@ public class ClojureHelper {
 		return ClojureHelper.applyClojureFunction(clojureFunction, Arrays.asList(args));
 	}
 	
-	/**
-	 * Gets inner value of literal
-	 * @param literalCode
-	 * @return
-	 */
-	public static String getLiteralInnerValue(String literalCode) {
-		return ClojureHelper.applyClojureFunction("first", literalCode);
-	}
+//	/**
+//	 * Gets inner value of literal
+//	 * @param literalCode
+//	 * @return
+//	 */
+//	public static String getLiteralInnerValue(String literalCode) {
+//		return ClojureHelper.applyClojureFunction("first", literalCode);
+//	}
 	
 	/**
 	 * Creates clojure cond expression
@@ -587,6 +587,13 @@ public class ClojureHelper {
 	 */
 	public static String setCostFunction(String fnCode, String costFunctionCode) {
 		String code = addMetadata(fnCode, new Pair<String, String>(ClojureCoreSymbols.costFunctionKey, costFunctionCode)); 
+		return code;
+	}
+	
+	public static String setCostAndType(String fnCode, String costFunctionCode, String typeInfo) {
+		String code = addMetadata(fnCode, 
+				new Pair<String, String>(ClojureCoreSymbols.costFunctionKey, costFunctionCode),
+				new Pair<String, String>(":lang-type", typeInfo)); 
 		return code;
 	}
 	

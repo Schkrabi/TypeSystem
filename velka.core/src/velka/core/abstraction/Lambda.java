@@ -220,9 +220,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 		
 		String fn = ClojureHelper.fnHelper(fnArgs, this.body.toClojureCode(child, typeEnv));
 		
-		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		
-		return Type.addTypeMetaInfo(fn, p.first);
+		return fn;
 	}
 
 	@Override

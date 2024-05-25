@@ -28,7 +28,6 @@ import velka.core.application.IfExpression;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
-import velka.core.expression.TypeSymbol;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.JavaArrayList;
@@ -40,6 +39,7 @@ import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
+import velka.parser.Parser;
 import velka.types.RepresentationOr;
 import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.TypeArrow;
@@ -581,129 +581,342 @@ class TestComplex extends VelkaTest {
 				env, typeEnv);
 
 		this.assertCompile("(println (tuple 42 \"42\"))", env, typeEnv);
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
+				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
+				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" 
+				+ "(define z (fcons 1 2))\n"
+				+ "(println (fcar z))");
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
+				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
+				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" 
+				+ "(define z (fcons 1 2))\n"
+				+ "(println (fcdr z))" );
 
 		this.assertIntprtAndCompPrintSameValues(
-				";;List is now already defined internal type, so we omit it\n"
-				+ "(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))\n" 
+				"(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))\n" 
 				+ "(constructor List:Linked () nil)\n" + "\n"
+				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))\n" 
+				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n"
+				+ "(println x)\n");
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
+				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
+				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" 
+				+ "(define z (fcons 1 2))\n"
+				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))\n" 
+				+ "(constructor List:Functional () nil)\n"
+				+ "(define y (construct List:Functional (construct Int:Roman \"XLII\") (construct List:Functional (construct Int:String \"42\") (construct List:Functional 42 (construct List:Functional)))))\n"
+				+ "(let-type (A B C) (println (fcar (deconstruct y ((((A) #> B)) #> C)))))\n");
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))\n" 
+				+ "(constructor List:Linked () nil)\n" + "\n"
+				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n" 
 				+ "(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
 				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
 				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" 
 				+ "(define z (fcons 1 2))\n"
-				+ "(println (fcar z))\n" 
-				+ "(println (fcdr z))\n" 
 				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))\n" 
 				+ "(constructor List:Functional () nil)\n"
-				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n"
 				+ "(define y (construct List:Functional (construct Int:Roman \"XLII\") (construct List:Functional (construct Int:String \"42\") (construct List:Functional 42 (construct List:Functional)))))\n"
-				+ "(println x)\n" 
 				+ "(define is-list-empty "
-					+ "(extend (extend (extended-lambda (List)) "
-						+ "(lambda ((List:Linked l)) (can-deconstruct-as l ()))) "
-						+ "(lambda ((List:Functional l)) (can-deconstruct-as l ()))))"
+				+ "(extend (extend (extended-lambda (List)) "
+					+ "(lambda ((List:Linked l)) (can-deconstruct-as l ()))) "
+					+ "(lambda ((List:Functional l)) (can-deconstruct-as l ()))))"
 				+ "(println (is-list-empty x))" 
 				+ "(println (is-list-empty y))"
 				+ "(println (is-list-empty (construct List:Linked)))\n"
 				+ "(println (is-list-empty (construct List:Functional)))\n"
 				+ "(println (is-list-empty (let-type (A) (cdr (deconstruct x (A List:Linked))))))\n"
 				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct y ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
-				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct (construct List:Functional 42 (construct List:Functional)) ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
+				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct (construct List:Functional 42 (construct List:Functional)) ((((A List:Functional) #> List:Functional)) #> List:Functional))))))");
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))\n" 
+				+ "(constructor List:Linked () nil)\n" + "\n"
+				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n" 
+				+ "(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
+				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
+				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" 
+				+ "(define z (fcons 1 2))\n"
+				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))\n" 
+				+ "(constructor List:Functional () nil)\n"
+				+ "(define y (construct List:Functional (construct Int:Roman \"XLII\") (construct List:Functional (construct Int:String \"42\") (construct List:Functional 42 (construct List:Functional)))))\n"
+				+ "(define is-list-empty "
+				+ "(extend (extend (extended-lambda (List)) "
+					+ "(lambda ((List:Linked l)) (can-deconstruct-as l ()))) "
+					+ "(lambda ((List:Functional l)) (can-deconstruct-as l ()))))"
 				+ "(define head-list (let-type (A B) "
-					+ "(extend (extend (extended-lambda (List)) "
-						+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
-							+ "(error \"Cannot make head of empty list\") "
-							+ "(car (deconstruct l (A List:Linked)))))) "
-						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
-							+ "(error \"Cannot make head of empty list\") "
-							+ "(fcar (deconstruct l ((((A List:Functional) #> B)) #> B))))))))"
+				+ "(extend (extend (extended-lambda (List)) "
+					+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+						+ "(error \"Cannot make head of empty list\") "
+						+ "(car (deconstruct l (A List:Linked)))))) "
+					+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+						+ "(error \"Cannot make head of empty list\") "
+						+ "(fcar (deconstruct l ((((A List:Functional) #> B)) #> B))))))))"
 				+ "(println (head-list x))" 
-				+ "(println (head-list y))" 
-				+ "(define tail-list (let-type (A) "
-					+ "(extend (extend (extended-lambda (List)) "
-						+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
-							+ "(error \"Cannot take tail of an empty list\") "
-							+ "(cdr (deconstruct l (A List:Linked)))))) "
-						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
-							+ "(error \"Cannot take tail of an empty list\") "
-							+ "(fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))"
-				+ "(println (tail-list x)) " 
-				+ "(println (head-list (tail-list y))) "
+				+ "(println (head-list y))");
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))\n" 
+				+ "(constructor List:Linked () nil)\n" + "\n"
+				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n" 
+				+ "(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
+				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
+				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" 
+				+ "(define z (fcons 1 2))\n"
+				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))\n" 
+				+ "(constructor List:Functional () nil)\n"
+				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n"
+				+ "(define y (construct List:Functional (construct Int:Roman \"XLII\") (construct List:Functional (construct Int:String \"42\") (construct List:Functional 42 (construct List:Functional)))))\n"
+				+ "(define is-list-empty "
+				+ "(extend (extend (extended-lambda (List)) "
+					+ "(lambda ((List:Linked l)) (can-deconstruct-as l ()))) "
+					+ "(lambda ((List:Functional l)) (can-deconstruct-as l ()))))"
+				+ "(define head-list (let-type (A B) "
+				+ "(extend (extend (extended-lambda (List)) "
+					+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+						+ "(error \"Cannot make head of empty list\") "
+						+ "(car (deconstruct l (A List:Linked)))))) "
+					+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+						+ "(error \"Cannot make head of empty list\") "
+						+ "(fcar (deconstruct l ((((A List:Functional) #> B)) #> B))))))))"				
 				+ "(define build-list-aux (lambda (i n f) " 
-					+ "(if (= i n) "
-						+ "(construct List:Linked) "
-						+ "(construct List:Linked (f i) (build-list-aux (+ i 1) n f))))) "
+				+ "(if (= i n) "
+					+ "(construct List:Linked) "
+					+ "(construct List:Linked (f i) (build-list-aux (+ i 1) n f))))) "
 				+ "(println (build-list-aux 0 5 (lambda (x) (+ x 1)))) "
 				+ "(define build-list (lambda (n f) (build-list-aux 0 n f))) "
-				+ "(println (build-list 5 (lambda (x) (+ x 1)))) " 
+				+ "(println (build-list 5 (lambda (x) (+ x 1)))) " );
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))\n" 
+				+ "(constructor List:Linked () nil)\n" + "\n"
+				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n" 
+				+ "(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
+				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
+				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" 
+				+ "(define z (fcons 1 2))\n"
+				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))\n" 
+				+ "(constructor List:Functional () nil)\n"
+				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n"
+				+ "(define y (construct List:Functional (construct Int:Roman \"XLII\") (construct List:Functional (construct Int:String \"42\") (construct List:Functional 42 (construct List:Functional)))))\n"
+				+ "(define is-list-empty "
+				+ "(extend (extend (extended-lambda (List)) "
+					+ "(lambda ((List:Linked l)) (can-deconstruct-as l ()))) "
+					+ "(lambda ((List:Functional l)) (can-deconstruct-as l ()))))"
+				+ "(define head-list (let-type (A B) "
+				+ "(extend (extend (extended-lambda (List)) "
+					+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+						+ "(error \"Cannot make head of empty list\") "
+						+ "(car (deconstruct l (A List:Linked)))))) "
+					+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+						+ "(error \"Cannot make head of empty list\") "
+						+ "(fcar (deconstruct l ((((A List:Functional) #> B)) #> B))))))))"	
+				+ "(define tail-list (let-type (A) "
+						+ "(extend (extend (extended-lambda (List)) "
+							+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+								+ "(error \"Cannot take tail of an empty list\") "
+								+ "(cdr (deconstruct l (A List:Linked)))))) "
+							+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+								+ "(error \"Cannot take tail of an empty list\") "
+								+ "(fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))"
+				+ "(define build-list-aux (lambda (i n f) " 
+				+ "(if (= i n) "
+					+ "(construct List:Linked) "
+					+ "(construct List:Linked (f i) (build-list-aux (+ i 1) n f))))) "				
 				+ "(define append-list (let-type (A) "
-					+ "(extend (extend (extended-lambda (List A)) "
-						+ "(lambda ((List:Linked l) (A x)) (if (is-list-empty l) "
-							+ "(construct List:Linked x (construct List:Linked)) "
-							+ "(construct List:Linked (head-list l) (append-list (tail-list l) x))))) "
-						+ "(lambda ((List:Functional l) (A x)) (if (is-list-empty l) "
-							+ "(construct List:Functional x (construct List:Functional)) "
-							+ "(construct List:Functional (head-list l) (append-list (tail-list l) x))))))) "
-				+ "(println (append-list x 21)) "
+				+ "(extend (extend (extended-lambda (List A)) "
+					+ "(lambda ((List:Linked l) (A x)) (if (is-list-empty l) "
+						+ "(construct List:Linked x (construct List:Linked)) "
+						+ "(construct List:Linked (head-list l) (append-list (tail-list l) x))))) "
+					+ "(lambda ((List:Functional l) (A x)) (if (is-list-empty l) "
+						+ "(construct List:Functional x (construct List:Functional)) "
+						+ "(construct List:Functional (head-list l) (append-list (tail-list l) x))))))) "
+				+ "(println (append-list x 21)) ");
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))\n" 
+				+ "(constructor List:Linked () nil)\n" + "\n"
+				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n" 
+				+ "(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
+				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
+				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" 
+				+ "(define z (fcons 1 2))\n"
+				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))\n" 
+				+ "(constructor List:Functional () nil)\n"
+				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n"
+				+ "(define y (construct List:Functional (construct Int:Roman \"XLII\") (construct List:Functional (construct Int:String \"42\") (construct List:Functional 42 (construct List:Functional)))))\n"
+				+ "(define is-list-empty "
+				+ "(extend (extend (extended-lambda (List)) "
+					+ "(lambda ((List:Linked l)) (can-deconstruct-as l ()))) "
+					+ "(lambda ((List:Functional l)) (can-deconstruct-as l ()))))"
+				+ "(define head-list (let-type (A B) "
+				+ "(extend (extend (extended-lambda (List)) "
+					+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+						+ "(error \"Cannot make head of empty list\") "
+						+ "(car (deconstruct l (A List:Linked)))))) "
+					+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+						+ "(error \"Cannot make head of empty list\") "
+						+ "(fcar (deconstruct l ((((A List:Functional) #> B)) #> B))))))))"	
+				+ "(define tail-list (let-type (A) "
+				+ "(extend (extend (extended-lambda (List)) "
+					+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+						+ "(error \"Cannot take tail of an empty list\") "
+						+ "(cdr (deconstruct l (A List:Linked)))))) "
+					+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+						+ "(error \"Cannot take tail of an empty list\") "
+						+ "(fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))"
+				+ "(define build-list-aux (lambda (i n f) " 
+				+ "(if (= i n) "
+					+ "(construct List:Linked) "
+					+ "(construct List:Linked (f i) (build-list-aux (+ i 1) n f))))) "				
+				+ "(define append-list (let-type (A) "
+				+ "(extend (extend (extended-lambda (List A)) "
+					+ "(lambda ((List:Linked l) (A x)) (if (is-list-empty l) "
+						+ "(construct List:Linked x (construct List:Linked)) "
+						+ "(construct List:Linked (head-list l) (append-list (tail-list l) x))))) "
+					+ "(lambda ((List:Functional l) (A x)) (if (is-list-empty l) "
+						+ "(construct List:Functional x (construct List:Functional)) "
+						+ "(construct List:Functional (head-list l) (append-list (tail-list l) x))))))) "
 				+ "(define reverse-list "
-					+ "(extend (extend (extended-lambda (List)) "
-						+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
-							+ "(construct List:Linked) "
-							+ "(append-list (reverse-list (tail-list l)) (head-list l))))) "
-						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
-							+ "(construct List:Functional) "
-							+ "(append-list (reverse-list (tail-list l)) (head-list l)))))) "
-				+ "(println (reverse-list x)) " 
-				+ "(println (head-list (reverse-list y)))");
+				+ "(extend (extend (extended-lambda (List)) "
+					+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+						+ "(construct List:Linked) "
+						+ "(append-list (reverse-list (tail-list l)) (head-list l))))) "
+					+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+						+ "(construct List:Functional) "
+						+ "(append-list (reverse-list (tail-list l)) (head-list l)))))) "
+			+ "(println (reverse-list x)) " 
+			+ "(println (head-list (reverse-list y)))");
+				
+//		this.assertIntprtAndCompPrintSameValues(
+//				";;List is now already defined internal type, so we omit it\n"
+//				+ "(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))\n" 
+//				+ "(constructor List:Linked () nil)\n" + "\n"
+//				+ "(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
+//				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
+//				+ "(define fcdr (lambda (p) (p (lambda (x y) y))))\n" 
+//				+ "(define z (fcons 1 2))\n"
+//				+ "(println (fcar z))\n" 
+//				+ "(println (fcdr z))\n" 
+//				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))\n" 
+//				+ "(constructor List:Functional () nil)\n"
+//				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n"
+//				+ "(define y (construct List:Functional (construct Int:Roman \"XLII\") (construct List:Functional (construct Int:String \"42\") (construct List:Functional 42 (construct List:Functional)))))\n"
+//				+ "(println x)\n" 
+//				+ "(define is-list-empty "
+//					+ "(extend (extend (extended-lambda (List)) "
+//						+ "(lambda ((List:Linked l)) (can-deconstruct-as l ()))) "
+//						+ "(lambda ((List:Functional l)) (can-deconstruct-as l ()))))"
+//				+ "(println (is-list-empty x))" 
+//				+ "(println (is-list-empty y))"
+//				+ "(println (is-list-empty (construct List:Linked)))\n"
+//				+ "(println (is-list-empty (construct List:Functional)))\n"
+//				+ "(println (is-list-empty (let-type (A) (cdr (deconstruct x (A List:Linked))))))\n"
+//				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct y ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
+//				+ "(println (is-list-empty (let-type (A) (fcdr (deconstruct (construct List:Functional 42 (construct List:Functional)) ((((A List:Functional) #> List:Functional)) #> List:Functional))))))\n"
+//				+ "(define head-list (let-type (A B) "
+//					+ "(extend (extend (extended-lambda (List)) "
+//						+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+//							+ "(error \"Cannot make head of empty list\") "
+//							+ "(car (deconstruct l (A List:Linked)))))) "
+//						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+//							+ "(error \"Cannot make head of empty list\") "
+//							+ "(fcar (deconstruct l ((((A List:Functional) #> B)) #> B))))))))"
+//				+ "(println (head-list x))" 
+//				+ "(println (head-list y))" 
+//				+ "(define tail-list (let-type (A) "
+//					+ "(extend (extend (extended-lambda (List)) "
+//						+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+//							+ "(error \"Cannot take tail of an empty list\") "
+//							+ "(cdr (deconstruct l (A List:Linked)))))) "
+//						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+//							+ "(error \"Cannot take tail of an empty list\") "
+//							+ "(fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))"
+//				+ "(println (tail-list x)) " 
+//				+ "(println (head-list (tail-list y))) "
+//				+ "(define build-list-aux (lambda (i n f) " 
+//					+ "(if (= i n) "
+//						+ "(construct List:Linked) "
+//						+ "(construct List:Linked (f i) (build-list-aux (+ i 1) n f))))) "
+//				+ "(println (build-list-aux 0 5 (lambda (x) (+ x 1)))) "
+//				+ "(define build-list (lambda (n f) (build-list-aux 0 n f))) "
+//				+ "(println (build-list 5 (lambda (x) (+ x 1)))) " 
+//				+ "(define append-list (let-type (A) "
+//					+ "(extend (extend (extended-lambda (List A)) "
+//						+ "(lambda ((List:Linked l) (A x)) (if (is-list-empty l) "
+//							+ "(construct List:Linked x (construct List:Linked)) "
+//							+ "(construct List:Linked (head-list l) (append-list (tail-list l) x))))) "
+//						+ "(lambda ((List:Functional l) (A x)) (if (is-list-empty l) "
+//							+ "(construct List:Functional x (construct List:Functional)) "
+//							+ "(construct List:Functional (head-list l) (append-list (tail-list l) x))))))) "
+//				+ "(println (append-list x 21)) "
+//				+ "(define reverse-list "
+//					+ "(extend (extend (extended-lambda (List)) "
+//						+ "(lambda ((List:Linked l)) (if (is-list-empty l) "
+//							+ "(construct List:Linked) "
+//							+ "(append-list (reverse-list (tail-list l)) (head-list l))))) "
+//						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
+//							+ "(construct List:Functional) "
+//							+ "(append-list (reverse-list (tail-list l)) (head-list l)))))) "
+//				+ "(println (reverse-list x)) " 
+//				+ "(println (head-list (reverse-list y)))");
 	}
 
-	@Test
-	@DisplayName("Test Clojure TypeSymbol")
-	void testClojureTypeSymbol() throws Exception {
-		// (println (let-type (A) (can-unify-representations Int:Native A)))
-		this
-				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
-						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyRepresentations,
-								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
-										new TypeSymbol(new TypeVariable(NameGenerator.next()))))))))));
-		// (println (can-unify-representations Int:Native Int:Native))
-		this.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(
-				Operators.PrintlnOperator,
-				new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyRepresentations, new Tuple(Arrays
-						.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative)))))))));
-		// (println (can-unify-representations Int:Native Int:Roman))
-		this.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(
-				Operators.PrintlnOperator,
-				new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyRepresentations, new Tuple(Arrays
-						.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman)))))))));
-		// (println (can-unify-representations Int:Native String:Native))
-		this
-				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
-						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyRepresentations,
-								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
-										new TypeSymbol(TypeAtom.TypeStringNative)))))))));
-		// (println (let-type (A) (can-unify-types Int:Native A)))
-		this
-				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
-						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes,
-								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
-										new TypeSymbol(new TypeVariable(NameGenerator.next()))))))))));
-		// (println (can-unify-types Int:Native Int:Native))
-		this.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(
-				Operators.PrintlnOperator,
-				new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes, new Tuple(Arrays
-						.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative)))))))));
-		// (println (can-unify-types Int:Native Int:Roman))
-		this.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(
-				Operators.PrintlnOperator,
-				new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes, new Tuple(Arrays
-						.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman)))))))));
-		// (println (can-unify-types Int:Native String:Native))
-		this
-				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
-						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes,
-								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
-										new TypeSymbol(TypeAtom.TypeStringNative)))))))));
-	}
+//	@Test
+//	@DisplayName("Test Clojure TypeSymbol")
+//	void testClojureTypeSymbol() throws Exception {
+//		// (println (let-type (A) (can-unify-representations Int:Native A)))
+//		this
+//				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
+//						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyRepresentations,
+//								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
+//										new TypeSymbol(new TypeVariable(NameGenerator.next()))))))))));
+//		// (println (can-unify-representations Int:Native Int:Native))
+//		this.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(
+//				Operators.PrintlnOperator,
+//				new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyRepresentations, new Tuple(Arrays
+//						.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative)))))))));
+//		// (println (can-unify-representations Int:Native Int:Roman))
+//		this.assertIntprtAndCompPrintSameValues(List.of(
+//				new AbstractionApplication(
+//						Operators.PrintlnOperator,
+//						new Tuple(new AbstractionApplication(Operators.CanUnifyRepresentations, new Tuple(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman)))))));
+//		// (println (can-unify-representations Int:Native String:Native))
+//		this
+//				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
+//						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyRepresentations,
+//								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
+//										new TypeSymbol(TypeAtom.TypeStringNative)))))))));
+//		// (println (let-type (A) (can-unify-types Int:Native A)))
+//		this
+//				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
+//						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes,
+//								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
+//										new TypeSymbol(new TypeVariable(NameGenerator.next()))))))))));
+//		// (println (can-unify-types Int:Native Int:Native))
+//		this.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(
+//				Operators.PrintlnOperator,
+//				new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes, new Tuple(Arrays
+//						.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative)))))))));
+//		// (println (can-unify-types Int:Native Int:Roman))
+//		this.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(
+//				Operators.PrintlnOperator,
+//				new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes, new Tuple(Arrays
+//						.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman)))))))));
+//		// (println (can-unify-types Int:Native String:Native))
+//		this
+//				.assertIntprtAndCompPrintSameValues(Arrays.asList(new AbstractionApplication(Operators.PrintlnOperator,
+//						new Tuple(Arrays.asList(new AbstractionApplication(Operators.CanUnifyTypes,
+//								new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
+//										new TypeSymbol(TypeAtom.TypeStringNative)))))))));
+//	}
 
 	@Test
 	@DisplayName("Test clojure instance-of and instance-of-representation")
@@ -734,7 +947,7 @@ class TestComplex extends VelkaTest {
 	@Test
 	@DisplayName("Test Custom Cost Function Compilation")
 	void testCustomRanking() throws Exception {
-Tuple elambda_args = new Tuple(new Symbol("a"));
+		Tuple elambda_args = new Tuple(new Symbol("a"));
 		
 		Lambda impl1 = new Lambda(
 				elambda_args, 
@@ -803,7 +1016,7 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.listNativeToTuple_full, 
 								ListNative.listNativeClojure(LitInteger.clojureLit("1"),
 										LitInteger.clojureLit("2")))),
-				"([1] [2])");
+				"(1 2)");
 		
 		assertClojureFunction(
 				definitions.toString(),
@@ -819,58 +1032,63 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 		assertClojureFunction(
 				definitions.toString(), 
 				"(println (" + ClojureCoreSymbols.tuple2velkaListSymbol_full + " [1 2 3]))",
-				"[(1 2 3)]");
+				"(1 2 3)");
 		
 		assertClojureFunction(
 				definitions.toString(),
 				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntRoman.clojureTypeRepresentation() + 
 						LitInteger.clojureLit("1") + "))",
-				"[[I]]");
+				"[I]");
 		
 		assertClojureFunction(
 				definitions.toString(),
 				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
 						TypeAtom.TypeIntString.clojureTypeRepresentation() + 
 						LitInteger.clojureLit("1") + "))",
-				"[[1]]");
-		
-		assertClojureFunction(
-				definitions.toString(),
-				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
-						TypeAtom.TypeIntNative.clojureTypeRepresentation() + 
-						LitComposite.clojureValueToClojureLiteral(LitString.clojureLit("\"1\""), TypeAtom.TypeIntString) + "))",
 				"[1]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
-						TypeAtom.TypeIntRoman.clojureTypeRepresentation() + 
-						LitComposite.clojureValueToClojureLiteral(LitString.clojureLit("\"1\""), TypeAtom.TypeIntString) + "))",
-				"[[I]]");
+				ClojureHelper.applyClojureFunction("println", 
+						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertAtomClojureSymbol_full, 
+								TypeAtom.TypeIntNative.clojureTypeRepresentation(),
+								ClojureHelper.litCompositeHelper_str(TypeAtom.TypeIntString.clojureTypeRepresentation(), ClojureHelper.stringHelper("1")))),
+				"1");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
-						TypeAtom.TypeIntNative.clojureTypeRepresentation() + 
-						LitComposite.clojureValueToClojureLiteral(LitString.clojureLit("\"I\""), TypeAtom.TypeIntRoman) + "))",
+				ClojureHelper.applyClojureFunction("println", 
+						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertAtomClojureSymbol_full, 
+								TypeAtom.TypeIntRoman.clojureTypeRepresentation(),
+								ClojureHelper.litCompositeHelper_str(TypeAtom.TypeIntString.clojureTypeRepresentation(), ClojureHelper.stringHelper("1")))),
+				"[I]");
+		
+		assertClojureFunction(
+				definitions.toString(),
+				ClojureHelper.applyClojureFunction("println", 
+						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertAtomClojureSymbol_full, 
+								TypeAtom.TypeIntNative.clojureTypeRepresentation(),
+								ClojureHelper.litCompositeHelper_str(TypeAtom.TypeIntRoman.clojureTypeRepresentation(), ClojureHelper.stringHelper("I")))),
+				"1");
+		
+		assertClojureFunction(
+				definitions.toString(),
+				ClojureHelper.applyClojureFunction("println", 
+						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertAtomClojureSymbol_full, 
+								TypeAtom.TypeIntString.clojureTypeRepresentation(),
+								ClojureHelper.litCompositeHelper_str(TypeAtom.TypeIntRoman.clojureTypeRepresentation(), ClojureHelper.stringHelper("I")))),
 				"[1]");
-		
-		assertClojureFunction(
-				definitions.toString(),
-				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
-						TypeAtom.TypeIntString.clojureTypeRepresentation() + 
-						LitComposite.clojureValueToClojureLiteral(LitString.clojureLit("\"I\""), TypeAtom.TypeIntRoman) + "))",
-				"[[1]]");
 		
 		Tuple t = new Tuple(new LitInteger(1), new LitComposite(new LitString("1"), TypeAtom.TypeIntString));
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCoreSymbols.convertTupleClojureSymbol_full + " " +
-						new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman).clojureTypeRepresentation() + " " +
-						t.toClojureCode(env, typeEnv) + "))",
-				"[[1] [[I]]]");
+				ClojureHelper.applyClojureFunction("println", 
+						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertTupleClojureSymbol_full, 
+								new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman).clojureTypeRepresentation(),
+								t.toClojureCode(env, typeEnv))),
+				"[1 [I]]");
 		
 		Lambda l = (Lambda)(this.parseString("(lambda ((Int:String x)) 1)").get(0));
 		TypeArrow lambda_to = new TypeArrow(new TypeTuple(TypeAtom.TypeIntRoman), TypeAtom.TypeIntString);
@@ -886,7 +1104,7 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 										lambda_to.clojureTypeRepresentation(),
 										l.toClojureCode(env, typeEnv)),
 								arg.toClojureCode(env, typeEnv))),
-				"[[1]]");
+				"[1]");
 		
 		Lambda l2 = (Lambda)(this.parseString("(lambda () 1)")).get(0);
 		TypeArrow l2_to = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeIntString);
@@ -898,15 +1116,6 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 												ClojureCoreSymbols.convertFnClojureSymbol_full, 
 												l2_to.clojureTypeRepresentation(),
 												l2.toClojureCode(env, typeEnv)))),
-				"[[1]]");
-		
-		assertClojureFunction(
-				definitions.toString(),
-				ClojureHelper.applyClojureFunction(
-						"println",
-						ClojureHelper.applyVelkaFunction_argsTuple(
-								l.toClojureCode(env, typeEnv),
-								(new Tuple(arg)).toClojureCode(env, typeEnv))),
 				"[1]");
 		
 		assertClojureFunction(
@@ -916,9 +1125,18 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 						ClojureHelper.applyVelkaFunction_argsTuple(
 								l.toClojureCode(env, typeEnv),
 								(new Tuple(arg)).toClojureCode(env, typeEnv))),
-				"[1]"); 
+				"1");
+		
+		assertClojureFunction(
+				definitions.toString(),
+				ClojureHelper.applyClojureFunction(
+						"println",
+						ClojureHelper.applyVelkaFunction_argsTuple(
+								l.toClojureCode(env, typeEnv),
+								(new Tuple(arg)).toClojureCode(env, typeEnv))),
+				"1"); 
 				
-				ListNative.makeListNativeExpression(
+				ListNative.of(
 				new LitInteger(42),
 				new LitComposite(new LitString("42"), TypeAtom.TypeIntString));	
 		
@@ -944,7 +1162,7 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 				 	"(println (" + ClojureCoreSymbols.convertToRepOrClojureSymbol_full + " " + 
 				 			RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString).clojureTypeRepresentation() + " " +
 				 			new LitInteger(42).toClojureCode(env, typeEnv) + "))",
-				 	"[42]");
+				 	"42");
 	}
 	
 	@Test
@@ -982,329 +1200,6 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 		this.assertIntprtAndCompPrintSameValues("(println (reverse-list-native (build-list-native 3 (lambda (x) x))))");
 		this.assertIntprtAndCompPrintSameValues("(everyp-list-native (construct List:Native #t (construct List:Native #t (construct List:Native))) (lambda (x) x))");
 		this.assertIntprtAndCompPrintSameValues("(everyp-list-native (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))");
-	}
-	
-	@Test
-	@DisplayName("Test Java Array List Clojure")
-	void testJavaArrayListClojure() throws Exception {
-		this.assertIntprtAndCompPrintSameValues("(construct List:JavaArray)");
-		this.assertIntprtAndCompPrintSameValues("(construct List:JavaArray (build-list-native 2 (lambda (x) x)))");
-		this.assertIntprtAndCompPrintSameValues("(construct List:JavaArray 42)");
-		this.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToEndSymbol_out.toString() + " (construct List:JavaArray) 42))");
-		this.assertIntprtAndCompPrintSameValues("(println (" + JavaArrayList.addToIndexSymbol_out.toString() + " (construct List:JavaArray) 0 42))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
-				+ "(println (" + JavaArrayList.addAllSymbol_out + " l1 l2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
-				+ "(println (" + JavaArrayList.containsSymbol_out + " l1 42))"
-				+ "(println (" + JavaArrayList.containsSymbol_out + " l1 84))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
-				+ "(println (" + JavaArrayList.containsAllSymbol_out + " l1 l2))"
-				+ "(println (" + JavaArrayList.containsAllSymbol_out + " l2 l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(println (" + JavaArrayList.getSymbol_out + " l1 0))");
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaArrayList.indexOfSymbol_out + " l1 1))"
-				+ "(println (" + JavaArrayList.indexOfSymbol_out + " l1 42))");
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(println (" + JavaArrayList.isEmptySymbol_out + " (construct List:JavaArray)))");
-		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaArrayList.isEmptySymbol_out + " l1))");
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaArrayList.lastIndexOfSymbol_out + " l1 1))"
-				+ "(println (" + JavaArrayList.lastIndexOfSymbol_out + " l1 42))");
-		/*
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
-				+ "(println (" + JavaArrayList.removeSymbol + " l1 0))");
-				*/
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaArrayList.removeSymbol_out + " l1 2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
-				+ "(println (" + JavaArrayList.removeAllSymbol_out + " l1 l2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
-				+ "(println (" + JavaArrayList.retainAllSymbol_out + " l1 l2))"
-				+ "(println (" + JavaArrayList.retainAllSymbol_out + " l2 l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaArrayList.setSymbol_out + " l1 0 2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaArrayList.sizeSymbol_out + " l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 84)" 
-				+ "(define l2 (" + JavaArrayList.sublistSymbol_out + " l1 0 1))"
-				+ "(println (" + JavaArrayList.getSymbol_out + " l2 0))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 84)" 
-				+ "(define l2 (" + JavaArrayList.mapSymbol_out + " l1 (lambda (x) (* x 2))))"
-				+ "(println (" + JavaArrayList.getSymbol_out + " l2 0))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 3)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
-				+ "(define l3 (" + JavaArrayList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y))))"
-				+ "(println (" + JavaArrayList.getSymbol_out + " l3 0))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
-				+ "(println (" + JavaArrayList.foldlSymbol_out + " + 0 l1))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 4)"
-				+ "(println (" + JavaArrayList.foldrSymbol_out + " / 16 l1))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l (construct List:JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
-				+ "(println (" + JavaLinkedList.getSymbol_out + " (convert List:JavaArray List:JavaLinked l) 0))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l (construct List:JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
-				+ "(println (head-list-native (convert List:JavaArray List:Native l)))");
-		this.assertIntprtAndCompPrintSameValues("(java-array-list-everyp (construct List:Native #t (construct List:Native #t (construct List:Native))) (lambda (x) x))");
-		this.assertIntprtAndCompPrintSameValues("(java-array-list-everyp (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))");
-	}
-	
-	@Test
-	@DisplayName("Test Java Linked List Clojure")
-	void testJavaLinkedListClojure() throws Exception {
-		this.assertIntprtAndCompPrintSameValues("(construct List:JavaLinked)");
-		this.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToEndSymbol_out.toString() + " (construct List:JavaLinked) 42))");
-		this.assertIntprtAndCompPrintSameValues("(println (" + JavaLinkedList.addToIndexSymbol_out.toString() + " (construct List:JavaLinked) 0 42))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
-				+ "(println (" + JavaLinkedList.addAllSymbol_out + " l1 l2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(println (" + JavaLinkedList.containsSymbol_out + " l1 42))"
-				+ "(println (" + JavaLinkedList.containsSymbol_out + " l1 84))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
-				+ "(println (" + JavaLinkedList.containsAllSymbol_out + " l1 l2))"
-				+ "(println (" + JavaLinkedList.containsAllSymbol_out + " l2 l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(println (" + JavaLinkedList.getSymbol_out + " l1 0))");
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaLinkedList.indexOfSymbol_out + " l1 1))"
-				+ "(println (" + JavaLinkedList.indexOfSymbol_out + " l1 42))");
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(println (" + JavaLinkedList.isEmptySymbol_out + " (construct List:JavaLinked)))");
-		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaLinkedList.isEmptySymbol_out + " l1))");
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaLinkedList.lastIndexOfSymbol_out + " l1 1))"
-				+ "(println (" + JavaLinkedList.lastIndexOfSymbol_out + " l1 42))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaLinkedList.removeSymbol_out + " l1 2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
-				+ "(println (" + JavaLinkedList.removeAllSymbol_out + " l1 l2))"
-				+ "(println (" + JavaLinkedList.removeAllSymbol_out + " l2 l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
-				+ "(println (" + JavaLinkedList.retainAllSymbol_out + " l1 l2))"
-				+ "(println (" + JavaLinkedList.retainAllSymbol_out + " l2 l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaLinkedList.setSymbol_out + " l1 0 2))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(println (" + JavaLinkedList.sizeSymbol_out + " l1))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 84)" 
-				+ "(define l2 (" + JavaLinkedList.sublistSymbol_out + " l1 0 1))"
-				+ "(println (" + JavaLinkedList.getSymbol_out + " l2 0))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 84)" 
-				+ "(define l2 (" + JavaLinkedList.mapSymbol_out + " l1 (lambda (x) (* x 2))))"
-				+ "(println (" + JavaLinkedList.getSymbol_out + " l2 0))");
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
-				+ "(define l3 (" + JavaLinkedList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y))))"
-				+ "(println (" + JavaLinkedList.getSymbol_out + " l3 0))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
-				+ "(println (" + JavaLinkedList.foldlSymbol_out + " + 0 l1))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 4)"
-				+ "(println (" + JavaLinkedList.foldrSymbol_out + " / 16 l1))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l (construct List:JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
-				+ "(println (" + JavaArrayList.getSymbol_out + " (convert List:JavaLinked List:JavaArray l) 0))");
-		
-		this.assertIntprtAndCompPrintSameValues("(define l (construct List:JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
-				+ "(println (" + JavaLinkedList.getSymbol_out + " l 0))");
-		this.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List:Native #t (construct List:Native #t (construct List:Native))) (lambda (x) x))");
-		this.assertIntprtAndCompPrintSameValues("(java-linked-list-everyp (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))");
-		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List:JavaLinked))\n"
-				+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-				+ "(println (java-linked-list-to-str l))");		
-		
-		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))"
-						+ "(println (linked-list-iterator-next (java-linked-list-iterator l 0)))");
-		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 0))\n"
-						+ "(println (linked-list-iterator-next (linked-list-iterator-add it 42)))"
-						+ "(println (java-linked-list-to-str l))");
-		
-		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 0))\n"
-						+ "(println (linked-list-iterator-has-next it))");
-		
-		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 0))\n"
-						+ "(println (linked-list-iterator-has-previous it))");
-		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 0))\n"
-						+ "(println (linked-list-iterator-next-index it))");
-		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 3))\n"
-						+ "(println (linked-list-iterator-previous it))");
-		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 3))\n"
-						+ "(println (linked-list-iterator-previous-index it))");
-		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 3))\n"
-						+ "(linked-list-iterator-next it)"
-						+ "(println (linked-list-iterator-next (linked-list-iterator-remove it)))"
-						+ "(println (java-linked-list-to-str l))");
-		assertIntprtAndCompPrintSameValues(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 3))\n"
-						+ "(linked-list-iterator-next it)"
-						+ "(println (linked-list-iterator-next (linked-list-iterator-set it 42)))"
-						+ "(println (java-linked-list-to-str l))");
 	}
 	
 	@Test
@@ -1510,35 +1405,41 @@ Tuple elambda_args = new Tuple(new Symbol("a"));
 	@Test
 	@DisplayName("Test Sandbox")
 	void testSandbox() throws Exception{				
-		Expression e = parseString(
-				"(let-type (A B C D) "
-				+ "(lambda (((C D) cd))"
-					+ "(tuple"
-						+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) cd)"
-						+ "((lambda (((Double:Native B) ab)) (dadd (car ab) 1.0)) cd)"
-						+ "((lambda (((Double:Native Double:Native) ab)) (dadd (car ab) (cdr ab))) cd))))"
-				).get(0);
+//		Expression e = parseString(
+//				"(let-type (A B C D) "
+//				+ "(lambda (((C D) cd))"
+//					+ "(tuple"
+//						+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) cd)"
+//						+ "((lambda (((Double:Native B) ab)) (dadd (car ab) 1.0)) cd)"
+//						+ "((lambda (((Double:Native Double:Native) ab)) (dadd (car ab) (cdr ab))) cd))))"
+//				).get(0);
+//		
+//		Environment env = Environment.initTopLevelEnvironment();
+//		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+//		
+//		assertThrows(SubstitutionsCannotBeMergedException.class,
+//				() -> e.infer(env, typeEnv));
+//		
+//		assertAll(() ->
+//				parseString(
+//						"(let-type (A B)"
+//								+ "(lambda ()"
+//									+ "(tuple"
+//										+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) (tuple 3.14 42))"
+//										+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) (tuple \"foo\" 42)))))")
+//				.get(0).infer(env, typeEnv));
+//		
+//		assertInterpretedStringEquals(
+//				"(define f (lambda (x) x))"
+//				+ "(tuple (f \"foo\") (f 42))",
+//				new Tuple(new LitString("foo"), new LitInteger(42)),
+//				env,
+//				typeEnv);
 		
+		var exprs = Parser.read("(lambda (x) x)");
 		Environment env = Environment.initTopLevelEnvironment();
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
-		assertThrows(SubstitutionsCannotBeMergedException.class,
-				() -> e.infer(env, typeEnv));
-		
-		assertAll(() ->
-				parseString(
-						"(let-type (A B)"
-								+ "(lambda ()"
-									+ "(tuple"
-										+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) (tuple 3.14 42))"
-										+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) (tuple \"foo\" 42)))))")
-				.get(0).infer(env, typeEnv));
-		
-		assertInterpretedStringEquals(
-				"(define f (lambda (x) x))"
-				+ "(tuple (f \"foo\") (f 42))",
-				new Tuple(new LitString("foo"), new LitInteger(42)),
-				env,
-				typeEnv);
+		var cljCode = ClojureCodeGenerator.ExpressionListToClojureCode(exprs, env, typeEnv);
+		var a = 1;
 	}
 }

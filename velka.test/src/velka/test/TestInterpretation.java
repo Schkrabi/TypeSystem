@@ -53,7 +53,6 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
-import velka.core.expression.TypeSymbol;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.ConstructorOperators;
@@ -959,34 +958,34 @@ class TestInterpretation extends VelkaTest{
 		this.assertOperator(Operators.Subtraction,
 				new Tuple(Arrays.asList(new LitInteger(84), new LitInteger(42))), new LitInteger(42),
 				TypeAtom.TypeIntNative);
-		this.assertOperator(Operators.CanUnifyRepresentations,
-				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
-						new TypeSymbol(new TypeVariable(NameGenerator.next())))),
-				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		this.assertOperator(Operators.CanUnifyRepresentations,
-				new Tuple(
-						Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative))),
-				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		this.assertOperator(Operators.CanUnifyRepresentations,
-				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman))),
-				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		this.assertOperator(Operators.CanUnifyRepresentations, new Tuple(
-				Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeStringNative))),
-				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
-		this.assertOperator(Operators.CanUnifyTypes,
-				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
-						new TypeSymbol(new TypeVariable(NameGenerator.next())))),
-				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		this.assertOperator(Operators.CanUnifyTypes,
-				new Tuple(
-						Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative))),
-				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		this.assertOperator(Operators.CanUnifyTypes,
-				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman))),
-				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
-		this.assertOperator(Operators.CanUnifyTypes, new Tuple(
-				Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeStringNative))),
-				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+//		this.assertOperator(Operators.CanUnifyRepresentations,
+//				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
+//						new TypeSymbol(new TypeVariable(NameGenerator.next())))),
+//				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+//		this.assertOperator(Operators.CanUnifyRepresentations,
+//				new Tuple(
+//						Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative))),
+//				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+//		this.assertOperator(Operators.CanUnifyRepresentations,
+//				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman))),
+//				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+//		this.assertOperator(Operators.CanUnifyRepresentations, new Tuple(
+//				Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeStringNative))),
+//				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
+//		this.assertOperator(Operators.CanUnifyTypes,
+//				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative),
+//						new TypeSymbol(new TypeVariable(NameGenerator.next())))),
+//				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+//		this.assertOperator(Operators.CanUnifyTypes,
+//				new Tuple(
+//						Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntNative))),
+//				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+//		this.assertOperator(Operators.CanUnifyTypes,
+//				new Tuple(Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeIntRoman))),
+//				LitBoolean.TRUE, TypeAtom.TypeBoolNative);
+//		this.assertOperator(Operators.CanUnifyTypes, new Tuple(
+//				Arrays.asList(new TypeSymbol(TypeAtom.TypeIntNative), new TypeSymbol(TypeAtom.TypeStringNative))),
+//				LitBoolean.FALSE, TypeAtom.TypeBoolNative);
 
 		this.assertOperator(Operators.IsSameType,
 				new Tuple(Arrays.asList(new LitInteger(42), new LitInteger(21))), LitBoolean.TRUE,
@@ -1020,7 +1019,7 @@ class TestInterpretation extends VelkaTest{
 				new LitInteger(18014398509481983l), TypeAtom.TypeIntNative);
 		this.assertOperator(Operators.BitNot, new Tuple(new LitInteger(6)), new LitInteger(-7), TypeAtom.TypeIntNative);
 		this.assertOperator(Operators.BitXor, new Tuple(new LitInteger(5), new LitInteger(6)), new LitInteger(3), TypeAtom.TypeIntNative);
-		this.assertOperator(Operators.ToStr, new Tuple(new LitInteger(42)), new LitString("[42]"), TypeAtom.TypeStringNative);
+		this.assertOperator(Operators.ToStr, new Tuple(new LitInteger(42)), new LitString("42"), TypeAtom.TypeStringNative);
 		
 		File tempOut = File.createTempFile("velka_read_test", null);
         String content  = "hello world !!";       
@@ -1040,7 +1039,7 @@ class TestInterpretation extends VelkaTest{
         this.assertOperator(Operators.StrSplit, 
         		new Tuple(new LitString("foo bar baz"), 
         		new LitString(" ")),
-        		ListNative.makeListNativeExpression(new LitString("foo"), new LitString("bar"), new LitString("baz")).interpret(env, typeEnv), 
+        		ListNative.of(new LitString("foo"), new LitString("bar"), new LitString("baz")).interpret(env, typeEnv), 
         		TypeAtom.TypeListNative);
         
         this.assertOperator(Operators.ParseInt, 
@@ -1417,16 +1416,15 @@ class TestInterpretation extends VelkaTest{
 		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
 		
 		assertEquals(
-				new LitComposite(
-						new LitInteropObject(new LinkedList<Expression>(
-								Arrays.asList(new LitInteger(42), new LitInteger(21), new LitInteger(2)))),
+					new LitInteropObject(new LinkedList<Expression>(
+								Arrays.asList(new LitInteger(42), new LitInteger(21), new LitInteger(2))),
 						TypeAtom.TypeListNative),
-				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21), new LitInteger(2)).interpret(env, typeEnv));
+				ListNative.of(new LitInteger(42), new LitInteger(21), new LitInteger(2)).interpret(env, typeEnv));
 
 		this.assertInterpretedStringEquals("(construct List:Native)",
 				ListNative.EMPTY_LIST_NATIVE, env, typeEnv);
 		this.assertInterpretedStringEquals("(construct List:Native 42 (construct List:Native))",
-				ListNative.makeListNativeExpression(new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
+				ListNative.of(new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
 
 		this.assertInterpretedStringEquals("(is-list-native-empty (construct List:Native))", LitBoolean.TRUE, env,
 				typeEnv);
@@ -1448,11 +1446,11 @@ class TestInterpretation extends VelkaTest{
 
 		this.assertInterpretedStringEquals(
 				"(map-list-native (lambda (x) (+ x 1)) (construct List:Native 42 (construct List:Native)))",
-				ListNative.makeListNativeExpression(new LitInteger(43)).interpret(env, typeEnv), env, typeEnv);
+				ListNative.of(new LitInteger(43)).interpret(env, typeEnv), env, typeEnv);
 
 		this.assertInterpretedStringEquals(
 				"(map2-list-native + (construct List:Native 21 (construct List:Native 21 (construct List:Native))) (construct List:Native 21 (construct List:Native 21 (construct List:Native))))",
-				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(42)).interpret(env, typeEnv),
+				ListNative.of(new LitInteger(42), new LitInteger(42)).interpret(env, typeEnv),
 				env, typeEnv);
 
 		this.assertInterpretedStringEquals(
@@ -1461,37 +1459,37 @@ class TestInterpretation extends VelkaTest{
 		
 		this.assertInterpretedStringEquals(
 				"(" + ListNative.addToEndSymbol_out + " (construct List:Native 21 (construct List:Native)) 42)",
-				ListNative.makeListNativeExpression(new LitInteger(21), new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
+				ListNative.of(new LitInteger(21), new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
 		
 		ArrayList<Expression> al = new ArrayList<Expression>();
 		al.add(new LitInteger(42));
 		al.add(new LitInteger(21));
 		this.assertInterpretedStringEquals(
 				"(convert List:Native List:JavaArray (construct List:Native 42 (construct List:Native 21 (construct List:Native))))",
-				new LitComposite(new LitInteropObject(al), JavaArrayList.TypeListJavaArray), env, typeEnv);
+				new LitInteropObject(al, TypeAtom.TypeListJavaArray), env, typeEnv);
 		
 		LinkedList<Expression> ll = new LinkedList<Expression>();
 		ll.add(new LitInteger(42));
 		ll.add(new LitInteger(21));
 		this.assertInterpretedStringEquals(
 				"(convert List:Native List:JavaLinked (construct List:Native 42 (construct List:Native 21 (construct List:Native))))",
-				new LitComposite(new LitInteropObject(ll), JavaLinkedList.TypeListJavaLinked), env, typeEnv);
+				new LitInteropObject(ll, TypeAtom.TypeListJavaLinked), env, typeEnv);
 				
 		this.assertInterpretedStringEquals("(contains-list-native (construct List:Native 42 (construct List:Native 21 (construct List:Native))) 42)", LitBoolean.TRUE, env, typeEnv);
 		this.assertInterpretedStringEquals("(contains-list-native (construct List:Native 42 (construct List:Native 21 (construct List:Native))) 84)", LitBoolean.FALSE, env, typeEnv);
 		
 		this.assertInterpretedStringEquals("(filter-list-native (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))",
-				ListNative.makeListNativeExpression(LitBoolean.TRUE).interpret(env, typeEnv), env, typeEnv);
+				ListNative.of(LitBoolean.TRUE).interpret(env, typeEnv), env, typeEnv);
 		this.assertInterpretedStringEquals("(get-list-native (construct List:Native 42 (construct List:Native)) 0)", new LitInteger(42), env, typeEnv);
-		this.assertInterpretedStringEquals("(build-list-native 2 (lambda (x) x))", ListNative.makeListNativeExpression(new LitInteger(0), new LitInteger(1)).interpret(env, typeEnv), env, typeEnv);
+		this.assertInterpretedStringEquals("(build-list-native 2 (lambda (x) x))", ListNative.of(new LitInteger(0), new LitInteger(1)).interpret(env, typeEnv), env, typeEnv);
 		
-		this.assertInterpretedStringEquals("(remove-list-native (build-list-native 2 (lambda (x) x)) 1)", ListNative.makeListNativeExpression(new LitInteger(0)).interpret(env, typeEnv), env, typeEnv);
+		this.assertInterpretedStringEquals("(remove-list-native (build-list-native 2 (lambda (x) x)) 1)", ListNative.of(new LitInteger(0)).interpret(env, typeEnv), env, typeEnv);
 		this.assertInterpretedStringEquals("(size-list-native (build-list-native 42 (lambda (x) x)))", new LitInteger(42), env, typeEnv);
 		this.assertInterpretedStringEquals("(append-list-native (build-list-native 1 (lambda (x) 21)) (build-list-native 1 (lambda (x) 42)))", 
-				ListNative.makeListNativeExpression(new LitInteger(21), new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
+				ListNative.of(new LitInteger(21), new LitInteger(42)).interpret(env, typeEnv), env, typeEnv);
 		
 		this.assertInterpretedStringEquals("(reverse-list-native (build-list-native 3 (lambda (x) x)))",
-				ListNative.makeListNativeExpression(new LitInteger(2), new LitInteger(1), new LitInteger(0))
+				ListNative.of(new LitInteger(2), new LitInteger(1), new LitInteger(0))
 						.interpret(env, typeEnv),
 				env, typeEnv);
 		
@@ -1499,30 +1497,6 @@ class TestInterpretation extends VelkaTest{
 				LitBoolean.TRUE, env, typeEnv);
 		this.assertInterpretedStringEquals("(everyp-list-native (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))",
 				LitBoolean.FALSE, env, typeEnv);
-	}
-
-	@Test
-	@DisplayName("Test Type Symbol")
-	void testTypeSymbol() throws AppendableException {
-		TypeSymbol typeSymbol = new TypeSymbol(TypeAtom.TypeIntNative);
-
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-
-		assertAll(() -> {
-			typeSymbol.toString();
-			typeSymbol.hashCode();
-			typeSymbol.toClojureCode(env, typeEnv);
-		});
-
-		this.assertReflexivity(typeSymbol);
-		this.assertDifference(typeSymbol, new TypeSymbol(TypeAtom.TypeBoolNative));
-		this.assertDifference(typeSymbol, Expression.EMPTY_EXPRESSION);
-
-		this.assertInterpretationEquals(typeSymbol, typeSymbol, env, typeEnv);
-
-		Pair<Type, Substitution> p = typeSymbol.infer(env, typeEnv);
-		this.assertInference(p, TypeAtom.TypeIntNative, typeSymbol);
 	}
 
 	@Test
@@ -1676,547 +1650,13 @@ class TestInterpretation extends VelkaTest{
 //				env,
 //				typeEnv);
 	}
-
-	@Test
-	@DisplayName("Test Java Array List")
-	void testJavaArrayList() throws Exception {
-		this.assertInterpretationEquals("(construct List:JavaArray)",
-				new LitComposite(new LitInteropObject(new ArrayList<Object>()), JavaArrayList.TypeListJavaArray));
-		
-		this.assertInterpretationEquals(
-				"(construct List:JavaArray (build-list-native 2 (lambda (x) x)))", 
-				new LitComposite(
-						new LitInteropObject(new ArrayList<Object>(Arrays.asList(new LitInteger(0), new LitInteger(1)))), 
-						JavaArrayList.TypeListJavaArray));
-		
-		this.assertInterpretationEquals(
-				"(construct List:JavaArray 42)",
-				new LitComposite(
-						new LitInteropObject(new ArrayList<Object>(42)), JavaArrayList.TypeListJavaArray));
-
-		ArrayList<Object> l = new ArrayList<Object>();
-		l.add(new LitInteger(42));
-
-		this.assertInterpretationEquals(
-				"(" + JavaArrayList.addToEndSymbol_out.toString() + " (construct List:JavaArray) 42)", LitBoolean.TRUE);
-		this.assertInterpretationEquals(
-				"(" + JavaArrayList.addToIndexSymbol_out.toString() + " (construct List:JavaArray) 0 42)",
-				Expression.EMPTY_EXPRESSION);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaArrayList.addAllSymbol_out + " l1 l2)",
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaArrayList.containsSymbol_out + " l1 42)",
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaArrayList.containsSymbol_out + " l1 84)",
-				LitBoolean.FALSE);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaArrayList.containsAllSymbol_out + " l1 l2)",
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 42)"
-				+ "(" + JavaArrayList.containsAllSymbol_out + " l1 l2)",
-				LitBoolean.FALSE);
-		
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.getSymbol_out + " l1 0)",
-				new LitInteger(1));
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaArrayList.indexOfSymbol_out + " l1 1)",
-				new LitInteger(0));
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaArrayList.indexOfSymbol_out + " l1 42)",
-				new LitInteger(-1));
-		
-		this.assertInterpretationEquals("(" + JavaArrayList.isEmptySymbol_out + " (construct List:JavaArray))", 
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaArrayList.isEmptySymbol_out + " l1)", 
-				LitBoolean.FALSE);
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaArrayList.lastIndexOfSymbol_out + " l1 1)",
-				new LitInteger(0));
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaArrayList.lastIndexOfSymbol_out + " l1 42)",
-				new LitInteger(-1));
-		/*this.testInterpretString(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol + " l1 2)" 
-				+ "(" + JavaArrayList.removeSymbol + " l1 0)", 
-				new LitInteger(1));*/
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaArrayList.removeSymbol_out + " l1 2)", 
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaArrayList.removeAllSymbol_out + " l1 l2)",
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 4)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 5)"
-				+ "(" + JavaArrayList.removeAllSymbol_out + " l2 l1)",
-				LitBoolean.FALSE);
-		
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaArrayList.retainAllSymbol_out + " l1 l2)",
-				LitBoolean.TRUE);
-		
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaArrayList.retainAllSymbol_out + " l2 l1)",
-				LitBoolean.FALSE);
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaArrayList.setSymbol_out + " l1 0 2)", 
-				new LitInteger(1));
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaArrayList.sizeSymbol_out + " l1)", 
-				new LitInteger(2));
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 84)" 
-				+ "(" + JavaArrayList.sublistSymbol_out + " l1 0 1)", 
-				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
-		
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)"  
-				+ "(" + JavaArrayList.mapSymbol_out + " l1 (lambda (x) (* 2 x)))", 
-				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
-		
-		this.assertInterpretationEquals("(define l1 (construct List:JavaArray))\n"
-				+ "(define l2 (construct List:JavaArray))"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l2 21)"
-				+ "(" + JavaArrayList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y)))",
-				new LitComposite(new LitInteropObject(l), JavaArrayList.TypeListJavaArray));
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 21)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 42)" 
-				+ "(" + JavaArrayList.foldlSymbol_out + " + 0 l1)", 
-				new LitInteger(63));
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaArray))\n" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l1 4)"
-				+ "(" + JavaArrayList.foldrSymbol_out + " / 16 l1)", 
-				new LitInteger(2));
-		
-		LinkedList<Expression> converted = new LinkedList<Expression>();
-		converted.add(new LitInteger(42));
-		converted.add(new LitInteger(21));
-		this.assertInterpretationEquals("(define l (construct List:JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
-				+ "(convert List:JavaArray List:JavaLinked l)", 
-				new LitComposite(new LitInteropObject(converted), JavaLinkedList.TypeListJavaLinked));
-		
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		this.assertInterpretationEquals("(define l (construct List:JavaArray))\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l 42)\n"
-				+ "(" + JavaArrayList.addToEndSymbol_out + " l 21)\n"
-				+ "(convert List:JavaArray List:Native l)", 
-				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21)).interpret(env, typeEnv));
-		this.assertInterpretationEquals(
-				"(java-array-list-everyp (construct List:Native #t (construct List:Native #t (construct List:Native))) (lambda (x) x))",
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals(
-				"(java-array-list-everyp (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))",
-				LitBoolean.FALSE);
-	}
-	
-	@Test
-	@DisplayName("Test Java Linked List")
-	void testJavaLinkedList() throws Exception {
-		this.assertInterpretationEquals("(construct List:JavaLinked)",
-				new LitComposite(new LitInteropObject(new LinkedList<Object>()), JavaLinkedList.TypeListJavaLinked));
-
-		LinkedList<Object> l = new LinkedList<Object>();
-		l.add(new LitInteger(42));
-
-		this.assertInterpretationEquals(
-				"(" + JavaLinkedList.addToEndSymbol_out.toString() + " (construct List:JavaLinked) 42)", LitBoolean.TRUE);
-		this.assertInterpretationEquals(
-				"(" + JavaLinkedList.addToIndexSymbol_out.toString() + " (construct List:JavaLinked) 0 42)",
-				Expression.EMPTY_EXPRESSION);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaLinkedList.addAllSymbol_out + " l1 l2)",
-				LitBoolean.TRUE);
-		
-		assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.toStrSymbol_out + " l1)",
-				new LitString("[[42], [42]]"));
-		
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.containsSymbol_out + " l1 42)",
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)"
-				+ "(" + JavaLinkedList.containsSymbol_out + " l1 84)",
-				LitBoolean.FALSE);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaLinkedList.containsAllSymbol_out + " l1 l2)",
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 42)"
-				+ "(" + JavaLinkedList.containsAllSymbol_out + " l1 l2)",
-				LitBoolean.FALSE);
-		
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.getSymbol_out + " l1 0)",
-				new LitInteger(1));
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaLinkedList.indexOfSymbol_out + " l1 1)",
-				new LitInteger(0));
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaLinkedList.indexOfSymbol_out + " l1 42)",
-				new LitInteger(-1));
-		
-		this.assertInterpretationEquals(
-				"(" + JavaLinkedList.isEmptySymbol_out + " (construct List:JavaLinked))", 
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaLinkedList.isEmptySymbol_out + " l1)", 
-				LitBoolean.FALSE);
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaLinkedList.lastIndexOfSymbol_out + " l1 1)",
-				new LitInteger(0));
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaLinkedList.lastIndexOfSymbol_out + " l1 42)",
-				new LitInteger(-1));
-
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaLinkedList.removeSymbol_out + " l1 2)", 
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaLinkedList.removeAllSymbol_out + " l1 l2)",
-				LitBoolean.TRUE);
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 4)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 5)"
-				+ "(" + JavaLinkedList.removeAllSymbol_out + " l2 l1)",
-				LitBoolean.FALSE);
-		
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaLinkedList.retainAllSymbol_out + " l1 l2)",
-				LitBoolean.TRUE);
-		
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 3)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 1)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 2)"
-				+ "(" + JavaLinkedList.retainAllSymbol_out + " l2 l1)",
-				LitBoolean.FALSE);
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaLinkedList.setSymbol_out + " l1 0 2)", 
-				new LitInteger(1));
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)" 
-				+ "(" + JavaLinkedList.sizeSymbol_out + " l1)", 
-				new LitInteger(2));
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 84)" 
-				+ "(" + JavaLinkedList.sublistSymbol_out + " l1 0 1)", 
-				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
-		
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)"  
-				+ "(" + JavaLinkedList.mapSymbol_out + " l1 (lambda (x) (* 2 x)))", 
-				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
-		
-		this.assertInterpretationEquals("(define l1 (construct List:JavaLinked))\n"
-				+ "(define l2 (construct List:JavaLinked))"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l2 21)"
-				+ "(" + JavaLinkedList.map2Symbol_out + " l1 l2 (lambda (x y) (+ x y)))",
-				new LitComposite(new LitInteropObject(l), JavaLinkedList.TypeListJavaLinked));
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 21)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 42)" 
-				+ "(" + JavaLinkedList.foldlSymbol_out + " + 0 l1)", 
-				new LitInteger(63));
-		
-		this.assertInterpretationEquals(
-				"(define l1 (construct List:JavaLinked))\n" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 1)" 
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 2)"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l1 4)"
-				+ "(" + JavaLinkedList.foldrSymbol_out + " / 16 l1)", 
-				new LitInteger(2));
-		
-		ArrayList<Expression> converted = new ArrayList<Expression>();
-		converted.add(new LitInteger(42));
-		converted.add(new LitInteger(21));
-		this.assertInterpretationEquals("(define l (construct List:JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
-				+ "(convert List:JavaLinked List:JavaArray l)", 
-				new LitComposite(new LitInteropObject(converted), JavaArrayList.TypeListJavaArray));
-		
-		this.assertInterpretationEquals("(define l (construct List:JavaLinked))\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 42)\n"
-				+ "(" + JavaLinkedList.addToEndSymbol_out + " l 21)\n"
-				+ "(convert List:JavaLinked List:Native l)", 
-				ListNative.makeListNativeExpression(new LitInteger(42), new LitInteger(21)));
-		
-		this.assertInterpretationEquals(
-				"(java-linked-list-everyp (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))",
-				LitBoolean.FALSE);
-		this.assertInterpretationEquals(
-				"(java-linked-list-everyp (construct List:Native #t (construct List:Native #t (construct List:Native))) (lambda (x) x))",
-				LitBoolean.TRUE);
-		
-		LinkedList<LitInteger> ll = new LinkedList<LitInteger>();
-		ll.add(new LitInteger(0));
-		ll.add(new LitInteger(2));
-		ll.add(new LitInteger(4));
-		ll.add(new LitInteger(6));
-		ll.add(new LitInteger(8));
-		ll.add(new LitInteger(10));
-		ll.add(new LitInteger(12));
-		ll.add(new LitInteger(14));
-		ll.add(new LitInteger(16));
-		ll.add(new LitInteger(18));
-		ListIterator<LitInteger> li = ll.listIterator(0);
-		this.assertInterpretationEquals(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))"
-						+ "(linked-list-iterator-next (java-linked-list-iterator l 0))",
-				li.next());
-		
-		li.previous();
-		li.add(new LitInteger(42));
-		this.assertInterpretationEquals(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 0))\n"
-						+ "(linked-list-iterator-next (linked-list-iterator-add it 42))"
-						+ "(java-linked-list-to-str l)",
-				new LitString("[[42], [0], [2], [4], [6], [8], [10], [12], [14], [16], [18]]"));
-		
-		li.next();
-		li.remove();
-		assertInterpretationEquals(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 0))\n"
-						+ "(linked-list-iterator-has-next it)",
-				li.hasNext() ? LitBoolean.TRUE : LitBoolean.FALSE);
-		
-		li.previous();
-		assertInterpretationEquals(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 0))\n"
-						+ "(linked-list-iterator-has-previous it)",
-				li.hasPrevious() ? LitBoolean.TRUE : LitBoolean.FALSE);
-		
-		assertInterpretationEquals(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 0))\n"
-						+ "(linked-list-iterator-next-index it)",
-				new LitInteger(li.nextIndex()));
-		
-		li.next();
-		li.next();
-		li.next();
-		assertInterpretationEquals(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 3))\n"
-						+ "(linked-list-iterator-previous it)",
-				li.previous());
-		
-		li.next();
-		assertInterpretationEquals(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 3))\n"
-						+ "(linked-list-iterator-previous-index it)",
-				new LitInteger(li.previousIndex()));
-		
-		li.next();
-		li.remove();
-		assertInterpretationEquals(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 3))\n"
-						+ "(linked-list-iterator-next it)"
-						+ "(linked-list-iterator-next (linked-list-iterator-remove it))"
-						+ "(java-linked-list-to-str l)",
-				new LitString("[[0], [2], [4], [8], [10], [12], [14], [16], [18]]"));
-		
-		li.next();
-		li.add(new LitInteger(8));
-		li.previous();
-		li.set(new LitInteger(42));
-		li.previous();
-		assertInterpretationEquals(
-				"(define l (construct List:JavaLinked))\n"
-						+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
-						+ "(define it (java-linked-list-iterator l 3))\n"
-						+ "(linked-list-iterator-next it)"
-						+ "(linked-list-iterator-next (linked-list-iterator-set it 42))",
-				li.next());
-	}
 	
 	@Test
 	@DisplayName("Test Java Bit Set")
 	void testJavaBitSet() throws AppendableException {
 		BitSet bs = new BitSet();
-		LitComposite bitSet = new LitComposite(
-				new LitInteropObject(bs),
+		var bitSet = 
+				new LitInteropObject(bs,
 				TypeAtom.TypeSetBitSet);
 		
 		assertInterpretationEquals(
@@ -2224,8 +1664,8 @@ class TestInterpretation extends VelkaTest{
 				bitSet);
 		
 		BitSet nbitsBs = new BitSet(2048);
-		LitComposite nBitsBitSet = new LitComposite(
-				new LitInteropObject(nbitsBs),
+		var nBitsBitSet = 
+				new LitInteropObject(nbitsBs,
 				TypeAtom.TypeSetBitSet);
 		
 		assertInterpretationEquals(
@@ -2353,7 +1793,7 @@ class TestInterpretation extends VelkaTest{
 				"(define s2 (construct Set:BitSet))\n"
 			+	"(" + JavaBitSet.setIntervalSymbol_out.toString() + " s2 4 7)\n"
 			+	"(" + JavaBitSet.getIntervalSymbol_out.toString() + " s2 5 7)",
-			new LitComposite(new LitInteropObject(nbitsBs.get(5, 7)), TypeAtom.TypeSetBitSet));
+			new LitInteropObject(nbitsBs.get(5, 7), TypeAtom.TypeSetBitSet));
 		
 		nbitsBs.clear();
 		nbitsBs.set(4, 7);
@@ -2538,10 +1978,10 @@ class TestInterpretation extends VelkaTest{
 		//Testing side effects
 		this.assertInterpretationEquals(
 				"(loop ((x 1) (a (construct List:JavaArray))) (if (= x 2) a (let ((z (java-array-list-add-to-end a x))) (recur (+ x 1) a))))",
-				new LitComposite(
+				
 						new LitInteropObject(
-								new ArrayList<Expression>(Arrays.asList(new LitInteger(1)))),
-						JavaArrayList.TypeListJavaArray));
+								new ArrayList<Expression>(Arrays.asList(new LitInteger(1))),
+						TypeAtom.TypeListJavaArray));
 		
 		//Testing nested loops
 		this.assertInterpretationEquals(

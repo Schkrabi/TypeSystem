@@ -10,6 +10,7 @@ import velka.types.Type;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 
 /**
@@ -64,11 +65,22 @@ public class CanDeconstructAs extends Expression {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		String code = LitBoolean.clojureLit(
-				"(.isPresent (velka.types.Type/unifyRepresentation " 
-						+ this.as.clojureTypeRepresentation() 
-						+ " (" + ClojureCoreSymbols.getTypeClojureSymbol_full + " (first " + this.expression.toClojureCode(env, typeEnv)
-						+ "))))");
+		String arg = "_arg";
+		String code = ClojureHelper.applyClojureFunction(
+				ClojureCoreSymbols.canDeconstructAs_full, 
+				this.expression.toClojureCode(env, typeEnv),
+				this.as.clojureTypeRepresentation());
+				
+//				ClojureHelper.letHelper(
+//				ClojureHelper.clojureIfHelper(
+//						ClojureHelper.applyClojureFunction("vector?", arg),
+//						ClojureHelper.applyClojureFunction(".isPresent", 
+//								ClojureHelper.applyClojureFunction("velka.types.Type/unifyRepresentation", 
+//										this.as.clojureTypeRepresentation(),
+//										ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full,
+//												ClojureHelper.applyClojureFunction("first", arg)))),
+//						LitBoolean.FALSE.toClojureCode(env, typeEnv)), 
+//				Pair.of(arg, this.expression.toClojureCode(env, typeEnv)));
 		
 		return code;
 	}

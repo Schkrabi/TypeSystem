@@ -44,22 +44,22 @@ class TestTreeMap extends VelkaTest {
 
 	@Test
 	void testConstructor() throws Exception {
-		assertAll(() ->
-		{
+//		assertAll(() ->
+//		{
 			Expression e = this.parseString("(construct Map:Tree (lambda (x y) -1))").get(0);
 			e.interpret(this.env, this.typeEnv);
-		});
+//		});
 		
 		this.assertIntprtAndCompPrintSameValues("(construct Map:Tree (lambda (x y) -1))");
 	}
 	
 	@Test
 	void testPut() throws Exception {
-		assertAll(() ->
-		{
+//		assertAll(() ->
+//		{
 			Expression e = this.parseString("(map-tree-put (construct Map:Tree (lambda (x y) -1)) 1 \"foo\")").get(0);
 			e.interpret(this.env, this.typeEnv);
-		});
+//		});
 		
 		this.assertIntprtAndCompPrintSameValues("(map-tree-put (construct Map:Tree (lambda (x y) -1)) 1 \"foo\")");
 	}
@@ -432,7 +432,7 @@ class TestTreeMap extends VelkaTest {
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\")))"
 				+ "(" + TreeMap.keysSymbol_out.toString() + " m))",
-				ListNative.makeListNativeExpression(new LitInteger(1), new LitInteger(2), new LitInteger(3)),
+				ListNative.of(new LitInteger(1), new LitInteger(2), new LitInteger(3)),
 				this.env,
 				this.typeEnv);
 		
@@ -837,7 +837,7 @@ class TestTreeMap extends VelkaTest {
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\")))"
 				+ "(" + TreeMap.valuesSymbol_out.toString() + " m))",
-				ListNative.makeListNativeExpression(new LitString("foo"), new LitString("bar"), new LitString("baz")),
+				ListNative.of(new LitString("foo"), new LitString("bar"), new LitString("baz")),
 				this.env,
 				this.typeEnv);
 		

@@ -2,6 +2,7 @@ package velka.core.application;
 
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 
@@ -106,30 +107,22 @@ public class IfExpression extends SpecialFormApplication {
 	
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		StringBuilder sb = new StringBuilder();
-		sb.append("(if ");
-		sb.append("(first ");
-		sb.append("(");
-		sb.append(ClojureCoreSymbols.convertClojureSymbol_full);
-		sb.append(" \n");
-		sb.append(TypeAtom.TypeBoolNative.clojureTypeRepresentation());
-		sb.append(" \n");
-		sb.append(this.getCondition().toClojureCode(env, typeEnv));
-		sb.append(")) ");
-		sb.append(this.getTrueBranch().toClojureCode(env, typeEnv));
-		//sb.append(" \n(");
+		String cond = null;
+		var ct = this.getCondition().infer(env, typeEnv).first;
+		if(ct.equals(TypeAtom.TypeBoolNative)) {
+			cond = this.getCondition().toClojureCode(env, typeEnv);
+		}
+		else {
+			cond = ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol_full, 
+					this.getCondition().toClojureCode(env, typeEnv));
+		}
 		
-		//Pair<Type, Substitution> trueType = this.getTrueBranch().infer(env, typeEnv);
+		var code = ClojureHelper.clojureIfHelper(
+				cond, 
+				this.getTrueBranch().toClojureCode(env, typeEnv), 
+				this.getFalseBranch().toClojureCode(env, typeEnv));
 		
-		//sb.append(ClojureCodeGenerator.convertClojureSymbol);
-		//sb.append(" \n");
-		//sb.append(trueType.first.clojureTypeRepresentation());
-		sb.append(" \n");
-		sb.append(this.getFalseBranch().toClojureCode(env, typeEnv));
-		//sb.append(")");
-		sb.append(")");
-		
-		return sb.toString();
+		return code;
 	}
 
 	@Override

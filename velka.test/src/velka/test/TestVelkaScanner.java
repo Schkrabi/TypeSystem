@@ -27,6 +27,7 @@ import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
+import velka.types.TypeAtom;
 import velka.util.AppendableException;
 
 /**
@@ -78,13 +79,11 @@ class TestVelkaScanner extends VelkaTest {
 		Expression parsed = this.parseString("(construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\")").get(0);
 		Expression e = parsed.interpret(env, typeEnv);
 
-		assertTrue(e instanceof LitComposite);
-		LitComposite lc = (LitComposite)e;
-		assertEquals(Scanner.TYPE, lc.composedType);
-		assertTrue(lc.value instanceof LitInteropObject);
-		LitInteropObject lio = (LitInteropObject)lc.value;
-		assertTrue(lio.javaObject instanceof java.util.Scanner);
-		java.util.Scanner s = (java.util.Scanner)lio.javaObject;		
+		assertTrue(e instanceof LitInteropObject);
+		var lc = (LitInteropObject)e;
+		assertEquals(TypeAtom.TypeScannerNative, lc.type);
+		assertTrue(lc.javaObject instanceof java.util.Scanner);
+		java.util.Scanner s = (java.util.Scanner)lc.javaObject;		
 		s.close();
 	}
 	
@@ -93,7 +92,7 @@ class TestVelkaScanner extends VelkaTest {
 		java.util.Scanner s = new java.util.Scanner(scannedFilePath);
 		Expression close = new AbstractionApplication(
 				Scanner.closeSymbol_out,
-				new Tuple(new LitComposite(new LitInteropObject(s), Scanner.TYPE)));
+				new Tuple(new LitInteropObject(s, TypeAtom.TypeScannerNative)));
 		
 		assertAll(() ->
 			close.interpret(this.env, this.typeEnv));
@@ -125,7 +124,7 @@ class TestVelkaScanner extends VelkaTest {
 		java.util.Scanner s = new java.util.Scanner(scannedFilePath);
 		Expression delimiter = new AbstractionApplication(
 				Scanner.delimiterSymbol_out,
-				new Tuple(new LitComposite(new LitInteropObject(s), Scanner.TYPE)));
+				new Tuple(new LitInteropObject(s, TypeAtom.TypeScannerNative)));
 		
 		Expression rslt = delimiter.interpret(this.env, this.typeEnv);
 		assertTrue(rslt instanceof LitString);

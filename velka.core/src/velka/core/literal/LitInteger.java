@@ -34,7 +34,7 @@ public class LitInteger extends Literal {
 
 	@Override
 	public String toString() {
-		return "[" + Long.toString(this.value) + "]";
+		return Long.toString(this.value);
 	}
 
 	@Override

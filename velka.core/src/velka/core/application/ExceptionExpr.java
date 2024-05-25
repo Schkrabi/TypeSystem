@@ -73,14 +73,17 @@ public class ExceptionExpr extends SpecialFormApplication {
 	
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		StringBuilder sb = new StringBuilder();
-		sb.append("(first (");
-		sb.append(ClojureCoreSymbols.convertClojureSymbol_full);
-		sb.append(" ");
-		sb.append(this.getMessage().toClojureCode(env, typeEnv));
-		sb.append("))");		
+		String msg = null;
+		var t = this.getMessage().infer(env, typeEnv).first;
+		if(t.equals(TypeAtom.TypeStringNative)) {
+			msg = this.getMessage().toClojureCode(env, typeEnv);
+		}
+		else {
+			msg = ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol_full, 
+					this.getMessage().toClojureCode(env, typeEnv));
+		}
 		
-		return ClojureHelper.errorHelper(sb.toString());
+		return ClojureHelper.errorHelper(msg);
 	}
 
 	@Override

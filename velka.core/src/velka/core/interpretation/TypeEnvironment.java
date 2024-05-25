@@ -395,9 +395,10 @@ public class TypeEnvironment {
 		 * @return constructor
 		 * @throws AppendableException if no such constructor exists
 		 */
-		public Lambda getConstructor(TypeTuple argsType) throws AppendableException {
+		public Abstraction getConstructor(TypeTuple argsType) throws AppendableException {
 			Abstraction rawConstructor = this.getRawConstructor(argsType);
-			return this.typeEnvironment.createConstructorFromLambda(this.type, rawConstructor);
+			//return this.typeEnvironment.createConstructorFromLambda(this.type, rawConstructor);
+			return rawConstructor;
 		}
 
 		/**

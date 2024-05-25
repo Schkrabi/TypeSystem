@@ -12,6 +12,7 @@ import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 
@@ -88,9 +89,20 @@ public class Get extends SpecialFormApplication {
 
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		String code = "(get " + this.getTuple().toClojureCode(env, typeEnv) + " (first ("
-				+ ClojureCoreSymbols.convertClojureSymbol_full + " " + TypeAtom.TypeIntNative.clojureTypeRepresentation()
-				+ " " + this.getIndex().toClojureCode(env, typeEnv) + ")))";
+		String idx = null;
+		var t = this.getIndex().infer(env, typeEnv).first;
+		if(t.equals(TypeAtom.TypeIntNative)) {
+			idx = this.getIndex().toClojureCode(env, typeEnv);
+		}
+		else {
+			idx = ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol_full, 
+					this.getIndex().toClojureCode(env, typeEnv));
+		}
+		
+		String code = ClojureHelper.applyClojureFunction("get", 
+				this.getTuple().toClojureCode(env, typeEnv),
+				idx);
+		
 		return code;
 	}
 	

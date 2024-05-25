@@ -143,6 +143,7 @@ public abstract class OperatorBank {
 			JavaLinkedList.singleton(),
 			JavaBitSet.singleton(),
 			Scanner.singleton(),
-			TreeMap.singleton()
+			TreeMap.singleton(),
+			JavaListIterator.singleton()
 			);
 }

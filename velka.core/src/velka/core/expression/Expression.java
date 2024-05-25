@@ -83,9 +83,9 @@ public abstract class Expression implements Comparable<Expression>, IConvertable
 		Expression e = this.doConvert(p.first, to, env, typeEnv);
 		
 		Pair<Type, Substitution> q = e.infer(env, typeEnv);
-		if(p.first.equals(q.first)) {
-			return this;
-		}
+//		if(p.first.equals(q.first)) {
+//			return this;
+//		}
 		return e;
 	}
 
