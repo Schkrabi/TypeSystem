@@ -43,21 +43,9 @@ public class AbstractionApplication extends Application {
 	 */
 	public final Expression fun;
 
-	/**
-	 * Cost function for this abstraction application
-	 */
-	public final Optional<Expression> costFunction;
-
 	public AbstractionApplication(Expression fun, Expression args) {
 		super(args);
 		this.fun = fun;
-		this.costFunction = Optional.empty();
-	}
-
-	public AbstractionApplication(Expression fun, Expression args, Expression costFunction) {
-		super(args);
-		this.fun = fun;
-		this.costFunction = Optional.of(costFunction);
 	}
 
 	@Override
@@ -80,7 +68,7 @@ public class AbstractionApplication extends Application {
 		Pair<Type, Substitution> iArgsInfered = iArgs.infer(env, typeEnv);
 
 		// Select implementation to use (if applicable)
-		abst = abst.selectImplementation(iArgs, this.costFunction, env, typeEnv);
+		abst = abst.selectImplementation(iArgs, env, typeEnv);
 
 		// Convert arguments to specific representations
 		Pair<Type, Substitution> abstInfered = abst.inferWithArgs(iArgs, env, typeEnv);
@@ -97,7 +85,7 @@ public class AbstractionApplication extends Application {
 		Tuple cArgsTuple = (Tuple) cArgs.interpret(env, typeEnv);
 
 		// Finally evaluate application
-		return abst.substituteAndEvaluate(cArgsTuple, env, typeEnv, this.costFunction);
+		return abst.substituteAndEvaluate(cArgsTuple, env, typeEnv);
 	}
 
 	/**
@@ -201,10 +189,7 @@ public class AbstractionApplication extends Application {
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		String code = ClojureHelper.applyVelkaFunction_argsTuple(
 				this.fun.toClojureCode(env, typeEnv),
-				this.args.toClojureCode(env, typeEnv),
-				this.costFunction.isPresent() ?
-						this.costFunction.get().toClojureCode(env, typeEnv) :
-						"nil");
+				this.args.toClojureCode(env, typeEnv));
 		
 		return code;
 	}
@@ -217,15 +202,6 @@ public class AbstractionApplication extends Application {
 			if (c != 0)
 				return c;
 			c = this.args.compareTo(o.args);
-			if (c != 0)
-				return c;
-			if (this.costFunction.isEmpty() && o.costFunction.isEmpty())
-				return 0;
-			if (this.costFunction.isEmpty() && o.costFunction.isPresent())
-				return -1;
-			if (this.costFunction.isPresent() && o.costFunction.isEmpty())
-				return 1;
-			c = this.costFunction.get().compareTo(o.costFunction.get());
 			return c;
 		}
 		return super.compareTo(other);
@@ -235,15 +211,18 @@ public class AbstractionApplication extends Application {
 	public boolean equals(Object other) {
 		if (other instanceof AbstractionApplication) {
 			return this.fun.equals(((AbstractionApplication) other).fun)
-					&& this.args.equals(((AbstractionApplication) other).args)
-					&& this.costFunction.equals(((AbstractionApplication) other).costFunction);
+					&& this.args.equals(((AbstractionApplication) other).args);
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return this.fun.hashCode() * this.args.hashCode() * this.costFunction.hashCode();
+		return new StringBuilder()
+				.append(this.fun.hashCode())
+				.append(this.args.hashCode())
+				.toString()
+				.hashCode();
 	}
 
 	@Override

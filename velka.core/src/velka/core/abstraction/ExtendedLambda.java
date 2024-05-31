@@ -322,40 +322,48 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	public Abstraction selectImplementation(Tuple args, Optional<Expression> selectionFunction, Environment env,
-			TypeEnvironment typeEnv) throws AppendableException {
+	public Abstraction selectImplementation(Tuple args, Environment env,
+			TypeEnvironment typeEnv) throws AppendableException {		
+		
 		Lambda bestImplementation = null;
 		long bestCost = Long.MAX_VALUE;
 		for(Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
-			AbstractionApplication costComputation;
-			if(selectionFunction.isPresent()) {
-				costComputation = new AbstractionApplication(selectionFunction.get(), args);
-			}
-			else {
-				costComputation = new AbstractionApplication(e.getValue(), args);
-			}
-			Expression costExpression = costComputation.interpret(env, typeEnv);
-			
-			if(!(costExpression instanceof LitInteger)) {
-				throw new AppendableException("Cost function " 
-												+ e.getValue().toString()
-												+ " did not returned LitInteger, got: "
-												+ costExpression.toString()
-												+ " for implementation "
-												+ e.getKey().toString()
-												+ " in extended function "
-												+ this.toString());
-			}
-			
-			long cost = ((LitInteger)costExpression).value;
-			
-			if(cost < bestCost || bestImplementation == null) {
-				bestCost = cost;
-				bestImplementation = e.getKey();
+			var cost = this.implementationCost((Lambda)e.getKey(), (Abstraction)e.getValue(), args, env, typeEnv);
+			if(cost.isPresent()) {
+				if(cost.get() < bestCost || bestImplementation == null ) {
+					bestImplementation = e.getKey();
+					bestCost = cost.get();
+				}
 			}
 		}
 		
 		return bestImplementation;
+	}
+	
+	/** Computes the cost of using implementation with given arguments */
+	private Optional<Long> implementationCost(Lambda impl, Abstraction cost, Tuple args, Environment env, TypeEnvironment typeEnv) {
+		try {
+			var costAppl = new AbstractionApplication(cost, args);
+			var implCost = costAppl.interpret(env, typeEnv);
+			var sum = ((LitInteger)implCost).value;
+			
+			var fpit = impl.argsType.iterator();
+			var ait = args.iterator();
+			while(fpit.hasNext()) {
+				var formalArgType = fpit.next();
+				var arg = ait.next();
+				var argType = arg.infer(env, typeEnv).first;
+				var ccost = typeEnv.conversionCost(argType, formalArgType, arg, env, typeEnv);
+				
+				if(ccost.isEmpty()) return Optional.empty();
+				
+				sum += ccost.get(); 
+			}
+			
+			return Optional.of(sum);
+		} catch(AppendableException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override

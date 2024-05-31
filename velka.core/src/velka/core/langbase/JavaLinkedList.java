@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
+import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
 import velka.core.exceptions.DuplicateTypeDefinitionException;
@@ -1563,6 +1564,13 @@ public class JavaLinkedList extends OperatorBank {
 		public String toString() {
 			return LinkedListToArrayListSymbol_out.toString();
 		}
+
+		@Override
+		public Expression cost() {
+			var arg = new Symbol(NameGenerator.next());
+			return new Lambda(new Tuple(arg), new TypeTuple(TypeAtom.TypeListJavaLinked),
+					new AbstractionApplication(JavaLinkedList.size, new Tuple(arg)));
+		}
 	};
 
 	public static final Symbol LinkedListToNativeListSymbol = new Symbol("to-list-native", NAMESPACE);
@@ -1615,6 +1623,13 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public String toString() {
 			return LinkedListToNativeListSymbol_out.toString();
+		}
+
+		@Override
+		public Expression cost() {
+			var arg = new Symbol(NameGenerator.next());
+			return new Lambda(new Tuple(arg), new TypeTuple(TypeAtom.TypeListJavaLinked),
+					new AbstractionApplication(JavaLinkedList.size, new Tuple(arg)));
 		}
 	};
 

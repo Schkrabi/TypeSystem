@@ -74,8 +74,6 @@ public class Function extends Lambda implements Comparable<Expression> {
 
 		s.append(") ");
 		s.append(this.body.toString());
-		s.append(' ');
-		s.append(this.creationEnvironment);
 		s.append(')');
 
 		return s.toString();

@@ -74,8 +74,7 @@ public class DefineConversion extends Expression {
 	@Override
 	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Lambda lambda = this.makeConversionLambda(env);
-		
-		typeEnv.addConversion(this.from, this.to, lambda);
+		typeEnv.addConversion(this.from, this.to, lambda, this.cost);
 		return Expression.EMPTY_EXPRESSION;
 	}
 
@@ -100,10 +99,10 @@ public class DefineConversion extends Expression {
 	@Override
 	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Lambda conversionLambda = this.makeConversionLambda(env);
-		typeEnv.addConversion(this.from, this.to, conversionLambda);
+		typeEnv.addConversion(this.from, this.to, conversionLambda, this.cost);
 		
 		String code = TypeAtom.addConversionToGlobalTable(this.from, this.to,
-				conversionLambda.toClojureCode(env, typeEnv));
+				conversionLambda.toClojureCode(env, typeEnv), this.cost.toClojureCode(env, typeEnv));
 
 		return code;
 	}

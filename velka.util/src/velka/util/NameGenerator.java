@@ -1,5 +1,9 @@
 package velka.util;
 
+import java.util.Collection;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 /**
  * Class for the generation of unique variable names
  * 
@@ -45,5 +49,10 @@ public class NameGenerator {
 		}
 
 		return prefix + s;
+	}
+	
+	/** Creates collection of n unique names */
+	public static Collection<String> uniqueNameCollection(int n) {
+		return Stream.iterate(next(), x -> next()).limit(n).collect(Collectors.toList());
 	}
 }

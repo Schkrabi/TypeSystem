@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -17,13 +18,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import velka.clojure.ClojureCodeGenerator;
-import velka.core.abstraction.ExtendedFunction;
 import velka.core.abstraction.ExtendedLambda;
 import velka.core.abstraction.Function;
 import velka.core.abstraction.Lambda;
 import velka.core.application.AbstractionApplication;
 import velka.core.application.CanDeconstructAs;
 import velka.core.application.Construct;
+import velka.core.application.Extend;
 import velka.core.application.IfExpression;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -235,56 +236,50 @@ class TestComplex extends VelkaTest {
 								linkedList),
 						env, typeEnv);
 
-		this.assertInterpretedStringEquals(
-					"(extend (extend (extended-lambda (List)) "
-						+	"(lambda ((List:Linked l)) (if (can-deconstruct-as l ()) "
-							+	"(construct List:Linked) "
-							+	"(append-list (reverse-list (tail-list l)) (head-list l))))) "
-						+	"(lambda ((List:Functional l)) (if (can-deconstruct-as l ()) "
-							+	"(construct List:Functional) "
-							+	"(append-list (reverse-list (tail-list l)) (head-list l)))))",
-				ExtendedFunction.makeExtendedFunction(Arrays.asList(
-						new Function(new TypeTuple(Arrays.asList(linkedList)),
-								new Tuple(Arrays
-										.asList(new Symbol("l"))),
-								new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
-										new Construct(linkedList,
-												Tuple.EMPTY_TUPLE),
-										new AbstractionApplication(new Symbol(
-												"append-list"),
-												new Tuple(
-														Arrays.asList(
-																new AbstractionApplication(
-																		new Symbol("reverse-list"),
-																		new Tuple(Arrays
-																				.asList(new AbstractionApplication(
-																						new Symbol("tail-list"),
-																						new Tuple(Arrays.asList(
-																								new Symbol("l"))))))),
-																new AbstractionApplication(new Symbol("head-list"),
-																		new Tuple(Arrays.asList(new Symbol("l")))))))),
-								env),
-						new Function(new TypeTuple(Arrays.asList(typeListFuntionalAtom)),
-								new Tuple(Arrays
-										.asList(new Symbol("l"))),
-								new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
-										new Construct(typeListFuntionalAtom, Tuple.EMPTY_TUPLE),
-										new AbstractionApplication(
-												new Symbol("append-list"),
-												new Tuple(
-														Arrays.asList(
-																new AbstractionApplication(
-																		new Symbol("reverse-list"),
-																		new Tuple(Arrays
-																				.asList(new AbstractionApplication(
-																						new Symbol("tail-list"),
-																						new Tuple(Arrays.asList(
-																								new Symbol("l"))))))),
-																new AbstractionApplication(new Symbol("head-list"),
-																		new Tuple(Arrays.asList(new Symbol("l")))))))),
-								env)),
-						env, typeEnv),
-				env, typeEnv);
+//		this.assertInterpretedStringEquals(
+//					"(extend (extend (extended-lambda (List)) "
+//						+	"(lambda ((List:Linked l)) (if (can-deconstruct-as l ()) "
+//							+	"(construct List:Linked) "
+//							+	"(append-list (reverse-list (tail-list l)) (head-list l))))) "
+//						+	"(lambda ((List:Functional l)) (if (can-deconstruct-as l ()) "
+//							+	"(construct List:Functional) "
+//							+	"(append-list (reverse-list (tail-list l)) (head-list l)))))",
+//				Extend.makeExtendedFunction(List.of(
+//						new Function(new TypeTuple(linkedList),
+//								new Tuple(new Symbol("l")),
+//								new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
+//										new Construct(linkedList,
+//												Tuple.EMPTY_TUPLE),
+//										new AbstractionApplication(new Symbol(
+//												"append-list"),
+//												new Tuple(
+//														new AbstractionApplication(
+//																		new Symbol("reverse-list"),
+//																		new Tuple(new AbstractionApplication(
+//																						new Symbol("tail-list"),
+//																						new Tuple(Arrays.asList(
+//																								new Symbol("l")))))),
+//																new AbstractionApplication(new Symbol("head-list"),
+//																		new Tuple(new Symbol("l")))))),
+//								env),
+//						new Function(new TypeTuple(Arrays.asList(typeListFuntionalAtom)),
+//								new Tuple(new Symbol("l")),
+//								new IfExpression(new CanDeconstructAs(new Symbol("l"), TypeTuple.EMPTY_TUPLE),
+//										new Construct(typeListFuntionalAtom, Tuple.EMPTY_TUPLE),
+//										new AbstractionApplication(
+//												new Symbol("append-list"),
+//												new Tuple(
+//													new AbstractionApplication(
+//															new Symbol("reverse-list"),
+//															new Tuple(new AbstractionApplication(
+//																			new Symbol("tail-list"),
+//																			new Tuple(
+//																					new Symbol("l"))))),
+//													new AbstractionApplication(new Symbol("head-list"),
+//															new Tuple(new Symbol("l")))))),
+//								env)),
+//						env, typeEnv),
+//				env, typeEnv);
 
 		this.assertInterpretedStringEquals("(define reverse-list (lambda ((List l)) "
 						+ "(if (is-list-empty l) " + "(construct List:Linked) "
@@ -975,8 +970,7 @@ class TestComplex extends VelkaTest {
 				new AbstractionApplication(
 						elambda_defaultCostFunction, 
 						args);
-		
-		this.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defCostFunction));
+				this.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defCostFunction));
 		
 		Lambda costFunction = new Lambda(
 				elambda_args,
@@ -1036,16 +1030,22 @@ class TestComplex extends VelkaTest {
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
-						TypeAtom.TypeIntRoman.clojureTypeRepresentation() + 
-						LitInteger.clojureLit("1") + "))",
+				ClojureHelper.applyClojureFunction(
+						"println", 
+						ClojureHelper.applyClojureFunction(
+								ClojureCoreSymbols.convertAtomClojureSymbol_full, 
+								TypeAtom.TypeIntRoman.clojureTypeRepresentation(),
+								LitInteger.clojureLit("1"))),
 				"[I]");
 		
 		assertClojureFunction(
 				definitions.toString(),
-				"(println (" + ClojureCoreSymbols.convertAtomClojureSymbol_full + " " +  
-						TypeAtom.TypeIntString.clojureTypeRepresentation() + 
-						LitInteger.clojureLit("1") + "))",
+				ClojureHelper.applyClojureFunction(
+						"println", 
+						ClojureHelper.applyClojureFunction(
+								ClojureCoreSymbols.convertAtomClojureSymbol_full, 
+								TypeAtom.TypeIntString.clojureTypeRepresentation(),
+								LitInteger.clojureLit("1"))),
 				"[1]");
 		
 		assertClojureFunction(

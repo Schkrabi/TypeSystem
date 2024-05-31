@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Lambda;
@@ -17,21 +16,20 @@ import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.exceptions.UndefinedTypeException;
 import velka.core.exceptions.UnrecognizedConstructorException;
 import velka.core.expression.Expression;
-import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
 import velka.core.langbase.OperatorBank;
-import velka.core.literal.LitComposite;
-import velka.types.Substitution;
+import velka.core.literal.LitInteger;
+import velka.types.RepresentationOr;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeName;
 import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
+import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.NameGenerator;
-import velka.util.Pair;
 
 /**
  * This class instance stores all information related to types not directly
@@ -132,6 +130,68 @@ public class TypeEnvironment {
 		TypeInformation info = this.getTypeInfo(typeAtom);
 		info.addConstructor(constructorLambda, env);
 	}
+	
+	/** Gets the cost of representation conversion */
+	public Optional<Long> conversionCost(Type from, Type to, Expression e, Environment env, TypeEnvironment typeEnv) {
+		if(from.equals(to)) {
+			return Optional.of(0l);
+		}
+		else if(!this.canConvert(from, to)) {
+			return Optional.empty();
+		}
+		else if(to instanceof TypeVariable
+				|| from instanceof RepresentationOr
+				|| to instanceof RepresentationOr) {
+			return Optional.of(0l);
+		}
+		else if(from instanceof TypeAtom) {
+			try {
+				var ti = this.getTypeInfo((TypeAtom)from);
+				
+				if(from.equals(to)) return Optional.of(0l);	
+				
+				if(!(to instanceof TypeAtom)) {
+					System.out.println("test");
+				}
+				
+				var c = ti.getConversionCost((TypeAtom)to);
+				if(c.isEmpty()) {
+					return Optional.empty();
+				}
+				var costApl = new AbstractionApplication(c.get(), new Tuple(e));
+				var cost = costApl.interpret(env, typeEnv);
+				if(!(cost instanceof LitInteger)) {
+					throw new RuntimeException("Invalid conversion cost: conversion " + from + " to " + to + " has improper cost function.");
+				}
+				return Optional.of(((LitInteger)cost).value);
+			} catch (AppendableException ex) {
+				throw new RuntimeException(ex);
+			}
+		}
+		else if(from instanceof TypeTuple) {
+			long sum = 0;
+			var ite = ((Tuple)e).iterator();
+			var itf = ((TypeTuple)from).iterator();
+			var itt = ((TypeTuple)to).iterator();
+			while(itf.hasNext()) {
+				var sef = itf.next();
+				var set = itt.next();
+				var te = ite.next();
+				var cost = this.conversionCost(sef, set, te, env, typeEnv);
+				if(cost.isEmpty()) return Optional.empty();
+				
+				sum += cost.get();
+			}
+			return Optional.of(sum);
+		}
+		else if(from instanceof TypeArrow) {
+			// The time to convert the function is constant
+			// What can change is the execution time of the function
+			// However that is not traceable for Velka
+			return Optional.of(1l);
+		}
+		throw new RuntimeException("Invalid conversion cost: unrecognized type: " + from + " or " + to);
+	}
 
 	/**
 	 * Adds constructor for primitive types. For internal use only
@@ -145,32 +205,6 @@ public class TypeEnvironment {
 	}
 
 	/**
-	 * Creates constructor of LitComposite from lambda and given TypeAtom
-	 * 
-	 * @param typeAtom Constructed type
-	 * @param lambda   lambda used for construction of wrapped expression
-	 * @return construtor
-	 */
-	private Lambda createConstructorFromLambda(TypeAtom typeAtom, Abstraction abst) throws AppendableException {
-		Pair<Type, Substitution> infered = abst.infer(this.environment, this);
-		Type abstType = infered.first;
-		if (!(abstType instanceof TypeArrow)) {
-			throw new AppendableException("Contstructor " + abst + " infered " + abstType + " expected TypeArrow!");
-		}
-		TypeArrow applAbstType = (TypeArrow) abstType;
-		if (!(applAbstType.ltype instanceof TypeTuple)) {
-			throw new AppendableException(
-					"Constructor " + abst + " infered arguments " + applAbstType.ltype + " expected TypeTuple!");
-		}
-		TypeTuple abstArgType = (TypeTuple) applAbstType.ltype;
-
-		Tuple args = new Tuple(
-				abstArgType.stream().map(x -> new Symbol(NameGenerator.next())).collect(Collectors.toList()));
-
-		return new Lambda(args, abstArgType, new LitComposite(new AbstractionApplication(abst, args), typeAtom));
-	}
-
-	/**
 	 * Adds new conversion to the environment
 	 * 
 	 * @param fromType              Type which is converted
@@ -179,17 +213,14 @@ public class TypeEnvironment {
 	 * @throws AppendableException if any TypeAtom is not recognized or if such
 	 *                             conversion already exists
 	 */
-	public void addConversion(TypeAtom fromType, TypeAtom toType, Expression conversionConstructor)
+	public void addConversion(TypeAtom fromType, TypeAtom toType, Expression conversionConstructor, Expression cost)
 			throws AppendableException {
 		if (!TypeAtom.isSameBasicType(fromType, toType)) {
 			throw new AppendableException("Can only define conversions between representations!");
 		}
-//		if (!this.existsTypeAtom(toType)) {
-//			throw new UndefinedTypeException(toType.toString());
-//		}
 
 		TypeInformation info = this.getTypeInfo(fromType);
-		info.addConversion(toType, conversionConstructor);
+		info.addConversion(toType, conversionConstructor, cost);
 	}
 	
 	/**
@@ -334,7 +365,7 @@ public class TypeEnvironment {
 		/**
 		 * Conversions of the type
 		 */
-		private Map<TypeAtom, Expression> conversions;
+		private Map<TypeAtom, ConversionInfo> conversions;
 		/**
 		 * Name of deconstruction function
 		 */
@@ -349,7 +380,7 @@ public class TypeEnvironment {
 			this.type = type;
 			this.deconstructionCheckFunctionName = checkDeconstructionFunctionName;
 			this.constructors = new TreeMap<TypeTuple, Abstraction>();
-			this.conversions = new TreeMap<TypeAtom, Expression>();
+			this.conversions = new TreeMap<TypeAtom, ConversionInfo >();
 			this.typeEnvironment = typeEnv;
 		}
 
@@ -426,13 +457,13 @@ public class TypeEnvironment {
 		 * @param conversionConstructor constructor for the conversion
 		 * @throws DuplicateConversionException if such conversion already exists
 		 */
-		public void addConversion(TypeAtom toType, Expression conversionConstructor)
+		public void addConversion(TypeAtom toType, Expression conversionConstructor, Expression cost)
 				throws DuplicateConversionException {
 			if (this.conversions.containsKey(toType)) {
-				throw new DuplicateConversionException(this.type, toType, this.conversions.get(toType),
+				throw new DuplicateConversionException(this.type, toType, this.conversions.get(toType).conversion,
 						conversionConstructor);
 			}
-			this.conversions.put(toType, conversionConstructor);
+			this.conversions.put(toType, new ConversionInfo(this.type, toType, conversionConstructor, cost));
 		}
 
 		/**
@@ -446,7 +477,14 @@ public class TypeEnvironment {
 			if (!this.conversions.containsKey(toType)) {
 				return Optional.empty();
 			}
-			return Optional.of(this.conversions.get(toType));
+			return Optional.of(this.conversions.get(toType).conversion);
+		}
+		
+		/** Gets the cost expression of the conversion */
+		public Optional<Expression> getConversionCost(TypeAtom to){
+			var ci = this.conversions.get(to);
+			if(ci == null) return Optional.empty();
+			return Optional.of(ci.cost);
 		}
 
 		/**
@@ -484,6 +522,20 @@ public class TypeEnvironment {
 		public int hashCode() {
 			return this.type.hashCode() * this.deconstructionCheckFunctionName.hashCode() * this.constructors.hashCode()
 					* this.conversions.hashCode();
+		}
+		
+		private static class ConversionInfo {
+			public final Expression conversion;
+			public final Expression cost;
+			public final Type from;
+			public final Type to;
+			
+			public ConversionInfo(Type from, Type to, Expression conversion, Expression cost) {
+				this.from = from;
+				this.to = to;
+				this.conversion = conversion;
+				this.cost = cost;
+			}
 		}
 
 	}

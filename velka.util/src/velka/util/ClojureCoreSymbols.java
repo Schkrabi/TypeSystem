@@ -151,4 +151,16 @@ public class ClojureCoreSymbols {
 	
 	public static final String canDeconstructAs = "can-deconstruct-as";
 	public static final String canDeconstructAs_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, canDeconstructAs);
+	
+	public static final String canConvert = "can-convert";
+	public static final String canConvert_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, canConvert);
+	
+	public static final String conversionCostFn = "conversion-cost-fn";
+	public static final String conversionCostFn_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, conversionCostFn);
+	
+	public static final String conversionCost = "conversion-cost";
+	public static final String conversionCost_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, conversionCost);
+	
+	public static final String implementationCost = "implementation-cost";
+	public static final String implementationCost_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, implementationCost);
 }

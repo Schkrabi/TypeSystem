@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.function.BiFunction;
 
 import velka.core.application.CanDeconstructAs;
 import velka.core.langbase.ConversionOperators;
@@ -439,87 +440,150 @@ public class VelkaClojureCore {
 											ClojureCoreSymbols.getTypeClojureSymbol,
 											convert_expr))));
 	
-	private static String eapply_abstr = "_abstr";
-	private static String eapply_args = "_args";
-	private static String eapply_costF = "_costF";
-	private static String eapply_impl = "_impl";
-	private static String eapply_fn_i = "_i";
-	private static String eapply_fn_p1 = "_p1";
-	private static String eapply_fn_p2 = "_p2";
-	/**
-	 * Definition for eapply function
-	 */
-	public static String eapplyClojureDef = ClojureHelper.clojureDefnHelper(
-			ClojureCoreSymbols.eapplyClojureSymbol,
-			Arrays.asList(eapply_abstr, eapply_args, eapply_costF),
-			ClojureHelper.letHelper(
-					ClojureHelper.applyClojureFunction(
-							"apply",
-							eapply_impl,
-							ClojureHelper.applyClojureFunction(
-									ClojureCoreSymbols.convertClojureSymbol,
-									ClojureHelper.applyClojureFunction(
-											".ltype",
-											ClojureHelper.applyClojureFunction(
-													ClojureCoreSymbols.getTypeClojureSymbol,
-													eapply_impl)),
-									eapply_args)),
-					new Pair<String, String>(
-							eapply_impl,
-							ClojureHelper.condHelper(
-									new Pair<String, String>(
-											ClojureHelper.applyClojureFunction("fn?", eapply_abstr),
-											eapply_abstr),
-									new Pair<String, String>(
-											ClojureHelper.applyClojureFunction("set?", eapply_abstr),
-											ClojureHelper.applyClojureFunction(
-													"first",
-													ClojureHelper.applyClojureFunction(
-															"reduce",
-															ClojureHelper.fnHelper(
-																	Arrays.asList(eapply_fn_p1, eapply_fn_p2),
-																	ClojureHelper.applyClojureFunction(
-																			"if",
-																			ClojureHelper.applyClojureFunction(
-																					"<",
-																					ClojureHelper.applyClojureFunction(
-																							"second",
-																							eapply_fn_p1),
-																					ClojureHelper.applyClojureFunction(
-																							"second",
-																							eapply_fn_p2)),
-																			eapply_fn_p1,
-																			eapply_fn_p2)),
-															ClojureHelper.applyClojureFunction(
-																	"map",
-																	ClojureHelper.fnHelper(
-																			Arrays.asList(eapply_fn_i),
-																			ClojureHelper.clojureVectorHelper(
-																					eapply_fn_i,
-																					ClojureHelper.applyVelkaFunction_argsTuple(
-																							ClojureHelper.applyClojureFunction(
-																									"if",
-																									ClojureHelper.applyClojureFunction(
-																											"nil?",
-																											eapply_costF),
-																									ClojureHelper.applyClojureFunction(
-																											ClojureCoreSymbols.getCostFunction_full,
-																											eapply_fn_i),
-																									eapply_costF),
-																							eapply_args))),
-																	eapply_abstr)))),
-									new Pair<String, String>(
-											":else",
-											ClojureHelper.errorHelper(
-													ClojureHelper.applyClojureFunction(
-															"str",
-															ClojureHelper.stringHelper("invalid abstraction "),
-															eapply_abstr,
-															ClojureHelper.stringHelper(" in (eapply "),
-															eapply_abstr,
-															ClojureHelper.stringHelper(" "),
-															eapply_args,
-															ClojureHelper.stringHelper(")"))))))));
+	//(defn can-convert-atom ([_from _to]
+	//					 	  (or (= _from _to)
+	//							  (instance? _to velka.types.TypeVariable)
+	//							  (and (= (.type _from) (.type _to))
+	//								   (or (= (.representation _from) velka.types.TypeRepresentation/WILDCARD)
+	//									   (= (.representation _to) velka.types.TypeRepresentation/WILDCARD)
+	//							  		   (contains? ClojureCoreSymbols.atomicConversionMapClojureSymbol [_from _to]))))))
+	
+	private final static String from = "_from";
+	private final static String to = "_to";
+	public static final String canConvertAtomDef = 
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.canConvert, List.of(from, to),
+					ClojureHelper.applyClojureFunction("or", 
+							ClojureHelper.applyClojureFunction("=", from, to),
+							ClojureHelper.applyClojureFunction("instance?", "velka.types.TypeVariable", to),
+							ClojureHelper.applyClojureFunction("and", 
+									ClojureHelper.applyClojureFunction("=", 
+											ClojureHelper.applyClojureFunction(".name", from), 
+											ClojureHelper.applyClojureFunction(".name", to)),
+									ClojureHelper.applyClojureFunction("or", 
+											ClojureHelper.applyClojureFunction("=", 
+													ClojureHelper.applyClojureFunction(".representation", from),
+													"velka.types.TypeRepresentation/WILDCARD"),
+											ClojureHelper.applyClojureFunction("=", 
+													ClojureHelper.applyClojureFunction(".representation", to),
+													"velka.types.TypeRepresentation/WILDCARD"),
+											ClojureHelper.applyClojureFunction("contains?", 
+													ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
+													ClojureHelper.clojureVectorHelper(from, to))))));
+	
+	//(defn conv-cost-fn ([_from _to]
+	//					  (TypeAtom.conversionCostCljMetaName (meta (get ClojureCoreSymbols.atomicConversionMapClojureSymbol_full [_from _to])))))
+	
+	public static final String conversionCostFn =
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.conversionCostFn, List.of(from, to), 
+					ClojureHelper.applyClojureFunction(TypeAtom.conversionCostCljMetaName, 
+							ClojureHelper.applyClojureFunction("meta", 
+									ClojureHelper.applyClojureFunction("get",
+											ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
+											ClojureHelper.clojureVectorHelper(from, to)))));
+	
+	
+	//(defn conv-cost ([_from _to _exp]
+	//				   (cond (= _from _to) 0
+	//						 (not (can-convert _from _to)) nil
+	//						 (or (instance? velka.types.TypeVariable _to)
+	//							 (instance? velka.types.RepresentationOr _from)
+	//							 (instance? velka.types.RepresentationOr _to)) 0
+	//						 (instance? _from velka.types.TypeAtom) (eapply (TypeAtom.conversionCostCljMetaName (get ClojureCoreSymbols.atomicConversionMapClojureSymbol_full [_from _to])) [_exp])
+	//						 (instance? _from velka.types.TypeTuple) (reduce (fn [x y] (if (nil? y) nil (+ x y))) 0 (map conv-cost _from _to _exp))
+	//						 (instance? _from velka.types.TypeArrow) 1
+	//						 :else (throw "cannot compute conversion cost"))))
+	
+	private static final String exp = "_exp";
+	private static final String x = "_x";
+	private static final String y = "_y";
+	public static final String conversionCostDef =
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.conversionCost, List.of(from, to, exp), 
+					ClojureHelper.condHelper(Pair.of(ClojureHelper.applyClojureFunction("=", from, to), "0"),
+											 Pair.of(ClojureHelper.applyClojureFunction("not", 
+													 ClojureHelper.applyClojureFunction("velka.types.Type/canConvert", 
+															 from, 
+															 to,
+															 ClojureHelper.applyClojureFunction("reify", 
+																	 BiFunction.class.getName(), 
+																	 ClojureHelper.applyClojureFunction("apply", 
+																			 ClojureHelper.clojureVectorHelper("this", x, y), 
+																			 ClojureHelper.applyClojureFunction(ClojureCoreSymbols.canConvert_full, x, y))))), "nil"),
+											 Pair.of(ClojureHelper.applyClojureFunction("or", 
+													 ClojureHelper.isInstanceOfClass(to, TypeVariable.class), 
+													 ClojureHelper.isInstanceOfClass(from, RepresentationOr.class),
+													 ClojureHelper.isInstanceOfClass(to, RepresentationOr.class)), "0"),
+											 Pair.of(ClojureHelper.isInstanceOfClass(from, TypeAtom.class), ClojureHelper.applyVelkaFunction(ClojureHelper.applyClojureFunction(ClojureCoreSymbols.conversionCostFn_full, 
+													 from, to),
+													 exp)),
+											 Pair.of(ClojureHelper.isInstanceOfClass(from, TypeTuple.class), ClojureHelper.applyClojureFunction("reduce", 
+													 ClojureHelper.fnHelper(List.of(x, y), ClojureHelper.clojureIfHelper(ClojureHelper.applyClojureFunction("nil?", y), "nil", ClojureHelper.applyClojureFunction("+", x, y))),
+													 "0",
+													 ClojureHelper.applyClojureFunction("map", ClojureCoreSymbols.conversionCost_full, from, to, exp))),
+											 Pair.of(ClojureHelper.isInstanceOfClass(from, TypeArrow.class), "1"),
+											 Pair.of(":else", ClojureHelper.errorHelper(ClojureHelper.applyClojureFunction("str", ClojureHelper.stringHelper("cannot compute conversion cost"), from, to, exp)))));
+	
+	
+	private static final String impl = "_impl", args = "_args", icost = "_icost", ccost = "_ccost";
+	//(defn impl-cost ([_impl _args]
+	//				   (let [_icost (eapply (getcost _impl) _args)
+	//						 _ccost (conversion-cost (get-type _args) (.ltype (get-type _impl)) _args)]
+	//					(+ _icost _ccost))))
+	
+	public static final String implementationCost = 
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.implementationCost, List.of(impl, args), 
+					ClojureHelper.letHelper(ClojureHelper.clojureIfHelper(ClojureHelper.applyClojureFunction("nil?", ccost), 
+							"nil",
+							ClojureHelper.applyClojureFunction("+", icost, ccost)), 
+							Pair.of(icost, ClojureHelper.applyVelkaFunction_argsTuple(ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getCostFunction_full, impl), args)),
+							Pair.of(ccost, ClojureHelper.applyClojureFunction(ClojureCoreSymbols.conversionCost_full, 
+									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, args),
+									ClojureHelper.applyClojureFunction(".ltype", ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, impl)),
+									args))));
+	
+	//(defn select-impl ([_efun _args]
+	//					(first (reduce 
+	//						(fn [p1 p2] (if (or (< (second p2) (second p1)) (nil? (first p1))) p2 p1))
+	//						[nil java.lang.Long/MAX_VALUE] 
+	//						(filter (fn [_x] (not (nil? (second _x)))) (map (fn [_impl] [_impl (implementation-cost _impl _args)]) _efun)))))))
+	
+	private static final String efun = "_efun", p1 = "_p1", p2 = "_p2";
+	public static final String selectImplementation =
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.selectImplementationClojureSymbol, List.of(efun, args), 
+					ClojureHelper.applyClojureFunction("first", 
+							ClojureHelper.applyClojureFunction("reduce", 
+									ClojureHelper.fnHelper(List.of(p1, p2), ClojureHelper.clojureIfHelper(
+											ClojureHelper.applyClojureFunction("or", ClojureHelper.applyClojureFunction("<", 
+														ClojureHelper.applyClojureFunction("second", p2),
+														ClojureHelper.applyClojureFunction("second", p1)),
+													ClojureHelper.applyClojureFunction("nil?", ClojureHelper.applyClojureFunction("first", p1))), 
+											p2, p1)),
+									ClojureHelper.clojureVectorHelper("nil", "java.lang.Long/MAX_VALUE"),
+									ClojureHelper.applyClojureFunction("filter", 
+											ClojureHelper.fnHelper(List.of(x), ClojureHelper.applyClojureFunction("not", ClojureHelper.applyClojureFunction("nil?", ClojureHelper.applyClojureFunction("second", x)))),
+											ClojureHelper.applyClojureFunction("map", 
+													ClojureHelper.fnHelper(List.of(impl), 
+															ClojureHelper.clojureVectorHelper(impl, ClojureHelper.applyClojureFunction(ClojureCoreSymbols.implementationCost_full, impl, args))),
+													efun)))));
+	
+	
+	//(defn eapply ([_abstr _args]
+	//				(let [_i (cond (fn? _abstr) _abstr 
+	//							   (set? _abstr) (select-implementation _abstr _args))
+	//					  _cargs (convert (.ltype (get-type _i)) _args)
+	//					 ]
+	//					(apply _i _cargs))))
+	
+	private static final String abstr = "_abstr", cargs = "_cargs";
+	public static final String eapply = 
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.eapplyClojureSymbol, List.of(abstr, args), 
+					ClojureHelper.letHelper(ClojureHelper.applyClojureFunction("apply", impl, cargs), 
+							Pair.of(impl, ClojureHelper.condHelper(
+									Pair.of(ClojureHelper.applyClojureFunction("fn?", abstr), abstr),
+									Pair.of(ClojureHelper.applyClojureFunction("set?", abstr), ClojureHelper.applyClojureFunction(ClojureCoreSymbols.selectImplementationClojureSymbol_full, abstr, args)))),
+							Pair.of(cargs, ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol_full, 
+									ClojureHelper.applyClojureFunction(".ltype", 
+											ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, impl)),
+									args))));
 	
 	private static final String langPstrClojureDef_expr = "_expr";
 	private static final String langPstrClojureDef_level = "_level";
@@ -675,6 +739,10 @@ public class VelkaClojureCore {
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.asFunctionClojure));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.getCostFunction));
 		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.canDeconstructAs));
+		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.canConvert));
+		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.conversionCostFn));
+		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.conversionCost));
+		sb.append(ClojureHelper.makeDeclaration(ClojureCoreSymbols.implementationCost));
 	
 		// Definitions
 		sb.append(type2typeSymbolDef);
@@ -699,9 +767,19 @@ public class VelkaClojureCore {
 		sb.append("\n");
 		sb.append(convertClojureDef);
 		sb.append("\n");
-		sb.append(eapplyClojureDef);
+		sb.append(eapply);
 		sb.append("\n");
 		sb.append(canDeconstructAsDef);
+		sb.append("\n");
+		sb.append(canConvertAtomDef);
+		sb.append("\n");
+		sb.append(conversionCostFn);
+		sb.append("\n");
+		sb.append(conversionCostDef);
+		sb.append("\n");
+		sb.append(implementationCost);
+		sb.append("\n");
+		sb.append(selectImplementation);
 		sb.append("\n");
 //		sb.append("(def lang-pstr" + "(fn [exp]" + "(letfn [(lang-pstr-aux [exp level]"
 //				+ "(let [type (:lang-type (meta exp))]" + "(cond" + "(or"

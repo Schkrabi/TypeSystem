@@ -215,19 +215,27 @@ public abstract class Type implements Comparable<Type> {
 	 * @return true if this type can be converted to other, false otherwise
 	 */
 	public boolean canConvertTo(Type other, BiFunction<TypeAtom, TypeAtom, Boolean> atomCheck) {
-		if(other instanceof TypeVariable) {
+		return canConvert(this, other, atomCheck);
+	}
+	
+	/** Checks if from type can be converted to to type */
+	public static boolean canConvert(Type from, Type to, BiFunction<TypeAtom, TypeAtom, Boolean> atomCheck) {
+		if(from == to
+			|| from.equals(to)
+			|| to instanceof TypeVariable) {
 			return true;
 		}
-		if(other instanceof RepresentationOr) {
-			for(Type t : ((RepresentationOr)other).getRepresentations()) {
-				if(this.canConvertTo(t, atomCheck)) {
+		
+		if(to instanceof RepresentationOr) {
+			for(Type t : ((RepresentationOr)to).getRepresentations()) {
+				if(from.canConvertTo(t, atomCheck)) {
 					return true;
 				}
 			}
 			return false;
 		}
 		
-		return doCanConvertTo(other, atomCheck);
+		return from.doCanConvertTo(to, atomCheck);
 	}
 	
 	/**

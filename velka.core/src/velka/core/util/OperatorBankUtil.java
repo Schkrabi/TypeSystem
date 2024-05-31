@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import velka.core.abstraction.Constructor;
+import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Operator;
 import velka.core.expression.Symbol;
 import velka.core.interpretation.Environment;
@@ -46,16 +48,16 @@ public class OperatorBankUtil {
 	 * @throws IllegalArgumentException if operator is badly annotated
 	 * @throws IllegalAccessException if operator is badly annotated
 	 */
-	private static List<Operator> getAnnotatedOperators(Class<?> operatorBank, Class<? extends Annotation> annotation) throws IllegalArgumentException, IllegalAccessException {
+	private static <T extends Operator> List<T> getAnnotatedOperators(Class<?> operatorBank, Class<? extends Annotation> annotation) throws IllegalArgumentException, IllegalAccessException {
 		List<Field> fields = 
 				Arrays.asList(operatorBank.getFields())
 				.stream()
 				.filter(f -> f.getAnnotation(annotation) != null)
 				.collect(Collectors.toList());
 		
-		List<Operator> l = new ArrayList<Operator>(fields.size());
+		List<T> l = new ArrayList<T>(fields.size());
 		for(Field f : fields) {
-			Operator operator = (Operator) f.get(null);
+			var operator = (T) f.get(null);
 			l.add(operator);
 		}
 		return l;
@@ -68,7 +70,7 @@ public class OperatorBankUtil {
 	 * @throws IllegalArgumentException if operator is badly annotated
 	 * @throws IllegalAccessException if operator is badly annotated
 	 */
-	public static List<Operator> getOperators(Class<?> clazz) throws IllegalArgumentException, IllegalAccessException {
+	public static List<Constructor> getOperators(Class<?> clazz) throws IllegalArgumentException, IllegalAccessException {
 		return getAnnotatedOperators(clazz, VelkaOperator.class);
 	}
 	
@@ -90,7 +92,7 @@ public class OperatorBankUtil {
 	 * @throws IllegalArgumentException if operator is badly annotated
 	 * @throws IllegalAccessException if operator is badly annotated
 	 */
-	public static List<Operator> getConversions(Class<?> clazz) throws IllegalArgumentException, IllegalAccessException {
+	public static List<Conversion> getConversions(Class<?> clazz) throws IllegalArgumentException, IllegalAccessException {
 		return getAnnotatedOperators(clazz, VelkaConversion.class);
 	}
 	
@@ -119,7 +121,7 @@ public class OperatorBankUtil {
 	 * @return Clojure Code
 	 * @throws AppendableException If conversion is badly defined
 	 */
-	public static String conversionDefinition(Operator conversion, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public static String conversionDefinition(Conversion conversion, Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Pair<Type, Substitution> p = conversion.infer(env, typeEnv);
 		
 		if(!(p.first instanceof TypeArrow)) {
@@ -147,6 +149,6 @@ public class OperatorBankUtil {
 		TypeAtom from = (TypeAtom)tt.get(0);
 		TypeAtom to = (TypeAtom)ta.rtype;
 		
-		return TypeAtom.addConversionToGlobalTable(from, to, conversion.toClojureCode(env, typeEnv));
+		return TypeAtom.addConversionToGlobalTable(from, to, conversion.toClojureCode(env, typeEnv), conversion.cost().toClojureCode(env, typeEnv));
 	}
 }

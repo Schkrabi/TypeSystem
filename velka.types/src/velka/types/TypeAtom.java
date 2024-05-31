@@ -7,6 +7,7 @@ import java.util.function.BiFunction;
 
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
+import velka.util.Pair;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
 
@@ -20,6 +21,8 @@ public class TypeAtom extends TerminalType {
 
 	public final TypeName name;
 	public final TypeRepresentation representation;
+	
+	public static final String conversionCostCljMetaName = ":conversion-cost";
 	
 
 	public TypeAtom(TypeName name, TypeRepresentation representation) {
@@ -310,11 +313,16 @@ public class TypeAtom extends TerminalType {
 	 * @param conversionCode code for conversion
 	 * @return String with code
 	 */
-	public static String addConversionToGlobalTable(TypeAtom fromType, TypeAtom toType, String conversionCode) {
+	public static String addConversionToGlobalTable(TypeAtom fromType, TypeAtom toType, String conversionCode, String conversionCostCode) {
 		String code = ClojureHelper.rebindGlobalVariable(ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
 				ClojureHelper.applyClojureFunction("assoc",
 						ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
-						makeAtomicConversionRecord(fromType, toType, conversionCode)));
+						makeAtomicConversionRecord(
+								fromType, 
+								toType, 
+								ClojureHelper.addMetadata(
+										conversionCode,
+										Pair.of(TypeAtom.conversionCostCljMetaName, conversionCostCode)))));
 		
 		return code;
 	}

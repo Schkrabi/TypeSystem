@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import velka.core.abstraction.Conversion;
+import velka.core.abstraction.Lambda;
 import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -15,7 +16,6 @@ import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
-import velka.core.literal.Literal;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -91,6 +91,11 @@ public final class ConversionOperators extends OperatorBank{
 		public Symbol getClojureSymbol() {
 			return new Symbol("int-native-2-int-roman", NAMESPACE);
 		}
+
+		@Override
+		public Expression cost() {
+			return Lambda.constFun(1, new LitInteger(1));
+		}
 	
 	};
 	
@@ -135,6 +140,11 @@ public final class ConversionOperators extends OperatorBank{
 		@Override
 		public Symbol getClojureSymbol() {
 			return new Symbol("int-native-2-int-string", NAMESPACE);
+		}
+
+		@Override
+		public Expression cost() {
+			return Lambda.constFun(1, new LitInteger(1));
 		}
 	
 	};
@@ -181,6 +191,11 @@ public final class ConversionOperators extends OperatorBank{
 		@Override
 		public Symbol getClojureSymbol() {
 			return new Symbol("int-roman-2-int-native", NAMESPACE);
+		}
+
+		@Override
+		public Expression cost() {
+			return Lambda.constFun(1, new LitInteger(1));
 		}
 	};
 	
@@ -230,6 +245,11 @@ public final class ConversionOperators extends OperatorBank{
 		public Symbol getClojureSymbol() {
 			return new Symbol("int-roman-2-int-string", NAMESPACE);
 		}
+
+		@Override
+		public Expression cost() {
+			return Lambda.constFun(1, new LitInteger(1));
+		}
 	
 	};
 	
@@ -276,6 +296,11 @@ public final class ConversionOperators extends OperatorBank{
 		@Override
 		public Symbol getClojureSymbol() {
 			return new Symbol("int-string-2-int-native", NAMESPACE);
+		}
+
+		@Override
+		public Expression cost() {
+			return Lambda.constFun(1, new LitInteger(1));
 		}
 	};
 	
@@ -324,6 +349,11 @@ public final class ConversionOperators extends OperatorBank{
 		@Override
 		public Symbol getClojureSymbol() {
 			return new Symbol("int-string-2-int-roman", NAMESPACE);
+		}
+
+		@Override
+		public Expression cost() {
+			return Lambda.constFun(1, new LitInteger(1));
 		}
 	};
 

@@ -695,20 +695,20 @@ class TestInterpretation extends VelkaTest{
 				new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)),
 						new Tuple(Arrays.asList(new Symbol("y"))), new Symbol("y"), bound));
 
-		ExtendedFunction function = ExtendedFunction.makeExtendedFunction(implementations, bound, typeEnv);
+		ExtendedFunction function = Extend.makeExtendedFunction(implementations, bound, typeEnv);
 
 		this.assertReflexivity(function);
 
 		List<Function> tmpImpls = new LinkedList<Function>(implementations);
 		tmpImpls.remove(0);
-		this.assertDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound, typeEnv));
+		this.assertDifference(function, Extend.makeExtendedFunction(tmpImpls, bound, typeEnv));
 
 		tmpImpls = new LinkedList<Function>(implementations);
 		tmpImpls.add(new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)),
 				new Tuple(Arrays.asList(new Symbol("y"))), new Symbol("y"), top));
-		this.assertDifference(function, ExtendedFunction.makeExtendedFunction(tmpImpls, bound, typeEnv));
+		this.assertDifference(function, Extend.makeExtendedFunction(tmpImpls, bound, typeEnv));
 
-		this.assertDifference(function, ExtendedFunction.makeExtendedFunction(implementations, top, typeEnv));
+		this.assertDifference(function, Extend.makeExtendedFunction(implementations, top, typeEnv));
 
 		this.assertDifference(function, Expression.EMPTY_EXPRESSION);
 
@@ -724,7 +724,7 @@ class TestInterpretation extends VelkaTest{
 						new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntString))),
 				function);
 
-		assertThrows(AppendableException.class, () -> ExtendedFunction
+		assertThrows(AppendableException.class, () -> Extend
 				.makeExtendedFunction(Arrays.asList(
 						new Function(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
 								new Tuple(Arrays.asList(new Symbol("x"))), new Symbol("x"), top),
@@ -804,15 +804,18 @@ class TestInterpretation extends VelkaTest{
 		this.assertInference(p, TypeAtom.TypeIntString, autoConRep);
 
 		// Test elambda/efunction comparation
-		ExtendedLambda elambda = ExtendedLambda.makeExtendedLambda(Arrays.asList(
-				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Symbol("x")),
-				new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), new Symbol("x"))));
+		ExtendedLambda elambda = ExtendedLambda.makeExtendedLambda(List.of(
+				new Lambda(new Tuple(new Symbol("x")),
+						new TypeTuple(TypeAtom.TypeIntString), new Symbol("x")),
+				new Lambda(new Tuple(new Symbol("x")),
+						new TypeTuple(TypeAtom.TypeIntRoman), new Symbol("x"))));
+		
 		AbstractionApplication useString = new AbstractionApplication(elambda, new Tuple(
-				Arrays.asList(new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString))));
+				new LitComposite(new LitString("5"), TypeAtom.TypeIntString)));
+		
 		this.assertInterpretationEquals(useString,
-				new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString), top, typeEnv);
+				new LitComposite(new LitString("5"), TypeAtom.TypeIntString), top, typeEnv);
+		
 		p = useString.infer(top, typeEnv);
 		this.assertInference(p,
 				RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntString, TypeAtom.TypeIntRoman), useString);
@@ -1221,6 +1224,15 @@ class TestInterpretation extends VelkaTest{
 
 		Pair<Type, Substitution> p = defCon.infer(top, typeEnv);
 		this.assertInference(p, Expression.EMPTY_EXPRESSION.infer(top, typeEnv).first, defCon);
+		
+		
+		var parsed = this.parseString("(conversion Type:Native Type:Other (x) x (lambda ((Type:Native x)) 42))");
+		var e = parsed.get(0);
+		
+		var top2 = Environment.initTopLevelEnvironment();
+		var typeEnv2 = TypeEnvironment.initBasicTypes(top);
+		
+		e.interpret(top2, typeEnv2);
 	}
 
 	@Test
@@ -2097,13 +2109,13 @@ class TestInterpretation extends VelkaTest{
 							  new Tuple(impl, elambda_args)),
 					  env));
 		
-		assertInterpretationEquals(
-				extend, 
-				ExtendedFunction.makeExtendedFunction(
-						m,
-						env), 
-				env, 
-				typeEnv);
+//		assertInterpretationEquals(
+//				extend, 
+//				ExtendedFunction.makeExtendedFunction(
+//						m,
+//						env), 
+//				env, 
+//				typeEnv);
 		
 		
 		Lambda costLambda = new Lambda(

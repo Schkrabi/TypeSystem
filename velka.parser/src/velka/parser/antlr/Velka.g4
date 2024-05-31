@@ -117,7 +117,7 @@ special_form returns [Expression val]
 	  ')' 
 	  expr                { var e = $expr.val; }
 	  expr                { var c = $expr.val; }
-	  ')'                 { $val = new DefineConversion(f, t, new Tuple(a), e); }
+	  ')'                 { $val = new DefineConversion(f, t, new Tuple(a), e, c); }
 	| '(' 
 	  'conversion' 
 	  representation_atom { var f = $representation_atom.val; }

@@ -29,7 +29,6 @@ import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
 import velka.core.literal.LitString;
-import velka.parser.exceptions.TypeNotRecognizedException;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -51,7 +50,6 @@ class TestTypes {
 	@DisplayName("Exceptions")
 	void testExceptions() {
 		assertAll(() -> {
-			new TypeNotRecognizedException("test");
 			new TypesDoesNotUnifyException(TypeAtom.TypeInt, TypeAtom.TypeBool);
 			new UnexpectedTypeException(TypeAtom.TypeInt, TypeArrow.class);
 			new ConversionException(TypeAtom.TypeBool, Expression.EMPTY_EXPRESSION);

@@ -1,24 +1,31 @@
 package velka.core.application;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import velka.core.abstraction.ExtendedFunction;
 import velka.core.abstraction.Function;
+import velka.core.abstraction.Lambda;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
-import velka.core.langbase.Operators;
+import velka.core.literal.LitInteger;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
+import velka.types.TypeTuple;
+import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
+import velka.util.NameGenerator;
 import velka.util.Pair;
 
 /**
@@ -47,31 +54,51 @@ public class Extend extends Expression implements Comparable<Expression> {
 	 */
 	public final Expression implementation;
 	
+	private static final Expression invalidCost = new Expression() {
+		@Override
+		public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			return null;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			return null;
+		}
+
+		@Override
+		public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			return null;
+		}
+
+		@Override
+		protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+				throws AppendableException {
+			return null;
+		}		
+	};
+	
 	/**
 	 * Cost function for implementation
 	 */
-	public final Optional<Expression> costFunction;
+	public final Expression costFunction;
 	
 	public Extend(Expression extendedFunction, Expression implementation) {
 		super();
 		this.extendedFunction = extendedFunction;
 		this.implementation = implementation;
-		this.costFunction = Optional.empty();
+		this.costFunction = Extend.invalidCost;
 	}
 	
 	public Extend(Expression extendedFunction, Expression implementation, Expression costFunction) {
 		super();
 		this.extendedFunction = extendedFunction;
 		this.implementation = implementation;
-		this.costFunction = Optional.of(costFunction);
+		this.costFunction = costFunction;
 	}
 	
 	private boolean isCostFunctionInferingCorrectly(Type implType, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		if(this.costFunction.isEmpty()) {
-			return true;
-		}
-		
-		Expression costF = costFunction.get();
+		var argsType = ((TypeTuple)((TypeArrow)implType).ltype);
+		Expression costF = this.getCostFunction(env, typeEnv);
 		Pair<Type, Substitution> infered = costF.infer(env, typeEnv);
 		
 		if(!infered.first.isApplicableType()){
@@ -137,7 +164,7 @@ public class Extend extends Expression implements Comparable<Expression> {
 		}
 		Function implementationIntp = (Function)implIntp;
 		
-		Expression costFunction = this.getInterpretedCostFunction(env, typeEnv);
+		Expression costFunction = this.getCostFunction(env, typeEnv).interpret(env, typeEnv);
 		
 		Map<Function, Expression> implementations = extendedFunctionIntp.getImplementationsAsFunctions();
 		implementations.put(implementationIntp, costFunction);
@@ -148,22 +175,17 @@ public class Extend extends Expression implements Comparable<Expression> {
 		return extendedFunction;
 	}
 	
-	/**
-	 * Gets interpreted cost function for this extend 
-	 * @param env interpretation environment
-	 * @param typeEnv type environment
-	 * @return Interpreted function
-	 * @throws AppendableException if anything goes wrong
-	 */
-	private Expression getInterpretedCostFunction(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		if(this.costFunction.isPresent()) {
-			return this.costFunction.get().interpret(env, typeEnv);
+	private Expression getCostFunction(Environment env, TypeEnvironment typeEnv) {
+		if(this.costFunction == Extend.invalidCost) {
+			try {
+				var p = this.implementation.infer(env, typeEnv);
+				var argsType = ((TypeTuple)((TypeArrow)p.first).ltype);
+				return Lambda.constFun(argsType.size(), new LitInteger(1));
+			}catch(AppendableException e) {
+				throw new RuntimeException(e);
+			}
 		}
-		
-		Expression defaultCost = ((Function)this.implementation.interpret(env, typeEnv))
-				.defaultCostFunction().interpret(env, typeEnv);
-		
-		return defaultCost;
+		return this.costFunction;
 	}
 
 	@Override
@@ -219,6 +241,15 @@ public class Extend extends Expression implements Comparable<Expression> {
 		String impl_noCost = "_implNoCost";
 		String impl = "_impl";
 		String implType = "_implType";
+		
+		String costF;
+		if(this.costFunction == Extend.invalidCost) {
+			costF = this.getCostFunction(env, typeEnv).toClojureCode(env, typeEnv);
+		}
+		else {
+			costF = this.costFunction.toClojureCode(env, typeEnv);
+		}
+		
 		String code = ClojureHelper.letHelper(
 				ClojureHelper.addTypeMetaInfo_str(
 						ClojureHelper.applyClojureFunction(
@@ -239,27 +270,23 @@ public class Extend extends Expression implements Comparable<Expression> {
 										ClojureHelper.clojureSetHelper(
 												extFunType,
 												implType)))),
-				new Pair<String, String>(
+				Pair.of(
 						extFun,
 						this.extendedFunction.toClojureCode(env, typeEnv)),
-				new Pair<String, String>(
+				Pair.of(
 						impl_noCost,
 						this.implementation.toClojureCode(env, typeEnv)),
-				new Pair<String, String>(
+				Pair.of(
 						impl,
 						ClojureHelper.setCostFunction(
 								impl_noCost,
-								this.costFunction.isPresent() ?
-										this.costFunction.get().toClojureCode(env, typeEnv) :
-										ClojureHelper.applyClojureFunction(
-												Operators.defaultCostFunction_full,
-												impl_noCost))),
-				new Pair<String, String>(
+								costF)),
+				Pair.of(
 						implType,
 						ClojureHelper.applyClojureFunction(
 								ClojureCoreSymbols.getTypeClojureSymbol_full,
 								impl)),
-				new Pair<String, String>(
+				Pair.of(
 						extFunType,
 						ClojureHelper.applyClojureFunction(
 								ClojureCoreSymbols.getTypeClojureSymbol_full,
@@ -274,6 +301,8 @@ public class Extend extends Expression implements Comparable<Expression> {
 
 	@Override
 	public boolean equals(Object other) {
+		if(this == other) return true;
+		
 		if(other instanceof Extend) {
 			return this.extendedFunction.equals(((Extend)other).extendedFunction)
 					&& this.implementation.equals(((Extend)other).implementation)
@@ -295,17 +324,8 @@ public class Extend extends Expression implements Comparable<Expression> {
 				return cmp;
 			}
 			
-			if(this.costFunction.isPresent()) {
-				if(o.costFunction.isPresent()) {
-					cmp = this.costFunction.get().compareTo(o.costFunction.get());
-				}
-				else {
-					cmp = 1;
-				}
-			}
-			else {
-				cmp = o.costFunction.isPresent() ? -1 : 0;
-			}
+			cmp = this.costFunction.compareTo(o.costFunction);
+			
 			return cmp;
 		}
 		return super.compareTo(other);
@@ -329,5 +349,27 @@ public class Extend extends Expression implements Comparable<Expression> {
 			throws AppendableException {
 		Expression e = this.interpret(env, typeEnv);
 		return e.convert(to, env, typeEnv);
+	}
+
+	/**
+	 * Creates new extended function
+	 * 
+	 * @param implementations    function implementations
+	 * @param rankingFunction    ranking function used for selecting implementation
+	 * @param createdEnvironment environment where function was created
+	 * @return new ExtendedFunction object
+	 * @throws AppendableException thrown if argument types of function does not
+	 *                             unify
+	 */
+	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
+			Environment createdEnvironment, TypeEnvironment typeEnv) 
+					throws AppendableException {		
+		Map<Function, Expression> m = new TreeMap<Function, Expression>();
+		for(Function f : implementations) {
+			Expression e = Lambda.constFun(f.args.size(), new LitInteger(1)).interpret(createdEnvironment, typeEnv);
+			m.put(f, e);
+		}
+		
+		return ExtendedFunction.makeExtendedFunction(m, createdEnvironment);
 	}
 }

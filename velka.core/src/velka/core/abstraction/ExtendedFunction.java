@@ -7,7 +7,6 @@ import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeVariable;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -139,28 +138,6 @@ public class ExtendedFunction extends ExtendedLambda {
 		return super.hashCode() * this.implementations.hashCode();
 	}
 
-	/**
-	 * Creates new extended function
-	 * 
-	 * @param implementations    function implementations
-	 * @param rankingFunction    ranking function used for selecting implementation
-	 * @param createdEnvironment environment where function was created
-	 * @return new ExtendedFunction object
-	 * @throws AppendableException thrown if argument types of function does not
-	 *                             unify
-	 */
-	public static ExtendedFunction makeExtendedFunction(Collection<Function> implementations,
-			Environment createdEnvironment, TypeEnvironment typeEnv) 
-					throws AppendableException {		
-		Map<Function, Expression> m = new TreeMap<Function, Expression>();
-		for(Function f : implementations) {
-			Expression e = f.defaultCostFunction().interpret(createdEnvironment, typeEnv);
-			m.put(f, e);
-		}
-		
-		return makeExtendedFunction(m, createdEnvironment);
-	}
-	
 	/**
 	 * 
 	 * @param implementations

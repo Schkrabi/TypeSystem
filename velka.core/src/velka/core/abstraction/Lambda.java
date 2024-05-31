@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
@@ -287,7 +286,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	public Abstraction selectImplementation(Tuple args, Optional<Expression> rankingFunction, Environment env,
+	public Abstraction selectImplementation(Tuple args, Environment env,
 			TypeEnvironment typeEnv) throws AppendableException {
 		return this;
 	}
@@ -361,5 +360,13 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 				convertedBody);
 		
 		return lambda;
+	}
+	
+	/** Creates a const function with given number of arguments */
+	public static  Lambda constFun(int numOfArgs, Expression constExp) {
+		var arg = new Tuple(NameGenerator.uniqueNameCollection(numOfArgs).stream().map(x -> new Symbol(x)).collect(Collectors.toList()));
+		var type = new TypeTuple(NameGenerator.uniqueNameCollection(numOfArgs).stream().map(x -> new TypeVariable(x)).collect(Collectors.toList()));
+		
+		return new Lambda(arg, type, constExp);
 	}
 }

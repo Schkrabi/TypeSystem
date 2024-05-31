@@ -212,11 +212,11 @@ class TestParser extends VelkaTest{
 
 		assertThrows(AppendableException.class,
 				() -> typeEnv.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative,
-						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env)));
+						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env), Expression.EMPTY_EXPRESSION));
 
 		assertThrows(DuplicateConversionException.class,
 				() -> typeEnv.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
-						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env)));
+						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env), Expression.EMPTY_EXPRESSION));
 
 		typeEnv.convertTo(new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString),
 				TypeAtom.TypeIntString, TypeAtom.TypeIntRoman);
@@ -287,6 +287,24 @@ class TestParser extends VelkaTest{
 		Recur r = (Recur)f;
 		
 		Assertions.assertEquals(r, new Recur(new Tuple(new LitInteger(42))));
+	}
+	
+	@Test
+	void testConversion() throws Exception {
+		var e = this.parseString("(conversion Type:Rep1 Type:Rep2 (x) x (lambda ((Type:Rep1 x)) 42))");
+		var c = e.get(0);
+		assertTrue(c instanceof DefineConversion);
+		var cst = (DefineConversion)c;
+		assertEquals(new TypeAtom(new TypeName("Type"), new TypeRepresentation("Rep1")), cst.from);
+		assertEquals(new TypeAtom(new TypeName("Type"), new TypeRepresentation("Rep2")), cst.to);
+		assertEquals(new Symbol("x"), cst.body);
+		assertEquals(new Tuple(new Symbol("x")), cst.args);
+		assertTrue(cst.cost instanceof Lambda);
+		
+		var l = (Lambda)cst.cost;
+		assertEquals(new LitInteger(42), l.body);
+		assertEquals(new Tuple(new Symbol("x")), l.args);
+		assertEquals(new TypeTuple(new TypeAtom(new TypeName("Type"), new TypeRepresentation("Rep1"))), l.argsType);
 	}
 
 	private void testParse(String parsedString, Expression expected) throws AppendableException {

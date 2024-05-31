@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
+import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
 import velka.core.application.Application;
@@ -1655,6 +1656,13 @@ public class JavaArrayList extends OperatorBank{
 			return ArrayListToLinkedListSymbol_out.toString();
 		}
 
+		@Override
+		public Expression cost() {
+			var arg = new Symbol(NameGenerator.next());
+			return new Lambda(new Tuple(arg), new TypeTuple(TypeAtom.TypeListJavaArray),
+					new AbstractionApplication(JavaArrayList.size, new Tuple(arg)));
+		}
+
 	};
 
 	public static final Symbol ArrayListToNativeListSymbol = new Symbol("to-velka-list", NAMESPACE);
@@ -1709,6 +1717,13 @@ public class JavaArrayList extends OperatorBank{
 		@Override
 		public String toString() {
 			return ArrayListToNativeListSymbol_out.toString();
+		}
+
+		@Override
+		public Expression cost() {
+			var arg = new Symbol(NameGenerator.next());
+			return new Lambda(new Tuple(arg), new TypeTuple(TypeAtom.TypeListJavaArray),
+					new AbstractionApplication(JavaArrayList.size, new Tuple(arg)));
 		}
 	};
 

@@ -19,6 +19,7 @@ import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
+import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
 import velka.core.exceptions.DuplicateTypeDefinitionException;
@@ -470,6 +471,7 @@ public class ListNative extends OperatorBank{
 			var iOp1 = (LitInteropObject) args.get(1);
 			var iOp2 = (LitInteropObject) args.get(2);
 			
+			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l1 = (LinkedList<Expression>) iOp1.javaObject;
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l2 = (LinkedList<Expression>) iOp2.javaObject;
@@ -681,6 +683,13 @@ public class ListNative extends OperatorBank{
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 
+		@Override
+		public Expression cost() {
+			var arg = new Symbol(NameGenerator.next());
+			return new Lambda(new Tuple(arg), new TypeTuple(TypeAtom.TypeListNative),
+					new AbstractionApplication(ListNative.size, new Tuple(arg)));
+		}
+
 	};
 
 	public static final Symbol ListNativeToLinkedListSymbol = new Symbol("to-linked-list", NAMESPACE);
@@ -728,6 +737,13 @@ public class ListNative extends OperatorBank{
 		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeListJavaLinked);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+		@Override
+		public Expression cost() {
+			var arg = new Symbol(NameGenerator.next());
+			return new Lambda(new Tuple(arg), new TypeTuple(TypeAtom.TypeListNative),
+					new AbstractionApplication(ListNative.size, new Tuple(arg)));
 		}
 
 	};

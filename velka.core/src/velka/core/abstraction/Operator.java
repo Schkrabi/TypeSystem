@@ -65,7 +65,7 @@ public abstract class Operator extends Abstraction {
 	}
 
 	@Override
-	public Abstraction selectImplementation(Tuple args, Optional<Expression> rankingFunction, Environment env,
+	public Abstraction selectImplementation(Tuple args, Environment env,
 			TypeEnvironment typeEnv) throws AppendableException {
 		return this;
 	}

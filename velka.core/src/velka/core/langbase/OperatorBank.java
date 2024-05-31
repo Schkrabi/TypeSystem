@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import velka.core.abstraction.Operator;
 import velka.core.exceptions.DuplicateTypeDefinitionException;
@@ -108,7 +107,7 @@ public abstract class OperatorBank {
 		sb.append(ClojureHelper.declareNamespace(Namespace));
 		
 		try {
-			List<Operator> operators = OperatorBankUtil.getOperators(clazz);
+			var operators = OperatorBankUtil.getOperators(clazz);
 		
 			for(Operator operator : operators) {
 				sb.append(Operator.makeOperatorDeclaration(operator));
@@ -121,8 +120,8 @@ public abstract class OperatorBank {
 				sb.append(Operator.makeOperatorDef(operator, env, typeEnv));
 			}
 			
-			List<Operator> conversions = OperatorBankUtil.getConversions(clazz);
-			for(Operator conversion : conversions) {
+			var conversions = OperatorBankUtil.getConversions(clazz);
+			for(var conversion : conversions) {
 				sb.append(OperatorBankUtil.conversionDefinition(conversion, env, typeEnv));
 			}
 			

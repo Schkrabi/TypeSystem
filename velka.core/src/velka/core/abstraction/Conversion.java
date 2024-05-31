@@ -1,5 +1,6 @@
 package velka.core.abstraction;
 
+import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
 import velka.core.util.DeclarableInTypeEnvironment;
@@ -18,6 +19,9 @@ import velka.util.Pair;
  */
 public abstract class Conversion extends Operator implements DeclarableInTypeEnvironment {
 
+	/** Returns the cost of the conversion */
+	public abstract Expression cost();
+	
 	/**
 	 * Declares this conversion in TypeEnvironment
 	 * 
@@ -34,7 +38,7 @@ public abstract class Conversion extends Operator implements DeclarableInTypeEnv
 		TypeArrow ta = (TypeArrow)p.first;
 		TypeAtom from = (TypeAtom)((TypeTuple)ta.ltype).get(0);
 		TypeAtom to = (TypeAtom)ta.rtype;
-		typeEnv.addConversion(from, to, this);
+		typeEnv.addConversion(from, to, this, this.cost());
 	}
 
 }

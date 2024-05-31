@@ -159,26 +159,14 @@ public class ClojureHelper {
 	 * Applies velka function in clojure code
 	 * @param funCode velka function code
 	 * @param argsTuple tuple of applied arguments
-	 * @param costFunction code of cost function
-	 * @return string with code
-	 */
-	public static String applyVelkaFunction_argsTuple(String funCode, String argsTuple, String costFunction) {
-		String code = applyClojureFunction(
-				ClojureCoreSymbols.eapplyClojureSymbol_full,
-				funCode,
-				argsTuple,
-				costFunction);
-		return code;
-	}
-	
-	/**
-	 * Applies velka function in clojure code
-	 * @param funCode velka function code
-	 * @param argsTuple tuple of applied arguments
 	 * @return string with code
 	 */
 	public static String applyVelkaFunction_argsTuple(String funCode, String argsTuple) {
-		return applyVelkaFunction_argsTuple(funCode, argsTuple, "nil");
+		String code = applyClojureFunction(
+				ClojureCoreSymbols.eapplyClojureSymbol_full,
+				funCode,
+				argsTuple);
+		return code;
 	}
 	
 	/**
@@ -189,17 +177,6 @@ public class ClojureHelper {
 	 */
 	public static String applyVelkaFunction(String funCode, String ...args)  {
 		return applyVelkaFunction_argsTuple(funCode, ClojureHelper.tupleHelper(args));
-	}
-	
-	/**
-	 * Applies velka function in clojure code with cost function
-	 * @param funCode funCode velka function code
-	 * @param costFunction code of cost function
-	 * @param args arguments to apply with
-	 * @return string with code
-	 */
-	public static String applyVelkaFunction_cost(String funCode, String costFunction, String ...args) {
-		return applyVelkaFunction_argsTuple(funCode, ClojureHelper.tupleHelper(args), costFunction);
 	}
 	
 	/**

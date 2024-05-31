@@ -698,7 +698,7 @@ public class VelkaParser extends Parser {
 				 var c = ((Special_formContext)_localctx).expr.val; 
 				setState(145);
 				match(RBRACKET);
-				 ((Special_formContext)_localctx).val =  new DefineConversion(f, t, new Tuple(a), e); 
+				 ((Special_formContext)_localctx).val =  new DefineConversion(f, t, new Tuple(a), e, c); 
 				}
 				break;
 			case 5:
