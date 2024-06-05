@@ -1,6 +1,9 @@
 package velka.core.abstraction;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import velka.core.application.AbstractionApplication;
 import velka.core.application.Convert;
@@ -10,9 +13,16 @@ import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.literal.LitBoolean;
+import velka.core.literal.LitDouble;
+import velka.core.literal.LitInteger;
+import velka.core.literal.LitInteropObject;
+import velka.core.literal.LitString;
+import velka.core.literal.Literal;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
+import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
@@ -73,7 +83,7 @@ public abstract class Operator extends Abstraction {
 	@Override
 	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
 		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		return Type.addTypeMetaInfo(this.toClojureOperator(env, typeEnv), p.first);
+		return this.toClojureOperator(env, typeEnv);
 	}
 	
 	@Override
@@ -141,5 +151,79 @@ public abstract class Operator extends Abstraction {
 				convertedBody);
 		
 		return lambda;
+	}
+	
+	public static Operator wrapJavaMethod(Class<?> clazz, String methodName, String velkaName, String namespace, Class<?> ...parameters) {
+		try {
+			var mthd = clazz.getMethod(methodName, parameters);
+			return wrapJavaMethod(clazz, mthd, velkaName, namespace);
+		} catch (NoSuchMethodException | SecurityException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public static Operator wrapJavaMethod(Class<?> clazz, Method method, String velkaName, String namespace) {
+		var op = new Operator() {
+
+			@Override
+			protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+				return ClojureHelper.wrapClojureOperatorToFn(method.getParameterCount() + 1, "." + method.getName());
+			}
+
+			@Override
+			public Symbol getClojureSymbol() {
+				return new Symbol("velka-" + method.getName(), namespace);
+			}
+
+			@Override
+			protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+					throws AppendableException {
+				var jargs = new Object[args.size() - 1];
+				Object instance = null;
+				int i = 0;
+				for(var a : args) {
+					if(instance == null) {
+						instance = Literal.literalToObject(a);
+					}
+					else {
+						jargs[i] = Literal.literalToObject(a);
+						i++;
+					}
+				}
+				
+				Object jrslt = null;
+				try {
+					jrslt = method.invoke(instance, jargs);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					throw new RuntimeException(e);
+				}
+				
+				var rslt = Literal.objectToLiteral(jrslt);
+				return rslt;
+			}
+
+			@Override
+			public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+				var as = new java.util.LinkedList<Type>();
+				as.add(TypeAtom.javaClassToType(clazz));
+				
+				for(var c : method.getParameterTypes()) {
+					as.add(TypeAtom.javaClassToType(c));
+				}
+				
+				var ret = TypeAtom.javaClassToType(method.getReturnType());
+				
+				var t = new TypeArrow(new TypeTuple(as), ret);
+				
+				return Pair.of(t, Substitution.EMPTY);
+			}
+			
+			@Override
+			public String toString() {
+				return velkaName;
+			}
+		};
+		
+		return op;
 	}
 }

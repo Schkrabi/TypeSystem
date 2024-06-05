@@ -21,14 +21,14 @@ public class LitInteropObject extends Literal {
 
 	public static final TypeAtom TypeJavaObject = new TypeAtom(new TypeName("TypeJavaObject"), TypeRepresentation.NATIVE);
 	
-	public final TypeAtom type;
+	public final Type type;
 	
 	/**
 	 * Carried object
 	 */
 	public final Object javaObject;
 
-	public LitInteropObject(Object javaObject, TypeAtom type) {
+	public LitInteropObject(Object javaObject, Type type) {
 		this.javaObject = javaObject;
 		this.type = type;
 	}

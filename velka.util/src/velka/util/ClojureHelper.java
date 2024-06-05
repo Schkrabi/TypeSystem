@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Class containing static utilities used to help with generating clojure code
@@ -782,5 +784,21 @@ public class ClojureHelper {
 	 */
 	public static String constructJavaClass(Class<?> clazz, String ...args) {
 		return constructJavaClass(clazz, Arrays.asList(args));
+	}
+	
+	/** Wraps operator in fn of the same arity, used for defining operators with metadata */
+	public static String wrapClojureOperatorToFn(int arity, String clojureOperator) {
+		var args = Stream.iterate(0, x -> x + 1).limit(arity).map(x -> "_" + Integer.toString(x)).collect(Collectors.toList());
+		String code =
+				ClojureHelper.fnHelper(args, ClojureHelper.applyClojureFunction(clojureOperator, args));
+		return code;
+	}
+	
+	public static String unaryOperatorToFn(String clojureOperator) {
+		return wrapClojureOperatorToFn(1, clojureOperator);
+	}
+	
+	public static String binaryOperatorToFn(String clojureOperator) {
+		return wrapClojureOperatorToFn(2, clojureOperator);
 	}
 }

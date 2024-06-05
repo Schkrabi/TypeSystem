@@ -60,6 +60,7 @@ public class VelkaClojureCore {
 							Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.Scanner.class.getName(), getTypeClojure_expr), velka.types.TypeAtom.TypeScannerNative.clojureTypeRepresentation()),
 							Pair.of(ClojureHelper.applyClojureFunction("instance?", "clojure.lang.LazySeq", getTypeClojure_expr), TypeAtom.TypeListNative.clojureTypeRepresentation()),
 							Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.ListIterator.class.getName(), getTypeClojure_expr), TypeAtom.TypeListIterator.clojureTypeRepresentation()),
+							Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.TreeSet.class.getName(), getTypeClojure_expr), TypeAtom.TypeSetTree.clojureTypeRepresentation()),
 							Pair.of(":else", ClojureHelper.applyClojureFunction(":lang-type", 
 									ClojureHelper.applyClojureFunction("meta", getTypeClojure_expr)))));
 	

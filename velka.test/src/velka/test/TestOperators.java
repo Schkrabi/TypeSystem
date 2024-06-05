@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TypeEnvironment;
+import velka.core.literal.LitBoolean;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
 
@@ -80,4 +81,58 @@ class TestOperators extends VelkaTest{
 		this.assertIntprtAndCompPrintSameValues("(println (strlen \"foo\"))");
 	}
 
+	@Test
+	void testLesserThanOrEquals() throws Exception {
+		this.assertInterpretedStringEquals(
+				"(<= 42 1)",
+				LitBoolean.FALSE,
+				this.env,
+				this.typeEnv);
+		
+		this.assertIntprtAndCompPrintSameValues("(println (<= 42 1))");
+	}
+	
+	@Test
+	void testGreaterThan() throws Exception {
+		this.assertInterpretedStringEquals(
+				"(> 42 1)",
+				LitBoolean.TRUE,
+				this.env,
+				this.typeEnv);
+		
+		this.assertIntprtAndCompPrintSameValues("(println (> 42 1))");
+	}
+	
+	@Test
+	void testGreaterThanOrEquals() throws Exception {
+		this.assertInterpretedStringEquals(
+				"(>= 42 1)",
+				LitBoolean.TRUE,
+				this.env,
+				this.typeEnv);
+		
+		this.assertIntprtAndCompPrintSameValues("(println (>= 42 1))");
+	}
+	
+	@Test
+	void testMax() throws Exception {
+		this.assertInterpretedStringEquals(
+				"(max 42 1)",
+				new LitInteger(42),
+				this.env,
+				this.typeEnv);
+		
+		this.assertIntprtAndCompPrintSameValues("(println (max 42 1))");
+	}
+	
+	@Test
+	void testMin() throws Exception {
+		this.assertInterpretedStringEquals(
+				"(min 42 1)",
+				new LitInteger(1),
+				this.env,
+				this.typeEnv);
+		
+		this.assertIntprtAndCompPrintSameValues("(println (min 42 1))");
+	}
 }

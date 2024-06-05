@@ -63,4 +63,53 @@ public abstract class Literal extends Expression {
 		
 		return e.interpret(env, typeEnv);
 	}
+	
+	public static Object literalToObject(Expression e) {
+		if(e instanceof LitBoolean lb) {
+			return Boolean.valueOf(lb.value);
+		}
+		else if(e instanceof LitInteger li) {
+			return Long.valueOf(li.value);
+		}
+		else if(e instanceof LitDouble ld) {
+			return Double.valueOf(ld.value);
+		}
+		else if(e instanceof LitString ls) {
+			return ls.value;
+		}
+		else if(e instanceof LitInteropObject li) {
+			return li.javaObject;
+		}
+		else if(e instanceof LitComposite lc) {
+			return lc;
+		}
+		throw new RuntimeException("Unexpected argument type");
+	}
+	
+	public static Literal objectToLiteral(Object o) {
+		if(o instanceof Byte || o instanceof Short || o instanceof Integer || o instanceof Long) {
+			Number n = (Number)o;
+			return new LitInteger(n.longValue());
+		}
+		else if(o instanceof Float || o instanceof Double) {
+			Number n = (Number)o;
+			return new LitDouble(n.doubleValue());
+		}
+		else if(o instanceof String s) {
+			return new LitString(s);
+		}
+		else if(o instanceof Boolean b) {
+			return b ? LitBoolean.TRUE : LitBoolean.FALSE;
+		}
+		else if(o instanceof Literal l) {
+			return l;
+		}
+		else {
+			var t = TypeAtom.javaTypeMapping.get(o.getClass());
+			if(t == null) {
+				throw new RuntimeException("Unsupported type!" + o.getClass().getName());
+			}
+			return new LitInteropObject(o, t);
+		}
+	}
 }

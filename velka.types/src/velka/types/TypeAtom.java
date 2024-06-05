@@ -1,12 +1,16 @@
 package velka.types;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
+import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
@@ -294,6 +298,14 @@ public class TypeAtom extends TerminalType {
 		}
 	};
 	
+	/** Type of Set:Tree */
+	public static final TypeAtom TypeSetTree = new TypeAtom(TypeName.SET, new TypeRepresentation("Tree")) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeSetTree";
+		}
+	};
+	
 	/**
 	 * Type of TypeSymbol
 	 */
@@ -352,5 +364,51 @@ public class TypeAtom extends TerminalType {
 			return true;
 		}
 		return atomCheck.apply(this, (TypeAtom) other);
+	}
+	
+	public static final Map<Class<?>, Type> primitiveTypeMapping = Map.of(
+			byte.class, TypeAtom.TypeIntNative,
+			short.class, TypeAtom.TypeIntNative,
+			int.class, TypeAtom.TypeIntNative,
+			long.class, TypeAtom.TypeIntNative,
+			float.class, TypeAtom.TypeDoubleNative,
+			double.class, TypeAtom.TypeDoubleNative,
+			boolean.class, TypeAtom.TypeBoolNative,
+			void.class, TypeTuple.EMPTY_TUPLE
+			);
+	
+	public static final Map<Class<?>, Type> javaLangTypeMapping = Map.of(
+			java.lang.Byte.class, TypeAtom.TypeIntNative,
+			java.lang.Short.class, TypeAtom.TypeIntNative,
+			java.lang.Integer.class, TypeAtom.TypeIntNative,
+			java.lang.Long.class, TypeAtom.TypeIntNative,
+			java.lang.Float.class, TypeAtom.TypeDoubleNative,
+			java.lang.Double.class, TypeAtom.TypeDoubleNative,
+			java.lang.String.class, TypeAtom.TypeStringNative,
+			java.lang.Boolean.class, TypeAtom.TypeBoolNative);
+	
+	public static final Map<Class<?>, Type> javaTypeMapping = 
+			Map.of( java.util.Collection.class, TypeListNative,
+					java.util.LinkedList.class, TypeListNative,
+					java.util.ArrayList.class, TypeListJavaArray,
+					java.util.ListIterator.class, TypeListIterator,
+					java.util.TreeMap.class, TypeMapTree,
+					java.util.BitSet.class, TypeSetBitSet,
+					java.util.Scanner.class, TypeScannerNative,
+					java.util.TreeSet.class, TypeSetTree);
+	
+	public static final Map<Class<?>, Type> typeMapping = Stream.of(primitiveTypeMapping, javaLangTypeMapping, javaTypeMapping)
+            .flatMap(map -> map.entrySet().stream())
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+	
+	public static Type javaClassToType(Class<?> clazz) {
+		if(clazz.equals(Object.class)) {
+			return new TypeVariable(NameGenerator.next());
+		}		
+		var t = typeMapping.get(clazz);
+		if(t == null) {
+			throw new RuntimeException("Unrecognized java type: " + clazz.getName());
+		}
+		return t;
 	}
 }
