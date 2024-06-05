@@ -47,7 +47,7 @@ public class TreeSet extends OperatorBank {
 	public static final String NAMESPACE = "velka.clojure.treeSet";
 	
 	public static final Path PATH = Paths.get("velka", "clojure");
-	public static final Path FILE = Paths.get("treeMap.clj");
+	public static final Path FILE = Paths.get("treeSet.clj");
 	
 	public static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
 	
