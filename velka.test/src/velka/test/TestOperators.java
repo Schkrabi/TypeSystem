@@ -1,7 +1,5 @@
 package velka.test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -9,7 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
+import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
@@ -17,7 +15,6 @@ import velka.core.literal.LitString;
 class TestOperators extends VelkaTest{
 
 	private Environment env;
-	private TypeEnvironment typeEnv;
 	
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
@@ -29,8 +26,7 @@ class TestOperators extends VelkaTest{
 
 	@BeforeEach
 	void setUp() throws Exception {
-		env = Environment.initTopLevelEnvironment();
-		typeEnv = TypeEnvironment.initBasicTypes(env);
+		env = TopLevelEnvironment.instantiate();
 	}
 
 	@AfterEach
@@ -42,8 +38,7 @@ class TestOperators extends VelkaTest{
 		this.assertInterpretedStringEquals(
 				"(type-str 42)",
 				new LitString("Int:*"),
-				this.env,
-				this.typeEnv);
+				this.env);
 		
 		this.assertIntprtAndCompPrintSameValues("(println (type-str 42))");
 	}
@@ -53,8 +48,7 @@ class TestOperators extends VelkaTest{
 		this.assertInterpretedStringEquals(
 				"(representation-str 42)",
 				new LitString("Int:Native"),
-				this.env,
-				this.typeEnv);
+				this.env);
 		
 		this.assertIntprtAndCompPrintSameValues("(println (representation-str 42))");
 	}
@@ -64,8 +58,7 @@ class TestOperators extends VelkaTest{
 		this.assertInterpretedStringEquals(
 				"(substr \"hamburger\" 4 8)",
 				new LitString("urge"),
-				this.env,
-				this.typeEnv);
+				this.env);
 		
 		this.assertIntprtAndCompPrintSameValues("(println (substr \"hamburger\" 4 8))");
 	}
@@ -75,8 +68,7 @@ class TestOperators extends VelkaTest{
 		this.assertInterpretedStringEquals(
 				"(strlen \"foo\")",
 				new LitInteger(3),
-				this.env,
-				this.typeEnv);
+				this.env);
 		
 		this.assertIntprtAndCompPrintSameValues("(println (strlen \"foo\"))");
 	}
@@ -86,8 +78,7 @@ class TestOperators extends VelkaTest{
 		this.assertInterpretedStringEquals(
 				"(<= 42 1)",
 				LitBoolean.FALSE,
-				this.env,
-				this.typeEnv);
+				this.env);
 		
 		this.assertIntprtAndCompPrintSameValues("(println (<= 42 1))");
 	}
@@ -97,8 +88,7 @@ class TestOperators extends VelkaTest{
 		this.assertInterpretedStringEquals(
 				"(> 42 1)",
 				LitBoolean.TRUE,
-				this.env,
-				this.typeEnv);
+				this.env);
 		
 		this.assertIntprtAndCompPrintSameValues("(println (> 42 1))");
 	}
@@ -108,8 +98,7 @@ class TestOperators extends VelkaTest{
 		this.assertInterpretedStringEquals(
 				"(>= 42 1)",
 				LitBoolean.TRUE,
-				this.env,
-				this.typeEnv);
+				this.env);
 		
 		this.assertIntprtAndCompPrintSameValues("(println (>= 42 1))");
 	}
@@ -119,8 +108,7 @@ class TestOperators extends VelkaTest{
 		this.assertInterpretedStringEquals(
 				"(max 42 1)",
 				new LitInteger(42),
-				this.env,
-				this.typeEnv);
+				this.env);
 		
 		this.assertIntprtAndCompPrintSameValues("(println (max 42 1))");
 	}
@@ -130,8 +118,7 @@ class TestOperators extends VelkaTest{
 		this.assertInterpretedStringEquals(
 				"(min 42 1)",
 				new LitInteger(1),
-				this.env,
-				this.typeEnv);
+				this.env);
 		
 		this.assertIntprtAndCompPrintSameValues("(println (min 42 1))");
 	}

@@ -9,7 +9,6 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.TypeHolder;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.util.AppendableException;
@@ -34,41 +33,41 @@ public class Let extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression interpret(Environment env) throws AppendableException {
 		var e = env;
 		
 		for(var p : this.bindings) {
-			var expr = p.second.interpret(e, typeEnv);
+			var expr = p.second.interpret(e);
 			e = Environment.create(e);
 			e.put(p.first, expr);
 		}
 		
-		return this.body.interpret(e, typeEnv);
+		return this.body.interpret(e);
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		var e = Environment.create(env);
 		var s = Substitution.EMPTY;
 		
 		for(var p : this.bindings) {
-			var t = p.second.infer(e, typeEnv);
+			var t = p.second.infer(e);
 			e = Environment.create(e);
 			e.put(p.first, new TypeHolder(t.first));
 			s = s.compose(t.second);
 		}
 		
-		var t = this.body.infer(e, typeEnv);
+		var t = this.body.infer(e);
 		return Pair.of(t.first, t.second.compose(s));
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		String code = ClojureHelper.letHelper(
-				this.body.toClojureCode(env, typeEnv), 
+				this.body.toClojureCode(env), 
 				this.bindings.stream().map(p -> {
 					try {
-						return Pair.of(p.first.toClojureCode(env, typeEnv), p.second.toClojureCode(env, typeEnv));
+						return Pair.of(p.first.toClojureCode(env), p.second.toClojureCode(env));
 					} catch (AppendableException e) {
 						throw new RuntimeException(e);
 					}
@@ -78,10 +77,10 @@ public class Let extends Expression {
 	}
 
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		var e = this.interpret(env, typeEnv);
-		return e.convert(to, env, typeEnv);
+		var e = this.interpret(env);
+		return e.convert(to, env);
 	}
 	
 	@Override

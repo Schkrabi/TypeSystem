@@ -16,24 +16,10 @@ import java.util.Scanner;
 import velka.clojure.ClojureCodeGenerator;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.parser.Parser;
 import velka.util.AppendableException;
 
 public class Compiler {
-
-	public static void initTopLevelEnvironment(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		
-	}
-
-	public static void initTypesConversions(Environment env) throws Exception {
-		TypeEnvironment.initBasicTypes(env);
-	}
-
-	public static void init(Environment env, TypeEnvironment typeEnv) throws Exception {
-		initTopLevelEnvironment(env, typeEnv);
-		initTypesConversions(env);
-	}
 
 	/**
 	 * Eval function for the REPL
@@ -44,10 +30,10 @@ public class Compiler {
 	 * @return list of evaluated expressions
 	 * @throws AppendableException 
 	 */
-	public static List<Expression> eval(List<Expression> in, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public static List<Expression> eval(List<Expression> in, Environment env) throws AppendableException {
 		List<Expression> out = new LinkedList<Expression>();
 		for(Expression e : in) {
-			Expression intp = e.interpret(env, typeEnv);
+			Expression intp = e.interpret(env);
 			out.add(intp);
 		}
 		return out;
@@ -68,9 +54,9 @@ public class Compiler {
 	 * @return string with compiled clojure codes
 	 * @throws Exception
 	 */
-	public static String compile(List<Expression> in, Environment env, TypeEnvironment typeEnv) throws Exception {
+	public static String compile(List<Expression> in, Environment env) throws Exception {
 		StringBuilder sb = new StringBuilder();
-		sb.append(ClojureCodeGenerator.ExpressionListToClojureCode(in, env, typeEnv));
+		sb.append(ClojureCodeGenerator.ExpressionListToClojureCode(in, env));
 		sb.append(ClojureCodeGenerator.writeMain());
 		return sb.toString();
 	}
@@ -105,8 +91,7 @@ public class Compiler {
 	 * @param showPromptLeadingChar whether to print Main.PROMPT_LEADING_CHAR to output stream before reading line
 	 * @throws Exception
 	 */
-	public static void repl(InputStream in, PrintStream out, Environment topLevel, TypeEnvironment typeEnv,
-			boolean showPromptLeadingChar) throws Exception {
+	public static void repl(InputStream in, PrintStream out, Environment topLevel, boolean showPromptLeadingChar) throws Exception {
 		Scanner input = new Scanner(in);
 	
 		try {
@@ -116,7 +101,7 @@ public class Compiler {
 				}
 	
 				out.println(Compiler.print(eval(Parser.read(new ByteArrayInputStream(input.nextLine().getBytes())),
-						topLevel, typeEnv)));
+						topLevel)));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -125,9 +110,9 @@ public class Compiler {
 		}
 	}
 	
-	public static void clojureCompile(Path in, Path out, Environment env, TypeEnvironment typeEnv) {
+	public static void clojureCompile(Path in, Path out, Environment env) {
 		try {
-			Compiler.clojure(Files.newInputStream(in), new PrintStream(Files.newOutputStream(out)), env, typeEnv);
+			Compiler.clojure(Files.newInputStream(in), new PrintStream(Files.newOutputStream(out)), env);
 		} catch (AppendableException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -145,13 +130,13 @@ public class Compiler {
 	 * @param typeEnv type environment for compilation
 	 * @throws Exception
 	 */
-	public static void clojure(InputStream in, PrintStream out, Environment topLevel, TypeEnvironment typeEnv)
+	public static void clojure(InputStream in, PrintStream out, Environment topLevel)
 			throws Exception {
 		Reader input = null;
 		Writer output = null;
 	
 		try {
-			out.print(Compiler.compile(Parser.read(in), topLevel, typeEnv));
+			out.print(Compiler.compile(Parser.read(in), topLevel));
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -172,8 +157,8 @@ public class Compiler {
 	 * @param typeEnv type environment for interpretation
 	 * @throws Exception 
 	 */
-	public static void interpret(InputStream in, Environment topLevel, TypeEnvironment typeEnv) throws Exception {
-		Compiler.print(eval(Parser.read(in), topLevel, typeEnv));
+	public static void interpret(InputStream in, Environment topLevel) throws Exception {
+		Compiler.print(eval(Parser.read(in), topLevel));
 	}
 
 }

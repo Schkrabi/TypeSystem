@@ -6,11 +6,7 @@ import java.util.Map;
 import velka.core.exceptions.UnboundVariableException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
-import velka.core.langbase.ConversionOperators;
-import velka.core.langbase.OperatorBank;
-import velka.core.langbase.Operators;
-import velka.core.util.OperatorBankUtil;
-import velka.types.TypeAtom;
+import velka.types.typeSystem.TypeSystem;
 import velka.util.AppendableException;
 
 /**
@@ -183,14 +179,11 @@ public class Environment implements Comparable<Environment> {
 		return new Environment(parent, initFrom);
 	}
 
-	public static Environment initTopLevelEnvironment() {
-		Environment env = new Environment();
-		
-		for(OperatorBank bank : OperatorBank.operatorBanks) {
-			OperatorBankUtil.initializeInEnvironment(bank.getClass(), env);
+	public TypeSystem getTypeSystem() {
+		if(this.parent == null) {
+			throw new RuntimeException("Missing top level environment");
 		}
 		
-		return env;
+		return this.parent.getTypeSystem();
 	}
-
 }

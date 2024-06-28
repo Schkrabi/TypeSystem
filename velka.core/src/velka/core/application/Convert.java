@@ -9,7 +9,6 @@ import java.util.Optional;
 import velka.core.exceptions.ConversionException;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
@@ -48,19 +47,19 @@ public class Convert extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return this.expression.convert(this.to, env, typeEnv);
+	public Expression interpret(Environment env) throws AppendableException {
+		return this.expression.convert(this.to, env);
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> p = this.expression.infer(env, typeEnv);
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+		Pair<Type, Substitution> p = this.expression.infer(env);
 		Optional<Substitution> s = Type.unifyTypes(this.from, p.first);
 		if(s.isEmpty()) {
 			throw new TypesDoesNotUnifyException(this.from, p.first);
 		}
 		
-		if (!typeEnv.canConvert(this.from, this.to)) {
+		if (!env.getTypeSystem().canConvert(this.from, this.to)) {
 			throw new ConversionException(this.to, this.expression);
 		}
 		
@@ -68,9 +67,9 @@ public class Convert extends Expression {
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		return ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol_full,
-				this.to.clojureTypeRepresentation(), this.expression.toClojureCode(env, typeEnv));
+				this.to.clojureTypeRepresentation(), this.expression.toClojureCode(env));
 	}
 
 	@Override
@@ -108,7 +107,7 @@ public class Convert extends Expression {
 	}
 
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
 		throw new ConversionException(to, this);
 	}

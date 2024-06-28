@@ -10,7 +10,6 @@ import java.util.List;
 
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.OperatorBank;
 import velka.types.Type;
 import velka.types.TypeTuple;
@@ -44,9 +43,9 @@ public class ClojureCodeGenerator {
 	 * @return clojure code
 	 * @throws Exception
 	 */
-	public static String ExpressionListToClojureCode(List<Expression> exprs, Environment env, TypeEnvironment typeEnv)
+	public static String ExpressionListToClojureCode(List<Expression> exprs, Environment env)
 			throws Exception {
-		return ExpressionListToClojureCode(DEFAULT_NAMESPACE, exprs, env, typeEnv);
+		return ExpressionListToClojureCode(DEFAULT_NAMESPACE, exprs, env);
 	}
 
 	/**
@@ -59,8 +58,7 @@ public class ClojureCodeGenerator {
 	 * @return clojure code
 	 * @throws Exception
 	 */
-	public static String ExpressionListToClojureCode(String namespace, List<Expression> exprs, Environment env,
-			TypeEnvironment typeEnv) throws Exception {
+	public static String ExpressionListToClojureCode(String namespace, List<Expression> exprs, Environment env) throws Exception {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append(ClojureHelper.declareNamespace(namespace));
@@ -73,7 +71,7 @@ public class ClojureCodeGenerator {
 		Iterator<Expression> i = exprs.iterator();
 		while (i.hasNext()) {
 			Expression e = i.next();
-			sb.append(e.toClojureCode(env, typeEnv));
+			sb.append(e.toClojureCode(env));
 			if (i.hasNext()) {
 				sb.append('\n');
 			}
@@ -92,10 +90,9 @@ public class ClojureCodeGenerator {
 	 * @return dest
 	 * @throws Exception
 	 */
-	public static Path ExpressionListToCljFile(Path dest, String namespace, List<Expression> exprs, Environment env,
-			TypeEnvironment typeEnv) throws Exception {
+	public static Path ExpressionListToCljFile(Path dest, String namespace, List<Expression> exprs, Environment env) throws Exception {
 		return Files.writeString(dest,
-				ClojureCodeGenerator.ExpressionListToClojureCode(namespace, exprs, env, typeEnv));
+				ClojureCodeGenerator.ExpressionListToClojureCode(namespace, exprs, env));
 	}
 
 	/**
@@ -108,9 +105,8 @@ public class ClojureCodeGenerator {
 	 * @return dest
 	 * @throws Exception
 	 */
-	public static Path ExpressionListToCljFile(Path dir, List<Expression> exprs, Environment env,
-			TypeEnvironment typeEnv) throws Exception {
-		return ExpressionListToCljFile(dir.resolve(DEFAULT_FILENAME), DEFAULT_NAMESPACE, exprs, env, typeEnv);
+	public static Path ExpressionListToCljFile(Path dir, List<Expression> exprs, Environment env) throws Exception {
+		return ExpressionListToCljFile(dir.resolve(DEFAULT_FILENAME), DEFAULT_NAMESPACE, exprs, env);
 	}
 
 	/**
@@ -144,7 +140,7 @@ public class ClojureCodeGenerator {
 		return directory;
 	}
 
-	public static String writeHeaders(Environment env, TypeEnvironment typeEnv) {
+	public static String writeHeaders(Environment env) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("(require '[clojure.string])\n");
 		sb.append("(ns " + ClojureCoreSymbols.NAMESPACE + " (:gen-class))\n");

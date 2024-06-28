@@ -11,12 +11,10 @@ import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
 import velka.core.application.ExceptionExpr;
-import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
@@ -66,7 +64,7 @@ public class TreeMap extends OperatorBank{
 	public static final Constructor constructor = new Constructor() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String cmpFun = "_compare-function";
 			String a1 = "_a1";
 			String a2 = "_a2";
@@ -98,7 +96,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			final Expression cmpFun = args.get(0);
 			
@@ -111,7 +109,7 @@ public class TreeMap extends OperatorBank{
 												new Tuple(o1, o2));
 					Expression cmp;
 					try {
-						cmp = cmpEval.interpret(env, typeEnv);
+						cmp = cmpEval.interpret(env);
 					} catch (AppendableException e) {
 						throw new RuntimeException(e);
 					}
@@ -128,7 +126,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(
 					new TypeTuple(
@@ -155,7 +153,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "No key-value mapping found!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String entry = "_entry";
@@ -187,7 +185,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -200,14 +198,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return new Tuple(e.getKey(), e.getValue());
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), new TypeTuple(K, V));
@@ -233,7 +231,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "No ceiling key exist!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String ceilKey = "_ceilKey";
@@ -257,7 +255,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -270,14 +268,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return e;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), K);
 			return Pair.of(type, Substitution.EMPTY);
@@ -300,7 +298,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator containsKey = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String code = ClojureHelper.fnHelper(
@@ -319,7 +317,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -335,7 +333,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
@@ -358,7 +356,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator containsValue = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String value = "_value";
 			String code = ClojureHelper.fnHelper(
@@ -377,7 +375,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -393,7 +391,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, V), TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
@@ -418,7 +416,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "map-tree-first-entry cannot retrieve first entry!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String entry = "_entry";
 			String code = ClojureHelper.fnHelper(
@@ -448,7 +446,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -459,14 +457,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return new Tuple(e.getKey(), e.getValue());
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), new TypeTuple(K, V));
@@ -491,7 +489,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "map-tree-first-key cannot retrieve first key!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String firstKey = "_firstKey";
 			String code = ClojureHelper.fnHelper(
@@ -513,7 +511,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -525,14 +523,14 @@ public class TreeMap extends OperatorBank{
 				key = map.firstKey();
 			} catch(NoSuchElementException e) {
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return key;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), K);
 			return Pair.of(type, Substitution.EMPTY);
@@ -557,7 +555,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "No key-value mapping found!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String entry = "_entry";
@@ -589,7 +587,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -602,14 +600,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return new Tuple(e.getKey(), e.getValue());
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), new TypeTuple(K, V));
@@ -635,7 +633,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "No ceiling key exist!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String floorKey = "_floorKey";
@@ -659,7 +657,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -672,14 +670,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return e;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), K);
 			return Pair.of(type, Substitution.EMPTY);
@@ -703,7 +701,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "Key not found in map";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String value = "_value";
@@ -727,7 +725,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -740,14 +738,14 @@ public class TreeMap extends OperatorBank{
 			if(value == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return value;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), V);
@@ -771,7 +769,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator headMap = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String toKey = "_to-key";
 			String code = ClojureHelper.fnHelper(
@@ -791,7 +789,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -806,7 +804,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), TypeAtom.TypeMapTree);
 			return Pair.of(type, Substitution.EMPTY);
@@ -829,7 +827,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator headMapIncl = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String toKey = "_to-key";
 			String inclusive = "_inclusive";
@@ -851,7 +849,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -868,7 +866,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K, TypeAtom.TypeBoolNative), TypeAtom.TypeMapTree);
 			return Pair.of(type, Substitution.EMPTY);
@@ -892,7 +890,7 @@ public class TreeMap extends OperatorBank{
 		private static final String ERROR = "map-tree-higher-entry cannot retrieve the entry.";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String entry = "_entry";
@@ -924,7 +922,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -937,14 +935,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return new Tuple(e.getKey(), e.getValue());
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), new TypeTuple(K, V));
@@ -969,7 +967,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "No higher key exist!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String retKey = "_retKey";
@@ -993,7 +991,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1006,14 +1004,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return e;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), K);
 			return Pair.of(type, Substitution.EMPTY);
@@ -1035,7 +1033,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator keys = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(map),
@@ -1055,7 +1053,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1066,7 +1064,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), TypeAtom.TypeListNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1090,7 +1088,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "map-tree-last-entry cannot retrieve last entry!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String entry = "_entry";
 			String code = ClojureHelper.fnHelper(
@@ -1120,7 +1118,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1131,14 +1129,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return new Tuple(e.getKey(), e.getValue());
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), new TypeTuple(K, V));
@@ -1163,7 +1161,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "map-tree-first-key cannot retrieve first key!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String firstKey = "_firstKey";
 			String code = ClojureHelper.fnHelper(
@@ -1185,7 +1183,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1197,14 +1195,14 @@ public class TreeMap extends OperatorBank{
 				key = map.lastKey();
 			} catch(NoSuchElementException e) {
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return key;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), K);
 			return Pair.of(type, Substitution.EMPTY);
@@ -1228,7 +1226,7 @@ public class TreeMap extends OperatorBank{
 		private static final String ERROR = "map-tree-lower-entry cannot retrieve the entry.";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String entry = "_entry";
@@ -1260,7 +1258,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1273,14 +1271,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return new Tuple(e.getKey(), e.getValue());
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), new TypeTuple(K, V));
@@ -1305,7 +1303,7 @@ public class TreeMap extends OperatorBank{
 		private static final String ERROR = "map-tree-lower-key cannot retrieve the key.";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String retKey = "_retKey";
@@ -1329,7 +1327,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1342,14 +1340,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return e;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), K);
 			return Pair.of(type, Substitution.EMPTY);
@@ -1373,7 +1371,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "map-tree-poll-first-entry cannot retrieve last entry!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String entry = "_entry";
 			String code = ClojureHelper.fnHelper(
@@ -1403,7 +1401,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1414,14 +1412,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return new Tuple(e.getKey(), e.getValue());
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), new TypeTuple(K, V));
@@ -1447,7 +1445,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "map-tree-poll-last-entry cannot retrieve last entry!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String entry = "_entry";
 			String code = ClojureHelper.fnHelper(
@@ -1477,7 +1475,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1488,14 +1486,14 @@ public class TreeMap extends OperatorBank{
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return new Tuple(e.getKey(), e.getValue());
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), new TypeTuple(K, V));
@@ -1519,7 +1517,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator put = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String value = "_value";
@@ -1543,7 +1541,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1559,7 +1557,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K, V), TypeAtom.TypeMapTree);
@@ -1583,7 +1581,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator putAll = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String sourceMap = "_source-map";
 			String tmp = "_tmp";
@@ -1604,7 +1602,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1621,7 +1619,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, TypeAtom.TypeMapTree), TypeAtom.TypeMapTree);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1644,7 +1642,7 @@ public class TreeMap extends OperatorBank{
 		private final String ERROR = "map-tree-remove removed key does not exist!";
 		
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String value = "_value";
@@ -1668,7 +1666,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1682,14 +1680,14 @@ public class TreeMap extends OperatorBank{
 			if(val == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env, typeEnv);
+				err.interpret(env);
 			}
 			
 			return val;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			TypeVariable V = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), V);
@@ -1712,7 +1710,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator size = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(map),
@@ -1729,7 +1727,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1742,7 +1740,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1764,7 +1762,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator subMapIncl = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String fromKey = "_from-key";
 			String fromInclusive = "_from-inclusive";
@@ -1790,7 +1788,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1814,7 +1812,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K, TypeAtom.TypeBoolNative, K, TypeAtom.TypeBoolNative), TypeAtom.TypeMapTree);
 			return Pair.of(type, Substitution.EMPTY);
@@ -1837,7 +1835,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator subMap = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String fromKey = "_from-key";
 			String toKey = "_to-key";
@@ -1859,7 +1857,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1879,7 +1877,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K, K), TypeAtom.TypeMapTree);
 			return Pair.of(type, Substitution.EMPTY);
@@ -1902,7 +1900,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator tailMap = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String code = ClojureHelper.fnHelper(
@@ -1922,7 +1920,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1937,7 +1935,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), TypeAtom.TypeMapTree);
 			return Pair.of(type, Substitution.EMPTY);
@@ -1959,7 +1957,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator tailMapIncl = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String key = "_key";
 			String inclusive = "_inclusive";
@@ -1981,7 +1979,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1998,7 +1996,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable K = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K, TypeAtom.TypeBoolNative), TypeAtom.TypeMapTree);
 			return Pair.of(type, Substitution.EMPTY);
@@ -2021,7 +2019,7 @@ public class TreeMap extends OperatorBank{
 	public static final Operator values = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(map),
@@ -2041,7 +2039,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -2052,7 +2050,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), TypeAtom.TypeListNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -2080,11 +2078,6 @@ public class TreeMap extends OperatorBank{
 	@Override
 	public Path getFileName() {
 		return FILE;
-	}
-	
-	@Override
-	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
-		typeEnv.addRepresentation(TypeAtom.TypeMapTree);
 	}
 	
 	private TreeMap() {}

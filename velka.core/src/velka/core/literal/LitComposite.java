@@ -4,7 +4,6 @@ import java.util.List;
 
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.langbase.ListNative;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -37,18 +36,18 @@ public class LitComposite extends Literal {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return new LitComposite(this.value.interpret(env, typeEnv), this.composedType);
+	public Expression interpret(Environment env) throws AppendableException {
+		return new LitComposite(this.value.interpret(env), this.composedType);
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
+	public Pair<Type, Substitution> infer(Environment env) {
 		return new Pair<Type, Substitution>(this.composedType, Substitution.EMPTY);
 	}
 
 	@Override
-	public String valueToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return LitComposite.clojureLit(this.composedType, this.value.toClojureCode(env, typeEnv));
+	public String valueToClojure(Environment env) throws AppendableException {
+		return LitComposite.clojureLit(this.composedType, this.value.toClojureCode(env));
 	}
 
 	@Override

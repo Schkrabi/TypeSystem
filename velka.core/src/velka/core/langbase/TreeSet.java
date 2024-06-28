@@ -8,12 +8,10 @@ import java.util.Collection;
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
-import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.Literal;
@@ -58,7 +56,7 @@ public class TreeSet extends OperatorBank {
 	public static final Constructor constructor = new Constructor() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String cmpFun = "_compare-function";
 			String a1 = "_a1";
 			String a2 = "_a2";
@@ -88,7 +86,7 @@ public class TreeSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			final Expression cmpFun = args.get(0);
 			
@@ -104,7 +102,7 @@ public class TreeSet extends OperatorBank {
 												new Tuple(e1, e2));
 					Expression cmp;
 					try {
-						cmp = cmpEval.interpret(env, typeEnv);
+						cmp = cmpEval.interpret(env);
 					} catch (AppendableException e) {
 						throw new RuntimeException(e);
 					}
@@ -121,7 +119,7 @@ public class TreeSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(
 					new TypeTuple(
@@ -219,10 +217,6 @@ public class TreeSet extends OperatorBank {
 	@Override
 	public Path getFileName() {
 		return FILE;
-	}
-
-	@Override
-	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
 	}
 	
 	private static TreeSet singleton = null;

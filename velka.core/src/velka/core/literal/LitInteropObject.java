@@ -2,7 +2,6 @@ package velka.core.literal;
 
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -34,18 +33,18 @@ public class LitInteropObject extends Literal {
 	}
 
 	@Override
-	protected String valueToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	protected String valueToClojure(Environment env) throws AppendableException {
 		throw new AppendableException(
 				"Cannot create clojure code for " + this.getClass().getName() + " of value " + this.toString());
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression interpret(Environment env) throws AppendableException {
 		return this;
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		return new Pair<Type, Substitution>(this.type, Substitution.EMPTY);
 	}
 

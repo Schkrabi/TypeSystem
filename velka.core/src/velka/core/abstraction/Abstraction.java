@@ -1,13 +1,11 @@
 package velka.core.abstraction;
 
 import java.util.Iterator;
-import java.util.Optional;
 
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.util.AppendableException;
@@ -23,10 +21,10 @@ import velka.util.Pair;
  */
 public abstract class Abstraction extends Expression {
 
-	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException;
 
-	public Expression substituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		return this.doSubstituteAndEvaluate(args, env, typeEnv);
+	public Expression substituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+		return this.doSubstituteAndEvaluate(args, env);
 	}
 
 	/**
@@ -62,12 +60,12 @@ public abstract class Abstraction extends Expression {
 	 * @return String containing clojure code
 	 * @throws AppendableException
 	 */
-	protected abstract String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	protected abstract String implementationsToClojure(Environment env) throws AppendableException;
 	
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException{
-		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		String code = Type.addTypeMetaInfo(this.implementationsToClojure(env, typeEnv), p.first);
+	public String toClojureCode(Environment env) throws AppendableException{
+		Pair<Type, Substitution> p = this.infer(env);
+		String code = Type.addTypeMetaInfo(this.implementationsToClojure(env), p.first);
 		
 		return code;
 	}
@@ -81,8 +79,7 @@ public abstract class Abstraction extends Expression {
 	 * @return abstraction
 	 * @throws AppendableException 
 	 */
-	public abstract Abstraction selectImplementation(Tuple args, Environment env,
-			TypeEnvironment typeEnv) throws AppendableException;
+	public abstract Abstraction selectImplementation(Tuple args, Environment env) throws AppendableException;
 	
 	/**
 	 * Does the inference with specified arguments
@@ -93,7 +90,7 @@ public abstract class Abstraction extends Expression {
 	 * @return pair of infered type and used substitution
 	 * @throws AppendableException 
 	 */
-	public abstract Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	public abstract Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env) throws AppendableException;
 
 	/**
 	 * Creates definition for an abstraction in clojure
@@ -105,9 +102,9 @@ public abstract class Abstraction extends Expression {
 	 * @return string with code
 	 * @throws AppendableException
 	 */
-	public static String makeLambdaDef(String fnName, Abstraction fn, Environment env, TypeEnvironment typeEnv)
+	public static String makeLambdaDef(String fnName, Abstraction fn, Environment env)
 			throws AppendableException {
-		String code =  ClojureHelper.applyClojureFunction("def", fnName, fn.toClojureCode(env, typeEnv));
+		String code =  ClojureHelper.applyClojureFunction("def", fnName, fn.toClojureCode(env));
 		
 		return code;
 	}

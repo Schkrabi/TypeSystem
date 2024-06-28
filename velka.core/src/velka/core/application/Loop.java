@@ -12,7 +12,6 @@ import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeTuple;
@@ -53,8 +52,8 @@ public class Loop extends Expression {
 		this.initArgs = initArgs;
 	}
 	
-	private Lambda createLoopLambda(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> argsInfered = this.initArgs.infer(env, typeEnv);
+	private Lambda createLoopLambda(Environment env) throws AppendableException {
+		Pair<Type, Substitution> argsInfered = this.initArgs.infer(env);
 		
 		TypeTuple argTypes = (TypeTuple)argsInfered.first;
 		
@@ -63,24 +62,24 @@ public class Loop extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression interpret(Environment env) throws AppendableException {
 		Environment recurEnvironment = Environment.create(env);
-		Lambda loopExpression = this.createLoopLambda(env, typeEnv);		
+		Lambda loopExpression = this.createLoopLambda(env);		
 		recurEnvironment.put(RECUR_MARK_SYMBOL, loopExpression);
 		
 		AbstractionApplication appl = new AbstractionApplication(loopExpression, initArgs);
-		return appl.interpret(recurEnvironment, typeEnv);
+		return appl.interpret(recurEnvironment);
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		Environment recurEnvironment = Environment.create(env);
 		TypeVariable tv = new TypeVariable(NameGenerator.next());
 		recurEnvironment.put(RECUR_MARK_SYMBOL, new TypeHolder(tv));
-		Lambda loopExpression = this.createLoopLambda(env, typeEnv);
+		Lambda loopExpression = this.createLoopLambda(env);
 		
 		AbstractionApplication appl = new AbstractionApplication(loopExpression, initArgs);
-		Pair<Type, Substitution> infered = appl.infer(recurEnvironment, typeEnv);		
+		Pair<Type, Substitution> infered = appl.infer(recurEnvironment);		
 		
 		Substitution s = infered.second;
 		Substitution tmp;
@@ -100,7 +99,7 @@ public class Loop extends Expression {
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		List<String> bidings = new LinkedList<String>();
 		Iterator<Expression> i = this.bindedSymbols.iterator();
 		Iterator<Expression> j = this.initArgs.iterator();
@@ -109,13 +108,13 @@ public class Loop extends Expression {
 			Expression currentSymbol = i.next();
 			Expression currentValue = j.next();
 			
-			bidings.add(currentSymbol.toClojureCode(env, typeEnv));
-			bidings.add(currentValue.toClojureCode(env, typeEnv));
+			bidings.add(currentSymbol.toClojureCode(env));
+			bidings.add(currentValue.toClojureCode(env));
 		}
 		
 		String code = ClojureHelper.applyClojureFunction("loop", 
 				ClojureHelper.clojureVectorHelper(bidings),
-				this.body.toClojureCode(env, typeEnv));
+				this.body.toClojureCode(env));
 		
 		return code;
 	}
@@ -185,9 +184,9 @@ public class Loop extends Expression {
 	}
 
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env, typeEnv);
-		return e.convert(to, env, typeEnv);
+		Expression e = this.interpret(env);
+		return e.convert(to, env);
 	}
 }

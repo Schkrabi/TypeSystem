@@ -4,9 +4,11 @@ import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
+
+import java.util.List;
+
 import velka.core.abstraction.Operator;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeVariable;
@@ -54,11 +56,11 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression interpret(Environment env) throws AppendableException {
 		if (!env.containsVariable(this)) {
 			return this;
 		}
-		return env.getVariableValue(this).interpret(env, typeEnv);
+		return env.getVariableValue(this).interpret(env);
 	}
 
 	@Override
@@ -67,10 +69,10 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
 			if (env.containsVariable(this)) {
-				return env.getVariableValue(this).infer(env, typeEnv);
+				return env.getVariableValue(this).infer(env);
 			}
 			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), Substitution.EMPTY);
 		} catch (AppendableException e) {
@@ -80,25 +82,25 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		if (env.containsVariable(this)) {
-			Expression e = env.getVariableValue(this);
-			if (e instanceof Operator) {
-				return ((Operator) e).getClojureSymbol().toClojureCode(env, typeEnv);
-			}
-		}
-
+	public String toClojureCode(Environment env) throws AppendableException {
 		if(!this.namespace.isEmpty()) {
 			return ClojureHelper.fullyQualifySymbol(this.namespace, this.name);
 		}
+		
+		if (env.containsVariable(this)) {
+			Expression e = env.getVariableValue(this);
+			if (e instanceof Operator) {
+				return ((Operator) e).getClojureSymbol().toClojureCode(env);
+			}
+		}
+		
 		return this.name;
 	}
 
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Symbol) {
-			return this.name.equals(((Symbol) other).name);// &&
-					//this.namespace.equals(((Symbol) other).namespace);
+			return this.name.equals(((Symbol) other).name);
 		}
 		return false;
 	}
@@ -109,12 +111,24 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	}
 
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression intprt = this.interpret(env, typeEnv);
+		Expression intprt = this.interpret(env);
 		if(intprt.equals(this)) {
 			return this;
 		}
-		return intprt.convert(to, env, typeEnv);
+		return intprt.convert(to, env);
+	}
+	
+	/** Creates a list of unique new symbols */
+	public static List<Symbol> uniqueSymbolList(int size, String namespace){
+		return NameGenerator.uniqueNameCollection(size).stream()
+				.map(s -> new Symbol(s, namespace))
+				.toList();
+	}
+	
+	/** Creates a list of unique new symbols */
+	public static List<Symbol> uniqueSymbolList(int size){
+		return uniqueSymbolList(size);
 	}
 }

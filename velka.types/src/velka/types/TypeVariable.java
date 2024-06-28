@@ -38,6 +38,7 @@ public class TypeVariable extends TerminalType {
 
 	@Override
 	public boolean equals(Object o) {
+		if(this == o) return true;
 		if (!(o instanceof TypeVariable)) {
 			return false;
 		}
@@ -137,5 +138,10 @@ public class TypeVariable extends TerminalType {
 	@Override
 	public boolean doCanConvertTo(Type other, BiFunction<TypeAtom, TypeAtom, Boolean> atomCheck) {
 		return true;
+	}
+	
+	/** Creates new unused type variable */
+	public static TypeVariable generate() {
+		return new TypeVariable(NameGenerator.next());
 	}
 }

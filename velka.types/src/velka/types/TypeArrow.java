@@ -39,6 +39,7 @@ public class TypeArrow extends Type {
 
 	@Override
 	public boolean equals(Object o) {
+		if(this == o) return true;
 		if (!(o instanceof TypeArrow)) {
 			return false;
 		}

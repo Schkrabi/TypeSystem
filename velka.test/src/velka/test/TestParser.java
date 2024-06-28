@@ -2,8 +2,6 @@ package velka.test;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -35,7 +33,6 @@ import velka.core.application.Let;
 import velka.core.application.Loop;
 import velka.core.application.OrExpression;
 import velka.core.application.Recur;
-import velka.core.exceptions.ConversionException;
 import velka.core.exceptions.DuplicateConversionException;
 import velka.core.exceptions.UndefinedTypeException;
 import velka.core.exceptions.UserException;
@@ -43,13 +40,11 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
+import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.literal.LitBoolean;
-import velka.core.literal.LitComposite;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
-import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeName;
@@ -60,14 +55,6 @@ import velka.util.AppendableException;
 import velka.util.Pair;
 
 class TestParser extends VelkaTest{
-	
-	private static boolean equalsLambdaUpToTypeVariables(Lambda l1, Lambda l2) throws AppendableException {		
-		return Type.unifyTypes(l1.argsType, l2.argsType).isPresent()
-				&& l1.args.equals(l2.args)
-				&& l1.body.equals(l2.body);
-		
-	}
-
 	@Test
 	@DisplayName("Test Semantic Simple")
 	void testSemanticSimple() throws AppendableException {
@@ -181,53 +168,9 @@ class TestParser extends VelkaTest{
 	}
 
 	@Test
-	@DisplayName("Test Type Environment")
-	public void testTypeEnvironment() throws AppendableException {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-
-		assertAll(() -> {
-			typeEnv.addType(new TypeName("ListTestTypeEnv"));
-			typeEnv.addRepresentation(
-					new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("Functional")));
-			typeEnv.addType(new TypeName("Test"));
-			typeEnv.addRepresentation(new TypeAtom(new TypeName("Test"), new TypeRepresentation("Functional")));
-		});
-
-		assertTrue(typeEnv.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), TypeRepresentation.WILDCARD)));
-		assertTrue(typeEnv
-				.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("Functional"))));
-		assertFalse(typeEnv.existsTypeAtom(new TypeAtom(new TypeName("kawabanga"), TypeRepresentation.WILDCARD)));
-		assertFalse(typeEnv
-				.existsTypeAtom(new TypeAtom(new TypeName("ListTestTypeEnv"), new TypeRepresentation("kawabanga"))));
-
-		assertAll(() -> typeEnv.getConstructor(TypeAtom.TypeIntRoman,
-				new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative))));
-		assertThrows(AppendableException.class,
-				() -> typeEnv.getConstructor(new TypeAtom(new TypeName("fail"), TypeRepresentation.WILDCARD),
-						TypeTuple.EMPTY_TUPLE));
-
-		assertThrows(AppendableException.class,
-				() -> typeEnv.addRepresentation(new TypeAtom(new TypeName("Int"), new TypeRepresentation("Roman"))));
-
-		assertThrows(AppendableException.class,
-				() -> typeEnv.addConversion(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative,
-						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env), Expression.EMPTY_EXPRESSION));
-
-		assertThrows(DuplicateConversionException.class,
-				() -> typeEnv.addConversion(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString,
-						new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env), Expression.EMPTY_EXPRESSION));
-
-		typeEnv.convertTo(new LitComposite(new Tuple(Arrays.asList(new LitString("5"))), TypeAtom.TypeIntString),
-				TypeAtom.TypeIntString, TypeAtom.TypeIntRoman);
-		assertThrows(ConversionException.class, () -> typeEnv.convertTo(Expression.EMPTY_EXPRESSION,
-				TypeAtom.TypeStringNative, TypeAtom.TypeIntNative));
-	}
-
-	@Test
 	@DisplayName("Test Exceptions")
 	void testExceptions() {
-		Environment env = Environment.initTopLevelEnvironment();
+		Environment env = TopLevelEnvironment.instantiate();
 		assertAll(() -> {
 			new UserException("test");
 			new DuplicateConversionException(TypeAtom.TypeBool, TypeAtom.TypeBoolNative,
@@ -240,7 +183,7 @@ class TestParser extends VelkaTest{
 	@Test
 	@DisplayName("Test Let Type")
 	void testLetType() throws AppendableException {
-		Expression e = this.parseString("(let-type (A) (lambda ((A x)) (let-type (A) (lambda ((A y)) x))))")
+		this.parseString("(let-type (A) (lambda ((A x)) (let-type (A) (lambda ((A y)) x))))")
 				.get(0);
 
 //		TypeVariable outer = (TypeVariable) ((Lambda) e).argsType.get(0);

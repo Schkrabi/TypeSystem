@@ -40,22 +40,13 @@ public class ClojureCoreSymbols {
 	 * Fully qualified tuple-2-velka-list symbol
 	 */
 	public static String tuple2velkaListSymbol_full = ClojureHelper.fullyQualifySymbol(ClojureCoreSymbols.NAMESPACE, tuple2velkaListSymbol);
-	/**
-	 * Symbol for map of atomic type conversion
-	 */
-	public static String atomicConversionMapClojureSymbol = "*ATOMIC-CONVERSION-MAP*";
-	/**
-	 * Fully qualified atomic-conversion-map symbol
-	 */
-	public static String atomicConversionMapClojureSymbol_full = ClojureHelper.fullyQualifySymbol(ClojureCoreSymbols.NAMESPACE, atomicConversionMapClojureSymbol);
-	/**
-	 * Symbol for convert-type-atom clojure function
-	 */
-	public static String convertAtomClojureSymbol = "convert-type-atom";
-	/**
-	 * Fully qualified convert-type-atom clojure symbol
-	 */
-	public static String convertAtomClojureSymbol_full = ClojureHelper.fullyQualifySymbol(ClojureCoreSymbols.NAMESPACE, convertAtomClojureSymbol);
+	
+	/** Symbol for velka type system */
+	public static String typeSystem = "velka-type-system";
+	
+	/** Fully qualified velka type system symbol */
+	public static String typeSystem_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, typeSystem);
+	
 	/**
 	 * Symbol for convert-tuple clojure symbol
 	 */
@@ -72,30 +63,6 @@ public class ClojureCoreSymbols {
 	 * Fully qualified convert-fn symbol
 	 */
 	public static String convertFnClojureSymbol_full = ClojureHelper.fullyQualifySymbol(ClojureCoreSymbols.NAMESPACE, convertFnClojureSymbol);
-	/**
-	 * Symbol for convert-set clojure function
-	 */
-	public static String convertRepOrClojureSymbol = "convert-set";
-	/**
-	 * Fully qualified symbol convert-set
-	 */
-	public static String convertRepOrClojureSymbol_full = ClojureHelper.fullyQualifySymbol(ClojureCoreSymbols.NAMESPACE, convertRepOrClojureSymbol);
-	/**
-	 * Symbol for convert-to-set clojure function
-	 */
-	public static String convertToRepOrClojureSymbol = "convert-to-set";
-	/**
-	 * Fully qualified symbol convert-to-set
-	 */
-	public static String convertToRepOrClojureSymbol_full = ClojureHelper.fullyQualifySymbol(ClojureCoreSymbols.NAMESPACE, convertToRepOrClojureSymbol);
-	/**
-	 * Symbol for convert-from-set clojure function
-	 */
-	static String convertFromRepOrClojureSymbol = "convert-from-set";
-	/**
-	 * Fully qualified symbol convert-from-set
-	 */
-	public static String convertFromRepOrClojureSymbol_full = ClojureHelper.fullyQualifySymbol(ClojureCoreSymbols.NAMESPACE, convertFromRepOrClojureSymbol);
 	/**
 	 * Symbol for convert clojure function
 	 */

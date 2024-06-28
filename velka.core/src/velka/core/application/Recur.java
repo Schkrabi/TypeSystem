@@ -7,7 +7,6 @@ import java.util.List;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeVariable;
@@ -36,23 +35,23 @@ public class Recur extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression interpret(Environment env) throws AppendableException {
 		Expression abstraction = env.getVariableValue(Loop.RECUR_MARK_SYMBOL);
 		AbstractionApplication appl = new AbstractionApplication(abstraction, this.rebidings);
 		
-		return appl.interpret(env, typeEnv);
+		return appl.interpret(env);
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), Substitution.EMPTY);
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		List<String> args = new LinkedList<String>();
 		for(Expression e : this.rebidings) {
-			String argCode = e.toClojureCode(env, typeEnv);
+			String argCode = e.toClojureCode(env);
 			args.add(argCode);
 		}
 		
@@ -102,9 +101,9 @@ public class Recur extends Expression {
 	}
 
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env, typeEnv);
-		return e.convert(to, env, typeEnv);
+		Expression e = this.interpret(env);
+		return e.convert(to, env);
 	}
 }

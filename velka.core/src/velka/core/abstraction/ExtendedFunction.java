@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
 import velka.util.NameGenerator;
 import velka.util.Pair;
@@ -59,7 +58,7 @@ public class ExtendedFunction extends ExtendedLambda {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
 			if(this.implementations.isEmpty()) {
 				Type t =  new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next()));
@@ -68,7 +67,7 @@ public class ExtendedFunction extends ExtendedLambda {
 			
 			Set<Pair<Type, Substitution>> s = new HashSet<Pair<Type, Substitution>>();
 			for (Expression e : this.implementations.keySet()) {
-				Pair<Type, Substitution> p = e.infer(env, typeEnv);
+				Pair<Type, Substitution> p = e.infer(env);
 				s.add(p);
 			}
 			
@@ -166,14 +165,14 @@ public class ExtendedFunction extends ExtendedLambda {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 //		Abstraction a = this.selectImplementation(args, rankingFunction, env, typeEnv);
 //		return a.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
 		throw new AppendableException("This method should not be directly used.");
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
+	public Expression interpret(Environment env) {
 		return this;
 	}
 }

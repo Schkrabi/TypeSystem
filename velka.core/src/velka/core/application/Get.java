@@ -3,7 +3,6 @@ package velka.core.application;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitInteger;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -46,9 +45,9 @@ public class Get extends SpecialFormApplication {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Expression expressionTuple = this.getTuple().interpret(env, typeEnv);
-		Expression expressionIndex = this.getIndex().interpret(env, typeEnv);
+	public Expression interpret(Environment env) throws AppendableException {
+		Expression expressionTuple = this.getTuple().interpret(env);
+		Expression expressionIndex = this.getIndex().interpret(env);
 		
 		if(!(expressionTuple instanceof Tuple)) {
 			throw new AppendableException("First argument of get must interpret to tuple. Got " + expressionTuple.toString());
@@ -57,8 +56,8 @@ public class Get extends SpecialFormApplication {
 		if(expressionIndex instanceof LitInteger) {
 			index = (LitInteger)expressionIndex;
 		}else {
-			Expression c = expressionIndex.convert(TypeAtom.TypeIntNative, env, typeEnv);
-			c = c.interpret(env, typeEnv);
+			Expression c = expressionIndex.convert(TypeAtom.TypeIntNative, env);
+			c = c.interpret(env);
 			
 			if(!(c instanceof LitInteger)) {
 				throw new AppendableException("Second argument of get must interpret to integer. Got " + expressionIndex.toString());
@@ -75,9 +74,9 @@ public class Get extends SpecialFormApplication {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> tuplePair = this.getTuple().infer(env, typeEnv);
-		Pair<Type, Substitution> indexPair = this.getIndex().infer(env, typeEnv);
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+		Pair<Type, Substitution> tuplePair = this.getTuple().infer(env);
+		Pair<Type, Substitution> indexPair = this.getIndex().infer(env);
 		
 		Type.unifyTypes(indexPair.first, TypeAtom.TypeIntNative);
 		if(!(tuplePair.first instanceof TypeTuple)) {
@@ -88,19 +87,19 @@ public class Get extends SpecialFormApplication {
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		String idx = null;
-		var t = this.getIndex().infer(env, typeEnv).first;
+		var t = this.getIndex().infer(env).first;
 		if(t.equals(TypeAtom.TypeIntNative)) {
-			idx = this.getIndex().toClojureCode(env, typeEnv);
+			idx = this.getIndex().toClojureCode(env);
 		}
 		else {
 			idx = ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol_full, 
-					this.getIndex().toClojureCode(env, typeEnv));
+					this.getIndex().toClojureCode(env));
 		}
 		
 		String code = ClojureHelper.applyClojureFunction("get", 
-				this.getTuple().toClojureCode(env, typeEnv),
+				this.getTuple().toClojureCode(env),
 				idx);
 		
 		return code;

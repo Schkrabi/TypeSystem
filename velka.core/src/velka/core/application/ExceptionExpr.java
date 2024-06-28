@@ -7,7 +7,6 @@ import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitString;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -42,12 +41,12 @@ public class ExceptionExpr extends SpecialFormApplication {
 	}
 	
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Tuple iArgs = (Tuple)this.args.interpret(env, typeEnv);
+	public Expression interpret(Environment env) throws AppendableException {
+		Tuple iArgs = (Tuple)this.args.interpret(env);
 		Expression iArg = iArgs.get(0);
 		if(!(iArg instanceof LitString)) {
-			iArg = iArg.convert(TypeAtom.TypeStringNative, env, typeEnv);
-			iArg = iArg.interpret(env, typeEnv);
+			iArg = iArg.convert(TypeAtom.TypeStringNative, env);
+			iArg = iArg.interpret(env);
 		}
 		
 		String message = ((LitString)iArg).value;
@@ -56,9 +55,9 @@ public class ExceptionExpr extends SpecialFormApplication {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Pair<Type, Substitution> infered = this.getMessage().infer(env, typeEnv);
+			Pair<Type, Substitution> infered = this.getMessage().infer(env);
 			Optional<Substitution> s = Type.unifyTypes(infered.first, TypeAtom.TypeStringNative);
 			if(s.isEmpty()) {
 				throw new TypesDoesNotUnifyException(infered.first, TypeAtom.TypeStringNative);
@@ -72,15 +71,15 @@ public class ExceptionExpr extends SpecialFormApplication {
 	}
 	
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		String msg = null;
-		var t = this.getMessage().infer(env, typeEnv).first;
+		var t = this.getMessage().infer(env).first;
 		if(t.equals(TypeAtom.TypeStringNative)) {
-			msg = this.getMessage().toClojureCode(env, typeEnv);
+			msg = this.getMessage().toClojureCode(env);
 		}
 		else {
 			msg = ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol_full, 
-					this.getMessage().toClojureCode(env, typeEnv));
+					this.getMessage().toClojureCode(env));
 		}
 		
 		return ClojureHelper.errorHelper(msg);

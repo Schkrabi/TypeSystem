@@ -5,7 +5,6 @@ import java.util.Iterator;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeTuple;
@@ -29,9 +28,9 @@ public class Function extends Lambda implements Comparable<Expression> {
 	}
 	
 	@Override
-	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env, TypeEnvironment typeEnv)
+	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env)
 			throws AppendableException {
-		return this.doInferWithArgs(args, this.creationEnvironment, env, typeEnv);
+		return this.doInferWithArgs(args, this.creationEnvironment, env);
 	}
 
 	@Override
@@ -93,19 +92,13 @@ public class Function extends Lambda implements Comparable<Expression> {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 		Environment childEnvironment = Abstraction.lexicalClojure(this.args, args, this.creationEnvironment);
-		return this.body.interpret(childEnvironment, typeEnv);
+		return this.body.interpret(childEnvironment);
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
+	public Expression interpret(Environment env) {
 		return this;
-	}
-	
-	@Override
-	public Lambda defaultCostFunction() throws AppendableException {
-		Lambda l = super.defaultCostFunction();
-		return new Function(l.argsType, l.args, l.body, this.creationEnvironment);
 	}
 }

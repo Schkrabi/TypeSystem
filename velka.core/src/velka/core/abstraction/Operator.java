@@ -3,7 +3,6 @@ package velka.core.abstraction;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import velka.core.application.AbstractionApplication;
 import velka.core.application.Convert;
@@ -12,12 +11,7 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
-import velka.core.literal.LitBoolean;
-import velka.core.literal.LitDouble;
-import velka.core.literal.LitInteger;
-import velka.core.literal.LitInteropObject;
-import velka.core.literal.LitString;
+import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.literal.Literal;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -45,7 +39,7 @@ public abstract class Operator extends Abstraction {
 	 * @return clojure code
 	 * @throws AppendableException
 	 */
-	protected abstract String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	protected abstract String toClojureOperator(Environment env) throws AppendableException;
 	
 	/**
 	 * Symbol used for operator in clojure
@@ -58,37 +52,33 @@ public abstract class Operator extends Abstraction {
 	 * @return code
 	 */
 	public String clojureDef() {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv;
+		Environment env = TopLevelEnvironment.instantiate();
 		try {
-			typeEnv = TypeEnvironment.initBasicTypes(env);
-			return this.toClojureCode(env, typeEnv);
+			return this.toClojureCode(env);
 		} catch (AppendableException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
-		return "";
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression interpret(Environment env) {
 		return this;
 	}
 
 	@Override
-	public Abstraction selectImplementation(Tuple args, Environment env,
-			TypeEnvironment typeEnv) throws AppendableException {
+	public Abstraction selectImplementation(Tuple args, Environment env) {
 		return this;
 	}
 
 	@Override
-	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		return this.toClojureOperator(env, typeEnv);
+	protected String implementationsToClojure(Environment env) throws AppendableException {
+		this.infer(env);
+		return this.toClojureOperator(env);
 	}
 	
 	@Override
-	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException{
-		return this.infer(env, typeEnv);
+	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env) throws AppendableException{
+		return this.infer(env);
 	}
 
 	public static String makeOperatorDeclaration(Operator operator) {
@@ -104,13 +94,13 @@ public abstract class Operator extends Abstraction {
 	 * @return string with code
 	 * @throws AppendableException
 	 */
-	public static String makeOperatorDef(Operator operator, Environment env, TypeEnvironment typeEnv) 
+	public static String makeOperatorDef(Operator operator, Environment env) 
 		throws AppendableException {
-		return Abstraction.makeLambdaDef(operator.getClojureSymbol().name, operator, env, typeEnv);
+		return Abstraction.makeLambdaDef(operator.getClojureSymbol().name, operator, env);
 	}
 	
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
 		if(!(to instanceof TypeArrow)) {
 			throw new ConversionException(to, this);
@@ -166,7 +156,7 @@ public abstract class Operator extends Abstraction {
 		var op = new Operator() {
 
 			@Override
-			protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			protected String toClojureOperator(Environment env) throws AppendableException {
 				return ClojureHelper.wrapClojureOperatorToFn(method.getParameterCount() + 1, "." + method.getName());
 			}
 
@@ -176,7 +166,7 @@ public abstract class Operator extends Abstraction {
 			}
 
 			@Override
-			protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+			protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 					throws AppendableException {
 				var jargs = new Object[args.size() - 1];
 				Object instance = null;
@@ -203,7 +193,7 @@ public abstract class Operator extends Abstraction {
 			}
 
 			@Override
-			public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+			public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 				var as = new java.util.LinkedList<Type>();
 				as.add(TypeAtom.javaClassToType(clazz));
 				

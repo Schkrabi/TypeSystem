@@ -12,7 +12,6 @@ import java.util.Optional;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -66,11 +65,11 @@ public class IfExpression extends SpecialFormApplication {
 	}
 	
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Expression iCond = this.getCondition().interpret(env, typeEnv);
+	public Expression interpret(Environment env) throws AppendableException {
+		Expression iCond = this.getCondition().interpret(env);
 		if(!(iCond instanceof LitBoolean)) {
-			iCond = iCond.convert(TypeAtom.TypeBoolNative, env, typeEnv);
-			iCond = iCond.interpret(env, typeEnv);
+			iCond = iCond.convert(TypeAtom.TypeBoolNative, env);
+			iCond = iCond.interpret(env);
 		}
 		
 		if(!(iCond instanceof LitBoolean)) {
@@ -78,20 +77,20 @@ public class IfExpression extends SpecialFormApplication {
 		}
 		LitBoolean cond = (LitBoolean)iCond;
 		if(cond.value) {
-			return this.getTrueBranch().interpret(env, typeEnv);
+			return this.getTrueBranch().interpret(env);
 		}
 		
-		Expression iFalse = this.getFalseBranch().interpret(env, typeEnv);
-		Pair<Type, Substitution> inf = this.infer(env, typeEnv);
+		Expression iFalse = this.getFalseBranch().interpret(env);
+		Pair<Type, Substitution> inf = this.infer(env);
 		
-		iFalse = iFalse.convert(inf.first, env, typeEnv);
-		iFalse = iFalse.interpret(env, typeEnv);
+		iFalse = iFalse.convert(inf.first, env);
+		iFalse = iFalse.interpret(env);
 		return iFalse;
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> argsInfered = this.args.infer(env, typeEnv);
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+		Pair<Type, Substitution> argsInfered = this.args.infer(env);
 		TypeVariable tv = new TypeVariable(NameGenerator.next());
 		Type argsExpected = new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative, tv, tv));
 		
@@ -106,21 +105,21 @@ public class IfExpression extends SpecialFormApplication {
 	}
 	
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		String cond = null;
-		var ct = this.getCondition().infer(env, typeEnv).first;
+		var ct = this.getCondition().infer(env).first;
 		if(ct.equals(TypeAtom.TypeBoolNative)) {
-			cond = this.getCondition().toClojureCode(env, typeEnv);
+			cond = this.getCondition().toClojureCode(env);
 		}
 		else {
 			cond = ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol_full, 
-					this.getCondition().toClojureCode(env, typeEnv));
+					this.getCondition().toClojureCode(env));
 		}
 		
 		var code = ClojureHelper.clojureIfHelper(
 				cond, 
-				this.getTrueBranch().toClojureCode(env, typeEnv), 
-				this.getFalseBranch().toClojureCode(env, typeEnv));
+				this.getTrueBranch().toClojureCode(env), 
+				this.getFalseBranch().toClojureCode(env));
 		
 		return code;
 	}

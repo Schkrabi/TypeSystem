@@ -22,13 +22,11 @@ import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
-import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
@@ -85,7 +83,7 @@ public class ListNative extends OperatorBank{
 	public static final Constructor constructorEmpty = new Constructor() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String code = ClojureHelper.fnHelper(Arrays.asList(),
 					Type.addTypeMetaInfo("'()", TypeAtom.TypeListNative));
 			return code;
@@ -97,12 +95,12 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			return new LitInteropObject(new LinkedList<Expression>(), TypeAtom.TypeListNative);
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -121,7 +119,7 @@ public class ListNative extends OperatorBank{
 	public static final Constructor constructor = new Constructor() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String val = "_value";
 			String rest = "_rest";
 			String code = ClojureHelper.fnHelper(Arrays.asList(val, rest),
@@ -137,7 +135,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			Expression val = args.get(0);
 			LitInteropObject interop = (LitInteropObject) args.get(1);
 			@SuppressWarnings("unchecked")
@@ -151,7 +149,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(new TypeVariable(NameGenerator.next()), TypeAtom.TypeListNative),
 					TypeAtom.TypeListNative);
@@ -176,12 +174,12 @@ public class ListNative extends OperatorBank{
 	public static final Operator isEmpty = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					ClojureHelper.clojureIfHelper(
 							ClojureHelper.applyClojureFunction("empty?", list),
-							LitBoolean.TRUE.toClojureCode(env, typeEnv), LitBoolean.FALSE.toClojureCode(env, typeEnv)));
+							LitBoolean.TRUE.toClojureCode(env), LitBoolean.FALSE.toClojureCode(env)));
 			return code;
 		}
 
@@ -196,7 +194,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitInteropObject interop = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
@@ -208,7 +206,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeListNative)),
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -234,7 +232,7 @@ public class ListNative extends OperatorBank{
 		private final String errorMsg = "Cannot take head of empty list.";
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					ClojureHelper.clojureIfHelper(
@@ -255,7 +253,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			
 			LitInteropObject interop = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
@@ -269,7 +267,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeListNative)), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -292,7 +290,7 @@ public class ListNative extends OperatorBank{
 		private final String errorMsg = "Cannot take tail of empty list.";
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					LitComposite.clojureValueToClojureLiteral(
@@ -318,7 +316,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			
 			LitInteropObject interop = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
@@ -333,7 +331,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeListNative)),
 					TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -359,7 +357,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator mapListNativeOperator = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String fn = "_fn";
 			String arg = "_arg";
@@ -386,7 +384,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			Expression f = args.get(0);
 			LitInteropObject interop = (LitInteropObject) args.get(1);
 			@SuppressWarnings("unchecked")
@@ -396,7 +394,7 @@ public class ListNative extends OperatorBank{
 
 			for (Expression e : l) {
 				AbstractionApplication appl = new AbstractionApplication(f, new Tuple(e));
-				Expression res = appl.interpret(env, typeEnv);
+				Expression res = appl.interpret(env);
 				agg.add(res);
 			}
 
@@ -404,7 +402,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeVariable B = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(
@@ -435,7 +433,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator map2ListNativeOperator = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list1 = "_list1";
 			String list2 = "_list2";
 			String fn = "_fn";
@@ -466,7 +464,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			Expression f = args.get(0);
 			var iOp1 = (LitInteropObject) args.get(1);
 			var iOp2 = (LitInteropObject) args.get(2);
@@ -485,7 +483,7 @@ public class ListNative extends OperatorBank{
 				Expression e2 = i2.next();
 
 				AbstractionApplication appl = new AbstractionApplication(f, new Tuple(e1, e2));
-				Expression ret = appl.interpret(env, typeEnv);
+				Expression ret = appl.interpret(env);
 				agg.add(ret);
 			}
 
@@ -493,7 +491,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeVariable B = new TypeVariable(NameGenerator.next());
 			TypeVariable C = new TypeVariable(NameGenerator.next());
@@ -520,7 +518,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator foldlListNativeOperator = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String terminator = "_term";
 			String fn = "_fn";
@@ -545,7 +543,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			Expression f = args.get(0);
 			Expression term = args.get(1);
 			var iOp = (LitInteropObject)args.get(2);
@@ -554,14 +552,14 @@ public class ListNative extends OperatorBank{
 
 			for (Expression e : l) {
 				AbstractionApplication appl = new AbstractionApplication(f, new Tuple(term, e));
-				term = appl.interpret(env, typeEnv);
+				term = appl.interpret(env);
 			}
 
 			return term;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeVariable B = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(
@@ -587,7 +585,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator addToEndOperator = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String element = "_element";
 
@@ -612,7 +610,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
@@ -625,7 +623,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, A), TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -646,7 +644,7 @@ public class ListNative extends OperatorBank{
 	public static final Conversion ListNativeToArrayListOperator = new Conversion() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper
 					.fnHelper(Arrays.asList(list),
@@ -668,7 +666,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
@@ -678,7 +676,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeListJavaArray);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -702,7 +700,7 @@ public class ListNative extends OperatorBank{
 	public static final Conversion ListNativeToLinkedListOperator = new Conversion() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper
 					.fnHelper(Arrays.asList(list),
@@ -724,7 +722,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
@@ -734,7 +732,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeListJavaLinked);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -768,7 +766,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator contains = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			final String list = "_list";
 			final String element = "_element";
 			final String arg = "_arg";
@@ -792,7 +790,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
@@ -806,7 +804,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, A), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -824,7 +822,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator filter = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String pred = "_pred";
 			String arg = "_arg";
@@ -853,7 +851,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
@@ -863,7 +861,7 @@ public class ListNative extends OperatorBank{
 
 			for (Expression e : l) {
 				AbstractionApplication app = new AbstractionApplication(pred, new Tuple(e));
-				Expression rsl = app.interpret(env, typeEnv);
+				Expression rsl = app.interpret(env);
 				if (rsl.equals(LitBoolean.TRUE)) {
 					aux.add(e);
 				}
@@ -873,7 +871,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			final TypeArrow type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListNative, new TypeArrow(new TypeTuple(A), TypeAtom.TypeBoolNative)),
@@ -904,7 +902,7 @@ public class ListNative extends OperatorBank{
 		private static final String errorMsg = "Index out of range";
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String index = "_index";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list, index), ClojureHelper.applyClojureFunction("nth",
@@ -924,7 +922,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
@@ -938,7 +936,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeIntNative), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -957,7 +955,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator buildList = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String n = "_n";
 			String fn = "_fn";
 			String arg = "_arg";
@@ -989,7 +987,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitInteger n = (LitInteger) args.get(0);
 			Expression fn = args.get(1);
 
@@ -998,7 +996,7 @@ public class ListNative extends OperatorBank{
 			for (long i = 0; i < n.value; i++) {
 				AbstractionApplication appl = new AbstractionApplication(fn, new Tuple(new LitInteger(i)));
 
-				Expression expr = appl.interpret(env, typeEnv);
+				Expression expr = appl.interpret(env);
 
 				l.add(expr);
 			}
@@ -1007,7 +1005,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable buildListNative_A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeIntNative,
@@ -1028,7 +1026,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator remove = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String element = "_element";
 			String arg = "_arg";
@@ -1057,7 +1055,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
@@ -1075,7 +1073,7 @@ public class ListNative extends OperatorBank{
 		private final TypeVariable A = new TypeVariable(NameGenerator.next());
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, A), TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -1092,7 +1090,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator size = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list), LitInteger.clojureLit(
 					ClojureHelper.applyClojureFunction("count", list)));
@@ -1111,7 +1109,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
@@ -1120,7 +1118,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -1137,7 +1135,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator append = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list1 = "_list1";
 			String list2 = "_list2";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list1, list2), LitComposite.clojureValueToClojureLiteral(
@@ -1158,7 +1156,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp1 = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l0 = (LinkedList<Expression>) iOp1.javaObject;
@@ -1173,7 +1171,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeListNative),
 					TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -1191,7 +1189,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator reverse = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					LitComposite.clojureValueToClojureLiteral(
@@ -1211,7 +1209,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
@@ -1225,7 +1223,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -1243,7 +1241,7 @@ public class ListNative extends OperatorBank{
 	public static final Operator everyp = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String pred = "_pred";
 			String pred_arg = "_arg";
@@ -1266,7 +1264,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
@@ -1274,7 +1272,7 @@ public class ListNative extends OperatorBank{
 
 			Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(expr -> {
 				AbstractionApplication appl = new AbstractionApplication(pred, new Tuple((Expression) expr));
-				Expression rslt = appl.interpret(env, typeEnv);
+				Expression rslt = appl.interpret(env);
 				return rslt.equals(LitBoolean.TRUE);
 			}));
 
@@ -1282,7 +1280,7 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListNative, new TypeArrow(
 							new TypeTuple(new TypeVariable(NameGenerator.next())), TypeAtom.TypeBoolNative)),
@@ -1415,12 +1413,6 @@ public class ListNative extends OperatorBank{
 	@Override
 	public Path getFileName() {
 		return VELKA_CLOJURE_LIST_NAME;
-	}
-
-	@Override
-	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
-		typeEnv.addType(TypeAtom.TypeList.name);
-		typeEnv.addRepresentation(TypeAtom.TypeListNative);		
 	}
 	
 	private ListNative() {}

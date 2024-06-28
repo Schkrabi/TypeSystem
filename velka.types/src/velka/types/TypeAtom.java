@@ -8,10 +8,8 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
-import velka.util.Pair;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
 
@@ -41,6 +39,7 @@ public class TypeAtom extends TerminalType {
 
 	@Override
 	public boolean equals(Object o) {
+		if(this == o) return true;
 		if (o instanceof TypeAtom) {
 			return this.name.equals(((TypeAtom) o).name) && this.representation.equals(((TypeAtom) o).representation);
 		}
@@ -315,28 +314,6 @@ public class TypeAtom extends TerminalType {
 	@Override
 	public Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
 		return this;
-	}
-
-	/**
-	 * Creates code to add conversion to global variable
-	 * 
-	 * @param fromType from type of conversion
-	 * @param toType to type of conversion
-	 * @param conversionCode code for conversion
-	 * @return String with code
-	 */
-	public static String addConversionToGlobalTable(TypeAtom fromType, TypeAtom toType, String conversionCode, String conversionCostCode) {
-		String code = ClojureHelper.rebindGlobalVariable(ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
-				ClojureHelper.applyClojureFunction("assoc",
-						ClojureCoreSymbols.atomicConversionMapClojureSymbol_full,
-						makeAtomicConversionRecord(
-								fromType, 
-								toType, 
-								ClojureHelper.addMetadata(
-										conversionCode,
-										Pair.of(TypeAtom.conversionCostCljMetaName, conversionCostCode)))));
-		
-		return code;
 	}
 
 	/**

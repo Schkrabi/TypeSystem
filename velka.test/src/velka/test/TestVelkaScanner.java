@@ -19,10 +19,9 @@ import velka.core.application.AbstractionApplication;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
+import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.langbase.Scanner;
 import velka.core.literal.LitBoolean;
-import velka.core.literal.LitComposite;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
@@ -39,7 +38,6 @@ class TestVelkaScanner extends VelkaTest {
 	private static Path scannedFilePath;
 	private static final String scannedFileContents = "42 true 42.0 foo\nbar";
 	private Environment env;
-	private TypeEnvironment typeEnv;
 
 	/**
 	 * @throws java.lang.Exception
@@ -63,8 +61,7 @@ class TestVelkaScanner extends VelkaTest {
 	 */
 	@BeforeEach
 	void setUp() throws Exception {
-		env = Environment.initTopLevelEnvironment();
-		typeEnv = TypeEnvironment.initBasicTypes(env);
+		env = TopLevelEnvironment.instantiate();
 	}
 
 	/**
@@ -77,7 +74,7 @@ class TestVelkaScanner extends VelkaTest {
 	@Test
 	void testConstructor() throws IOException, AppendableException {
 		Expression parsed = this.parseString("(construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\")").get(0);
-		Expression e = parsed.interpret(env, typeEnv);
+		Expression e = parsed.interpret(env);
 
 		assertTrue(e instanceof LitInteropObject);
 		var lc = (LitInteropObject)e;
@@ -95,7 +92,7 @@ class TestVelkaScanner extends VelkaTest {
 				new Tuple(new LitInteropObject(s, TypeAtom.TypeScannerNative)));
 		
 		assertAll(() ->
-			close.interpret(this.env, this.typeEnv));
+			close.interpret(this.env));
 		assertThrows(java.lang.IllegalStateException.class,
 				() -> s.nextLine());
 		s.close();
@@ -109,8 +106,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "line)",
 				new LitString("42 true 42.0 foo"),
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -126,7 +123,7 @@ class TestVelkaScanner extends VelkaTest {
 				Scanner.delimiterSymbol_out,
 				new Tuple(new LitInteropObject(s, TypeAtom.TypeScannerNative)));
 		
-		Expression rslt = delimiter.interpret(this.env, this.typeEnv);
+		Expression rslt = delimiter.interpret(this.env );
 		assertTrue(rslt instanceof LitString);
 		LitString rslt_str = (LitString)rslt;
 		assertEquals(s.delimiter().toString(), rslt_str.value);
@@ -147,8 +144,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "found)",
 				new LitString("foo"),
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -165,8 +162,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "found)",
 				new LitString("foo"),
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -183,8 +180,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				LitBoolean.TRUE,
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -201,8 +198,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				LitBoolean.FALSE,
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -219,8 +216,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				LitBoolean.FALSE,
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -237,8 +234,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				LitBoolean.TRUE,
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -255,8 +252,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				LitBoolean.TRUE,
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -273,8 +270,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				LitBoolean.TRUE,
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -291,8 +288,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				LitBoolean.TRUE,
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -309,8 +306,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				new LitString("42"),
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -327,8 +324,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				new LitString("42"),
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -346,8 +343,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				LitBoolean.TRUE,
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -365,8 +362,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				new LitDouble(42),
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -383,8 +380,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				new LitInteger(42),
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -401,8 +398,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				new LitInteger(10),
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -421,8 +418,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				new LitInteger(10),
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -441,8 +438,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				new LitString("true"),
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"
@@ -460,8 +457,8 @@ class TestVelkaScanner extends VelkaTest {
 				+ "(cls (scanner-native-close s)))"
 				+ "rslt)",
 				new LitInteger(8),
-				this.env,
-				this.typeEnv);
+				this.env
+				);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let* ((s (construct Scanner:Native \"" + this.pathToStr(scannedFilePath) + "\"))"

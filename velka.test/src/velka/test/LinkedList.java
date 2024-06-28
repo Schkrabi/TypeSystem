@@ -1,21 +1,5 @@
  package velka.test;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.junit.jupiter.api.Test;
-
-import velka.core.expression.Expression;
-import velka.core.langbase.JavaArrayList;
-import velka.core.langbase.JavaLinkedList;
-import velka.core.langbase.ListNative;
-import velka.core.literal.LitBoolean;
-import velka.core.literal.LitComposite;
-import velka.core.literal.LitInteger;
-import velka.core.literal.LitInteropObject;
-import velka.core.literal.LitString;
-
 class LinkedList extends VelkaTest {
 	
 //	@Test

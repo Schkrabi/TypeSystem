@@ -7,13 +7,12 @@ import java.util.List;
 
 import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Lambda;
-import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitComposite;
+import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
 import velka.types.Substitution;
@@ -23,6 +22,7 @@ import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
+import velka.util.CostAggregation;
 import velka.util.Pair;
 import velka.util.RomanNumbers;
 import velka.util.annotations.Description;
@@ -58,14 +58,14 @@ public final class ConversionOperators extends OperatorBank{
 	public static final Conversion IntNativeToIntRoman = new Conversion() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitInteger arg = (LitInteger) args.get(0);
 	
 			return new LitComposite(new LitString(RomanNumbers.int2roman(arg.value)), TypeAtom.TypeIntRoman);
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
+		public Pair<Type, Substitution> infer(Environment env) {
 			Type type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntRoman);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -76,7 +76,7 @@ public final class ConversionOperators extends OperatorBank{
 		}
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String arg = "_arg";
 			return ClojureHelper.fnHelper(
 					List.of(arg),
@@ -94,7 +94,7 @@ public final class ConversionOperators extends OperatorBank{
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitInteger(1));
+			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
 		}
 	
 	};
@@ -109,13 +109,13 @@ public final class ConversionOperators extends OperatorBank{
 	public static final Conversion IntNativeToIntString = new Conversion() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitInteger arg = (LitInteger) args.get(0);
 			return new LitComposite(new LitString(Long.toString(arg.value)), TypeAtom.TypeIntString);
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntString);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -126,7 +126,7 @@ public final class ConversionOperators extends OperatorBank{
 		}
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String arg = "_arg";
 			return ClojureHelper.fnHelper(
 					List.of(arg),
@@ -144,7 +144,7 @@ public final class ConversionOperators extends OperatorBank{
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitInteger(1));
+			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
 		}
 	
 	};
@@ -159,14 +159,14 @@ public final class ConversionOperators extends OperatorBank{
 	public static final Conversion IntRomanToIntNative = new Conversion() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitComposite arg = (LitComposite) args.get(0);
 			LitString strArg = (LitString) arg.value;
 			return new LitInteger(RomanNumbers.roman2int(strArg.value));
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -177,7 +177,7 @@ public final class ConversionOperators extends OperatorBank{
 		}
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String arg = "_arg";
 			return ClojureHelper.fnHelper(
 					List.of(arg),
@@ -195,7 +195,7 @@ public final class ConversionOperators extends OperatorBank{
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitInteger(1));
+			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
 		}
 	};
 	
@@ -209,7 +209,7 @@ public final class ConversionOperators extends OperatorBank{
 	public static final Conversion IntRomanToIntString = new Conversion() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitComposite arg = (LitComposite) args.get(0);
 			LitString strArg = (LitString) arg.value;
 			int value = RomanNumbers.roman2int(strArg.value);
@@ -217,7 +217,7 @@ public final class ConversionOperators extends OperatorBank{
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntString);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -228,7 +228,7 @@ public final class ConversionOperators extends OperatorBank{
 		}
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String arg = "_arg";
 			return ClojureHelper.fnHelper(
 					List.of(arg),
@@ -248,7 +248,7 @@ public final class ConversionOperators extends OperatorBank{
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitInteger(1));
+			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
 		}
 	
 	};
@@ -263,7 +263,7 @@ public final class ConversionOperators extends OperatorBank{
 	public static final Conversion IntStringToIntNative = new Conversion() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitComposite arg = (LitComposite) args.get(0);
 			LitString strArg = (LitString) arg.value;
 	
@@ -271,7 +271,7 @@ public final class ConversionOperators extends OperatorBank{
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -282,7 +282,7 @@ public final class ConversionOperators extends OperatorBank{
 		}
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String arg = "_arg";
 			return ClojureHelper.fnHelper(
 					List.of(arg),
@@ -300,7 +300,7 @@ public final class ConversionOperators extends OperatorBank{
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitInteger(1));
+			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
 		}
 	};
 	
@@ -314,7 +314,7 @@ public final class ConversionOperators extends OperatorBank{
 	public static final Conversion IntStringToIntRoman = new Conversion() {
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitComposite arg = (LitComposite) args.get(0);
 			LitString strArg = (LitString) arg.value;
 			int value = Integer.parseInt(strArg.value);
@@ -322,7 +322,7 @@ public final class ConversionOperators extends OperatorBank{
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), TypeAtom.TypeIntRoman);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -333,7 +333,7 @@ public final class ConversionOperators extends OperatorBank{
 		}
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String arg = "_arg";
 			return ClojureHelper.fnHelper(
 					List.of(arg),
@@ -353,7 +353,7 @@ public final class ConversionOperators extends OperatorBank{
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitInteger(1));
+			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
 		}
 	};
 
@@ -374,11 +374,6 @@ public final class ConversionOperators extends OperatorBank{
 	@Override
 	public Path getFileName() {
 		return VELKA_CLOJURE_CONVERSIONS_NAME;
-	}
-
-	@Override
-	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
-		//No types to initialize		
 	}
 	
 	private ConversionOperators() {}

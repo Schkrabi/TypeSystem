@@ -10,7 +10,6 @@ import velka.core.exceptions.InvalidNumberOfArgumentsException;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
@@ -49,9 +48,9 @@ public class AbstractionApplication extends Application {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression interpret(Environment env) throws AppendableException {
 		// Interpret the abstraction
-		Expression ifun = this.fun.interpret(env, typeEnv);
+		Expression ifun = this.fun.interpret(env);
 
 		if (!(ifun instanceof Abstraction)) {
 			throw new AppendableException(ifun.toString() + " is not an abstration");
@@ -59,19 +58,19 @@ public class AbstractionApplication extends Application {
 		Abstraction abst = (Abstraction) ifun;
 
 		// Interpret arguments
-		Expression intArgs = this.args.interpret(env, typeEnv);
+		Expression intArgs = this.args.interpret(env);
 		if(!(intArgs instanceof Tuple)) {
 			throw new AppendableException("Invalid argument expression " + intArgs.toString() + " in " + this.toString());
 		}
 		
 		Tuple iArgs = (Tuple)intArgs; 
-		Pair<Type, Substitution> iArgsInfered = iArgs.infer(env, typeEnv);
+		Pair<Type, Substitution> iArgsInfered = iArgs.infer(env);
 
 		// Select implementation to use (if applicable)
-		abst = abst.selectImplementation(iArgs, env, typeEnv);
+		abst = abst.selectImplementation(iArgs, env);
 
 		// Convert arguments to specific representations
-		Pair<Type, Substitution> abstInfered = abst.inferWithArgs(iArgs, env, typeEnv);
+		Pair<Type, Substitution> abstInfered = abst.inferWithArgs(iArgs, env);
 		Type abstArgsType = ((TypeArrow) abstInfered.first).ltype;
 
 		int expectedNumberOfArgs = ((TypeTuple) abstArgsType).size();
@@ -81,11 +80,11 @@ public class AbstractionApplication extends Application {
 			throw new InvalidNumberOfArgumentsException(expectedNumberOfArgs, iArgs, this);
 		}
 
-		Expression cArgs = iArgs.convert(abstArgsType, env, typeEnv);
-		Tuple cArgsTuple = (Tuple) cArgs.interpret(env, typeEnv);
+		Expression cArgs = iArgs.convert(abstArgsType, env);
+		Tuple cArgsTuple = (Tuple) cArgs.interpret(env);
 
 		// Finally evaluate application
-		return abst.substituteAndEvaluate(cArgsTuple, env, typeEnv);
+		return abst.substituteAndEvaluate(cArgsTuple, env);
 	}
 
 	/**
@@ -130,10 +129,10 @@ public class AbstractionApplication extends Application {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Pair<Type, Substitution> funInfered = this.fun.infer(env, typeEnv);
-			Pair<Type, Substitution> argsInfered = this.args.infer(env, typeEnv);
+			Pair<Type, Substitution> funInfered = this.fun.infer(env);
+			Pair<Type, Substitution> argsInfered = this.args.infer(env);
 
 			if (funInfered.first instanceof TypeArrow) {				
 				return AbstractionApplication.inferResultType(argsInfered.first, argsInfered.second,
@@ -186,10 +185,10 @@ public class AbstractionApplication extends Application {
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		String code = ClojureHelper.applyVelkaFunction_argsTuple(
-				this.fun.toClojureCode(env, typeEnv),
-				this.args.toClojureCode(env, typeEnv));
+				this.fun.toClojureCode(env),
+				this.args.toClojureCode(env));
 		
 		return code;
 	}
@@ -231,9 +230,9 @@ public class AbstractionApplication extends Application {
 	}
 
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression intprt = this.interpret(env, typeEnv);
-		return intprt.convert(to, env, typeEnv);
+		Expression intprt = this.interpret(env);
+		return intprt.convert(to, env);
 	}
 }

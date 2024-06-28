@@ -18,8 +18,7 @@ import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
-import velka.core.literal.LitInteger;
+import velka.core.literal.LitDouble;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.SubstitutionsCannotBeMergedException;
@@ -28,6 +27,7 @@ import velka.types.TypeArrow;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
+import velka.util.CostAggregation;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ThrowingFunction;
@@ -73,12 +73,12 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	public Expression interpret(final Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression interpret(final Environment env) throws AppendableException {
 		Map<Function, Expression> m = new TreeMap<Function, Expression>();
 		
 		for(Map.Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
-			Function f = (Function)e.getKey().interpret(env, typeEnv);
-			Expression r = e.getValue().interpret(env, typeEnv);
+			Function f = (Function)e.getKey().interpret(env);
+			Expression r = e.getValue().interpret(env);
 			
 			m.put(f, r);
 		}
@@ -87,7 +87,7 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		if(this.implementations.isEmpty()) {
 			Type t =  new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next()));
 			return new Pair<Type, Substitution>(t, Substitution.EMPTY);
@@ -121,13 +121,13 @@ public class ExtendedLambda extends Abstraction {
 			throw re;
 		}	
 		
-		return this.inferWithArgs(typeHolderArgs, env, typeEnv);
+		return this.inferWithArgs(typeHolderArgs, env);
 	}
 	
 	@Override
-	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env, TypeEnvironment typeEnv)
+	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env)
 			throws AppendableException {
-		return this.doInferWithArgs(args, env, env, typeEnv);
+		return this.doInferWithArgs(args, env, env);
 	}
 	
 	/**
@@ -140,12 +140,12 @@ public class ExtendedLambda extends Abstraction {
 	 * @throws AppendableException
 	 */
 	protected Pair<Type, Substitution> doInferWithArgs(Tuple args, Environment creationEnv,
-			Environment applicationEnvironment, TypeEnvironment typeEnv) throws AppendableException {
+			Environment applicationEnvironment) throws AppendableException {
 		try {
 			Set<Type> types = new TreeSet<Type>();
 			Substitution s = Substitution.EMPTY;
 			for (Lambda l : this.implementations.keySet()) {
-				Pair<Type, Substitution> p = l.doInferWithArgs(args, creationEnv, applicationEnvironment, typeEnv);
+				Pair<Type, Substitution> p = l.doInferWithArgs(args, creationEnv, applicationEnvironment);
 				types.add(p.first);
 				
 				Optional<Substitution> opt = s.merge(p.second);
@@ -236,9 +236,9 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		ExtendedFunction f = (ExtendedFunction) this.interpret(env, typeEnv);
-		return f.doSubstituteAndEvaluate(args, env, typeEnv);
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+		ExtendedFunction f = (ExtendedFunction) this.interpret(env);
+		return f.doSubstituteAndEvaluate(args, env);
 	}
 	
 	/**
@@ -262,7 +262,7 @@ public class ExtendedLambda extends Abstraction {
 	public static ExtendedLambda makeExtendedLambda(Collection<Lambda> implementations) throws AppendableException {
 		Map<Lambda, Expression> m = new TreeMap<Lambda, Expression>();
 		for(Lambda l : implementations) {
-			Expression costF = l.defaultCostFunction();
+			var costF = Lambda.constFun(l.args.size(), new LitDouble(CostAggregation.instance().defaultImplementationRank()));
 			m.put(l, costF);
 		}
 		
@@ -299,16 +299,16 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {				
+	protected String implementationsToClojure(Environment env) throws AppendableException {				
 		List<String> implCodes = new LinkedList<String>();
 		
 		for(Map.Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
 			Lambda l = e.getKey();
 			Expression ex = e.getValue();
 			
-			String implCode = l.toClojureFn(env, typeEnv);
-			String costFnCode = ex.toClojureCode(env, typeEnv);
-			var p = l.infer(env, typeEnv);
+			String implCode = l.toClojureFn(env);
+			String costFnCode = ex.toClojureCode(env);
+			var p = l.infer(env);
 			
 			String implWithCostCode = ClojureHelper.setCostAndType(
 					implCode, 
@@ -322,15 +322,14 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	public Abstraction selectImplementation(Tuple args, Environment env,
-			TypeEnvironment typeEnv) throws AppendableException {		
+	public Abstraction selectImplementation(Tuple args, Environment env) throws AppendableException {		
 		
 		Lambda bestImplementation = null;
-		long bestCost = Long.MAX_VALUE;
+		var bestCost = 0.d;
 		for(Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
-			var cost = this.implementationCost((Lambda)e.getKey(), (Abstraction)e.getValue(), args, env, typeEnv);
+			var cost = this.implementationCost((Lambda)e.getKey(), (Abstraction)e.getValue(), args, env);
 			if(cost.isPresent()) {
-				if(cost.get() < bestCost || bestImplementation == null ) {
+				if(cost.get() > bestCost || bestImplementation == null ) {
 					bestImplementation = e.getKey();
 					bestCost = cost.get();
 				}
@@ -341,23 +340,27 @@ public class ExtendedLambda extends Abstraction {
 	}
 	
 	/** Computes the cost of using implementation with given arguments */
-	private Optional<Long> implementationCost(Lambda impl, Abstraction cost, Tuple args, Environment env, TypeEnvironment typeEnv) {
+	private Optional<Double> implementationCost(Lambda impl, Abstraction cost, Tuple args, Environment env) {
 		try {
 			var costAppl = new AbstractionApplication(cost, args);
-			var implCost = costAppl.interpret(env, typeEnv);
-			var sum = ((LitInteger)implCost).value;
+			var implCost = costAppl.interpret(env);
+			if(!(implCost instanceof LitDouble)) {
+				throw new RuntimeException();
+			}
+			
+			var sum = ((LitDouble)implCost).value;
 			
 			var fpit = impl.argsType.iterator();
 			var ait = args.iterator();
 			while(fpit.hasNext()) {
 				var formalArgType = fpit.next();
 				var arg = ait.next();
-				var argType = arg.infer(env, typeEnv).first;
-				var ccost = typeEnv.conversionCost(argType, formalArgType, arg, env, typeEnv);
+				var argType = arg.infer(env).first;
+				var ccost = env.getTypeSystem().conversionCost(argType, formalArgType, arg, env);
 				
-				if(ccost.isEmpty()) return Optional.empty();
+				if(ccost == null) return Optional.empty();
 				
-				sum += ccost.get(); 
+				sum = CostAggregation.instance().aggregate(sum, ccost); 
 			}
 			
 			return Optional.of(sum);
@@ -367,7 +370,7 @@ public class ExtendedLambda extends Abstraction {
 	}
 
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
 		if(!(to instanceof TypeArrow)) {
 			throw new ConversionException(to, this);

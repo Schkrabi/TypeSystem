@@ -1,20 +1,6 @@
 // Generated from ./Velka.g4 by ANTLR 4.13.1
 package velka.parser.antlr;
 
-import velka.core.abstraction.*;
-import velka.core.application.*;
-import velka.core.expression.*;
-import velka.core.literal.*;
-import velka.types.*;
-import velka.util.NameGenerator;
-
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
-import java.util.Iterator;
-import java.util.ArrayList;
-import java.util.HashSet;
-
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -25,7 +11,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * which can be extended to create a listener which only needs to handle a subset
  * of the available methods.
  */
-@SuppressWarnings("CheckReturnValue")
 public class VelkaBaseListener implements VelkaListener {
 	/**
 	 * {@inheritDoc}

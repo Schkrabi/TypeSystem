@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 import velka.core.abstraction.Operator;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
+import velka.core.interpretation.TopLevelEnvironment;
 import velka.util.AppendableException;
 import velka.util.annotations.Description;
 import velka.util.annotations.Example;
@@ -410,9 +410,8 @@ public class LangbaseDocumentationGenerator {
 	 * @return Markdown code
 	 */
 	private String operatorDocType(Operator operator) throws AppendableException {
-		Environment env 		= Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		Type type = operator.infer(env, typeEnv).first;
+		Environment env 		= TopLevelEnvironment.instantiate();
+		Type type = operator.infer(env).first;
 		
 		return new StringBuilder()
 				.append("Type Signature:\n\n")

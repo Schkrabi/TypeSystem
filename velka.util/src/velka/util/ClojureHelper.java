@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -800,5 +799,29 @@ public class ClojureHelper {
 	
 	public static String binaryOperatorToFn(String clojureOperator) {
 		return wrapClojureOperatorToFn(2, clojureOperator);
+	}
+	
+	/** Creates clojure implementation of java interface */
+	public static String reify(Class<?> clazz, Collection<Pair<String, Pair<Collection<String>, String>>> implementations) {
+		var sb = new StringBuilder();
+		
+		for(var fun : implementations) {
+			var s = applyClojureFunction(
+					fun.first, 
+					clojureVectorHelper(fun.second.first),
+					fun.second.second);
+			sb.append(s);
+		}
+		
+		return applyClojureFunction(
+				"reify", 
+				clazz.getName(),
+				sb.toString());
+	}
+	
+	/** Creates clojure implementatio of java inteface*/
+	@SafeVarargs
+	public static String reify(Class<?> clazz, Pair<String, Pair<Collection<String>, String>> ...impls) {
+		return reify(clazz, List.of(impls));
 	}
 }

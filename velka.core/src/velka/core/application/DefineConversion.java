@@ -1,6 +1,9 @@
 package velka.core.application;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import velka.core.abstraction.Lambda;
@@ -8,8 +11,7 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
-import velka.core.literal.LitInteger;
+import velka.core.literal.LitDouble;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -17,6 +19,9 @@ import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.TypesDoesNotUnifyException;
 import velka.util.AppendableException;
+import velka.util.ClojureCoreSymbols;
+import velka.util.ClojureHelper;
+import velka.util.CostAggregation;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 
@@ -59,7 +64,7 @@ public class DefineConversion extends Expression {
 		this.to = toType;
 		this.args = args;
 		this.body = body;
-		this.cost = new Lambda(new Tuple(new Symbol(NameGenerator.next())), new TypeTuple(this.from), new LitInteger(1));
+		this.cost = new Lambda(new Tuple(new Symbol(NameGenerator.next())), new TypeTuple(this.from), new LitDouble(CostAggregation.instance().defaultConversionRank()));
 	}
 	
 	public DefineConversion(TypeAtom fromType, TypeAtom toType, Tuple args, Expression body, Expression cost) {
@@ -72,15 +77,52 @@ public class DefineConversion extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Lambda lambda = this.makeConversionLambda(env);
-		typeEnv.addConversion(this.from, this.to, lambda, this.cost);
+	public Expression interpret(Environment env) throws AppendableException {
+		final var lambda = this.makeConversionLambda(env);
+		final var me = this;
+		env.getTypeSystem().addConversion(this.from, this.to, 
+				new velka.types.typeSystem.IEvalueable() {
+
+					@Override
+					public Object evaluate(Collection<? extends Object> args, Object env) {
+						var eargs = new ArrayList<Expression>(args.size());
+						args.stream().forEach(o -> eargs.add((Expression)o));
+						
+						var appl = new AbstractionApplication(lambda, new Tuple(eargs));
+						try {
+							var eenv = (Environment)env;
+							
+							return appl.interpret(eenv);
+						} catch (AppendableException e) {
+							throw new RuntimeException(e);
+						}
+					}
+					
+				}, 
+				new velka.types.typeSystem.IEvalueable() {
+
+					@Override
+					public Object evaluate(Collection<? extends Object> args, Object env) {
+						var eargs = new ArrayList<Expression>(args.size());
+						args.stream().forEach(o -> eargs.add((Expression)o));
+						
+						var appl = new AbstractionApplication(me.cost, new Tuple(eargs));
+						try {
+							var eenv = (Environment)env;
+							
+							return appl.interpret(eenv);
+						} catch (AppendableException e) {
+							throw new RuntimeException(e);
+						}
+					}
+					
+				});
 		return Expression.EMPTY_EXPRESSION;
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> p = this.makeConversionLambda(env).infer(env, typeEnv);
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+		Pair<Type, Substitution> p = this.makeConversionLambda(env).infer(env);
 		TypeArrow type = (TypeArrow) p.first;
 		TypeTuple ttuple = new TypeTuple(Arrays.asList(this.from));
 		Optional<Substitution> left = Type.unifyTypes(type.ltype, ttuple);
@@ -93,17 +135,25 @@ public class DefineConversion extends Expression {
 			throw new TypesDoesNotUnifyException(type.rtype, this.to);
 		}
 		
-		return new Pair<Type, Substitution>(Expression.EMPTY_EXPRESSION.infer(env, typeEnv).first, Substitution.EMPTY);
+		return new Pair<Type, Substitution>(Expression.EMPTY_EXPRESSION.infer(env).first, Substitution.EMPTY);
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Lambda conversionLambda = this.makeConversionLambda(env);
-		typeEnv.addConversion(this.from, this.to, conversionLambda, this.cost);
-		
-		String code = TypeAtom.addConversionToGlobalTable(this.from, this.to,
-				conversionLambda.toClojureCode(env, typeEnv), this.cost.toClojureCode(env, typeEnv));
-
+	public String toClojureCode(Environment env) throws AppendableException {
+		final var lambda = this.makeConversionLambda(env);
+		final var arg = "_arg";
+		final var rhis = "_this";
+		final var cenv = "_env";
+		var code = ClojureHelper.applyClojureFunction(".addConversion", 
+				ClojureCoreSymbols.typeSystem_full,
+				this.from.clojureTypeRepresentation(),
+				this.to.clojureTypeRepresentation(),
+				ClojureHelper.reify(velka.types.typeSystem.IEvalueable.class, 
+						Pair.of("evaluate", Pair.of(List.of(rhis, arg, cenv), ClojureHelper.applyVelkaFunction_argsTuple(lambda.toClojureCode(env), 
+								arg)))),
+				ClojureHelper.reify(velka.types.typeSystem.IEvalueable.class, 
+						Pair.of("evaluate", Pair.of(List.of(rhis, arg, cenv), ClojureHelper.applyVelkaFunction_argsTuple(this.cost.toClojureCode(env), 
+								arg)))));
 		return code;
 	}
 
@@ -164,17 +214,17 @@ public class DefineConversion extends Expression {
 	 * @return true or false
 	 * @throws AppendableException if there is issue during inference of lambda
 	 */
-	public static boolean isLambdaValidConversion(Lambda lambda, TypeAtom from, TypeAtom to, Environment env, TypeEnvironment typeEnv)
+	public static boolean isLambdaValidConversion(Lambda lambda, TypeAtom from, TypeAtom to, Environment env)
 			throws AppendableException {
-		Pair<Type, Substitution> infered = lambda.infer(env, typeEnv);
+		Pair<Type, Substitution> infered = lambda.infer(env);
 		TypeArrow expected = new TypeArrow(new TypeTuple(Arrays.asList(from)), to);
 		return infered.first.equals(expected);
 	}
 
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env, typeEnv);
-		return e.convert(to, env, typeEnv);
+		Expression e = this.interpret(env);
+		return e.convert(to, env);
 	}
 }

@@ -3,7 +3,6 @@ package velka.core.application;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Type;
 import velka.util.AppendableException;
 
@@ -27,9 +26,9 @@ public abstract class SpecialFormApplication extends Application {
 	}
 	
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env, typeEnv);
-		return e.convert(to, env, typeEnv);
+		Expression e = this.interpret(env);
+		return e.convert(to, env);
 	}
 }

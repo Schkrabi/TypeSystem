@@ -25,7 +25,7 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
+import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
 import velka.core.literal.LitString;
@@ -176,15 +176,15 @@ class TestTypes {
 				new TypeVariable("b"),
 				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)));
 
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 
 		assertThrows(ConversionException.class,
 				() -> (new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)))
-						.convert(TypeAtom.TypeInt, env, typeEnv));
+						.convert(TypeAtom.TypeInt, env));
 		assertThrows(ConversionException.class,
 				() -> (new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)))
-						.convert(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString)), env, typeEnv));
+						.convert(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString)), env));
 
 		TestTypes.testApply(tuple,
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),
@@ -218,24 +218,23 @@ class TestTypes {
 		TestTypes.testConvertTo(typeArrow, Expression.EMPTY_EXPRESSION, new TypeVariable("c"),
 				Expression.EMPTY_EXPRESSION);
 
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 
 		Expression e = 
 				(new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
 						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Symbol("x")))
 					.convert(new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman), 
-							env, 
-							typeEnv);
+							env);
 
 		assertTrue(e instanceof Lambda);
 
-		Pair<Type, Substitution> p = e.infer(env, typeEnv);
+		Pair<Type, Substitution> p = e.infer(env);
 		assertEquals(p.first,
 				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman));
 
 		assertThrows(ConversionException.class,
-				() -> Expression.EMPTY_EXPRESSION.convert(TypeAtom.TypeInt, env, typeEnv));
+				() -> Expression.EMPTY_EXPRESSION.convert(TypeAtom.TypeInt, env));
 
 		TestTypes.testApply(new TypeArrow(TypeAtom.TypeBool, new TypeVariable("a")),
 				new Substitution(
@@ -295,17 +294,17 @@ class TestTypes {
 		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitComposite(new LitString("42"), TypeAtom.TypeIntString),
 				TypeAtom.TypeIntRoman, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman));
 
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 
 		assertThrows(ConversionException.class, 
-				() -> Expression.EMPTY_EXPRESSION.convert(new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt), env, typeEnv));
+				() -> Expression.EMPTY_EXPRESSION.convert(new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt), env));
 		assertThrows(ConversionException.class,
-				() -> Expression.EMPTY_EXPRESSION.convert(TypeAtom.TypeIntString, env, typeEnv));
+				() -> Expression.EMPTY_EXPRESSION.convert(TypeAtom.TypeIntString, env));
 		assertThrows(ConversionException.class,
 				() -> Expression.EMPTY_EXPRESSION.convert(
 						new TypeAtom(new TypeName("Test"), TypeRepresentation.STRING),
-						env, typeEnv));
+						env));
 
 		TestTypes.testApply(TypeAtom.TypeInt,
 				new Substitution(
@@ -509,11 +508,11 @@ class TestTypes {
 		assertNotNull(to);
 		assertNotNull(expected);
 
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 
 		Expression converted = 
-				from.convert(to, env, typeEnv).interpret(env, typeEnv);
+				from.convert(to, env).interpret(env);
 
 		assertEquals(converted, expected);
 	}

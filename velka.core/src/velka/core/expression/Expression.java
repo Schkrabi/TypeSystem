@@ -4,7 +4,6 @@ import velka.util.AppendableException;
 import velka.util.Pair;
 import velka.core.exceptions.ConversionException;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -25,7 +24,7 @@ public abstract class Expression implements Comparable<Expression>, IConvertable
 	 * @return Expression
 	 * @throws Exception
 	 */
-	public abstract Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	public abstract Expression interpret(Environment env) throws AppendableException;
 
 	/**
 	 * Infers type of expression and returns used substitutions
@@ -33,7 +32,7 @@ public abstract class Expression implements Comparable<Expression>, IConvertable
 	 * @return Pair of infered type and used substitution
 	 * @throws AppendableException
 	 */
-	public abstract Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	public abstract Pair<Type, Substitution> infer(Environment env) throws AppendableException;
 
 	@Override
 	public int compareTo(Expression other) {
@@ -46,7 +45,7 @@ public abstract class Expression implements Comparable<Expression>, IConvertable
 	 * @return string containing clojure expression
 	 * @throws AppendableException
 	 */
-	public abstract String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	public abstract String toClojureCode(Environment env) throws AppendableException;
 	
 	/**
 	 * Does the conversion logic
@@ -56,19 +55,19 @@ public abstract class Expression implements Comparable<Expression>, IConvertable
 	 * @return Expression
 	 * @throws AppendableException if conversion is invalid
 	 */
-	protected abstract Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	protected abstract Expression doConvert(Type from, Type to, Environment env) throws AppendableException;
 	
 	@Override
-	public Expression convert(Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression convert(Type to, Environment env) throws AppendableException {
 		if(to instanceof TypeVariable) {
 			return this;
 		}
-		Pair<Type, Substitution> p = this.infer(env, typeEnv);
+		Pair<Type, Substitution> p = this.infer(env);
 		
 		if(Type.unifyRepresentation(p.first, to).isPresent()) {
 			return this;
 		}
-		if(!typeEnv.canConvert(p.first, to)) {
+		if(!env.getTypeSystem().canConvert(p.first, to)) {
 			throw new ConversionException(to, this);
 		}
 		if(to instanceof RepresentationOr) {
@@ -80,12 +79,9 @@ public abstract class Expression implements Comparable<Expression>, IConvertable
 			throw new ConversionException(to, this);
 		}
 		
-		Expression e = this.doConvert(p.first, to, env, typeEnv);
+		Expression e = this.doConvert(p.first, to, env);
 		
-		Pair<Type, Substitution> q = e.infer(env, typeEnv);
-//		if(p.first.equals(q.first)) {
-//			return this;
-//		}
+		e.infer(env);
 		return e;
 	}
 
@@ -94,17 +90,17 @@ public abstract class Expression implements Comparable<Expression>, IConvertable
 	 */
 	public static final Expression EMPTY_EXPRESSION = new Expression() {
 		@Override
-		public Expression interpret(Environment env, TypeEnvironment typeEnv) {
+		public Expression interpret(Environment env) {
 			return this;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
+		public Pair<Type, Substitution> infer(Environment env) {
 			return new Pair<Type, Substitution>(TypeTuple.EMPTY_TUPLE, Substitution.EMPTY);
 		}
 
 		@Override
-		public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public String toClojureCode(Environment env) throws AppendableException {
 			return Type.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE);
 		}
 		
@@ -114,7 +110,7 @@ public abstract class Expression implements Comparable<Expression>, IConvertable
 		}
 
 		@Override
-		protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doConvert(Type from, Type to, Environment env) throws AppendableException {
 			if(!to.equals(TypeTuple.EMPTY_TUPLE)) {
 				throw new ConversionException(to, this);
 			}

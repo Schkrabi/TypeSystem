@@ -2,7 +2,6 @@ package velka.core.application;
 
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -38,8 +37,8 @@ public class InstanceOfRepresentation extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> infered = this.expression.interpret(env, typeEnv).infer(env, typeEnv);
+	public Expression interpret(Environment env) throws AppendableException {
+		Pair<Type, Substitution> infered = this.expression.interpret(env).infer(env);
 		
 		if(Type.unifyRepresentation(infered.first, this.type).isPresent()) {
 			return LitBoolean.TRUE;
@@ -48,16 +47,16 @@ public class InstanceOfRepresentation extends Expression {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> p = this.expression.infer(env, typeEnv);
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+		Pair<Type, Substitution> p = this.expression.infer(env);
 		return new Pair<Type, Substitution>(TypeAtom.TypeBoolNative, p.second);
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		String code = LitBoolean.clojureLit(
 				"(.isPresent (velka.types.Type/unifyRepresentation "
-				+ "(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " " + this.expression.toClojureCode(env, typeEnv) + ") "
+				+ "(" + ClojureCoreSymbols.getTypeClojureSymbol_full + " " + this.expression.toClojureCode(env) + ") "
 				+ this.type.clojureTypeRepresentation() + "))"); 
 				
 				return code;
@@ -95,10 +94,10 @@ public class InstanceOfRepresentation extends Expression {
 	}
 
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env, typeEnv);
-		return e.convert(to, env, typeEnv);
+		Expression e = this.interpret(env);
+		return e.convert(to, env);
 	}
 
 }

@@ -3,6 +3,7 @@ package velka.types;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +27,7 @@ import velka.util.ThrowingFunction;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class RepresentationOr extends Type {
+public class RepresentationOr extends Type implements Iterable<Type>{
 
 	/**
 	 * All types this Or is representing
@@ -214,6 +215,7 @@ public class RepresentationOr extends Type {
 
 	@Override
 	public boolean equals(Object other) {
+		if(this == other) return true;
 		if (!(other instanceof RepresentationOr)) {
 			return false;
 		}
@@ -336,5 +338,10 @@ public class RepresentationOr extends Type {
 		Set<Type> s = this.getRepresentations();
 		s.add(t);
 		return (RepresentationOr) RepresentationOr.makeRepresentationOr(s);
+	}
+
+	@Override
+	public Iterator<Type> iterator() {
+		return this.representations.iterator();
 	}
 }

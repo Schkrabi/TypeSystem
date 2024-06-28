@@ -19,8 +19,6 @@ import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
-import velka.core.langbase.Operators;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -67,7 +65,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
+	public Expression interpret(Environment env) {
 		return new Function(this.argsType, this.args, this.body, env);
 	}
 
@@ -100,15 +98,15 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		Tuple typeHolderArgs = new Tuple(this.argsType.stream().map(x -> new TypeHolder(x)).collect(Collectors.toList()));
-		return this.inferWithArgs(typeHolderArgs, env, typeEnv);
+		return this.inferWithArgs(typeHolderArgs, env);
 	}
 	
 	@Override
-	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env, TypeEnvironment typeEnv)
+	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env)
 			throws AppendableException {
-		return this.doInferWithArgs(args, env, env, typeEnv);
+		return this.doInferWithArgs(args, env, env);
 	}
 	
 	/**
@@ -161,9 +159,9 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	 * @return pair of inferred type and substitution
 	 * @throws AppendableException
 	 */
-	public Pair<Type, Substitution> doInferWithArgs(Tuple args, Environment creationEnv, Environment applicationEnvironment, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> doInferWithArgs(Tuple args, Environment creationEnv, Environment applicationEnvironment) throws AppendableException {
 		try {
-			Pair<Type, Substitution> argsInfered = args.infer(applicationEnvironment, typeEnv);
+			Pair<Type, Substitution> argsInfered = args.infer(applicationEnvironment);
 			
 			//First check if arguments are of valid types
 			if(!Type.unifyTypes(argsInfered.first, this.argsType).isPresent()) {
@@ -175,7 +173,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			Environment childEnv = ceS.first;
 			Substitution argsSubst = ceS.second;		
 			
-			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv, typeEnv);
+			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv);
 			Substitution s = argsSubst.compose(bodyInfered.second);
 			
 			Type argsType = this.argsType.apply(s);
@@ -199,7 +197,7 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	 * @throws AppendableException Thrown on unification error or when any argument
 	 *                             is not a variable
 	 */
-	protected String toClojureFn(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	protected String toClojureFn(Environment env) throws AppendableException {
 		List<String> fnArgs = new LinkedList<String>();
 		Iterator<Expression> i = this.args.iterator();
 		Iterator<Type> j = this.argsType.iterator();
@@ -214,10 +212,10 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 			Symbol v = (Symbol) e;
 			child.put(v, new TypeHolder(t));
 			
-			fnArgs.add(v.toClojureCode(env, typeEnv));
+			fnArgs.add(v.toClojureCode(env));
 		}
 		
-		String fn = ClojureHelper.fnHelper(fnArgs, this.body.toClojureCode(child, typeEnv));
+		String fn = ClojureHelper.fnHelper(fnArgs, this.body.toClojureCode(child));
 		
 		return fn;
 	}
@@ -263,9 +261,9 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Function f = (Function) this.interpret(env, typeEnv);
-		return f.doSubstituteAndEvaluate(args, env, typeEnv);
+	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+		Function f = (Function) this.interpret(env);
+		return f.doSubstituteAndEvaluate(args, env);
 	}
 
 	/**
@@ -280,41 +278,18 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	}
 
 	@Override
-	protected String implementationsToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		String code = this.toClojureFn(env, typeEnv);
+	protected String implementationsToClojure(Environment env) throws AppendableException {
+		String code = this.toClojureFn(env);
 		return code;
 	}
 
 	@Override
-	public Abstraction selectImplementation(Tuple args, Environment env,
-			TypeEnvironment typeEnv) throws AppendableException {
+	public Abstraction selectImplementation(Tuple args, Environment env) {
 		return this;
-	}
-	
-	/**
-	 * Creates default cost function for this lambda
-	 * @return a Lambda expression
-	 * @throws AppendableException if inference fails
-	 */
-	public Lambda defaultCostFunction() throws AppendableException {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		
-		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		TypeArrow type = (TypeArrow)p.first;
-		TypeTuple argsType = (TypeTuple)type.ltype;
-		
-		Lambda costFunction = new Lambda(
-				this.args,
-				(TypeTuple)argsType.removeRepresentationInformation(),
-				new AbstractionApplication(
-						Operators.ConversionCost,
-						new Tuple(this, this.args)));
-		return costFunction;
 	}
 
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	protected Expression doConvert(Type from, Type to, Environment env) throws AppendableException {
 		//Cannot convert into more general type
 		//	converting [Int:Native] -> Int:Native to [A] -> Int:Native is not possible
 		//	to should not contain any type variables.

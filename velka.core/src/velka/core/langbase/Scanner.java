@@ -8,15 +8,12 @@ import java.util.regex.Pattern;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Operator;
-import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.exceptions.FallThroughException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
-import velka.core.literal.LitComposite;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
@@ -65,7 +62,7 @@ public class Scanner extends OperatorBank{
 	public static final Constructor constructor = new Constructor() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String path = "_path";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(path),
@@ -83,7 +80,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			LitString filename = (LitString)args.get(0);
 			
@@ -99,7 +96,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeStringNative), TypeAtom.TypeScannerNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -121,7 +118,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator close = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -137,7 +134,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -148,7 +145,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeTuple.EMPTY_TUPLE);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -169,7 +166,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator nextLine = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -186,7 +183,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -198,7 +195,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeStringNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -221,7 +218,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator delimiter = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -240,7 +237,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -252,7 +249,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeStringNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -273,7 +270,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator findInLine = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String pattern = "_pattern";
 			String code = ClojureHelper.fnHelper(
@@ -292,7 +289,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -308,7 +305,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative, TypeAtom.TypeStringNative), TypeAtom.TypeStringNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -329,7 +326,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator findWithinHorizon = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String pattern = "_pattern";
 			String horizon = "_horizon";
@@ -350,7 +347,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -367,7 +364,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative, TypeAtom.TypeStringNative, TypeAtom.TypeIntNative), TypeAtom.TypeStringNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -388,7 +385,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator hasNext = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -405,7 +402,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -419,7 +416,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -440,7 +437,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator hasNextPattern = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String pattern = "_pattern";
 			String code = ClojureHelper.fnHelper(
@@ -459,7 +456,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -475,7 +472,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative, TypeAtom.TypeStringNative), TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -497,7 +494,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator hasNextBoolean = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -514,7 +511,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -528,7 +525,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -550,7 +547,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator hasNextDouble = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -567,7 +564,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -581,7 +578,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -602,7 +599,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator hasNextInt = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -619,7 +616,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -633,7 +630,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -655,7 +652,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator hasNextIntRadix = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String radix = "_radix";
 			String code = ClojureHelper.fnHelper(
@@ -674,7 +671,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -690,7 +687,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative, TypeAtom.TypeIntNative), TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -711,7 +708,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator hasNextLine = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -728,7 +725,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -743,7 +740,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -764,7 +761,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator next = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -781,7 +778,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -793,7 +790,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeStringNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -814,7 +811,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator nextPattern = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String pattern = "_pattern";
 			String code = ClojureHelper.fnHelper(
@@ -833,7 +830,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -847,7 +844,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative, TypeAtom.TypeStringNative), TypeAtom.TypeStringNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -868,7 +865,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator nextBool = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -885,7 +882,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -899,7 +896,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeBoolNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -921,7 +918,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator nextDouble = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -938,7 +935,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -950,7 +947,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeDoubleNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -972,7 +969,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator nextInt = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -989,7 +986,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1001,7 +998,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1022,7 +1019,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator radix = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -1039,7 +1036,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1051,7 +1048,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeIntNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1072,7 +1069,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator reset = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(scanner),
@@ -1088,7 +1085,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1100,7 +1097,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative), TypeAtom.TypeScannerNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1122,7 +1119,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator skip = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String pattern = "_pattern";
 			String code = ClojureHelper.fnHelper(
@@ -1140,7 +1137,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1154,7 +1151,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative, TypeAtom.TypeStringNative), TypeAtom.TypeScannerNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1177,7 +1174,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator useDelimiter = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String delimiter = "_delimiter";
 			String code = ClojureHelper.fnHelper(
@@ -1195,7 +1192,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1209,7 +1206,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative, TypeAtom.TypeStringNative), TypeAtom.TypeScannerNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1231,7 +1228,7 @@ public class Scanner extends OperatorBank{
 	public static final Operator useRadix = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String scanner = "_scanner";
 			String radix = "_radix";
 			String code = ClojureHelper.fnHelper(
@@ -1249,7 +1246,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
@@ -1263,7 +1260,7 @@ public class Scanner extends OperatorBank{
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeScannerNative, TypeAtom.TypeIntNative), TypeAtom.TypeScannerNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -1290,11 +1287,6 @@ public class Scanner extends OperatorBank{
 	@Override
 	public Path getFileName() {
 		return VELKA_CLOJURE_SCANNER_NAME;
-	}
-
-	@Override
-	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
-		typeEnv.addRepresentation(TypeAtom.TypeScannerNative);		
 	}
 	
 	private Scanner() {};

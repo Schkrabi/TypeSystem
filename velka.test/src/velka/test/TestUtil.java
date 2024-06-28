@@ -28,7 +28,7 @@ import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
+import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitInteger;
 import velka.types.TypeTuple;
@@ -57,11 +57,10 @@ class TestUtil {
 	@Test
 	@DisplayName("ClojureCodeGenerator")
 	public void testClojureCodeGeneratorBasic() throws IOException, Exception {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
 		assertAll(() -> new ClojureCodeGenerator(),
 				() -> ClojureCodeGenerator.ExpressionListToClojureCode(
-						Arrays.asList(new LitInteger(128), Expression.EMPTY_EXPRESSION, LitBoolean.TRUE), env, typeEnv));
+						Arrays.asList(new LitInteger(128), Expression.EMPTY_EXPRESSION, LitBoolean.TRUE), env));
 	}
 
 	@Test

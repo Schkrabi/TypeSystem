@@ -5,7 +5,6 @@ package velka.core.literal;
 
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -36,12 +35,12 @@ public class LitEnum extends Literal {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) {
+	public Expression interpret(Environment env) {
 		return this;
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
+	public Pair<Type, Substitution> infer(Environment env) {
 		return new Pair<Type, Substitution>(this.enumType, Substitution.EMPTY);
 	}
 
@@ -75,7 +74,7 @@ public class LitEnum extends Literal {
 	}
 
 	@Override
-	public String valueToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String valueToClojure(Environment env) throws AppendableException {
 		throw new AppendableException("Not Implemented");
 	}
 

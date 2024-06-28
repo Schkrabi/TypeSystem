@@ -4,21 +4,12 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import velka.clojure.ClojureCodeGenerator;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
-import velka.core.langbase.ConstructorOperators;
-import velka.core.langbase.ConversionOperators;
-import velka.core.langbase.JavaArrayList;
-import velka.core.langbase.JavaBitSet;
-import velka.core.langbase.JavaLinkedList;
-import velka.core.langbase.ListNative;
+import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.langbase.OperatorBank;
-import velka.core.langbase.Operators;
-import velka.core.langbase.Scanner;
 
 /**
  * Main entry point for testing
@@ -56,27 +47,26 @@ public class Main {
 	}
 	
 	private static void runMode(String mode, Path currentFolder, String fileArg) throws Exception {
-		Environment topLevel = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(topLevel);
-		Compiler.init(topLevel, typeEnv);
+		
+		Environment topLevel = TopLevelEnvironment.instantiate();
 		switch(mode) {
 		
 		case COMPILE:
-			Compiler.clojureCompile(Paths.get(fileArg), currentFolder.resolve(ClojureCodeGenerator.DEFAULT_FILENAME), topLevel, typeEnv);
+			Compiler.clojureCompile(Paths.get(fileArg), currentFolder.resolve(ClojureCodeGenerator.DEFAULT_FILENAME), topLevel);
 			break;
 		case PREPARE:
 			ClojureCodeGenerator.generateClojureProject(currentFolder);
 			break;
 		case BUILD:
 			ClojureCodeGenerator.generateClojureProject(currentFolder);
-			Compiler.clojureCompile(Paths.get(fileArg), currentFolder.resolve(ClojureCodeGenerator.DEFAULT_FILE_PROJECT_PATH), topLevel, typeEnv);
+			Compiler.clojureCompile(Paths.get(fileArg), currentFolder.resolve(ClojureCodeGenerator.DEFAULT_FILE_PROJECT_PATH), topLevel);
 			break;
 		case INTERPRET:
 			InputStream inStream = Files.newInputStream(Paths.get(fileArg));
-			Compiler.interpret(inStream, topLevel, typeEnv);
+			Compiler.interpret(inStream, topLevel);
 			break;
 		case REPL:
-			Compiler.repl(System.in, System.out, topLevel, typeEnv, true);
+			Compiler.repl(System.in, System.out, topLevel, true);
 			break;
 		case DOCUMENTATION:
 			LangbaseDocumentationGenerator.spitDocStatic(

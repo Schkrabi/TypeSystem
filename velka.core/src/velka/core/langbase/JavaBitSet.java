@@ -7,14 +7,11 @@ import java.util.BitSet;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Operator;
-import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
-import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
@@ -22,7 +19,6 @@ import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
-import velka.types.TypeName;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
@@ -62,7 +58,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Constructor constructor = new Constructor() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String code = ClojureHelper.fnHelper(
 							Arrays.asList(),
 							ClojureHelper.applyClojureFunction("java.util.BitSet."));
@@ -75,14 +71,14 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			Expression e = new LitInteropObject(new BitSet(), TypeAtom.TypeSetBitSet);
 			return e;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -102,7 +98,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Constructor nBitsConstructor = new Constructor() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String nbits = "_nbits";
 			String code = ClojureHelper.fnHelper(
 							Arrays.asList(nbits),
@@ -118,7 +114,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			LitInteger nbits = (LitInteger)args.get(0);
 			Expression e = new LitInteropObject(new BitSet((int) nbits.value), TypeAtom.TypeSetBitSet);
@@ -126,7 +122,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -157,7 +153,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator and = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set1 = "_set1";
 			String set2 = "_set2";
 			String code = ClojureHelper.fnHelper(
@@ -179,7 +175,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -196,7 +192,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeSetBitSet);
@@ -223,7 +219,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator andNot = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set1 = "_set1";
 			String set2 = "_set2";
 			String code = ClojureHelper.fnHelper(
@@ -245,7 +241,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -262,7 +258,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeSetBitSet);
@@ -287,7 +283,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator cardinality = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
@@ -304,7 +300,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set = (LitInteropObject)args.get(0);
@@ -317,7 +313,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeIntNative);
@@ -342,7 +338,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator clear = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String code =
 					ClojureHelper.fnHelper(
@@ -363,7 +359,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set = (LitInteropObject)args.get(0);
@@ -373,7 +369,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet), TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -396,7 +392,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator clearBitIndex = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String bitIndex = "_bit-index";
 			String code = ClojureHelper.fnHelper(
@@ -418,7 +414,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set = (LitInteropObject)args.get(0);
@@ -429,7 +425,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeSetBitSet);
@@ -454,7 +450,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator clearInterval = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String fromIndex = "_fromIndex";
 			String toIndex = "_toIndex";
@@ -478,7 +474,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set = (LitInteropObject)args.get(0);
@@ -490,7 +486,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
 					TypeAtom.TypeSetBitSet);
@@ -515,7 +511,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator clone = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
@@ -531,7 +527,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set = (LitInteropObject)args.get(0);
@@ -540,7 +536,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeSetBitSet);
@@ -568,7 +564,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator equals = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set1 = "_set1";
 			String set2 = "_set2";
 			String code = ClojureHelper.fnHelper(
@@ -587,7 +583,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -602,7 +598,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeBoolNative);
@@ -626,7 +622,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator flip = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String bitIndex = "_bitIndex";
 			String code = ClojureHelper.fnHelper(
@@ -648,7 +644,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set = (LitInteropObject)args.get(0);
@@ -661,7 +657,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeSetBitSet);
@@ -685,7 +681,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator flipInterval = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String fromIndex = "_fromIndex";
 			String toIndex = "_toIndex";
@@ -709,7 +705,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set = (LitInteropObject)args.get(0);
@@ -723,7 +719,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
 					TypeAtom.TypeSetBitSet);
@@ -748,7 +744,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator get = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String index = "_index";
 			String code = ClojureHelper.fnHelper(
@@ -767,7 +763,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set = (LitInteropObject)args.get(0);
@@ -778,7 +774,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeBoolNative);
@@ -803,7 +799,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator getInterval = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String fromIndex = "_fromIndex";
 			String toIndex = "_toIndex";
@@ -823,7 +819,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set = (LitInteropObject)args.get(0);
@@ -836,7 +832,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
 					TypeAtom.TypeSetBitSet);
@@ -863,7 +859,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator intersects = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set1 = "_set1";
 			String set2 = "_set2";
 			String code = ClojureHelper.fnHelper(
@@ -882,7 +878,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -897,7 +893,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeSetBitSet);
@@ -923,7 +919,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator isEmpty = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
@@ -940,7 +936,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -950,7 +946,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeBoolNative);
@@ -975,7 +971,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator length = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
@@ -992,7 +988,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1002,7 +998,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeIntNative);
@@ -1025,7 +1021,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator nextClearBit = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String fromIndex = "_fromIndex";
 			String code = ClojureHelper.fnHelper(
@@ -1044,7 +1040,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1056,7 +1052,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
@@ -1079,7 +1075,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator nextSetBit = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String fromIndex = "_fromIndex";
 			String code = ClojureHelper.fnHelper(
@@ -1098,7 +1094,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1110,7 +1106,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
@@ -1137,7 +1133,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator or = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set1 = "_set1";
 			String set2 = "_set2";
 			String code = ClojureHelper.fnHelper(
@@ -1159,7 +1155,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1176,7 +1172,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeSetBitSet);
@@ -1199,7 +1195,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator previousClearBit = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String fromIndex = "_fromIndex";
 			String code = ClojureHelper.fnHelper(
@@ -1218,7 +1214,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1230,7 +1226,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
@@ -1253,7 +1249,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator previousSetBit = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String fromIndex = "_fromIndex";
 			String code = ClojureHelper.fnHelper(
@@ -1272,7 +1268,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1284,7 +1280,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeIntNative);
@@ -1308,7 +1304,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator set = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String bitIndex = "_bitIndex";
 			String code = ClojureHelper.fnHelper(
@@ -1330,7 +1326,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1343,7 +1339,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
 					TypeAtom.TypeSetBitSet);
@@ -1367,7 +1363,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator setValue = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String bitIndex = "_bitIndex";
 			String value = "_value";
@@ -1391,7 +1387,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1405,7 +1401,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
 					TypeAtom.TypeSetBitSet);
@@ -1429,7 +1425,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator setInterval = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String fromIndex = "_fromIndex";
 			String toIndex = "_toIndex";
@@ -1453,7 +1449,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1467,7 +1463,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
 					TypeAtom.TypeSetBitSet);
@@ -1491,7 +1487,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator setIntervalValue = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String fromIndex = "_fromIndex";
 			String toIndex = "_toIndex";
@@ -1517,7 +1513,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1533,7 +1529,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
 					TypeAtom.TypeSetBitSet);
@@ -1558,7 +1554,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator size = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
@@ -1575,7 +1571,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1585,7 +1581,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeIntNative);
@@ -1610,7 +1606,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator str = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set = "_set";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(set),
@@ -1627,7 +1623,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1637,7 +1633,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeStringNative);
@@ -1664,7 +1660,7 @@ public class JavaBitSet extends OperatorBank {
 	public static final Operator xor = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String set1 = "_set1";
 			String set2 = "_set2";
 			String code = ClojureHelper.fnHelper(
@@ -1686,7 +1682,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject set1 = (LitInteropObject)args.get(0);
@@ -1703,7 +1699,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
 					TypeAtom.TypeSetBitSet);
@@ -1733,12 +1729,6 @@ public class JavaBitSet extends OperatorBank {
 	@Override
 	public Path getFileName() {
 		return VELKA_CLOJURE_BITSET_NAME;
-	}
-
-	@Override
-	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
-		typeEnv.addType(TypeName.SET);
-		typeEnv.addRepresentation(TypeAtom.TypeSetBitSet);		
 	}
 	
 	private JavaBitSet() {}

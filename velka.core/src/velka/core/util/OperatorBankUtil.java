@@ -12,14 +12,7 @@ import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Operator;
 import velka.core.expression.Symbol;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
-import velka.types.Substitution;
-import velka.types.Type;
-import velka.types.TypeArrow;
-import velka.types.TypeAtom;
-import velka.types.TypeTuple;
 import velka.util.AppendableException;
-import velka.util.Pair;
 import velka.util.annotations.VelkaConstructor;
 import velka.util.annotations.VelkaConversion;
 import velka.util.annotations.VelkaOperator;
@@ -48,6 +41,7 @@ public class OperatorBankUtil {
 	 * @throws IllegalArgumentException if operator is badly annotated
 	 * @throws IllegalAccessException if operator is badly annotated
 	 */
+	@SuppressWarnings("unchecked")
 	private static <T extends Operator> List<T> getAnnotatedOperators(Class<?> operatorBank, Class<? extends Annotation> annotation) throws IllegalArgumentException, IllegalAccessException {
 		List<Field> fields = 
 				Arrays.asList(operatorBank.getFields())
@@ -70,7 +64,7 @@ public class OperatorBankUtil {
 	 * @throws IllegalArgumentException if operator is badly annotated
 	 * @throws IllegalAccessException if operator is badly annotated
 	 */
-	public static List<Constructor> getOperators(Class<?> clazz) throws IllegalArgumentException, IllegalAccessException {
+	public static List<Operator> getOperators(Class<?> clazz) throws IllegalArgumentException, IllegalAccessException {
 		return getAnnotatedOperators(clazz, VelkaOperator.class);
 	}
 	
@@ -81,7 +75,7 @@ public class OperatorBankUtil {
 	 * @throws IllegalArgumentException if operator is badly annotated
 	 * @throws IllegalAccessException if operator is badly annotated
 	 */
-	public static List<Operator> getConstructors(Class<?> clazz) throws IllegalArgumentException, IllegalAccessException {
+	public static List<Constructor> getConstructors(Class<?> clazz) throws IllegalArgumentException, IllegalAccessException {
 		return getAnnotatedOperators(clazz, VelkaConstructor.class);
 	}
 	
@@ -121,34 +115,7 @@ public class OperatorBankUtil {
 	 * @return Clojure Code
 	 * @throws AppendableException If conversion is badly defined
 	 */
-	public static String conversionDefinition(Conversion conversion, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> p = conversion.infer(env, typeEnv);
-		
-		if(!(p.first instanceof TypeArrow)) {
-			throw new AppendableException("Conversion " + conversion.toString() + " does not infer to TypeArrow.");
-		}
-		TypeArrow ta = (TypeArrow)p.first;
-		
-		if(!(ta.rtype instanceof TypeAtom)) {
-			throw new AppendableException("Conversion " + conversion.toString() + " must convert to typeAtom, got " + ta.rtype.toString());
-		}
-		
-		if(!(ta.ltype instanceof TypeTuple)) {
-			throw new AppendableException("Conversion " + conversion.toString() + " ltype of abstraction must always be a type tuple, got " + ta.ltype.toString()); 
-		}
-		
-		TypeTuple tt = (TypeTuple)ta.ltype;
-		if(tt.size() != 1) {
-			throw new AppendableException("Conversion " + conversion.toString() + " only one argument allowed on conversion, got " + tt.toString());
-		}
-		
-		if(!(tt.get(0) instanceof TypeAtom)) {
-			throw new AppendableException("Conversion " + conversion.toString() + " must convert from typeAtom, got " + tt.get(0).toString());
-		}
-		
-		TypeAtom from = (TypeAtom)tt.get(0);
-		TypeAtom to = (TypeAtom)ta.rtype;
-		
-		return TypeAtom.addConversionToGlobalTable(from, to, conversion.toClojureCode(env, typeEnv), conversion.cost().toClojureCode(env, typeEnv));
+	public static String conversionDefinition(Conversion conversion, Environment env) throws AppendableException {		
+		return conversion.toClojureCode(env);
 	}
 }

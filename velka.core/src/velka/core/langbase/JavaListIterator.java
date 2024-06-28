@@ -6,21 +6,17 @@ import java.util.Arrays;
 import java.util.ListIterator;
 
 import velka.core.abstraction.Operator;
-import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
-import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
-import velka.types.TypeName;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.AppendableException;
@@ -51,7 +47,7 @@ public class JavaListIterator extends OperatorBank {
 	public static final Operator iteratorAdd = new Operator() {
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String listIt = "_list-iterator";
 			String element = "_element";
 			String code = ClojureHelper.fnHelper(
@@ -73,7 +69,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject it_io = (LitInteropObject)args.get(0);
@@ -90,7 +86,7 @@ public class JavaListIterator extends OperatorBank {
 		
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListIterator, A),
@@ -115,7 +111,7 @@ public class JavaListIterator extends OperatorBank {
 	public static final Operator iteratorHasNext = new Operator() {
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String it = "_iterator";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(it),
@@ -132,7 +128,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject it_io = (LitInteropObject)args.get(0);
@@ -143,7 +139,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListIterator),
 					TypeAtom.TypeBoolNative);
@@ -167,7 +163,7 @@ public class JavaListIterator extends OperatorBank {
 	public static final Operator iteratorHasPrevious = new Operator() {
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String it = "_iterator";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(it),
@@ -184,7 +180,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject it_io = (LitInteropObject)args.get(0);
@@ -195,7 +191,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListIterator),
 					TypeAtom.TypeBoolNative);
@@ -219,7 +215,7 @@ public class JavaListIterator extends OperatorBank {
 	public static final Operator iteratorNext = new Operator() {
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String it = "_iterator";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(it),
@@ -235,7 +231,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject it_io = (LitInteropObject)args.get(0);
@@ -245,7 +241,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListIterator),
@@ -270,7 +266,7 @@ public class JavaListIterator extends OperatorBank {
 	public static final Operator iteratorNextIndex = new Operator() {
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String it = "_iterator";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(it),
@@ -287,7 +283,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject it_io = (LitInteropObject)args.get(0);
@@ -299,7 +295,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListIterator),
 					TypeAtom.TypeIntNative);
@@ -323,7 +319,7 @@ public class JavaListIterator extends OperatorBank {
 	public static final Operator iteratorPrevious = new Operator() {
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String it = "_iterator";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(it),
@@ -339,7 +335,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject it_io = (LitInteropObject)args.get(0);
@@ -349,7 +345,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListIterator),
@@ -374,7 +370,7 @@ public class JavaListIterator extends OperatorBank {
 	public static final Operator iteratorPreviousIndex = new Operator() {
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String it = "_iterator";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(it),
@@ -391,7 +387,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject it_io = (LitInteropObject)args.get(0);
@@ -403,7 +399,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListIterator),
 					TypeAtom.TypeIntNative);
@@ -427,7 +423,7 @@ public class JavaListIterator extends OperatorBank {
 	public static final Operator iteratorRemove = new Operator() {
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String it = "_iterator";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(it),
@@ -447,7 +443,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject it_io = (LitInteropObject)args.get(0);
@@ -460,7 +456,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListIterator),
 					TypeAtom.TypeListIterator);
@@ -485,7 +481,7 @@ public class JavaListIterator extends OperatorBank {
 	public static final Operator iteratorSet = new Operator() {
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String it = "_iterator";
 			String element = "_element";
 			String code = ClojureHelper.fnHelper(
@@ -507,7 +503,7 @@ public class JavaListIterator extends OperatorBank {
 		}
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject it_io = (LitInteropObject)args.get(0);
@@ -522,7 +518,7 @@ public class JavaListIterator extends OperatorBank {
 		}		
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListIterator, A),
@@ -553,11 +549,6 @@ public class JavaListIterator extends OperatorBank {
 	@Override
 	public Path getFileName() {
 		return FILE_NAME;
-	}
-
-	@Override
-	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
-		typeEnv.addRepresentation(TypeAtom.TypeListIterator);
 	}
 	
 	private static JavaListIterator instance = null;

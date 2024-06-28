@@ -5,7 +5,6 @@ package velka.core.expression;
 
 import velka.core.exceptions.ConversionException;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.util.AppendableException;
@@ -46,7 +45,7 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	 * @see expression.Expression#interpret(interpretation.Environment)
 	 */
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression interpret(Environment env) throws AppendableException {
 		if (this.placeholderOf == null || !env.containsVariable(this.placeholderOf)) {
 			throw new AppendableException(this.getClass().getName() + " is not to be interpreted!");
 		}
@@ -55,9 +54,9 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 			if (env.isTopLevel()) {
 				throw new AppendableException(this.getClass().getName() + " is not to be interpreted!");
 			}
-			return this.placeholderOf.interpret(env.parent, typeEnv);
+			return this.placeholderOf.interpret(env.parent);
 		}
-		return e.interpret(env, typeEnv);
+		return e.interpret(env);
 	}
 
 	/*
@@ -66,12 +65,12 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	 * @see expression.Expression#infer(interpretation.Environment)
 	 */
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) {
+	public Pair<Type, Substitution> infer(Environment env) {
 		return new Pair<Type, Substitution>(this.type, Substitution.EMPTY);
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		throw new AppendableException(this.getClass().getName() + " is not to be converted to Clojure!");
 	}
 
@@ -102,7 +101,7 @@ public final class TypeHolder extends Expression implements Comparable<Expressio
 	}
 
 	@Override
-	public Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression doConvert(Type from, Type to, Environment env) throws AppendableException {
 		throw new ConversionException(to, this);
 	}
 }

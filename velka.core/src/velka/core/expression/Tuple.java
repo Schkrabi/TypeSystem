@@ -18,7 +18,6 @@ import velka.util.Pair;
 import velka.util.ThrowingFunction;
 import velka.core.exceptions.ConversionException;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
@@ -30,7 +29,7 @@ import velka.types.TypeTuple;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class Tuple extends Expression implements Iterable<Expression> {
+public class Tuple extends Expression implements Iterable<Expression>, Collection<Expression> {
 
 	/**
 	 * Values of the tuple
@@ -89,11 +88,11 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression interpret(Environment env) throws AppendableException {
 		List<Expression> vls = new LinkedList<Expression>();
 
 		for (Expression e : this) {
-			vls.add(e.interpret(env, typeEnv));
+			vls.add(e.interpret(env));
 		}
 		return new Tuple(vls);
 	}
@@ -114,13 +113,13 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
 			Substitution s = Substitution.EMPTY;
 			List<Type> types = new LinkedList<Type>();
 
 			for (Expression e : this) {
-				Pair<Type, Substitution> infered = e.infer(env, typeEnv);
+				Pair<Type, Substitution> infered = e.infer(env);
 				types.add(infered.first);
 				
 				Optional<Substitution> mergeRslt = s.merge(infered.second);
@@ -145,10 +144,10 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public String toClojureCode(Environment env) throws AppendableException {
 		List<String> members = null;
 		try {
-			members = this.stream().map(ThrowingFunction.wrapper(e -> e.toClojureCode(env, typeEnv))).collect(Collectors.toList());
+			members = this.stream().map(ThrowingFunction.wrapper(e -> e.toClojureCode(env))).collect(Collectors.toList());
 		}catch(RuntimeException re) {
 			if(re.getCause() instanceof AppendableException) {
 				AppendableException ae = (AppendableException)re.getCause();
@@ -232,7 +231,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	public static final String EMPTY_TUPLE_CLOJURE = ClojureHelper.tupleHelper();
 
 	@Override
-	public Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression doConvert(Type from, Type to, Environment env) throws AppendableException {
 		if(!(to instanceof TypeTuple)) {
 			throw new ConversionException(to, this);
 		}
@@ -248,7 +247,7 @@ public class Tuple extends Expression implements Iterable<Expression> {
 		while(it.hasNext()) {
 			Expression e = it.next();
 			Type t = it_to.next();
-			Expression c = e.convert(t, env, typeEnv);
+			Expression c = e.convert(t, env);
 			l.add(c);
 		}
 		return new Tuple(l);
@@ -257,5 +256,55 @@ public class Tuple extends Expression implements Iterable<Expression> {
 	/** Creates new instance of an array with elements of the tuple */
 	public Expression[] toArray() {
 		return this.values.toArray(Expression[]::new);
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return this.values.isEmpty();
+	}
+
+	@Override
+	public boolean contains(Object o) {
+		return this.values.contains(o);
+	}
+
+	@Override
+	public <T> T[] toArray(T[] a) {
+		return this.values.toArray(a);
+	}
+
+	@Override
+	public boolean add(Expression e) {
+		throw new RuntimeException("Cannot add to tuple");
+	}
+
+	@Override
+	public boolean remove(Object o) {
+		throw new RuntimeException("cannot remove from tuple");
+	}
+
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		return this.values.containsAll(c);
+	}
+
+	@Override
+	public boolean addAll(Collection<? extends Expression> c) {
+		throw new RuntimeException("Cannot add all to tuple");
+	}
+
+	@Override
+	public boolean removeAll(Collection<?> c) {
+		throw new RuntimeException("cannot remove all from tuple");
+	}
+
+	@Override
+	public boolean retainAll(Collection<?> c) {
+		throw new RuntimeException("Cannot retainAll from tuple");
+	}
+
+	@Override
+	public void clear() {
+		throw new RuntimeException("cannot clear tuple");		
 	}
 }

@@ -1,9 +1,10 @@
 package velka.core.literal;
 
+import java.util.List;
+
 import velka.core.exceptions.ConversionException;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -20,9 +21,9 @@ import velka.util.Pair;
 public abstract class Literal extends Expression {
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> p = this.infer(env, typeEnv);
-		return clojureValueToClojureLiteral(this.valueToClojure(env, typeEnv), p.first);
+	public String toClojureCode(Environment env) throws AppendableException {
+		Pair<Type, Substitution> p = this.infer(env);
+		return clojureValueToClojureLiteral(this.valueToClojure(env), p.first);
 	}
 
 	/**
@@ -31,7 +32,7 @@ public abstract class Literal extends Expression {
 	 * @return String with clojure code
 	 * @throws AppendableException if anything goes wrong during compilation
 	 */
-	protected abstract String valueToClojure(Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	protected abstract String valueToClojure(Environment env) throws AppendableException;
 	
 	/**
 	 * Creates code for literal with metadata type in clojure
@@ -44,12 +45,12 @@ public abstract class Literal extends Expression {
 	}
 	
 	@Override
-	public Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	public Expression doConvert(Type from, Type to, Environment env) throws AppendableException {
 		if(!(to instanceof TypeAtom)) {
 			throw new ConversionException(to, this);
 		}		
 		TypeAtom to_typeAtom = (TypeAtom)to;
-		Pair<Type, Substitution> p = this.infer(env, typeEnv);
+		Pair<Type, Substitution> p = this.infer(env);
 		TypeAtom myType = (TypeAtom)p.first;
 		
 		if(!TypeAtom.isSameBasicType(myType, to_typeAtom)) {
@@ -59,9 +60,13 @@ public abstract class Literal extends Expression {
 			return this;
 		}
 		
-		Expression e = typeEnv.convertTo(this, myType, to_typeAtom);
+		var o = env.getTypeSystem().convert(myType, to_typeAtom, List.of(this), env);
 		
-		return e.interpret(env, typeEnv);
+		if(o instanceof Expression e) {
+			return e;
+		}
+		
+		throw new RuntimeException("Invalid conversion");
 	}
 	
 	public static Object literalToObject(Expression e) {

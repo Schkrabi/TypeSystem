@@ -31,7 +31,7 @@ import velka.core.application.AbstractionApplication;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
+import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.langbase.ConstructorOperators;
 import velka.core.langbase.ConversionOperators;
 import velka.core.langbase.JavaArrayList;
@@ -112,13 +112,13 @@ public class VelkaTest {
 	 * @param typeEnv type environment
 	 * @throws AppendableException
 	 */
-	protected void assertInterpretedStringEquals(String code, Expression expected, Environment env, TypeEnvironment typeEnv)
+	protected void assertInterpretedStringEquals(String code, Expression expected, Environment env)
 			throws AppendableException {
 				Expression last = null;
 				for (Expression e : this.parseString(code)) {
 					@SuppressWarnings("unused")
-					Pair<Type, Substitution> p = e.infer(env, typeEnv);
-					last = e.interpret(env, typeEnv);
+					Pair<Type, Substitution> p = e.infer(env);
+					last = e.interpret(env);
 				}
 			
 				assertEquals(expected, last);
@@ -132,12 +132,12 @@ public class VelkaTest {
 	 * @return
 	 * @throws AppendableException
 	 */
-	private String compileExpressionsToClojure(List<Expression> l, Environment env, TypeEnvironment typeEnv)
+	private String compileExpressionsToClojure(List<Expression> l, Environment env)
 			throws AppendableException {
 				StringBuilder s = new StringBuilder();
 				Iterator<Expression> i = l.iterator();
 				while (i.hasNext()) {
-					s.append(i.next().toClojureCode(env, typeEnv));
+					s.append(i.next().toClojureCode(env));
 					if (i.hasNext()) {
 						s.append('\n');
 					}
@@ -145,39 +145,39 @@ public class VelkaTest {
 				return s.toString();
 			}
 
-	private String compileToClojure(String code, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+	private String compileToClojure(String code, Environment env) throws AppendableException {
 		List<Expression> l = this.parseString(code);
-		return compileExpressionsToClojure(l, env, typeEnv);
+		return compileExpressionsToClojure(l, env);
 	}
 
 	@SuppressWarnings("unused")
-	private void assertCompiledExpressionEquals(Expression e, String expected, Environment env, TypeEnvironment typeEnv)
+	private void assertCompiledExpressionEquals(Expression e, String expected, Environment env)
 			throws AppendableException {
 				List<Expression> l = new LinkedList<Expression>();
 				l.add(e);
-				String s = this.compileExpressionsToClojure(l, env, typeEnv);
+				String s = this.compileExpressionsToClojure(l, env);
 				assertEquals(expected, s);
 			}
 
-	protected void assertCompiledCodeEquals(String code, String expected, Environment env, TypeEnvironment typeEnv)
+	protected void assertCompiledCodeEquals(String code, String expected, Environment env)
 			throws AppendableException {
-				String s = this.compileToClojure(code, env, typeEnv);
+				String s = this.compileToClojure(code, env);
 			
 				assertEquals(expected, s);
 			}
 
 	@SuppressWarnings("unused")
-	private void assertCompiledCodeMatch(String code, String regex, Environment env, TypeEnvironment typeEnv)
+	private void assertCompiledCodeMatch(String code, String regex, Environment env)
 			throws AppendableException {
-				String s = this.compileToClojure(code, env, typeEnv);
+				String s = this.compileToClojure(code, env);
 				if (!s.matches(regex)) {
 					fail("Clojure compilation test failed, compiling " + code + " do not match " + regex + " got "
 							+ s.toString());
 				}
 			}
 
-	protected void assertCompile(String code, Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		this.compileToClojure(code, env, typeEnv);
+	protected void assertCompile(String code, Environment env) throws AppendableException {
+		this.compileToClojure(code, env);
 	}
 
 	protected void assertIntprtAndCompPrintSameValues(String code) throws Exception {
@@ -186,26 +186,24 @@ public class VelkaTest {
 	}
 
 	protected void assertIntprtAndCompPrintSameValues(List<Expression> in) throws Exception {
-		Environment intpEnv = Environment.initTopLevelEnvironment();
-		TypeEnvironment intpTypeEnv = TypeEnvironment.initBasicTypes(intpEnv);
+		Environment intpEnv = TopLevelEnvironment.instantiate();
 	
-		String interpretationPrintOut = interpretationPrint(in, intpEnv, intpTypeEnv);
+		String interpretationPrintOut = interpretationPrint(in, intpEnv);
 	
-		Environment cmplEnv = Environment.initTopLevelEnvironment();
-		TypeEnvironment cmplTypeEnv = TypeEnvironment.initBasicTypes(cmplEnv);
+		Environment cmplEnv = TopLevelEnvironment.instantiate();
 	
-		String compilationPrintOut = clojureCompilationResult(in, cmplEnv, cmplTypeEnv);
+		String compilationPrintOut = clojureCompilationResult(in, cmplEnv);
 	
 		assertEquals(interpretationPrintOut, compilationPrintOut);
 	}
 
-	private String interpretationPrint(List<Expression> in, Environment env, TypeEnvironment typeEnv) throws Exception {
+	private String interpretationPrint(List<Expression> in, Environment env) throws Exception {
 		PrintStream stdOut = System.out;
 		ByteArrayOutputStream tmp = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(tmp));
 	
 		@SuppressWarnings("unused")
-		List<Expression> rslt = velka.compiler.Compiler.eval(in, env, typeEnv);
+		List<Expression> rslt = velka.compiler.Compiler.eval(in, env);
 	
 		String result = tmp.toString();
 		System.setOut(stdOut);
@@ -262,7 +260,7 @@ public class VelkaTest {
 				pb.inheritIO();
 				pb.directory(tmpDir.toFile());
 				
-				pb.environment().put("PATH", "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\windows\\system32;C:\\windows;C:\\windows\\System32\\Wbem;C:\\windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\windows\\System32\\OpenSSH\\;C:\\Program Files\\dotnet\\;C:\\Program Files\\Git\\cmd;C:\\Program Files (x86)\\dotnet\\;C:\\Java\\jdk-17.0.1\\bin;C:\\Java\\apache-ant-1.10.12\\bin;C:\\Users\\r.skrabal\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\r.skrabal\\.dotnet\\tools;C:\\windows\\System32;");
+				pb.environment().put("PATH", "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\windows\\system32;C:\\windows;C:\\windows\\System32\\Wbem;C:\\windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\windows\\System32\\OpenSSH\\;C:\\Program Files\\dotnet\\;C:\\Program Files\\Git\\cmd;C:\\Program Files (x86)\\dotnet\\;C:\\Java\\jdk-20.0.1\\bin;C:\\Java\\apache-ant-1.10.12\\bin;C:\\Users\\r.skrabal\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\r.skrabal\\.dotnet\\tools;C:\\windows\\System32;");
 				
 				File tempOut = File.createTempFile("velka_clojure_test_out", null);
 				File tempErr = File.createTempFile("velka_clojure_test_err", null);
@@ -286,18 +284,16 @@ public class VelkaTest {
 				return result;
 			}
 
-	private String clojureCompilationResult(List<Expression> l, Environment env, TypeEnvironment typeEnv) throws Exception {
-		String code = ClojureCodeGenerator.ExpressionListToClojureCode(l, env, typeEnv);
+	private String clojureCompilationResult(List<Expression> l, Environment env) throws Exception {
+		String code = ClojureCodeGenerator.ExpressionListToClojureCode(l, env);
 		
 		String result = this.clojureCodeResult(code);
 		return result;
 	}
 
 	protected void assertCompiledCodeEquals(String code, String expected) throws Exception {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-	
-		this.assertCompiledCodeEquals(code, expected, env, typeEnv);
+		Environment env = TopLevelEnvironment.instantiate();	
+		this.assertCompiledCodeEquals(code, expected, env);
 	}
 
 	protected String escapeBrackets(String s) {
@@ -344,17 +340,17 @@ public class VelkaTest {
 		}
 	}
 
-	protected void assertInterpretationEquals(Expression interpreted, Expression expected, Environment env, TypeEnvironment typeEnv)
+	protected void assertInterpretationEquals(Expression interpreted, Expression expected, Environment env)
 			throws AppendableException {
-				Expression e = interpreted.interpret(env, typeEnv);
+				Expression e = interpreted.interpret(env);
 				assertEquals(expected, e);
 			}
 
-	protected void assertInterpretationLastEquals(Collection<Expression> interpreted, Expression expected, Environment env, TypeEnvironment typeEnv)
+	protected void assertInterpretationLastEquals(Collection<Expression> interpreted, Expression expected, Environment env)
 			throws AppendableException {
 				Expression f = null;
 				for(Expression e : interpreted) {
-					f = e.interpret(env, typeEnv);
+					f = e.interpret(env);
 				}
 				assertEquals(expected, f);
 			}
@@ -362,18 +358,17 @@ public class VelkaTest {
 	protected void assertOperator(final Operator operator, Tuple args, Expression expectedInterpret, Type expectedInference)
 			throws AppendableException {
 				AbstractionApplication application = new AbstractionApplication(operator, args);
-				Environment env = Environment.initTopLevelEnvironment();
-				TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+				Environment env = TopLevelEnvironment.instantiate();
 			
-				this.assertInterpretationEquals(application, expectedInterpret, env, typeEnv);
-				Pair<Type, Substitution> p = application.infer(env, typeEnv);
+				this.assertInterpretationEquals(application, expectedInterpret, env);
+				Pair<Type, Substitution> p = application.infer(env);
 				if (expectedInference != null) {
 					this.assertInference(p, expectedInference, application);
 				}
 			
 				assertAll(() -> {
 					operator.toString();
-					operator.toClojureCode(env, typeEnv);
+					operator.toClojureCode(env);
 				});
 			}
 
@@ -384,18 +379,16 @@ public class VelkaTest {
 				});
 			
 				AbstractionApplication appl = new AbstractionApplication(conversion, new Tuple(Arrays.asList(argument)));
-				Environment env = Environment.initTopLevelEnvironment();
-				TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+				Environment env = TopLevelEnvironment.instantiate();
 			
-				this.assertInterpretationEquals(appl, expectedInterpret, env, typeEnv);
-				Pair<Type, Substitution> p = conversion.infer(env, typeEnv);
+				this.assertInterpretationEquals(appl, expectedInterpret, env);
+				Pair<Type, Substitution> p = conversion.infer(env);
 				this.assertInference(p, expectedInfer, conversion);
 			}
 
 	protected void assertInterpretationEquals(String interpreted, Expression expected) throws AppendableException {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		this.assertInterpretedStringEquals(interpreted, expected, env, typeEnv);
+		Environment env = TopLevelEnvironment.instantiate();
+		this.assertInterpretedStringEquals(interpreted, expected, env);
 	}
 	
 	/**

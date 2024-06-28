@@ -2,7 +2,6 @@ package velka.core.application;
 
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
 import velka.types.Substitution;
@@ -42,13 +41,13 @@ public class CanDeconstructAs extends Expression {
 	}
 
 	@Override
-	public Expression interpret(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Expression e = this.expression.interpret(env, typeEnv);
+	public Expression interpret(Environment env) throws AppendableException {
+		Expression e = this.expression.interpret(env);
 		if (!(e instanceof LitComposite)) {
 			return LitBoolean.FALSE;
 		}
 		LitComposite lc = (LitComposite) e;
-		Pair<Type, Substitution> p = lc.value.infer(env, typeEnv);
+		Pair<Type, Substitution> p = lc.value.infer(env);
 
 		if(Type.unifyTypes(p.first, this.as).isEmpty()) {
 			return LitBoolean.FALSE;
@@ -58,29 +57,17 @@ public class CanDeconstructAs extends Expression {
 	}
 
 	@Override
-	public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		Pair<Type, Substitution> p = this.expression.infer(env, typeEnv);
+	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+		Pair<Type, Substitution> p = this.expression.infer(env);
 		return new Pair<Type, Substitution>(TypeAtom.TypeBoolNative, p.second);
 	}
 
 	@Override
-	public String toClojureCode(Environment env, TypeEnvironment typeEnv) throws AppendableException {
-		String arg = "_arg";
+	public String toClojureCode(Environment env) throws AppendableException {
 		String code = ClojureHelper.applyClojureFunction(
 				ClojureCoreSymbols.canDeconstructAs_full, 
-				this.expression.toClojureCode(env, typeEnv),
+				this.expression.toClojureCode(env),
 				this.as.clojureTypeRepresentation());
-				
-//				ClojureHelper.letHelper(
-//				ClojureHelper.clojureIfHelper(
-//						ClojureHelper.applyClojureFunction("vector?", arg),
-//						ClojureHelper.applyClojureFunction(".isPresent", 
-//								ClojureHelper.applyClojureFunction("velka.types.Type/unifyRepresentation", 
-//										this.as.clojureTypeRepresentation(),
-//										ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full,
-//												ClojureHelper.applyClojureFunction("first", arg)))),
-//						LitBoolean.FALSE.toClojureCode(env, typeEnv)), 
-//				Pair.of(arg, this.expression.toClojureCode(env, typeEnv)));
 		
 		return code;
 	}
@@ -118,10 +105,10 @@ public class CanDeconstructAs extends Expression {
 	}
 
 	@Override
-	protected Expression doConvert(Type from, Type to, Environment env, TypeEnvironment typeEnv)
+	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env, typeEnv);
-		return e.convert(to, env, typeEnv);
+		Expression e = this.interpret(env);
+		return e.convert(to, env);
 	}
 
 }

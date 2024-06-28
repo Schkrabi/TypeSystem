@@ -11,10 +11,9 @@ import org.junit.jupiter.api.Test;
 
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
+import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.langbase.JavaArrayList;
 import velka.core.literal.LitBoolean;
-import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.types.TypeAtom;
@@ -22,7 +21,6 @@ import velka.types.TypeAtom;
 class TestJavaArrayList extends VelkaTest {
 
 	private Environment env;
-	private TypeEnvironment typeEnv;
 	
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
@@ -34,8 +32,7 @@ class TestJavaArrayList extends VelkaTest {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		env = Environment.initTopLevelEnvironment();
-		typeEnv = TypeEnvironment.initBasicTypes(env);
+		env = TopLevelEnvironment.instantiate();
 	}
 
 	@AfterEach
@@ -49,8 +46,7 @@ class TestJavaArrayList extends VelkaTest {
 						new LitInteropObject(new ArrayList<Expression>(Arrays.asList(
 								new LitInteger(1), new LitInteger(2), new LitInteger(3), new LitInteger(4), new LitInteger(5))),
 						TypeAtom.TypeListJavaArray),
-				this.env,
-				this.typeEnv);
+				this.env);
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(println (java-array-list-get (java-array-list-build 5 (lambda (x) (+ x 1))) 2))");

@@ -1,7 +1,6 @@
 package velka.core.expression;
 
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.types.Type;
 import velka.util.AppendableException;
 
@@ -18,5 +17,5 @@ public interface IConvertable<T> {
 	 * @return Converted expression
 	 * @throws AppendableException if conversion is not possible
 	 */
-	public abstract T convert(Type to, Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	public abstract T convert(Type to, Environment env) throws AppendableException;
 }

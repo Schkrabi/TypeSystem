@@ -1,7 +1,6 @@
 package velka.test;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -10,7 +9,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -19,18 +17,13 @@ import org.junit.jupiter.api.Test;
 
 import velka.clojure.ClojureCodeGenerator;
 import velka.core.abstraction.ExtendedLambda;
-import velka.core.abstraction.Function;
 import velka.core.abstraction.Lambda;
 import velka.core.application.AbstractionApplication;
-import velka.core.application.CanDeconstructAs;
-import velka.core.application.Construct;
-import velka.core.application.Extend;
-import velka.core.application.IfExpression;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
+import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaBitSet;
 import velka.core.langbase.JavaLinkedList;
@@ -38,11 +31,9 @@ import velka.core.langbase.ListNative;
 import velka.core.langbase.Operators;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
+import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
-import velka.parser.Parser;
-import velka.types.RepresentationOr;
-import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeName;
@@ -52,21 +43,20 @@ import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
-import velka.util.NameGenerator;
+import velka.util.CostAggregation;
 
 class TestComplex extends VelkaTest {
 	
 	@Test
 	@DisplayName("Test Recursion")
 	void testRecursion() throws Exception {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 
 		this.assertInterpretedStringEquals("(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))" + "(fact 5)",
-				new LitInteger(120), env, typeEnv);
+				new LitInteger(120), env);
 
-		this.assertCompile("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))", env,
-				typeEnv);
+		this.assertCompile("(define fact (lambda (x) (if (= x 1) x (* x (fact (- x 1))))))", env);
 
 		this.assertIntprtAndCompPrintSameValues(
 				"(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))" + "(println (fact 5))");
@@ -75,8 +65,8 @@ class TestComplex extends VelkaTest {
 	@Test
 	@DisplayName("Test Basic Extended lambda")
 	void testExtemdedLambda() throws Exception {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 
 		this.assertInterpretedStringEquals(
 				"(constructor Name:Unstructured ((String:Native x)) x)" 
@@ -85,21 +75,21 @@ class TestComplex extends VelkaTest {
 					+ "(lambda ((Name:Unstructured x)) \"unstructured\")) "
 					+ "(lambda ((Name:Structured x)) \"structured\")) "
 						+ "(construct Name:Unstructured \"Jan Novak\"))",
-				new LitString("unstructured"), env, typeEnv);
+				new LitString("unstructured"), env);
 
 		this.assertInterpretedStringEquals(
 				"((extend (extend (extended-lambda (Name)) "
 					+ "(lambda ((Name:Unstructured x)) \"unstructured\")) "
 					+ "(lambda ((Name:Structured x)) \"structured\")) "
 						+ "(construct Name:Structured \"Jan\" \"Novak\"))",
-				new LitString("structured"), env, typeEnv);
+				new LitString("structured"), env);
 
 		this.assertInterpretedStringEquals(
 				"(conversion Name:Structured Name:Unstructured (x) (construct Name:Unstructured (concat (car (deconstruct x (String:Native String:Native))) (cdr (deconstruct x (String:Native String:Native))))))"
 						+ "((lambda ((Name:Unstructured x)) x) (construct Name:Structured \"Jan\" \"Novak\"))",
 				new LitComposite(new LitString("JanNovak"),
 						new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured"))),
-				env, typeEnv);
+				env);
 
 		this.assertIntprtAndCompPrintSameValues(
 				"(println ((lambda ((String:Native x) (Int:String y)) x) \"test\" (construct Int:String \"1984\")))");
@@ -114,13 +104,12 @@ class TestComplex extends VelkaTest {
 	@Test
 	@DisplayName("Test User List Interpretation")
 	void testComplexList() throws AppendableException {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 
 		TypeName listTypeName = new TypeName("List");
 
 		final TypeAtom linkedList = new TypeAtom(listTypeName, new TypeRepresentation("Linked"));
-		final TypeAtom typeListFuntionalAtom = new TypeAtom(listTypeName, new TypeRepresentation("Functional"));
 		final LitComposite emptyList = new LitComposite(Expression.EMPTY_EXPRESSION, linkedList);
 
 		this.assertInterpretedStringEquals(
@@ -131,12 +120,12 @@ class TestComplex extends VelkaTest {
 						new Tuple(Arrays.asList(new LitInteger(1),
 								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
 						linkedList),
-				env, typeEnv);
+				env);
 
 		this.assertInterpretedStringEquals("(define fcons (lambda (x y) (lambda (f) (f x y))))"
 				+ "(define fcar (lambda (p) (p (lambda (x y) x))))" + "(define fcdr (lambda (p) (p (lambda (x y) y))))"
 				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))"
-				+ "(constructor List:Functional () nil)", Expression.EMPTY_EXPRESSION, env, typeEnv);
+				+ "(constructor List:Functional () nil)", Expression.EMPTY_EXPRESSION, env);
 
 		final LitComposite xlii = new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman);
 		final LitComposite fortyTwoStr = new LitComposite(new LitString("42"), TypeAtom.TypeIntString);
@@ -144,28 +133,28 @@ class TestComplex extends VelkaTest {
 
 		this.assertInterpretedStringEquals(
 				"(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))",
-				Expression.EMPTY_EXPRESSION, env, typeEnv);
+				Expression.EMPTY_EXPRESSION, env);
 
 		this.assertInterpretedStringEquals(
 				"(define y (construct List:Functional (construct Int:Roman \"XLII\") (construct List:Functional (construct Int:String \"42\") (construct List:Functional 42 (construct List:Functional)))))",
-				Expression.EMPTY_EXPRESSION, env, typeEnv);
+				Expression.EMPTY_EXPRESSION, env);
 		this.assertInterpretedStringEquals(
 					"(define is-list-empty (extended-lambda (List)))"
 				+	"(define is-list-empty (extend is-list-empty (lambda ((List:Linked l)) (can-deconstruct-as l ()))))"
 				+ 	"(define is-list-empty (extend is-list-empty (lambda ((List:Functional l)) (can-deconstruct-as l ()))))",
-				Expression.EMPTY_EXPRESSION, env, typeEnv);
-		this.assertInterpretedStringEquals("(is-list-empty x)", LitBoolean.FALSE, env, typeEnv);
-		this.assertInterpretedStringEquals("(is-list-empty y)", LitBoolean.FALSE, env, typeEnv);
-		this.assertInterpretedStringEquals("(is-list-empty (construct List:Linked))", LitBoolean.TRUE, env, typeEnv);
-		this.assertInterpretedStringEquals("(is-list-empty (construct List:Functional))", LitBoolean.TRUE, env, typeEnv);
+				Expression.EMPTY_EXPRESSION, env);
+		this.assertInterpretedStringEquals("(is-list-empty x)", LitBoolean.FALSE, env);
+		this.assertInterpretedStringEquals("(is-list-empty y)", LitBoolean.FALSE, env);
+		this.assertInterpretedStringEquals("(is-list-empty (construct List:Linked))", LitBoolean.TRUE, env);
+		this.assertInterpretedStringEquals("(is-list-empty (construct List:Functional))", LitBoolean.TRUE, env);
 
 		this.assertInterpretedStringEquals(
 					"(define head-list (extended-lambda (List)))"
 				+	"(define head-list (let-type (A C) (extend head-list (lambda ((List:Linked l)) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (car (deconstruct l (A List:Linked))))))))"
 				+	"(define head-list (let-type (A C) (extend head-list (lambda ((List:Functional l)) (if (is-list-empty l) (error \"Cannot make head of empty list!\") (fcar (deconstruct l ((((A List:Functional) #> C)) #> C))))))))",
-				Expression.EMPTY_EXPRESSION, env, typeEnv);
-		this.assertInterpretedStringEquals("(head-list x)", xlii, env, typeEnv);
-		this.assertInterpretedStringEquals("(head-list y)", xlii, env, typeEnv);
+				Expression.EMPTY_EXPRESSION, env);
+		this.assertInterpretedStringEquals("(head-list x)", xlii, env);
+		this.assertInterpretedStringEquals("(head-list y)", xlii, env);
 
 		this.assertInterpretedStringEquals(
 					"(define tail-list (extended-lambda (List)))"
@@ -175,15 +164,15 @@ class TestComplex extends VelkaTest {
 						+ "(lambda ((List:Functional l)) (if (is-list-empty l) "
 							+ "(error \"Cannot make tail of empty list!\") " 
 							+ "(fcdr (deconstruct l ((((A List:Functional) #> List:Functional)) #> List:Functional))))))))",
-				Expression.EMPTY_EXPRESSION, env, typeEnv);
+				Expression.EMPTY_EXPRESSION, env);
 
 		this.assertInterpretedStringEquals("(tail-list x)",
 				new LitComposite(
 						new Tuple(Arrays.asList(fortyTwoStr,
 								new LitComposite(new Tuple(Arrays.asList(fortyTwo, emptyList)), linkedList))),
 						linkedList),
-				env, typeEnv);
-		this.assertInterpretedStringEquals("(head-list (tail-list y))", fortyTwoStr, env, typeEnv);
+				env);
+		this.assertInterpretedStringEquals("(head-list (tail-list y))", fortyTwoStr, env);
 
 		this.assertInterpretedStringEquals(
 				"(define build-list-aux (lambda (i n f) " + "(if (= i n) " + "(construct List:Linked)"
@@ -193,7 +182,7 @@ class TestComplex extends VelkaTest {
 						new Tuple(Arrays.asList(new LitInteger(1),
 								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
 						linkedList),
-				env, typeEnv);
+				env);
 
 		this.assertInterpretedStringEquals(
 				"(define build-list (lambda (n f) (build-list-aux 0 n f)))" + "(build-list 2 (lambda (x) (+ x 1)))",
@@ -201,7 +190,7 @@ class TestComplex extends VelkaTest {
 						new Tuple(Arrays.asList(new LitInteger(1),
 								new LitComposite(new Tuple(Arrays.asList(new LitInteger(2), emptyList)), linkedList))),
 						linkedList),
-				env, typeEnv);
+				env);
 
 		this.assertInterpretedStringEquals(
 					"(define append-list (let-type (A) (extended-lambda (List A))))"
@@ -213,7 +202,7 @@ class TestComplex extends VelkaTest {
 							+	"(if (is-list-empty l) "
 								+	"(construct List:Functional x (construct List:Functional)) "
 								+	"(construct List:Functional (head-list l) (append-list (tail-list l) x)))))))",
-				Expression.EMPTY_EXPRESSION, env, typeEnv);
+				Expression.EMPTY_EXPRESSION, env);
 
 		this
 				.assertInterpretedStringEquals("(append-list x 21)",
@@ -234,7 +223,7 @@ class TestComplex extends VelkaTest {
 																				linkedList))),
 														linkedList))),
 								linkedList),
-						env, typeEnv);
+						env);
 
 //		this.assertInterpretedStringEquals(
 //					"(extend (extend (extended-lambda (List)) "
@@ -278,8 +267,8 @@ class TestComplex extends VelkaTest {
 //													new AbstractionApplication(new Symbol("head-list"),
 //															new Tuple(new Symbol("l")))))),
 //								env)),
-//						env, typeEnv),
-//				env, typeEnv);
+//						env),
+//				env);
 
 		this.assertInterpretedStringEquals("(define reverse-list (lambda ((List l)) "
 						+ "(if (is-list-empty l) " + "(construct List:Linked) "
@@ -290,34 +279,34 @@ class TestComplex extends VelkaTest {
 										new LitComposite(new Tuple(Arrays.asList(xlii, emptyList)), linkedList))),
 										linkedList))),
 						linkedList),
-				env, typeEnv);
+				env);
 	}
 
 	@Test
 	@DisplayName("Test Complex Types")
 	void testComplexTypes() throws Exception {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 
 		this.assertInterpretedStringEquals("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)",
-				new LitInteger(42), env, typeEnv);
+				new LitInteger(42), env);
 		this.assertInterpretedStringEquals(
 				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
 					+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
 					+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int:String \"21\") (construct Int:String \"21\")))) "
 					+ "+)",
-				new LitInteger(42), env, typeEnv);
+				new LitInteger(42), env);
 		this.assertInterpretedStringEquals(
 				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
 				+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
 				+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int:String \"21\") (construct Int:String \"21\")))) "
 				+ "(lambda ((Int:String x) (Int:String y)) (construct Int:String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))",
-				new LitComposite(new LitString("2121"), TypeAtom.TypeIntString), env, typeEnv);
+				new LitComposite(new LitString("2121"), TypeAtom.TypeIntString), env);
 		this.assertInterpretedStringEquals(
 				"(let-type (A B) ((lambda ((A x) (B y)) (tuple x y)) 42 (construct Int:String  \"42\")))",
 				new Tuple(Arrays.asList(new LitInteger(42),
 						new LitComposite(new LitString("42"), TypeAtom.TypeIntString))),
-				env, typeEnv);
+				env);
 
 		this.assertIntprtAndCompPrintSameValues(
 				"(constructor Name:Unstructured ((String:Native x)) x) " 
@@ -337,8 +326,8 @@ class TestComplex extends VelkaTest {
 	@Test
 	@DisplayName("Clojure Literals")
 	void testClojureLiterals() throws Exception {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 
 		this.assertIntprtAndCompPrintSameValues("(println 0)");
 		this.assertIntprtAndCompPrintSameValues("(println 3.141521)");
@@ -347,14 +336,14 @@ class TestComplex extends VelkaTest {
 		this.assertIntprtAndCompPrintSameValues("(println \"Hello World\")");
 		this.assertIntprtAndCompPrintSameValues("(println (construct Int:Roman \"XLII\"))");
 
-		this.assertCompiledCodeEquals("variable", "variable", env, typeEnv);
+		this.assertCompiledCodeEquals("variable", "variable", env);
 	}
 
 	@Test
 	@DisplayName("Clojure Special Forms and Applications")
 	void testSpecialFormsAndApplication() throws Exception {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 
 		this.assertIntprtAndCompPrintSameValues("(println ((lambda (x y) x) 42 21))");
 		this.assertIntprtAndCompPrintSameValues("(println ((lambda ((Int:Native x) (Int:Native y)) x) 42 21))");
@@ -362,7 +351,7 @@ class TestComplex extends VelkaTest {
 		this.assertIntprtAndCompPrintSameValues(
 				"(println (if #t (construct Int:Roman \"XLII\") (construct Int:String \"42\")))");
 		this.assertIntprtAndCompPrintSameValues("(println (tuple 21 21))");
-		this.assertCompile("(error \"error msg\")", env, typeEnv);
+		this.assertCompile("(error \"error msg\")", env);
 		this.assertIntprtAndCompPrintSameValues("(println (and #t #f))");
 		this.assertIntprtAndCompPrintSameValues("(println (or #t #f))");
 		this.assertIntprtAndCompPrintSameValues("(define answer 42)" + "(println answer)");
@@ -434,22 +423,22 @@ class TestComplex extends VelkaTest {
 	@Test
 	@DisplayName("Clojure Conversions")
 	void testClojureConversions() throws Exception {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 
-		this.assertCompile("(IntNative2IntRoman 42)", env, typeEnv);
-		this.assertCompile("(IntNative2IntString 42)", env, typeEnv);
-		this.assertCompile("(IntRoman2IntNative (Int:Roman \"XLII\"))", env, typeEnv);
-		this.assertCompile("(IntRoman2IntString (Int:Roman \"XLII\"))", env, typeEnv);
-		this.assertCompile("(IntString2IntNative (Int:String \"42\"))", env, typeEnv);
-		this.assertCompile("(IntString2IntRoman (Int:String \"42\"))", env, typeEnv);
+		this.assertCompile("(IntNative2IntRoman 42)", env);
+		this.assertCompile("(IntNative2IntString 42)", env);
+		this.assertCompile("(IntRoman2IntNative (Int:Roman \"XLII\"))", env);
+		this.assertCompile("(IntRoman2IntString (Int:Roman \"XLII\"))", env);
+		this.assertCompile("(IntString2IntNative (Int:String \"42\"))", env);
+		this.assertCompile("(IntString2IntRoman (Int:String \"42\"))", env);
 
 		this.assertCompile(
 				"((extend (extended-lambda (Bool Int Int)) "
 					+ "(lambda ((Bool:Native x) (Int:String y) (Int:String z)) "
 						+ "(if x z y))) "
 					+ "#f (Int:Roman \"XLII\") 66)",
-				env, typeEnv);
+				env);
 
 		this.assertIntprtAndCompPrintSameValues(
 				"(println (convert Int:Native Int:String 42))\n" + "(println (convert Int:Native Int:Roman 42))\n"
@@ -461,122 +450,7 @@ class TestComplex extends VelkaTest {
 
 	@Test
 	@DisplayName("Clojure List")
-	void testListClojure() throws Exception {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-
-		// List
-		this.assertCompiledCodeEquals("(let-type (A) (constructor List2:Linked ((A x) (List2 l)) (tuple x l)))", "", env, typeEnv);
-		this.assertCompiledCodeEquals("(constructor List2:Linked () nil)", "", env, typeEnv);
-		this.assertCompile("(define fcons (lambda (x y) (lambda (f) (f x y))))", env, typeEnv);
-		this.assertCompile("(define fcar (lambda (p) (p (lambda (x y) x))))", env, typeEnv);
-		this.assertCompiledCodeEquals("(let-type (A) (constructor List2:Functional ((A x) (List2 l)) (fcons x l)))", "", env, typeEnv);
-		this.assertCompiledCodeEquals("(constructor List2:Functional () nil)", "", env, typeEnv);
-
-		this.assertCompile(
-				"(define x (construct List2:Linked (construct Int:Roman \"XLII\") (construct List2:Linked (construct Int:String \"42\") (construct List2:Linked 42 (construct List2:Linked)))))",
-				env, typeEnv);
-
-		this.assertCompile(
-				"(define y (construct List2:Functional (construct Int:Roman \"XLII\") (construct List2:Functional (construct Int:String \"42\") (construct List2:Functional 42 (construct List2:Functional)))))",
-				env, typeEnv);
-		
-		this.assertCompile(
-				"(let-type (A) (lambda ((List2:Functional l)) (if (can-deconstruct-as l ()) "
-					+ "(error \"smt\") "
-					+ "(fcar (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))",
-					env, typeEnv);
-
-		this.assertCompile(
-				"(define head-list2 "
-					+ "(extend (extend (extended-lambda (List2)) "
-						+ "(let-type (A) (lambda ((List2:Linked l)) (if (can-deconstruct-as l ()) "
-							+ "(error \"Cannot make head of empty list!\") "
-							+ "(car (deconstruct l (A List2:Linked)))))))"
-						+ "(let-type (A) (lambda ((List2:Functional l)) (if (can-deconstruct-as l ()) " 
-							+ "(error \"Cannot make head of empty list!\") "
-							+ "(fcar (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))))",
-				env, typeEnv);
-
-		this.assertCompile(
-				"(define tail-list2 (let-type (A) "
-					+ "(extend (extend (extended-lambda (List2)) "
-						+ "(lambda ((List2:Linked l)) (if (can-deconstruct-as l ()) "
-							+ "(error \"Cannot make tail of empty list!\") "
-							+ "(cdr (deconstruct l (A List2:Linked))))))"
-						+ "(lambda ((List2:Functional l)) (if (can-deconstruct-as l ()) "
-							+ "(error \"Cannot make tail of empty list!\") "
-							+ "(fcdr (deconstruct l ((((A List2:Functional) #> List2:Functional)) #> List2:Functional))))))))",
-				env, typeEnv);
-
-		// This is interesting, extended lambda is not sufficient, when I might want to
-		// return a different representation.
-		// But on what would I base the representation?
-		this.assertCompile(
-				"(define build-list2-aux (lambda (i n f) (if (= i n) (construct List2:Linked) (construct List2:Linked (f i) (build-list2-aux (+ i 1) n f)))))",
-				env, typeEnv);
-
-		this.assertCompile("(define build-list2 (lambda (n f) (build-list2-aux 0 n f)))", env,
-				typeEnv);
-
-		this.assertCompile("(let-type (A) (define append-list2 (lambda ((List2 l) (A x)) \n"
-				+ "(if (can-deconstruct-as l ()) (construct List2:Linked x (construct List2:Linked)) (construct List2:Linked (head-list2 l) (append-list2 (tail-list2 l) x))))))",
-				env, typeEnv);
-
-		this.assertCompile(
-				"(define reverse-list2 (lambda ((List2 l)) (if (can-deconstruct-as l ()) (construct List2:Linked) (append-list2 (reverse-list2 (tail-list2 l)) (head-list2 l)))))",
-				env, typeEnv);
-
-		this.assertCompile("((lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21)) +)", env,
-				typeEnv);
-		this.assertCompile(
-				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
-					+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
-					+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int:String \"21\") (construct Int:String \"21\")))) "
-					+ "+)",
-				env, typeEnv);
-		this.assertCompile(
-				"((extend (extend (extended-lambda (((Int Int) #> Int))) "
-						+ "(lambda ((((Int:Native Int:Native) #> Int:Native) f)) (f 21 21))) "
-						+ "(lambda ((((Int:String Int:String) #> Int:String) f)) (f (construct Int:String \"21\") (construct Int:String \"21\")))) "
-						+ "(lambda ((Int:String x) (Int:String y)) (construct Int:String (concat (deconstruct x String:Native) (deconstruct y String:Native)))))",
-				env, typeEnv);
-
-		this.assertCompile(
-				"(let-type (A B) ((lambda ((A x) (B y)) (tuple x y)) 42 (construct Int:String  \"42\")))", env, typeEnv);
-
-		this.assertCompile(
-				"(let-type (A) (extend (extend (extended-lambda (List2 A)) "
-					+ "(lambda ((List2:Linked l) (A x)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2:Linked x (construct List2:Linked)) "
-						+ "(construct List2:Linked (head-list l) (append-list (tail-list l) x))))) "
-					+ "(lambda ((List:Functional l) (A x)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2:Functional x (construct List2:Functional))"
-						+ "(construct List2:Functional (head-list l) (append-list (tail-list l) x))))))",
-				env, typeEnv);
-
-		this.assertCompile(
-				"(extend (extend (extended-lambda (List2)) "
-					+ "(lambda ((List2:Linked l)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2:Linked) "
-						+ "(append-list (reverse-list (tail-list l)) (head-list l))))) "
-					+ "(lambda ((List2:Functional l)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2:Functional) "
-						+ "(append-list (reverse-list (tail-list l)) (head-list l)))))",
-				env, typeEnv);
-
-		this.assertCompile(
-				"(let-type (A B) (extend (extend (extended-lambda (((A) #> B) List2)) "
-					+ "(lambda ((((A) #> B) f) (List2:Linked l)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2:Linked) "
-						+ "(construct List2:Linked (f (head-list l)) (map-list f (tail-list l)))))) "
-					+ "(lambda ((((A) #> B) f) (List2:Functional l)) (if (can-deconstruct-as l ()) "
-						+ "(construct List2:Functional) "
-						+ "(construct List2:Functional (f (head-list l)) (map-list f (tail-list l)))))))",
-				env, typeEnv);
-
-		this.assertCompile("(println (tuple 42 \"42\"))", env, typeEnv);
-		
+	void testListClojure() throws Exception {		
 		this.assertIntprtAndCompPrintSameValues(
 				"(define fcons (lambda (x y) (lambda (p) (p x y))))\n"
 				+ "(define fcar (lambda (p) (p (lambda (x y) x))))\n"
@@ -593,8 +467,7 @@ class TestComplex extends VelkaTest {
 
 		this.assertIntprtAndCompPrintSameValues(
 				"(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))\n" 
-				+ "(constructor List:Linked () nil)\n" + "\n"
-				+ "(let-type (A) (constructor List:Functional ((A x) (List l)) (fcons x l)))\n" 
+				+ "(constructor List:Linked () nil)\n" + "\n" 
 				+ "(define x (construct List:Linked (construct Int:Roman \"XLII\") (construct List:Linked (construct Int:String \"42\") (construct List:Linked 42 (construct List:Linked)))))\n"
 				+ "(println x)\n");
 		
@@ -686,8 +559,8 @@ class TestComplex extends VelkaTest {
 					+ "(construct List:Linked) "
 					+ "(construct List:Linked (f i) (build-list-aux (+ i 1) n f))))) "
 				+ "(println (build-list-aux 0 5 (lambda (x) (+ x 1)))) "
-				+ "(define build-list (lambda (n f) (build-list-aux 0 n f))) "
-				+ "(println (build-list 5 (lambda (x) (+ x 1)))) " );
+				+ "(define build-list-test (lambda (n f) (build-list-aux 0 n f))) "
+				+ "(println (build-list-test 5 (lambda (x) (+ x 1)))) " );
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let-type (A) (constructor List:Linked ((A x) (List l)) (tuple x l)))\n" 
@@ -957,8 +830,8 @@ class TestComplex extends VelkaTest {
 				new TypeTuple(TypeAtom.TypeIntRoman),
 				new LitString("Int Roman"));
 		
-		//Environment env = Environment.initTopLevelEnvironment();
-		//TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		//Environment env = TopLevelEnvironment.instantiate();
+		//
 		Tuple args = new Tuple(new LitInteger(42));
 		
 		ExtendedLambda elambda_defaultCostFunction = 
@@ -970,17 +843,17 @@ class TestComplex extends VelkaTest {
 				new AbstractionApplication(
 						elambda_defaultCostFunction, 
 						args);
-				this.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defCostFunction));
+		this.assertIntprtAndCompPrintSameValues(Arrays.asList(app_defCostFunction));
 		
 		Lambda costFunction = new Lambda(
 				elambda_args,
 				new TypeTuple(TypeAtom.TypeInt),
-				new LitInteger(Long.MIN_VALUE));
+				new LitDouble(Double.MIN_VALUE));
 
 		Map<Lambda, Expression> m = new TreeMap<Lambda, Expression>();
-		m.put(impl1, impl1.defaultCostFunction());
+		m.put(impl1, Lambda.constFun(elambda_args.size(), new LitDouble(CostAggregation.instance().defaultImplementationRank())));
 		m.put(impl2, costFunction);
-		m.put(impl3, impl3.defaultCostFunction());
+		m.put(impl3, Lambda.constFun(elambda_args.size(), new LitDouble(CostAggregation.instance().defaultImplementationRank())));
 		
 		ExtendedLambda elambda_customCostFunction = 
 				ExtendedLambda.makeExtendedLambda(m);
@@ -996,8 +869,8 @@ class TestComplex extends VelkaTest {
 	@Test
 	@DisplayName("Test Clojure Headers")
 	void testClojureHeaders() throws Exception {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 		
 		StringBuilder definitions = new StringBuilder();
 		definitions.append(ClojureHelper.declareNamespace(ClojureCodeGenerator.DEFAULT_NAMESPACE));
@@ -1028,58 +901,6 @@ class TestComplex extends VelkaTest {
 				"(println (" + ClojureCoreSymbols.tuple2velkaListSymbol_full + " [1 2 3]))",
 				"(1 2 3)");
 		
-		assertClojureFunction(
-				definitions.toString(),
-				ClojureHelper.applyClojureFunction(
-						"println", 
-						ClojureHelper.applyClojureFunction(
-								ClojureCoreSymbols.convertAtomClojureSymbol_full, 
-								TypeAtom.TypeIntRoman.clojureTypeRepresentation(),
-								LitInteger.clojureLit("1"))),
-				"[I]");
-		
-		assertClojureFunction(
-				definitions.toString(),
-				ClojureHelper.applyClojureFunction(
-						"println", 
-						ClojureHelper.applyClojureFunction(
-								ClojureCoreSymbols.convertAtomClojureSymbol_full, 
-								TypeAtom.TypeIntString.clojureTypeRepresentation(),
-								LitInteger.clojureLit("1"))),
-				"[1]");
-		
-		assertClojureFunction(
-				definitions.toString(),
-				ClojureHelper.applyClojureFunction("println", 
-						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertAtomClojureSymbol_full, 
-								TypeAtom.TypeIntNative.clojureTypeRepresentation(),
-								ClojureHelper.litCompositeHelper_str(TypeAtom.TypeIntString.clojureTypeRepresentation(), ClojureHelper.stringHelper("1")))),
-				"1");
-		
-		assertClojureFunction(
-				definitions.toString(),
-				ClojureHelper.applyClojureFunction("println", 
-						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertAtomClojureSymbol_full, 
-								TypeAtom.TypeIntRoman.clojureTypeRepresentation(),
-								ClojureHelper.litCompositeHelper_str(TypeAtom.TypeIntString.clojureTypeRepresentation(), ClojureHelper.stringHelper("1")))),
-				"[I]");
-		
-		assertClojureFunction(
-				definitions.toString(),
-				ClojureHelper.applyClojureFunction("println", 
-						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertAtomClojureSymbol_full, 
-								TypeAtom.TypeIntNative.clojureTypeRepresentation(),
-								ClojureHelper.litCompositeHelper_str(TypeAtom.TypeIntRoman.clojureTypeRepresentation(), ClojureHelper.stringHelper("I")))),
-				"1");
-		
-		assertClojureFunction(
-				definitions.toString(),
-				ClojureHelper.applyClojureFunction("println", 
-						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertAtomClojureSymbol_full, 
-								TypeAtom.TypeIntString.clojureTypeRepresentation(),
-								ClojureHelper.litCompositeHelper_str(TypeAtom.TypeIntRoman.clojureTypeRepresentation(), ClojureHelper.stringHelper("I")))),
-				"[1]");
-		
 		Tuple t = new Tuple(new LitInteger(1), new LitComposite(new LitString("1"), TypeAtom.TypeIntString));
 		
 		assertClojureFunction(
@@ -1087,7 +908,7 @@ class TestComplex extends VelkaTest {
 				ClojureHelper.applyClojureFunction("println", 
 						ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertTupleClojureSymbol_full, 
 								new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman).clojureTypeRepresentation(),
-								t.toClojureCode(env, typeEnv))),
+								t.toClojureCode(env))),
 				"[1 [I]]");
 		
 		Lambda l = (Lambda)(this.parseString("(lambda ((Int:String x)) 1)").get(0));
@@ -1102,8 +923,8 @@ class TestComplex extends VelkaTest {
 								ClojureHelper.applyClojureFunction(
 										ClojureCoreSymbols.convertFnClojureSymbol_full,
 										lambda_to.clojureTypeRepresentation(),
-										l.toClojureCode(env, typeEnv)),
-								arg.toClojureCode(env, typeEnv))),
+										l.toClojureCode(env)),
+								arg.toClojureCode(env))),
 				"[1]");
 		
 		Lambda l2 = (Lambda)(this.parseString("(lambda () 1)")).get(0);
@@ -1115,7 +936,7 @@ class TestComplex extends VelkaTest {
 										ClojureHelper.applyClojureFunction(
 												ClojureCoreSymbols.convertFnClojureSymbol_full, 
 												l2_to.clojureTypeRepresentation(),
-												l2.toClojureCode(env, typeEnv)))),
+												l2.toClojureCode(env)))),
 				"[1]");
 		
 		assertClojureFunction(
@@ -1123,8 +944,8 @@ class TestComplex extends VelkaTest {
 				ClojureHelper.applyClojureFunction(
 						"println",
 						ClojureHelper.applyVelkaFunction_argsTuple(
-								l.toClojureCode(env, typeEnv),
-								(new Tuple(arg)).toClojureCode(env, typeEnv))),
+								l.toClojureCode(env),
+								(new Tuple(arg)).toClojureCode(env))),
 				"1");
 		
 		assertClojureFunction(
@@ -1132,37 +953,24 @@ class TestComplex extends VelkaTest {
 				ClojureHelper.applyClojureFunction(
 						"println",
 						ClojureHelper.applyVelkaFunction_argsTuple(
-								l.toClojureCode(env, typeEnv),
-								(new Tuple(arg)).toClojureCode(env, typeEnv))),
+								l.toClojureCode(env),
+								(new Tuple(arg)).toClojureCode(env))),
 				"1"); 
 				
 				ListNative.of(
 				new LitInteger(42),
 				new LitComposite(new LitString("42"), TypeAtom.TypeIntString));	
 		
-		ExtendedLambda elambda = ExtendedLambda.makeExtendedLambda(
-				new Lambda(
-						new Tuple(new Symbol("x")),
-						new TypeTuple(TypeAtom.TypeIntNative),
-						new LitString("a")),
-				new Lambda(
-						new Tuple(new Symbol("x")),
-						new TypeTuple(TypeAtom.TypeIntString),
-						new LitString("b")));
-		
-		this.clojureCodeResult(definitions.toString() + 
-				ClojureHelper.applyClojureFunction(
-						"println",
-						ClojureHelper.applyClojureFunction(
-								ClojureCoreSymbols.convertRepOrClojureSymbol_full,
-								new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeStringNative).clojureTypeRepresentation(),
-								elambda.toClojureCode(env, typeEnv))));
-		
-		this.assertClojureFunction(definitions.toString(),
-				 	"(println (" + ClojureCoreSymbols.convertToRepOrClojureSymbol_full + " " + 
-				 			RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString).clojureTypeRepresentation() + " " +
-				 			new LitInteger(42).toClojureCode(env, typeEnv) + "))",
-				 	"42");
+//		ExtendedLambda elambda = ExtendedLambda.makeExtendedLambda(
+//				new Lambda(
+//						new Tuple(new Symbol("x")),
+//						new TypeTuple(TypeAtom.TypeIntNative),
+//						new LitString("a")),
+//				new Lambda(
+//						new Tuple(new Symbol("x")),
+//						new TypeTuple(TypeAtom.TypeIntString),
+//						new LitString("b")));
+//		
 	}
 	
 	@Test
@@ -1173,9 +981,7 @@ class TestComplex extends VelkaTest {
 		this.assertIntprtAndCompPrintSameValues("(println (is-list-native-empty (construct List:Native)))");
 		this.assertIntprtAndCompPrintSameValues("(println (is-list-native-empty (construct List:Native 42 (construct List:Native))))");
 		this.assertIntprtAndCompPrintSameValues("(println (head-list-native (construct List:Native 42 (construct List:Native))))");
-		//this.assertIntprtAndCompPrintSameValues("(println (head-list-native (construct List:Native)))");
 		this.assertIntprtAndCompPrintSameValues("(println (tail-list-native (construct List:Native 42 (construct List:Native))))");
-		//TestComplex.assertIntprtAndCompPrintSameValues("(println (tail-list-native (construct List:Native)))");
 		this.assertIntprtAndCompPrintSameValues("(println (map-list-native (lambda (x) (+ x 1)) (construct List:Native 42 (construct List:Native))))");
 		this.assertIntprtAndCompPrintSameValues("(println (map2-list-native + (construct List:Native 21 (construct List:Native 21 (construct List:Native))) (construct List:Native 21 (construct List:Native 21 (construct List:Native)))))");
 		this.assertIntprtAndCompPrintSameValues("(println (foldl-list-native + 0 (construct List:Native 1 (construct List:Native 2 (construct List:Native)))))");
@@ -1328,11 +1134,11 @@ class TestComplex extends VelkaTest {
 	@Test
 	@DisplayName("Test logging")
 	void testLogging() throws Exception {
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		this.assertCompile("(timestamp)", env, typeEnv);
-		this.assertCompile("(init-logger \"test-clj-log\")", env, typeEnv);
-		this.assertCompile("(log \"test-clj\")", env, typeEnv);
+		Environment env = TopLevelEnvironment.instantiate();
+		
+		this.assertCompile("(timestamp)", env);
+		this.assertCompile("(init-logger \"test-clj-log\")", env);
+		this.assertCompile("(log \"test-clj\")", env);
 		this.assertIntprtAndCompPrintSameValues("(init-logger \"test-clj-log\")\n" + "(log \"test-clj\")");
 	}
 	
@@ -1361,14 +1167,13 @@ class TestComplex extends VelkaTest {
 		Files.copy(velkaUtilJar, tmpDir.resolve(Paths.get("velka.util.jar")), StandardCopyOption.REPLACE_EXISTING);
 		Files.copy(velkaTypesJar, tmpDir.resolve(Paths.get("velka.types.jar")), StandardCopyOption.REPLACE_EXISTING);		
 		
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
+		Environment env = TopLevelEnvironment.instantiate();
+		
 		
 		ClojureCodeGenerator.ExpressionListToCljFile(
 				tmpDir, 
 				this.parseString("(println (+ 21 21))"), 
-				env, 
-				typeEnv);
+				env);
 		
 		//Deletes the tmp dir recursively
 		Files.walk(tmpDir)
@@ -1398,48 +1203,20 @@ class TestComplex extends VelkaTest {
 				"(println ((extend (extend "
 				+ "(extended-lambda (Int)) "
 					+ "(lambda ((Int:Native x)) \"foo\")) "
-					+ "(lambda ((Int:Roman x)) \"bar\") (lambda ((Int:* x)) -999)) "
+					+ "(lambda ((Int:Roman x)) \"bar\") (lambda ((Int:* x)) -999.0)) "
 				+ "42))");
 	}
 	
 	@Test
 	@DisplayName("Test Sandbox")
-	void testSandbox() throws Exception{				
-//		Expression e = parseString(
-//				"(let-type (A B C D) "
-//				+ "(lambda (((C D) cd))"
-//					+ "(tuple"
-//						+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) cd)"
-//						+ "((lambda (((Double:Native B) ab)) (dadd (car ab) 1.0)) cd)"
-//						+ "((lambda (((Double:Native Double:Native) ab)) (dadd (car ab) (cdr ab))) cd))))"
-//				).get(0);
-//		
-//		Environment env = Environment.initTopLevelEnvironment();
-//		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-//		
-//		assertThrows(SubstitutionsCannotBeMergedException.class,
-//				() -> e.infer(env, typeEnv));
-//		
-//		assertAll(() ->
-//				parseString(
-//						"(let-type (A B)"
-//								+ "(lambda ()"
-//									+ "(tuple"
-//										+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) (tuple 3.14 42))"
-//										+ "((lambda (((A Int:Native) ab)) (+ (cdr ab) 1)) (tuple \"foo\" 42)))))")
-//				.get(0).infer(env, typeEnv));
-//		
-//		assertInterpretedStringEquals(
-//				"(define f (lambda (x) x))"
-//				+ "(tuple (f \"foo\") (f 42))",
-//				new Tuple(new LitString("foo"), new LitInteger(42)),
-//				env,
-//				typeEnv);
+	void testSandbox() throws Exception{	
+		var env = TopLevelEnvironment.instantiate();
 		
-		var exprs = Parser.read("(lambda (x) x)");
-		Environment env = Environment.initTopLevelEnvironment();
-		TypeEnvironment typeEnv = TypeEnvironment.initBasicTypes(env);
-		var cljCode = ClojureCodeGenerator.ExpressionListToClojureCode(exprs, env, typeEnv);
-		var a = 1;
+		var tv = TypeVariable.generate();
+		var t1 = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative), TypeAtom.TypeIntNative);
+		var t2 = new TypeArrow(new TypeTuple(tv, tv), TypeAtom.TypeIntNative);
+		
+		assertTrue(env.getTypeSystem().canConvert(t1, t2));
+		
 	}
 }

@@ -113,6 +113,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 	@Override
 	public boolean equals(Object o) {
+		if(this == o) return true;
 		if (!(o instanceof TypeTuple)) {
 			return false;
 		}

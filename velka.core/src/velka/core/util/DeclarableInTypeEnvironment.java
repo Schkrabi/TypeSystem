@@ -1,12 +1,11 @@
 package velka.core.util;
 
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.util.AppendableException;
 
 /**
  * Interface for classes declarable in TypeEnvironment
- * @author Mgr. Radomir Škrabal
+ * @author Mgr. Radomir ï¿½krabal
  *
  */
 public interface DeclarableInTypeEnvironment {
@@ -16,5 +15,5 @@ public interface DeclarableInTypeEnvironment {
 	 * @param typeEnv type enviroment where declaring
 	 * @throws AppendableException if anything goes awry
 	 */
-	public void declareInTypeEnvironment(Environment env, TypeEnvironment typeEnv) throws AppendableException;
+	public void declareInTypeEnvironment(Environment env) throws AppendableException;
 }

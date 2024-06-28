@@ -16,12 +16,10 @@ import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
-import velka.core.exceptions.DuplicateTypeDefinitionException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
-import velka.core.interpretation.TypeEnvironment;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
@@ -80,7 +78,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Constructor constructor = new Constructor() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(),
 					ClojureHelper.applyClojureFunction("java.util.LinkedList."));
@@ -88,13 +86,13 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			Expression e = new LitInteropObject(new LinkedList<Object>(), TypeAtom.TypeListJavaLinked);
 			return e;
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeListJavaLinked);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -121,7 +119,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator addToEnd = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String e = "_e";
 			String code = ClojureHelper.fnHelper(
@@ -135,7 +133,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -150,7 +148,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A),
 					TypeAtom.TypeBoolNative);
@@ -185,7 +183,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator addToIndex = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String index = "_index";
 			String e = "_e";
@@ -201,12 +199,12 @@ public class JavaLinkedList extends OperatorBank {
 													list,
 													index,
 													e),
-											Expression.EMPTY_EXPRESSION.toClojureCode(env, typeEnv)))));
+											Expression.EMPTY_EXPRESSION.toClojureCode(env)))));
 			return code;
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -224,7 +222,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
 					TypeTuple.EMPTY_TUPLE);
@@ -263,7 +261,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator addAll = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String collection = "_collection";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list, collection),
@@ -274,7 +272,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -296,7 +294,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
@@ -331,7 +329,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator contains = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String object = "_object";
 			String code = ClojureHelper.fnHelper(
@@ -345,7 +343,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -364,7 +362,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A),
 					TypeAtom.TypeBoolNative);
@@ -401,7 +399,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator containsAll = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String collection = "_collection";
 			String code = ClojureHelper.fnHelper(
@@ -415,7 +413,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -437,7 +435,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
@@ -474,7 +472,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator get = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String index = "_index";
 			String code = ClojureHelper.fnHelper(
@@ -488,7 +486,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -503,7 +501,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -539,7 +537,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator indexOf = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String object = "_object";
 			String code = ClojureHelper.fnHelper(
@@ -553,7 +551,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -570,7 +568,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -604,7 +602,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator isEmpty = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list),
@@ -616,7 +614,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -632,7 +630,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -667,7 +665,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator lastIndexOf = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String object = "_object";
 			String code = ClojureHelper.fnHelper(
@@ -681,7 +679,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -698,7 +696,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -736,7 +734,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator remove = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String o = "_o";
 			String code = ClojureHelper.fnHelper(
@@ -750,7 +748,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -768,7 +766,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A),
 					TypeAtom.TypeBoolNative);
@@ -811,7 +809,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator removeAll = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String c = "_c";
 			String code = ClojureHelper.fnHelper(
@@ -826,7 +824,7 @@ public class JavaLinkedList extends OperatorBank {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -849,7 +847,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
@@ -889,7 +887,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator retainAll = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String c = "_c";
 			String code = ClojureHelper.fnHelper(
@@ -905,7 +903,7 @@ public class JavaLinkedList extends OperatorBank {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -928,7 +926,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
 					TypeAtom.TypeBoolNative);
@@ -967,7 +965,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator set = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String index = "_index";
 			String element = "_element";
@@ -983,7 +981,7 @@ public class JavaLinkedList extends OperatorBank {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -998,7 +996,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeVariable A = new TypeVariable(NameGenerator.next());
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
 					A);
@@ -1034,7 +1032,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator size = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list),
@@ -1046,7 +1044,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -1061,7 +1059,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked), TypeAtom.TypeIntNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -1097,7 +1095,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator sublist = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String from = "_from";
 			String to = "_to";
@@ -1116,7 +1114,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -1134,7 +1132,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
 					TypeAtom.TypeListJavaLinked);
@@ -1172,7 +1170,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator map = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String abst = "_abst";
 			String e = "_e";
@@ -1194,7 +1192,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -1208,7 +1206,7 @@ public class JavaLinkedList extends OperatorBank {
 			try {
 				rslt = new LinkedList<Expression>(al.stream().map(ThrowingFunction.wrapper(e -> {
 					AbstractionApplication appl = new AbstractionApplication(abst, new Tuple(e));
-					return appl.interpret(env, typeEnv);
+					return appl.interpret(env);
 				})).collect(Collectors.toList()));
 			} catch (RuntimeException re) {
 				if (re.getCause() instanceof AppendableException) {
@@ -1225,7 +1223,7 @@ public class JavaLinkedList extends OperatorBank {
 		private TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListJavaLinked, new TypeArrow(new TypeTuple(A), B)),
 					TypeAtom.TypeListJavaLinked);
@@ -1265,7 +1263,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator map2 = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list1 = "_list1";
 			String list2 = "_list2";
 			String abst = "_abst";
@@ -1291,7 +1289,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
@@ -1317,7 +1315,7 @@ public class JavaLinkedList extends OperatorBank {
 
 				AbstractionApplication appl = new AbstractionApplication(abst, new Tuple(e1, e2));
 
-				rslt.add(appl.interpret(env, typeEnv));
+				rslt.add(appl.interpret(env));
 			}
 
 			return new LitInteropObject(rslt, TypeAtom.TypeListJavaLinked);
@@ -1328,7 +1326,7 @@ public class JavaLinkedList extends OperatorBank {
 		private TypeVariable C = new TypeVariable(NameGenerator.next());
 		
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked,
 					TypeAtom.TypeListJavaLinked, new TypeArrow(new TypeTuple(A, B), C)),
 					TypeAtom.TypeListJavaLinked);
@@ -1364,7 +1362,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator foldl = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String abst = "_abst";
 			String term = "_term";
 			String list = "_list";
@@ -1386,7 +1384,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			Abstraction abst = (Abstraction) args.get(0);
 			Expression terminator = args.get(1);
 			LitInteropObject io = (LitInteropObject) args.get(2);
@@ -1397,7 +1395,7 @@ public class JavaLinkedList extends OperatorBank {
 			try {
 				rslt = list.stream().reduce(terminator, ThrowingBinaryOperator.wrapper((agg, element) -> {
 					AbstractionApplication app = new AbstractionApplication(abst, new Tuple(agg, element));
-					return app.interpret(env, typeEnv);
+					return app.interpret(env);
 				}));
 			} catch (RuntimeException re) {
 				if (re.getCause() instanceof AppendableException) {
@@ -1414,7 +1412,7 @@ public class JavaLinkedList extends OperatorBank {
 		private TypeVariable B = new TypeVariable(NameGenerator.next());
 		
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(
 					new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, TypeAtom.TypeListJavaLinked)), A);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -1450,7 +1448,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator foldr = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String abst = "_abst";
 			String term = "_term";
 			String list = "_list";
@@ -1474,7 +1472,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			Abstraction abst = (Abstraction) args.get(0);
 			Expression terminator = args.get(1);
 			LitInteropObject io = (LitInteropObject) args.get(2);
@@ -1486,7 +1484,7 @@ public class JavaLinkedList extends OperatorBank {
 			while (i.hasPrevious()) {
 				Expression element = i.previous();
 				AbstractionApplication app = new AbstractionApplication(abst, new Tuple(agg, element));
-				agg = app.interpret(env, typeEnv);
+				agg = app.interpret(env);
 			}
 
 			return agg;
@@ -1496,7 +1494,7 @@ public class JavaLinkedList extends OperatorBank {
 		private TypeVariable B = new TypeVariable(NameGenerator.next());
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			
 			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(
 					new TypeArrow(new TypeTuple(Arrays.asList(A, B)), A), A, TypeAtom.TypeListJavaLinked)), A);
@@ -1528,7 +1526,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static Conversion LinkedListToArrayList = new Conversion() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list),
@@ -1539,7 +1537,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			
 			LitInteropObject lio = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
@@ -1549,7 +1547,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked),
 					TypeAtom.TypeListJavaArray);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
@@ -1586,7 +1584,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static Conversion LinkedListToNativeList = new Conversion() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(Arrays.asList(list),
 					LitComposite.clojureValueToClojureLiteral(
@@ -1598,7 +1596,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			
 			LitInteropObject lio = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
@@ -1610,7 +1608,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked), TypeAtom.TypeListNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
@@ -1646,7 +1644,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator everyp = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String pred = "_pred";
 			String pred_arg = "_arg";
@@ -1669,7 +1667,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var lio = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
 			LinkedList<Expression> l = (LinkedList<Expression>) lio.javaObject;
@@ -1677,7 +1675,7 @@ public class JavaLinkedList extends OperatorBank {
 
 			Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(expr -> {
 				AbstractionApplication appl = new AbstractionApplication(pred, new Tuple((Expression) expr));
-				Expression rslt = appl.interpret(env, typeEnv);
+				Expression rslt = appl.interpret(env);
 				return rslt.equals(LitBoolean.TRUE);
 			}));
 
@@ -1685,7 +1683,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListJavaLinked, new TypeArrow(
 							new TypeTuple(new TypeVariable(NameGenerator.next())), TypeAtom.TypeBoolNative)),
@@ -1706,7 +1704,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator toStr = new Operator() {
 
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(
 					Arrays.asList(list),
@@ -1723,7 +1721,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject list_io = (LitInteropObject)args.get(0);
@@ -1732,7 +1730,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked),
 					TypeAtom.TypeStringNative);
 			return Pair.of(type, Substitution.EMPTY);
@@ -1756,7 +1754,7 @@ public class JavaLinkedList extends OperatorBank {
 	public static final Operator listIterator = new Operator() {
 	
 		@Override
-		protected String toClojureOperator(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String index = "_index";
 			String code = ClojureHelper.fnHelper(
@@ -1774,7 +1772,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 	
 		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env, TypeEnvironment typeEnv)
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
 			LitInteropObject list_io = (LitInteropObject)args.get(0);
@@ -1788,7 +1786,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 	
 		@Override
-		public Pair<Type, Substitution> infer(Environment env, TypeEnvironment typeEnv) throws AppendableException {
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 			Type type = new TypeArrow(
 					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative),
 					TypeAtom.TypeListIterator);
@@ -1818,11 +1816,6 @@ public class JavaLinkedList extends OperatorBank {
 	@Override
 	public Path getFileName() {
 		return VELKA_CLOJURE_LINKEDLIST_NAME;
-	}
-
-	@Override
-	public void initTypes(TypeEnvironment typeEnv) throws DuplicateTypeDefinitionException {
-		typeEnv.addRepresentation(TypeAtom.TypeListJavaLinked);
 	}
 	
 	private static JavaLinkedList instance = null;
