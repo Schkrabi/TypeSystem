@@ -3,15 +3,20 @@ package velka.core.langbase;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
+import java.util.List;
 
 import velka.core.abstraction.Constructor;
+import velka.core.abstraction.Conversion;
+import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
+import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.Literal;
@@ -32,6 +37,7 @@ import velka.util.annotations.Header;
 import velka.util.annotations.Name;
 import velka.util.annotations.Syntax;
 import velka.util.annotations.VelkaConstructor;
+import velka.util.annotations.VelkaConversion;
 import velka.util.annotations.VelkaOperator;
 import velka.util.annotations.VelkaOperatorBank;
 
@@ -203,6 +209,62 @@ public class TreeSet extends OperatorBank {
 	@VelkaOperator
 	@Description("Removes from this set all of its elements that are contained in the specified collection (optional operation). If the specified collection is also a set, this operation effectively modifies this set so that its value is the asymmetric set difference of the two sets.")
 	public static Operator removeAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "removeAll", "set-tree-remove-all", NAMESPACE, Collection.class);
+	
+	@VelkaConversion
+	@Description("Converts Set:BitSet into Set:Tree.") 
+	@Example("(convert Set:BitSet Set:Tree (bit-set-set (bit-set-set (bit-set-set (construct Set:BitSet) 3) 6) 9))") 
+	@Syntax("(convert Set:BitSet Set:Tree <arg>)")
+	public static Conversion treeSetToBitSet = new Conversion() {
+
+		@Override
+		public Expression cost() {
+			//TODO fine tune!
+			return Lambda.constFun(1, new LitDouble(0.8d));
+		}
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			final String arg = "_arg", bitSet = "_bs", tmp = "_tmp", x = "_x";
+			var code = ClojureHelper.fnHelper(List.of(arg),
+					ClojureHelper.letHelper(bitSet, 
+							Pair.of(bitSet, ClojureHelper.constructJavaClass(java.util.BitSet.class)),
+							Pair.of(tmp, ClojureHelper.applyClojureFunction("doall", 
+									ClojureHelper.applyClojureFunction("map",
+											ClojureHelper.fnHelper(List.of(x), ClojureHelper.applyClojureFunction(".set", bitSet, x)),
+											arg)))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("tree-set-2-bit-set", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			@SuppressWarnings("unchecked")
+			var treeSet = (java.util.TreeSet<Object>)lio.javaObject;
+			var bitSet = new BitSet();
+			
+			treeSet.stream().forEach(e -> {
+				if(e instanceof Long l) {
+					bitSet.set(l.intValue());
+					return;
+				}
+				throw new RuntimeException("Can only convert integer sets to bit sets");
+			});
+			
+			return new LitInteropObject(bitSet, TypeAtom.TypeSetBitSet);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree), TypeAtom.TypeSetBitSet);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+	};
 	
 	@Override
 	public String getNamespace() {

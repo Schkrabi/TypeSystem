@@ -824,4 +824,28 @@ public class ClojureHelper {
 	public static String reify(Class<?> clazz, Pair<String, Pair<Collection<String>, String>> ...impls) {
 		return reify(clazz, List.of(impls));
 	}
+	
+	/** Instantiates java.util.funtion.Function in clojure */
+	public static String javaFunIntfToClj(String arg, String body) {
+		final var rhis = "_this";
+		var code = reify(java.util.function.Function.class,
+				Pair.of("apply", Pair.of(List.of(rhis, arg), body)));
+		return code;
+	}
+	
+	/** Instantiates java.util.function.Consumer in clojure */
+	public static String javaConsumerToClj(String arg, String body) {
+		final var rhis = "_this";
+		var code = reify(java.util.function.Consumer.class,
+				Pair.of("accept", Pair.of(List.of(rhis, arg), body)));
+		return code;
+	}
+	
+	/** Instantiates java.util.function.BiFunction in clojure */
+	public static String javaBiFunIntToClj(String arg1, String arg2, String body) {
+		final var rhis = "_this";
+		var code = reify(java.util.function.BiFunction.class,
+				Pair.of("apply", Pair.of(List.of(rhis, arg1, arg2), body)));
+		return code;
+	}
 }

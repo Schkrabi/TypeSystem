@@ -4,14 +4,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.List;
 
 import velka.core.abstraction.Constructor;
+import velka.core.abstraction.Conversion;
+import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitBoolean;
+import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
@@ -29,6 +33,7 @@ import velka.util.annotations.Header;
 import velka.util.annotations.Name;
 import velka.util.annotations.Syntax;
 import velka.util.annotations.VelkaConstructor;
+import velka.util.annotations.VelkaConversion;
 import velka.util.annotations.VelkaOperator;
 import velka.util.annotations.VelkaOperatorBank;
 
@@ -1710,6 +1715,58 @@ public class JavaBitSet extends OperatorBank {
 		public String toString() {
 			return xorSymbol_out.toString();
 		}
+	};
+	
+	@VelkaConversion
+	@Description("Converts Set:BitSet into Set:Tree.") 
+	@Example("(convert Set:BitSet Set:Tree (bit-set-set (bit-set-set (bit-set-set (construct Set:BitSet) 3) 6) 9))") 
+	@Syntax("(convert Set:BitSet Set:Tree <arg>)")
+	public static final Conversion bitSetToTreeSet = new Conversion() {
+
+		@Override
+		public Expression cost() {
+			//TODO fine tune!
+			return Lambda.constFun(1, new LitDouble(0.8d));
+		}
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			final var arg = "_arg";
+			final var code = ClojureHelper.fnHelper(
+					List.of(arg),
+					ClojureHelper.applyClojureFunction("velka.util.BitSetHelper/bitset2treeset", arg)); 
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("bit-set-2-tree-set", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var bitSet = (java.util.BitSet)lio.javaObject;
+			
+			var treeSet = new java.util.TreeSet<Expression>((Expression e1, Expression e2) -> {
+				if(e1 instanceof LitInteger li1 && e2 instanceof LitInteger li2) {
+					return Long.compare(li1.value, li2.value);
+				}
+				throw new RuntimeException("Can only convert non negative integer sets to BitSet, got " + e1.toString() + " and " + e2.toString());
+			});
+			
+			bitSet.stream().forEach(x -> treeSet.add(new LitInteger(x)));
+			
+			return new LitInteropObject(treeSet, TypeAtom.TypeSetTree);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet), TypeAtom.TypeSetTree);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
 	};
 	
 	public static final Path VELKA_CLOJURE_BITSET_PATH = Paths.get("velka", "clojure");

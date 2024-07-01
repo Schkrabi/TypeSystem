@@ -12,6 +12,8 @@ import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.literal.LitInteger;
+import velka.core.literal.LitInteropObject;
+import velka.types.TypeAtom;
 
 /**
  * 
@@ -64,4 +66,28 @@ class TreeSetTest extends VelkaTest {
         		+ "(tmp (set-tree-add-all set (build-list-native 5 (lambda (x) (* x x))))))"
         		+ "(println (set-tree-ceiling set 4)))");
     }
+	
+	@Test
+	void testToBitSet() throws Exception {
+		var bs = new java.util.BitSet();
+		bs.set(3);
+		bs.set(6);
+		bs.set(9);
+		var lio = new LitInteropObject(bs, TypeAtom.TypeSetBitSet);
+		
+		this.assertInterpretationEquals(
+				"(let ((ts (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add ts 3))"
+				+ "(tmp (set-tree-add ts 6))"
+				+ "(tmp (set-tree-add ts 9)))"
+				+ "(convert Set:Tree Set:BitSet ts))", 
+				lio);
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let ((ts (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+						+ "(tmp (set-tree-add ts 3))"
+						+ "(tmp (set-tree-add ts 6))"
+						+ "(tmp (set-tree-add ts 9)))"
+						+ "(println (bit-set-str (convert Set:Tree Set:BitSet ts))))");
+	}
 }

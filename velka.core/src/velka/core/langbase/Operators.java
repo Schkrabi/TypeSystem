@@ -1591,9 +1591,13 @@ public final class Operators extends OperatorBank {
 			Expression arg = (Expression) args.get(0);
 
 			String s = arg.toString();
-			if(arg instanceof LitInteropObject
-					&& ((LitInteropObject)arg).type.equals(TypeAtom.TypeListNative)) {
-				s = s.replace('[', '(').replace(']', ')').replace(",", "");
+			if(arg instanceof LitInteropObject lio) {				
+				if(lio.type.equals(TypeAtom.TypeListNative)) {
+					s = s.replace('[', '(').replace(']', ')').replace(",", "");
+				}
+				else if(lio.type.equals(TypeAtom.TypeSetTree)) {
+					s = s.replace("[", "#{").replace(']', '}').replace(",", "");
+				}
 			}
 			
 			System.out.println(s);
