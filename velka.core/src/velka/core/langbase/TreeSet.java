@@ -140,6 +140,45 @@ public class TreeSet extends OperatorBank {
 		}		
 	};
 	
+	@VelkaConstructor
+	@Description("Copies Set:Tree.") 
+	@Name("Constructs a new, tree set copying an existing tree set.") 
+	@Syntax("(construct Set Tree <comparator function>)")
+	public static Constructor copyConstructor = new Constructor() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var arg = "_arg";
+			var code = ClojureHelper.fnHelper(List.of(arg),
+					ClojureHelper.applyClojureFunction("java.util.TreeSet.", 
+							arg));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-construct-copy", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			@SuppressWarnings("unchecked")
+			var ts = (java.util.TreeSet<Object>)lio.javaObject;
+			
+			var cts = new java.util.TreeSet<Object>(ts);
+			
+			return new LitInteropObject(cts, TypeAtom.TypeSetTree);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree), TypeAtom.TypeSetTree);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+	};
+	
 	@VelkaOperator
 	@Description("Adds the specified element to this set if it is not already present.") 
 	@Example("(map-tree-ceiling-entry (construct Map Tree (lambda (x y) -1)))") 

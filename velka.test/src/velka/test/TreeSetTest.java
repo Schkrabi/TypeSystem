@@ -5,6 +5,8 @@ package velka.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Set;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +35,25 @@ class TreeSetTest extends VelkaTest {
 		e.interpret(this.env);
 	
 		this.assertIntprtAndCompPrintSameValues("(construct Set:Tree (lambda (x y) -1))");
+	}
+	
+	@Test
+	void testCopyConstructor() throws Exception{
+		var ts = new LitInteropObject(new java.util.TreeSet<Object>(Set.of(3l, 6l, 9l)), TypeAtom.TypeSetTree);
+		
+		this.assertInterpretationEquals(
+				"(let ((ts1 (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add ts1 3))"
+				+ "(tmp (set-tree-add ts1 6))"
+				+ "(tmp (set-tree-add ts1 9)))"
+				+ "(construct Set:Tree ts1))", 
+				ts);
+		
+		this.assertIntprtAndCompPrintSameValues("(let ((ts1 (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add ts1 3))"
+				+ "(tmp (set-tree-add ts1 6))"
+				+ "(tmp (set-tree-add ts1 9)))"
+				+ "(println (construct Set:Tree ts1)))");
 	}
 	
 	@Test
