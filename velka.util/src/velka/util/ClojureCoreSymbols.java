@@ -1,6 +1,5 @@
 package velka.util;
 
-
 public class ClojureCoreSymbols {
 
 	/**
@@ -130,4 +129,6 @@ public class ClojureCoreSymbols {
 	
 	public static final String implementationCost = "implementation-cost";
 	public static final String implementationCost_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, implementationCost);
+
+	public static final String CONSOLE_ARGS_SYMBOL = "_args_";
 }

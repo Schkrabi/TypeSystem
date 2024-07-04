@@ -848,4 +848,12 @@ public class ClojureHelper {
 				Pair.of("apply", Pair.of(List.of(rhis, arg1, arg2), body)));
 		return code;
 	}
+	
+	/** Creates a def expression */
+	public static String def(String symbol, String value) {
+		return applyClojureFunction("def", symbol, value);
+	}
+	
+	/** Standard clj symbol for command line args */
+	public static final String COMMAND_LINE_ARGS = "*command-line-args*";
 }

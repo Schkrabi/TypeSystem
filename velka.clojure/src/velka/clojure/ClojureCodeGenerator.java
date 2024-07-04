@@ -67,6 +67,8 @@ public class ClojureCodeGenerator {
 		for(OperatorBank ob : OperatorBank.operatorBanks) {
 			sb.append(ClojureHelper.requireNamespace(ob.getNamespace()));
 		}
+		
+		sb.append(VelkaClojureCore.cmdArgs);
 
 		Iterator<Expression> i = exprs.iterator();
 		while (i.hasNext()) {

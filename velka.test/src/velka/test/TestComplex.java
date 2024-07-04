@@ -48,11 +48,19 @@ import velka.util.CostAggregation;
 class TestComplex extends VelkaTest {
 	
 	@Test
+	void testCmdLineArgs() throws Exception {
+		var val = "test";
+		this.cljCmdArgs.add(val);
+		this.assertCompiledCodePrints(
+				"(println (get " + ClojureCoreSymbols.CONSOLE_ARGS_SYMBOL + " 0))", 
+				ClojureHelper.stringHelper(val) + System.getProperty("line.separator"));
+	}
+	
+	@Test
 	@DisplayName("Test Recursion")
 	void testRecursion() throws Exception {
 		Environment env = TopLevelEnvironment.instantiate();
 		
-
 		this.assertInterpretedStringEquals("(define fact (lambda (x) (if (= x 1) 1 (* x (fact (- x 1))))))" + "(fact 5)",
 				new LitInteger(120), env);
 

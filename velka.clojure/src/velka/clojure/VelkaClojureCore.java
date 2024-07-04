@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
+import velka.core.expression.Tuple;
 import velka.core.literal.LitComposite;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -408,6 +409,11 @@ public class VelkaClojureCore {
 											ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full,
 													ClojureHelper.applyClojureFunction("first", arg)))),
 							"false"));
+	
+	public static final String cmdArgs = ClojureHelper.def(ClojureCoreSymbols.CONSOLE_ARGS_SYMBOL, 
+			ClojureHelper.clojureIfHelper(ClojureHelper.applyClojureFunction("some?", ClojureHelper.COMMAND_LINE_ARGS), 
+					ClojureHelper.applyClojureFunction("vec", ClojureHelper.tupleHelper_str("*command-line-args*")),
+					Tuple.EMPTY_TUPLE_CLOJURE));
 
 	/**
 	 * Generates clojure code for definitions of velka.clojure.core namespace

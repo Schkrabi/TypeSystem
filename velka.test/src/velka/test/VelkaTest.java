@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -23,6 +24,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
 import velka.clojure.ClojureCodeGenerator;
 import velka.core.abstraction.Abstraction;
@@ -54,6 +56,8 @@ public class VelkaTest {
 	public static boolean IS_UNIX = (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") > 0);
 	protected static final Path velkaUtilJar = Paths.get("C:", "Users", "r.skrabal", "Documents", "private-r.skrabal", "Java", "TypeSystem", "lib", "velka.util.jar");
 	protected static final Path velkaTypesJar = Paths.get("C:", "Users", "r.skrabal", "Documents", "private-r.skrabal", "Java", "TypeSystem", "lib", "velka.types.jar");
+	
+	protected List<String> cljCmdArgs = new ArrayList<String>();
 
 	@BeforeAll
 	static void setupTest() throws IOException {
@@ -62,6 +66,11 @@ public class VelkaTest {
 		ClojureCodeGenerator.generateClojureProject(tmpDir);
 		Files.copy(velkaUtilJar, tmpDir.resolve(Paths.get("velka.util.jar")), StandardCopyOption.REPLACE_EXISTING);
 		Files.copy(velkaTypesJar, tmpDir.resolve(Paths.get("velka.types.jar")), StandardCopyOption.REPLACE_EXISTING);
+	}
+	
+	@BeforeEach
+	void setupCmdArgs() {
+		this.cljCmdArgs = new ArrayList<String>();
 	}
 
 	@AfterAll
@@ -184,17 +193,29 @@ public class VelkaTest {
 		List<Expression> exprs = Parser.read(code);
 		this.assertIntprtAndCompPrintSameValues(exprs);
 	}
+	
+	/** asserts compiled code prints the given value **/
+	public void assertCompiledCodePrints(String code, String expectedPrintou) throws Exception {
+		List<Expression> exprs = Parser.read(code);
+		this.assertCompiledCodePrints(exprs, expectedPrintou);
+	}
+	
+	
+	/** asserts compiled code prints the given value */
+	public void assertCompiledCodePrints(List<Expression> in, String expectedPrintout) throws Exception {
+		Environment cmplEnv = TopLevelEnvironment.instantiate();
+		
+		String compilationPrintOut = clojureCompilationResult(in, cmplEnv);
+	
+		assertEquals(expectedPrintout, compilationPrintOut);
+	}
 
 	protected void assertIntprtAndCompPrintSameValues(List<Expression> in) throws Exception {
 		Environment intpEnv = TopLevelEnvironment.instantiate();
 	
 		String interpretationPrintOut = interpretationPrint(in, intpEnv);
 	
-		Environment cmplEnv = TopLevelEnvironment.instantiate();
-	
-		String compilationPrintOut = clojureCompilationResult(in, cmplEnv);
-	
-		assertEquals(interpretationPrintOut, compilationPrintOut);
+		this.assertCompiledCodePrints(in, interpretationPrintOut);
 	}
 
 	private String interpretationPrint(List<Expression> in, Environment env) throws Exception {
@@ -227,6 +248,7 @@ public class VelkaTest {
 				Path codeFile = Files.writeString(tmpDir.resolve(Paths.get("velka", "clojure", "user.clj")), code);
 				
 				ProcessBuilder pb = new ProcessBuilder("clj", codeFile.toAbsolutePath().toString());
+				pb.command().addAll(this.cljCmdArgs);
 				pb.inheritIO();
 				pb.directory(tmpDir.toFile());
 				
@@ -257,6 +279,7 @@ public class VelkaTest {
 				Path codeFile = Files.writeString(tmpDir.resolve(Paths.get("velka", "clojure", "user.clj")), code);
 				
 				ProcessBuilder pb = new ProcessBuilder("powershell", "-command", "clj",	"-M", codeFile.toAbsolutePath().toString());
+				pb.command().addAll(this.cljCmdArgs);
 				pb.inheritIO();
 				pb.directory(tmpDir.toFile());
 				
