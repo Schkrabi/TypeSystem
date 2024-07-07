@@ -5,6 +5,7 @@ package velka.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -110,5 +111,61 @@ class TreeSetTest extends VelkaTest {
 						+ "(tmp (set-tree-add ts 6))"
 						+ "(tmp (set-tree-add ts 9)))"
 						+ "(println (bit-set-str (convert Set:Tree Set:BitSet ts))))");
+	}
+	
+	@Test
+	void testIntersect() throws Exception {
+		var s = new LitInteropObject(new java.util.TreeSet<Object>(List.of(2l, 3l)), TypeAtom.TypeSetTree);
+		
+		this.assertInterpretationEquals(
+				"(let ((s1 (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add s1 1))"
+				+ "(tmp (set-tree-add s1 2))"
+				+ "(tmp (set-tree-add s1 3))"
+				+ "(s2 (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add s2 2))"
+				+ "(tmp (set-tree-add s2 3))"
+				+ "(tmp (set-tree-add s2 4)))"
+				+ "(set-tree-intersect s1 s2))", 
+				s);
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let ((s1 (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add s1 1))"
+				+ "(tmp (set-tree-add s1 2))"
+				+ "(tmp (set-tree-add s1 3))"
+				+ "(s2 (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add s2 2))"
+				+ "(tmp (set-tree-add s2 3))"
+				+ "(tmp (set-tree-add s2 4)))"
+				+ "(println (set-tree-intersect s1 s2)))");
+	}
+	
+	@Test
+	void testUnion() throws Exception {
+var s = new LitInteropObject(new java.util.TreeSet<Object>(List.of(1l, 2l, 3l, 4l)), TypeAtom.TypeSetTree);
+		
+		this.assertInterpretationEquals(
+				"(let ((s1 (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add s1 1))"
+				+ "(tmp (set-tree-add s1 2))"
+				+ "(tmp (set-tree-add s1 3))"
+				+ "(s2 (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add s2 2))"
+				+ "(tmp (set-tree-add s2 3))"
+				+ "(tmp (set-tree-add s2 4)))"
+				+ "(set-tree-union s1 s2))", 
+				s);
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let ((s1 (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add s1 1))"
+				+ "(tmp (set-tree-add s1 2))"
+				+ "(tmp (set-tree-add s1 3))"
+				+ "(s2 (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add s2 2))"
+				+ "(tmp (set-tree-add s2 3))"
+				+ "(tmp (set-tree-add s2 4)))"
+				+ "(println (set-tree-union s1 s2)))");
 	}
 }

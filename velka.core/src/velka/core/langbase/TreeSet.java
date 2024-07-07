@@ -302,6 +302,104 @@ public class TreeSet extends OperatorBank {
 			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree), TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
+	};
+	
+	@VelkaOperator
+	public static final Operator intersect = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			final var s1 = "_s1";
+			final var s2 = "_s2";
+			final var tmp = "_tmp";
+			
+			var code = ClojureHelper.fnHelper(List.of(s1, s2),
+					ClojureHelper.letHelper(s1, 
+							Pair.of(tmp, ClojureHelper.constructJavaClass(java.util.TreeSet.class, s1)),
+							Pair.of("_aux", ClojureHelper.applyClojureFunction(".retainAll", tmp, s2)),
+							Pair.of("_aux", ClojureHelper.applyClojureFunction(".retainAll", s1, tmp))));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-intersect", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var ls1 = (LitInteropObject)args.get(0);
+			var ls2 = (LitInteropObject)args.get(1);
+			
+			@SuppressWarnings("unchecked")
+			var s1 = (java.util.TreeSet<Object>)ls1.javaObject;
+			@SuppressWarnings("unchecked")
+			var s2 = (java.util.TreeSet<Object>)ls2.javaObject;
+			
+			var tmp = new java.util.TreeSet<Object>(s1);
+			tmp.retainAll(s2);
+			s1.retainAll(tmp);
+			
+			return new LitInteropObject(s1, TypeAtom.TypeSetTree);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree, TypeAtom.TypeSetTree), TypeAtom.TypeSetTree);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-tree-intersect";
+		}
+	};
+	
+	@VelkaOperator
+	public static final Operator union = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			final var s1 = "_s1";
+			final var s2 = "_s2";
+			
+			var code = ClojureHelper.fnHelper(List.of(s1, s2),
+					ClojureHelper.letHelper(s1, 
+							Pair.of("_aux", ClojureHelper.applyClojureFunction(".addAll", s1, s2))));
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-union", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var ls1 = (LitInteropObject)args.get(0);
+			var ls2 = (LitInteropObject)args.get(1);
+			
+			@SuppressWarnings("unchecked")
+			var s1 = (java.util.TreeSet<Object>)ls1.javaObject;
+			@SuppressWarnings("unchecked")
+			var s2 = (java.util.TreeSet<Object>)ls2.javaObject;
+			
+			s1.addAll(s2);
+			return new LitInteropObject(s1, TypeAtom.TypeSetTree);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree, TypeAtom.TypeSetTree), TypeAtom.TypeSetTree);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-tree-union";
+		}
 		
 	};
 	

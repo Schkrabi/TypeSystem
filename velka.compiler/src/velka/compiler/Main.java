@@ -86,10 +86,10 @@ public class Main {
 					}
 					break;
 				case INTERPRET:{
-						var inStream = Files.newInputStream(Path.of(args[0]));
+						var inStream = Files.newInputStream(Path.of(args[1]));
 						var topLevel = TopLevelEnvironment.instantiate();
-						var l = new ArrayList<Expression>(args.length - 1);
-						for(int i = 1; i < args.length; i++) {
+						var l = new ArrayList<Expression>(args.length - 2);
+						for(int i = 2; i < args.length; i++) {
 							l.add(new LitString(args[i]));
 						}
 						topLevel.put(new Symbol(ClojureCoreSymbols.CONSOLE_ARGS_SYMBOL), new Tuple(l));

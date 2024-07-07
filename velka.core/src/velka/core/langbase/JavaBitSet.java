@@ -138,6 +138,44 @@ public class JavaBitSet extends OperatorBank {
 		}		
 	};
 	
+	@VelkaConstructor
+	public static final Constructor copyConstructor = new Constructor() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			final String arg = "_arg";
+			final String set = "_set";
+			var code = ClojureHelper.fnHelper(List.of(arg),
+					ClojureHelper.letHelper(set, 
+							Pair.of(set, ClojureHelper.constructJavaClass(java.util.BitSet.class, ClojureHelper.applyClojureFunction(".length", arg))),
+							Pair.of("tmp", ClojureHelper.applyClojureFunction(".or", set, arg))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("copy-construct", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var bs = (java.util.BitSet)lio.javaObject;
+			
+			var ret = new java.util.BitSet(bs.length());
+			ret.or(bs);
+			
+			return new LitInteropObject(ret, TypeAtom.TypeSetBitSet);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet), TypeAtom.TypeSetBitSet);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+	};
+	
 	/**
 	 * Symbol for void and(BitSet set)
 	 */

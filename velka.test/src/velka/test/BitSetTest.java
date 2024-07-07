@@ -14,6 +14,31 @@ import velka.types.TypeAtom;
 class BitSetTest extends VelkaTest {
 
 	@Test
+	void testConstructor() throws Exception {
+		var bset = new java.util.BitSet();
+		bset.set(3);
+		bset.set(6);
+		bset.set(9);
+		
+		var lio = new LitInteropObject(bset, TypeAtom.TypeSetBitSet);
+		
+		this.assertInterpretationEquals(
+				"(let ((set (construct Set:BitSet))"
+				+ "(tmp (bit-set-set set 3))"
+				+ "(tmp (bit-set-set set 6))"
+				+ "(tmp (bit-set-set set 9)))"
+				+ "(construct Set:BitSet set))", 
+				lio);
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let ((set (construct Set:BitSet))"
+				+ "(tmp (bit-set-set set 3))"
+				+ "(tmp (bit-set-set set 6))"
+				+ "(tmp (bit-set-set set 9)))"
+				+ "(println (bit-set-str (construct Set:BitSet set))))");
+	}
+	
+	@Test
     @DisplayName("Test bit-set-str with empty BitSet")
     void testBitSetStrEmpty() throws Exception {
         this.assertIntprtAndCompPrintSameValues("(println (bit-set-str (construct Set:BitSet)))");
