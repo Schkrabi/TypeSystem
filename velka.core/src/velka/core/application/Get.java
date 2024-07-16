@@ -79,7 +79,7 @@ public class Get extends SpecialFormApplication {
 		Pair<Type, Substitution> indexPair = this.getIndex().infer(env);
 		
 		Type.unifyTypes(indexPair.first, TypeAtom.TypeIntNative);
-		if(!(tuplePair.first instanceof TypeTuple)) {
+		if(!((tuplePair.first instanceof TypeTuple) || (tuplePair.first instanceof TypeVariable))) {
 			throw new AppendableException("First argument of get must infer to TypeTuple. Got " + tuplePair.first);
 		}
 		

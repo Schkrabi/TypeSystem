@@ -856,4 +856,12 @@ public class ClojureHelper {
 	
 	/** Standard clj symbol for command line args */
 	public static final String COMMAND_LINE_ARGS = "*command-line-args*";
+	
+	/** Varargs syntax for clojure */
+	public static final String varargs(String symbol) {
+		return new StringBuilder()
+				.append("& ")
+				.append(symbol)
+				.toString();
+	}
 }

@@ -291,6 +291,14 @@ public class TreeSet extends OperatorBank {
 					bitSet.set(l.intValue());
 					return;
 				}
+				if(e instanceof Integer i) {
+					bitSet.set(i);
+					return;
+				}
+				if(e instanceof LitInteger li) {
+					bitSet.set((int)li.value);
+					return;
+				}
 				throw new RuntimeException("Can only convert integer sets to bit sets");
 			});
 			

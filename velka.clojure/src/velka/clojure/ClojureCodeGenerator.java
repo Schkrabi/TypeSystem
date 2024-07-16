@@ -160,14 +160,23 @@ public class ClojureCodeGenerator {
 	 * @throws AppendableException 
 	 */
 	public static String writeMain() throws AppendableException {
-		// TODO add support of command line arguments!
-		return "(defn -main []\n"
-				+ ClojureHelper.applyVelkaFunction("main", Type.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)) + ")";
+		final String args = "_args";
+		return ClojureHelper.clojureDefnHelper("-main", List.of(ClojureHelper.varargs(args)), 
+				ClojureHelper.applyVelkaFunction("main", 
+								ClojureHelper.tupleHelper_str( //Converts the clj &args into a velka tuple
+										ClojureHelper.applyClojureFunction("vec", args))));				
 	}
 	
 	public static Path createDepsEdn(Path directory) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		sb.append("{\n");
+		
+		sb.append(":aliases {\n")
+		.append(":run {\n")
+		.append(":main-opts [\"-m\" \"velka.clojure.user\"]\n")
+		.append("}\n")
+		.append("}\n");
+		
 		sb.append(":paths\n");
 		sb.append("[\n");
 		

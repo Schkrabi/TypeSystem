@@ -80,7 +80,7 @@ public class VelkaClojureDev {
 	private static final String velkaTuple = ClojureHelper.clojureDefnHelper(
 			velkaTupleSymbol, 
 			Arrays.asList("& " +  velkaTuple_args), 
-			ClojureHelper.tupleHelper_str(velkaTuple_args));
+			ClojureHelper.tupleHelper_str(ClojureHelper.applyClojureFunction("vec", velkaTuple_args)));
 	
 	private static final String velkaApplySymbol = "velka-apply";
 	private static final String velkaApply_fun = "_fun";

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.literal.LitBoolean;
+import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
 
@@ -121,5 +122,27 @@ class TestOperators extends VelkaTest{
 				this.env);
 		
 		this.assertIntprtAndCompPrintSameValues("(println (min 42 1))");
+	}
+	
+	@Test
+	void testLinearFunction() throws Exception {
+		this.assertInterpretationEquals("((lin-fun 1.0 .0) .0)", new LitDouble(0.0));
+		this.assertInterpretationEquals("((lin-fun 1.0 .0) 1.0)", new LitDouble(1.0));
+		this.assertInterpretationEquals("((lin-fun 1.0 .0) -2.0)", new LitDouble(-2.0));
+		
+		this.assertIntprtAndCompPrintSameValues("(println ((lin-fun 1.0 .0) .0))");
+		this.assertIntprtAndCompPrintSameValues("(println ((lin-fun 1.0 .0) 1.0))");
+		this.assertIntprtAndCompPrintSameValues("(println ((lin-fun 1.0 .0) -2.0))");
+	}
+	
+	@Test
+	void testLinearFunctionPoints() throws Exception {
+		this.assertInterpretationEquals("((lin-fun-pts 0.0 0.0 1.0 1.0) .0)", new LitDouble(0.0));
+		this.assertInterpretationEquals("((lin-fun-pts 0.0 0.0 1.0 1.0) 1.0)", new LitDouble(1.0));
+		this.assertInterpretationEquals("((lin-fun-pts 0.0 0.0 1.0 1.0) -2.0)", new LitDouble(-2.0));
+		
+		this.assertIntprtAndCompPrintSameValues("(println ((lin-fun-pts 0.0 0.0 1.0 1.0) .0))");
+		this.assertIntprtAndCompPrintSameValues("(println ((lin-fun-pts 0.0 0.0 1.0 1.0) 1.0))");
+		this.assertIntprtAndCompPrintSameValues("(println ((lin-fun-pts 0.0 0.0 1.0 1.0) -2.0))");
 	}
 }

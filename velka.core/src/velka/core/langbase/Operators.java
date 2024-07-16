@@ -34,6 +34,7 @@ import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
+import velka.util.Functions;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.annotations.Description;
@@ -1538,7 +1539,7 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			return ClojureHelper.unaryOperatorToFn("Integer/parseInt");
+			return ClojureHelper.unaryOperatorToFn("Long/parseLong");
 		}
 
 		@Override
@@ -2113,6 +2114,159 @@ public final class Operators extends OperatorBank {
 		@Override
 		public String toString() {
 			return "strlen";
+		}
+	};
+	
+	@VelkaOperator
+	public static final Operator linFun = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var q = "_q";
+			var k = "_k";
+			var f = "_f";
+			var x = "_x";
+			var code = ClojureHelper.fnHelper(List.of(k, q),
+					ClojureHelper.letHelper(ClojureHelper.addTypeMetaInfo_str(
+							ClojureHelper.fnHelper(List.of(x), ClojureHelper.applyClojureFunction(".apply", f, x)), 
+							new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative).clojureTypeRepresentation()), 
+							Pair.of(f, ClojureHelper.applyClojureFunction("velka.util.Functions/linearFunction", k, q))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("lin-fun", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var k = (LitDouble)args.get(0);
+			var q = (LitDouble)args.get(1);
+			
+			final var f = Functions.linearFunction(k.value, q.value);
+			
+			var op = new Operator() {
+
+				@Override
+				protected String toClojureOperator(Environment env) throws AppendableException {
+					return "";
+				}
+
+				@Override
+				public Symbol getClojureSymbol() {
+					return null;
+				}
+
+				@Override
+				protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+					var x = (LitDouble)args.get(0);
+					
+					var r = f.apply(x.value);
+					
+					return new LitDouble(r);
+				}
+
+				@Override
+				public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+					var type = new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative);
+					return Pair.of(type, Substitution.EMPTY);
+				}
+				
+			};
+			
+			return op;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative, TypeAtom.TypeDoubleNative),
+					new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative));
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "lin-fun";
+		}
+		
+	};
+	
+	@VelkaOperator
+	public static final Operator linFunPoints = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var x1 = "_x1";
+			var y1 = "_y1";
+			var x2 = "_x2";
+			var y2 = "_y2";
+			var f = "_f";
+			var x = "_x";
+			var code = ClojureHelper.fnHelper(List.of(x1, y1, x2, y2),
+					ClojureHelper.letHelper(ClojureHelper.addTypeMetaInfo_str(
+							ClojureHelper.fnHelper(List.of(x), ClojureHelper.applyClojureFunction(".apply", f, x)), 
+							new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative).clojureTypeRepresentation()), 
+							Pair.of(f, ClojureHelper.applyClojureFunction("velka.util.Functions/linearFunctionFromPoints", x1, y1, x2, y2))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("lin-fun-pts", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var x1 = (LitDouble)args.get(0);
+			var y1 = (LitDouble)args.get(1);
+			var x2 = (LitDouble)args.get(2);
+			var y2 = (LitDouble)args.get(3);
+			
+			final var f = Functions.linearFunctionFromPoints(x1.value, y1.value, x2.value, y2.value);
+			
+			var op = new Operator() {
+
+				@Override
+				protected String toClojureOperator(Environment env) throws AppendableException {
+					return "";
+				}
+
+				@Override
+				public Symbol getClojureSymbol() {
+					return null;
+				}
+
+				@Override
+				protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+					var x = (LitDouble)args.get(0);
+					
+					var r = f.apply(x.value);
+					
+					return new LitDouble(r);
+				}
+
+				@Override
+				public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+					var type = new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative);
+					return Pair.of(type, Substitution.EMPTY);
+				}
+				
+			};
+			
+			return op;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative, TypeAtom.TypeDoubleNative, TypeAtom.TypeDoubleNative, TypeAtom.TypeDoubleNative),
+					new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative));
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "lin-fun-pts";
 		}
 	};
 	

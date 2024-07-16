@@ -182,7 +182,11 @@ public class TypeSystem {
 			throw new RuntimeException("Cannot convert " + (from != null ? from.toString() : "nil") + " to " + to);
 		}
 		
-		if(to instanceof TypeVariable || to instanceof RepresentationOr) return arg;
+		if (from instanceof TypeVariable 
+				|| from instanceof RepresentationOr
+				|| to instanceof TypeVariable 
+				|| to instanceof RepresentationOr)
+			return arg;
 		
 		if(from instanceof TypeTuple ftt) {
 			var ttt = (TypeTuple)to;
@@ -200,6 +204,15 @@ public class TypeSystem {
 			
 			return this.convertAtom(fta, tta, args, env);
 		}
-		throw new RuntimeException("Unknown conversion error");
+		throw new RuntimeException(new StringBuilder()
+				.append("Unknown conversion error, args: ")
+				.append(from)
+				.append(" ")
+				.append(to)
+				.append(" ")
+				.append(args)
+				.append(" ")
+				.append(env)
+				.toString());
 	}
 }
