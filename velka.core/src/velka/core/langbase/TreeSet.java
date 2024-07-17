@@ -31,6 +31,7 @@ import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ClojureHelper.ProxyImpl;
+import velka.util.Functions;
 import velka.util.annotations.Description;
 import velka.util.annotations.Example;
 import velka.util.annotations.Header;
@@ -257,8 +258,46 @@ public class TreeSet extends OperatorBank {
 
 		@Override
 		public Expression cost() {
-			//TODO fine tune!
-			return Lambda.constFun(1, new LitDouble(0.8d));
+			final var f = Functions.linearFunctionFromPoints(0d, 0.8d, 1000d, 0.5d);
+			var l = new Operator() {
+
+				@Override
+				protected String toClojureOperator(Environment env) throws AppendableException {
+					var arg = "_arg";
+					var code = ClojureHelper.fnHelper(List.of(arg),
+							ClojureHelper.applyClojureFunction("min", "0.8",
+									ClojureHelper.applyClojureFunction("max", "0.5",
+											ClojureHelper.applyClojureFunction(".apply",
+													ClojureHelper.applyClojureFunction("velka.util.Functions/linearFunctionFromPoints",  "0", "0.8", "1000", "0.5"),
+													ClojureHelper.applyClojureFunction("double", ClojureHelper.applyClojureFunction(".size", arg))))));
+					return code;
+				}
+
+				@Override
+				public Symbol getClojureSymbol() {
+					return new Symbol(NameGenerator.next());
+				}
+
+				@Override
+				protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+					var lio = (LitInteropObject)args.get(0);
+					@SuppressWarnings("unchecked")
+					var set = (java.util.TreeSet<Object>)lio.javaObject;
+					
+					var cost = Math.min(0.8d, Math.max(0.5d, f.apply((double)set.size())));
+					
+					return new LitDouble(cost);
+				}
+
+				@Override
+				public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+					var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree), TypeAtom.TypeDoubleNative);
+					return Pair.of(type, Substitution.EMPTY);
+				}
+				
+			};
+			
+			return l;
 		}
 
 		@Override

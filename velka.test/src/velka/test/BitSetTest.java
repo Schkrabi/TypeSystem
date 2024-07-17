@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import velka.core.expression.Expression;
 import velka.core.langbase.JavaBitSet;
+import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.types.TypeAtom;
@@ -351,5 +352,15 @@ class BitSetTest extends VelkaTest {
     			"(define bs (bit-set-set (bit-set-set (bit-set-set (construct Set:BitSet) 3) 6) 9))"
     	    	+ "(println (convert Set:BitSet Set:Tree bs))"
     			);
+    	
+    	this.assertInterpretationEquals("(conversion-cost (lambda ((Set:Tree x)) x) (tuple (construct Set:BitSet)))", new LitDouble(0.8d));
+    	this.assertInterpretationEquals("(let ((s (construct Set:BitSet))"
+    			+ "(tmp (bit-set-set-interval s 0 2000)))"
+    			+ "(conversion-cost (lambda ((Set:Tree x)) x) (tuple s)))", new LitDouble(0.5d));
+    	
+    	this.assertIntprtAndCompPrintSameValues("(println (conversion-cost (lambda ((Set:Tree x)) x) (tuple (construct Set:BitSet))))");
+    	this.assertIntprtAndCompPrintSameValues("(let ((s (construct Set:BitSet))"
+    			+ "(tmp (bit-set-set-interval s 0 2000)))"
+    			+ "(println (conversion-cost (lambda ((Set:Tree x)) x) (tuple s))))");
     }
 }

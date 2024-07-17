@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TopLevelEnvironment;
+import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.types.TypeAtom;
@@ -111,6 +112,16 @@ class TreeSetTest extends VelkaTest {
 						+ "(tmp (set-tree-add ts 6))"
 						+ "(tmp (set-tree-add ts 9)))"
 						+ "(println (bit-set-str (convert Set:Tree Set:BitSet ts))))");
+		
+		this.assertInterpretationEquals("(conversion-cost (lambda ((Set:BitSet x)) x) (tuple (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1))))))", new LitDouble(0.8d));
+		this.assertInterpretationEquals("(let ((s (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add-all s (build-list-native 1000 (lambda (x) x)))))"
+				+ "(conversion-cost (lambda ((Set:BitSet x)) x) (tuple s)))", new LitDouble(0.5d));
+		
+		this.assertIntprtAndCompPrintSameValues("(println (conversion-cost (lambda ((Set:BitSet x)) x) (tuple (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))))");
+		this.assertIntprtAndCompPrintSameValues("(let ((s (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add-all s (build-list-native 1000 (lambda (x) x)))))"
+				+ "(println (conversion-cost (lambda ((Set:BitSet x)) x) (tuple s))))");
 	}
 	
 	@Test
