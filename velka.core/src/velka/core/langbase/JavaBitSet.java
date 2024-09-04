@@ -5,11 +5,12 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
+import java.util.function.IntConsumer;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
-import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
+import velka.core.application.AbstractionApplication;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -1757,25 +1758,133 @@ public class JavaBitSet extends OperatorBank {
 		}
 	};
 	
+	public static final Symbol mapSymbol = new Symbol("velka-map", NAMESPACE);
+	public static final Symbol mapSymbol_out = new Symbol("bit-set-map");
+	
+	@VelkaOperator
+	@Description("Map function.") 
+	@Example("(define s (construct Set:BitSet))\n"
+					+ "(bit-set-set-interval s 0 5)\n"
+					+ "(bit-set-map s (lambda (x) (+ x 1)))") 
+	@Syntax("(bit-set-map <set1> <fun>)")
+	public static final Operator map = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var fun = "_fun";
+			var set = "_set";
+			var acc = "_acc";
+			var idx = "_idx";
+			var vl = "_vl";
+			var tmp = "_tmp";
+//			var code = ClojureHelper.fnHelper(
+//					List.of(set, fun),
+//					ClojureHelper.applyClojureFunction(
+//							"map", fun,
+//							ClojureHelper.applyClojureFunction("loop",
+//									ClojureHelper.clojureVectorHelper(
+//											acc, "'()",
+//											idx, ClojureHelper.applyClojureFunction(".size", set)),
+//									ClojureHelper.letHelper(
+//											ClojureHelper.clojureIfHelper(
+//													ClojureHelper.applyClojureFunction("=", vl, "-1"), 
+//													acc, 
+//													ClojureHelper.applyClojureFunction("recur", 
+//															ClojureHelper.applyClojureFunction("conj", acc, vl),
+//															ClojureHelper.applyClojureFunction("-", vl, "1"))), 
+//											Pair.of(vl, ClojureHelper.applyClojureFunction(".previousSetBit", set, idx))))));
+			var code = ClojureHelper.fnHelper(
+					List.of(set, fun),
+							ClojureHelper.applyClojureFunction("loop",
+									ClojureHelper.clojureVectorHelper(
+											acc, ClojureHelper.constructJavaClass(BitSet.class),
+											idx, "0"),
+									ClojureHelper.letHelper(
+											ClojureHelper.clojureIfHelper(
+													ClojureHelper.applyClojureFunction("=", vl, "-1"), 
+													acc, 
+													ClojureHelper.applyClojureFunction("recur", 
+															ClojureHelper.letHelper(acc, 
+																	Pair.of(tmp, ClojureHelper.applyClojureFunction(".set", 
+																			acc, 
+																			ClojureHelper.applyVelkaFunction(fun, vl)))),
+															ClojureHelper.applyClojureFunction("+", vl, "1"))), 
+											Pair.of(vl, ClojureHelper.applyClojureFunction(".nextSetBit", set, idx)))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return mapSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var set = (LitInteropObject)args.get(0);
+			var fun = args.get(1);
+			var bSet = (BitSet)set.javaObject;
+			
+			var retSet = new BitSet();
+			
+			bSet.stream().forEach(i -> {
+				var app = new AbstractionApplication(fun, new Tuple(new LitInteger((long)i)));
+				try {
+					var exp = app.interpret(env);
+					if(exp instanceof LitInteger li) {
+						retSet.set((int)li.value); 
+					}
+					else {
+						throw new RuntimeException("Invalid mapping, got: " + exp);
+					}
+				}catch(Exception e) {
+					throw new RuntimeException(e);
+				}
+			});
+			
+			return new LitInteropObject(retSet, TypeAtom.TypeSetBitSet);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet, new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeIntNative)),
+					TypeAtom.TypeSetBitSet);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return mapSymbol_out.toString();
+		}
+		
+	};
+	
 	@VelkaConversion
 	@Description("Converts Set:BitSet into Set:Tree.") 
 	@Example("(convert Set:BitSet Set:Tree (bit-set-set (bit-set-set (bit-set-set (construct Set:BitSet) 3) 6) 9))") 
 	@Syntax("(convert Set:BitSet Set:Tree <arg>)")
 	public static final Conversion bitSetToTreeSet = new Conversion() {
 
+		Double costX1 = 0d;
+		Double costY1 = 0.8d;
+		Double costX2 = 1000d;
+		Double costY2 = 0.5d;
+		
 		@Override
 		public Expression cost() {
-			final var f = Functions.linearFunctionFromPoints(0d, 0.8d, 1000d, 0.5d);
+			final var f = Functions.linearFunctionFromPoints(costX1, costY1, costX2, costY2);
 			var l = new Operator() {
 
 				@Override
 				protected String toClojureOperator(Environment env) throws AppendableException {
 					var arg = "_arg";
 					var code = ClojureHelper.fnHelper(List.of(arg),
-							ClojureHelper.applyClojureFunction("min", "0.8",
-									ClojureHelper.applyClojureFunction("max", "0.5",
+							ClojureHelper.applyClojureFunction("min", costY1.toString(),
+									ClojureHelper.applyClojureFunction("max", costY2.toString(),
 											ClojureHelper.applyClojureFunction(".apply",
-													ClojureHelper.applyClojureFunction("velka.util.Functions/linearFunctionFromPoints",  "0", "0.8", "1000", "0.5"),
+													ClojureHelper.applyClojureFunction(
+															"velka.util.Functions/linearFunctionFromPoints",
+															costX1.toString(), costY1.toString(), costX2.toString(),
+															costY2.toString()),
 													ClojureHelper.applyClojureFunction("double", ClojureHelper.applyClojureFunction(".cardinality", arg))))));
 					return code;
 				}

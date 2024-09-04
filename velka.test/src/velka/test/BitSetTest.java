@@ -329,6 +329,18 @@ class BitSetTest extends VelkaTest {
         );
     }
     
+    @Test
+    @DisplayName("Test map")
+    void testMap() throws Exception{
+    	var bs = new java.util.BitSet();
+    	bs.set(1, 6);
+    	this.assertInterpretationEquals(
+    			"(bit-set-map (bit-set-set-interval (construct Set:BitSet) 0 5) (lambda (x) (+ x 1)))", 
+    			new LitInteropObject(bs, TypeAtom.TypeSetBitSet));
+    	
+    	this.assertIntprtAndCompPrintSameValues("(println (bit-set-str (bit-set-map (bit-set-set-interval (construct Set:BitSet) 0 5) (lambda (x) (+ x 1)))))");
+    }
+    
     @SuppressWarnings("unchecked")
 	@Test
     @DisplayName("Test conversion BitSet to TreeSet")

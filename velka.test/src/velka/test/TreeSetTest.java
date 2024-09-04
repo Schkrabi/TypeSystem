@@ -154,7 +154,7 @@ class TreeSetTest extends VelkaTest {
 	
 	@Test
 	void testUnion() throws Exception {
-var s = new LitInteropObject(new java.util.TreeSet<Object>(List.of(1l, 2l, 3l, 4l)), TypeAtom.TypeSetTree);
+		var s = new LitInteropObject(new java.util.TreeSet<Object>(List.of(1l, 2l, 3l, 4l)), TypeAtom.TypeSetTree);
 		
 		this.assertInterpretationEquals(
 				"(let ((s1 (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
@@ -178,5 +178,21 @@ var s = new LitInteropObject(new java.util.TreeSet<Object>(List.of(1l, 2l, 3l, 4
 				+ "(tmp (set-tree-add s2 3))"
 				+ "(tmp (set-tree-add s2 4)))"
 				+ "(println (set-tree-union s1 s2)))");
+	}
+	
+	@Test
+	void testMap() throws Exception {
+		this.assertInterpretationEquals(
+				"(let ((s (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add-all s (build-list-native 5 (lambda (x) x)))))"
+				+ "(set-tree-map s (lambda (x) (+ x 1))))", 
+				new LitInteropObject(new java.util.TreeSet<Expression>(
+						List.of(new LitInteger(1), new LitInteger(2), new LitInteger(3), new LitInteger(4), new LitInteger(5))), 
+						TypeAtom.TypeSetTree));
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let ((s (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add-all s (build-list-native 5 (lambda (x) x)))))"
+				+ "(println (set-tree-map s (lambda (x) (+ x 1)))))");
 	}
 }

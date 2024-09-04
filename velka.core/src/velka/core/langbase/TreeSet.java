@@ -9,7 +9,7 @@ import java.util.List;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
-import velka.core.abstraction.Lambda;
+
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
 import velka.core.expression.Expression;
@@ -250,25 +250,103 @@ public class TreeSet extends OperatorBank {
 	@Description("Removes from this set all of its elements that are contained in the specified collection (optional operation). If the specified collection is also a set, this operation effectively modifies this set so that its value is the asymmetric set difference of the two sets.")
 	public static Operator removeAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "removeAll", "set-tree-remove-all", NAMESPACE, Collection.class);
 	
+	public static final Symbol mapSymbol = new Symbol("velka-map", NAMESPACE);
+	public static final Symbol mapSymbol_out = new Symbol("set-tree-map");
+	
+	@VelkaOperator
+	@Description("Map int function")
+	public static final Operator map = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var fun = "_fun";
+			var set = "_set";
+			var x = "_x";
+			var ret = "_ret";
+			var code = ClojureHelper.fnHelper(List.of(set, fun),
+						ClojureHelper.letHelper(
+								ret,
+								Pair.of(ret, ClojureHelper.constructJavaClass(java.util.TreeSet.class, 
+												ClojureHelper.applyClojureFunction(".comparator", set))),
+								Pair.of("tmp", ClojureHelper.applyClojureFunction(".addAll", 
+										ret,
+										ClojureHelper.applyClojureFunction("map", 
+												ClojureHelper.fnHelper(List.of(x), ClojureHelper.applyVelkaFunction(fun, x)),
+												set)))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return mapSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var set = (LitInteropObject)args.get(0);
+			var fun = args.get(1);
+			var tSet = (java.util.TreeSet<Expression>)set.javaObject;
+			
+			var rSet = new java.util.TreeSet<Expression>(tSet.comparator());
+			
+			tSet.stream().forEach(x -> {
+				var app = new AbstractionApplication(fun, new Tuple(x));
+				try {
+					var exp = app.interpret(env);
+					if(exp instanceof LitInteger li) {
+						rSet.add(li); 
+					}
+					else {
+						throw new RuntimeException("Invalid mapping, got: " + exp);
+					}
+				}catch(Exception e) {
+					throw new RuntimeException(e);
+				}
+			});
+			
+			return new LitInteropObject(rSet, TypeAtom.TypeSetTree);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree, new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeIntNative)),
+					TypeAtom.TypeSetTree);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return mapSymbol_out.toString();
+		}
+	};
+	
 	@VelkaConversion
 	@Description("Converts Set:BitSet into Set:Tree.") 
 	@Example("(convert Set:BitSet Set:Tree (bit-set-set (bit-set-set (bit-set-set (construct Set:BitSet) 3) 6) 9))") 
 	@Syntax("(convert Set:BitSet Set:Tree <arg>)")
 	public static Conversion treeSetToBitSet = new Conversion() {
+		
+		Double costX1 = 0d;
+		Double costY1 = 0.8d;
+		Double costX2 = 1000d;
+		Double costY2 = 0.5d;
 
 		@Override
 		public Expression cost() {
-			final var f = Functions.linearFunctionFromPoints(0d, 0.8d, 1000d, 0.5d);
+			final var f = Functions.linearFunctionFromPoints(costX1, costY1, costX2, costY2);
 			var l = new Operator() {
 
 				@Override
 				protected String toClojureOperator(Environment env) throws AppendableException {
 					var arg = "_arg";
 					var code = ClojureHelper.fnHelper(List.of(arg),
-							ClojureHelper.applyClojureFunction("min", "0.8",
-									ClojureHelper.applyClojureFunction("max", "0.5",
+							ClojureHelper.applyClojureFunction("min", costY1.toString(),
+									ClojureHelper.applyClojureFunction("max", costY2.toString(),
 											ClojureHelper.applyClojureFunction(".apply",
-													ClojureHelper.applyClojureFunction("velka.util.Functions/linearFunctionFromPoints",  "0", "0.8", "1000", "0.5"),
+													ClojureHelper.applyClojureFunction(
+															"velka.util.Functions/linearFunctionFromPoints",
+															costX1.toString(), costY1.toString(), costX2.toString(),
+															costY2.toString()),
 													ClojureHelper.applyClojureFunction("double", ClojureHelper.applyClojureFunction(".size", arg))))));
 					return code;
 				}
