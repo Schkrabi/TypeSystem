@@ -110,7 +110,8 @@ public class DefineConversion extends Expression {
 						try {
 							var eenv = (Environment)env;
 							
-							return appl.interpret(eenv);
+							LitDouble ld = (LitDouble)appl.interpret(eenv);
+							return Double.valueOf(ld.value);
 						} catch (AppendableException e) {
 							throw new RuntimeException(e);
 						}

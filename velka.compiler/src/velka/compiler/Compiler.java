@@ -91,7 +91,7 @@ public class Compiler {
 	 * @param showPromptLeadingChar whether to print Main.PROMPT_LEADING_CHAR to output stream before reading line
 	 * @throws Exception
 	 */
-	public static void repl(InputStream in, PrintStream out, Environment topLevel, boolean showPromptLeadingChar) throws Exception {
+	public static void repl(InputStream in, PrintStream out, Environment topLevel, boolean showPromptLeadingChar) {
 		Scanner input = new Scanner(in);
 	
 		try {
@@ -155,9 +155,11 @@ public class Compiler {
 	 * @param out output stream
 	 * @param topLevel environment for interpretation
 	 * @param typeEnv type environment for interpretation
+	 * @throws IOException 
+	 * @throws AppendableException 
 	 * @throws Exception 
 	 */
-	public static void interpret(InputStream in, Environment topLevel) throws Exception {
+	public static void interpret(InputStream in, Environment topLevel) throws AppendableException, IOException {
 		Compiler.print(eval(Parser.read(in), topLevel));
 	}
 

@@ -2,10 +2,12 @@ package velka.core.langbase;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
@@ -215,6 +217,10 @@ public class TreeSet extends OperatorBank {
 	public static Operator higher = Operator.wrapJavaMethod(java.util.TreeSet.class, "higher", "set-tree-higher", NAMESPACE, Object.class);
 	
 	@VelkaOperator
+	@Description("Returns true if this set contains no elements.")
+	public static Operator isEmpty = Operator.wrapJavaMethod(java.util.TreeSet.class, "isEmpty", "set-tree-is-empty", NAMESPACE);
+	
+	@VelkaOperator
 	@Description("Returns the last (highest) element currently in this set.")
 	public static Operator last = Operator.wrapJavaMethod(java.util.TreeSet.class, "last", "set-tree-last", NAMESPACE);
 	
@@ -285,20 +291,18 @@ public class TreeSet extends OperatorBank {
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var set = (LitInteropObject)args.get(0);
 			var fun = args.get(1);
-			var tSet = (java.util.TreeSet<Expression>)set.javaObject;
+			@SuppressWarnings("unchecked")
+			var tSet = (java.util.TreeSet<Object>)set.javaObject;
 			
-			var rSet = new java.util.TreeSet<Expression>(tSet.comparator());
+			var rSet = new java.util.TreeSet<Object>(tSet.comparator());
 			
 			tSet.stream().forEach(x -> {
-				var app = new AbstractionApplication(fun, new Tuple(x));
+				var ex = Literal.objectToLiteral(x);
+				var app = new AbstractionApplication(fun, new Tuple(ex));
 				try {
 					var exp = app.interpret(env);
-					if(exp instanceof LitInteger li) {
-						rSet.add(li); 
-					}
-					else {
-						throw new RuntimeException("Invalid mapping, got: " + exp);
-					}
+					var o = Literal.literalToObject(exp);
+					rSet.add(o); 
 				}catch(Exception e) {
 					throw new RuntimeException(e);
 				}
@@ -309,7 +313,9 @@ public class TreeSet extends OperatorBank {
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree, new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeIntNative)),
+			var A = new TypeVariable(NameGenerator.next());
+			var B = new TypeVariable(NameGenerator.next());
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree, new TypeArrow(new TypeTuple(A), B)),
 					TypeAtom.TypeSetTree);
 			return Pair.of(type, Substitution.EMPTY);
 		}
@@ -318,6 +324,46 @@ public class TreeSet extends OperatorBank {
 		public String toString() {
 			return mapSymbol_out.toString();
 		}
+	};
+	
+	@VelkaOperator
+	public static final Operator toList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var set = "_set";
+			var code = ClojureHelper.fnHelper(List.of(set),
+							ClojureHelper.applyClojureFunction("seq", set));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("to-list", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var set = (LitInteropObject)args.get(0);
+			@SuppressWarnings("unchecked")
+			var tSet = (java.util.TreeSet<Expression>)set.javaObject;
+			
+			var l = new ArrayList<Expression>(tSet);
+			
+			return new LitInteropObject(l, TypeAtom.TypeListNative);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree), TypeAtom.TypeListNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-tree-to-list";
+		}
+		
 	};
 	
 	@VelkaConversion
@@ -439,10 +485,9 @@ public class TreeSet extends OperatorBank {
 			final var tmp = "_tmp";
 			
 			var code = ClojureHelper.fnHelper(List.of(s1, s2),
-					ClojureHelper.letHelper(s1, 
+					ClojureHelper.letHelper(tmp, 
 							Pair.of(tmp, ClojureHelper.constructJavaClass(java.util.TreeSet.class, s1)),
-							Pair.of("_aux", ClojureHelper.applyClojureFunction(".retainAll", tmp, s2)),
-							Pair.of("_aux", ClojureHelper.applyClojureFunction(".retainAll", s1, tmp))));
+							Pair.of("_aux", ClojureHelper.applyClojureFunction(".retainAll", tmp, s2))));
 			
 			return code;
 		}
@@ -464,9 +509,8 @@ public class TreeSet extends OperatorBank {
 			
 			var tmp = new java.util.TreeSet<Object>(s1);
 			tmp.retainAll(s2);
-			s1.retainAll(tmp);
 			
-			return new LitInteropObject(s1, TypeAtom.TypeSetTree);
+			return new LitInteropObject(tmp, TypeAtom.TypeSetTree);
 		}
 
 		@Override
@@ -524,6 +568,97 @@ public class TreeSet extends OperatorBank {
 		@Override
 		public String toString() {
 			return "set-tree-union";
+		}
+		
+	};
+	
+	@VelkaOperator
+	public static final Operator fromList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var lst = "_lst";
+			var cmpFun = "_cmp-fun";
+			var set = "_set";
+			var a1 = "a1";
+			var a2 = "a2";
+			String code;
+			try {
+				code = ClojureHelper.fnHelper(List.of(lst, cmpFun),
+							ClojureHelper.letHelper(set, 
+									Pair.of(set, ClojureHelper.constructJavaClass(
+											java.util.TreeSet.class,
+											ClojureHelper.proxy(
+													java.util.Comparator.class,
+													Arrays.asList(),
+													ProxyImpl.of(
+															java.util.Comparator.class.getDeclaredMethod("compare", Object.class, Object.class),
+															Arrays.asList(a1, a2), 
+																ClojureHelper.applyVelkaFunction(
+																			cmpFun, a1, a2))))),
+									Pair.of("tmp", ClojureHelper.applyClojureFunction(".addAll", set, lst))));
+			} catch (NoSuchMethodException | SecurityException e) {
+				throw new RuntimeException(e);
+			}		
+			
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("from-list", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lst = (LitInteropObject)args.get(0);
+			var cmp = args.get(1);
+			@SuppressWarnings("unchecked")
+			var l = ((java.util.List<Expression>) lst.javaObject).stream()
+					.map(e -> Literal.literalToObject(e))
+					.collect(Collectors.toList());
+			
+			var set = new java.util.TreeSet<Object>(
+					new java.util.Comparator<Object>() {
+
+						@Override
+						public int compare(Object o1, Object o2) {
+							try {
+								var arg1 = Literal.objectToLiteral(o1);
+								var arg2 = Literal.objectToLiteral(o2);
+								var appl = new velka.core.application.AbstractionApplication(cmp,
+										new Tuple(arg1, arg2));
+
+								var ret = appl.interpret(env);
+
+								if (ret instanceof LitInteger li) {
+									return (int) li.value;
+								}
+								throw new RuntimeException("Invalid result of comparator " + ret);
+
+							} catch (AppendableException ae) {
+								throw new RuntimeException(ae);
+							}
+						}
+					});
+			
+			set.addAll(l);
+			
+			return new LitInteropObject(set, TypeAtom.TypeSetTree);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var A = new TypeVariable(NameGenerator.next());
+			var type = new TypeArrow(
+					new TypeTuple(TypeAtom.TypeListNative, new TypeArrow(new TypeTuple(A, A), TypeAtom.TypeIntNative)),
+					TypeAtom.TypeSetTree);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-tree-from-list";
 		}
 		
 	};

@@ -1,6 +1,7 @@
 package velka.util;
 
 import java.util.BitSet;
+import java.util.HashSet;
 import java.util.TreeSet;
 
 /** Utility functions for bit sets */
@@ -15,5 +16,51 @@ public class BitSetHelper {
 		bs.stream().forEach(x -> treeSet.add((long) x));
 		
 		return treeSet;
+	}
+	
+	/** Converts hashset with integers or doubles to a treeset */
+	public static TreeSet<Object> hashset2treeset(HashSet<Object> hs){
+		java.util.Comparator<Object> cmp = null;
+		if(hs.stream().allMatch(x -> x instanceof Long || x instanceof Integer)) {
+			cmp = new java.util.Comparator<Object>() {
+
+				@Override
+				public int compare(Object o1, Object o2) {
+					var i1 = (Long)o1;
+					var i2 = (Long)o2;
+					
+					return Long.compare(i1, i2);
+				}
+				
+			};
+		}
+		else if(hs.stream().allMatch(x -> x instanceof Double)) {
+			cmp = new java.util.Comparator<Object>() {
+
+				@Override
+				public int compare(Object o1, Object o2) {
+					var d1 = (Double)o1;
+					var d2 = (Double)o2;
+					return Double.compare(d1, d2);
+				}
+			};
+		}
+		else {
+			throw new RuntimeException("Only Integer or Double sets can be automaticaly converted.");
+		}
+		
+		var treeset = new TreeSet<Object>(cmp);
+		treeset.addAll(hs);
+		return treeset;
+	}
+	
+	/** Convers integer hashset to bit set */
+	public static BitSet hashset2bitset(HashSet<Object> hashset) {
+		if(!hashset.stream().allMatch(x -> x instanceof Long || x instanceof Integer)) {
+			throw new RuntimeException("Only integer sets can be converted to bit sets");
+		}
+		var bitset = new BitSet();
+		hashset.stream().forEach(x -> bitset.set((Integer)x));
+		return bitset;
 	}
 }

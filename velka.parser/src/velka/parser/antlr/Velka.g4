@@ -196,6 +196,10 @@ special_form returns [Expression val]
 	  expr { var e = $expr.val; }
 	  type { var t = $type.val; }
 	  ')'  { $val = new InstanceOfRepresentation(e, t); }
+	| '('   { var ll = new ArrayList<Expression>(); }
+	  'list'
+	  (expr { ll.add($expr.val); })* 
+	  ')'   { $val = velka.core.application.List.of(ll); }
 	| '(' 
 	  'loop' 
 	  bind_list { var bds = $bind_list.val; }

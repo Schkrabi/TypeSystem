@@ -60,6 +60,7 @@ public class Symbol extends Expression implements Comparable<Expression> {
 		if (!env.containsVariable(this)) {
 			return this;
 		}
+		//System.out.println(this.toString());
 		return env.getVariableValue(this).interpret(env);
 	}
 

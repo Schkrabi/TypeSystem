@@ -144,7 +144,7 @@ public class JavaArrayList extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitInteropObject interop = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
+			var l = (List<Expression>) interop.javaObject;
 
 			ArrayList<Expression> al = new ArrayList<Expression>(l);
 

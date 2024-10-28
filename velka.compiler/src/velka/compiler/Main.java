@@ -1,5 +1,6 @@
 package velka.compiler;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +19,7 @@ import velka.core.interpretation.Environment;
 import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.langbase.OperatorBank;
 import velka.core.literal.LitString;
+import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 
 /**
@@ -119,7 +121,7 @@ public class Main {
 					break;
 			}
 		}
-		catch(Exception e) {
+		catch(AppendableException | IOException e) {
 			throw new RuntimeException(e);
 		}
 		

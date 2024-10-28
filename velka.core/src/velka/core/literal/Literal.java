@@ -1,5 +1,6 @@
 package velka.core.literal;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import velka.core.exceptions.ConversionException;
@@ -83,6 +84,11 @@ public abstract class Literal extends Expression {
 			return ls.value;
 		}
 		else if(e instanceof LitInteropObject li) {
+			if(li.type.equals(TypeAtom.TypeListNative)) {
+				@SuppressWarnings("unchecked")
+				ArrayList<Expression> l = (ArrayList<Expression>)li.javaObject;
+				return l.stream().map(ex -> Literal.literalToObject(ex)).toList();
+			}			
 			return li.javaObject;
 		}
 		else if(e instanceof LitComposite lc) {
@@ -91,8 +97,11 @@ public abstract class Literal extends Expression {
 		throw new RuntimeException("Unexpected argument type");
 	}
 	
-	public static Literal objectToLiteral(Object o) {
-		if(o instanceof Byte || o instanceof Short || o instanceof Integer || o instanceof Long) {
+	public static Expression objectToLiteral(Object o) {
+		if(o == null) {
+			return Expression.EMPTY_EXPRESSION;
+		}
+		else if(o instanceof Byte || o instanceof Short || o instanceof Integer || o instanceof Long) {
 			Number n = (Number)o;
 			return new LitInteger(n.longValue());
 		}

@@ -139,9 +139,9 @@ public class ListNative extends OperatorBank{
 			Expression val = args.get(0);
 			LitInteropObject interop = (LitInteropObject) args.get(1);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
+			List<Expression> l = (List<Expression>) interop.javaObject;
 
-			LinkedList<Expression> ll = new LinkedList<Expression>();
+			List<Expression> ll = new ArrayList<Expression>();
 			ll.add(val);
 			ll.addAll(l);
 
@@ -197,7 +197,7 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitInteropObject interop = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
+			List<Expression> l = (List<Expression>) interop.javaObject;
 
 			if (l.isEmpty()) {
 				return LitBoolean.TRUE;
@@ -257,7 +257,7 @@ public class ListNative extends OperatorBank{
 			
 			LitInteropObject interop = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
+			List<Expression> l = (List<Expression>) interop.javaObject;
 
 			if (l.isEmpty()) {
 				throw new UserException(errorMsg);
@@ -320,13 +320,13 @@ public class ListNative extends OperatorBank{
 			
 			LitInteropObject interop = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
+			List<Expression> l = (List<Expression>) interop.javaObject;
 
 			if (l.isEmpty()) {
 				throw new UserException(errorMsg);
 			}
 
-			LinkedList<Expression> ll = new LinkedList<Expression>(l.subList(1, l.size()));
+			List<Expression> ll = new ArrayList<Expression>(l.subList(1, l.size()));
 			return new LitInteropObject(ll, TypeAtom.TypeListNative);
 		}
 
@@ -388,9 +388,9 @@ public class ListNative extends OperatorBank{
 			Expression f = args.get(0);
 			LitInteropObject interop = (LitInteropObject) args.get(1);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) interop.javaObject;
+			List<Expression> l = (List<Expression>) interop.javaObject;
 
-			LinkedList<Expression> agg = new LinkedList<Expression>();
+			List<Expression> agg = new ArrayList<Expression>();
 
 			for (Expression e : l) {
 				AbstractionApplication appl = new AbstractionApplication(f, new Tuple(e));
@@ -470,11 +470,11 @@ public class ListNative extends OperatorBank{
 			var iOp2 = (LitInteropObject) args.get(2);
 			
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l1 = (LinkedList<Expression>) iOp1.javaObject;
+			List<Expression> l1 = (List<Expression>) iOp1.javaObject;
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l2 = (LinkedList<Expression>) iOp2.javaObject;
+			List<Expression> l2 = (List<Expression>) iOp2.javaObject;
 
-			LinkedList<Expression> agg = new LinkedList<Expression>();
+			List<Expression> agg = new ArrayList<Expression>();
 
 			Iterator<Expression> i1 = l1.iterator();
 			Iterator<Expression> i2 = l2.iterator();
@@ -548,7 +548,7 @@ public class ListNative extends OperatorBank{
 			Expression term = args.get(1);
 			var iOp = (LitInteropObject)args.get(2);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
+			List<Expression> l = (List<Expression>) iOp.javaObject;
 
 			for (Expression e : l) {
 				AbstractionApplication appl = new AbstractionApplication(f, new Tuple(term, e));
@@ -613,10 +613,10 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
+			List<Expression> l = (List<Expression>) iOp.javaObject;
 			Expression e = args.get(1);
 
-			LinkedList<Expression> ll = new LinkedList<Expression>(l);
+			List<Expression> ll = new ArrayList<Expression>(l);
 			ll.add(e);
 
 			return new LitInteropObject(ll, TypeAtom.TypeListNative);
@@ -669,7 +669,7 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
+			List<Expression> l = (List<Expression>) iOp.javaObject;
 			ArrayList<Expression> a = new ArrayList<Expression>(l);
 
 			return new LitInteropObject(a, TypeAtom.TypeListJavaArray);
@@ -725,8 +725,8 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
-			LinkedList<Expression> a = new LinkedList<Expression>(l);
+			List<Expression> l = (List<Expression>) iOp.javaObject;
+			List<Expression> a = new ArrayList<Expression>(l);
 
 			return new LitInteropObject(a, TypeAtom.TypeListJavaLinked);
 		}
@@ -793,7 +793,7 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
+			List<Expression> l = (List<Expression>) iOp.javaObject;
 			Expression element = args.get(1);
 
 			if (l.contains(element)) {
@@ -809,13 +809,12 @@ public class ListNative extends OperatorBank{
 			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, A), TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
-
 	};
 
 	public static final Symbol filterSymbol = new Symbol("velka-filter", NAMESPACE);
 	public static final Symbol filterSymbol_out = new Symbol("filter-list-native");
 
-	@VelkaOperator
+	@VelkaOperator	
 	@Description("Returns new List:Native containing only those elements of list, for which predicate returns true.") 
 	@Example("(filter-list-native (build-list-native 5 (lambda (x) x)) (lambda (y) (= (mod y 2) 0))) ;; = (0 2 4)") 
 	@Syntax("(filter-list-native <list> <predicate>)")
@@ -854,10 +853,10 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
+			List<Expression> l = (List<Expression>) iOp.javaObject;
 			Expression pred = args.get(1);
 
-			LinkedList<Expression> aux = new LinkedList<Expression>();
+			List<Expression> aux = new ArrayList<Expression>();
 
 			for (Expression e : l) {
 				AbstractionApplication app = new AbstractionApplication(pred, new Tuple(e));
@@ -925,7 +924,7 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
+			List<Expression> l = (List<Expression>) iOp.javaObject;
 			LitInteger index = (LitInteger) args.get(1);
 
 			if (index.value >= l.size()) {
@@ -991,7 +990,7 @@ public class ListNative extends OperatorBank{
 			LitInteger n = (LitInteger) args.get(0);
 			Expression fn = args.get(1);
 
-			LinkedList<Expression> l = new LinkedList<Expression>();
+			List<Expression> l = new ArrayList<Expression>();
 
 			for (long i = 0; i < n.value; i++) {
 				AbstractionApplication appl = new AbstractionApplication(fn, new Tuple(new LitInteger(i)));
@@ -1058,10 +1057,10 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
+			List<Expression> l = (List<Expression>) iOp.javaObject;
 			Expression e = args.get(1);
 
-			LinkedList<Expression> ll = new LinkedList<Expression>(l);
+			List<Expression> ll = new ArrayList<Expression>(l);
 			ll.remove(e);
 
 			return new LitInteropObject(ll, TypeAtom.TypeListNative);
@@ -1112,7 +1111,7 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
+			List<Expression> l = (List<Expression>) iOp.javaObject;
 
 			return new LitInteger(l.size());
 		}
@@ -1159,12 +1158,12 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp1 = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l0 = (LinkedList<Expression>) iOp1.javaObject;
+			List<Expression> l0 = (List<Expression>) iOp1.javaObject;
 			var iOp2 = (LitInteropObject)args.get(1);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l1 = (LinkedList<Expression>) iOp2.javaObject;
+			List<Expression> l1 = (List<Expression>) iOp2.javaObject;
 
-			LinkedList<Expression> aux = new LinkedList<Expression>(l0);
+			List<Expression> aux = new ArrayList<Expression>(l0);
 			aux.addAll(l1);
 
 			return new LitInteropObject(aux, TypeAtom.TypeListNative);
@@ -1212,7 +1211,7 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
+			List<Expression> l = (List<Expression>) iOp.javaObject;
 			ListIterator<Expression> li = l.listIterator(l.size());
 			List<Expression> r = new LinkedList<Expression>();
 			while (li.hasPrevious()) {
@@ -1267,7 +1266,7 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) iOp.javaObject;
+			List<Expression> l = (List<Expression>) iOp.javaObject;
 			Expression pred = args.get(1);
 
 			Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(expr -> {
@@ -1319,7 +1318,7 @@ public class ListNative extends OperatorBank{
 	 * @return list native literal (LitComposite instance)
 	 */
 	public static Expression makeListNativeExpression(List<Expression> l) {
-		LinkedList<Expression> ll = new LinkedList<Expression>(l);
+		List<Expression> ll = new ArrayList<Expression>(l);
 		return new LitInteropObject(ll, TypeAtom.TypeListNative);
 	}
 
@@ -1341,7 +1340,7 @@ public class ListNative extends OperatorBank{
 	 */
 	public static Tuple listNativeToTuple(LitComposite list) {
 		@SuppressWarnings("unchecked")
-		LinkedList<Expression> l = (LinkedList<Expression>) ((LitInteropObject) list.value).javaObject;
+		List<Expression> l = (List<Expression>) ((LitInteropObject) list.value).javaObject;
 
 		return new Tuple(l);
 	}

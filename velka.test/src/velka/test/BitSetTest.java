@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import velka.core.expression.Expression;
 import velka.core.langbase.JavaBitSet;
+import velka.core.literal.LitBoolean;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
@@ -344,21 +345,12 @@ class BitSetTest extends VelkaTest {
     @SuppressWarnings("unchecked")
 	@Test
     @DisplayName("Test conversion BitSet to TreeSet")
-    void test2TreeSet() throws Exception {
-    	var expected = new LitInteropObject(
-    			new java.util.TreeSet<Expression>((Expression e1, Expression e2) -> {
-    				if(e1 instanceof LitInteger li1 && e2 instanceof LitInteger li2) {
-    					return Long.compare(li1.value, li2.value);
-    				}
-    				throw new RuntimeException("Can only convert integer sets to BitSet, got " + e1.toString() + " and " + e2.toString());
-    			}),
-    			TypeAtom.TypeSetTree);
-    	((java.util.TreeSet<Expression>)expected.javaObject).addAll(List.of(new LitInteger(3), new LitInteger(6), new LitInteger(9)));
-    	
+    void test2TreeSet() throws Exception {    	
     	this.assertInterpretationEquals(
     			"(define bs (bit-set-set (bit-set-set (bit-set-set (construct Set:BitSet) 3) 6) 9))"
     			+ "(convert Set:BitSet Set:Tree bs)", 
-    			expected);
+    			new LitInteropObject(new java.util.TreeSet<Object>(List.of(3l, 6l, 9l)),
+    					TypeAtom.TypeSetTree));
     	
     	this.assertIntprtAndCompPrintSameValues(
     			"(define bs (bit-set-set (bit-set-set (bit-set-set (construct Set:BitSet) 3) 6) 9))"
@@ -374,5 +366,72 @@ class BitSetTest extends VelkaTest {
     	this.assertIntprtAndCompPrintSameValues("(let ((s (construct Set:BitSet))"
     			+ "(tmp (bit-set-set-interval s 0 2000)))"
     			+ "(println (conversion-cost (lambda ((Set:Tree x)) x) (tuple s))))");
+    }
+    
+    @Test
+    void testContainsAll() throws Exception{
+    	this.assertInterpretationEquals(
+    			"(let ((set (construct Set:BitSet))"
+    			+ "(tmp (bit-set-set-interval set 0 5))"
+    			+ "(l (build-list-native 5 (lambda (x) x))))"
+    			+ "(bit-set-contains-all set l))", 
+    			LitBoolean.TRUE);
+    	
+    	this.assertInterpretationEquals(
+    			"(let ((set (construct Set:BitSet))"
+    			+ "(tmp (bit-set-set-interval set 0 2))"
+    			+ "(l (build-list-native 5 (lambda (x) x))))"
+    			+ "(bit-set-contains-all set l))", 
+    			LitBoolean.FALSE);
+    	
+    	this.assertIntprtAndCompPrintSameValues(
+    			"(let ((set (construct Set:BitSet))"
+    			+ "(tmp (bit-set-set-interval set 0 5))"
+    			+ "(l (build-list-native 5 (lambda (x) x))))"
+    			+ "(println (bit-set-contains-all set l)))");
+    	
+    	this.assertIntprtAndCompPrintSameValues(
+    			"(let ((set (construct Set:BitSet))"
+    			+ "(tmp (bit-set-set-interval set 0 2))"
+    			+ "(l (build-list-native 5 (lambda (x) x))))"
+    			+ "(println (bit-set-contains-all set l)))");
+    	
+    	this.assertIntprtAndCompPrintSameValues(
+    			"(println (bit-set-contains-all (bit-set-from-list (list 1 2)) (list 0 1 2)))")	;
+    }
+    
+    @Test
+    void testSetAll() throws Exception {
+    	var bs = new java.util.BitSet();
+    	bs.set(0, 2);
+    	
+    	this.assertInterpretationEquals(
+    			"(let ((set (construct Set:BitSet))"
+    			+ "(l (build-list-native 2 (lambda (x) x))))"
+    			+ "(bit-set-set-all set l))", 
+    			new LitInteropObject(bs, TypeAtom.TypeSetBitSet));
+    	
+    	this.assertIntprtAndCompPrintSameValues(
+    			"(let ((set (construct Set:BitSet))"
+    			+ "(l (build-list-native 2 (lambda (x) x))))"
+    			+ "(println (bit-set-str (bit-set-set-all set l))))");
+    }
+    
+    @Test
+    void testFromList() throws Exception {
+    	var bs = new java.util.BitSet();
+    	bs.set(1, 4);
+    	this.assertInterpretationEquals("(bit-set-from-list (list 1 2 3))", new LitInteropObject(bs, TypeAtom.TypeSetBitSet));
+    	
+    	this.assertIntprtAndCompPrintSameValues("(println (bit-set-str (bit-set-from-list (list 1 2 3))))");
+    }
+    
+    @Test
+    void testToList() throws Exception{
+    	this.assertInterpretationEquals(
+    			"(bit-set-to-list (bit-set-from-list (list 1 2 3)))", 
+    			new LitInteropObject(List.of(new LitInteger(1l), new LitInteger(2l), new LitInteger(3l)), TypeAtom.TypeListNative));
+    	
+    	this.assertIntprtAndCompPrintSameValues("(println (bit-set-to-list (bit-set-from-list (list 1 2 3))))");
     }
 }

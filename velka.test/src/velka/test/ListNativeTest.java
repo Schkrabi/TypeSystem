@@ -8,6 +8,7 @@ import java.util.LinkedList;
 
 import org.junit.jupiter.api.Test;
 
+import velka.core.application.List;
 import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
@@ -216,5 +217,13 @@ class ListNativeTest extends VelkaTest {
         this.assertInterpretedStringEquals("(everyp-list-native (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))",
                 LitBoolean.FALSE, env);
         this.assertIntprtAndCompPrintSameValues("(everyp-list-native (construct List:Native #t (construct List:Native #f (construct List:Native))) (lambda (x) x))");
+    }
+    
+    @Test
+    void testListSpecialForm() throws Exception {
+    	this.assertInterpretationEquals("(list 1 2)", 
+    			new LitInteropObject(java.util.List.of(new LitInteger(1), new LitInteger(2)), TypeAtom.TypeListNative));
+    	
+    	this.assertIntprtAndCompPrintSameValues("(println (list 1 2))");
     }
 }

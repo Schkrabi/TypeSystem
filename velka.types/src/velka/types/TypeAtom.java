@@ -305,6 +305,14 @@ public class TypeAtom extends TerminalType {
 		}
 	};
 	
+	/** Type of Set:Hash */
+	public static final TypeAtom TypeSetHash = new TypeAtom(TypeName.SET, new TypeRepresentation("Hash")) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeSetHash";
+		}
+	};
+	
 	/**
 	 * Type of TypeSymbol
 	 */
@@ -372,7 +380,8 @@ public class TypeAtom extends TerminalType {
 					java.util.TreeMap.class, TypeMapTree,
 					java.util.BitSet.class, TypeSetBitSet,
 					java.util.Scanner.class, TypeScannerNative,
-					java.util.TreeSet.class, TypeSetTree);
+					java.util.TreeSet.class, TypeSetTree,
+					java.util.HashSet.class, TypeSetHash);
 	
 	public static final Map<Class<?>, Type> typeMapping = Stream.of(primitiveTypeMapping, javaLangTypeMapping, javaTypeMapping)
             .flatMap(map -> map.entrySet().stream())

@@ -6,11 +6,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import velka.core.abstraction.ExtendedFunction;
 import velka.core.abstraction.Function;
 import velka.core.abstraction.Lambda;
+import velka.core.abstraction.Operator;
 import velka.core.expression.Expression;
+import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
@@ -24,6 +27,7 @@ import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
 import velka.util.CostAggregation;
+import velka.util.NameGenerator;
 import velka.util.Pair;
 
 /**
@@ -152,6 +156,14 @@ public class Extend extends Expression implements Comparable<Expression> {
 		
 		Expression implIntp = this.implementation.interpret(env);
 		
+		if(implIntp instanceof Operator) {
+			TypeArrow t = (TypeArrow)implIntp.infer(env).first;
+			var at = (TypeTuple)t.ltype;
+			var a = new Tuple(at.stream().map(x -> (Expression) new velka.core.expression.Symbol(NameGenerator.next()))
+					.collect(Collectors.toList()));
+			implIntp = new Function(at, a, new AbstractionApplication(implIntp, a), env);
+					
+		}
 		if(!(implIntp instanceof Function)) {
 			throw new AppendableException(
 					this.implementation.toString()

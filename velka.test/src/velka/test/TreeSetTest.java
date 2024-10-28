@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TopLevelEnvironment;
+import velka.core.literal.LitBoolean;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
@@ -186,13 +187,59 @@ class TreeSetTest extends VelkaTest {
 				"(let ((s (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
 				+ "(tmp (set-tree-add-all s (build-list-native 5 (lambda (x) x)))))"
 				+ "(set-tree-map s (lambda (x) (+ x 1))))", 
-				new LitInteropObject(new java.util.TreeSet<Expression>(
-						List.of(new LitInteger(1), new LitInteger(2), new LitInteger(3), new LitInteger(4), new LitInteger(5))), 
+				new LitInteropObject(new java.util.TreeSet<Object>(
+						List.of(1l, 2l, 3l, 4l, 5l)), 
 						TypeAtom.TypeSetTree));
 		
 		this.assertIntprtAndCompPrintSameValues(
 				"(let ((s (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
 				+ "(tmp (set-tree-add-all s (build-list-native 5 (lambda (x) x)))))"
 				+ "(println (set-tree-map s (lambda (x) (+ x 1)))))");
+	}
+	
+	@Test
+	void testIsEmpty() throws Exception {
+		this.assertInterpretationEquals(
+				"(let ((s (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add-all s (build-list-native 5 (lambda (x) x)))))"
+				+ "(set-tree-is-empty s))", 
+				LitBoolean.FALSE);
+		
+		this.assertInterpretationEquals(
+				"(set-tree-is-empty (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))", 
+				LitBoolean.TRUE);
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let ((s (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+				+ "(tmp (set-tree-add-all s (build-list-native 5 (lambda (x) x)))))"
+				+ "(println (set-tree-is-empty s)))");
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(println (set-tree-is-empty (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1))))))");
+	}
+	
+	@Test
+	void testToList() throws Exception {
+		this.assertInterpretationEquals(
+				"(let ((s (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+						+ "(tmp (set-tree-add-all s (build-list-native 3 (lambda (x) x)))))"
+						+ "(set-tree-to-list s))",
+				new LitInteropObject(List.of(0l, 1l, 2l), TypeAtom.TypeListNative));
+		
+		this.assertIntprtAndCompPrintSameValues(
+				"(let ((s (construct Set:Tree (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))"
+						+ "(tmp (set-tree-add-all s (build-list-native 3 (lambda (x) x)))))"
+						+ "(println (set-tree-to-list s)))");
+	}
+	
+	@Test
+	void testFromList() throws Exception {
+		this.assertInterpretationEquals("(set-tree-from-list (list 1 2 3) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1))))",
+				new LitInteropObject(
+						new java.util.TreeSet<Object>(
+								List.of(1l, 2l, 3l)),
+						TypeAtom.TypeSetTree));
+		
+		this.assertIntprtAndCompPrintSameValues("(println (set-tree-from-list (list 1 2 3) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))");
 	}
 }

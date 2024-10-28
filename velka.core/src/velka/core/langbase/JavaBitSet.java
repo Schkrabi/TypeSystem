@@ -2,6 +2,7 @@ package velka.core.langbase;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
@@ -9,8 +10,10 @@ import java.util.function.IntConsumer;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
+import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
+import velka.core.application.IfExpression;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -20,6 +23,7 @@ import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
+import velka.core.literal.Literal;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -1858,6 +1862,242 @@ public class JavaBitSet extends OperatorBank {
 		
 	};
 	
+	public static Symbol containsAllSymbol = new Symbol("velka-contains-all", NAMESPACE);
+	public static Symbol containsAllSymbol_out = new Symbol("bit-set-contains-all");
+	
+	@VelkaOperator
+	public static final Operator containsAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var set = "_set";
+			var lst = "_lst";
+			var x = "_x";
+			var y = "_y";
+			var code = ClojureHelper.fnHelper(
+					List.of(set, lst),
+					ClojureHelper.applyClojureFunction(
+							"reduce",
+							ClojureHelper.fnHelper(
+									List.of(x, y),
+									ClojureHelper.applyClojureFunction("and", 
+											x, 
+											ClojureHelper.applyClojureFunction(".get", set, y))),
+							"true",
+							lst));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return containsAllSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var set = (LitInteropObject)args.get(0);
+			var lst = (LitInteropObject)args.get(1);
+			
+			var bset = (java.util.BitSet)set.javaObject;
+			@SuppressWarnings("unchecked")
+			var l = (java.util.List<Expression>)lst.javaObject;
+			
+			var ret = l.stream().allMatch(e -> {
+				if(e instanceof LitInteger li) {
+					return bset.get((int)li.value);
+				}
+				throw new RuntimeException("Invalid set.");
+			});
+			
+			
+			return ret ? LitBoolean.TRUE : LitBoolean.FALSE;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeListNative), TypeAtom.TypeBoolNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return containsAllSymbol_out.toString();
+		}
+	};
+	
+	public static Symbol setAllSymbol = new Symbol("set-all", NAMESPACE);
+	public static Symbol setAllSymbol_out = new Symbol("bit-set-set-all");
+	
+	@VelkaOperator
+	public static Operator setAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var set = "_set";
+			var lst = "_lst";
+			var x = "_x";
+			var code = ClojureHelper.fnHelper(
+					List.of(set, lst),
+					ClojureHelper.letHelper(
+							set,
+							Pair.of("tmp", ClojureHelper.applyClojureFunction("doall", 
+									ClojureHelper.applyClojureFunction("map", 
+											ClojureHelper.fnHelper(List.of(x), ClojureHelper.applyClojureFunction(".set", set, x)),
+													lst)))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return setAllSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var set = (LitInteropObject)args.get(0);
+			var lst = (LitInteropObject)args.get(1);
+			
+			var bset = (java.util.BitSet)set.javaObject;
+			@SuppressWarnings("unchecked")
+			var l = (java.util.List<Expression>)lst.javaObject;
+			
+			l.stream().forEach(e ->{
+				if(e instanceof LitInteger li) {
+					bset.set((int)li.value);
+				}
+			});
+			
+			return set;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeListNative), TypeAtom.TypeSetBitSet);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return setAllSymbol_out.toString();
+		}
+		
+	};
+	
+	@VelkaOperator
+	public static final Operator fromList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var lst = "_lst";
+			var set = "_set";
+			var e = "_e";
+			var code = ClojureHelper.fnHelper(List.of(lst),
+					ClojureHelper.letHelper(set,
+							Pair.of(set,
+									ClojureHelper.constructJavaClass(java.util.BitSet.class,
+											ClojureHelper.applyClojureFunction("count", lst))),
+							Pair.of("tmp",
+									ClojureHelper.applyClojureFunction("doall",
+											ClojureHelper.applyClojureFunction("map",
+													ClojureHelper.fnHelper(List.of(e),
+															ClojureHelper.applyClojureFunction(".set", set, e)),
+													lst)))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("from-list", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lst = (LitInteropObject)args.get(0);
+			var l = (java.util.List<Expression>)lst.javaObject;
+			
+			var set = new java.util.BitSet(l.size());
+			l.stream().forEach(e ->{
+				if(e instanceof LitInteger li) {
+					set.set((int)li.value);
+					return;
+				}
+				throw new RuntimeException("All elements of initialization list must be Int:Native, got " + e);
+			}
+			);
+			
+			return new LitInteropObject(set, TypeAtom.TypeSetBitSet);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeSetBitSet);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "bit-set-from-list";                                                                                                                                         
+		}
+		
+	};
+	
+	@VelkaOperator
+	public static final Operator toList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var set = "_set";
+			var i = "_i";
+			var acc = "_acc";
+			var code = ClojureHelper.fnHelper(
+					List.of(set),
+					ClojureHelper.applyClojureFunction("loop", 
+							ClojureHelper.clojureVectorHelper(i, ClojureHelper.applyClojureFunction(".nextSetBit", set, "0"), 
+									acc, ClojureHelper.tupleHelper()),
+							ClojureHelper.clojureIfHelper(
+									ClojureHelper.applyClojureFunction("<", i, "0"), 
+									ClojureHelper.applyClojureFunction("seq", acc), 
+									ClojureHelper.applyClojureFunction("recur", 
+											ClojureHelper.applyClojureFunction(".nextSetBit", set, ClojureHelper.applyClojureFunction("+", i, "1")),
+											ClojureHelper.applyClojureFunction("conj", acc, i)))));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("to-list", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var bset = (java.util.BitSet)lio.javaObject;
+			
+			var l = new ArrayList<Expression>();
+			
+			int i = bset.nextSetBit(0);
+			while(i >= 0) {
+				l.add(new LitInteger((long)i));
+				
+				i = bset.nextSetBit(i + 1);
+			}
+			
+			return new LitInteropObject(l, TypeAtom.TypeListNative);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet), TypeAtom.TypeListNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "bit-set-to-list";
+		}
+		
+	};
+	
 	@VelkaConversion
 	@Description("Converts Set:BitSet into Set:Tree.") 
 	@Example("(convert Set:BitSet Set:Tree (bit-set-set (bit-set-set (bit-set-set (construct Set:BitSet) 3) 6) 9))") 
@@ -1936,14 +2176,44 @@ public class JavaBitSet extends OperatorBank {
 			var lio = (LitInteropObject)args.get(0);
 			var bitSet = (java.util.BitSet)lio.javaObject;
 			
-			var treeSet = new java.util.TreeSet<Expression>((Expression e1, Expression e2) -> {
-				if(e1 instanceof LitInteger li1 && e2 instanceof LitInteger li2) {
-					return Long.compare(li1.value, li2.value);
+			var treeSet = new java.util.TreeSet<Object>(new java.util.Comparator<Object>() {
+
+				@Override
+				public int compare(Object o1, Object o2) {
+					try {
+						var arg1 = Literal.objectToLiteral(o1);
+						var arg2 = Literal.objectToLiteral(o2);
+						var a1 = new Symbol(NameGenerator.next());
+						var a2 = new Symbol(NameGenerator.next());
+						
+						var cmp = new Lambda(new Tuple(a1, a2),
+								new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+								new velka.core.application.IfExpression(
+										new velka.core.application.AbstractionApplication(Operators.Equals,
+												new Tuple(a1, a2)),
+										new LitInteger(0),
+										new IfExpression(
+												new AbstractionApplication(Operators.LesserThan, new Tuple(a1, a2)),
+												new LitInteger(-1), new LitInteger(1))));
+						
+						var appl = new velka.core.application.AbstractionApplication(cmp,
+								new Tuple(arg1, arg2));
+
+						var ret = appl.interpret(env);
+
+						if (ret instanceof LitInteger li) {
+							return (int) li.value;
+						}
+						throw new RuntimeException("Invalid result of comparator " + ret);
+
+					} catch (AppendableException ae) {
+						throw new RuntimeException(ae);
+					}
 				}
-				throw new RuntimeException("Can only convert non negative integer sets to BitSet, got " + e1.toString() + " and " + e2.toString());
+				
 			});
 			
-			bitSet.stream().forEach(x -> treeSet.add(new LitInteger(x)));
+			bitSet.stream().forEach(x -> treeSet.add(Long.valueOf(x)));
 			
 			return new LitInteropObject(treeSet, TypeAtom.TypeSetTree);
 		}

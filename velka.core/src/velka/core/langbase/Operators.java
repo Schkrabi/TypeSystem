@@ -1596,7 +1596,7 @@ public final class Operators extends OperatorBank {
 				if(lio.type.equals(TypeAtom.TypeListNative)) {
 					s = s.replace('[', '(').replace(']', ')').replace(",", "");
 				}
-				else if(lio.type.equals(TypeAtom.TypeSetTree)) {
+				else if (lio.type.equals(TypeAtom.TypeSetTree) || lio.type.equals(TypeAtom.TypeSetHash)) {
 					s = s.replace("[", "#{").replace(']', '}').replace(",", "");
 				}
 			}
@@ -2267,6 +2267,41 @@ public final class Operators extends OperatorBank {
 		@Override
 		public String toString() {
 			return "lin-fun-pts";
+		}
+	};
+	
+	@VelkaOperator
+	public static final Operator doall = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var arg = "_arg";
+			var code = ClojureHelper.fnHelper(List.of(arg),
+					ClojureHelper.applyClojureFunction("doall", arg));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-doall", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var arg = args.get(0);
+			return arg;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var tv = new TypeVariable(NameGenerator.next());
+			var type = new TypeArrow(new TypeTuple(tv), tv);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "doall";
 		}
 	};
 	

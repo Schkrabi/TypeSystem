@@ -121,7 +121,8 @@ public class Let extends Expression {
 			
 			var it = this.bindings.iterator();
 			var ot = o.bindings.iterator();
-			while(cmp == 0) {
+			while(cmp == 0
+					&& it.hasNext()) {
 				var p = it.next();
 				var op = ot.next();
 				cmp = p.first.compareTo(op.first);

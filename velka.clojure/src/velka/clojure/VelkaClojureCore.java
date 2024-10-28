@@ -56,6 +56,7 @@ public class VelkaClojureCore {
 											Pair.of(ClojureHelper.applyClojureFunction("seq?", getTypeClojure_expr), TypeAtom.TypeListNative.clojureTypeRepresentation()),
 											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.ListIterator.class.getName(), getTypeClojure_expr), TypeAtom.TypeListIterator.clojureTypeRepresentation()),
 											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.TreeSet.class.getName(), getTypeClojure_expr), TypeAtom.TypeSetTree.clojureTypeRepresentation()),
+											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.HashSet.class.getName(), getTypeClojure_expr), TypeAtom.TypeSetHash.clojureTypeRepresentation()),
 											Pair.of(":else", ClojureHelper.errorHelper(ClojureHelper.stringHelper("Unrecognized type!"))))),
 							Pair.of(declared, ClojureHelper.applyClojureFunction(":lang-type", 
 													ClojureHelper.applyClojureFunction("meta", getTypeClojure_expr)))));

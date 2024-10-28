@@ -495,7 +495,7 @@ public class JavaLinkedList extends OperatorBank {
 			LitInteger index = (LitInteger) args.get(1);
 
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) list.javaObject;
+			var l = (List<Expression>) list.javaObject;
 
 			return l.get((int) index.value);
 		}
