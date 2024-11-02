@@ -146,5 +146,29 @@ private Environment env;
 	    
 	    this.assertIntprtAndCompPrintSameValues("(let ((s (set-hash-from-list (list 1 2 3 4)))" + "(tmp (set-hash-retain-all s (list 2 3))))" + "(println s))");
 	}
+	
+	@Test
+	void testToList() throws Exception {
+		this.assertInterpretationEquals(
+				"(set-hash-to-list (set-hash-from-list (list 1 2 3)))",
+				new LitInteropObject(
+						List.of(new LitInteger(1l), new LitInteger(2l), new LitInteger(3l)),
+						TypeAtom.TypeListNative));
+		
+		this.assertIntprtAndCompPrintSameValues("(println (set-hash-to-list (set-hash-from-list (list 1 2 3))))");
+	}
 
+	@Test
+	void testLargest() throws Exception {
+		this.assertInterpretationEquals(
+				"(set-hash-largest (set-hash-from-list (list 1 2 3)) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1))))",
+				new LitInteger(3));
+		this.assertIntprtAndCompPrintSameValues("(println  (set-hash-largest (set-hash-from-list (list 1 2 3)) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))");
+		
+		this.assertInterpretationEquals(
+				"(set-hash-largest (set-hash-from-list (list)) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1))))", 
+				Expression.EMPTY_EXPRESSION);
+		
+		this.assertIntprtAndCompPrintSameValues("(println (set-hash-largest (set-hash-from-list (list)) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))");
+	}
 }

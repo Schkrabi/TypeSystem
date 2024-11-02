@@ -86,7 +86,7 @@ public abstract class Literal extends Expression {
 		else if(e instanceof LitInteropObject li) {
 			if(li.type.equals(TypeAtom.TypeListNative)) {
 				@SuppressWarnings("unchecked")
-				ArrayList<Expression> l = (ArrayList<Expression>)li.javaObject;
+				List<Expression> l = (List<Expression>)li.javaObject;
 				return l.stream().map(ex -> Literal.literalToObject(ex)).toList();
 			}			
 			return li.javaObject;

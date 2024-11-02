@@ -255,10 +255,15 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	}
 
 	@Override
-	public String clojureTypeRepresentation() throws AppendableException {
+	public String clojureTypeRepresentation() {
 		List<String> l = new LinkedList<String>();
 		for(Type t : this.values) {
-			String s = t.clojureTypeRepresentation();
+			String s;
+			try {
+				s = t.clojureTypeRepresentation();
+			} catch (AppendableException e) {
+				throw new RuntimeException(e);
+			}
 			l.add(s);
 		}
 		

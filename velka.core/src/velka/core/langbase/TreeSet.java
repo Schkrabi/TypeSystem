@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
-
+import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
 import velka.core.expression.Expression;
@@ -346,9 +346,10 @@ public class TreeSet extends OperatorBank {
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var set = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			var tSet = (java.util.TreeSet<Expression>)set.javaObject;
+			var tSet = (java.util.TreeSet<Object>)set.javaObject;
 			
-			var l = new ArrayList<Expression>(tSet);
+			var l = new ArrayList<Expression>();
+			tSet.stream().forEach(o -> l.add(Literal.objectToLiteral(o)));
 			
 			return new LitInteropObject(l, TypeAtom.TypeListNative);
 		}
@@ -660,7 +661,63 @@ public class TreeSet extends OperatorBank {
 		public String toString() {
 			return "set-tree-from-list";
 		}
+	};
+	
+	@VelkaConversion
+	public static Conversion toHashSet = new Conversion() {
+
+		@Override
+		public Expression cost() {
+			var hashSet = new Symbol(NameGenerator.next());
+			
+			var cost = new Lambda(
+					new Tuple(hashSet), 
+					new TypeTuple(TypeAtom.TypeSetHash),
+					new AbstractionApplication(
+							new AbstractionApplication(
+									Operators.linFunPoints, 
+									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
+							new Tuple(
+									new AbstractionApplication(Operators.IntToDouble,
+											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(hashSet)))))));
+			return cost;
+		}
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var ts = "_tree-set";
+			var code = ClojureHelper.fnHelper(
+					List.of(ts),
+					ClojureHelper.constructJavaClass(java.util.HashSet.class, ts));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("treeset-2-hashset");
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			@SuppressWarnings("unchecked")
+			var ts = (java.util.TreeSet<Object>)lio.javaObject;
+			
+			var hs = new java.util.HashSet<Object>(ts);
+			
+			return new LitInteropObject(hs, TypeAtom.TypeSetHash);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree), TypeAtom.TypeSetHash);
+			return Pair.of(type, Substitution.EMPTY);
+		}
 		
+		@Override
+		public String toString() {
+			return "treeset-2-hashset";
+		}
 	};
 	
 	@Override

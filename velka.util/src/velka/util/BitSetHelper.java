@@ -60,7 +60,23 @@ public class BitSetHelper {
 			throw new RuntimeException("Only integer sets can be converted to bit sets");
 		}
 		var bitset = new BitSet();
-		hashset.stream().forEach(x -> bitset.set((Integer)x));
+		hashset.stream().forEach(x -> {
+			if(x instanceof Integer) {
+				var i = (Integer)x;
+				bitset.set(i.intValue());
+			}
+			if(x instanceof Long) {
+				var l = (Long)x;
+				bitset.set(l.intValue());
+			}
+		});
 		return bitset;
+	}
+	
+	/** Converts bitset to hashset */
+	public static HashSet<Object> bitset2hashset(BitSet bitset){
+		var hs = new HashSet<Object>();
+		bitset.stream().forEach(i -> hs.add(Long.valueOf((long)i)));
+		return hs;
 	}
 }

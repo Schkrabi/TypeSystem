@@ -48,6 +48,7 @@ public class VelkaClojureCore {
 											Pair.of(ClojureHelper.applyClojureFunction("boolean?", getTypeClojure_expr), TypeAtom.TypeBoolNative.clojureTypeRepresentation()),
 											Pair.of(ClojureHelper.applyClojureFunction("double?", getTypeClojure_expr), TypeAtom.TypeDoubleNative.clojureTypeRepresentation()),
 											Pair.of(ClojureHelper.applyClojureFunction("string?", getTypeClojure_expr), TypeAtom.TypeStringNative.clojureTypeRepresentation()),
+											Pair.of(ClojureHelper.applyClojureFunction("nil?", getTypeClojure_expr), TypeTuple.EMPTY_TUPLE.clojureTypeRepresentation()),
 											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.ArrayList.class.getName(), getTypeClojure_expr), TypeAtom.TypeListJavaArray.clojureTypeRepresentation()),
 											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.LinkedList.class.getName(), getTypeClojure_expr), TypeAtom.TypeListJavaLinked.clojureTypeRepresentation()),
 											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.BitSet.class.getName(), getTypeClojure_expr), TypeAtom.TypeSetBitSet.clojureTypeRepresentation()),
@@ -303,6 +304,7 @@ public class VelkaClojureCore {
 									Arrays.asList(langPstrClojureDef_expr, langPstrClojureDef_level), 
 									ClojureHelper.letHelper(
 											ClojureHelper.condHelper(
+													new Pair<String, String>(ClojureHelper.applyClojureFunction("nil?", langPstrClojureDef_expr), "[]"),
 													new Pair<String, String>(
 															ClojureHelper.applyClojureFunction("or", 
 																	ClojureHelper.applyClojureFunction("=", 

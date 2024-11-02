@@ -15,6 +15,7 @@ import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitDouble;
+import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.Literal;
 import velka.types.Substitution;
@@ -22,6 +23,7 @@ import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
+import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.BitSetHelper;
 import velka.util.ClojureHelper;
@@ -281,6 +283,124 @@ public class HashSet extends OperatorBank {
 		@Override
 		public String toString() {
 			return "set-hash-union";
+		}
+	};
+	
+	@VelkaOperator
+	public static Operator toList = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var hs = "_hash-set";
+			var code = ClojureHelper.fnHelper(List.of(hs),
+					ClojureHelper.applyClojureFunction("seq", hs));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("to-list", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var hs = (java.util.HashSet<Object>)lio.javaObject;
+			
+			var l = hs.stream().map(o -> Literal.objectToLiteral(o)).toList();
+			
+			return new LitInteropObject(l, TypeAtom.TypeListNative);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetHash), TypeAtom.TypeListNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-hash-to-list";
+		}
+	};
+	
+	@VelkaOperator
+	public static Operator largest = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var hs = "_hash-set";
+			var comparator = "_comparator";
+			var x = "_x";
+			var y = "_y";
+			var code = ClojureHelper.fnHelper(List.of(hs, comparator),
+						ClojureHelper.clojureIfHelper(
+								ClojureHelper.applyClojureFunction(".isEmpty", hs), 
+								Expression.EMPTY_EXPRESSION.toClojureCode(env),
+								ClojureHelper.applyClojureFunction(
+										"reduce", 
+										ClojureHelper.fnHelper(
+												List.of(x, y),
+												ClojureHelper.clojureIfHelper(
+														ClojureHelper.applyClojureFunction("<=", 
+																ClojureHelper.applyVelkaFunction(comparator, x, y), 
+																"0"), 
+														y, x)),
+										hs)));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("velka-largest", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			@SuppressWarnings("unchecked")
+			var hs = (java.util.HashSet<Object>)lio.javaObject;
+			
+			if(hs.isEmpty()) {
+				return Expression.EMPTY_EXPRESSION;
+			}
+			
+			var comparator = args.get(1);
+			
+			var largest = hs.stream().reduce(
+					(o1, o2) -> {
+						var e1 = Literal.objectToLiteral(o1);
+						var e2 = Literal.objectToLiteral(o2);
+						
+						var appl = new AbstractionApplication(comparator, new Tuple(e1, e2));
+						Expression cmp;
+						try {
+							cmp = appl.interpret(env);
+						} catch (AppendableException e) {
+							throw new RuntimeException(e);
+						}
+						if(cmp instanceof LitInteger li) {
+							if(li.value <= 0) {
+								return o2;
+							}
+							return o1;
+						}
+						throw new RuntimeException("Invalid comparator function " + comparator);
+					}).get();
+			
+			return Literal.objectToLiteral(largest);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var A = new TypeVariable(NameGenerator.next());
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetHash, new TypeArrow(new TypeTuple(A, A), TypeAtom.TypeIntNative)), A);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-hash-largest";
 		}
 	};
 	

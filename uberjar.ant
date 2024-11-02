@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project velka.compiler">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <!--define folder properties-->
+    <property name="dir.buildfile" value="."/>
+    <property name="dir.workspace" value="${dir.buildfile}"/>
+    <property name="dir.jarfile" value="${dir.workspace}/lib"/>
+    <target name="create_run_jar">
+        <jar destfile="${dir.jarfile}/velka.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="velka.compiler.Main"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="${dir.workspace}/velka.compiler/bin"/>
+            <fileset dir="${dir.workspace}/velka.util/bin"/>
+            <fileset dir="${dir.workspace}/velka.types/bin"/>
+            <fileset dir="${dir.workspace}/velka.core/bin"/>
+            <fileset dir="${dir.workspace}/velka.clojure/bin"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.workspace}/velka.clojure/jar/velka.clojure.jar"/>
+            <fileset dir="${dir.workspace}/velka.parser/bin"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/antlr-4.13.1-complete.jar"/>
+        </jar>
+    </target>
+</project>

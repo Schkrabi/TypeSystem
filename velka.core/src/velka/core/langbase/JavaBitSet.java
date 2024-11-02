@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
-import java.util.function.IntConsumer;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
@@ -30,6 +29,7 @@ import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
+import velka.util.BitSetHelper;
 import velka.util.ClojureHelper;
 import velka.util.Functions;
 import velka.util.NameGenerator;
@@ -2013,6 +2013,7 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var lst = (LitInteropObject)args.get(0);
+			@SuppressWarnings("unchecked")
 			var l = (java.util.List<Expression>)lst.javaObject;
 			
 			var set = new java.util.BitSet(l.size());
@@ -2137,7 +2138,6 @@ public class JavaBitSet extends OperatorBank {
 				@Override
 				protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 					var lio = (LitInteropObject)args.get(0);
-					@SuppressWarnings("unchecked")
 					var set = (java.util.BitSet)lio.javaObject;
 					
 					var cost = Math.max(0.5d, Math.min(0.8d, f.apply((double) set.cardinality())));
@@ -2224,6 +2224,62 @@ public class JavaBitSet extends OperatorBank {
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
+	};
+	
+	@VelkaConversion
+	public static Conversion toHashSet = new Conversion() {
+
+		@Override
+		public Expression cost() {
+			var arg = new Symbol(NameGenerator.next());
+			
+			var cost = new Lambda(
+					new Tuple(arg), 
+					new TypeTuple(TypeAtom.TypeSetHash),
+					new AbstractionApplication(
+							new AbstractionApplication(
+									Operators.linFunPoints, 
+									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
+							new Tuple(
+									new AbstractionApplication(Operators.IntToDouble,
+											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(arg)))))));
+			return cost;
+		}
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var bs = "_bit-set";
+			var code = ClojureHelper.fnHelper(
+					List.of(bs),
+					ClojureHelper.applyClojureFunction("velka.util.BitSetHelper/bitset2hashset", bs));
+			return code;
+		}
+
+		@Override
+		public Symbol getClojureSymbol() {
+			return new Symbol("bit-set-2-hash-set", NAMESPACE);
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var bs = (java.util.BitSet)lio.javaObject;
+			
+			var hs = BitSetHelper.bitset2hashset(bs);
+			
+			return new LitInteropObject(hs, TypeAtom.TypeSetHash);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet), TypeAtom.TypeSetHash);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "bit-set-2-hash-set";
+		}
 	};
 	
 	public static final Path VELKA_CLOJURE_BITSET_PATH = Paths.get("velka", "clojure");

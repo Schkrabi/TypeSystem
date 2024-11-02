@@ -11,7 +11,7 @@
     <property name="velka.util.lib" value="../lib/velka.util.jar" />
     <property name="velka.types.lib" value="../lib/velka.types.jar" />
     <property name="velka.core.lib" value="../lib/velka.core.jar" />
-    <property name="antlr.lib" value="../lib/antlr-4.7.2-complete.jar" /> 
+    <property name="antlr.lib" value="../lib/antlr-4.13.1-complete.jar" /> 
     
     <path id="modulepath">
         <pathelement location="${velka.util.lib}" />

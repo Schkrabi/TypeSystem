@@ -242,4 +242,13 @@ class TreeSetTest extends VelkaTest {
 		
 		this.assertIntprtAndCompPrintSameValues("(println (set-tree-from-list (list 1 2 3) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))");
 	}
+	
+	@Test
+	void testToHashSet() throws Exception {
+		this.assertInterpretationEquals(
+				"(convert Set:Tree Set:Hash (set-tree-from-list (list 1 2 3) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))", 
+				new LitInteropObject(new java.util.HashSet<Object>(List.of(1l, 2l, 3l)), TypeAtom.TypeSetHash));
+		
+		this.assertIntprtAndCompPrintSameValues("(println (convert Set:Tree Set:Hash (set-tree-from-list (list 1 2 3) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1))))))");
+	}
 }
