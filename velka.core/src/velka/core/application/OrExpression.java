@@ -3,8 +3,12 @@ package velka.core.application;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitBoolean;
 import velka.types.Substitution;
@@ -23,7 +27,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class OrExpression extends SpecialFormApplication {
+public class OrExpression extends SpecialFormApplication implements CompileableToJava {
 	
 	public static final String OR = "or";
 
@@ -36,8 +40,11 @@ public class OrExpression extends SpecialFormApplication {
 		for(Expression e : (Tuple)args) {
 			Expression ie = e.interpret(env);
 			if(!(ie instanceof LitBoolean)) {
-				ie = ie.convert(TypeAtom.TypeBoolNative, env);
-				ie = ie.interpret(env);
+				ie = (Expression)env.getTypeSystem().convert(
+						env.getTypeSystem().getType(ie),
+						TypeAtom.TypeBoolNative,
+						ie,
+						env);
 			}
 			
 			if(ie.equals(LitBoolean.TRUE)) {
@@ -100,5 +107,18 @@ public class OrExpression extends SpecialFormApplication {
 	@Override
 	protected String applicatedToString() {
 		return OR;
+	}
+	
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var ret = JExpr.lit(true); 
+		
+		for(Expression e : (Tuple)this.args) {
+			var ctj = (CompileableToJava)e;
+			
+			ret = ret.bor(ctj.toJavaExpr(env));
+		}
+		
+		return ret;
 	}
 }

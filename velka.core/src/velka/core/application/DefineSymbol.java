@@ -3,9 +3,12 @@ package velka.core.application;
 import java.util.Arrays;
 import java.util.Optional;
 
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.TypeHolder;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -23,7 +26,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class DefineSymbol extends Expression {
+public class DefineSymbol extends Expression implements CompileableToJava {
 	
 	/**
 	 * Symbol for define special form
@@ -155,7 +158,21 @@ public class DefineSymbol extends Expression {
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("doConvert not implemented");
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		if(this.defined instanceof CompileableToJava ctj) {
+			Type t;
+			try {
+				t = this.defined.infer(env).first;
+			} catch (AppendableException e) {
+				throw new RuntimeException(e);
+			}
+			env.put(this.name, new TypeHolder(t));
+			return ctj.toJavaExpr(env);
+		}
+		throw new RuntimeException("Not compileable expression " + this.defined);
 	}
 }

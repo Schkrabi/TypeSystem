@@ -1,5 +1,5 @@
 module velka.types {
-	requires velka.util;
+	requires transitive velka.util;
 	exports velka.types;
 	exports velka.types.typeSystem;
 }

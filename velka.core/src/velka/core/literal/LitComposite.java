@@ -2,9 +2,16 @@ package velka.core.literal;
 
 import java.util.List;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.langbase.ListNative;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.TypedObject;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -18,7 +25,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class LitComposite extends Literal {
+public class LitComposite extends Literal implements CompileableToJava {
 
 	/**
 	 * Composed values of this literal
@@ -75,23 +82,9 @@ public class LitComposite extends Literal {
 		return this.value.hashCode() * this.composedType.hashCode();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public String toString() {
-		if(this.composedType == TypeAtom.TypeListNative) {
-			LitInteropObject intObj = (LitInteropObject)this.value;
-			return ListNative.toStringListNative((List<Expression>)intObj.javaObject);
-		}
-		if(this.composedType == TypeAtom.TypeIntRoman
-			|| this.composedType == TypeAtom.TypeIntString) {
-			return "[" + this.value.toString() + "]";
-		}
-		
-		return "[" + this.value.toString() + "]";
-
-		// return "<" + this.composedType.toString() + " "
-		// + this.value.stream().map(x -> x.toString() + ",").reduce("", (x, y) -> x +
-		// y) + ">";
+		return this.value.toString();
 	}
 
 	/**
@@ -103,5 +96,15 @@ public class LitComposite extends Literal {
 	 */
 	public static String clojureLit(Type type, String value) throws AppendableException {
 		return ClojureHelper.litCompositeHelper_str(type.clojureTypeRepresentation(), value);
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		CompileableToJava val = (CompileableToJava)this.value;
+		
+		var expr = JExpr._new(CodeModelInstance.instance().ref(TypedObject.class))
+				.arg(val.toJavaExpr(env))
+				.arg(TypeUtil.instance().type2java(this.composedType));
+		return expr;
 	}
 }

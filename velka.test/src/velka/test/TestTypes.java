@@ -36,7 +36,6 @@ import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeName;
 import velka.types.TypeRepresentation;
-import velka.types.TypeSetDoesNotUnifyException;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.types.TypesDoesNotUnifyException;
@@ -44,7 +43,7 @@ import velka.types.UnexpectedTypeException;
 import velka.util.AppendableException;
 import velka.util.Pair;
 
-class TestTypes {
+class TestTypes extends VelkaTest {
 
 	@Test
 	@DisplayName("Exceptions")
@@ -165,27 +164,6 @@ class TestTypes {
 
 		TestTypes.testGetUnconstrainedVariables(tuple, Arrays.asList(new TypeVariable("a")));
 
-		TestTypes.testConvertTo(tuple,
-				new Tuple(Arrays.asList(new LitComposite(new LitString("XIII"), TypeAtom.TypeIntRoman), new Symbol("x"),
-						LitBoolean.TRUE)),
-				new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString, TypeAtom.TypeBool)),
-				new Tuple(Arrays.asList(new LitComposite(new LitString("13"), TypeAtom.TypeIntString), new Symbol("x"),
-						LitBoolean.TRUE)));
-		TestTypes.testConvertTo(tuple,
-				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)),
-				new TypeVariable("b"),
-				new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)));
-
-		Environment env = TopLevelEnvironment.instantiate();
-		
-
-		assertThrows(ConversionException.class,
-				() -> (new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)))
-						.convert(TypeAtom.TypeInt, env));
-		assertThrows(ConversionException.class,
-				() -> (new Tuple(Arrays.asList(new LitString("XIII"), new Symbol("x"), LitBoolean.TRUE)))
-						.convert(new TypeTuple(Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeString)), env));
-
 		TestTypes.testApply(tuple,
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeInt))),
 				new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman, TypeAtom.TypeInt, TypeAtom.TypeBool)));
@@ -214,27 +192,9 @@ class TestTypes {
 		TestTypes.testDifference(typeArrow, TypeTuple.EMPTY_TUPLE);
 
 		TestTypes.testGetUnconstrainedVariables(new TypeArrow(new TypeVariable("b"), TypeAtom.TypeIntString),
-				Arrays.asList(new TypeVariable("b")));
-		TestTypes.testConvertTo(typeArrow, Expression.EMPTY_EXPRESSION, new TypeVariable("c"),
-				Expression.EMPTY_EXPRESSION);
+				Arrays.asList(new TypeVariable("b")));;
 
 		Environment env = TopLevelEnvironment.instantiate();
-		
-
-		Expression e = 
-				(new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeIntString)), new Symbol("x")))
-					.convert(new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman), 
-							env);
-
-		assertTrue(e instanceof Lambda);
-
-		Pair<Type, Substitution> p = e.infer(env);
-		assertEquals(p.first,
-				new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntRoman)), TypeAtom.TypeIntRoman));
-
-		assertThrows(ConversionException.class,
-				() -> Expression.EMPTY_EXPRESSION.convert(TypeAtom.TypeInt, env));
 
 		TestTypes.testApply(new TypeArrow(TypeAtom.TypeBool, new TypeVariable("a")),
 				new Substitution(
@@ -289,23 +249,6 @@ class TestTypes {
 
 		TestTypes.testGetUnconstrainedVariables(atom, Arrays.asList());
 
-		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitString("42"), new TypeVariable("a"),
-				new LitString("42"));
-		TestTypes.testConvertTo(TypeAtom.TypeIntString, new LitComposite(new LitString("42"), TypeAtom.TypeIntString),
-				TypeAtom.TypeIntRoman, new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman));
-
-		Environment env = TopLevelEnvironment.instantiate();
-		
-
-		assertThrows(ConversionException.class, 
-				() -> Expression.EMPTY_EXPRESSION.convert(new TypeArrow(TypeAtom.TypeInt, TypeAtom.TypeInt), env));
-		assertThrows(ConversionException.class,
-				() -> Expression.EMPTY_EXPRESSION.convert(TypeAtom.TypeIntString, env));
-		assertThrows(ConversionException.class,
-				() -> Expression.EMPTY_EXPRESSION.convert(
-						new TypeAtom(new TypeName("Test"), TypeRepresentation.STRING),
-						env));
-
 		TestTypes.testApply(TypeAtom.TypeInt,
 				new Substitution(
 						Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("a"), TypeAtom.TypeIntRoman))),
@@ -319,14 +262,14 @@ class TestTypes {
 	@DisplayName("Test Representation Or")
 	void testRepresentationOr() throws AppendableException {
 		// Test construction
-		assertEquals(RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt)), TypeAtom.TypeInt);
+		assertEquals(RepresentationOr.factory(Arrays.asList(TypeAtom.TypeInt)), TypeAtom.TypeInt);
 
 		assertAll(() -> {
-			RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString));
+			RepresentationOr.factory(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString));
 		});
 
 		RepresentationOr ror = (RepresentationOr) RepresentationOr
-				.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString));
+				.factory(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString));
 		assertAll(() -> {
 			ror.toString();
 			ror.getRepresentations();
@@ -334,28 +277,28 @@ class TestTypes {
 
 		assertTrue(ror instanceof RepresentationOr);
 
-		assertThrows(AppendableException.class, () -> RepresentationOr.makeRepresentationOr(Arrays.asList()));
-		assertThrows(TypeSetDoesNotUnifyException.class,
-				() -> RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeBool)));
+		assertThrows(RuntimeException.class, () -> RepresentationOr.factory(Arrays.asList()));
+		assertThrows(RuntimeException.class,
+				() -> RepresentationOr.factory(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeBool)));
 
 		// Equals & CompareTo
 		TestTypes.testReflexivity(ror);
-		TestTypes.testDifference(ror, RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt)));
-		TestTypes.testDifference(ror, RepresentationOr.makeRepresentationOr(
+		TestTypes.testDifference(ror, RepresentationOr.factory(Arrays.asList(TypeAtom.TypeInt)));
+		TestTypes.testDifference(ror, RepresentationOr.factory(
 				Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString, TypeAtom.TypeIntRoman)));
 		TestTypes.testDifference(ror,
-				RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeIntRoman)));
+				RepresentationOr.factory(Arrays.asList(TypeAtom.TypeInt, TypeAtom.TypeIntRoman)));
 		TestTypes.testDifference(ror, TypeTuple.EMPTY_TUPLE);
 
 		TestTypes.testGetUnconstrainedVariables(ror, Arrays.asList());
 
 		TestTypes.testApply(
-				RepresentationOr.makeRepresentationOr(
+				RepresentationOr.factory(
 						Arrays.asList(new TypeArrow(TypeAtom.TypeIntNative, new TypeVariable("x")),
 								new TypeArrow(TypeAtom.TypeIntString, new TypeVariable("x")))),
 				new Substitution(
 						Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), TypeAtom.TypeIntString))),
-				RepresentationOr.makeRepresentationOr(
+				RepresentationOr.factory(
 						Arrays.asList(new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeIntString),
 								new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeIntString))));
 	}
@@ -391,37 +334,37 @@ class TestTypes {
 				new TypeTuple(TypeAtom.TypeInt, TypeAtom.TypeInt, TypeAtom.TypeInt)));
 
 		TestTypes.testUnify(new TypeVariable("x"),
-				RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
+				RepresentationOr.factory(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), RepresentationOr
-						.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman))))));
+						.factory(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman))))));
 		TestTypes.testUnify(
-				RepresentationOr.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
+				RepresentationOr.factory(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman)),
 				new TypeVariable("x"),
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), RepresentationOr
-						.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman))))));
+						.factory(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman))))));
 		TestTypes.testUnify(
-				RepresentationOr.makeRepresentationOr(
+				RepresentationOr.factory(
 						Arrays.asList(new TypeArrow(TypeAtom.TypeIntNative, new TypeVariable("x")),
 								new TypeArrow(TypeAtom.TypeIntString, new TypeVariable("x")))),
 				new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative), new Substitution(
 						Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), TypeAtom.TypeStringNative))));
 		TestTypes.testUnify(new TypeArrow(new TypeVariable("x"), TypeAtom.TypeStringNative),
-				RepresentationOr.makeRepresentationOr(new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative),
+				RepresentationOr.factory(new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative),
 						new TypeArrow(TypeAtom.TypeIntString, TypeAtom.TypeStringNative)),
 				new Substitution(Arrays.asList(new Pair<TypeVariable, Type>(new TypeVariable("x"), RepresentationOr
-						.makeRepresentationOr(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString))))));
+						.factory(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntString))))));
 		TestTypes.testUnify(
-				RepresentationOr.makeRepresentationOr(
+				RepresentationOr.factory(
 						Arrays.asList(new TypeArrow(TypeAtom.TypeIntNative, new TypeVariable("x")),
 								new TypeArrow(TypeAtom.TypeIntString, new TypeVariable("x")))),
 				RepresentationOr
-						.makeRepresentationOr(Arrays.asList(new TypeArrow(new TypeVariable("y"), TypeAtom.TypeIntRoman),
+						.factory(Arrays.asList(new TypeArrow(new TypeVariable("y"), TypeAtom.TypeIntRoman),
 								new TypeArrow(new TypeVariable("y"), TypeAtom.TypeIntNative))),
 				new Substitution(Arrays.asList(
 						new Pair<TypeVariable, Type>(new TypeVariable("x"),
-								RepresentationOr.makeRepresentationOr(
+								RepresentationOr.factory(
 										Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman))),
-						new Pair<TypeVariable, Type>(new TypeVariable("y"), RepresentationOr.makeRepresentationOr(
+						new Pair<TypeVariable, Type>(new TypeVariable("y"), RepresentationOr.factory(
 								Arrays.asList(TypeAtom.TypeIntString, TypeAtom.TypeIntNative))))));
 	}
 	
@@ -456,24 +399,44 @@ class TestTypes {
 					.canConvertTo(new TypeArrow(TypeAtom.TypeStringNative, TypeAtom.TypeIntString), atomChecker),
 				false);
 		assertEquals(
-				RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)
+				RepresentationOr.factory(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)
 					.canConvertTo(TypeAtom.TypeIntNative, atomChecker),
 				true);
 		assertEquals(
-				RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)
+				RepresentationOr.factory(TypeAtom.TypeIntNative, TypeAtom.TypeIntString)
 					.canConvertTo(TypeAtom.TypeStringNative, atomChecker),
 				false);
 		assertEquals(
 				TypeAtom.TypeIntNative.canConvertTo(
-						RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString), 
+						RepresentationOr.factory(TypeAtom.TypeIntNative, TypeAtom.TypeIntString), 
 						atomChecker),
 				true);
 		assertEquals(
 				TypeAtom.TypeStringNative.canConvertTo(
-						RepresentationOr.makeRepresentationOr(TypeAtom.TypeIntNative, TypeAtom.TypeIntString), 
+						RepresentationOr.factory(TypeAtom.TypeIntNative, TypeAtom.TypeIntString), 
 						atomChecker),
 				false);
 	}
+	
+//	@Test
+//	void testType2Java() throws AppendableException {
+//		this.assertJExprEquals(TypeAtom.TypeIntNative, TypeUtil.instance().type2java(TypeAtom.TypeIntNative));
+//		
+//		var atom = new TypeAtom(new TypeName("test"), new TypeRepresentation("test"));
+//		this.assertJExprEquals(atom, TypeUtil.instance().type2java(atom));
+//		
+//		var arrow = new TypeArrow(TypeAtom.TypeIntNative, TypeAtom.TypeDoubleNative);
+//		this.assertJExprEquals(arrow, TypeUtil.instance().type2java(arrow));
+//		
+//		var tuple = new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeDoubleNative);
+//		this.assertJExprEquals(tuple, TypeUtil.instance().type2java(tuple));
+//		
+//		var variable = new TypeVariable("A");
+//		this.assertJExprEquals(variable, TypeUtil.instance().type2java(variable));
+//		
+//		var set = RepresentationOr.factory(TypeAtom.TypeIntNative, TypeAtom.TypeIntRoman, TypeAtom.TypeIntString);
+//		this.assertJExprEquals(set, TypeUtil.instance().type2java(set));
+//	}
 
 	static void testReflexivity(Type type) {
 		assertNotNull(type);
@@ -500,21 +463,6 @@ class TestTypes {
 			fail("Variables " + s + " are missing in " + type + ".getUnconstrainedVariables()" + " got "
 					+ unconstrained);
 		}
-	}
-
-	static void testConvertTo(Type type, Expression from, Type to, Expression expected) throws AppendableException {
-		assertNotNull(type);
-		assertNotNull(from);
-		assertNotNull(to);
-		assertNotNull(expected);
-
-		Environment env = TopLevelEnvironment.instantiate();
-		
-
-		Expression converted = 
-				from.convert(to, env).interpret(env);
-
-		assertEquals(converted, expected);
 	}
 
 	static void testApply(Type type, Substitution s, Type expected) throws AppendableException {

@@ -39,15 +39,25 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	public static final TypeTuple EMPTY_TUPLE = new TypeTuple();
 
 	public TypeTuple(Collection<? extends Type> values) {
+		if(values.stream().anyMatch(x -> x == null)) {
+			throw new RuntimeException("Null in typetuple");
+		}
 		this.values = new Vector<Type>(values);
 	}
 	
 	public TypeTuple(Type ...types) {
+		if(Stream.of(types).anyMatch(x -> x == null)) {
+			throw new RuntimeException("Null in typetuple");
+		}
 		this.values = new Vector<Type>(Arrays.asList(types));
 	}
 	
 	public TypeTuple(Stream<? extends Type> values) {
-		this.values = new Vector<Type>(values.collect(Collectors.toList()));
+		var vls = values.collect(Collectors.toList());
+		if(vls.stream().anyMatch(x -> x == null)) {
+			throw new RuntimeException("Null in typetuple");
+		}
+		this.values = new Vector<Type>(vls);
 	}
 
 	private TypeTuple() {

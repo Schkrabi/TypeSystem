@@ -1,12 +1,7 @@
 package velka.core.application;
 
-import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
+import com.sun.codemodel.JExpression;
 
 import velka.core.abstraction.ExtendedFunction;
 import velka.core.abstraction.Function;
@@ -14,19 +9,19 @@ import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitDouble;
-import velka.core.literal.LitInteger;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
+import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.AppendableException;
-import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
-import velka.util.CostAggregation;
+import velka.util.RankAggregation;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 
@@ -39,22 +34,21 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Extend extends Expression implements Comparable<Expression> {
+public class Extend extends Expression implements Comparable<Expression>, CompileableToJava {
 
 	/**
 	 * Symbol of the special form
 	 */
 	public static final String EXTEND = "extend";
 	
-	/**
-	 * Expresion that evaluates to extended function
-	 */
+	/** Expresion that evaluates to extended function */
 	public final Expression extendedFunction;
 	
-	/**
-	 * Expression that evaluates to function -> future implementation
-	 */
+	/** Expression that evaluates to function -> future implementation */
 	public final Expression implementation;
+	
+	/** Cost function for implementation */
+	public final Expression costFunction;
 	
 	private static final Expression invalidCost = new Expression() {
 		@Override
@@ -78,11 +72,6 @@ public class Extend extends Expression implements Comparable<Expression> {
 			return null;
 		}		
 	};
-	
-	/**
-	 * Cost function for implementation
-	 */
-	public final Expression costFunction;
 	
 	public Extend(Expression extendedFunction, Expression implementation) {
 		super();
@@ -141,48 +130,46 @@ public class Extend extends Expression implements Comparable<Expression> {
 	}
 	
 	@Override
-	public Expression interpret(Environment env) throws AppendableException {
-		Expression extFunIntp = this.extendedFunction.interpret(env);
+	public Expression interpret(Environment env) throws AppendableException {		
+		var efi = this.extendedFunction.interpret(env);
+		var impli = this.implementation.interpret(env);
+		var costi = this.getCostFunction(env).interpret(env);
 		
-		if(!(extFunIntp instanceof ExtendedFunction)) {
-			throw new AppendableException(
-					this.extendedFunction.toString()
-					+ " does not interpret to extended function, got: "
-					+ extFunIntp.toString()
-					+ " in "
-					+ this.toString());
-		}
-		ExtendedFunction extendedFunctionIntp = (ExtendedFunction)extFunIntp;
-		
-		Expression implIntp = this.implementation.interpret(env);
-		
-		if(implIntp instanceof Operator) {
-			TypeArrow t = (TypeArrow)implIntp.infer(env).first;
-			var at = (TypeTuple)t.ltype;
-			var a = new Tuple(at.stream().map(x -> (Expression) new velka.core.expression.Symbol(NameGenerator.next()))
-					.collect(Collectors.toList()));
-			implIntp = new Function(at, a, new AbstractionApplication(implIntp, a), env);
-					
-		}
-		if(!(implIntp instanceof Function)) {
+		if(efi instanceof ExtendedFunction ef) {
+			if(impli instanceof Operator o) {
+				var p = o.infer(env);
+				var t = (TypeArrow)p.first;
+				var pt = (TypeTuple)t.ltype;
+				var parms = pt.stream().map(lt -> Pair.of(new velka.core.expression.Symbol(NameGenerator.next()), lt)).toList(); 
+				
+				impli = new Function(env,
+						new AbstractionApplication(o, new Tuple(parms.stream().map(lp -> lp.first).toList())), parms);
+			}
+			
+			if(impli instanceof Function impl) {
+				if(costi instanceof VelkaAbstraction cost) {
+					return ef.extend(impl, cost);
+				}
+				throw new AppendableException(
+						new StringBuilder()
+							.append(this.getCostFunction(env))
+							.append(" does not interpret to VelkaAbstraction, got: ")
+							.append(costi)
+							.toString());
+			}
 			throw new AppendableException(
 					this.implementation.toString()
 					+ " does not interpret to function, got: "
-					+ implIntp.toString()
+					+ impli.toString()
 					+ " in "
 					+ this.toString());
 		}
-		Function implementationIntp = (Function)implIntp;
-		
-		Expression costFunction = this.getCostFunction(env).interpret(env);
-		
-		Map<Function, Expression> implementations = extendedFunctionIntp.getImplementationsAsFunctions();
-		implementations.put(implementationIntp, costFunction);
-		
-		ExtendedFunction extendedFunction = 
-				ExtendedFunction.makeExtendedFunction(implementations, extendedFunctionIntp.creationEnvironment);
-		
-		return extendedFunction;
+		throw new AppendableException(
+				this.extendedFunction.toString()
+				+ " does not interpret to extended function, got: "
+				+ efi.toString()
+				+ " in "
+				+ this.toString());
 	}
 	
 	private Expression getCostFunction(Environment env) {
@@ -190,7 +177,7 @@ public class Extend extends Expression implements Comparable<Expression> {
 			try {
 				var p = this.implementation.infer(env);
 				var argsType = ((TypeTuple)((TypeArrow)p.first).ltype);
-				return Lambda.constFun(argsType.size(), new LitDouble(CostAggregation.instance().defaultImplementationRank()));
+				return Lambda.constFun(argsType.size(), new LitDouble(RankAggregation.instance().defaultImplementationRank()));
 			}catch(AppendableException e) {
 				throw new RuntimeException(e);
 			}
@@ -200,113 +187,33 @@ public class Extend extends Expression implements Comparable<Expression> {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		Pair<Type, Substitution> extendedFunctionInfered = this.extendedFunction.infer(env);
+		var efInf = this.extendedFunction.infer(env);
+		var implInf = this.implementation.infer(env);
 		
-		Set<Type> representations = getExtendedFunctionRepresentations(extendedFunctionInfered);
+		this.isCostFunctionInferingCorrectly(implInf.first, env);
 		
-		Pair<Type, Substitution> implementationInfered = this.implementation.infer(env);
-		
-		representations.add(implementationInfered.first);
-		
-		Type type = RepresentationOr.makeRepresentationOr(representations); 
-		
-		this.isCostFunctionInferingCorrectly(implementationInfered.first, env);
-		
-		return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-	}
-
-	/**
-	 * Gets representations of modified extended functions
-	 * @param extendedFunctionInfered inference result of extended function
-	 * @return Set of representations
-	 * @throws AppendableException if extended function is not valid
-	 */
-	private Set<Type> getExtendedFunctionRepresentations(Pair<Type, Substitution> extendedFunctionInfered)
-			throws AppendableException {
-		Set<Type> representations;
-		if ((extendedFunctionInfered.first instanceof RepresentationOr)
-				&& ((RepresentationOr) extendedFunctionInfered.first).getRepresentations().stream()
-						.allMatch(x -> x instanceof TypeArrow)) {
-			representations = ((RepresentationOr)extendedFunctionInfered.first).getRepresentations();
-		}
-		else if(extendedFunctionInfered.first instanceof TypeArrow) {
-			representations = new TreeSet<Type>();
-			representations.add(extendedFunctionInfered.first);
-		}
-		else {
-			throw new AppendableException(
-					this.extendedFunction.toString()
-					+ " must infer to Representation Or of type arrows or type arrow, got: "
-					+ extendedFunctionInfered.first.toString()
-					+ " in "
-					+ this.toString());
-		}
-		return representations;
+		var t = RepresentationOr.or(efInf.first, implInf.first);
+		return Pair.of(t, Substitution.EMPTY);
 	}
 
 	@Override
 	public String toClojureCode(Environment env) throws AppendableException {
-		String extFun = "_extFun";
-		String extFunType = "_extFunType";
-		String impl_noCost = "_implNoCost";
-		String impl = "_impl";
-		String implType = "_implType";
+		var code = ClojureHelper.applyClojureFunction(
+				".extend",
+				this.extendedFunction.toClojureCode(env),
+				this.implementation.toClojureCode(env),
+				this.getCostFunction(env).toClojureCode(env));
 		
-		String costF;
-		if(this.costFunction == Extend.invalidCost) {
-			costF = this.getCostFunction(env).toClojureCode(env);
-		}
-		else {
-			costF = this.costFunction.toClojureCode(env);
-		}
-		
-		String code = ClojureHelper.letHelper(
-				ClojureHelper.addTypeMetaInfo_str(
-						ClojureHelper.applyClojureFunction(
-								"conj",
-								extFun,
-								impl),
-						ClojureHelper.applyClojureFunction(
-								"if",
-								ClojureHelper.isInstanceOfClass(
-										extFunType,
-										RepresentationOr.class),
-								ClojureHelper.applyClojureFunction(
-										".conjoin",
-										extFunType,
-										implType),
-								ClojureHelper.applyClojureFunction(
-										"velka.types.RepresentationOr/makeRepresentationOr",
-										ClojureHelper.clojureSetHelper(
-												extFunType,
-												implType)))),
-				Pair.of(
-						extFun,
-						this.extendedFunction.toClojureCode(env)),
-				Pair.of(
-						impl_noCost,
-						this.implementation.toClojureCode(env)),
-				Pair.of(
-						impl,
-						ClojureHelper.setCostFunction(
-								impl_noCost,
-								costF)),
-				Pair.of(
-						implType,
-						ClojureHelper.applyClojureFunction(
-								ClojureCoreSymbols.getTypeClojureSymbol_full,
-								impl)),
-				Pair.of(
-						extFunType,
-						ClojureHelper.applyClojureFunction(
-								ClojureCoreSymbols.getTypeClojureSymbol_full,
-								extFun)));
 		return code;
 	}
 	
 	@Override
 	public int hashCode() {
-		return this.extendedFunction.hashCode() * this.implementation.hashCode();
+		return new StringBuilder()
+				.append(this.extendedFunction.hashCode())
+				.append(this.implementation.hashCode())
+				.append(this.costFunction.hashCode())
+				.toString().hashCode();
 	}
 
 	@Override
@@ -343,43 +250,34 @@ public class Extend extends Expression implements Comparable<Expression> {
 	
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("(");
-		sb.append(Extend.EXTEND);
-		sb.append(" ");
-		sb.append(this.extendedFunction.toString());
-		sb.append(" ");
-		sb.append(this.implementation.toString());
-		sb.append(")");
-		return sb.toString();
+		return new StringBuilder()
+			.append("(")
+			.append(Extend.EXTEND)
+			.append(" ")
+			.append(this.extendedFunction.toString())
+			.append(" ")
+			.append(this.implementation.toString())
+			.append(")")
+			.toString();
 	}
 
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("doConvert is not implemented for extend");
 	}
 
-	/**
-	 * Creates new extended function
-	 * 
-	 * @param implementations    function implementations
-	 * @param rankingFunction    ranking function used for selecting implementation
-	 * @param createdEnvironment environment where function was created
-	 * @return new ExtendedFunction object
-	 * @throws AppendableException thrown if argument types of function does not
-	 *                             unify
-	 */
-	public static ExtendedFunction makeExtendedFunction(Collection<? extends Function> implementations,
-			Environment createdEnvironment) 
-					throws AppendableException {		
-		Map<Function, Expression> m = new TreeMap<Function, Expression>();
-		for(Function f : implementations) {
-			Expression e = Lambda.constFun(f.args.size(), new LitInteger(1)).interpret(createdEnvironment);
-			m.put(f, e);
-		}
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var ef = (CompileableToJava)this.extendedFunction;
+		var impl = (CompileableToJava)this.implementation;
+		var cost = (CompileableToJava)this.getCostFunction(env);
 		
-		return ExtendedFunction.makeExtendedFunction(m, createdEnvironment);
+		var _ef = ef.toJavaExpr(env);
+		var ret = _ef.invoke("extend")
+				.arg(impl.toJavaExpr(env))
+				.arg(cost.toJavaExpr(env));
+		
+		return ret;
 	}
 }

@@ -1,14 +1,17 @@
 package velka.core.langbase;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMod;
 
 import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Constructor;
@@ -22,9 +25,10 @@ import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
-import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
-import velka.core.literal.LitString;
+import velka.core.literal.Literal;
+import velka.java.CodeModelInstance;
+import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -35,9 +39,7 @@ import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
-import velka.util.ThrowingBinaryOperator;
 import velka.util.ThrowingFunction;
-import velka.util.ThrowingPredicate;
 import velka.util.annotations.Description;
 import velka.util.annotations.Example;
 import velka.util.annotations.Header;
@@ -59,13 +61,6 @@ import velka.util.annotations.VelkaOperatorBank;
 @Description("Operators for working with wrapped java.util.LinkedList.") 
 @Header("Linked List")
 public class JavaLinkedList extends OperatorBank {
-
-	/**
-	 * Clojure namespace symbol for JavaLinkedList
-	 */
-	public static final String NAMESPACE = "velka.clojure.linkedList";
-
-	private static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
 	public static final Symbol constructorSymbol_out = new Symbol("construct-linked-list");
 
 	/**
@@ -75,38 +70,13 @@ public class JavaLinkedList extends OperatorBank {
 	@Description("Constructs empty List:Linked.") 
 	@Name("Construct empty list") 
 	@Syntax("(construct List:JavaLinked)")
-	public static final Constructor constructor = new Constructor() {
+	public static final Constructor constructor = Constructor.wrapJavaContructorToType(LinkedList.class, JavaLinkedList.singleton().getNamespace(),
+			TypeAtom.TypeListJavaLinked);
+	
+	@VelkaConstructor
+	public static final Constructor copyConstructor = Constructor.wrapJavaContructorToType(LinkedList.class, JavaLinkedList.singleton().getNamespace(), 
+			TypeAtom.TypeListJavaLinked, java.util.Collection.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(),
-					ClojureHelper.applyClojureFunction("java.util.LinkedList."));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			Expression e = new LitInteropObject(new LinkedList<Object>(), TypeAtom.TypeListJavaLinked);
-			return e;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeArrow type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeListJavaLinked);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return constructorSymbol;
-		}
-	};
-
-	/**
-	 * Symbol for boolean add(E e)
-	 */
-	private static final Symbol addToEndSymbol = new Symbol("add-to-end", NAMESPACE);
 	public static final Symbol addToEndSymbol_out = new Symbol("java-linked-list-add-to-end");
 
 	/**
@@ -116,61 +86,9 @@ public class JavaLinkedList extends OperatorBank {
 	@Description("Appends the specified element to the end of this list.") 
 	@Example("(java-linked-list-add-to-end (construct List:JavaLinked) 42)") 
 	@Syntax("(java-linked-list-add-to-end <list> <element>)")
-	public static final Operator addToEnd = new Operator() {
+	public static final Operator addToEnd = Operator.wrapJavaMethod(LinkedList.class, "add", "java-linked-list-add-to-end",
+			JavaLinkedList.singleton().getNamespace(), Object.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String e = "_e";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, e),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".add",
-									list,
-									e)));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-			Expression e = args.get(1);
-
-			@SuppressWarnings("unchecked")
-			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
-			l.add(e);
-
-			return LitBoolean.TRUE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A),
-					TypeAtom.TypeBoolNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return addToEndSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return addToEndSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for void add(int index, E element)
-	 */
-	private static final Symbol addToIndexSymbol = new Symbol("add-to-index", NAMESPACE);
 	public static final Symbol addToIndexSymbol_out = new Symbol("java-linked-list-add-to-index");
 
 	/**
@@ -180,71 +98,9 @@ public class JavaLinkedList extends OperatorBank {
 	@Description("Inserts the specified element at the specified position in this list.") 
 	@Example("(java-linked-list-add-to-index (construct List:JavaLinked) 0 42)") 
 	@Syntax("(java-linked-list-add-to-index <list> <index> <element>)")
-	public static final Operator addToIndex = new Operator() {
+	public static final Operator addToIndex = Operator.wrapJavaMethod(LinkedList.class, "add", "java-linked-list-add-to-index",
+			JavaLinkedList.singleton().getNamespace(), int.class, Object.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String index = "_index";
-			String e = "_e";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, index, e),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.applyClojureFunction(
-									"doall",
-									ClojureHelper.clojureVectorHelper(
-											ClojureHelper.applyClojureFunction(
-													".add",
-													list,
-													index,
-													e),
-											Expression.EMPTY_EXPRESSION.toClojureCode(env)))));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			LitInteger index = (LitInteger) args.get(1);
-
-			Expression e = args.get(2);
-
-			@SuppressWarnings("unchecked")
-			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
-			l.add((int) index.value, e);
-
-			return Expression.EMPTY_EXPRESSION;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
-					TypeTuple.EMPTY_TUPLE);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return addToIndexSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return addToIndexSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for boolean addAll(Collection<? extends E> c)
-	 */
-	private static final Symbol addAllSymbol = new Symbol("add-all", NAMESPACE);
 	public static final Symbol addAllSymbol_out = new Symbol("java-linked-list-add-all");
 
 	/**
@@ -258,65 +114,9 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(println l)\n"
 					+ ";;(42 0 1 2)") 
 	@Syntax("(java-linked-list-add-all <list1> <list2>)")
-	public static final Operator addAll = new Operator() {
+	public static final Operator addAll = Operator.wrapJavaMethod(LinkedList.class, "addAll", "java-linked-list-add-all",
+			JavaLinkedList.singleton().getNamespace(), java.util.Collection.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String collection = "_collection";
-			String code = ClojureHelper.fnHelper(Arrays.asList(list, collection),
-					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction(".addAll",
-							list, collection)));
-
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			
-			LitInteropObject collection = (LitInteropObject) args.get(1);
-
-			@SuppressWarnings("unchecked")
-			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
-			@SuppressWarnings("unchecked")
-			LinkedList<Object> c = (LinkedList<Object>) collection.javaObject;
-
-			if (l.addAll(c)) {
-				return LitBoolean.TRUE;
-			}
-
-			return LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeArrow type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
-					TypeAtom.TypeBoolNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return addAllSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return addAllSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for boolean contains(Object o)
-	 */
-	private static final Symbol containsSymbol = new Symbol("velka-contains", NAMESPACE);
 	public static final Symbol containsSymbol_out = new Symbol("java-linked-list-contains");
 
 	/**
@@ -326,65 +126,9 @@ public class JavaLinkedList extends OperatorBank {
 	@Description("Returns true if this list contains the specified element.") 
 	@Example("(java-linked-list-contains (construct List:JavaLinked) 42) ; = #f") 
 	@Syntax("(java-linked-list-contains <list> <element>)")
-	public static final Operator contains = new Operator() {
+	public static final Operator contains = Operator.wrapJavaMethod(LinkedList.class, "contains", "java-linked-list-contains",
+			JavaLinkedList.singleton().getNamespace(), Object.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String object = "_object";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, object),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".contains",
-									list,
-									object)));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			@SuppressWarnings("unchecked")
-			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
-
-			Expression e = args.get(1);
-
-			if (l.contains(e)) {
-				return LitBoolean.TRUE;
-			}
-
-			return LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A),
-					TypeAtom.TypeBoolNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return containsSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return containsSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for boolean containsAll(Collection<?> c)
-	 */
-	private static final Symbol containsAllSymbol = new Symbol("contains-all", NAMESPACE);
 	public static final Symbol containsAllSymbol_out = new Symbol("java-linked-list-contains-all");
 
 	/**
@@ -396,68 +140,9 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-linked-list-contains-all k (build-list-native 2 (lambda (x) x))) ;; = #t") 
 	@Syntax("(java-linked-list-contains-all <list1> <list2>)")
-	public static final Operator containsAll = new Operator() {
+	public static final Operator containsAll = Operator.wrapJavaMethod(LinkedList.class, "containsAll", "java-linked-list-contains-all",
+			JavaLinkedList.singleton().getNamespace(), java.util.Collection.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String collection = "_collection";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, collection),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".containsAll",
-									list,
-									collection)));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			
-			LitInteropObject collection = (LitInteropObject) args.get(1);
-
-			@SuppressWarnings("unchecked")
-			LinkedList<Object> l = (LinkedList<Object>) list.javaObject;
-			@SuppressWarnings("unchecked")
-			LinkedList<Object> c = (LinkedList<Object>) collection.javaObject;
-
-			if (l.containsAll(c)) {
-				return LitBoolean.TRUE;
-			}
-
-			return LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeArrow type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
-					TypeAtom.TypeBoolNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return containsAllSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return containsAllSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for E get(int index)
-	 */
-	private static final Symbol getSymbol = new Symbol("velka-get", NAMESPACE);
 	public static final Symbol getSymbol_out = new Symbol("java-linked-list-get");
 
 	/**
@@ -469,60 +154,9 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-linked-list-get l 1) ;; = 1") 
 	@Syntax("(java-linked-list-get <list> <index>)")
-	public static final Operator get = new Operator() {
+	public static final Operator get = Operator.wrapJavaMethod(LinkedList.class, "get", "java-linked-list-get",
+			JavaLinkedList.singleton().getNamespace(), int.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String index = "_index";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, index),
-					ClojureHelper.applyClojureFunction(
-							".get",
-							list,
-							index));
-			
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			LitInteger index = (LitInteger) args.get(1);
-
-			@SuppressWarnings("unchecked")
-			var l = (List<Expression>) list.javaObject;
-
-			return l.get((int) index.value);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative), A);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return getSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return getSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for int indexOf(Object o)
-	 */
-	private static final Symbol indexOfSymbol = new Symbol("velka-index-of", NAMESPACE);
 	public static final Symbol indexOfSymbol_out = new Symbol("java-linked-list-index-of");
 
 	/**
@@ -534,62 +168,9 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-linked-list-index-of l 1) ;; = 1") 
 	@Syntax("(java-linked-list-index-of <list> <element>)")
-	public static final Operator indexOf = new Operator() {
+	public static final Operator indexOf = Operator.wrapJavaMethod(LinkedList.class, "indexOf", "java-linked-list-index-of",
+			JavaLinkedList.singleton().getNamespace(), Object.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String object = "_object";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, object),
-					LitInteger.clojureLit(
-						ClojureHelper.applyClojureFunction(
-								".indexOf",
-								list,
-								object)));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			Expression e = args.get(1);
-
-			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) list.javaObject;
-
-			int ret = l.indexOf(e);
-
-			return new LitInteger(ret);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return indexOfSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return indexOfSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for boolean isEmpty()
-	 */
-	private static final Symbol isEmptySymbol = new Symbol("is-empty", NAMESPACE);
 	public static final Symbol isEmptySymbol_out = new Symbol("java-linked-list-is-empty");
 
 	/**
@@ -599,58 +180,9 @@ public class JavaLinkedList extends OperatorBank {
 	@Description("Returns true if this list contains no elements.") 
 	@Example("(java-linked-list-is-empty (construct List:JavaLinked)) ;; = #t") 
 	@Syntax("(java-linked-list-is-empty <list>)")
-	public static final Operator isEmpty = new Operator() {
+	public static final Operator isEmpty = Operator.wrapJavaMethod(LinkedList.class, "isEmpty", "java-linked-list-is-empty",
+			JavaLinkedList.singleton().getNamespace());
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".isEmpty",
-									list)));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) list.javaObject;
-
-			if (l.isEmpty()) {
-				return LitBoolean.TRUE;
-			}
-			return LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked), TypeAtom.TypeBoolNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return isEmptySymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return isEmptySymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for int lastIndexOf(E e)
-	 */
-	private static final Symbol lastIndexOfSymbol = new Symbol("last-index-of", NAMESPACE);
 	public static final Symbol lastIndexOfSymbol_out = new Symbol("java-linked-list-last-index-of");
 
 	/**
@@ -662,62 +194,9 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
 					+ "(java-linked-list-last-index-of l 1) ;; = 2") 
 	@Syntax("(java-linked-list-last-index-of <list> <element>)")
-	public static final Operator lastIndexOf = new Operator() {
+	public static final Operator lastIndexOf = Operator.wrapJavaMethod(LinkedList.class, "lastIndexOf", "java-linked-list-last-index-of",
+			JavaLinkedList.singleton().getNamespace(), Object.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String object = "_object";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, object),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".lastIndexOf",
-									list,
-									object)));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			Expression e = args.get(1);
-
-			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) list.javaObject;
-
-			int ret = l.lastIndexOf(e);
-
-			return new LitInteger(ret);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A), TypeAtom.TypeIntNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return lastIndexOfSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return lastIndexOfSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for boolean remove(Object o)
-	 */
-	private static final Symbol removeSymbol = new Symbol("velka-remove", NAMESPACE);
 	public static final Symbol removeSymbol_out = new Symbol("java-linked-list-remove");
 
 	/**
@@ -731,65 +210,9 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(println l)\n"
 					+ "(0 2)") 
 	@Syntax("(java-linked-list-remove <list> <element>)")
-	public static final Operator remove = new Operator() {
+	public static final Operator remove = Operator.wrapJavaMethod(LinkedList.class, "remove", "java-linked-list-remove",
+			JavaLinkedList.singleton().getNamespace(), Object.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String o = "_o";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, o),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".remove",
-									list,
-									o)));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			Expression o = args.get(1);
-
-			@SuppressWarnings("rawtypes")
-			LinkedList al = (LinkedList) list.javaObject;
-
-			if (al.remove(o)) {
-				return LitBoolean.TRUE;
-			}
-			return LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, A),
-					TypeAtom.TypeBoolNative);
-			;
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return removeSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return removeSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * symbol for boolean removeAll(Collection<?> c)
-	 */
-	private static final Symbol removeAllSymbol = new Symbol("remove-all", NAMESPACE);
 	public static final Symbol removeAllSymbol_out = new Symbol("java-linked-list-remove-all");
 
 	/**
@@ -806,70 +229,9 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(println l)\n"
 					+ "(0 2)")
 	@Syntax("(java-linked-list-remove <list> <element>)")
-	public static final Operator removeAll = new Operator() {
+	public static final Operator removeAll = Operator.wrapJavaMethod(LinkedList.class, "removeAll", "java-linked-list-remove-all",
+			JavaLinkedList.singleton().getNamespace(), Collection.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String c = "_c";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, c),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".removeAll",
-									list,
-									c)));
-			return code;
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject ec = (LitInteropObject) args.get(1);
-
-			@SuppressWarnings("rawtypes")
-			LinkedList al = (LinkedList) list.javaObject;
-			@SuppressWarnings("rawtypes")
-			LinkedList c = (LinkedList) ec.javaObject;
-
-			if (al.removeAll(c)) {
-				return LitBoolean.TRUE;
-			}
-			return LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeArrow type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
-					TypeAtom.TypeBoolNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return removeAllSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return removeAllSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for boolean retainAll(Collection<?> c)
-	 */
-	private static final Symbol retainAllSymbol = new Symbol("retain-all", NAMESPACE);
 	public static final Symbol retainAllSymbol_out = new Symbol("java-linked-list-retain-all");
 
 	/**
@@ -884,71 +246,9 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(println l)\n"
 					+ "(2 3)") 
 	@Syntax("(java-linked-list-retain-all <retained-list> <retainee-list>)")
-	public static final Operator retainAll = new Operator() {
+	public static final Operator retainAll = Operator.wrapJavaMethod(LinkedList.class, "retainAll", "java-linked-list-retain-all",
+			JavaLinkedList.singleton().getNamespace(), Collection.class);
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String c = "_c";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, c),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".retainAll",
-									list,
-									c)));
-			
-			return code;
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject ec = (LitInteropObject) args.get(1);
-
-			@SuppressWarnings("rawtypes")
-			LinkedList al = (LinkedList) list.javaObject;
-			@SuppressWarnings("rawtypes")
-			LinkedList c = (LinkedList) ec.javaObject;
-
-			if (al.retainAll(c)) {
-				return LitBoolean.TRUE;
-			}
-			return LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeArrow type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListJavaLinked),
-					TypeAtom.TypeBoolNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return retainAllSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return retainAllSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for E set(int index, E element)
-	 */
-	private static final Symbol setSymbol = new Symbol("velka-set", NAMESPACE);
 	public static final Symbol setSymbol_out = new Symbol("java-linked-list-set");
 
 	/**
@@ -962,62 +262,8 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(println l)\n"
 					+ "(0 42 2)") 
 	@Syntax("(java-linked-list-set <list> <index> <element>)")
-	public static final Operator set = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String index = "_index";
-			String element = "_element";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, index, element),
-					ClojureHelper.applyClojureFunction(
-							".set",
-							list,
-							index,
-							element));
-			return code;
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			LitInteger index = (LitInteger) args.get(1);
-			Expression element = args.get(2);
-
-			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
-
-			return al.set((int) index.value, element);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative, A),
-					A);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return setSymbol;
-		}
-
-		@Override
-		public String toString() {
-			return setSymbol_out.toString();
-		}
-	};
-
-	/**
-	 * Symbol for int size()
-	 */
-	private static final Symbol sizeSymbol = new Symbol("velka-size", NAMESPACE);
+	public static final Operator set = Operator.wrapJavaMethod(LinkedList.class, "set", "java-linked-list-set",
+			JavaLinkedList.singleton().getNamespace(), int.class, Object.class);
 	public static final Symbol sizeSymbol_out = new Symbol("java-linked-list-size");
 
 	/**
@@ -1029,57 +275,9 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-linked-list-size l) ;; = 3") 
 	@Syntax("(java-linked-list-size <list>)")
-	public static final Operator size = new Operator() {
+	public static final Operator size = Operator.wrapJavaMethod(LinkedList.class, "size", "java-linked-list-size",
+			JavaLinkedList.singleton().getNamespace());
 
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".size",
-									list)));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			@SuppressWarnings("unchecked")
-			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
-
-			int size = al.size();
-
-			return new LitInteger(size);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked), TypeAtom.TypeIntNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return sizeSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return sizeSymbol_out.toString();
-		}
-
-	};
-
-	/**
-	 * Symbol for List<E> subList(int fromIndex, int toIndex)
-	 */
-	private static final Symbol sublistSymbol = new Symbol("velka-sublist", NAMESPACE);
 	public static final Symbol sublistSymbol_out = new Symbol("java-linked-list-sublist");
 
 	/**
@@ -1092,69 +290,13 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(java-linked-list-sublist l 3 7)\n"
 					+ ";; = (2 3 4 5 6 7)") 
 	@Syntax("(java-linked-list-sublist <list> <fromIndex> <toIndex>)")
-	public static final Operator sublist = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String from = "_from";
-			String to = "_to";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, from, to),
-					LitComposite.clojureValueToClojureLiteral(
-							ClojureHelper.applyClojureFunction(
-									"java.util.LinkedList.",
-									ClojureHelper.applyClojureFunction(
-											".subList",
-											list,
-											from,
-											to)),
-							TypeAtom.TypeListJavaLinked));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			// Need to extract LitComposite carrying type info first
-			
-			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
-
-			LitInteger from = (LitInteger) args.get(1);
-			LitInteger to = (LitInteger) args.get(2);
-
-			@SuppressWarnings("unchecked")
-			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
-
-			LinkedList<Expression> sublist = new LinkedList<Expression>(al.subList((int) from.value, (int) to.value));
-
-			return new LitInteropObject(sublist, TypeAtom.TypeListJavaLinked);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeArrow type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeAtom.TypeListJavaLinked);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return sublistSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return sublistSymbol_out.toString();
-		}
-
-	};
+	public static final Operator sublist = Operator.wrapJavaMethod(LinkedList.class, "subList", "java-linked-list-sublist",
+			JavaLinkedList.singleton().getNamespace(), int.class, int.class);
 
 	/**
 	 * Symbol for List<T> map(Function<T, E>)
 	 */
-	private static final Symbol mapSymbol = new Symbol("velka-map", NAMESPACE);
+	private static final Symbol mapSymbol = new Symbol("velka_map", JavaLinkedList.singleton().getNamespace());
 	public static final Symbol mapSymbol_out = new Symbol("java-linked-list-map");
 
 	/**
@@ -1196,17 +338,24 @@ public class JavaLinkedList extends OperatorBank {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
+			var list = (LitInteropObject) args.get(0);
 
-			Abstraction abst = (Abstraction) args.get(1);
+			var abst = args.get(1);
 
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> al = (LinkedList<Expression>) list.javaObject;
-			LinkedList<Expression> rslt = null;
+			var al = (LinkedList<Object>) list.javaObject;
+			LinkedList<Object> rslt = null;
 			try {
-				rslt = new LinkedList<Expression>(al.stream().map(ThrowingFunction.wrapper(e -> {
-					AbstractionApplication appl = new AbstractionApplication(abst, new Tuple(e));
-					return appl.interpret(env);
+				rslt = new LinkedList<Object>(al.stream().map(ThrowingFunction.wrapper(e -> {
+					var appl = new AbstractionApplication(abst, new Tuple(
+							e instanceof Expression lit ? lit : Literal.objectToLiteral(e)));
+					
+					var ret = appl.interpret(env);
+					if(ret instanceof Literal lit){
+						var lto = Literal.literalToObject(ret);
+						return lto;
+					}
+					return ret;					
 				})).collect(Collectors.toList()));
 			} catch (RuntimeException re) {
 				if (re.getCause() instanceof AppendableException) {
@@ -1231,7 +380,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return mapSymbol;
 		}
 		
@@ -1240,12 +389,30 @@ public class JavaLinkedList extends OperatorBank {
 			return mapSymbol_out.toString();
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod _method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var objCl = CodeModelInstance.instance()._ref(Object.class);
+			var aCl = CodeModelInstance.instance().anonymousClass(java.util.function.Function.class);
+			var applyMth = aCl.method(JMod.PUBLIC, objCl, "apply");
+			var applyArg = applyMth.param(objCl, "_arg");
+			
+			applyMth.body()._return(
+					mappedArgs.get(new Symbol("_1")).invoke("apply")
+						.arg(VelkaTuple._velkaTuple(applyArg)));
+			
+			_method.body()._return(
+					JExpr._new(CodeModelInstance.instance()._ref(LinkedList.class)).arg(
+						mappedArgs.get(new Symbol("_0"))
+							.invoke("stream")
+							.invoke("map").arg(JExpr._new(aCl))
+							.invoke("toList")));
+		}
 	};
 
 	/**
 	 * Symbol for List<T> map2(List<E2> other, Function<T, E1, E2>)
 	 */
-	private static final Symbol map2Symbol = new Symbol("velka-map2", NAMESPACE);
+	private static final Symbol map2Symbol = new Symbol("velka_map2", JavaLinkedList.singleton().getNamespace());
 	public static final Symbol map2Symbol_out = new Symbol("java-linked-list-map2");
 
 	/**
@@ -1293,29 +460,51 @@ public class JavaLinkedList extends OperatorBank {
 			// Need to extract LitComposite carrying type info first
 			
 			// Now I can get to LitInteropObject carrying java.util.ArrayList
-			LitInteropObject list = (LitInteropObject) args.get(0);
+			var list = (LitInteropObject) args.get(0);
 
 			
-			LitInteropObject list2 = (LitInteropObject) args.get(1);
+			var list2 = (LitInteropObject) args.get(1);
 
-			Abstraction abst = (Abstraction) args.get(2);
+			var abst = args.get(2);
 
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l1 = (LinkedList<Expression>) list.javaObject;
+			var l1 = (LinkedList<Object>) list.javaObject;
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l2 = (LinkedList<Expression>) list2.javaObject;
-			LinkedList<Expression> rslt = new LinkedList<Expression>();
+			var l2 = (LinkedList<Object>) list2.javaObject;
+			var rslt = new LinkedList<Object>();
 
-			Iterator<Expression> i1 = l1.iterator();
-			Iterator<Expression> i2 = l2.iterator();
+			var i1 = l1.iterator();
+			var i2 = l2.iterator();
 
 			while (i1.hasNext() && i2.hasNext()) {
-				Expression e1 = i1.next();
-				Expression e2 = i2.next();
+				var o1 = i1.next();
+				var o2 = i2.next();
+				
+				Expression e1, e2;
+				if(o1 instanceof Expression expr) {
+					e1 = expr;
+				}
+				else {
+					e1 = Literal.objectToLiteral(o1);
+				}
+				
+				if(o2 instanceof Expression expr) {
+					e2 = expr;
+				}
+				else {
+					e2 = Literal.objectToLiteral(o2);
+				}
 
 				AbstractionApplication appl = new AbstractionApplication(abst, new Tuple(e1, e2));
 
-				rslt.add(appl.interpret(env));
+				var ret = appl.interpret(env);
+				
+				if(ret instanceof Literal lit){
+					var lto = Literal.literalToObject(ret);
+					rslt.add(lto);
+					continue;
+				}
+				rslt.add(ret);
 			}
 
 			return new LitInteropObject(rslt, TypeAtom.TypeListJavaLinked);
@@ -1334,7 +523,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return map2Symbol;
 		}
 
@@ -1342,12 +531,35 @@ public class JavaLinkedList extends OperatorBank {
 		public String toString() {
 			return map2Symbol_out.toString();
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod _method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var objCl = CodeModelInstance.instance().ref(Object.class);
+			var itCl = CodeModelInstance.instance().ref(java.util.Iterator.class);
+			var llCl = CodeModelInstance.instance().ref(LinkedList.class);
+			
+			var ret = _method.body().decl(llCl, "_ret", JExpr._new(llCl));
+			
+			var it1 = _method.body().decl(itCl, "_it1", mappedArgs.get(new Symbol("_0")).invoke("iterator"));
+			var it2 = _method.body().decl(itCl, "_it2", mappedArgs.get(new Symbol("_1")).invoke("iterator"));
+			
+			var _while = _method.body()._while(it1.invoke("hasNext").band(it2.invoke("hasNext")));
+			var e1 = _while.body().decl(objCl, "_e1", it1.invoke("next"));
+			var e2 = _while.body().decl(objCl, "_e2", it2.invoke("next"));
+			
+			var rslt = _while.body().decl(objCl, "_rslt", mappedArgs.get(new Symbol("_2")).invoke("apply")
+							.arg(VelkaTuple._velkaTuple(e1, e2)));
+			
+			_while.body().add(ret.invoke("add").arg(rslt));
+			
+			_method.body()._return(ret);
+		}
 	};
 
 	/**
 	 * Symbol for T foldl(Function<T, E, T>)
 	 */
-	private static final Symbol foldlSymbol = new Symbol("foldl", NAMESPACE);
+	private static final Symbol foldlSymbol = new Symbol("foldl", JavaLinkedList.singleton().getNamespace());
 	public static final Symbol foldlSymbol_out = new Symbol("java-linked-list-foldl");
 
 	/**
@@ -1385,27 +597,28 @@ public class JavaLinkedList extends OperatorBank {
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			Abstraction abst = (Abstraction) args.get(0);
-			Expression terminator = args.get(1);
-			LitInteropObject io = (LitInteropObject) args.get(2);
+			var abst = args.get(0);
+			var agg = args.get(1);
+			var io = (LitInteropObject) args.get(2);			
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> list = (LinkedList<Expression>) io.javaObject;
-
-			Expression rslt = Expression.EMPTY_EXPRESSION;
-			try {
-				rslt = list.stream().reduce(terminator, ThrowingBinaryOperator.wrapper((agg, element) -> {
-					AbstractionApplication app = new AbstractionApplication(abst, new Tuple(agg, element));
-					return app.interpret(env);
-				}));
-			} catch (RuntimeException re) {
-				if (re.getCause() instanceof AppendableException) {
-					AppendableException e = (AppendableException) re.getCause();
-					throw e;
+			var list = (LinkedList<Object>) io.javaObject;
+			
+			var i = list.iterator();
+			while(i.hasNext()) {
+				var o = i.next();
+				Expression e;
+				if(o instanceof Expression expr) {
+					e = expr;
 				}
-				throw re;
+				else {
+					e = Literal.objectToLiteral(o);
+				}
+				
+				var app = new AbstractionApplication(abst, new Tuple(agg, e));
+				agg = app.interpret(env);
 			}
-
-			return rslt;
+			
+			return agg;
 		}
 		
 		private TypeVariable A = new TypeVariable(NameGenerator.next());
@@ -1419,7 +632,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return foldlSymbol;
 		}
 		
@@ -1428,12 +641,27 @@ public class JavaLinkedList extends OperatorBank {
 			return foldlSymbol_out.toString();
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod _method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var objCl = CodeModelInstance.instance().ref(Object.class);
+			
+			var i = _method.body().decl(CodeModelInstance.instance()._ref(Iterator.class), "_i",
+					mappedArgs.get(new Symbol("_2")).invoke("iterator"));
+			var ret = _method.body().decl(objCl, "_ret", mappedArgs.get(new Symbol("_1")));
+			
+			var _while = _method.body()._while(i.invoke("hasNext"));
+			var e = _while.body().decl(objCl, "_e", i.invoke("next"));
+			_while.body().assign(ret,
+					mappedArgs.get(new Symbol("_0")).invoke("apply").arg(VelkaTuple._velkaTuple(ret, e)));
+			
+			_method.body()._return(ret);
+		}
 	};
 
 	/**
 	 * Symbol for T foldr(Function<T, E, T>)
 	 */
-	private static final Symbol foldrSymbol = new Symbol("foldr", NAMESPACE);
+	private static final Symbol foldrSymbol = new Symbol("foldr", JavaLinkedList.singleton().getNamespace());
 	public static final Symbol foldrSymbol_out = new Symbol("java-linked-list-foldr");
 
 	/**
@@ -1473,16 +701,25 @@ public class JavaLinkedList extends OperatorBank {
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			Abstraction abst = (Abstraction) args.get(0);
-			Expression terminator = args.get(1);
-			LitInteropObject io = (LitInteropObject) args.get(2);
+			var abst = args.get(0);
+			var terminator = args.get(1);
+			var io = (LitInteropObject) args.get(2);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> list = (LinkedList<Expression>) io.javaObject;
+			var list = (LinkedList<Object>) io.javaObject;
 
-			Expression agg = terminator;
-			ListIterator<Expression> i = list.listIterator(list.size());
+			var agg = terminator;
+			var i = list.listIterator(list.size());
 			while (i.hasPrevious()) {
-				Expression element = i.previous();
+				Object o = i.previous();
+				Expression element;
+				
+				if(i instanceof Expression expr) {
+					element = expr;
+				}
+				else {
+					element = Literal.objectToLiteral(o);
+				}
+				
 				AbstractionApplication app = new AbstractionApplication(abst, new Tuple(agg, element));
 				agg = app.interpret(env);
 			}
@@ -1502,7 +739,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return foldrSymbol;
 		}
 		
@@ -1511,67 +748,25 @@ public class JavaLinkedList extends OperatorBank {
 			return foldrSymbol_out.toString();
 		}
 
-	};
-
-	public static final Symbol LinkedListToArrayListSymbol = new Symbol("to-array-list", NAMESPACE);
-	public static final Symbol LinkedListToArrayListSymbol_out = new Symbol("linked-list-2-array-list");
-
-	/**
-	 * Conversion LinkedList 2 ArrayList
-	 */
-	@VelkaConversion
-	@Description("Converts List:JavaLinked to List:JavaArray)") 
-	@Example("(linked-list-2-array-list (construct List:JavaLinked))") 
-	@Syntax("(linked-list-2-array-list <linked-list>)")
-	public static Conversion LinkedListToArrayList = new Conversion() {
-
 		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list),
-						ClojureHelper.applyClojureFunction(
-									"java.util.ArrayList.",
-									list));
-			return code;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod _method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var objCl = CodeModelInstance.instance().ref(Object.class);
 			
-			LitInteropObject lio = (LitInteropObject) args.get(0);
-			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) lio.javaObject;
-
-			return new LitInteropObject(new ArrayList<Expression>(l), TypeAtom.TypeListJavaArray);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked),
-					TypeAtom.TypeListJavaArray);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return LinkedListToArrayListSymbol;
-		}
-
-		@Override
-		public String toString() {
-			return LinkedListToArrayListSymbol_out.toString();
-		}
-
-		@Override
-		public Expression cost() {
-			var arg = new Symbol(NameGenerator.next());
-			return new Lambda(new Tuple(arg), new TypeTuple(TypeAtom.TypeListJavaLinked),
-					new AbstractionApplication(JavaLinkedList.size, new Tuple(arg)));
+			var l = mappedArgs.get(new Symbol("_2"));			
+			var i = _method.body().decl(CodeModelInstance.instance()._ref(ListIterator.class), "_i",
+					l.invoke("listIterator").arg(l.invoke("size")));
+			var ret = _method.body().decl(objCl, "_ret", mappedArgs.get(new Symbol("_1")));
+			
+			var _while = _method.body()._while(i.invoke("hasPrevious"));
+			var e = _while.body().decl(objCl, "_e", i.invoke("previous"));
+			_while.body().assign(ret,
+					mappedArgs.get(new Symbol("_0")).invoke("apply").arg(VelkaTuple._velkaTuple(ret, e)));
+			
+			_method.body()._return(ret);
 		}
 	};
 
-	public static final Symbol LinkedListToNativeListSymbol = new Symbol("to-list-native", NAMESPACE);
+	public static final Symbol LinkedListToNativeListSymbol = new Symbol("to_list_native", JavaLinkedList.singleton().getNamespace());
 	public static final Symbol LinkedListToNativeListSymbol_out = new Symbol("linked-list-2-native-list");
 
 	/**
@@ -1586,12 +781,9 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
-			String code = ClojureHelper.fnHelper(Arrays.asList(list),
-					LitComposite.clojureValueToClojureLiteral(
-							ClojureHelper.applyClojureFunction(
-									"seq", 
-									list),
-							TypeAtom.TypeListNative));
+			String code = ClojureHelper.fnHelper(List.of(list),
+					ClojureHelper.constructJavaClass(ArrayList.class,
+							list));
 			return code;
 		}
 
@@ -1614,7 +806,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return LinkedListToNativeListSymbol;
 		}
 		
@@ -1626,12 +818,18 @@ public class JavaLinkedList extends OperatorBank {
 		@Override
 		public Expression cost() {
 			var arg = new Symbol(NameGenerator.next());
-			return new Lambda(new Tuple(arg), new TypeTuple(TypeAtom.TypeListJavaLinked),
-					new AbstractionApplication(JavaLinkedList.size, new Tuple(arg)));
+			return new Lambda(new AbstractionApplication(JavaLinkedList.size, new Tuple(arg)),
+					List.of(Pair.of(arg, TypeAtom.TypeListJavaLinked)));
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(JExpr._new(CodeModelInstance.instance()._ref(ArrayList.class))
+					.arg(mappedArgs.get(new Symbol("_0"))));
 		}
 	};
 
-	public static final Symbol everypSymbol = new Symbol("velka-everyp", NAMESPACE);
+	public static final Symbol everypSymbol = new Symbol("velka_everyp", JavaLinkedList.singleton().getNamespace());
 	public static final Symbol everypSymbol_out = new Symbol("java-linked-list-everyp");
 
 	@VelkaOperator
@@ -1657,7 +855,7 @@ public class JavaLinkedList extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return everypSymbol;
 		}
 		
@@ -1670,16 +868,28 @@ public class JavaLinkedList extends OperatorBank {
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var lio = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) lio.javaObject;
-			Expression pred = args.get(1);
+			var l = (LinkedList<Object>) lio.javaObject;
+			var pred = args.get(1);
 
-			Boolean ret = l.stream().allMatch(ThrowingPredicate.wrapper(expr -> {
-				AbstractionApplication appl = new AbstractionApplication(pred, new Tuple((Expression) expr));
-				Expression rslt = appl.interpret(env);
-				return rslt.equals(LitBoolean.TRUE);
-			}));
+			var i = l.iterator();
+			while(i.hasNext()) {
+				var o = i.next();
+				Expression e;
+				if(o instanceof Expression expr) {
+					e = expr;
+				}
+				else {
+					e = Literal.objectToLiteral(o);
+				}
+				
+				var appl = new AbstractionApplication(pred, new Tuple(e));
+				var ret = appl.interpret(env);
+				if(ret.equals(LitBoolean.FALSE)) {
+					return LitBoolean.FALSE;
+				}
+			}
 
-			return ret ? LitBoolean.TRUE : LitBoolean.FALSE;
+			return LitBoolean.TRUE;
 		}
 
 		@Override
@@ -1690,9 +900,27 @@ public class JavaLinkedList extends OperatorBank {
 					TypeAtom.TypeBoolNative);
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var objCl = CodeModelInstance.instance().ref(Object.class);
+			
+			var i = method.body().decl(CodeModelInstance.instance()._ref(Iterator.class), "_i",
+					mappedArgs.get(new Symbol("_0")).invoke("iterator"));
+			
+			var _while = method.body()._while(i.invoke("hasNext"));
+			var e = _while.body().decl(objCl, "_e", i.invoke("next"));
+			
+			var _if = _while.body()
+					._if(JExpr.cast(CodeModelInstance.instance()._ref(Boolean.class),
+							mappedArgs.get(new Symbol("_1")).invoke("apply").arg(VelkaTuple._velkaTuple(e))).not());
+			_if._then()._return(JExpr.FALSE);
+			
+			method.body()._return(JExpr.TRUE);
+		}
 	};
 	
-	public static final Symbol toStrSymbol = new Symbol("velka-to-str", NAMESPACE);
+	public static final Symbol toStrSymbol = new Symbol("velka_to_str", JavaLinkedList.singleton().getNamespace());
 	public static final Symbol toStrSymbol_out = new Symbol("java-linked-list-to-str");
 	
 	@VelkaOperator
@@ -1701,49 +929,10 @@ public class JavaLinkedList extends OperatorBank {
 			+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 			+ "(java-linked-list-to-str l)")
 	@Syntax("(java-linked-list-to-str <list>)")
-	public static final Operator toStr = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list),
-					LitString.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".toString",
-									list)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return toStrSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject list_io = (LitInteropObject)args.get(0);
-			LinkedList<?> list = (LinkedList<?>)list_io.javaObject;
-			return new LitString(list.toString());
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked),
-					TypeAtom.TypeStringNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return toStrSymbol_out.toString();
-		}
-		
-	};
+	public static final Operator toStr = Operator.wrapJavaMethod(LinkedList.class, "toString", "java-linked-list-to-str",
+			JavaLinkedList.singleton().getNamespace());
 	
-	public static final Symbol listIteratorSymbol = new Symbol("list-iterator", NAMESPACE);
+	public static final Symbol listIteratorSymbol = new Symbol("list_iterator", JavaLinkedList.singleton().getNamespace());
 	public static final Symbol listIteratorSymbol_out = new Symbol("java-linked-list-iterator");
 	@VelkaOperator
 	@Description("Returns a list-iterator of the elements in this list (in proper sequence), starting at the specified position in the list.") 
@@ -1751,72 +940,8 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(java-linked-list-add-all l (build-list-native 10 (lambda (x) (* 2 x))))\n"
 					+ "(java-linked-list-iterator l 0)") 
 	@Syntax("(java-linked-list-iterator <list> <index>)")
-	public static final Operator listIterator = new Operator() {
-	
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String index = "_index";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(list, index),
-							ClojureHelper.applyClojureFunction(
-									".listIterator",
-									list,
-									index));
-			return code;
-		}
-	
-		@Override
-		public Symbol getClojureSymbol() {
-			return listIteratorSymbol;
-		}
-	
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject list_io = (LitInteropObject)args.get(0);
-			LinkedList<?> list = (LinkedList<?>)list_io.javaObject;
-			
-			LitInteger index = (LitInteger)args.get(1);
-			
-			ListIterator<?> li = list.listIterator((int) index.value);
-			
-			return new LitInteropObject(li, TypeAtom.TypeListIterator);
-		}
-	
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeIntNative),
-					TypeAtom.TypeListIterator);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return listIteratorSymbol_out.toString();
-		}
-	};
-	
-	public static final Path VELKA_CLOJURE_LINKEDLIST_PATH = Paths.get("velka", "clojure");
-
-	public static final Path VELKA_CLOJURE_LINKEDLIST_NAME = Paths.get("linkedList.clj");
-
-	@Override
-	public String getNamespace() {
-		return NAMESPACE;
-	}
-
-	@Override
-	public Path getPath() {
-		return VELKA_CLOJURE_LINKEDLIST_PATH;
-	}
-
-	@Override
-	public Path getFileName() {
-		return VELKA_CLOJURE_LINKEDLIST_NAME;
-	}
+	public static final Operator listIterator = Operator.wrapJavaMethod(LinkedList.class, "listIterator", "java-linked-list-iterator",
+			JavaLinkedList.singleton().getNamespace(), int.class);
 	
 	private static JavaLinkedList instance = null;
 	private JavaLinkedList() {}
@@ -1829,5 +954,10 @@ public class JavaLinkedList extends OperatorBank {
 	
 	public static Expression of(Expression ...vals) {
 		return new LitInteropObject(new LinkedList<Expression>(List.of(vals)), TypeAtom.TypeListJavaLinked);
+	}
+
+	@Override
+	protected String name() {
+		return "linkedList";
 	}
 }

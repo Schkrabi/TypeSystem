@@ -1,6 +1,11 @@
 package velka.core.literal;
 
+import java.util.List;
+
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -16,7 +21,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class LitInteropObject extends Literal {
+public class LitInteropObject extends Literal implements CompileableToJava {
 
 	public static final TypeAtom TypeJavaObject = new TypeAtom(new TypeName("TypeJavaObject"), TypeRepresentation.NATIVE);
 	
@@ -49,7 +54,19 @@ public class LitInteropObject extends Literal {
 	}
 
 	@Override
-	public String toString() {		
+	public String toString() {
+//		if(this.type.equals(TypeAtom.TypeListNative)) {
+//			@SuppressWarnings("unchecked")
+//			var l = (List<Object>)this.javaObject;
+//			var ret = l.stream().map(x -> {
+//				if(x instanceof String s) {
+//					return "\"" + s + "\"";
+//				}
+//				return x.toString();
+//			}).reduce((x, y) -> x + " " + y).get();
+//			return ret;
+//		}
+		
 		return this.javaObject.toString();
 	}
 
@@ -75,5 +92,10 @@ public class LitInteropObject extends Literal {
 		}
 
 		return super.compareTo(e);
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		throw new RuntimeException("LitInteropObject should not have a static reference.");
 	}
 }

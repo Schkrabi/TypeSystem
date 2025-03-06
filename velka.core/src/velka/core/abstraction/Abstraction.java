@@ -1,13 +1,28 @@
 package velka.core.abstraction;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import com.sun.codemodel.JVar;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMethod;
 
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
+import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.Type;
+import velka.types.TypeArrow;
+import velka.types.TypeTuple;
+import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.Pair;
@@ -19,7 +34,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public abstract class Abstraction extends Expression {
+public abstract class Abstraction extends Expression implements VelkaAbstraction {
 
 	protected abstract Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException;
 
@@ -107,5 +122,57 @@ public abstract class Abstraction extends Expression {
 		String code =  ClojureHelper.applyClojureFunction("def", fnName, fn.toClojureCode(env));
 		
 		return code;
+	}
+	
+	/** Converts and declares the arguments in the method*/
+	public static Map<Symbol, JVar> convertAndDeclareParms(Collection<Pair<Symbol, Type>> parms, JMethod method){
+		var typeSystem = JavaTypeSystem.codeInstance();
+		var parm = method.param(Collection.class, "_parm");
+		
+		var vtCl = CodeModelInstance.instance().ref(VelkaTuple.class);
+		var cparm = method.body().decl(vtCl, "_cparm", 
+				JExpr.cast(vtCl,
+						typeSystem.invoke("convert")
+						.arg(typeSystem.invoke("getType").arg(parm))
+						.arg(TypeUtil.instance().type2java(new TypeTuple(parms.stream().map(x -> x.second).toList())))
+						.arg(parm)
+						.arg(JExpr._null())));
+		
+		var ret = new HashMap<Symbol, JVar>();
+		int i = 0;
+		
+		for(var p : parms) {
+			var jt = TypeUtil.instance().velkaTypeToJType(p.second);
+			var v = method.body().decl(jt, p.first.name,
+					JExpr.cast(jt, cparm.invoke("get").arg(JExpr.lit(i))));
+			ret.put(p.first, v);
+			i++;
+		}
+		
+		return ret;
+	}
+	
+	public static Map<Symbol, JVar> declareArgs(Collection<Pair<Symbol, Type>> parms, JMethod method, Environment env){
+		var parm = method.param(Collection.class, "_parm");
+		
+		var cVelkaTuple = CodeModelInstance.instance().ref(VelkaTuple.class);
+		
+		var tparm = method.body().decl(cVelkaTuple, "_tparm",
+				JExpr.cast(cVelkaTuple, parm));
+		
+		
+		var ret = new HashMap<Symbol, JVar>();
+		int i = 0;
+		for(var p : parms){
+			var sym = p.first;
+			var type = p.second;
+			var jt = TypeUtil.instance().velkaTypeToJType(type);
+			var v = method.body().decl(jt, sym.name, 					
+					JExpr.cast(jt, tparm.invoke("get").arg(JExpr.lit(i))));
+			ret.put(sym, v);
+			i++;
+		}
+		
+		return ret;
 	}
 }

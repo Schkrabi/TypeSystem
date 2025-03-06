@@ -1,10 +1,15 @@
 package velka.core.literal;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 
 /**
@@ -13,7 +18,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class LitString extends Literal {
+public class LitString extends Literal implements CompileableToJava {
 	/**
 	 * value of the string literal
 	 */
@@ -30,12 +35,12 @@ public class LitString extends Literal {
 
 	@Override
 	public String toString() {
-		return "\"" + this.value + "\"";
+		return this.value;
 	}
 
 	@Override
 	public String valueToClojure(Environment env) {
-		return '"' + this.value + '"';
+		return ClojureHelper.stringHelper(value);
 	}
 
 	@Override
@@ -72,5 +77,10 @@ public class LitString extends Literal {
 	 */
 	public static String clojureLit(String clojureCode) {
 		return Literal.clojureValueToClojureLiteral(clojureCode, TypeAtom.TypeStringNative);
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		return JExpr.lit(this.value);
 	}
 }

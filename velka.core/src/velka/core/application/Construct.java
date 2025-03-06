@@ -2,9 +2,16 @@ package velka.core.application;
 
 import java.util.Iterator;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
+import velka.core.literal.LitString;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -20,7 +27,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Construct extends Expression {
+public class Construct extends Expression implements CompileableToJava {
 	
 	/**
 	 * Symbol for construct special form
@@ -127,7 +134,23 @@ public class Construct extends Expression {
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("doConvert not implemented");
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		Type type = null;
+		try {
+			type = this.arguments.infer(env).first;
+		} catch (AppendableException e) {
+			throw new RuntimeException(e);
+		}
+		var exp = 
+				JavaTypeSystem.codeInstance().invoke("construct")
+				.arg(TypeUtil.instance().type2java(this.constructedType))
+				.arg(TypeUtil.instance().type2java(type))
+				.arg(this.arguments.toJavaExpr(env))
+				.arg(JExpr._null());
+		return exp;
 	}
 }

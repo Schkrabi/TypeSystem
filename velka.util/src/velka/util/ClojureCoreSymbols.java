@@ -3,9 +3,9 @@ package velka.util;
 public class ClojureCoreSymbols {
 
 	/**
-	 * Namespace for velka.clojure.core
+	 * Namespace for velka.runtime.core
 	 */
-	public static String NAMESPACE = "velka.clojure.core";
+	public static String NAMESPACE = "velka.runtime.core";
 	
 	/**
 	 * Symbol for list-native-to-tuple

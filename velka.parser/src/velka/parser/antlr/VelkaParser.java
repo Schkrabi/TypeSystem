@@ -1,4 +1,4 @@
-// Generated from ./Velka.g4 by ANTLR 4.13.1
+// Generated from ../velka.parser/src/velka/parser/antlr/Velka.g4 by ANTLR 4.13.1
 package velka.parser.antlr;
 
 import velka.core.abstraction.*;
@@ -298,7 +298,7 @@ public class VelkaParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class Argument_listContext extends ParserRuleContext {
-		public List<velka.util.Pair<Type, Expression>> val;
+		public List<velka.util.Pair<Symbol, Type>> val;
 		public TypeContext type;
 		public Token SYMBOL;
 		public List<TerminalNode> LBRACKET() { return getTokens(VelkaParser.LBRACKET); }
@@ -346,7 +346,7 @@ public class VelkaParser extends Parser {
 				{
 				setState(50);
 				match(LBRACKET);
-				 var ll = new ArrayList<velka.util.Pair<Type, Expression>>(); 
+				 var ll = new ArrayList<velka.util.Pair<Symbol, Type>>(); 
 				setState(59); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
@@ -360,7 +360,7 @@ public class VelkaParser extends Parser {
 					 var t = ((Argument_listContext)_localctx).type.val; 
 					setState(55);
 					((Argument_listContext)_localctx).SYMBOL = match(SYMBOL);
-					 ll.add(velka.util.Pair.of(t, new Symbol((((Argument_listContext)_localctx).SYMBOL!=null?((Argument_listContext)_localctx).SYMBOL.getText():null)))); 
+					 ll.add(velka.util.Pair.of(new Symbol((((Argument_listContext)_localctx).SYMBOL!=null?((Argument_listContext)_localctx).SYMBOL.getText():null)), t)); 
 					setState(57);
 					match(RBRACKET);
 					}
@@ -379,7 +379,7 @@ public class VelkaParser extends Parser {
 				{
 				setState(66);
 				match(LBRACKET);
-				 var ll = new ArrayList<velka.util.Pair<Type, Expression>>(); 
+				 var ll = new ArrayList<velka.util.Pair<Symbol, Type>>(); 
 				setState(72);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
@@ -391,7 +391,7 @@ public class VelkaParser extends Parser {
 					 
 						            var t = new TypeVariable(NameGenerator.next());
 									var s = new Symbol((((Argument_listContext)_localctx).SYMBOL!=null?((Argument_listContext)_localctx).SYMBOL.getText():null));
-									ll.add(velka.util.Pair.of(t, s)); 
+									ll.add(velka.util.Pair.of(s, t)); 
 								  
 					}
 					}
@@ -748,13 +748,7 @@ public class VelkaParser extends Parser {
 				setState(171);
 				match(RBRACKET);
 				 
-											var al = new ArrayList<Expression>();
-											var tl = new ArrayList<Type>();
-											args.stream().forEach(p -> {
-																		tl.add(p.first);
-																		al.add(p.second);
-																	   });
-											((Special_formContext)_localctx).val =  new DefineConstructor(t, new Lambda(new Tuple(al), new TypeTuple(tl), e));
+											((Special_formContext)_localctx).val =  new DefineConstructor(t, new Lambda(e, args));
 										  
 				}
 				break;
@@ -984,7 +978,7 @@ public class VelkaParser extends Parser {
 				}
 				setState(285);
 				match(RBRACKET);
-				 ((Special_formContext)_localctx).val = velka.core.application.List.of(ll); 
+				 ((Special_formContext)_localctx).val =  velka.core.application.List.of(ll); 
 				}
 				break;
 			case 18:
@@ -1003,13 +997,7 @@ public class VelkaParser extends Parser {
 				setState(293);
 				match(RBRACKET);
 
-									var symbols = new ArrayList<Symbol>();
-									var args = new ArrayList<Expression>();
-									bds.stream().forEach(p -> {
-																symbols.add(p.first);
-																args.add(p.second);
-															  });
-									((Special_formContext)_localctx).val =  new Loop(new Tuple(symbols), e, new Tuple(args));
+									((Special_formContext)_localctx).val =  new Loop(e, bds);
 						        
 				}
 				break;
@@ -1085,13 +1073,7 @@ public class VelkaParser extends Parser {
 				setState(328);
 				match(RBRACKET);
 
-										var args = new ArrayList<Expression>();
-										var ts = new ArrayList<Type>();
-										ll.stream().forEach(p -> {
-																	ts.add(p.first);
-																	args.add(p.second);
-																 });
-										((Special_formContext)_localctx).val =  new Lambda(new Tuple(args), new TypeTuple(ts), e);
+										((Special_formContext)_localctx).val =  new Lambda(e, ll);
 									
 				}
 				break;
@@ -1300,7 +1282,7 @@ public class VelkaParser extends Parser {
 				{
 				setState(405);
 				((AtomContext)_localctx).INT = match(INT);
-				 ((AtomContext)_localctx).val =  new LitInteger(Long.parseLong((((AtomContext)_localctx).INT!=null?((AtomContext)_localctx).INT.getText():null))); 
+				 ((AtomContext)_localctx).val =  new LitInteger(Integer.parseInt((((AtomContext)_localctx).INT!=null?((AtomContext)_localctx).INT.getText():null))); 
 				}
 				break;
 			case FLOAT:

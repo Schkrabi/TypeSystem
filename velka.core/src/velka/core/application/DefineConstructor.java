@@ -4,13 +4,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.sun.codemodel.JExpression;
+
 import velka.core.abstraction.Lambda;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitComposite;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
 import velka.types.Substitution;
 import velka.types.Type;
+import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
@@ -23,7 +29,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class DefineConstructor extends Expression {
+public class DefineConstructor extends Expression implements CompileableToJava {
 	
 	/**
 	 * Symbol for constructor special form
@@ -42,16 +48,16 @@ public class DefineConstructor extends Expression {
 
 	public DefineConstructor(TypeAtom constructedType, Lambda constructionLambda) {
 		this.constructedType = constructedType;
-		this.constructionLambda = new Lambda(constructionLambda.args, constructionLambda.argsType,
-				new LitComposite(constructionLambda.body, constructedType)); 
+		this.constructionLambda = new Lambda(new LitComposite(constructionLambda.body, constructedType),
+				constructionLambda.parms); 
 	}
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
 		env.getTypeSystem().addConstructor(
 				constructedType, 
-				this.constructionLambda.argsType, 
-				new velka.types.typeSystem.IEvalueable() {
+				this.constructionLambda.getParmType(), 
+				new velka.util.IEvalueable() {
 
 					@Override
 					public Object evaluate(Collection<? extends Object> args, Object env) {
@@ -85,8 +91,8 @@ public class DefineConstructor extends Expression {
 		var code = ClojureHelper.applyClojureFunction(".addConstructor", 
 				ClojureCoreSymbols.typeSystem_full,
 				this.constructedType.clojureTypeRepresentation(),
-				this.constructionLambda.argsType.clojureTypeRepresentation(),
-				ClojureHelper.reify(velka.types.typeSystem.IEvalueable.class, 
+				this.constructionLambda.getParmType().clojureTypeRepresentation(),
+				ClojureHelper.reify(velka.util.IEvalueable.class, 
 						Pair.of("evaluate", Pair.of(List.of(rhis, arg, cenv), 
 								ClojureHelper.applyVelkaFunction_argsTuple(this.constructionLambda.toClojureCode(env), 
 										arg
@@ -136,8 +142,23 @@ public class DefineConstructor extends Expression {
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("doConvert not implemented");
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {		
+		TypeArrow ltype;
+		try {
+			ltype = (velka.types.TypeArrow)this.constructionLambda.infer(env).first;
+		} catch (AppendableException e) {
+			throw new RuntimeException(e);
+		}
+		var ctj = (CompileableToJava)this.constructionLambda;
+		
+		return JavaTypeSystem.codeInstance().invoke("addConstructor")
+				.arg(TypeUtil.instance().type2java(constructedType))
+				.arg(TypeUtil.instance().type2java(ltype.ltype))
+				.arg(ctj.toJavaExpr(env));
 	}
 
 }

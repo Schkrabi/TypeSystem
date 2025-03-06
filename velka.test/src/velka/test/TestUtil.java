@@ -173,7 +173,7 @@ class TestUtil {
 		assertAll(() -> new UnboundVariableException(new Symbol("x")),
 				() -> new InvalidNumberOfArgumentsException(2, Expression.EMPTY_EXPRESSION,
 						new AbstractionApplication(
-								new Lambda(Tuple.EMPTY_TUPLE, TypeTuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION),
+								new Lambda(Expression.EMPTY_EXPRESSION, List.of()),
 								Tuple.EMPTY_TUPLE)));
 	}
 

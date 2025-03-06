@@ -8,19 +8,22 @@ import velka.types.Type;
 import velka.types.TypeAtom;
 import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
+import velka.util.IEvalueable;
 
 /** Holds constructors and conversion for type atoms */
 public class TypeAtomInfo {
 	/** Type to which information is relatet */
 	public final TypeAtom type;
+	private final TypeSystem typeSystem;
 	
 	record ConversionInfo(TypeAtom from, TypeAtom to, IEvalueable conversion, IEvalueable cost) {}
 	
 	private Map<TypeTuple, IEvalueable> constructors = new HashMap<TypeTuple, IEvalueable>();
 	private Map<TypeAtom, ConversionInfo> conversions = new HashMap<TypeAtom, ConversionInfo>();
 	
-	public TypeAtomInfo(TypeAtom type) {
+	public TypeAtomInfo(TypeAtom type, TypeSystem typeSystem) {
 		this.type = type;
+		this.typeSystem = typeSystem;
 	}
 	
 	/** Tries to find constructor with specific argument types */
@@ -72,13 +75,17 @@ public class TypeAtomInfo {
 	public boolean canConvertTo(TypeAtom toType) {
 		return toType.representation.equals(TypeRepresentation.WILDCARD)
 				|| this.type.representation.equals(TypeRepresentation.WILDCARD)
-				|| this.getConversion(toType) != null;
+				|| this.type.name.equals(toType.name);
 	}
 	
 	/** Converts typa atom */
-	public Object convert(TypeAtom to, Collection<? extends Object> args, Object env) {
+	public Object convert(TypeAtom to, Object arg, Object env) {
 		var conv = this.getConversion(to);
-		var ret = conv.conversion.evaluate(args, env);
+		if(conv == null) {
+			throw new RuntimeException(new StringBuilder("There is no suitable conversion from ")
+					.append(this.type).append(" to ").append(to).toString());
+		}
+		var ret = conv.conversion.evaluate(this.typeSystem.conversionEngine.instantiateCollection(arg), env);
 		return ret;
 	}
 	

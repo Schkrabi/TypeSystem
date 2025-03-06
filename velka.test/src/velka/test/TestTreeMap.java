@@ -2,12 +2,15 @@ package velka.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import velka.core.application.List;
 import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
@@ -17,7 +20,11 @@ import velka.core.langbase.ListNative;
 import velka.core.langbase.TreeMap;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitInteger;
+import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
+import velka.java.runtime.TypedObject;
+import velka.java.runtime.VelkaTuple;
+import velka.types.TypeAtom;
 
 class TestTreeMap extends VelkaTest {
 	
@@ -53,234 +60,140 @@ class TestTreeMap extends VelkaTest {
 	
 	@Test
 	void testPut() throws Exception {
-//		assertAll(() ->
-//		{
-			Expression e = this.parseString("(map-tree-put (construct Map:Tree (lambda (x y) -1)) 1 \"foo\")").get(0);
-			e.interpret(this.env);
-//		});
+		Expression e = this.parseString("(map-tree-put (construct Map:Tree (lambda (x y) -1)) 1 \"foo\")").get(0);
+		e.interpret(this.env);
+
+		this.assertInterpretationEquals("(map-tree-put (construct Map:Tree (lambda (x y) -1)) 1 \"foo\")", Expression.EMPTY_EXPRESSION);
 		
 		this.assertIntprtAndCompPrintSameValues("(map-tree-put (construct Map:Tree (lambda (x y) -1)) 1 \"foo\")");
+		
+		this.assertJExprEquals(null,
+				"(map-tree-put (construct Map:Tree (lambda (x y) -1)) 1 \"foo\")", env);
 	}
 	
 	@Test
 	void testGet() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\")))"
 				+ "(map-tree-get m 1))",
 				new LitString("foo"),
 				this.env);
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(map-tree-get (construct Map:Tree (lambda (x y) -1)) 42)").get(0);
-					e.interpret(this.env);
-				});
-		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\")))"
 						+ "(println (map-tree-get m 1)))");
+		
+		this.assertJExprEquals("foo", 
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+						+ "(tmp (map-tree-put m 1 \"foo\")))"
+						+ "(map-tree-get m 1))", 
+				env);
 	}
 
 	@Test
 	void testCeilingEntry() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
+		
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\")))"
-				+ "(map-tree-ceiling-entry m 1))",
-				new Tuple(new LitInteger(1), new LitString("foo")),
-				this.env);
-		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(map-tree-ceiling-entry (construct Map:Tree (lambda (x y) -1)) 42)").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println (map-tree-ceiling-entry m 1)))");
+				+ "(car (map-tree-ceiling-entry m 1)))",
+				tm.ceilingEntry(1).getKey());
 	}
 	
 	@Test
 	void testCeilingKey() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-				+ "(tmp (map-tree-put m 1 \"foo\")))"
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
+		
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+						+ "(tmp (map-tree-put m 1 \"foo\"))"
+						+ "(tmp (map-tree-put m 2 \"bar\"))"
+						+ "(tmp (map-tree-put m 3 \"baz\")))"
 				+ "(map-tree-ceiling-key m 1))",
-				new LitInteger(1),
-				this.env);
-		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(map-tree-ceiling-key (construct Map:Tree (lambda (x y) -1)) 42)").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println (map-tree-ceiling-key m 1)))");
+				tm.ceilingKey(1));
 	}
 	
 	@Test
 	void testContainsKey() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
+		
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\")))"
-				+ "(" + TreeMap.containsKeySymbol_out + " m 1))",
-				LitBoolean.TRUE,
-				this.env);
-		
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-				+ "(tmp (map-tree-put m 1 \"foo\")))"
-				+ "(" + TreeMap.containsKeySymbol_out + " m 42))",
-				LitBoolean.FALSE,
-				this.env);
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println (" + TreeMap.containsKeySymbol_out + " m 1)))");
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println (" + TreeMap.containsKeySymbol_out + " m 42)))");
+				+ "(map-tree-contains-key m 1))",
+				tm.containsKey(1));
 	}
 	
 	@Test
 	void testContainsValue() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-				+ "(tmp (map-tree-put m 1 \"foo\")))"
-				+ "(" + TreeMap.containsValueSymbol_out + " m \"foo\"))",
-				LitBoolean.TRUE,
-				this.env);
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
 		
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-				+ "(tmp (map-tree-put m 1 \"foo\")))"
-				+ "(" + TreeMap.containsValueSymbol_out + " m \"bar\"))",
-				LitBoolean.FALSE,
-				this.env);
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println (" + TreeMap.containsValueSymbol_out + " m \"foo\")))");
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println (" + TreeMap.containsValueSymbol_out + " m \"bar\")))");
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+						+ "(tmp (map-tree-put m 1 \"foo\"))"
+						+ "(tmp (map-tree-put m 2 \"bar\"))"
+						+ "(tmp (map-tree-put m 3 \"baz\")))"
+				+ "(map-tree-contains-value m \"foo\"))",
+				tm.containsValue("foo"));
 	}
 	
 	@Test
 	void testFirstEntry() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
+		
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\")))"
-				+ "(" + TreeMap.firstEntrySymbol_out.toString() + " m))",
-				new Tuple(new LitInteger(1), new LitString("foo")),
-				this.env);
-		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(" + TreeMap.firstEntrySymbol_out.toString() + " (construct Map:Tree (lambda (x y) -1)))").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println ("+ TreeMap.firstEntrySymbol_out.toString() + " m)))");
+				+ "(car (map-tree-first-entry m)))",
+				tm.firstEntry().getKey());
 	}
 	
 	@Test
 	void testFirstKey() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-				+ "(tmp (map-tree-put m 1 \"foo\")))"
-				+ "(" + TreeMap.firstKeySymbol_out.toString() + " m))",
-				new LitInteger(1),
-				this.env);
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(" + TreeMap.firstKeySymbol_out.toString() + " (construct Map:Tree (lambda (x y) -1)))").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println (" + TreeMap.firstKeySymbol_out.toString() + " m)))");
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+						+ "(tmp (map-tree-put m 1 \"foo\"))"
+						+ "(tmp (map-tree-put m 2 \"bar\"))"
+						+ "(tmp (map-tree-put m 3 \"baz\")))"
+				+ "(map-tree-first-key m))",
+				tm.firstKey());
 	}
 	
 	@Test
 	void testFloorEntry() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-				+ "(tmp (map-tree-put m 1 \"foo\")))"
-				+ "(" + TreeMap.floorEntrySymbol_out.toString() + " m 1))",
-				new Tuple(new LitInteger(1), new LitString("foo")),
-				this.env);
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(" + TreeMap.floorEntrySymbol_out.toString() + " (construct Map:Tree (lambda (x y) -1)) 42)").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println (" + TreeMap.floorEntrySymbol_out.toString() + " m 1)))");
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+						+ "(tmp (map-tree-put m 1 \"foo\"))"
+						+ "(tmp (map-tree-put m 2 \"bar\"))"
+						+ "(tmp (map-tree-put m 3 \"baz\")))"
+				+ "(car (map-tree-floor-entry m 1)))",
+				tm.floorEntry(1).getKey());
 	}
 	
 	@Test
 	void testFloorKey() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-				+ "(tmp (map-tree-put m 1 \"foo\")))"
-				+ "(" + TreeMap.floorKeySymbol_out.toString() + " m 1))",
-				new LitInteger(1),
-				this.env);
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(" + TreeMap.floorKeySymbol_out.toString() + " (construct Map:Tree (lambda (x y) -1)) 42)").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println (" + TreeMap.floorKeySymbol_out.toString() + " m 1)))");
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				+ "(tmp (map-tree-put m 1 \"foo\"))"
+				+ "(tmp (map-tree-put m 2 \"bar\"))"
+				+ "(tmp (map-tree-put m 3 \"baz\")))"
+				+ "(map-tree-floor-key m 1))",
+				tm.floorKey(1));
 	}
 	
 	@Test
 	void testHeadMap() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\"))"
@@ -289,32 +202,29 @@ class TestTreeMap extends VelkaTest {
 				new LitString("foo"),
 				this.env);
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-							+ "(tmp (map-tree-put m 1 \"foo\"))"
-							+ "(tmp (map-tree-put m 2 \"bar\"))"
-							+ "(tmp (map-tree-put m 3 \"baz\"))"
-							+ "(m2 (" + TreeMap.headMapSymbol_out.toString() + " m 2)))"
-							+ "(" + TreeMap.getSymbol_out.toString() + " m2 3))").get(0);
-					e.interpret(this.env);
-				});
-		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\"))"
 						+ "(m2 (" + TreeMap.headMapSymbol_out.toString() + " m 2)))"
 						+ "(println (" + TreeMap.getSymbol_out.toString() + " m2 1)))");
+		
+		this.assertJExprEquals(
+				"foo", 
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+						+ "(tmp (map-tree-put m 1 \"foo\"))"
+						+ "(tmp (map-tree-put m 2 \"bar\"))"
+						+ "(tmp (map-tree-put m 3 \"baz\"))"
+						+ "(m2 (" + TreeMap.headMapSymbol_out.toString() + " m 2)))"
+						+ "(" + TreeMap.getSymbol_out.toString() + " m2 1))", 
+				env);
 	}
 	
 	@Test
 	void testHeadMapIncl() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\"))"
@@ -323,284 +233,146 @@ class TestTreeMap extends VelkaTest {
 				new LitString("bar"),
 				this.env);
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-							+ "(tmp (map-tree-put m 1 \"foo\"))"
-							+ "(tmp (map-tree-put m 2 \"bar\"))"
-							+ "(tmp (map-tree-put m 3 \"baz\"))"
-							+ "(m2 (" + TreeMap.headMapInclSymbol_out.toString() + " m 2 #f)))"
-							+ "(" + TreeMap.getSymbol_out.toString() + " m2 2))").get(0);
-					e.interpret(this.env);
-				});
-		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\"))"
 						+ "(m2 (" + TreeMap.headMapInclSymbol_out.toString() + " m 2 #t)))"
 						+ "(println (" + TreeMap.getSymbol_out.toString() + " m2 2)))");
+		
+		this.assertJExprEquals(
+				"bar",
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+						+ "(tmp (map-tree-put m 1 \"foo\"))"
+						+ "(tmp (map-tree-put m 2 \"bar\"))"
+						+ "(tmp (map-tree-put m 3 \"baz\"))"
+						+ "(m2 (" + TreeMap.headMapInclSymbol_out.toString() + " m 2 #t)))"
+						+ "(" + TreeMap.getSymbol_out.toString() + " m2 2))",
+				env);
 	}
 	
 	@Test
 	void testHigherEntry() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
+		
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(" + TreeMap.higherEntrySymbol_out.toString() + " m 1))",
-				new Tuple(new LitInteger(2), new LitString("bar")),
-				this.env);
-		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-							+ "(tmp (map-tree-put m 1 \"foo\"))"
-							+ "(tmp (map-tree-put m 2 \"bar\"))"
-							+ "(tmp (map-tree-put m 3 \"baz\")))"
-							+ "(" + TreeMap.higherEntrySymbol_out.toString() + " m 3))").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\"))"
-						+ "(tmp (map-tree-put m 2 \"bar\"))"
-						+ "(tmp (map-tree-put m 3 \"baz\")))"
-						+ "(println (" + TreeMap.higherEntrySymbol_out.toString() + " m 1)))");
+				+ "(car (map-tree-higher-entry m 1)))",
+				tm.higherEntry(1).getKey());
 	}
 	
 	@Test
 	void testHigherKey() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
+		
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(" + TreeMap.higherKeySymbol_out.toString() + " m 1))",
-				new LitInteger(2),
-				this.env);
-		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-							+ "(tmp (map-tree-put m 1 \"foo\"))"
-							+ "(tmp (map-tree-put m 2 \"bar\"))"
-							+ "(tmp (map-tree-put m 3 \"baz\")))"
-					+ "(" + TreeMap.higherKeySymbol_out.toString() + " m 3))").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\"))"
-						+ "(tmp (map-tree-put m 2 \"bar\"))"
-						+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(println (" + TreeMap.higherKeySymbol_out.toString() + " m 1)))");
+				+ "(map-tree-higher-key m 1))",
+				tm.higherKey(1));
 	}
 	
 	@Test
 	void testKeys() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\"))"
-						+ "(tmp (map-tree-put m 2 \"bar\"))"
-						+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(" + TreeMap.keysSymbol_out.toString() + " m))",
-				ListNative.of(new LitInteger(1), new LitInteger(2), new LitInteger(3)),
-				this.env
-				);
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
 		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(println (" + TreeMap.keysSymbol_out.toString() + " m)))");
+				+ "(map-tree-keys m))",
+				new java.util.ArrayList<Object>(tm.keySet()));
 	}
 	
 	@Test
 	void testLasttEntry() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-				+ "(tmp (map-tree-put m 1 \"foo\")))"
-				+ "(" + TreeMap.lastEntrySymbol_out.toString() + " m))",
-				new Tuple(new LitInteger(1), new LitString("foo")),
-				this.env
-				);
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(" + TreeMap.lastEntrySymbol_out.toString() + " (construct Map:Tree (lambda (x y) -1)))").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println ("+ TreeMap.lastEntrySymbol_out.toString() + " m)))");
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+						+ "(tmp (map-tree-put m 1 \"foo\"))"
+						+ "(tmp (map-tree-put m 2 \"bar\"))"
+						+ "(tmp (map-tree-put m 3 \"baz\")))"
+				+ "(car (map-tree-last-entry m)))",
+				tm.lastEntry().getKey());
 	}
 	
 	@Test
 	void testLastKey() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-				+ "(tmp (map-tree-put m 1 \"foo\")))"
-				+ "(" + TreeMap.lastKeySymbol_out.toString() + " m))",
-				new LitInteger(1),
-				this.env
-				);
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(" + TreeMap.lastKeySymbol_out.toString() + " (construct Map:Tree (lambda (x y) -1)))").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\")))"
-						+ "(println (" + TreeMap.lastKeySymbol_out.toString() + " m)))");
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				+ "(tmp (map-tree-put m 1 \"foo\"))"
+				+ "(tmp (map-tree-put m 2 \"bar\"))"
+				+ "(tmp (map-tree-put m 3 \"baz\")))"
+				+ "(map-tree-last-key m))",
+				tm.lastKey());
 	}
 	
 	@Test
 	void testLowerEntry() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
+		
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(" + TreeMap.lowerEntrySymbol_out.toString() + " m 3))",
-				new Tuple(new LitInteger(2), new LitString("bar")),
-				this.env
-				);
-		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-							+ "(tmp (map-tree-put m 1 \"foo\"))"
-							+ "(tmp (map-tree-put m 2 \"bar\"))"
-							+ "(tmp (map-tree-put m 3 \"baz\")))"
-							+ "(" + TreeMap.lowerEntrySymbol_out.toString() + " m 1))").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\"))"
-						+ "(tmp (map-tree-put m 2 \"bar\"))"
-						+ "(tmp (map-tree-put m 3 \"baz\")))"
-						+ "(println (" + TreeMap.lowerEntrySymbol_out.toString() + " m 3)))");
+				+ "(car (map-tree-lower-entry m 3)))",
+				tm.lowerEntry(3).getKey());
 	}
 	
 	@Test
 	void testLowerKey() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
+		
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(" + TreeMap.lowerKeySymbol_out.toString() + " m 3))",
-				new LitInteger(2),
-				this.env
-				);
-		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-							+ "(tmp (map-tree-put m 1 \"foo\"))"
-							+ "(tmp (map-tree-put m 2 \"bar\"))"
-							+ "(tmp (map-tree-put m 3 \"baz\")))"
-					+ "(" + TreeMap.lowerKeySymbol_out.toString() + " m 1))").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\"))"
-						+ "(tmp (map-tree-put m 2 \"bar\"))"
-						+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(println (" + TreeMap.lowerKeySymbol_out.toString() + " m 3)))");
+				+ "(map-tree-lower-key m 3))",
+				tm.lowerKey(3));
 	}
 	
 	@Test
 	void testPollFirstEntry() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
+		
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(" + TreeMap.pollFirstEntrySymbol_out.toString() + " m))",
-				new Tuple(new LitInteger(1), new LitString("foo")),
-				this.env
-				);
-		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0))))))"
-							+ "(" + TreeMap.pollFirstEntrySymbol_out.toString() + " m))").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\"))"
-						+ "(tmp (map-tree-put m 2 \"bar\"))"
-						+ "(tmp (map-tree-put m 3 \"baz\")))"
-						+ "(println (" + TreeMap.pollFirstEntrySymbol_out.toString() + " m)))");
+				+ "(car (map-tree-first-entry m)))",
+				tm.firstEntry().getKey());
 	}
 	
 	@Test
 	void testPollLastEntry() throws Exception {
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
+		
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(" + TreeMap.pollLastEntrySymbol_out.toString() + " m))",
-				new Tuple(new LitInteger(3), new LitString("baz")),
-				this.env
-				);
-		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0))))))"
-							+ "(" + TreeMap.pollLastEntrySymbol_out.toString() + " m))").get(0);
-					e.interpret(this.env);
-				});
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\"))"
-						+ "(tmp (map-tree-put m 2 \"bar\"))"
-						+ "(tmp (map-tree-put m 3 \"baz\")))"
-						+ "(println (" + TreeMap.pollLastEntrySymbol_out.toString() + " m)))");
+				+ "(car (map-tree-poll-last-entry m)))",
+				tm.pollLastEntry().getKey());
 	}
 	
 	@Test
 	void testPutAll() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\"))"
@@ -611,18 +383,27 @@ class TestTreeMap extends VelkaTest {
 				);
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\"))"
 						+ "(m2 (" + TreeMap.putAllSymbol_out.toString() + " (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))) m)))"
 						+ "(println (" + TreeMap.getSymbol_out.toString() + " m2 2)))");
+		
+		this.assertJExprEquals("bar",
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				+ "(tmp (map-tree-put m 1 \"foo\"))"
+				+ "(tmp (map-tree-put m 2 \"bar\"))"
+				+ "(tmp (map-tree-put m 3 \"baz\"))"
+				+ "(m2 (" + TreeMap.putAllSymbol_out.toString() + " (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))) m)))"
+				+ "(" + TreeMap.getSymbol_out.toString() + " m2 2))",
+				this.env);
 	}
 	
 	@Test 
 	void testRemove() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\")))"
@@ -632,46 +413,57 @@ class TestTreeMap extends VelkaTest {
 				);
 		
 		assertThrows(
-				UserException.class,
+				RuntimeException.class,
 				() -> 
 				{
-					Expression e = this.parseString("(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0))))))"
+					Expression e = this.parseString("(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0))))))"
 							+ "(" + TreeMap.removeSymbol_out.toString() + " m 2))").get(0);
 					e.interpret(this.env);
 				});
 		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\")))"
 						+ "(println (" + TreeMap.removeSymbol_out + " m 2)))");
+		
+		this.assertJExprEquals("bar",
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				+ "(tmp (map-tree-put m 1 \"foo\"))"
+				+ "(tmp (map-tree-put m 2 \"bar\"))"
+				+ "(tmp (map-tree-put m 3 \"baz\")))"
+				+ "(" + TreeMap.removeSymbol_out + " m 2))",
+				this.env);
+		
+		assertThrows(
+				RuntimeException.class,
+				() -> 
+				{
+					this.assertJExprEquals(null,
+							"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0))))))"
+							+ "(" + TreeMap.removeSymbol_out.toString() + " m 2))",
+							this.env);
+				});
 	}
 	
 	@Test
 	void testSize() throws Exception{
-		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+		var tm = new java.util.TreeMap<Object, Object>(Map.of(1, "foo", 2, "bar", 3, "baz"));
+		
+		this.assertVelkaCode(
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(" + TreeMap.sizeSymbol_out + " m))",
-				new LitInteger(3),
-				this.env
-				);
-		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\"))"
-						+ "(tmp (map-tree-put m 2 \"bar\"))"
-						+ "(tmp (map-tree-put m 3 \"baz\")))"
-						+ "(println (" + TreeMap.sizeSymbol_out + " m)))");
+				+ "(map-tree-size m))",
+				tm.size());
 	}
 	
 	@Test
 	void testSubMapIncl() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\"))"
@@ -681,34 +473,28 @@ class TestTreeMap extends VelkaTest {
 				this.env
 				);
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString(
-							"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-									+ "(tmp (map-tree-put m 1 \"foo\"))"
-									+ "(tmp (map-tree-put m 2 \"bar\"))"
-									+ "(tmp (map-tree-put m 3 \"baz\"))"
-									+ "(m2 (" + TreeMap.subMapInclSymbol_out.toString() + " m 2 #t 3 #f)))"
-									+ "(" + TreeMap.getSymbol_out.toString() + " m2 3))")
-							.get(0);
-					e.interpret(this.env);
-				});
-		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\"))"
 						+ "(m2 (" + TreeMap.subMapInclSymbol_out.toString() + " m 2 #t 3 #f)))"
 						+ "(println (" + TreeMap.getSymbol_out.toString() + " m2 2)))");
+		
+		this.assertJExprEquals("bar",
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				+ "(tmp (map-tree-put m 1 \"foo\"))"
+				+ "(tmp (map-tree-put m 2 \"bar\"))"
+				+ "(tmp (map-tree-put m 3 \"baz\"))"
+				+ "(m2 (" + TreeMap.subMapInclSymbol_out.toString() + " m 2 #t 3 #f)))"
+				+ "(" + TreeMap.getSymbol_out.toString() + " m2 2))",
+				this.env);
 	}
 	
 	@Test
 	void testSubMap() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\"))"
@@ -718,34 +504,28 @@ class TestTreeMap extends VelkaTest {
 				this.env
 				);
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString(
-							"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-									+ "(tmp (map-tree-put m 1 \"foo\"))"
-									+ "(tmp (map-tree-put m 2 \"bar\"))"
-									+ "(tmp (map-tree-put m 3 \"baz\"))"
-									+ "(m2 (" + TreeMap.subMapSymbol_out.toString() + " m 2 3)))"
-									+ "(" + TreeMap.getSymbol_out.toString() + " m2 3))")
-							.get(0);
-					e.interpret(this.env);
-				});
-		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\"))"
 						+ "(m2 (" + TreeMap.subMapSymbol_out.toString() + " m 2 3)))"
 						+ "(println (" + TreeMap.getSymbol_out.toString() + " m2 2)))");
+		
+		this.assertJExprEquals("bar",
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				+ "(tmp (map-tree-put m 1 \"foo\"))"
+				+ "(tmp (map-tree-put m 2 \"bar\"))"
+				+ "(tmp (map-tree-put m 3 \"baz\"))"
+				+ "(m2 (" + TreeMap.subMapSymbol_out.toString() + " m 2 3)))"
+				+ "(" + TreeMap.getSymbol_out.toString() + " m2 2))",
+				this.env);
 	}
 	
 	@Test
 	void testTailMap() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\"))"
@@ -755,32 +535,28 @@ class TestTreeMap extends VelkaTest {
 				this.env
 				);
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-							+ "(tmp (map-tree-put m 1 \"foo\"))"
-							+ "(tmp (map-tree-put m 2 \"bar\"))"
-							+ "(tmp (map-tree-put m 3 \"baz\"))"
-							+ "(m2 (" + TreeMap.tailMapSymbol_out.toString() + " m 2)))"
-							+ "(" + TreeMap.getSymbol_out.toString() + " m2 1))").get(0);
-					e.interpret(this.env);
-				});
-		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\"))"
 						+ "(m2 (" + TreeMap.tailMapSymbol_out.toString() + " m 2)))"
 						+ "(println (" + TreeMap.getSymbol_out.toString() + " m2 3)))");
+		
+		this.assertJExprEquals("baz",
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				+ "(tmp (map-tree-put m 1 \"foo\"))"
+				+ "(tmp (map-tree-put m 2 \"bar\"))"
+				+ "(tmp (map-tree-put m 3 \"baz\"))"
+				+ "(m2 (" + TreeMap.tailMapSymbol_out.toString() + " m 2)))"
+				+ "(" + TreeMap.getSymbol_out.toString() + " m2 3))",
+				this.env);
 	}
 	
 	@Test
 	void testTailMapIncl() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 				+ "(tmp (map-tree-put m 1 \"foo\"))"
 				+ "(tmp (map-tree-put m 2 \"bar\"))"
 				+ "(tmp (map-tree-put m 3 \"baz\"))"
@@ -790,45 +566,49 @@ class TestTreeMap extends VelkaTest {
 				this.env
 				);
 		
-		assertThrows(
-				UserException.class,
-				() -> 
-				{
-					Expression e = this.parseString("(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-							+ "(tmp (map-tree-put m 1 \"foo\"))"
-							+ "(tmp (map-tree-put m 2 \"bar\"))"
-							+ "(tmp (map-tree-put m 3 \"baz\"))"
-							+ "(m2 (" + TreeMap.tailMapInclSymbol_out.toString() + " m 2 #f)))"
-							+ "(" + TreeMap.getSymbol_out.toString() + " m2 2))").get(0);
-					e.interpret(this.env);
-				});
-		
 		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\"))"
 						+ "(m2 (" + TreeMap.tailMapInclSymbol_out.toString() + " m 2 #t)))"
 						+ "(println (" + TreeMap.getSymbol_out.toString() + " m2 2)))");
+		
+		this.assertJExprEquals("bar",
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				+ "(tmp (map-tree-put m 1 \"foo\"))"
+				+ "(tmp (map-tree-put m 2 \"bar\"))"
+				+ "(tmp (map-tree-put m 3 \"baz\"))"
+				+ "(m2 (" + TreeMap.tailMapInclSymbol_out.toString() + " m 2 #t)))"
+				+ "(" + TreeMap.getSymbol_out.toString() + " m2 2))",
+				this.env);
 	}
 	
 	@Test
 	void testValues() throws Exception {
 		this.assertInterpretedStringEquals(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\")))"
 				+ "(" + TreeMap.valuesSymbol_out.toString() + " m))",
-				ListNative.of(new LitString("foo"), new LitString("bar"), new LitString("baz")),
+				new LitInteropObject(java.util.List.of("foo", "bar", "baz"), TypeAtom.TypeListNative),
 				this.env
 				);
 		
-		this.assertIntprtAndCompPrintSameValues(
-				"(let* ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+//		this.assertIntprtAndCompPrintSameValues(
+//				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
+//						+ "(tmp (map-tree-put m 1 \"foo\"))"
+//						+ "(tmp (map-tree-put m 2 \"bar\"))"
+//						+ "(tmp (map-tree-put m 3 \"baz\")))"
+//				+ "(println (" + TreeMap.valuesSymbol_out.toString() + " m)))");
+		
+		this.assertJExprEquals(java.util.List.of("foo", "bar", "baz"),
+				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
 						+ "(tmp (map-tree-put m 1 \"foo\"))"
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(println (" + TreeMap.valuesSymbol_out.toString() + " m)))");
+				+ "(" + TreeMap.valuesSymbol_out.toString() + " m))",
+				this.env);
 	}
 }

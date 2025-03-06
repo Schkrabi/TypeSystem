@@ -1,20 +1,25 @@
 package velka.core.langbase;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+
+import com.sun.codemodel.JExpr;
 
 import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Lambda;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
+
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitComposite;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.TypedObject;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -22,7 +27,7 @@ import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
-import velka.util.CostAggregation;
+import velka.util.RankAggregation;
 import velka.util.Pair;
 import velka.util.RomanNumbers;
 import velka.util.annotations.Description;
@@ -42,11 +47,6 @@ import velka.util.annotations.VelkaOperatorBank;
 @Description("Conversions of build-in representations") 
 @Header("General Conversions")
 public final class ConversionOperators extends OperatorBank{
-	
-	/**
-	 * Namespace 
-	 */
-	public static final String NAMESPACE = "velka.clojure.conversions";
 
 	/**
 	 * Conversion from Int:Native to Int:Roman
@@ -88,15 +88,22 @@ public final class ConversionOperators extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("int-native-2-int-roman", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("int-native-2-int-roman", ConversionOperators.singleton().getNamespace());
 		}
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
+			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
 		}
-	
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(JExpr._new(CodeModelInstance.instance()._ref(TypedObject.class))
+					.arg(CodeModelInstance.instance().ref(RomanNumbers.class).staticInvoke("int2roman")
+							.arg(mappedArgs.get(new Symbol("_0"))))
+					.arg(TypeUtil.instance().type2java(TypeAtom.TypeIntRoman)));
+		}
 	};
 	
 	/**
@@ -138,15 +145,22 @@ public final class ConversionOperators extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("int-native-2-int-string", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("int-native-2-int-string", ConversionOperators.singleton().getNamespace());
 		}
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
+			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
 		}
-	
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(JExpr._new(CodeModelInstance.instance()._ref(TypedObject.class))
+					.arg(CodeModelInstance.instance().ref(Long.class).staticInvoke("toString")
+							.arg(mappedArgs.get(new Symbol("_0"))))
+					.arg(TypeUtil.instance().type2java(TypeAtom.TypeIntString)));
+		}
 	};
 	
 	/**
@@ -189,13 +203,28 @@ public final class ConversionOperators extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("int-roman-2-int-native", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("int-roman-2-int-native", ConversionOperators.singleton().getNamespace());
 		}
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
+			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var _try = method.body()._try();
+			_try.body()
+					._return(CodeModelInstance.instance().ref(RomanNumbers.class).staticInvoke("roman2int")
+									.arg(JExpr.cast(CodeModelInstance.instance()._ref(String.class),
+											mappedArgs.get(new Symbol("_0")).ref("object"))));
+			
+			var _catch = _try._catch(CodeModelInstance.instance().ref(AppendableException.class));
+			var e = _catch.param("e");
+			
+			_catch.body()._throw(JExpr._new(CodeModelInstance.instance()._ref(RuntimeException.class))
+					.arg(e));
 		}
 	};
 	
@@ -242,15 +271,31 @@ public final class ConversionOperators extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("int-roman-2-int-string", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("int-roman-2-int-string", ConversionOperators.singleton().getNamespace());
 		}
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
+			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
 		}
 	
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var _try = method.body()._try();
+			_try.body()._return(JExpr._new(CodeModelInstance.instance().ref(TypedObject.class))
+					.arg(CodeModelInstance.instance().ref(Long.class).staticInvoke("toString")
+							.arg(CodeModelInstance.instance().ref(RomanNumbers.class).staticInvoke("roman2int")
+									.arg(JExpr.cast(CodeModelInstance.instance()._ref(String.class),
+											mappedArgs.get(new Symbol("_0")).ref("object")))))
+					.arg(TypeUtil.instance().type2java(TypeAtom.TypeIntString)));
+			
+			var _catch = _try._catch(CodeModelInstance.instance().ref(AppendableException.class));
+			var e = _catch.param("e");
+			
+			_catch.body()._throw(JExpr._new(CodeModelInstance.instance()._ref(RuntimeException.class))
+					.arg(e));
+		}
 	};
 	
 	/**
@@ -294,13 +339,19 @@ public final class ConversionOperators extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("int-string-2-int-native", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("int-string-2-int-native", ConversionOperators.singleton().getNamespace());
 		}
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
+			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(CodeModelInstance.instance().ref(Integer.class).staticInvoke("parseInt").arg(JExpr.cast(
+					CodeModelInstance.instance()._ref(String.class), mappedArgs.get(new Symbol("_0")).ref("object"))));
 		}
 	};
 	
@@ -347,34 +398,26 @@ public final class ConversionOperators extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("int-string-2-int-roman", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("int-string-2-int-roman", ConversionOperators.singleton().getNamespace());
 		}
 
 		@Override
 		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(CostAggregation.instance().defaultConversionRank()));
+			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(
+					JExpr._new(CodeModelInstance.instance().ref(TypedObject.class))
+						.arg(CodeModelInstance.instance().ref(RomanNumbers.class).staticInvoke("int2roman")
+								.arg(CodeModelInstance.instance().ref(Long.class).staticInvoke("parseLong")
+											.arg(JExpr.cast(CodeModelInstance.instance()._ref(String.class),
+													mappedArgs.get(new Symbol("_0")).ref("object")))))
+						.arg(TypeUtil.instance().type2java(TypeAtom.TypeIntRoman)));
 		}
 	};
-
-	public static final Path VELKA_CLOJURE_CONVERSIONS_PATH = Paths.get("velka", "clojure");
-
-	public static final Path VELKA_CLOJURE_CONVERSIONS_NAME = Paths.get("conversions.clj");
-
-	@Override
-	public String getNamespace() {
-		return NAMESPACE;
-	}
-
-	@Override
-	public Path getPath() {
-		return VELKA_CLOJURE_CONVERSIONS_PATH;
-	}
-
-	@Override
-	public Path getFileName() {
-		return VELKA_CLOJURE_CONVERSIONS_NAME;
-	}
 	
 	private ConversionOperators() {}
 	private static ConversionOperators instance = null;
@@ -383,6 +426,11 @@ public final class ConversionOperators extends OperatorBank{
 			instance = new ConversionOperators();
 		}
 		return instance;
+	}
+
+	@Override
+	protected String name() {
+		return "conversions";
 	}
 
 }

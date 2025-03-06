@@ -9,10 +9,16 @@ import velka.util.Pair;
 import java.util.Arrays;
 import java.util.Optional;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JMod;
+
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitBoolean;
+import velka.java.CodeModelInstance;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -26,7 +32,7 @@ import velka.types.TypesDoesNotUnifyException;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class IfExpression extends SpecialFormApplication {
+public class IfExpression extends SpecialFormApplication implements CompileableToJava {
 	
 	/**
 	 * Symbol for special form if
@@ -68,8 +74,11 @@ public class IfExpression extends SpecialFormApplication {
 	public Expression interpret(Environment env) throws AppendableException {
 		Expression iCond = this.getCondition().interpret(env);
 		if(!(iCond instanceof LitBoolean)) {
-			iCond = iCond.convert(TypeAtom.TypeBoolNative, env);
-			iCond = iCond.interpret(env);
+			iCond = (Expression)env.getTypeSystem().convert(
+						env.getTypeSystem().getType(iCond),
+						TypeAtom.TypeBoolNative,
+						iCond,
+						env);
 		}
 		
 		if(!(iCond instanceof LitBoolean)) {
@@ -83,8 +92,11 @@ public class IfExpression extends SpecialFormApplication {
 		Expression iFalse = this.getFalseBranch().interpret(env);
 		Pair<Type, Substitution> inf = this.infer(env);
 		
-		iFalse = iFalse.convert(inf.first, env);
-		iFalse = iFalse.interpret(env);
+		iFalse = (Expression)env.getTypeSystem().convert(
+									env.getTypeSystem().getType(iFalse),
+									inf.first,
+									iFalse,
+									env);
 		return iFalse;
 	}
 
@@ -135,5 +147,26 @@ public class IfExpression extends SpecialFormApplication {
 			return super.equals(other);
 		}
 		return false;
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var cond = (CompileableToJava)this.getCondition();
+		var then = (CompileableToJava)this.getTrueBranch();
+		var _else = (CompileableToJava)this.getFalseBranch();
+		
+		var jcond = cond.toJavaExpr(env);
+		var jthen = then.toJavaExpr(env);
+		var jelse = _else.toJavaExpr(env);
+		
+		var spcl = CodeModelInstance.instance().anonymousClass(java.util.function.Supplier.class);
+		var _get = spcl.method(JMod.PUBLIC, CodeModelInstance.instance()._ref(Object.class), "get");
+		
+		var _if = _get.body()._if(JExpr.cast(CodeModelInstance.instance().ref(Boolean.class), jcond));
+		_if._then()._return(jthen);
+		_if._else()._return(jelse);
+		
+		var e = JExpr._new(spcl).invoke(_get);
+		return e;
 	}
 }

@@ -1,9 +1,15 @@
 package velka.core.application;
 
+import com.sun.codemodel.JExpression;
+
 import velka.core.exceptions.IllegalDeconstructionException;
 import velka.core.expression.Expression;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitComposite;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.TypedObject;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.util.AppendableException;
@@ -16,7 +22,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Deconstruct extends Expression {
+public class Deconstruct extends Expression implements CompileableToJava {
 	
 	/**
 	 * Symbol for deconstruct special form
@@ -100,7 +106,16 @@ public class Deconstruct extends Expression {
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("doConvert not implemented");
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var toCl = CodeModelInstance.instance().ref(TypedObject.class);
+		var ctj = (CompileableToJava)this.argument;
+		
+		return toCl.staticInvoke("deconstructAs")
+				.arg(ctj.toJavaExpr(env))
+				.arg(TypeUtil.instance().type2java(this.as));
 	}
 }

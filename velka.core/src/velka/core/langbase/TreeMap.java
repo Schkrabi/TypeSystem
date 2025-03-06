@@ -1,11 +1,16 @@
 package velka.core.langbase;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JStatement;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Operator;
@@ -20,12 +25,19 @@ import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
+import velka.core.literal.Literal;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
+import velka.java.runtime.VelkaThrower;
+import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
+import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.ClojureHelper.ProxyImpl;
@@ -50,12 +62,8 @@ import velka.util.annotations.VelkaOperatorBank;
 @Description("Operators for working with java.util.TreeMap.") 
 @Header("Tree Map")
 public class TreeMap extends OperatorBank{
-	/**
-	 * Clojure namespace for TreeMap
-	 */
-	public static final String NAMESPACE = "velka.clojure.treeMap";
 	
-	public static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
+	public static final Symbol constructorSymbol = new Symbol("velka_construct", TreeMap.singleton().getNamespace());
 	
 	@VelkaConstructor
 	@Description("Constructs Map:Tree.") 
@@ -91,7 +99,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return constructorSymbol;
 		}
 
@@ -100,13 +108,28 @@ public class TreeMap extends OperatorBank{
 				throws AppendableException {
 			final Expression cmpFun = args.get(0);
 			
-			java.util.Comparator<Expression> comparator = new java.util.Comparator<Expression>() {
+			java.util.Comparator<Object> comparator = new java.util.Comparator<Object>() {
 
 				@Override
-				public int compare(Expression o1, Expression o2) {
+				public int compare(Object o1, Object o2) {
+					Expression e1, e2;
+					if(o1 instanceof Expression exp) {
+						e1 = exp; 
+					}
+					else {
+						e1 = Literal.objectToLiteral(o1);
+					}
+					
+					if(o2 instanceof Expression exp) {
+						e2 = exp;
+					}
+					else {
+						e2 = Literal.objectToLiteral(o2);
+					}
+					
 					Expression cmpEval = new AbstractionApplication(
 												cmpFun,
-												new Tuple(o1, o2));
+												new Tuple(e1, e2));
 					Expression cmp;
 					try {
 						cmp = cmpEval.interpret(env);
@@ -138,17 +161,47 @@ public class TreeMap extends OperatorBank{
 		@Override
 		public String toString() {
 			return "construct Map Tree";
-		}		
+		}	
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var cmpCl = CodeModelInstance.instance().anonymousClass(java.util.Comparator.class);
+			
+			var cmpM = cmpCl.method(JMod.PUBLIC, int.class, "compare");			
+			var o1 = cmpM.param(Object.class, "_o1");
+			var o2 = cmpM.param(Object.class, "o2");
+			
+			var vtCl = CodeModelInstance.instance().ref(VelkaTuple.class);
+			
+			var tuple = cmpM.body().decl(vtCl, "_tuple", 
+					JExpr._new(vtCl)
+						.arg(CodeModelInstance.instance().ref(java.util.List.class).staticInvoke("of").arg(o1).arg(o2))
+						.arg(JExpr._new(TypeUtil.instance().typeTupleJType())
+								.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(o1))
+								.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(o2))));
+			
+			var numberCl = CodeModelInstance.instance()._ref(Number.class);
+			var cmp = cmpM.body().decl(numberCl, "_cmp",
+					JExpr.cast(numberCl, 
+							JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class), mappedArgs.get(new Symbol("_0")))
+							.invoke("apply").arg(tuple)));
+			
+			cmpM.body()._return(cmp.invoke("intValue"));
+			
+			method.body()
+				._return(JExpr._new(CodeModelInstance.instance().ref(java.util.TreeMap.class))
+							.arg(JExpr._new(cmpCl)));
+		}
 	};
 	
-	private static final Symbol ceilingEntrySymbol = new Symbol("ceiling-entry", NAMESPACE);
+	private static final Symbol ceilingEntrySymbol = new Symbol("ceiling_entry", TreeMap.singleton().getNamespace());
 	public static final Symbol ceilingEntrySymbol_out = new Symbol("map-tree-ceiling-entry");
 	
 	@VelkaOperator
 	@Description("Returns a key-value mapping associated with the least key greater than or equal to the given key, or throws error if no such mapping exists.") 
-	@Example("(map-tree-ceiling-entry (construct Map Tree (lambda (x y) -1)))") 
-	@Syntax("(map-tree-ceiling-entry <map>)")
-	public static final Operator ceilingEntry = new Operator() {
+	@Example("(map-tree-ceiling-entry (construct Map Tree (lambda (x y) -1)) 42)") 
+	@Syntax("(map-tree-ceiling-entry <map> <key>)")
+	public static final Operator ceilingEntry  = new Operator() {
 
 		private final String ERROR = "No key-value mapping found!";
 		
@@ -180,7 +233,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return ceilingEntrySymbol;
 		}
 
@@ -190,18 +243,35 @@ public class TreeMap extends OperatorBank{
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			Expression key = args.get(1);
+			Object key = args.get(1);
 			
-			Map.Entry<Expression, Expression> e = map.ceilingEntry(key);
+			var e = map.ceilingEntry(key);
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
 				err.interpret(env);
 			}
 			
-			return new Tuple(e.getKey(), e.getValue());
+			Expression ek;
+			if(e.getKey() instanceof Expression expr) {
+				ek = expr;
+			}
+			else {
+				ek = Literal.objectToLiteral(e.getKey());
+			}
+			
+			Expression ev;
+			if(e.getValue() instanceof Expression expr) {
+				ev = expr;
+			}
+			else {
+				ev = Literal.objectToLiteral(e.getValue());
+			}
+			
+			
+			return new Tuple(ek, ev);
 		}
 
 		@Override
@@ -217,194 +287,51 @@ public class TreeMap extends OperatorBank{
 			return ceilingEntrySymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var e = method.body().decl(CodeModelInstance.instance()._ref(Map.Entry.class), "_e",
+					mappedArgs.get(new Symbol("_0")).invoke("ceilingEntry").arg(mappedArgs.get(new Symbol("_1"))));
+			
+			method.body()._if(e.eq(JExpr._null()))
+				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
+			
+			method.body()._return(VelkaTuple._velkaTuple(
+					e.invoke("getKey"),
+					e.invoke("getValue")));
+		}
 	};
 	
-	private static final Symbol ceilingKeySymbol = new Symbol("ceiling-key", NAMESPACE);
+	private static final Symbol ceilingKeySymbol = new Symbol("ceiling_key", TreeMap.singleton().getNamespace());
 	public static final Symbol ceilingKeySymbol_out = new Symbol("map-tree-ceiling-key");
 	
 	@VelkaOperator
 	@Description("Returns the least key greater than or equal to the given key, or null if there is no such key.") 
-	@Example("(map-tree-ceiling-key (construct Map Tree (lambda (x y) -1)))") 
-	@Syntax("(map-tree-ceiling-entry <map>)")
-	public static final Operator ceilingKey = new Operator() {
-
-		private final String ERROR = "No ceiling key exist!";
-		
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String key = "_key";
-			String ceilKey = "_ceilKey";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map, key),
-					ClojureHelper.letHelper(
-							ClojureHelper.clojureIfHelper(
-									ClojureHelper.applyClojureFunction("nil?", ceilKey),
-									ClojureHelper.errorHelper(ClojureHelper.stringHelper(ERROR)),
-									ceilKey),
-							Pair.of(ceilKey,
-									ClojureHelper.applyClojureFunction(".ceilingKey",
-									map,
-									key))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return ceilingKeySymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			Expression key = args.get(1);
-			
-			Expression e = map.ceilingKey(key);
-			if(e == null) {
-				//Will throw error
-				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env);
-			}
-			
-			return e;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable K = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), K);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return ceilingKeySymbol_out.toString();
-		}
-		
-	};
+	@Example("(map-tree-ceiling-key (construct Map Tree (lambda (x y) -1)) 42)") 
+	@Syntax("(map-tree-ceiling-entry <map> <key>)")
+	public static final Operator ceilingKey = Operator.wrapNullableJavaMethod(java.util.TreeMap.class, "ceilingKey",
+			"map-tree-ceiling-key", TreeMap.singleton().getNamespace(), Object.class);
 	
-	private static final Symbol containsKeySymbol = new Symbol("contains-key", NAMESPACE);
+	private static final Symbol containsKeySymbol = new Symbol("contains_key", TreeMap.singleton().getNamespace());
 	public static final Symbol containsKeySymbol_out = new Symbol("map-tree-contains-key");
 	
 	@VelkaOperator
 	@Description("Returns true if this map contains a mapping for the specified key.") 
 	@Example("(map-tree-contains-key (construct Map Tree (lambda (x y) -1)) 1 )") 
 	@Syntax("(map-tree-contains-key <map> <key>)")
-	public static final Operator containsKey = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String key = "_key";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map, key),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".containsKey",
-									map,
-									key)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return containsKeySymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			Expression key = args.get(1);
-			
-			if(map.containsKey(key)) {
-				return LitBoolean.TRUE;
-			}
-			return LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable K = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), TypeAtom.TypeBoolNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return containsKeySymbol_out.toString();
-		}
-		
-	};
+	public static final Operator containsKey = Operator.wrapJavaMethod(java.util.TreeMap.class, "containsKey",
+			"map-tree-contains-key", TreeMap.singleton().getNamespace(), Object.class);	
 	
-	private static final Symbol containsValueSymbol = new Symbol("contains-value", NAMESPACE);
+	private static final Symbol containsValueSymbol = new Symbol("contains_value", TreeMap.singleton().getNamespace());
 	public static final Symbol containsValueSymbol_out = new Symbol("map-tree-contains-value");
 	
 	@VelkaOperator
 	@Description("Returns true if this map maps one or more keys to the specified value.") 
 	@Example("(map-tree-contains-value (construct Map Tree (lambda (x y) -1)) \"foo\")") 
 	@Syntax("(map-tree-contains-value <map> <value>)")
-	public static final Operator containsValue = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String value = "_value";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map, value),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".containsValue",
-									map,
-									value)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return containsValueSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			Expression value = args.get(1);
-			
-			if(map.containsValue(value)) {
-				return LitBoolean.TRUE;
-			}
-			return LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable V = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, V), TypeAtom.TypeBoolNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return containsValueSymbol_out.toString();
-		}
-		
-	};
+	public static final Operator containsValue = Operator.wrapJavaMethod(java.util.TreeMap.class, "containsValue", 
+			"map-tree-contains-value", TreeMap.singleton().getNamespace(), Object.class);
 	
-	private static final Symbol firstEntrySymbol = new Symbol("first-entry", NAMESPACE);
+	private static final Symbol firstEntrySymbol = new Symbol("first_entry", TreeMap.singleton().getNamespace());
 	public static final Symbol firstEntrySymbol_out = new Symbol("map-tree-first-entry");
 	
 	@VelkaOperator
@@ -441,7 +368,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return firstEntrySymbol;
 		}
 
@@ -451,16 +378,32 @@ public class TreeMap extends OperatorBank{
 			
 			LitInteropObject lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			Map.Entry<Expression, Expression> e = map.firstEntry();
+			var e = map.firstEntry();
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
 				err.interpret(env);
 			}
 			
-			return new Tuple(e.getKey(), e.getValue());
+			Expression ek;
+			if(e.getKey() instanceof Expression expr) {
+				ek = expr;
+			}
+			else {
+				ek = Literal.objectToLiteral(e.getKey());
+			}
+			
+			Expression ev;
+			if(e.getValue() instanceof Expression expr) {
+				ev = expr;
+			}
+			else {
+				ev = Literal.objectToLiteral(e.getValue());
+			}
+			
+			return new Tuple(ek, ev);
 		}
 
 		@Override
@@ -475,75 +418,32 @@ public class TreeMap extends OperatorBank{
 		public String toString() {
 			return firstEntrySymbol_out.toString();
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var e = method.body().decl(CodeModelInstance.instance()._ref(Map.Entry.class), "_e",
+					mappedArgs.get(new Symbol("_0")).invoke("firstEntry"));
+			
+			method.body()._if(e.eq(JExpr._null()))
+				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
+			
+			method.body()._return(VelkaTuple._velkaTuple(
+					e.invoke("getKey"),
+					e.invoke("getValue")));
+		}
 	};
 	
-	private static final Symbol firstKeySymbol = new Symbol("first-key", NAMESPACE);
+	private static final Symbol firstKeySymbol = new Symbol("first_key", TreeMap.singleton().getNamespace());
 	public static final Symbol firstKeySymbol_out = new Symbol("map-tree-first-key");
 	
 	@VelkaOperator
 	@Description("Returns the first (lowest) key currently in this map. Throws error if no such key exists.") 
 	@Example("(map-tree-first-key (construct Map Tree (lambda (x y) -1)))") 
 	@Syntax("(map-tree-first-key <map>)")
-	public static final Operator firstKey = new Operator() {
-
-		private final String ERROR = "map-tree-first-key cannot retrieve first key!";
-		
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String firstKey = "_firstKey";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map),
-					ClojureHelper.letHelper(
-							ClojureHelper.clojureIfHelper(
-									ClojureHelper.applyClojureFunction("nil?", firstKey),
-									ClojureHelper.errorHelper(ClojureHelper.stringHelper(ERROR)),
-									firstKey),
-							Pair.of(firstKey,
-									ClojureHelper.applyClojureFunction(".firstKey",
-									map))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return firstKeySymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			Expression key = null;
-			try {
-				key = map.firstKey();
-			} catch(NoSuchElementException e) {
-				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env);
-			}
-			
-			return key;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable K = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), K);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return firstKeySymbol_out.toString();
-		}
-		
-	};
+	public static final Operator firstKey = Operator.wrapNullableJavaMethod(java.util.TreeMap.class, "firstKey", 
+			"map-tree-first-key", TreeMap.singleton().getNamespace()); 
 	
-	private static final Symbol floorEntrySymbol = new Symbol("floor-entry", NAMESPACE);
+	private static final Symbol floorEntrySymbol = new Symbol("floor_entry", TreeMap.singleton().getNamespace());
 	public static final Symbol floorEntrySymbol_out = new Symbol("map-tree-floor-entry");
 	
 	@VelkaOperator
@@ -582,7 +482,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return floorEntrySymbol;
 		}
 
@@ -590,20 +490,42 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			Expression key = args.get(1);
+			Object key;
+			if(args.get(1) instanceof Literal lit) {
+				key = Literal.literalToObject(lit);
+			}
+			else {
+				key = args.get(1);
+			}
 			
-			Map.Entry<Expression, Expression> e = map.floorEntry(key);
+			var e = map.floorEntry(key);
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
 				err.interpret(env);
 			}
 			
-			return new Tuple(e.getKey(), e.getValue());
+			Expression ek;
+			if(e.getKey() instanceof Expression expr) {
+				ek = expr;
+			}
+			else {
+				ek = Literal.objectToLiteral(e.getKey());
+			}
+			
+			Expression ev;
+			if(e.getValue() instanceof Expression expr) {
+				ev = expr;
+			}
+			else {
+				ev = Literal.objectToLiteral(e.getValue());
+			}
+			
+			return new Tuple(ek, ev);
 		}
 
 		@Override
@@ -619,147 +541,41 @@ public class TreeMap extends OperatorBank{
 			return floorEntrySymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var e = method.body().decl(CodeModelInstance.instance()._ref(Map.Entry.class), "_e",
+					mappedArgs.get(new Symbol("_0")).invoke("floorEntry").arg(mappedArgs.get(new Symbol("_1"))));
+			
+			method.body()._if(e.eq(JExpr._null()))
+				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
+			
+			method.body()._return(VelkaTuple._velkaTuple(
+					e.invoke("getKey"),
+					e.invoke("getValue")));
+		}
 	};
 	
-	private static final Symbol floorKeySymbol = new Symbol("floor-key", NAMESPACE);
+	private static final Symbol floorKeySymbol = new Symbol("floor_key", TreeMap.singleton().getNamespace());
 	public static final Symbol floorKeySymbol_out = new Symbol("map-tree-floor-key");
 	
 	@VelkaOperator
 	@Description("Returns the greatest key less than or equal to the given key, or throws error if there is no such key.") 
 	@Example("(map-tree-floor-key (construct Map Tree (lambda (x y) -1)) 1 )") 
 	@Syntax("(map-tree-floor-key <map> <key>)")
-	public static final Operator floorKey = new Operator() {
-
-		private final String ERROR = "No ceiling key exist!";
-		
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String key = "_key";
-			String floorKey = "_floorKey";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map, key),
-					ClojureHelper.letHelper(
-							ClojureHelper.clojureIfHelper(
-									ClojureHelper.applyClojureFunction("nil?", floorKey),
-									ClojureHelper.errorHelper(ClojureHelper.stringHelper(ERROR)),
-									floorKey),
-							Pair.of(floorKey,
-									ClojureHelper.applyClojureFunction(".floorKey",
-									map,
-									key))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return floorKeySymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			Expression key = args.get(1);
-			
-			Expression e = map.floorKey(key);
-			if(e == null) {
-				//Will throw error
-				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env);
-			}
-			
-			return e;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable K = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), K);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return floorKeySymbol_out.toString();
-		}
-	};
+	public static final Operator floorKey = Operator.wrapNullableJavaMethod(java.util.TreeMap.class, "floorKey", 
+			"map-tree-floor-key", TreeMap.singleton().getNamespace(), Object.class); 
 	
-	private static final Symbol getSymbol = new Symbol("velka-get", NAMESPACE);
+	private static final Symbol getSymbol = new Symbol("velka_get", TreeMap.singleton().getNamespace());
 	public static final Symbol getSymbol_out = new Symbol("map-tree-get");
 	
 	@VelkaOperator
 	@Description("Returns the value to which the specified key is mapped, or null if this map contains no mapping for the key.") 
 	@Example("(map-tree-get (construct Map Tree (lambda (x y) -1)) 1 )") 
 	@Syntax("(map-tree-get <map> <key>)")
-	public static final Operator get = new Operator() {
-
-		private final String ERROR = "Key not found in map";
-		
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String key = "_key";
-			String value = "_value";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map, key),
-					ClojureHelper.letHelper(
-							ClojureHelper.clojureIfHelper(
-									ClojureHelper.applyClojureFunction("nil?", value),
-									ClojureHelper.errorHelper(ClojureHelper.stringHelper(ERROR)),
-									value),
-							Pair.of(value, ClojureHelper.applyClojureFunction(
-									".get",
-									map,
-									key))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return getSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			Expression key = args.get(1);
-			Expression value = map.get(key);
-			
-			if(value == null) {
-				//Will throw error
-				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env);
-			}
-			
-			return value;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable K = new TypeVariable(NameGenerator.next());
-			TypeVariable V = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), V);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return getSymbol_out.toString();
-		}
-		
-	};
+	public static final Operator get = Operator.wrapJavaMethod(java.util.TreeMap.class, "get", 
+			"map-tree-get", TreeMap.singleton().getNamespace(), Object.class); 
 	
-	private static final Symbol headMapSymbol = new Symbol("head-map", NAMESPACE);
+	private static final Symbol headMapSymbol = new Symbol("head_map", TreeMap.singleton().getNamespace());
 	public static final Symbol headMapSymbol_out = new Symbol("map-tree-head");
 	
 	@VelkaOperator
@@ -784,7 +600,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return headMapSymbol;
 		}
 
@@ -792,13 +608,13 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
 			Expression toKey = args.get(1);
 			
-			java.util.TreeMap<Expression, Expression> res = new java.util.TreeMap<Expression, Expression>(map.headMap(toKey));
+			var res = new java.util.TreeMap<Object, Object>(map.headMap(toKey));
 			
 			return new LitInteropObject(res, TypeAtom.TypeMapTree);
 		}
@@ -815,9 +631,19 @@ public class TreeMap extends OperatorBank{
 			return headMapSymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod _method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var head = _method.body().decl(CodeModelInstance.instance().ref(java.util.SortedMap.class), "head",
+					mappedArgs.get(new Symbol("_0")).invoke("headMap").arg(mappedArgs.get(new Symbol("_1"))));
+			var tmcl = CodeModelInstance.instance().ref(java.util.TreeMap.class);
+			var ret = _method.body().decl(tmcl, "ret",
+					JExpr._new(tmcl).arg(head));
+			_method.body()._return(ret);
+		}
+		
 	};
 	
-	private static final Symbol headMapInclSymbol = new Symbol("head-map-incl", NAMESPACE);
+	private static final Symbol headMapInclSymbol = new Symbol("head_map_incl", TreeMap.singleton().getNamespace());
 	public static final Symbol headMapInclSymbol_out = new Symbol("map-tree-head-incl");
 	
 	@VelkaOperator
@@ -844,7 +670,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return headMapInclSymbol;
 		}
 
@@ -852,14 +678,14 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
 			Expression toKey = args.get(1);
 			LitBoolean inclusive = (LitBoolean)args.get(2);
 			
-			java.util.TreeMap<Expression, Expression> res = new java.util.TreeMap<Expression, Expression>(
+			var res = new java.util.TreeMap<Object, Object>(
 					map.headMap(toKey, inclusive == LitBoolean.TRUE));
 			
 			return new LitInteropObject(res, TypeAtom.TypeMapTree);
@@ -876,9 +702,21 @@ public class TreeMap extends OperatorBank{
 		public String toString() {
 			return headMapInclSymbol_out.toString();
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod _method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var head = _method.body().decl(CodeModelInstance.instance().ref(java.util.SortedMap.class), "head",
+					mappedArgs.get(new Symbol("_0")).invoke("headMap")
+						.arg(mappedArgs.get(new Symbol("_1")))
+						.arg(mappedArgs.get(new Symbol("_2"))));
+			var tmcl = CodeModelInstance.instance().ref(java.util.TreeMap.class);
+			var ret = _method.body().decl(tmcl, "ret",
+					JExpr._new(tmcl).arg(head));
+			_method.body()._return(ret);
+		}
 	};
 	
-	private static final Symbol higherEntrySymbol = new Symbol("higher-entry", NAMESPACE);
+	private static final Symbol higherEntrySymbol = new Symbol("higher_entry", TreeMap.singleton().getNamespace());
 	public static final Symbol higherEntrySymbol_out = new Symbol("map-tree-higher-entry");
 	
 	@VelkaOperator
@@ -917,7 +755,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return higherEntrySymbol;
 		}
 
@@ -925,20 +763,36 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
 			Expression key = args.get(1);
 			
-			Map.Entry<Expression, Expression> e = map.higherEntry(key);
+			var e = map.higherEntry(key);
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
 				err.interpret(env);
 			}
 			
-			return new Tuple(e.getKey(), e.getValue());
+			Expression ek;
+			if(e.getKey() instanceof Expression expr) {
+				ek = expr;
+			}
+			else {
+				ek = Literal.objectToLiteral(e.getKey());
+			}
+			
+			Expression ev;
+			if(e.getValue() instanceof Expression expr) {
+				ev = expr;
+			}
+			else {
+				ev = Literal.objectToLiteral(e.getValue());
+			}
+			
+			return new Tuple(ek, ev);
 		}
 
 		@Override
@@ -953,77 +807,32 @@ public class TreeMap extends OperatorBank{
 		public String toString() {
 			return higherEntrySymbol_out.toString();
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var e = method.body().decl(CodeModelInstance.instance()._ref(Map.Entry.class), "_e",
+					mappedArgs.get(new Symbol("_0")).invoke("higherEntry").arg(mappedArgs.get(new Symbol("_1"))));
+			
+			method.body()._if(e.eq(JExpr._null()))
+				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
+			
+			method.body()._return(VelkaTuple._velkaTuple(
+					e.invoke("getKey"),
+					e.invoke("getValue")));
+		}
 	};
 	
-	private static final Symbol higherKeySymbol = new Symbol("higher-key", NAMESPACE);
+	private static final Symbol higherKeySymbol = new Symbol("higher_key", TreeMap.singleton().getNamespace());
 	public static final Symbol higherKeySymbol_out = new Symbol("map-tree-higher-key");
 	
 	@VelkaOperator
 	@Description("Returns the least key strictly greater than the given key, or throws error if there is no such key.") 
 	@Example("(map-tree-higher-key (construct Map Tree (lambda (x y) -1)) 1)") 
 	@Syntax("(map-tree-higher-key <map> <key>)")
-	public static final Operator higherKey = new Operator() {
-
-		private final String ERROR = "No higher key exist!";
-		
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String key = "_key";
-			String retKey = "_retKey";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map, key),
-					ClojureHelper.letHelper(
-							ClojureHelper.clojureIfHelper(
-									ClojureHelper.applyClojureFunction("nil?", retKey),
-									ClojureHelper.errorHelper(ClojureHelper.stringHelper(ERROR)),
-									retKey),
-							Pair.of(retKey,
-									ClojureHelper.applyClojureFunction(".higherKey",
-									map,
-									key))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return higherKeySymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			Expression key = args.get(1);
-			
-			Expression e = map.higherKey(key);
-			if(e == null) {
-				//Will throw error
-				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env);
-			}
-			
-			return e;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable K = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), K);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return higherKeySymbol_out.toString();
-		}
-	};
+	public static final Operator higherKey = Operator.wrapNullableJavaMethod(java.util.TreeMap.class, "higherKey", 
+			"map-tree-higher-key", TreeMap.singleton().getNamespace(), Object.class); 
 	
-	private static final Symbol keysSymbol = new Symbol("velka-keys", NAMESPACE);
+	private static final Symbol keysSymbol = new Symbol("velka_keys", TreeMap.singleton().getNamespace());
 	public static final Symbol keysSymbol_out = new Symbol("map-tree-keys");
 	
 	@VelkaOperator
@@ -1036,19 +845,16 @@ public class TreeMap extends OperatorBank{
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			String map = "_map";
 			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map),
-					LitComposite
-					.clojureValueToClojureLiteral(
-							ClojureHelper.applyClojureFunction("lazy-seq",
+					List.of(map),
+					ClojureHelper.constructJavaClass(ArrayList.class,
 									ClojureHelper.applyClojureFunction(
 											".keySet",
-											map)),
-							TypeAtom.TypeListNative));
+											map)));
 			return code;
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return keysSymbol;
 		}
 
@@ -1056,11 +862,11 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			return ListNative.makeListNativeExpression(new LinkedList<Expression>(map.keySet()));
+			return new LitInteropObject(new ArrayList<Object>(map.keySet()), TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -1074,9 +880,16 @@ public class TreeMap extends OperatorBank{
 			return keysSymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var ks = method.body().decl(CodeModelInstance.instance()._ref(java.util.Set.class), "_ks",
+					mappedArgs.get(new Symbol("_0")).invoke("keySet"));
+			method.body()._return(
+					JExpr._new(CodeModelInstance.instance()._ref(java.util.ArrayList.class)).arg(ks));
+		}
 	};
 	
-	private static final Symbol lastEntrySymbol = new Symbol("last-entry", NAMESPACE);
+	private static final Symbol lastEntrySymbol = new Symbol("last_entry", TreeMap.singleton().getNamespace());
 	public static final Symbol lastEntrySymbol_out = new Symbol("map-tree-last-entry");
 	
 	@VelkaOperator
@@ -1113,7 +926,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return lastEntrySymbol;
 		}
 
@@ -1121,18 +934,34 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			Map.Entry<Expression, Expression> e = map.lastEntry();
+			var e = map.lastEntry();
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
 				err.interpret(env);
 			}
 			
-			return new Tuple(e.getKey(), e.getValue());
+			Expression ek;
+			if(e.getKey() instanceof Expression expr) {
+				ek = expr;
+			}
+			else {
+				ek = Literal.objectToLiteral(e.getKey());
+			}
+			
+			Expression ev;
+			if(e.getValue() instanceof Expression expr) {
+				ev = expr;
+			}
+			else {
+				ev = Literal.objectToLiteral(e.getValue());
+			}
+			
+			return new Tuple(ek, ev);
 		}
 
 		@Override
@@ -1147,74 +976,32 @@ public class TreeMap extends OperatorBank{
 		public String toString() {
 			return lastEntrySymbol_out.toString();
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var e = method.body().decl(CodeModelInstance.instance()._ref(Map.Entry.class), "_e",
+					mappedArgs.get(new Symbol("_0")).invoke("lastEntry"));
+			
+			method.body()._if(e.eq(JExpr._null()))
+				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
+			
+			method.body()._return(VelkaTuple._velkaTuple(
+					e.invoke("getKey"),
+					e.invoke("getValue")));
+		}
 	};
 	
-	private static final Symbol lastKeySymbol = new Symbol("last-key", NAMESPACE);
+	private static final Symbol lastKeySymbol = new Symbol("last_key", TreeMap.singleton().getNamespace());
 	public static final Symbol lastKeySymbol_out = new Symbol("map-tree-last-key");
 	
 	@VelkaOperator
 	@Description("Returns the last (highest) key currently in this map.") 
 	@Example("(map-tree-last-key (construct Map Tree (lambda (x y) -1)))") 
 	@Syntax("(map-tree-last-key <map>)")
-	public static final Operator lastKey = new Operator() {
-
-		private final String ERROR = "map-tree-first-key cannot retrieve first key!";
-		
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String firstKey = "_firstKey";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map),
-					ClojureHelper.letHelper(
-							ClojureHelper.clojureIfHelper(
-									ClojureHelper.applyClojureFunction("nil?", firstKey),
-									ClojureHelper.errorHelper(ClojureHelper.stringHelper(ERROR)),
-									firstKey),
-							Pair.of(firstKey,
-									ClojureHelper.applyClojureFunction(".lastKey",
-									map))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return lastKeySymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			Expression key = null;
-			try {
-				key = map.lastKey();
-			} catch(NoSuchElementException e) {
-				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env);
-			}
-			
-			return key;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable K = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), K);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return lastKeySymbol_out.toString();
-		}
-	};
+	public static final Operator lastKey = Operator.wrapNullableJavaMethod(java.util.TreeMap.class, "lastKey", 
+			"map-tree-last-key", TreeMap.singleton().getNamespace());
 	
-	private static final Symbol lowerEntrySymbol = new Symbol("lower-entry", NAMESPACE);
+	private static final Symbol lowerEntrySymbol = new Symbol("lower_entry", TreeMap.singleton().getNamespace());
 	public static final Symbol lowerEntrySymbol_out = new Symbol("map-tree-lower-entry");
 	
 	@VelkaOperator
@@ -1253,7 +1040,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return lowerEntrySymbol;
 		}
 
@@ -1261,20 +1048,36 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			Expression key = args.get(1);
+			var key = args.get(1);
 			
-			Map.Entry<Expression, Expression> e = map.lowerEntry(key);
+			var e = map.lowerEntry(key);
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
 				err.interpret(env);
 			}
 			
-			return new Tuple(e.getKey(), e.getValue());
+			Expression ek;
+			if(e.getKey() instanceof Expression expr) {
+				ek = expr;
+			}
+			else {
+				ek = Literal.objectToLiteral(e.getKey());
+			}
+			
+			Expression ev;
+			if(e.getValue() instanceof Expression expr) {
+				ev = expr;
+			}
+			else {
+				ev = Literal.objectToLiteral(e.getValue());
+			}
+			
+			return new Tuple(ek, ev);
 		}
 
 		@Override
@@ -1289,77 +1092,32 @@ public class TreeMap extends OperatorBank{
 		public String toString() {
 			return lowerEntrySymbol_out.toString();
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var e = method.body().decl(CodeModelInstance.instance()._ref(Map.Entry.class), "_e",
+					mappedArgs.get(new Symbol("_0")).invoke("lowerEntry").arg(mappedArgs.get(new Symbol("_1"))));
+			
+			method.body()._if(e.eq(JExpr._null()))
+				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
+			
+			method.body()._return(VelkaTuple._velkaTuple(
+					e.invoke("getKey"),
+					e.invoke("getValue")));
+		}
 	};
 	
-	private static final Symbol lowerKeySymbol = new Symbol("lower-key", NAMESPACE);
+	private static final Symbol lowerKeySymbol = new Symbol("lower_key", TreeMap.singleton().getNamespace());
 	public static final Symbol lowerKeySymbol_out = new Symbol("map-tree-lower-key");
 	
 	@VelkaOperator
 	@Description("Returns the greatest key strictly less than the given key, or throws an error if there is no such key.") 
 	@Example("(map-tree-lower-key (construct Map Tree (lambda (x y) -1)) 1)") 
 	@Syntax("(map-tree-lower-key <map> <key>)")
-	public static final Operator lowerKey = new Operator() {
-
-		private static final String ERROR = "map-tree-lower-key cannot retrieve the key.";
-		
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String key = "_key";
-			String retKey = "_retKey";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map, key),
-					ClojureHelper.letHelper(
-							ClojureHelper.clojureIfHelper(
-									ClojureHelper.applyClojureFunction("nil?", retKey),
-									ClojureHelper.errorHelper(ClojureHelper.stringHelper(ERROR)),
-									retKey),
-							Pair.of(retKey,
-									ClojureHelper.applyClojureFunction(".lowerKey",
-									map,
-									key))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return lowerKeySymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			Expression key = args.get(1);
-			
-			Expression e = map.lowerKey(key);
-			if(e == null) {
-				//Will throw error
-				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env);
-			}
-			
-			return e;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable K = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), K);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return lowerKeySymbol_out.toString();
-		}
-	};
+	public static final Operator lowerKey = Operator.wrapNullableJavaMethod(java.util.TreeMap.class, "lowerKey", 
+			"map-tree-lower-key", TreeMap.singleton().getNamespace(), Object.class);
 	
-	private static final Symbol pollFirstEntrySymbol = new Symbol("poll-first-entry", NAMESPACE);
+	private static final Symbol pollFirstEntrySymbol = new Symbol("poll_first_entry", TreeMap.singleton().getNamespace());
 	public static final Symbol pollFirstEntrySymbol_out = new Symbol("map-tree-poll-first-entry");
 	
 	@VelkaOperator
@@ -1396,7 +1154,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return pollFirstEntrySymbol;
 		}
 
@@ -1404,18 +1162,34 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			Map.Entry<Expression, Expression> e = map.pollFirstEntry();
+			var e = map.pollFirstEntry();
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
 				err.interpret(env);
 			}
 			
-			return new Tuple(e.getKey(), e.getValue());
+			Expression ek;
+			if(e.getKey() instanceof Expression expr) {
+				ek = expr;
+			}
+			else {
+				ek = Literal.objectToLiteral(e.getKey());
+			}
+			
+			Expression ev;
+			if(e.getValue() instanceof Expression expr) {
+				ev = expr;
+			}
+			else {
+				ev = Literal.objectToLiteral(e.getValue());
+			}
+			
+			return new Tuple(ek, ev);
 		}
 
 		@Override
@@ -1431,9 +1205,21 @@ public class TreeMap extends OperatorBank{
 			return pollFirstEntrySymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var e = method.body().decl(CodeModelInstance.instance()._ref(Map.Entry.class), "_e",
+					mappedArgs.get(new Symbol("_0")).invoke("pollFirstEntry"));
+			
+			method.body()._if(e.eq(JExpr._null()))
+				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
+			
+			method.body()._return(VelkaTuple._velkaTuple(
+					e.invoke("getKey"),
+					e.invoke("getValue")));
+		}
 	};
 	
-	private static final Symbol pollLastEntrySymbol = new Symbol("poll-last-entry", NAMESPACE);
+	private static final Symbol pollLastEntrySymbol = new Symbol("poll_last_entry", TreeMap.singleton().getNamespace());
 	public static final Symbol pollLastEntrySymbol_out = new Symbol("map-tree-poll-last-entry");
 	
 	@VelkaOperator
@@ -1470,7 +1256,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return pollLastEntrySymbol;
 		}
 
@@ -1478,18 +1264,34 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			Map.Entry<Expression, Expression> e = map.pollLastEntry();
+			var e = map.pollLastEntry();
 			if(e == null) {
 				//Will throw error
 				Expression err = new ExceptionExpr(new LitString(ERROR));
 				err.interpret(env);
 			}
 			
-			return new Tuple(e.getKey(), e.getValue());
+			Expression ek;
+			if(e.getKey() instanceof Expression expr) {
+				ek = expr;
+			}
+			else {
+				ek = Literal.objectToLiteral(e.getKey());
+			}
+			
+			Expression ev;
+			if(e.getValue() instanceof Expression expr) {
+				ev = expr;
+			}
+			else {
+				ev = Literal.objectToLiteral(e.getValue());
+			}
+			
+			return new Tuple(ek, ev);
 		}
 
 		@Override
@@ -1505,73 +1307,31 @@ public class TreeMap extends OperatorBank{
 			return pollLastEntrySymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var e = method.body().decl(CodeModelInstance.instance()._ref(Map.Entry.class), "_e",
+					mappedArgs.get(new Symbol("_0")).invoke("pollLastEntry"));
+			
+			method.body()._if(e.eq(JExpr._null()))
+				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
+			
+			method.body()._return(VelkaTuple._velkaTuple(
+					e.invoke("getKey"),
+					e.invoke("getValue")));
+		}
 	};
 	
-	private static final Symbol putSymbol = new Symbol("put", NAMESPACE);
+	private static final Symbol putSymbol = new Symbol("put", TreeMap.singleton().getNamespace());
 	public static final Symbol putSymbol_out = new Symbol("map-tree-put");
 	
 	@VelkaOperator
 	@Description("Associates the specified value with the specified key in the map.") 
 	@Example("(map-tree-put (construct Map Tree (lambda (x y) -1)) 1 \"foo\")") 
 	@Syntax("(map-tree-put <map> <key> <value>)")
-	public static final Operator put = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String key = "_key";
-			String value = "_value";
-			String tmp = "_tmp";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map, key, value),
-					ClojureHelper.letHelper(
-							map,
-							Pair.of(tmp,
-									ClojureHelper.applyClojureFunction(
-											".put",
-											map,
-											key,
-											value))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return putSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			Expression key = args.get(1);
-			Expression value = args.get(2);
-			
-			map.put(key, value);
-			
-			return lji;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable K = new TypeVariable(NameGenerator.next());
-			TypeVariable V = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K, V), TypeAtom.TypeMapTree);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return putSymbol_out.toString();
-		}
-		
-	};
+	public static final Operator put = Operator.wrapJavaMethod(java.util.TreeMap.class, "put", "map-tree-put",
+			TreeMap.singleton().getNamespace(), Object.class, Object.class);
 	
-	private static final Symbol putAllSymbol = new Symbol("put-all", NAMESPACE);
+	private static final Symbol putAllSymbol = new Symbol("put_all", TreeMap.singleton().getNamespace());
 	public static final Symbol putAllSymbol_out = new Symbol("map-tree-put-all");
 	
 	@VelkaOperator
@@ -1597,7 +1357,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return putAllSymbol;
 		}
 
@@ -1628,131 +1388,37 @@ public class TreeMap extends OperatorBank{
 		public String toString() {
 			return putAllSymbol_out.toString();
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body().add(
+					mappedArgs.get(new Symbol("_0")).invoke("putAll").arg(mappedArgs.get(new Symbol("_1"))));
+			
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
 	};
 	
-	private static final Symbol removeSymbol = new Symbol("velka-remove", NAMESPACE);
+	private static final Symbol removeSymbol = new Symbol("velka_remove", TreeMap.singleton().getNamespace());
 	public static final Symbol removeSymbol_out = new Symbol("map-tree-remove");
 	
 	@VelkaOperator
 	@Description("Removes the mapping for this key from this TreeMap if present.") 
 	@Example("(map-tree-remove (construct Map Tree (lambda (x y) -1)) 1)") 
 	@Syntax("(map-tree-remove <map> <key>)")
-	public static final Operator remove = new Operator() {
-
-		private final String ERROR = "map-tree-remove removed key does not exist!";
-		
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String key = "_key";
-			String value = "_value";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map, key),
-					ClojureHelper.letHelper(
-							ClojureHelper.clojureIfHelper(
-									ClojureHelper.applyClojureFunction("nil?", value),
-									ClojureHelper.errorHelper(ClojureHelper.stringHelper(ERROR)),
-									value),
-							Pair.of(value,
-									ClojureHelper.applyClojureFunction(".remove",
-									map,
-									key))));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return removeSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			Expression key = args.get(1);
-			
-			Expression val = map.remove(key);
-			
-			if(val == null) {
-				//Will throw error
-				Expression err = new ExceptionExpr(new LitString(ERROR));
-				err.interpret(env);
-			}
-			
-			return val;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable K = new TypeVariable(NameGenerator.next());
-			TypeVariable V = new TypeVariable(NameGenerator.next());
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K), V);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return removeSymbol_out.toString();
-		}
-	};
+	public static final Operator remove = Operator.wrapNullableJavaMethod(java.util.TreeMap.class, "remove", 
+			"map-tree-remove", TreeMap.singleton().getNamespace(), Object.class); 
 	
-	private static final Symbol sizeSymbol = new Symbol("velka-size", NAMESPACE);
+	private static final Symbol sizeSymbol = new Symbol("velka_size", TreeMap.singleton().getNamespace());
 	public static final Symbol sizeSymbol_out = new Symbol("map-tree-size");
 	
 	@VelkaOperator
 	@Description("Returns the number of key-value mappings in this map.") 
 	@Example("(map-tree-size (construct Map Tree (lambda (x y) -1)))") 
 	@Syntax("(map-tree-size <map>)")
-	public static final Operator size = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String map = "_map";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(map),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".size",
-									map)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return sizeSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
-			
-			int size = map.size();
-			
-			return new LitInteger((long)size);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree), TypeAtom.TypeIntNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return sizeSymbol_out.toString();
-		}
-		
-	};
+	public static final Operator size = Operator.wrapJavaMethod(java.util.TreeMap.class, "size",
+			"map-tree-size", TreeMap.singleton().getNamespace());
 	
-	private static final Symbol subMapInclSymbol = new Symbol("sub-map-incl", NAMESPACE);
+	private static final Symbol subMapInclSymbol = new Symbol("sub_map_incl", TreeMap.singleton().getNamespace());
 	public static final Symbol subMapInclSymbol_out = new Symbol("map-tree-sub-map-inclusive");
 	
 	@VelkaOperator
@@ -1783,7 +1449,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return subMapInclSymbol;
 		}
 
@@ -1791,17 +1457,17 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			Expression fromKey = args.get(1);
+			Object fromKey = args.get(1);
 			LitBoolean fromInclusive = (LitBoolean)args.get(2);
-			Expression toKey = args.get(3);
+			Object toKey = args.get(3);
 			LitBoolean toInclusive = (LitBoolean)args.get(4);
 			
-			java.util.TreeMap<Expression, Expression> res = 
-					new java.util.TreeMap<Expression, Expression>(
+			var res = 
+					new java.util.TreeMap<Object, Object>(
 							map.subMap(
 									fromKey, 
 									fromInclusive == LitBoolean.TRUE,
@@ -1823,9 +1489,19 @@ public class TreeMap extends OperatorBank{
 			return subMapInclSymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(
+					JExpr._new(CodeModelInstance.instance()._ref(java.util.TreeMap.class))
+					.arg(mappedArgs.get(new Symbol("_0")).invoke("subMap")
+							.arg(mappedArgs.get(new Symbol("_1")))
+							.arg(mappedArgs.get(new Symbol("_2")))
+							.arg(mappedArgs.get(new Symbol("_3")))
+							.arg(mappedArgs.get(new Symbol("_4")))));
+		}
 	};
 	
-	private static final Symbol subMapSymbol = new Symbol("velka-sub-map", NAMESPACE);
+	private static final Symbol subMapSymbol = new Symbol("velka_sub_map", TreeMap.singleton().getNamespace());
 	public static final Symbol subMapSymbol_out = new Symbol("map-tree-sub-map");
 	
 	@VelkaOperator
@@ -1852,7 +1528,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return subMapSymbol;
 		}
 
@@ -1860,15 +1536,15 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			Expression fromKey = args.get(1);
-			Expression toKey = args.get(2);
+			var fromKey = args.get(1);
+			var toKey = args.get(2);
 			
-			java.util.TreeMap<Expression, Expression> res = 
-					new java.util.TreeMap<Expression, Expression>(
+			var res = 
+					new java.util.TreeMap<Object, Object>(
 							map.subMap(
 									fromKey, 
 									toKey));
@@ -1888,9 +1564,17 @@ public class TreeMap extends OperatorBank{
 			return subMapSymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(
+					JExpr._new(CodeModelInstance.instance()._ref(java.util.TreeMap.class))
+					.arg(mappedArgs.get(new Symbol("_0")).invoke("subMap")
+							.arg(mappedArgs.get(new Symbol("_1")))
+							.arg(mappedArgs.get(new Symbol("_2")))));
+		}
 	};
 	
-	private static final Symbol tailMapSymbol = new Symbol("tail-map", NAMESPACE);
+	private static final Symbol tailMapSymbol = new Symbol("tail_map", TreeMap.singleton().getNamespace());
 	public static final Symbol tailMapSymbol_out = new Symbol("map-tree-tail-map");
 	
 	@VelkaOperator
@@ -1915,7 +1599,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return tailMapSymbol;
 		}
 
@@ -1923,13 +1607,13 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
 			Expression key = args.get(1);
 			
-			java.util.TreeMap<Expression, Expression> res = new java.util.TreeMap<Expression, Expression>(map.tailMap(key));
+			var res = new java.util.TreeMap<Object, Object>(map.tailMap(key));
 			
 			return new LitInteropObject(res, TypeAtom.TypeMapTree);
 		}
@@ -1945,9 +1629,17 @@ public class TreeMap extends OperatorBank{
 		public String toString() {
 			return tailMapSymbol_out.toString();
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(
+					JExpr._new(CodeModelInstance.instance()._ref(java.util.TreeMap.class))
+					.arg(mappedArgs.get(new Symbol("_0")).invoke("tailMap")
+							.arg(mappedArgs.get(new Symbol("_1")))));
+		}
 	};
 	
-	private static final Symbol tailMapInclSymbol = new Symbol("tail-map-incl", NAMESPACE);
+	private static final Symbol tailMapInclSymbol = new Symbol("tail_map_incl", TreeMap.singleton().getNamespace());
 	public static final Symbol tailMapInclSymbol_out = new Symbol("map-tree-tail-map-incl");
 	
 	@VelkaOperator
@@ -1974,7 +1666,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return tailMapInclSymbol;
 		}
 
@@ -1982,14 +1674,14 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			Expression key = args.get(1);
-			LitBoolean inclusive = (LitBoolean)args.get(2);
+			var key = args.get(1);
+			var inclusive = (LitBoolean)args.get(2);
 			
-			java.util.TreeMap<Expression, Expression> res = new java.util.TreeMap<Expression, Expression>(
+			var res = new java.util.TreeMap<Object, Object>(
 					map.tailMap(key, inclusive == LitBoolean.TRUE));
 			
 			return new LitInteropObject(res, TypeAtom.TypeMapTree);
@@ -2007,9 +1699,17 @@ public class TreeMap extends OperatorBank{
 			return tailMapInclSymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(
+					JExpr._new(CodeModelInstance.instance()._ref(java.util.TreeMap.class))
+					.arg(mappedArgs.get(new Symbol("_0")).invoke("tailMap")
+							.arg(mappedArgs.get(new Symbol("_1")))
+							.arg(mappedArgs.get(new Symbol("_2")))));
+		}
 	};
 	
-	private static final Symbol valuesSymbol = new Symbol("velka-values", NAMESPACE);
+	private static final Symbol valuesSymbol = new Symbol("velka_values", TreeMap.singleton().getNamespace());
 	public static final Symbol valuesSymbol_out = new Symbol("map-tree-values");
 	
 	@VelkaOperator
@@ -2034,7 +1734,7 @@ public class TreeMap extends OperatorBank{
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return valuesSymbol;
 		}
 
@@ -2042,11 +1742,12 @@ public class TreeMap extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
 				throws AppendableException {
 			
-			LitInteropObject lji = (LitInteropObject)args.get(0);
+			var lji = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			java.util.TreeMap<Expression, Expression> map = (java.util.TreeMap<Expression, Expression>)lji.javaObject;
+			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			return ListNative.makeListNativeExpression(new LinkedList<Expression>(map.values()));
+			var l = map.values();
+			return new LitInteropObject(new ArrayList<Object>(l), TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -2060,25 +1761,17 @@ public class TreeMap extends OperatorBank{
 			return valuesSymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var vls = method.body().decl(CodeModelInstance.instance()._ref(Collection.class), "_vls",
+					mappedArgs.get(new Symbol("_0")).invoke("values"));
+			
+			var arrListCl = CodeModelInstance.instance().ref(ArrayList.class);
+			var ret = method.body().decl(arrListCl, "_ret",
+					JExpr._new(arrListCl).arg(vls));
+			method.body()._return(ret);
+		}
 	};
-	
-	public static final Path PATH = Paths.get("velka", "clojure");
-	public static final Path FILE = Paths.get("treeMap.clj");
-	
-	@Override
-	public String getNamespace() {
-		return NAMESPACE;
-	}
-
-	@Override
-	public Path getPath() {
-		return PATH;
-	}
-
-	@Override
-	public Path getFileName() {
-		return FILE;
-	}
 	
 	private TreeMap() {}
 	private static TreeMap me = null;
@@ -2088,6 +1781,11 @@ public class TreeMap extends OperatorBank{
 			me = new TreeMap();
 		}
 		return me;
+	}
+
+	@Override
+	protected String name() {
+		return "treeMap";
 	}
 
 	

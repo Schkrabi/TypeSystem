@@ -5,6 +5,9 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+
+import com.sun.codemodel.JExpr;
 
 import velka.core.abstraction.Constructor;
 import velka.core.expression.Expression;
@@ -16,6 +19,9 @@ import velka.core.literal.LitComposite;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitString;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.TypedObject;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -24,6 +30,7 @@ import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.Pair;
+import velka.util.RomanNumbers;
 import velka.util.annotations.Description;
 import velka.util.annotations.Header;
 import velka.util.annotations.Name;
@@ -40,8 +47,6 @@ import velka.util.annotations.VelkaOperatorBank;
 @Description("General constructors for basic Velka representations.") 
 @Header("General Constructors")
 public final class ConstructorOperators extends OperatorBank {
-
-	public static final String NAMESPACE = "velka.clojure.constructors";
 	
 	/**
 	 * Int:Native constructor
@@ -72,15 +77,15 @@ public final class ConstructorOperators extends OperatorBank {
 		}
 	
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-int-native", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("velka-int-native", ConstructorOperators.singleton().getNamespace());
 		}
 		
 		public void declareInTypeEnvironment(Environment env) throws AppendableException {
 			env.getTypeSystem().addConstructor(
 					TypeAtom.TypeIntNative, 
 					new TypeTuple(TypeAtom.TypeIntNative), 
-					new velka.types.typeSystem.IEvalueable() {
+					new velka.util.IEvalueable() {
 
 						@Override
 						public Object evaluate(Collection<? extends Object> args, Object env) {
@@ -93,46 +98,13 @@ public final class ConstructorOperators extends OperatorBank {
 						
 					});
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
 	
-	};
-	
-//	/**
-//	 * Int constructor (really constructs Int:Native)
-//	 */
-//	@VelkaConstructor(showInDoc = false)
-//	public static Constructor IntConstructor = new Constructor() {
-//	
-//		@Override
-//		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-//			LitInteger arg = (LitInteger) args.get(0);
-//			return arg;
-//		}
-//	
-//		@Override
-//		public Pair<Type, Substitution> infer(Environment env) {
-//			Type type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative)), TypeAtom.TypeIntNative);
-//			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-//		}
-//	
-//		@Override
-//		public String toString() {
-//			return "Int";
-//		}
-//	
-//		@Override
-//		protected String toClojureOperator(Environment env) throws AppendableException {
-//			return "(fn [_x] (identity _x))";
-//		}
-//	
-//		@Override
-//		public Symbol getClojureSymbol() {
-//			return new Symbol("velka-int", NAMESPACE);
-//		}
-//		
-//		@Override
-//		public void declareInTypeEnvironment(Environment env) throws AppendableException {	}
-//	};
-	
+	};	
 	
 	/**
 	 * Int:String constructor
@@ -167,8 +139,8 @@ public final class ConstructorOperators extends OperatorBank {
 		}
 	
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-int-string", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("velka-int-string", ConstructorOperators.singleton().getNamespace());
 		}
 
 		@Override
@@ -176,7 +148,7 @@ public final class ConstructorOperators extends OperatorBank {
 			env.getTypeSystem().addConstructor(
 					TypeAtom.TypeIntString, 
 					new TypeTuple(TypeAtom.TypeStringNative), 
-					new velka.types.typeSystem.IEvalueable() {
+					new velka.util.IEvalueable() {
 
 						@Override
 						public Object evaluate(Collection<? extends Object> args, Object env) {
@@ -199,6 +171,18 @@ public final class ConstructorOperators extends OperatorBank {
 						
 					});
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var o = mappedArgs.get(new Symbol("_0"));
+			
+			var _if = method.body()._if(o._instanceof(CodeModelInstance.instance()._ref(String.class)));
+			_if._then()._return(JExpr._new(CodeModelInstance.instance().ref(TypedObject.class))
+									.arg(o)
+									.arg(TypeUtil.instance().type2java(TypeAtom.TypeIntString)));
+			
+			method.body()._throw(JExpr._new(CodeModelInstance.instance().ref(RuntimeException.class)).arg(JExpr.lit("Invalid ctor argument")));
+		}
 	};
 	/**
 	 * Int:Roman constructor
@@ -212,6 +196,11 @@ public final class ConstructorOperators extends OperatorBank {
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitString arg = (LitString) args.get(0);
+			
+			if(!RomanNumbers.check(arg.value)) {
+				throw new AppendableException(arg.value + " is not a valid roman number.");
+			}
+			
 			return new LitComposite(arg, TypeAtom.TypeIntRoman);
 		}
 	
@@ -229,12 +218,16 @@ public final class ConstructorOperators extends OperatorBank {
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			String arg = "_arg";
-			return ClojureHelper.fnHelper(List.of(arg), LitComposite.clojureLit(TypeAtom.TypeIntRoman, arg));
+			return ClojureHelper.fnHelper(List.of(arg),
+					ClojureHelper.clojureIfHelper(ClojureHelper.applyClojureFunction("velka.util.RomanNumbers/check", arg), 
+							LitComposite.clojureLit(TypeAtom.TypeIntRoman, arg), 
+							ClojureHelper.errorHelper(
+									ClojureHelper.applyClojureFunction("str", arg, ClojureHelper.stringHelper(" is not a valid roman number.")))));
 		}
 	
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-int-roman", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("velka-int-roman", ConstructorOperators.singleton().getNamespace());
 		}
 
 		@Override
@@ -242,13 +235,16 @@ public final class ConstructorOperators extends OperatorBank {
 			env.getTypeSystem().addConstructor(
 					TypeAtom.TypeIntRoman, 
 					new TypeTuple(TypeAtom.TypeStringNative), 
-					new velka.types.typeSystem.IEvalueable() {
+					new velka.util.IEvalueable() {
 
 						@Override
 						public Object evaluate(Collection<? extends Object> args, Object env) {
 							var o = args.stream().limit(1).findAny().get();
 							
 							if(o instanceof LitString ls) {
+								if(!RomanNumbers.check(ls.value)) {
+									throw new RuntimeException(ls.value + " is not a valid roman number.");
+								}
 								return new LitComposite(ls, TypeAtom.TypeIntRoman);
 							}
 							
@@ -259,6 +255,21 @@ public final class ConstructorOperators extends OperatorBank {
 			
 		}
 	
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var o = mappedArgs.get(new Symbol("_0"));
+			
+			var _if = method.body()._if(o._instanceof(CodeModelInstance.instance()._ref(String.class)));
+			
+			var _if2 = _if._then()._if(CodeModelInstance.instance().ref(RomanNumbers.class).staticInvoke("check").arg(o).not());
+			_if2._then()._throw(JExpr._new(CodeModelInstance.instance().ref(RuntimeException.class)).arg(o.plus(JExpr.lit(" is not a valid roman number."))));
+			
+			_if._then()._return(JExpr._new(CodeModelInstance.instance().ref(TypedObject.class))
+									.arg(o)
+									.arg(TypeUtil.instance().type2java(TypeAtom.TypeIntRoman)));
+			
+			method.body()._throw(JExpr._new(CodeModelInstance.instance().ref(RuntimeException.class)).arg(JExpr.lit("Invalid ctor argument")));
+		}
 	};
 	
 	/**
@@ -291,8 +302,8 @@ public final class ConstructorOperators extends OperatorBank {
 		}
 	
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-string-native", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("velka-string-native", ConstructorOperators.singleton().getNamespace());
 		}
 		
 		@Override
@@ -300,7 +311,7 @@ public final class ConstructorOperators extends OperatorBank {
 			env.getTypeSystem().addConstructor(
 					TypeAtom.TypeStringNative, 
 					new TypeTuple(TypeAtom.TypeStringNative), 
-					new velka.types.typeSystem.IEvalueable() {
+					new velka.util.IEvalueable() {
 
 						@Override
 						public Object evaluate(Collection<? extends Object> args, Object env) {
@@ -316,46 +327,12 @@ public final class ConstructorOperators extends OperatorBank {
 					});
 			
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
 	};
-	
-//	/**
-//	 * String constructor (really constructs String:Native)
-//	 */
-//	@VelkaConstructor(showInDoc = false)
-//	public static Constructor StringConstructor = new Constructor() {
-//	
-//		@Override
-//		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-//			LitString arg = (LitString) args.get(0);
-//			return arg;
-//		}
-//	
-//		@Override
-//		public Pair<Type, Substitution> infer(Environment env) {
-//			Type type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)),
-//					TypeAtom.TypeStringNative);
-//			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-//		}
-//	
-//		@Override
-//		public String toString() {
-//			return "String";
-//		}
-//	
-//		@Override
-//		protected String toClojureOperator(Environment env) throws AppendableException {
-//			return "identity";
-//		}
-//	
-//		@Override
-//		public Symbol getClojureSymbol() {
-//			return new Symbol("velka-string", NAMESPACE);
-//		}
-//		
-//		@Override
-//		public void declareInTypeEnvironment(Environment env) throws AppendableException {
-//		}
-//	};
 	
 	/**
 	 * Double:Native constructor
@@ -387,8 +364,8 @@ public final class ConstructorOperators extends OperatorBank {
 		}
 	
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-double-native", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("velka-double-native", ConstructorOperators.singleton().getNamespace());
 		}
 		
 		@Override
@@ -396,7 +373,7 @@ public final class ConstructorOperators extends OperatorBank {
 			env.getTypeSystem().addConstructor(
 					TypeAtom.TypeDoubleNative, 
 					new TypeTuple(TypeAtom.TypeDoubleNative), 
-					new velka.types.typeSystem.IEvalueable() {
+					new velka.util.IEvalueable() {
 
 						@Override
 						public Object evaluate(Collection<? extends Object> args, Object env) {
@@ -409,46 +386,12 @@ public final class ConstructorOperators extends OperatorBank {
 						
 					});
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
 	};
-	
-//	/**
-//	 * Double constructor (really constructs Double:Native)
-//	 */
-//	@VelkaConstructor(showInDoc = false)
-//	public static Constructor DoubleConstructor = new Constructor() {
-//	
-//		@Override
-//		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-//			LitDouble arg = (LitDouble) args.get(0);
-//			return arg;
-//		}
-//	
-//		@Override
-//		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-//			Type type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeDoubleNative)),
-//					TypeAtom.TypeDoubleNative);
-//			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-//		}
-//	
-//		@Override
-//		public String toString() {
-//			return "Double";
-//		}
-//	
-//		@Override
-//		protected String toClojureOperator(Environment env) throws AppendableException {
-//			return "identity";
-//		}
-//	
-//		@Override
-//		public Symbol getClojureSymbol() {
-//			return new Symbol("velka-double", NAMESPACE);
-//		}
-//	
-//		@Override
-//		public void declareInTypeEnvironment(Environment env) throws AppendableException {
-//		}
-//	};
 	
 	/**
 	 * Bool:Native constructor
@@ -479,8 +422,8 @@ public final class ConstructorOperators extends OperatorBank {
 		}
 	
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-bool-native", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("velka-bool-native", ConstructorOperators.singleton().getNamespace());
 		}
 		
 		@Override
@@ -488,7 +431,7 @@ public final class ConstructorOperators extends OperatorBank {
 			env.getTypeSystem().addConstructor(
 					TypeAtom.TypeBoolNative, 
 					new TypeTuple(TypeAtom.TypeBoolNative), 
-					new velka.types.typeSystem.IEvalueable() {
+					new velka.util.IEvalueable() {
 
 						@Override
 						public Object evaluate(Collection<? extends Object> args, Object env) {
@@ -504,62 +447,16 @@ public final class ConstructorOperators extends OperatorBank {
 					});
 			
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
 	};
-	
-//	/**
-//	 * Bool constructor (really constructs Bool:Native)
-//	 */	
-//	@VelkaConstructor(showInDoc = false)
-//	public static Constructor BoolConstructor = new Constructor() {
-//	
-//		@Override
-//		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-//			LitBoolean arg = (LitBoolean) args.get(0);
-//			return arg;
-//		}
-//	
-//		@Override
-//		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-//			Type type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeBoolNative)), TypeAtom.TypeBoolNative);
-//			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-//		}
-//	
-//		@Override
-//		public String toString() {
-//			return "Bool";
-//		}
-//	
-//		@Override
-//		protected String toClojureOperator(Environment env) throws AppendableException {
-//			return "identity";
-//		}
-//	
-//		@Override
-//		public Symbol getClojureSymbol() {
-//			return new Symbol("velka-bool", NAMESPACE);
-//		}
-//		
-//		@Override
-//		public void declareInTypeEnvironment(Environment env) throws AppendableException {
-//		}
-//	
-//	};
 
-	public static final Path VELKA_CLOJURE_CONSTRUCTORS_PATH = Paths.get("velka", "clojure");
+	public static final Path VELKA_CLOJURE_CONSTRUCTORS_PATH = velka.core.util.Constants.LOCATION;
 
-	public static final Path VELKA_CLOJURE_CONSTRUCTORS_NAME = Paths.get("constructors.clj");
-	@Override
-	public String getNamespace() {
-		return NAMESPACE;
-	}
-	@Override
-	public Path getPath() {
-		return VELKA_CLOJURE_CONSTRUCTORS_PATH;
-	}
-	@Override
-	public Path getFileName() {
-		return VELKA_CLOJURE_CONSTRUCTORS_NAME;
-	}
+	public static final Path VELKA_CLOJURE_CONSTRUCTORS_NAME = Paths.get("constructors");
 	
 	private ConstructorOperators() {}
 	private static ConstructorOperators instance = null;
@@ -568,6 +465,10 @@ public final class ConstructorOperators extends OperatorBank {
 			instance = new ConstructorOperators();
 		}
 		return instance;
+	}
+	@Override
+	protected String name() {
+		return "constructors";
 	}
 
 }

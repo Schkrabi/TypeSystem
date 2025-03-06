@@ -11,12 +11,13 @@ import velka.types.TypeAtom;
 import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
-import velka.util.CostAggregation;
+import velka.util.RankAggregation;
+import velka.util.IEvalueable;
 
 /** Type system */
-public class TypeSystem {
-	private final Map<TypeAtom, TypeAtomInfo> typeInfo = new HashMap<TypeAtom, TypeAtomInfo>();
-	private final IConversionEngine conversionEngine;
+public abstract class TypeSystem {
+	protected final Map<TypeAtom, TypeAtomInfo> typeInfo = new HashMap<TypeAtom, TypeAtomInfo>();
+	protected final IConversionEngine conversionEngine;
 	
 	public TypeSystem(IConversionEngine conversionEngine) {
 		this.conversionEngine = conversionEngine;
@@ -31,7 +32,7 @@ public class TypeSystem {
 	public TypeAtomInfo getOrCreateTypeInfo(TypeAtom type) {
 		var ti = typeInfo.get(type);
 		if(ti == null) {
-			ti = new TypeAtomInfo(type);
+			ti = new TypeAtomInfo(type, this);
 			this.typeInfo.put(type, ti);
 		}
 		return ti;
@@ -107,7 +108,7 @@ public class TypeSystem {
 	/** Gets the cost of representation conversion */
 	public Double conversionCost(Type from, Type to, Object e, Object env) {
 		if(from.equals(to)) {
-			return CostAggregation.instance().neutralRank();
+			return RankAggregation.instance().neutralRank();
 		}
 		else if(!this.canConvert(from, to)) {
 			return null;
@@ -115,12 +116,12 @@ public class TypeSystem {
 		else if(to instanceof TypeVariable
 				|| from instanceof RepresentationOr
 				|| to instanceof RepresentationOr) {
-			return CostAggregation.instance().neutralRank();
+			return RankAggregation.instance().neutralRank();
 		}
 		else if(from instanceof TypeAtom ta) {
 			var toTa = (TypeAtom)to;
 			if(toTa.representation.equals(TypeRepresentation.WILDCARD)) {
-				return CostAggregation.instance().neutralRank();
+				return RankAggregation.instance().neutralRank();
 			}
 			
 			var ti = this.getOrCreateTypeInfo(ta);
@@ -137,7 +138,7 @@ public class TypeSystem {
 			return (Double)c;
 		}
 		else if(from instanceof TypeTuple) {
-			var sum = CostAggregation.instance().neutralRank();
+			var sum = RankAggregation.instance().neutralRank();
 			if(!(e instanceof Iterable)) {
 				throw new RuntimeException("Converting not iterable object with type tuple type " + e.toString());
 			}
@@ -153,7 +154,7 @@ public class TypeSystem {
 				var cost = this.conversionCost(sef, set, te, env);
 				if(cost == null) return null;
 				
-				sum = CostAggregation.instance().aggregate(sum, cost);
+				sum = RankAggregation.instance().aggregate(sum, cost);
 			}
 			return sum;
 		}
@@ -161,25 +162,33 @@ public class TypeSystem {
 			// The time to convert the function is constant
 			// What can change is the execution time of the function
 			// However that is not traceable for Velka
-			return CostAggregation.instance().functionConversionRank();
+			return RankAggregation.instance().functionConversionRank();
 		}
 		throw new RuntimeException("Invalid conversion cost: unrecognized type: " + from + " or " + to);
 	}
 	
 	/** Converts type atom */
-	public Object convertAtom(TypeAtom from, TypeAtom to, Collection<? extends Object> args, Object env) {
+	public Object convertAtom(TypeAtom from, TypeAtom to, Object arg, Object env) {
 		var ti = this.getOrCreateTypeInfo(from);
-		var ret = ti.convert(to, args, env);
+		var ret = ti.convert(to, arg, env);
 		return ret;
 	}
 	
 	/** Convert types */
-	public Object convert(Type from, Type to, Collection<? extends Object> args, Object env) {
-		var arg = args.iterator().next();
-		if(from.equals(to)) return arg;
+	public Object convert(Type from, Type to, Object arg, Object env) {
+		if(		from == to
+			||	from.equals(to)
+			||	Type.unifyRepresentation(from, to).isPresent()) {
+			return arg;
+		}
 		
 		if(!this.canConvert(from, to)) {
-			throw new RuntimeException("Cannot convert " + (from != null ? from.toString() : "nil") + " to " + to);
+			throw new RuntimeException(
+					new StringBuilder("Cannot convert ")
+						.append(from != null ? from.toString() : "nil")
+						.append(" to ")
+						.append(to != null ? to.toString() : "nil")
+						.toString());
 		}
 		
 		if (from instanceof TypeVariable 
@@ -202,17 +211,30 @@ public class TypeSystem {
 				return arg;
 			}
 			
-			return this.convertAtom(fta, tta, args, env);
+			return this.convertAtom(fta, tta, arg, env);
 		}
 		throw new RuntimeException(new StringBuilder()
 				.append("Unknown conversion error, args: ")
-				.append(from)
+				.append(from != null ? from.toString() : "nil")
 				.append(" ")
-				.append(to)
+				.append(to != null ? to.toString() : "nil")
 				.append(" ")
-				.append(args)
+				.append(arg != null ? arg.toString() : "nil")
 				.append(" ")
-				.append(env)
+				.append(env != null ? env.toString() : "nil")
 				.toString());
+	}
+	
+	/** Gets type of an object */
+	public abstract Type getType(Object object);
+	
+	/** extracts rank from an object returned 
+	 * by rank functions identity by default,
+	 * can be overriden for different representatons.
+	 * @param object
+	 * @return
+	 */
+	public double extractRank(Object object) {
+		return (Double)object;
 	}
 }

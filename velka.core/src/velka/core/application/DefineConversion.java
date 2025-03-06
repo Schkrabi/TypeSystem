@@ -6,12 +6,19 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+
 import velka.core.abstraction.Lambda;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitDouble;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -21,7 +28,7 @@ import velka.types.TypesDoesNotUnifyException;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
-import velka.util.CostAggregation;
+import velka.util.RankAggregation;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 
@@ -31,7 +38,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class DefineConversion extends Expression {
+public class DefineConversion extends Expression implements CompileableToJava {
 	
 	/**
 	 * Symbol for conversion special form
@@ -64,7 +71,12 @@ public class DefineConversion extends Expression {
 		this.to = toType;
 		this.args = args;
 		this.body = body;
-		this.cost = new Lambda(new Tuple(new Symbol(NameGenerator.next())), new TypeTuple(this.from), new LitDouble(CostAggregation.instance().defaultConversionRank()));
+		try {
+			this.cost = new Lambda(new LitDouble(RankAggregation.instance().defaultConversionRank()),
+					List.of(Pair.of(new Symbol(NameGenerator.next()), this.from.removeRepresentationInformation())));
+		} catch (AppendableException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public DefineConversion(TypeAtom fromType, TypeAtom toType, Tuple args, Expression body, Expression cost) {
@@ -81,7 +93,7 @@ public class DefineConversion extends Expression {
 		final var lambda = this.makeConversionLambda(env);
 		final var me = this;
 		env.getTypeSystem().addConversion(this.from, this.to, 
-				new velka.types.typeSystem.IEvalueable() {
+				new velka.util.IEvalueable() {
 
 					@Override
 					public Object evaluate(Collection<? extends Object> args, Object env) {
@@ -99,7 +111,7 @@ public class DefineConversion extends Expression {
 					}
 					
 				}, 
-				new velka.types.typeSystem.IEvalueable() {
+				new velka.util.IEvalueable() {
 
 					@Override
 					public Object evaluate(Collection<? extends Object> args, Object env) {
@@ -149,10 +161,10 @@ public class DefineConversion extends Expression {
 				ClojureCoreSymbols.typeSystem_full,
 				this.from.clojureTypeRepresentation(),
 				this.to.clojureTypeRepresentation(),
-				ClojureHelper.reify(velka.types.typeSystem.IEvalueable.class, 
+				ClojureHelper.reify(velka.util.IEvalueable.class, 
 						Pair.of("evaluate", Pair.of(List.of(rhis, arg, cenv), ClojureHelper.applyVelkaFunction_argsTuple(lambda.toClojureCode(env), 
 								arg)))),
-				ClojureHelper.reify(velka.types.typeSystem.IEvalueable.class, 
+				ClojureHelper.reify(velka.util.IEvalueable.class, 
 						Pair.of("evaluate", Pair.of(List.of(rhis, arg, cenv), ClojureHelper.applyVelkaFunction_argsTuple(this.cost.toClojureCode(env), 
 								arg)))));
 		return code;
@@ -201,7 +213,8 @@ public class DefineConversion extends Expression {
 	 * @return lambda expression
 	 */
 	private Lambda makeConversionLambda(Environment env) {
-		return new Lambda(this.args, new TypeTuple(Arrays.asList(this.from)), this.body);
+		return new Lambda(this.body,
+				List.of(Pair.of((Symbol)this.args.get(0), this.from)));
 	}
 
 	/**
@@ -225,7 +238,20 @@ public class DefineConversion extends Expression {
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("doConvert not implemented");
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var ctjlbd = (CompileableToJava)this.makeConversionLambda(env);
+		var ctjcst = (CompileableToJava)this.cost;
+		
+		var ievCl = CodeModelInstance.instance().ref(velka.util.IEvalueable.class);
+		
+		return JavaTypeSystem.codeInstance().invoke("addConversion")
+				.arg(TypeUtil.instance().type2java(from))
+				.arg(TypeUtil.instance().type2java(to))
+				.arg(JExpr.cast(ievCl, ctjlbd.toJavaExpr(env)))
+				.arg(JExpr.cast(ievCl, ctjcst.toJavaExpr(env)));
 	}
 }

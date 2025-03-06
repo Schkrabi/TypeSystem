@@ -28,7 +28,6 @@ public abstract class SpecialFormApplication extends Application {
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("doConvert not implemented");
 	}
 }

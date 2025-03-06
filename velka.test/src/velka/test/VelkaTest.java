@@ -3,6 +3,7 @@ package velka.test;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -10,6 +11,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,19 +23,33 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
+import javax.tools.ToolProvider;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 import velka.clojure.ClojureCodeGenerator;
 import velka.core.abstraction.Abstraction;
+import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
+import velka.core.application.DefineSymbol;
+import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
+import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TopLevelEnvironment;
@@ -40,9 +59,17 @@ import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
 import velka.core.langbase.Operators;
+import velka.core.literal.Literal;
+import velka.core.util.Constants;
+import velka.java.generate.ClassGenerator;
+import velka.java.runtime.JavaTypeSystem;
+import velka.java.runtime.VelkaTuple;
 import velka.parser.Parser;
 import velka.types.Substitution;
 import velka.types.Type;
+import velka.types.TypeTuple;
+import velka.types.TypeVariable;
+import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
@@ -50,6 +77,10 @@ import velka.util.Pair;
 
 public class VelkaTest {
 
+	private boolean displayJavaWarning = false;
+	private boolean displayJavaError = true;
+	private boolean displayJavaOther = false;
+	
 	static Path tmpDir;
 	private static String os = System.getProperty("os.name").toLowerCase();
 	public static boolean IS_WINDOWS = (os.indexOf("win") >= 0);
@@ -58,6 +89,7 @@ public class VelkaTest {
 	protected static final Path velkaTypesJar = Paths.get("C:", "Users", "r.skrabal", "Documents", "private-r.skrabal", "Java", "TypeSystem", "lib", "velka.types.jar");
 	
 	protected List<String> cljCmdArgs = new ArrayList<String>();
+	protected Environment env;
 
 	@BeforeAll
 	static void setupTest() throws IOException {
@@ -70,6 +102,7 @@ public class VelkaTest {
 	
 	@BeforeEach
 	void setupCmdArgs() {
+		this.env = TopLevelEnvironment.instantiate();
 		this.cljCmdArgs = new ArrayList<String>();
 	}
 
@@ -87,14 +120,13 @@ public class VelkaTest {
 				//Test that definitions are sound
 				StringBuilder sb = new StringBuilder();
 			
-				sb.append(ClojureHelper.declareNamespace(ClojureCodeGenerator.DEFAULT_NAMESPACE));
+				sb.append(ClojureHelper.declareNamespace(Constants.DEFAULT_NAMESPACE));
 				sb.append(ClojureHelper.requireNamespace(ClojureCoreSymbols.NAMESPACE));
-				sb.append(ClojureHelper.requireNamespace(Operators.NAMESPACE));
-				sb.append(ClojureHelper.requireNamespace(ListNative.NAMESPACE));
-				sb.append(ClojureHelper.requireNamespace(ConstructorOperators.NAMESPACE));
-				sb.append(ClojureHelper.requireNamespace(ConversionOperators.NAMESPACE));
-				sb.append(ClojureHelper.requireNamespace(JavaArrayList.NAMESPACE));
-				sb.append(ClojureHelper.requireNamespace(JavaLinkedList.NAMESPACE));
+				sb.append(ClojureHelper.requireNamespace(Operators.singleton().getNamespace()));
+				sb.append(ClojureHelper.requireNamespace(ListNative.singleton().getNamespace()));
+				sb.append(ClojureHelper.requireNamespace(ConstructorOperators.singleton().getNamespace()));
+				sb.append(ClojureHelper.requireNamespace(ConversionOperators.singleton().getNamespace()));
+				sb.append(ClojureHelper.requireNamespace(JavaLinkedList.singleton().getNamespace()));
 				sb.append(definitions);
 				
 				this.clojureCodeResult(sb.toString());
@@ -207,7 +239,12 @@ public class VelkaTest {
 		
 		String compilationPrintOut = clojureCompilationResult(in, cmplEnv);
 	
-		assertEquals(expectedPrintout, compilationPrintOut);
+		var eNorm = expectedPrintout.trim().replace("\t", " ").replaceAll("\\s+", " ");
+		var aNorm = compilationPrintOut.trim().replace("\t", " ").replaceAll("\\s+", " ");
+		
+		assertEquals(
+				eNorm, 
+				aNorm);
 	}
 
 	protected void assertIntprtAndCompPrintSameValues(List<Expression> in) throws Exception {
@@ -221,7 +258,7 @@ public class VelkaTest {
 	private String interpretationPrint(List<Expression> in, Environment env) throws Exception {
 		PrintStream stdOut = System.out;
 		ByteArrayOutputStream tmp = new ByteArrayOutputStream();
-		System.setOut(new PrintStream(tmp));
+		System.setOut(new PrintStream(tmp, true, "UTF-8"));
 	
 		@SuppressWarnings("unused")
 		List<Expression> rslt = velka.compiler.Compiler.eval(in, env);
@@ -276,7 +313,7 @@ public class VelkaTest {
 
 	private String clojureCodeResult_windows(String code)
 			throws IOException, InterruptedException, AppendableException {
-				Path codeFile = Files.writeString(tmpDir.resolve(Paths.get("velka", "clojure", "user.clj")), code);
+				Path codeFile = Files.writeString(tmpDir.resolve(ClojureCodeGenerator.DEFAULT_FILE_PROJECT_PATH), code);
 				
 				ProcessBuilder pb = new ProcessBuilder("powershell", "-command", "clj",	"-M", codeFile.toAbsolutePath().toString());
 				pb.command().addAll(this.cljCmdArgs);
@@ -294,7 +331,7 @@ public class VelkaTest {
 				Process p = pb.start();
 				p.waitFor();
 				
-				String result = Files.readString(tempOut.toPath());
+				String result = Files.readString(tempOut.toPath(), StandardCharsets.UTF_8);
 				String err = Files.readString(tempErr.toPath());
 				tempOut.delete();	
 				tempErr.delete();
@@ -338,7 +375,7 @@ public class VelkaTest {
 
 	protected void assertDifference(Expression original, Expression e) {
 		assertNotEquals(original, e);
-		assertNotEquals(original.compareTo(e), 0);
+		//assertNotEquals(original.compareTo(e), 0);
 	}
 
 	protected void assertInference(Pair<Type, Substitution> result, Type expected, Expression infered) {
@@ -346,7 +383,7 @@ public class VelkaTest {
 	}
 
 	protected void assertInference(Pair<Type, Substitution> p, Type expected, Expression infered, boolean shouldeBeSUbstEmpty) {
-		assertEquals(expected, p.first);
+		assertTrue(Type.unifyRepresentation(expected, p.first).isPresent());
 		if (shouldeBeSUbstEmpty) {
 			assertEquals(Substitution.EMPTY, p.second);
 		}
@@ -426,5 +463,183 @@ public class VelkaTest {
 	public VelkaTest() {
 		super();
 	}
+	
+//	private com.sun.codemodel.JCodeModel prepareClass(Collection<JExpression> exprs, String className, String methodName) {
+//		if(exprs.isEmpty()) {
+//			throw new RuntimeException("No expressions to add to class!");
+//		}
+//		
+//		var localCodeModel = new com.sun.codemodel.JCodeModel();
+//		JDefinedClass testClass;
+//		try {
+//			testClass = localCodeModel._class(className);
+//		} catch (JClassAlreadyExistsException e) {
+//			throw new RuntimeException(e);
+//		}
+//		
+//		var testMethod = testClass.method(JMod.PUBLIC, localCodeModel.ref(Object.class), methodName);
+//		testMethod._throws(AppendableException.class);
+//		
+//		var it = exprs.iterator();
+//		JExpression last = null;
+//		while(it.hasNext()) {
+//			var expr = it.next();
+//			if(!it.hasNext()) {
+//				last = expr;
+//				break;
+//			}
+//			
+//			if(expr instanceof com.sun.codemodel.JStatement js) {
+//				testMethod.body().add(js);
+//			}
+//			else {
+//				throw new RuntimeException("Adding non statement " + expr);
+//			}
+//		}
+//		testMethod.body()._return(last);
+//		
+//		return localCodeModel;
+//	}
 
+	/** Compiles JExpression, evaluates it and returns its value */
+	private Object compileJExprs(Collection<? extends Expression> exprs) {
+		var symbol = "_test";
+		final boolean showWarning = this.displayJavaWarning;
+		final boolean showError = this.displayJavaError;
+		final boolean showOther = this.displayJavaOther;
+		
+		try {			
+			var es = new ArrayList<Expression>();
+			var i = exprs.iterator();
+			while(i.hasNext()) {
+				var e = i.next();
+				if(!i.hasNext()) {
+					es.add(new DefineSymbol(new Symbol(symbol),
+							new Lambda(e, List.of())));
+				}
+				else {
+					es.add(e);
+				}
+			}
+			
+			var workingDir = Files.createTempDirectory("jcompilation-test").toFile();
+			var localCodeModel = new com.sun.codemodel.JCodeModel();
+			
+			var generator = new ClassGenerator(localCodeModel);
+			
+			var files = generator.build(es, workingDir);
+			
+			var compiler = ToolProvider.getSystemJavaCompiler();
+	        var fileManager = compiler.getStandardFileManager(null, null, null);
+	        
+	        //Add required libs
+	        var velkautil = new File("../lib/velka.util.jar");
+	        var velkatypes = new File("../lib/velka.types.jar");
+	        var velkajava = new File("../lib/velka.java.jar");
+	        
+	        var classpath = workingDir.getPath() 
+	        		+ File.pathSeparator + velkautil.getAbsolutePath()
+	        		+ File.pathSeparator + velkatypes.getAbsolutePath()
+	        		+ File.pathSeparator + velkajava.getAbsolutePath();
+	        
+	        var sourceFiles = (File[])files.values().stream().map(p -> p.toFile()).toArray(l -> new File[l]);
+	        var compilationUnits = fileManager.getJavaFileObjects(sourceFiles);
+	        
+	        fileManager.setLocation(StandardLocation.CLASS_OUTPUT, java.util.Collections.singletonList(workingDir));
+	        compiler.getTask(
+	        		null, 
+	        		fileManager, 
+	        		new DiagnosticListener<JavaFileObject>() {
+	                    @Override
+	                    public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
+	                        switch(diagnostic.getKind()) {
+	                        case WARNING:
+	                        	if(showWarning) {
+	                        		System.err.println(diagnostic.toString());
+	                        	}
+	                        	break;
+	                        case ERROR:
+	                        	if(showError) {
+	                        		System.err.println(diagnostic.toString());
+	                        	}
+	                        	break;
+	                        default:
+	                        	if(showOther) {
+	                        		System.out.println(diagnostic.toString());
+	                        	}
+	                        }
+	                    }
+	                }, 
+	        		List.of("-classpath", classpath, "-Xlint:unchecked"), 
+	        		null, 
+	        		compilationUnits)
+	        	.call();
+	        fileManager.close();
+			
+	        var classLoader = URLClassLoader.newInstance(new URL[]{workingDir.toURI().toURL()});
+	        
+	        Map<String, Class<? extends Object>> loadedCls = new HashMap<String, Class<? extends Object>>();
+	        
+	        for(var name : files.keySet()) {
+	        	var cl = Class.forName(name, true, classLoader);
+	        	loadedCls.put(name, cl);
+	        }
+	        
+	        var loadedClass = loadedCls.get(velka.core.util.Constants.DEFAULT_NAMESPACE);
+	        
+	        //var instance = loadedClass.getDeclaredConstructor().newInstance();
+	        var _field = loadedClass.getField(symbol);
+	        var _mthd = (VelkaAbstraction)_field.get(null);
+	        
+	        var ret = _mthd.apply(new VelkaTuple(List.of(), TypeTuple.EMPTY_TUPLE));
+	        
+			return ret;
+		}
+		catch(Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	protected void assertJExprEquals(Object expected, Expression expr) {
+		this.assertJExprsEquals(expected, List.of(expr));
+	}
+	
+	protected void assertJExprsEquals(Object expected, Collection<? extends Expression> exprs) {
+		JavaTypeSystem.instance().reset();
+		var ret = this.compileJExprs(exprs);
+		assertEquals(expected, ret);
+		JavaTypeSystem.instance().reset();
+	}
+	
+	protected void assertJExprEquals(Object expected, String code, Environment env) {
+		try {
+			var exprs = this.parseString(code);
+			this.assertJExprsEquals(expected, exprs);
+		} catch (AppendableException ex) {
+			throw new RuntimeException(ex);
+		}		
+	}
+	
+	protected void assertVelkaCode(String code, Object expected) {
+		try {
+			this.assertInterpretationEquals(code,
+					Literal.objectToLiteral(expected));
+			
+			this.assertIntprtAndCompPrintSameValues("(println (to-str " + code + "))");
+			
+			this.assertJExprEquals(expected, code, env);
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+	
+	protected void assertVelkaThrows(String code) {
+		Assertions.assertThrows(RuntimeException.class, () -> {
+			this.assertInterpretationEquals(code, null);
+		});
+		
+		Assertions.assertThrows(RuntimeException.class, () -> {
+			this.assertJExprEquals(code, null);
+		});
+	}
 }

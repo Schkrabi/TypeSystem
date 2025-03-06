@@ -1,9 +1,17 @@
 package velka.core.application;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JMod;
+
 import velka.core.expression.Expression;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitComposite;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.TypedObject;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -19,7 +27,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class CanDeconstructAs extends Expression {
+public class CanDeconstructAs extends Expression implements CompileableToJava {
 	
 	/**
 	 * Velka symbol for special form can-deconstruct-as
@@ -107,8 +115,17 @@ public class CanDeconstructAs extends Expression {
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("doConvert not implemented");
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var toCl = CodeModelInstance.instance().ref(TypedObject.class);
+		var ctj = (CompileableToJava)this.expression;
+		
+		return toCl.staticInvoke("canDeconstructAs")
+				.arg(ctj.toJavaExpr(env))
+				.arg(TypeUtil.instance().type2java(this.as));
 	}
 
 }

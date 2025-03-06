@@ -42,9 +42,9 @@ public class RepresentationOr extends Type implements Iterable<Type>{
 	 * @throws AppendableException thrown if representation is empty or if any of
 	 *                             the types in representation does not unify
 	 */
-	public static Type makeRepresentationOr(Collection<? extends Type> representations) throws AppendableException {
+	public static Type factory(Collection<? extends Type> representations) {
 		if (representations.isEmpty()) {
-			throw new AppendableException("Cannot make empty RepresentationOr! ");
+			throw new RuntimeException(new AppendableException("Cannot make empty RepresentationOr! "));
 		}
 		if (representations.size() == 1) {
 			return representations.stream().findAny().get();
@@ -52,7 +52,7 @@ public class RepresentationOr extends Type implements Iterable<Type>{
 
 		Optional<Substitution> opt = Type.unifyMany(representations);
 		if(opt.isEmpty()) {
-			throw new TypeSetDoesNotUnifyException(representations);
+			throw new RuntimeException(new TypeSetDoesNotUnifyException(representations));
 		}
 		
 		final Substitution fagg = opt.get();
@@ -73,8 +73,8 @@ public class RepresentationOr extends Type implements Iterable<Type>{
 	 * @throws AppendableException thrown if representation is empty or if any of
 	 *                             the types in representation does not unify
 	 */
-	public static Type makeRepresentationOr(Type... reps) throws AppendableException {
-		return RepresentationOr.makeRepresentationOr(Arrays.asList(reps));
+	public static Type factory(Type... reps) {
+		return RepresentationOr.factory(Arrays.asList(reps));
 	}
 
 	private RepresentationOr(Collection<Type> representations) {
@@ -167,6 +167,7 @@ public class RepresentationOr extends Type implements Iterable<Type>{
 
 	@Override
 	public Optional<Substitution> unifyRepresentationWith(Type other) {
+		if(this.equals(other)) return Optional.of(Substitution.EMPTY);
 		if (other instanceof TypeVariable) {
 			return other.unifyRepresentationWith(this);
 		}
@@ -241,7 +242,7 @@ public class RepresentationOr extends Type implements Iterable<Type>{
 		}
 		
 		String code = ClojureHelper.applyClojureFunction(
-				"velka.types.RepresentationOr/makeRepresentationOr",
+				"velka.types.RepresentationOr/factory",
 				ClojureHelper.clojureSetHelper(representationsCode));
 		
 		return code;
@@ -265,7 +266,7 @@ public class RepresentationOr extends Type implements Iterable<Type>{
 		if (other instanceof RepresentationOr) {
 			Set<Type> reps = this.getRepresentations();
 			reps.addAll(((RepresentationOr) other).getRepresentations());
-			return RepresentationOr.makeRepresentationOr(reps);
+			return RepresentationOr.factory(reps);
 		}
 
 		if (this.representations.contains(other)) {
@@ -277,13 +278,13 @@ public class RepresentationOr extends Type implements Iterable<Type>{
 	@Override
 	public Type map(Function<Type, Type> fun) throws AppendableException {
 		return RepresentationOr
-				.makeRepresentationOr(this.representations.stream().map(fun).collect(Collectors.toList()));
+				.factory(this.representations.stream().map(fun).collect(Collectors.toList()));
 	}
 
 	@Override
 	public Type replaceVariable(TypeVariable replaced, TypeVariable replacee) throws AppendableException {
 		try {
-			return RepresentationOr.makeRepresentationOr(this.representations.stream()
+			return RepresentationOr.factory(this.representations.stream()
 					.map(ThrowingFunction.wrapper(r -> r.replaceVariable(replaced, replacee)))
 					.collect(Collectors.toSet()));
 		} catch (RuntimeException re) {
@@ -337,7 +338,31 @@ public class RepresentationOr extends Type implements Iterable<Type>{
 	public RepresentationOr conjoin(Type t) throws AppendableException {		
 		Set<Type> s = this.getRepresentations();
 		s.add(t);
-		return (RepresentationOr) RepresentationOr.makeRepresentationOr(s);
+		return (RepresentationOr) RepresentationOr.factory(s);
+	}
+	
+	public static Type or(Type t1, Type t2) {
+		if(t1 instanceof RepresentationOr ro1
+				&& t2 instanceof RepresentationOr ro2) {
+			var s = ro1.getRepresentations();
+			s.addAll(ro2.getRepresentations());
+			return RepresentationOr.factory(s);
+		}
+		else if(t1 instanceof RepresentationOr ro) {
+			try {
+				return ro.conjoin(t2);
+			} catch (AppendableException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		else if(t2 instanceof RepresentationOr ro) {
+			try {
+				return ro.conjoin(t1);
+			} catch (AppendableException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return RepresentationOr.factory(t1, t2);		
 	}
 
 	@Override

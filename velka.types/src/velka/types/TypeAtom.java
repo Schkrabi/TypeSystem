@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
+import velka.util.annotations.LangbaseType;
 import velka.types.TypeAtom;
 import velka.util.AppendableException;
 
@@ -148,12 +149,14 @@ public class TypeAtom extends TerminalType {
 	/**
 	 * Type of Bool
 	 */
+	@LangbaseType
 	public static final TypeAtom TypeBool = new TypeAtom(TypeName.BOOL, TypeRepresentation.WILDCARD) {
 		@Override
 		public String clojureTypeRepresentation() {
 			return "velka.types.TypeAtom/TypeBool";
 		}
 	};
+	@LangbaseType
 	public static final TypeAtom TypeBoolNative = new TypeAtom(TypeName.BOOL, TypeRepresentation.NATIVE) {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -164,24 +167,28 @@ public class TypeAtom extends TerminalType {
 	/**
 	 * Type of Integer
 	 */
+	@LangbaseType
 	public static final TypeAtom TypeInt = new TypeAtom(TypeName.INT, TypeRepresentation.WILDCARD){
 		@Override
 		public String clojureTypeRepresentation() {
 			return "velka.types.TypeAtom/TypeInt";
 		}
 	};
+	@LangbaseType
 	public static final TypeAtom TypeIntNative = new TypeAtom(TypeName.INT, TypeRepresentation.NATIVE) {
 		@Override
 		public String clojureTypeRepresentation() {
 			return "velka.types.TypeAtom/TypeIntNative";
 		}
 	};
+	@LangbaseType
 	public static final TypeAtom TypeIntString = new TypeAtom(TypeName.INT, TypeRepresentation.STRING) {
 		@Override
 		public String clojureTypeRepresentation() {
 			return "velka.types.TypeAtom/TypeIntString";
 		}
 	};
+	@LangbaseType
 	public static final TypeAtom TypeIntRoman = new TypeAtom(TypeName.INT, TypeRepresentation.ROMAN) {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -192,12 +199,14 @@ public class TypeAtom extends TerminalType {
 	/**
 	 * Type of String
 	 */
+	@LangbaseType
 	public static final TypeAtom TypeString = new TypeAtom(TypeName.STRING, TypeRepresentation.WILDCARD) {
 		@Override
 		public String clojureTypeRepresentation() {
 			return "velka.types.TypeAtom/TypeString";
 		}
 	};
+	@LangbaseType
 	public static final TypeAtom TypeStringNative = new TypeAtom(TypeName.STRING, TypeRepresentation.NATIVE) {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -208,12 +217,14 @@ public class TypeAtom extends TerminalType {
 	/**
 	 * Type of Double
 	 */
+	@LangbaseType
 	public static final TypeAtom TypeDouble = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.WILDCARD) {
 		@Override
 		public String clojureTypeRepresentation() {
 			return "velka.types.TypeAtom/TypeDouble";
 		}
 	};
+	@LangbaseType
 	public static final TypeAtom TypeDoubleNative = new TypeAtom(TypeName.DOUBLE, TypeRepresentation.NATIVE) {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -224,12 +235,14 @@ public class TypeAtom extends TerminalType {
 	/**
 	 * Type of List
 	 */
+	@LangbaseType
 	public static final TypeAtom TypeList = new TypeAtom(TypeName.LIST, TypeRepresentation.WILDCARD) {
 		@Override
 		public String clojureTypeRepresentation() {
 			return "velka.types.TypeAtom/TypeList";
 		}
 	};
+	@LangbaseType
 	public static final TypeAtom TypeListNative = new TypeAtom(TypeName.LIST, TypeRepresentation.NATIVE) {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -240,6 +253,7 @@ public class TypeAtom extends TerminalType {
 	/**
 	 * Type of Set
 	 */
+	@LangbaseType
 	public static final TypeAtom TypeSet = new TypeAtom(TypeName.SET, TypeRepresentation.WILDCARD) {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -247,6 +261,7 @@ public class TypeAtom extends TerminalType {
 		}
 	};
 	
+	@LangbaseType
 	public static final TypeAtom TypeMapTree = new TypeAtom(new TypeName("Map"), new TypeRepresentation("Tree")) {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -254,6 +269,7 @@ public class TypeAtom extends TerminalType {
 		}
 	};
 	
+	@LangbaseType
 	public static final TypeAtom TypeScannerNative = new TypeAtom(new TypeName("Scanner"), TypeRepresentation.NATIVE)  {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -263,6 +279,7 @@ public class TypeAtom extends TerminalType {
 	/**
 	 * Type for list iterator
 	 */
+	@LangbaseType
 	public final static TypeAtom TypeListIterator = new TypeAtom(new TypeName("ListIterator"), TypeRepresentation.NATIVE) {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -272,24 +289,18 @@ public class TypeAtom extends TerminalType {
 	/**
 	 * Type of java linked list in velka
 	 */
+	@LangbaseType
 	public final static TypeAtom TypeListJavaLinked = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaLinked")) {
 		@Override
 		public String clojureTypeRepresentation() {
 			return "velka.types.TypeAtom/TypeListJavaLinked";
 		}
 	};
-	/**
-	 * Type of java array list in velka
-	 */
-	public static final TypeAtom TypeListJavaArray = new TypeAtom(TypeName.LIST, new TypeRepresentation("JavaArray")) {
-		@Override
-		public String clojureTypeRepresentation() {
-			return "velka.types.TypeAtom/TypeListJavaArray";
-		}
-	};
+
 	/**
 	 * Type of Set:BitSet in Velka
 	 */
+	@LangbaseType
 	public static final TypeAtom TypeSetBitSet = new TypeAtom(TypeName.SET, new TypeRepresentation("BitSet")) {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -298,6 +309,7 @@ public class TypeAtom extends TerminalType {
 	};
 	
 	/** Type of Set:Tree */
+	@LangbaseType
 	public static final TypeAtom TypeSetTree = new TypeAtom(TypeName.SET, new TypeRepresentation("Tree")) {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -306,6 +318,7 @@ public class TypeAtom extends TerminalType {
 	};
 	
 	/** Type of Set:Hash */
+	@LangbaseType
 	public static final TypeAtom TypeSetHash = new TypeAtom(TypeName.SET, new TypeRepresentation("Hash")) {
 		@Override
 		public String clojureTypeRepresentation() {
@@ -374,8 +387,9 @@ public class TypeAtom extends TerminalType {
 	
 	public static final Map<Class<?>, Type> javaTypeMapping = 
 			Map.of( java.util.Collection.class, TypeListNative,
-					java.util.LinkedList.class, TypeListNative,
-					java.util.ArrayList.class, TypeListJavaArray,
+					java.util.LinkedList.class, TypeListJavaLinked,
+					java.util.List.class, TypeListNative,
+					java.util.ArrayList.class, TypeListNative,
 					java.util.ListIterator.class, TypeListIterator,
 					java.util.TreeMap.class, TypeMapTree,
 					java.util.BitSet.class, TypeSetBitSet,
@@ -393,7 +407,14 @@ public class TypeAtom extends TerminalType {
 		}		
 		var t = typeMapping.get(clazz);
 		if(t == null) {
-			throw new RuntimeException("Unrecognized java type: " + clazz.getName());
+			for(var e : TypeAtom.javaTypeMapping.entrySet()) {
+				
+				if(e.getKey().isAssignableFrom(clazz)) {
+					return e.getValue();
+				}
+			}
+			
+			return null;
 		}
 		return t;
 	}

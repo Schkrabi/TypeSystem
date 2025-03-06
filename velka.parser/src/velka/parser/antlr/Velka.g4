@@ -62,20 +62,20 @@ expr returns [Expression val]
 	| 'nil'        { $val = Expression.EMPTY_EXPRESSION; }
 	;
 	
-argument_list returns [List<velka.util.Pair<Type, Expression>> val]
-	: '('          { var ll = new ArrayList<velka.util.Pair<Type, Expression>>(); }
+argument_list returns [List<velka.util.Pair<Symbol, Type>> val]
+	: '('          { var ll = new ArrayList<velka.util.Pair<Symbol, Type>>(); }
 	  (
 	   '('
 	   type   { var t = $type.val; }
-	   SYMBOL { ll.add(velka.util.Pair.of(t, new Symbol($SYMBOL.text))); }
+	   SYMBOL { ll.add(velka.util.Pair.of(new Symbol($SYMBOL.text), t)); }
 	   ')'
 	  )+
 	  ')'          { $val = ll; }
-	| '('     { var ll = new ArrayList<velka.util.Pair<Type, Expression>>(); }
+	| '('     { var ll = new ArrayList<velka.util.Pair<Symbol, Type>>(); }
 	  (SYMBOL { 
 	            var t = new TypeVariable(NameGenerator.next());
 				var s = new Symbol($SYMBOL.text);
-				ll.add(velka.util.Pair.of(t, s)); 
+				ll.add(velka.util.Pair.of(s, t)); 
 			  })*
 	  ')'     { $val = ll; }
 	;
@@ -133,13 +133,7 @@ special_form returns [Expression val]
 	  argument_list       { var args = $argument_list.val; }
 	  expr                { var e = $expr.val; }
 	  ')'                 { 
-							var al = new ArrayList<Expression>();
-							var tl = new ArrayList<Type>();
-							args.stream().forEach(p -> {
-														tl.add(p.first);
-														al.add(p.second);
-													   });
-							$val = new DefineConstructor(t, new Lambda(new Tuple(al), new TypeTuple(tl), e));
+							$val = new DefineConstructor(t, new Lambda(e, args));
 						  }
 	| '(' 
 	  'deconstruct' 
@@ -205,13 +199,7 @@ special_form returns [Expression val]
 	  bind_list { var bds = $bind_list.val; }
 	  expr      { var e = $expr.val; }
 	  ')'       {
-					var symbols = new ArrayList<Symbol>();
-					var args = new ArrayList<Expression>();
-					bds.stream().forEach(p -> {
-												symbols.add(p.first);
-												args.add(p.second);
-											  });
-					$val = new Loop(new Tuple(symbols), e, new Tuple(args));
+					$val = new Loop(e, bds);
 		        }
 	| '(' 
 	  'or'  { var ll = new ArrayList<Expression>(); } 
@@ -226,13 +214,7 @@ special_form returns [Expression val]
 	  argument_list { var ll = $argument_list.val; }
 	  expr          { var e = $expr.val; }
 	  ')'           {
-						var args = new ArrayList<Expression>();
-						var ts = new ArrayList<Type>();
-						ll.stream().forEach(p -> {
-													ts.add(p.first);
-													args.add(p.second);
-												 });
-						$val = new Lambda(new Tuple(args), new TypeTuple(ts), e);
+						$val = new Lambda(e, ll);
 					}
 	| '(' 
 	  'extended-lambda' 
@@ -272,7 +254,7 @@ special_form returns [Expression val]
 	;
 
 atom returns [Expression val]
-	: INT	 { $val = new LitInteger(Long.parseLong($INT.text)); }
+	: INT	 { $val = new LitInteger(Integer.parseInt($INT.text)); }
 	| FLOAT  { $val = new LitDouble(Double.parseDouble($FLOAT.text)); }
 	| SYMBOL { $val = new Symbol($SYMBOL.text); }
 	| TRUE   { $val = LitBoolean.TRUE; }

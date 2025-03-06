@@ -2,9 +2,15 @@ package velka.core.application;
 
 import java.util.stream.Collectors;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitInteropObject;
+import velka.core.literal.Literal;
+import velka.java.CodeModelInstance;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -15,7 +21,7 @@ import velka.util.Pair;
 /**
  * Special form to construct static lists
  */
-public class List extends Expression {
+public class List extends Expression implements CompileableToJava {
 
 	private final java.util.List<Expression> args;
 	
@@ -35,7 +41,11 @@ public class List extends Expression {
 	public Expression interpret(Environment env) throws AppendableException {
 		var l = this.args.stream().map(e -> {
 			try {
-				return e.interpret(env);
+				var exp = e.interpret(env);
+				if(exp instanceof Literal lit) {
+					return Literal.literalToObject(lit);
+				}
+				return exp;
 			}catch(AppendableException ex) {
 				throw new RuntimeException(ex);
 			}
@@ -66,14 +76,15 @@ public class List extends Expression {
 			}		
 			}).collect(Collectors.toList());
 		
-		var code = Type.addTypeMetaInfo(ClojureHelper.applyClojureFunction("list", argCodes), TypeAtom.TypeListNative);
+		var code = ClojureHelper.constructJavaClass(java.util.ArrayList.class, 
+				ClojureHelper.applyClojureFunction("list", argCodes)); 
+		
 		return code;
 	}
 
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env) throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("doConvert not implemented");
 	}
 
 	@Override
@@ -86,5 +97,18 @@ public class List extends Expression {
 				.append(argsStr)
 				.append(")")
 				.toString();
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var inv = CodeModelInstance.instance().ref(java.util.List.class).staticInvoke("of");
+		
+		for(var a : this.args) {
+			var ctj = (CompileableToJava)a;
+			var je = ctj.toJavaExpr(env);
+			inv.arg(je);
+		}
+		
+		return JExpr._new(CodeModelInstance.instance().ref(java.util.ArrayList.class)).arg(inv);
 	}
 }

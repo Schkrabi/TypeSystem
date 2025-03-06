@@ -12,12 +12,19 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.Pair;
 import velka.util.ThrowingFunction;
 import velka.core.exceptions.ConversionException;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
@@ -29,7 +36,7 @@ import velka.types.TypeTuple;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class Tuple extends Expression implements Iterable<Expression>, Collection<Expression> {
+public class Tuple extends Expression implements Iterable<Expression>, Collection<Expression>, CompileableToJava {
 
 	/**
 	 * Values of the tuple
@@ -232,25 +239,7 @@ public class Tuple extends Expression implements Iterable<Expression>, Collectio
 
 	@Override
 	public Expression doConvert(Type from, Type to, Environment env) throws AppendableException {
-		if(!(to instanceof TypeTuple)) {
-			throw new ConversionException(to, this);
-		}
-		TypeTuple to_typeTuple = (TypeTuple)to;
-		
-		if(to_typeTuple.size() != this.size()) {
-			throw new ConversionException(to, this);
-		}
-		
-		List<Expression> l = new LinkedList<Expression>();
-		Iterator<Type> it_to = to_typeTuple.iterator();
-		Iterator<Expression> it = this.iterator();
-		while(it.hasNext()) {
-			Expression e = it.next();
-			Type t = it_to.next();
-			Expression c = e.convert(t, env);
-			l.add(c);
-		}
-		return new Tuple(l);
+		throw new RuntimeException("doConvert not implemented");
 	}
 	
 	/** Creates new instance of an array with elements of the tuple */
@@ -306,5 +295,29 @@ public class Tuple extends Expression implements Iterable<Expression>, Collectio
 	@Override
 	public void clear() {
 		throw new RuntimeException("cannot clear tuple");		
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		Type t;
+		try {
+			t = this.infer(env).first;
+		}catch(AppendableException e) {
+			throw new RuntimeException(e);
+		}
+		
+		var listof = CodeModelInstance.instance().ref(List.class)
+				.staticInvoke("of");
+		
+		for(var expr : this.values) {
+			var compileableExpr = (CompileableToJava)expr;
+			listof.arg(compileableExpr.toJavaExpr(env));
+		}
+		
+		var expr = JExpr._new(CodeModelInstance.instance().ref(VelkaTuple.class))
+				.arg(listof)
+				.arg(TypeUtil.instance().type2java(t));
+		
+		return expr;
 	}
 }

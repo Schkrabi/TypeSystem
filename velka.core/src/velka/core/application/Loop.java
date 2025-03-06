@@ -1,16 +1,21 @@
 	package velka.core.application;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+
+import com.sun.codemodel.JExpression;
 
 import velka.core.abstraction.Lambda;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -28,7 +33,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Loop extends Expression {
+public class Loop extends Expression implements CompileableToJava {
 	
 	public static final String LOOP = "loop";
 	
@@ -37,28 +42,30 @@ public class Loop extends Expression {
 	 */
 	public static final Symbol RECUR_MARK_SYMBOL = new Symbol(NameGenerator.next());
 	
-	public final Tuple bindedSymbols;
+	private final List<Pair<Symbol, Expression>> bindings;
 	
 	public final Expression body;
 	
-	/**
-	 * Holds values for initialization
-	 */
-	public final Tuple initArgs;
-	
-	public Loop(Tuple bindedSymbols, Expression body, Tuple initArgs) {
-		this.bindedSymbols = bindedSymbols;
+	public Loop(Expression body, Collection<Pair<Symbol, Expression>> bindings) {
+		this.bindings = new ArrayList<Pair<Symbol, Expression>>(bindings);
 		this.body = body;
-		this.initArgs = initArgs;
 	}
 	
 	private Lambda createLoopLambda(Environment env) throws AppendableException {
-		Pair<Type, Substitution> argsInfered = this.initArgs.infer(env);
-		
-		TypeTuple argTypes = (TypeTuple)argsInfered.first;
-		
-		Lambda l = new Lambda(this.bindedSymbols, argTypes, this.body);
+		Lambda l = new Lambda(this.body,
+				this.bindings.stream().map(p -> {
+					try {
+						return Pair.of(p.first, p.second.infer(env).first);
+					} catch (AppendableException e) {
+						throw new RuntimeException(e);
+					}
+				}).toList());
 		return l;
+	}
+	
+	private Tuple getInitArgs()
+	{
+		return new Tuple(this.bindings.stream().map(p -> p.second).toList());
 	}
 
 	@Override
@@ -67,7 +74,7 @@ public class Loop extends Expression {
 		Lambda loopExpression = this.createLoopLambda(env);		
 		recurEnvironment.put(RECUR_MARK_SYMBOL, loopExpression);
 		
-		AbstractionApplication appl = new AbstractionApplication(loopExpression, initArgs);
+		AbstractionApplication appl = new AbstractionApplication(loopExpression, this.getInitArgs());
 		return appl.interpret(recurEnvironment);
 	}
 
@@ -78,7 +85,7 @@ public class Loop extends Expression {
 		recurEnvironment.put(RECUR_MARK_SYMBOL, new TypeHolder(tv));
 		Lambda loopExpression = this.createLoopLambda(env);
 		
-		AbstractionApplication appl = new AbstractionApplication(loopExpression, initArgs);
+		AbstractionApplication appl = new AbstractionApplication(loopExpression, this.getInitArgs());
 		Pair<Type, Substitution> infered = appl.infer(recurEnvironment);		
 		
 		Substitution s = infered.second;
@@ -100,20 +107,15 @@ public class Loop extends Expression {
 
 	@Override
 	public String toClojureCode(Environment env) throws AppendableException {
-		List<String> bidings = new LinkedList<String>();
-		Iterator<Expression> i = this.bindedSymbols.iterator();
-		Iterator<Expression> j = this.initArgs.iterator();
+		List<String> bds = new LinkedList<String>();
 		
-		while(i.hasNext() && j.hasNext()) {
-			Expression currentSymbol = i.next();
-			Expression currentValue = j.next();
-			
-			bidings.add(currentSymbol.toClojureCode(env));
-			bidings.add(currentValue.toClojureCode(env));
+		for(var p : this.bindings) {
+			bds.add(p.first.toClojureCode(env));
+			bds.add(p.second.toClojureCode(env));
 		}
 		
 		String code = ClojureHelper.applyClojureFunction("loop", 
-				ClojureHelper.clojureVectorHelper(bidings),
+				ClojureHelper.clojureVectorHelper(bds),
 				this.body.toClojureCode(env));
 		
 		return code;
@@ -121,72 +123,57 @@ public class Loop extends Expression {
 	
 	@Override
 	public int hashCode() {
-		return this.bindedSymbols.hashCode() * this.initArgs.hashCode() * this.body.hashCode();
+		return new StringBuilder()
+				.append(this.body.hashCode())
+				.append(this.bindings.hashCode())
+				.toString().hashCode();
 	}
 
 	@Override
 	public boolean equals(Object other) {
-		if(other instanceof Loop) {
-			return this.bindedSymbols.equals(((Loop) other).bindedSymbols)
-					&& this.initArgs.equals(((Loop) other).initArgs)
+		if(other instanceof Loop l) {
+			return this.bindings.equals(l.bindings)
 					&& this.body.equals(((Loop) other).body);
 		}
 		return false;
 	}
 	
 	@Override
-	public int compareTo(Expression other) {
-		if(other instanceof Loop) {
-			int cmp = this.bindedSymbols.compareTo(((Loop) other).bindedSymbols);
-			if(cmp != 0) {
-				return cmp;
-			}
-			cmp = this.initArgs.compareTo(((Loop) other).initArgs);
-			if(cmp != 0) {
-				return cmp;
-			}
-			
-			cmp = this.body.compareTo(((Loop) other).body);
-			return cmp;
-		}
-		return super.compareTo(other);
-	}
-	
-	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
+		StringBuilder sb = new StringBuilder()
+				.append("(")
+				.append(LOOP)
+				.append(" ");
 		
-		sb.append("(");
-		sb.append(LOOP);
-		sb.append(" ");
 		
-		Iterator<Expression> i = this.bindedSymbols.iterator();
-		Iterator<Expression> j = this.initArgs.iterator();
-		
-		while(i.hasNext() && j.hasNext()) {
-			Expression symbol = i.next();
-			Expression value = j.next();
+		var it = this.bindings.iterator();
+		while(it.hasNext()){
+			var p = it.next();
 			
-			sb.append("(");
-			sb.append(symbol.toString());
-			sb.append(" ");
-			sb.append(value.toString());
-			sb.append(")");
+			sb.append("(")
+				.append(p.first.toString())
+				.append(" ")
+				.append(p.second.toString())
+				.append(")");
 			
-			if(i.hasNext() && j.hasNext()) {
+			if(it.hasNext()) {
 				sb.append(" ");
 			}
 		}
 		
-		sb.append(this.body.toString());
-		sb.append(")");
+		sb.append(this.body.toString())
+			.append(")");
 		return sb.toString();
 	}
 
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("Loop does not have implemented doCOnvert");
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		throw new RuntimeException("Loop is not supported for java compilation.");
 	}
 }

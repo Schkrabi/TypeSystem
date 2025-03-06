@@ -1,4 +1,4 @@
-// Generated from ./Velka.g4 by ANTLR 4.13.1
+// Generated from ../velka.parser/src/velka/parser/antlr/Velka.g4 by ANTLR 4.13.1
 package velka.parser.antlr;
 
 import velka.core.abstraction.*;

@@ -16,12 +16,12 @@ import velka.util.ClojureHelper;
  */
 public class VelkaClojureDev {
 	/**
-	 * Relative path to velka.clojure.core file
+	 * Relative path to velka.runtime.core file
 	 */
-	public static final Path VELKA_CLOJURE_DEV_PATH = Paths.get("velka", "clojure");
+	public static final Path VELKA_CLOJURE_DEV_PATH = Paths.get("velka", "runtime");
 	
 	/**
-	 * Name of the velka.clojure.core file
+	 * Name of the velka.runtime.core file
 	 */
 	public static final Path VELKA_CLOJURE_DEV_NAME = Paths.get("dev.clj");
 
@@ -33,7 +33,7 @@ public class VelkaClojureDev {
 	/**
 	 * Namespace
 	 */
-	public static final String NAMESPACE = "velka.clojure.dev";
+	public static final String NAMESPACE = "velka.runtime.dev";
 	
 	private static final String velkaLiteralSymbol = "velka-literal";
 	private static final String velkaLiteral_val = "_val";
@@ -90,7 +90,7 @@ public class VelkaClojureDev {
 			ClojureHelper.applyVelkaFunction_argsTuple(velkaApply_fun, ClojureHelper.tupleHelper_str(velkaApply_args)));
 	
 	/**
-	 * Generates clojure code for definitions of velka.clojure.dev namespace
+	 * Generates clojure code for definitions of velka.runtime.dev namespace
 	 * 
 	 * @return string with code
 	 */

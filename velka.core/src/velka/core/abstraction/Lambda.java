@@ -1,29 +1,33 @@
 package velka.core.abstraction;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JMod;
+
 import velka.util.AppendableException;
+import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
-import velka.core.application.AbstractionApplication;
-import velka.core.application.Convert;
-import velka.core.exceptions.ConversionException;
-import velka.core.exceptions.InvalidArgumentsException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
+import velka.types.typeSystem.VelkaAbstraction;
 
 /**
  * Simple lambda expression
@@ -31,7 +35,7 @@ import velka.types.TypeVariable;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Lambda extends Abstraction implements Comparable<Expression> {
+public class Lambda extends Expression implements CompileableToJava {
 
 	/**
 	 * Symbol for lambda special form
@@ -39,55 +43,41 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	public static final String LAMBDA = "lambda";
 
 	/**
-	 * Formal arguments (names) of the lambda expression
-	 */
-	public final Tuple args;
-
-	/**
 	 * Body
 	 */
 	public final Expression body;
 
-	/**
-	 * Non mandatory type of the lambda arguments
-	 */
-	public final TypeTuple argsType;
+	public final List<Pair<Symbol, Type>> parms;
 
 	/**
 	 * General identity lambda
 	 */
 	public static final Lambda identity = Lambda.makeIdentity(new TypeVariable(NameGenerator.next()));
 
-	public Lambda(Tuple args, TypeTuple argsType, Expression body) {
-		this.args = args;
+	public Lambda(Expression body, Collection<Pair<Symbol, Type>> parms) {
 		this.body = body;
-		this.argsType = argsType;
+		this.parms = new java.util.ArrayList<Pair<Symbol, Type>>(parms);
+	}
+	
+	public TypeTuple getParmType() {
+		return new TypeTuple(this.parms.stream().map(p -> p.second).toList());
+	}
+	
+	public Tuple getParmSymbols() {
+		return new Tuple(this.parms.stream().map(p -> p.first).toList());
 	}
 
 	@Override
 	public Expression interpret(Environment env) {
-		return new Function(this.argsType, this.args, this.body, env);
+		return new Function(env, this.body, this.parms);
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder("(lambda (");
 
-		Iterator<Expression> i = this.args.iterator();
-		Iterator<Type> j = this.argsType.iterator();
-		while (i.hasNext()) {
-			Expression e = i.next();
-			Type t = j.next();
-
-			if (t instanceof TypeVariable) {
-				s.append(e.toString());
-			} else {
-				s.append('(');
-				s.append(t.toString());
-				s.append(' ');
-				s.append(e.toString());
-				s.append(')');
-			}
+		for(var p : this.parms) {
+			s.append('(').append(p.second).append(' ').append(p.first).append(')');
 		}
 
 		s.append(") ");
@@ -99,171 +89,48 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		Tuple typeHolderArgs = new Tuple(this.argsType.stream().map(x -> new TypeHolder(x)).collect(Collectors.toList()));
-		return this.inferWithArgs(typeHolderArgs, env);
-	}
-	
-	@Override
-	public Pair<Type, Substitution> inferWithArgs(Tuple args, Environment env)
-			throws AppendableException {
-		return this.doInferWithArgs(args, env, env);
-	}
-	
-	/**
-	 * Creates new environment, where each argument is binded to typeholder with its inferred type and returns this environments along with substitution, which is union of all argument inference substitutions
-	 * @param creationEnv environment where abstraction was created
-	 * @param argsInfered Infered type of applied arguments
-	 * @return pair of environment and substitution
-	 * @throws AppendableException
-	 */
-	private Pair<Environment, Substitution> prepareInferenceEnvironment(Environment creationEnv, TypeTuple argsInfered) throws AppendableException{
-		Environment childEnv = Environment.create(creationEnv);
-		Substitution argsSubst = Substitution.EMPTY;
+		var clj = Environment.create(env);
 		
-		Iterator<Expression> itFormalArg = this.args.iterator();
-		Iterator<Type> itFormalArgType = this.argsType.iterator();
-		Iterator<Type> itArgType = argsInfered.iterator();
+		for(var p : this.parms) {
+			clj.put(p.first, new TypeHolder(p.second));
+		}		
 		
-		while (itFormalArg.hasNext()) {
-			Expression sym = itFormalArg.next();
-			Type fArgType = itFormalArgType.next();
-			Type argType = itArgType.next();
-			Type holderType;
-			
-			//If representation of this argument can be unified with representation of 
-			//formal argument then use it.
-			Optional<Substitution> uni = Type.unifyRepresentation(fArgType, argType);
-			if(uni.isPresent()) {
-				holderType = fArgType.apply(uni.get());
-			}
-			//Otherwise use representation of formal argument, since it will be converted
-			else{
-				holderType = fArgType;
-			}
-
-			if (!(sym instanceof Symbol)) {
-				throw new AppendableException(sym + " is not instance of " + Symbol.class.getName());
-			}
-			childEnv.put((Symbol) sym, new TypeHolder(holderType));
-		}
+		var ret = this.body.infer(clj);
 		
-		return new Pair<Environment, Substitution>(childEnv, argsSubst);
-	}
-	
-	/**
-	 * Does the actual logic for inferWithArgs, since for functions creation and interpretation environment might differ.
-	 * @param args arguments applied with
-	 * @param creationEnv environment where abstraction was created
-	 * @param applicationEnvironment environment where abstraction was applied
-	 * @param typeEnv type environment
-	 * @return pair of inferred type and substitution
-	 * @throws AppendableException
-	 */
-	public Pair<Type, Substitution> doInferWithArgs(Tuple args, Environment creationEnv, Environment applicationEnvironment) throws AppendableException {
-		try {
-			Pair<Type, Substitution> argsInfered = args.infer(applicationEnvironment);
-			
-			//First check if arguments are of valid types
-			if(!Type.unifyTypes(argsInfered.first, this.argsType).isPresent()) {
-				throw new InvalidArgumentsException(this, args);
-			}
-			
-			Pair<Environment, Substitution> ceS = this.prepareInferenceEnvironment(creationEnv, (TypeTuple)argsInfered.first);
-			
-			Environment childEnv = ceS.first;
-			Substitution argsSubst = ceS.second;		
-			
-			Pair<Type, Substitution> bodyInfered = this.body.infer(childEnv);
-			Substitution s = argsSubst.compose(bodyInfered.second);
-			
-			Type argsType = this.argsType.apply(s);
-			Type bodyType = bodyInfered.first.apply(s);
-			
-			TypeArrow finalType = new TypeArrow(argsType, bodyType);
-			
-			return new Pair<Type, Substitution>(finalType, s);
-		} catch (AppendableException e) {
-			e.appendMessage("\nin " + this.toString());
-			throw e;
-		}
-	}
-
-	/**
-	 * Creates code of this lambda as simple lambda in Clojure (e.g. (fn [x] x))
-	 * 
-	 * @param env environment where lambda is evaluated
-	 * @param typeEnv type environment
-	 * @return string containing clojure code
-	 * @throws AppendableException Thrown on unification error or when any argument
-	 *                             is not a variable
-	 */
-	protected String toClojureFn(Environment env) throws AppendableException {
-		List<String> fnArgs = new LinkedList<String>();
-		Iterator<Expression> i = this.args.iterator();
-		Iterator<Type> j = this.argsType.iterator();
-		Environment child = Environment.create(env);
-		while (i.hasNext()) {
-			Expression e = i.next();
-			Type t = j.next();
-			if (!(e instanceof Symbol)) {
-				// TODO change throwable
-				throw new AppendableException("Invalid expression in lambda variable list!");
-			}
-			Symbol v = (Symbol) e;
-			child.put(v, new TypeHolder(t));
-			
-			fnArgs.add(v.toClojureCode(env));
-		}
+		var t = new TypeArrow(
+				(new TypeTuple(this.parms.stream().map(p -> p.second).toList())).apply(ret.second), 
+				ret.first);
 		
-		String fn = ClojureHelper.fnHelper(fnArgs, this.body.toClojureCode(child));
-		
-		return fn;
-	}
-
-	@Override
-	public int compareTo(Expression other) {
-		if (other instanceof Lambda) {
-			int cmp = this.args.compareTo(((Lambda) other).args);
-			if (cmp != 0) {
-				return cmp;
-			}
-
-			cmp = this.argsType.compareTo(((Lambda) other).argsType);
-			if (cmp != 0) {
-				return cmp;
-			}
-
-			return this.body.compareTo(((Lambda) other).body);
-		}
-		return super.compareTo(other);
+		return Pair.of(t, Substitution.EMPTY);
 	}
 
 	@Override
 	public boolean equals(Object other) {
-		if (other instanceof Lambda) {
-			boolean argsEqual = this.args.equals(((Lambda) other).args);
-			if(!argsEqual) {
-				return false;
-			}
-			boolean bodyEqual = this.body.equals(((Lambda) other).body);
-			if(!bodyEqual) {
-				return false;
+		if (other instanceof Lambda l) {
+			if(this.parms.size() != l.parms.size()) return false;
+			
+			var i = this.parms.iterator();
+			var j = l.parms.iterator();
+			while(i.hasNext()) {
+				var p = i.next();
+				var q = j.next();
+				
+				if(!p.first.equals(q.first)) return false;
+				if(Type.unifyRepresentation(p.second, q.second).isEmpty()) return false;
 			}
 			
-			return Type.unifyRepresentation(this.argsType, ((Lambda) other).argsType).isPresent();
+			
+			return this.body.equals(l.body);			
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return this.args.hashCode() * this.body.hashCode();
-	}
-
-	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-		Function f = (Function) this.interpret(env);
-		return f.doSubstituteAndEvaluate(args, env);
+		return new StringBuilder()
+				.append(this.parms.hashCode())
+				.append(this.body.hashCode())
+				.toString().hashCode();
 	}
 
 	/**
@@ -274,74 +141,94 @@ public class Lambda extends Abstraction implements Comparable<Expression> {
 	 */
 	public static Lambda makeIdentity(Type argType) {
 		Symbol symbol = new Symbol(NameGenerator.next());
-		return new Lambda(new Tuple(Arrays.asList(symbol)), new TypeTuple(Arrays.asList(argType)), symbol);
-	}
-
-	@Override
-	protected String implementationsToClojure(Environment env) throws AppendableException {
-		String code = this.toClojureFn(env);
-		return code;
-	}
-
-	@Override
-	public Abstraction selectImplementation(Tuple args, Environment env) {
-		return this;
+		return new Lambda(symbol, List.of(Pair.of(symbol, new TypeVariable(NameGenerator.next()))));
 	}
 
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env) throws AppendableException {
-		//Cannot convert into more general type
-		//	converting [Int:Native] -> Int:Native to [A] -> Int:Native is not possible
-		//	to should not contain any type variables.
-		//However type of this can contain type variables
-		//	converting A -> B to [Int:Native Int:Native] -> String:Native is viable
-		if(!(to instanceof TypeArrow)) {
-			throw new ConversionException(to, this);
-		}
-		TypeArrow to_typeArrow = (TypeArrow)to;
-		
-		Optional<Substitution> o = Type.unifyTypes(this.argsType, to_typeArrow.ltype);
-		if(o.isEmpty()) {
-			throw new ConversionException(to, this);
-		}
-		
-		Tuple formalArgs = null;
-		Expression convertedArgs = null;
-		
-		TypeArrow from_typeArrow = (TypeArrow)from;
-		if(from_typeArrow.ltype instanceof TypeVariable) {
-			formalArgs = this.args;
-			convertedArgs = this.args;
-		}
-		else {
-			formalArgs = new Tuple(this.args.stream().map(x -> new Symbol(NameGenerator.next())));
-			convertedArgs = new Convert(to_typeArrow.ltype, from_typeArrow.ltype, formalArgs);
-		}
-		
-		Expression convertedBody = 
-				new Convert(
-						from_typeArrow.rtype,
-						to_typeArrow.rtype,
-						new AbstractionApplication(
-								this,
-								convertedArgs));
-		
-		TypeTuple convertedArgsType =
-				(TypeTuple)to_typeArrow.ltype.apply(o.get());
-								
-		Lambda lambda = new Lambda(
-				formalArgs,
-				convertedArgsType,
-				convertedBody);
-		
-		return lambda;
+		throw new RuntimeException("doConvert not implemented for lambda");
 	}
 	
 	/** Creates a const function with given number of arguments */
 	public static  Lambda constFun(int numOfArgs, Expression constExp) {
-		var arg = new Tuple(NameGenerator.uniqueNameCollection(numOfArgs).stream().map(x -> new Symbol(x)).collect(Collectors.toList()));
-		var type = new TypeTuple(NameGenerator.uniqueNameCollection(numOfArgs).stream().map(x -> new TypeVariable(x)).collect(Collectors.toList()));
+		var parms = Stream
+				.generate(() -> Pair.of(new Symbol(NameGenerator.next()), (Type)(new TypeVariable(NameGenerator.next()))))
+				.limit(numOfArgs)
+				.toList();
+		return new Lambda(constExp, parms);
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		Pair<Type, Substitution> inf;
+		Environment clj = null;
+		try {
+			inf = this.infer(env);
+			clj = Environment.create(env);
+		} catch (AppendableException e) {
+			throw new RuntimeException(e);
+		}
 		
-		return new Lambda(arg, type, constExp);
+		var aClass = CodeModelInstance.instance().anonymousClass(VelkaAbstraction.class);
+		aClass.method(JMod.PUBLIC, Type.class, "getType").body()
+			._return(TypeUtil.instance().type2java(inf.first));
+		
+		var apply = aClass.method(JMod.PUBLIC, Object.class, "apply");
+		
+		for(var p : this.parms) {
+			clj.put(p.first, new TypeHolder(p.second.apply(inf.second)));
+		}
+		
+		Abstraction.convertAndDeclareParms(
+				this.parms.stream().map(x -> Pair.of(x.first, x.second.apply(inf.second))).toList(), apply);
+		
+		var compileablebody = (CompileableToJava)this.body;
+		apply.body()._return(compileablebody.toJavaExpr(clj));
+		
+		return JExpr._new(aClass);
+	}
+
+	@Override
+	public String toClojureCode(Environment env) throws AppendableException {
+		var _this = "_this";
+		var _arg = "_arg";
+		var _carg = "_carg";
+		
+		var inf = this.infer(env);
+		var ta = (TypeArrow)inf.first;
+		
+		var bindings = new ArrayList<Pair<String, String>>();
+		
+		bindings.add(
+				Pair.of(_carg,
+						ClojureHelper.applyClojureFunction(
+								".convert",
+								ClojureCoreSymbols.typeSystem_full,
+								ClojureHelper.applyClojureFunction(".getType", ClojureCoreSymbols.typeSystem_full, _arg),
+								ta.ltype.clojureTypeRepresentation(),
+								_arg,
+								"nil")));
+		
+		var clj = Environment.create(env);
+		int i = 0;
+		
+		for(var p : this.parms) {
+			clj.put(p.first, new TypeHolder(p.second));
+			bindings.add(Pair.of(p.first.toClojureCode(env), 
+					ClojureHelper.applyClojureFunction("get", _carg, Integer.toString(i))));
+			i++;
+		}
+		
+		var applyCode =
+				ClojureHelper.letHelper(
+						this.body.toClojureCode(clj),
+						bindings);		
+		
+		var code = 
+				ClojureHelper.reify(
+					velka.types.typeSystem.VelkaAbstraction.class,
+					Pair.of("apply", Pair.of(List.of(_this, _arg), applyCode)),
+					Pair.of("getType", Pair.of(List.of(_this), inf.first.clojureTypeRepresentation())));
+		return code;
 	}
 }

@@ -1,4 +1,4 @@
-package velka.types.typeSystem;
+package velka.util;
 
 import java.util.Collection;
 

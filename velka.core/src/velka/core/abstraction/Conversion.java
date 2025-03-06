@@ -3,18 +3,27 @@ package velka.core.abstraction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JMod;
 
 import velka.core.application.AbstractionApplication;
 import velka.core.expression.Expression;
+import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitDouble;
 import velka.core.util.DeclarableInTypeEnvironment;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
+import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
@@ -49,17 +58,17 @@ public abstract class Conversion extends Operator implements DeclarableInTypeEnv
 		final var me = this;
 		
 		env.getTypeSystem().addConversion(from, to, 
-				new velka.types.typeSystem.IEvalueable() {
+				new velka.util.IEvalueable() {
 
 					@Override
-					public Object evaluate(Collection<? extends Object> args, Object env) {
+					public Object evaluate(Collection<? extends Object> args, Object _env) {
 						var eargs = new ArrayList<Expression>(args.size());
 						args.stream().forEach(o -> eargs.add((Expression)o));
 						
 						var appl = new AbstractionApplication(me, new Tuple(eargs));
 						
 						try {
-							var eenv = (Environment)env;
+							var eenv = (Environment)_env;
 							return appl.interpret(eenv);
 						} catch (AppendableException e) {
 							throw new RuntimeException(e);
@@ -67,25 +76,25 @@ public abstract class Conversion extends Operator implements DeclarableInTypeEnv
 					}
 			
 				}, 
-				new velka.types.typeSystem.IEvalueable() {
+				new velka.util.IEvalueable() {
 
 					@Override
-					public Object evaluate(Collection<? extends Object> args, Object env) {
+					public Object evaluate(Collection<? extends Object> args, Object _env) {
 						var eargs = new ArrayList<Expression>(args.size());
 						args.stream().forEach(o -> eargs.add((Expression)o));
 						
-						var appl = new AbstractionApplication(me.cost(), new Tuple(eargs));
-						
+						VelkaAbstraction cabst;
 						try {
-							var eenv = (Environment)env;
-							var r = appl.interpret(eenv);
-							if(r instanceof LitDouble ld) {
-								return Double.valueOf(ld.value);
-							}
-							throw new RuntimeException("Invalid cost for conversion operator " + me);
+							cabst = (VelkaAbstraction)me.cost().interpret(env);
 						} catch (AppendableException e) {
 							throw new RuntimeException(e);
 						}
+						
+						var r = cabst.apply(args);
+						if(r instanceof LitDouble ld) {
+							return Double.valueOf(ld.value);
+						}
+						throw new RuntimeException("Invalid cost for conversion operator " + me);
 					}
 					
 					
@@ -111,11 +120,11 @@ public abstract class Conversion extends Operator implements DeclarableInTypeEnv
 					ClojureCoreSymbols.typeSystem_full,
 					from.clojureTypeRepresentation(),
 					to.clojureTypeRepresentation(),
-					ClojureHelper.reify(velka.types.typeSystem.IEvalueable.class, 
+					ClojureHelper.reify(velka.util.IEvalueable.class, 
 							Pair.of("evaluate", Pair.of(List.of(rhis, arg, cenv), ClojureHelper.applyVelkaFunction_argsTuple(
 									super.toClojureCode(env), 
 									arg)))),
-					ClojureHelper.reify(velka.types.typeSystem.IEvalueable.class, 
+					ClojureHelper.reify(velka.util.IEvalueable.class, 
 							Pair.of("evaluate", Pair.of(List.of(rhis, arg, cenv), ClojureHelper.applyVelkaFunction_argsTuple(
 									this.cost().toClojureCode(env), 
 									arg)))));
@@ -125,4 +134,38 @@ public abstract class Conversion extends Operator implements DeclarableInTypeEnv
 		return code;
 	}
 
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		TypeArrow type;
+		try {
+			type = (TypeArrow)this.infer(env).first;
+		} catch (AppendableException e) {
+			throw new RuntimeException(e);
+		}
+		var tfrom = (TypeTuple)(type.ltype);
+		var from = tfrom.get(0);
+		var to = type.rtype;
+		
+		var ieval = CodeModelInstance.instance().anonymousClass(velka.util.IEvalueable.class);
+		var eval = ieval.method(JMod.PUBLIC, Object.class, "evaluate");
+		
+		var argmap = Abstraction.declareArgs(
+				List.of(Pair.of(new Symbol("_0"), from)),  
+				eval,
+				env);
+		
+		this.modifyJavaMethod(eval, argmap);
+		
+		var cost = (CompileableToJava)this.cost();
+		
+		eval.param(Object.class, "env");
+		
+		var jexpr = 
+				JavaTypeSystem.codeInstance().invoke("addConversion")
+					.arg(JExpr.cast(TypeUtil.instance().typeAtomJType(), TypeUtil.instance().type2java(from)))
+					.arg(JExpr.cast(TypeUtil.instance().typeAtomJType(), TypeUtil.instance().type2java(to)))
+					.arg(JExpr._new(ieval))
+					.arg(cost.toJavaExpr(env));
+		return jexpr;
+	}
 }

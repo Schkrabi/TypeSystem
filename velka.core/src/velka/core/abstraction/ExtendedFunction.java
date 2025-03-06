@@ -2,25 +2,18 @@ package velka.core.abstraction;
 
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
-import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
+import velka.types.TypeTuple;
 import velka.types.TypeVariable;
+import velka.types.typeSystem.ImplementationSelector;
+import velka.types.typeSystem.VelkaAbstraction;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
-
+import java.util.ArrayList;
+import java.util.Collection;
 import velka.core.expression.Expression;
-import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.util.AppendableException;
-import velka.util.NameGenerator;
 import velka.util.Pair;
 
 /**
@@ -29,150 +22,67 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class ExtendedFunction extends ExtendedLambda {
+public class ExtendedFunction extends Expression implements VelkaAbstraction {
+	private final Collection<Pair<? extends VelkaAbstraction, ? extends VelkaAbstraction>> implementations;
+	private final Environment env;
+	
+	public ExtendedFunction(Environment env) {
+		this.implementations = new ArrayList<Pair<? extends VelkaAbstraction, ? extends VelkaAbstraction>>();
+		this.env = env;
+	}
+	
+	public ExtendedFunction extend(Function function, VelkaAbstraction cost) {
+		var ef = new ExtendedFunction(this.env);
+		ef.implementations.addAll(this.implementations);
+		ef.implementations.add(Pair.of(function, cost));
+		return ef;
+	}
 
-	public final Environment creationEnvironment;
-	
-	protected ExtendedFunction(Type argsType, Map<Function, Expression> implementations, Environment createdEnvironment) {
-		super(argsType, implementations);
-		this.creationEnvironment = createdEnvironment;
-	}
-	
-	public ExtendedFunction(Type argsType, Environment createdEnvironment) {
-		super(argsType, new TreeMap<Lambda, Expression>());
-		this.creationEnvironment = createdEnvironment;
-	}
-	
-	/**
-	 * Gets shallow copy of implementations set as Functions
-	 * @return Set
-	 */
-	public Map<Function, Expression> getImplementationsAsFunctions(){
-		Map<Function, Expression> m = new TreeMap<Function, Expression>();
-		
-		for(Entry<? extends Lambda, Expression> e : this.implementations.entrySet()) {
-			m.put((Function)e.getKey(), e.getValue());
+	@Override
+	public Type getType() {
+		if(this.implementations.isEmpty()) {
+			return new TypeArrow(TypeVariable.generate(), TypeVariable.generate());
 		}
 		
-		return m;
+		return RepresentationOr.factory(this.implementations.stream().map(x -> x.first.getType()).toList());
+	}
+
+	@Override
+	public Object apply(Collection<? extends Object> arg) {
+		var selector = new ImplementationSelector(this.env.getTypeSystem());
+		var impl = selector.selectImplementation(
+				this.implementations, 
+				arg);
+		
+		return impl.evaluate(arg, null);
+	}
+
+	@Override
+	public Expression interpret(Environment env) throws AppendableException {
+		return this;
 	}
 
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-		try {
-			if(this.implementations.isEmpty()) {
-				Type t =  new TypeArrow(this.argsType, new TypeVariable(NameGenerator.next()));
-				return new Pair<Type, Substitution>(t, Substitution.EMPTY);
-			}
-			
-			Set<Pair<Type, Substitution>> s = new HashSet<Pair<Type, Substitution>>();
-			for (Expression e : this.implementations.keySet()) {
-				Pair<Type, Substitution> p = e.infer(env);
-				s.add(p);
-			}
-			
-			Substitution aggregate = Substitution.EMPTY;
-			for(Pair<Type, Substitution> p : s) {
-				Optional<Substitution> opt = aggregate.merge(p.second);
-				if(opt.isEmpty()) {
-					throw new SubstitutionsCannotBeMergedException(aggregate, p.second);
-				}
-			}
-
-			return new Pair<Type, Substitution>(
-					RepresentationOr.makeRepresentationOr(s.stream().map(x -> x.first).collect(Collectors.toSet())),
-					aggregate);
-
-		} catch (AppendableException e) {
-			e.appendMessage("in " + this);
-			throw e;
-		}
+		return Pair.of(this.getType(), Substitution.EMPTY);
 	}
 
 	@Override
-	public int compareTo(Expression other) {
-		if (other instanceof ExtendedFunction) {
-			int cmp = this.creationEnvironment.compareTo(((ExtendedFunction) other).creationEnvironment);
-			if (cmp != 0)
-				return cmp;
-		}
-		return super.compareTo(other);
+	protected Expression doConvert(Type from, Type to, Environment env) throws AppendableException {
+		throw new RuntimeException("doConvert not implemented");
 	}
 
+	@Override
+	public String toClojureCode(Environment env) throws AppendableException {
+		throw new RuntimeException("toClojureCode not implemented");
+	}
+	
 	@Override
 	public boolean equals(Object other) {
-		if (other instanceof ExtendedFunction) {
-			return this.creationEnvironment.equals(((ExtendedFunction) other).creationEnvironment)
-					&& super.equals(other);
-
+		if(other instanceof ExtendedFunction ef) {
+			return this.env.equals(ef.env)
+					&& this.implementations.equals(ef.implementations);
 		}
 		return false;
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder s = new StringBuilder("(ExFunctionInternal (");
-
-		// Arguments
-		Iterator<? extends Lambda> k = this.implementations.keySet().iterator();
-		while (k.hasNext()) {
-			Lambda f = k.next();
-			s.append('(');
-			s.append(f.argsType.toString().replace('[', '(').replace(']', ')'));
-			s.append(' ');
-			s.append(f.body.toString());
-			s.append(')');
-			if (k.hasNext()) {
-				s.append(' ');
-			}
-		}
-
-		s.append("))");
-
-		return s.toString();
-	}
-
-	@Override
-	public int hashCode() {
-		return super.hashCode() * this.implementations.hashCode();
-	}
-
-	/**
-	 * 
-	 * @param implementations
-	 * @param createdEnvironment
-	 * @return
-	 * @throws AppendableException
-	 */
-	public static ExtendedFunction makeExtendedFunction(
-			Map<Function, Expression> implementations, 
-			Environment createdEnvironment) throws AppendableException {
-		if(implementations.isEmpty()) {
-			throw new AppendableException("Cannot create extended function from empty implementation map.");
-		}
-		
-		Optional<Substitution> o = Type.unifyMany(implementations.keySet().stream().map(x -> x.argsType).collect(Collectors.toSet()));
-		
-		if(o.isEmpty()) {
-			throw new AppendableException("Cannot create extended function from implementations: "
-					+ implementations.toString());
-		}
-		
-		Type sample = implementations.keySet().stream().findAny().get().argsType;
-		sample = sample.apply(o.get()).removeRepresentationInformation();
-		
-		return new ExtendedFunction(sample, implementations, createdEnvironment);
-	}
-
-	@Override
-	protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-//		Abstraction a = this.selectImplementation(args, rankingFunction, env, typeEnv);
-//		return a.doSubstituteAndEvaluate(args, env, typeEnv, rankingFunction);
-		throw new AppendableException("This method should not be directly used.");
-	}
-
-	@Override
-	public Expression interpret(Environment env) {
-		return this;
 	}
 }

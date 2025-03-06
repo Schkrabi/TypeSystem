@@ -6,9 +6,16 @@ import velka.types.TypesDoesNotUnifyException;
 
 import java.util.Optional;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+
 import velka.core.exceptions.ConversionException;
 import velka.core.expression.Expression;
+import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
@@ -20,7 +27,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Convert extends Expression {
+public class Convert extends Expression implements CompileableToJava {
 	
 	/**
 	 * Symbol for convert special form
@@ -48,7 +55,13 @@ public class Convert extends Expression {
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		return this.expression.convert(this.to, env);
+		var o = env.getTypeSystem().convert(
+				this.from,
+				this.to,
+				this.expression,
+				env);
+		
+		return (Expression)o;
 	}
 
 	@Override
@@ -110,5 +123,18 @@ public class Convert extends Expression {
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
 		throw new ConversionException(to, this);
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var cij = (CompileableToJava)this.expression;
+		
+		var expr = 
+				JavaTypeSystem.codeInstance().invoke("convert")
+					.arg(TypeUtil.instance().type2java(this.from))
+					.arg(TypeUtil.instance().type2java(this.to))
+					.arg(cij.toJavaExpr(env))
+					.arg(JExpr._null());
+		return expr;
 	}
 }

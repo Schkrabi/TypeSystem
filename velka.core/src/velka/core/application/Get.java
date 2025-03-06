@@ -1,9 +1,17 @@
 package velka.core.application;
 
+import java.util.Collection;
+
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitInteger;
+import velka.java.CodeModelInstance;
+import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -20,7 +28,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Get extends SpecialFormApplication {
+public class Get extends SpecialFormApplication implements CompileableToJava {
 	
 	/**
 	 * Symbol for special form get
@@ -52,19 +60,12 @@ public class Get extends SpecialFormApplication {
 		if(!(expressionTuple instanceof Tuple)) {
 			throw new AppendableException("First argument of get must interpret to tuple. Got " + expressionTuple.toString());
 		}
-		LitInteger index;
-		if(expressionIndex instanceof LitInteger) {
-			index = (LitInteger)expressionIndex;
-		}else {
-			Expression c = expressionIndex.convert(TypeAtom.TypeIntNative, env);
-			c = c.interpret(env);
-			
-			if(!(c instanceof LitInteger)) {
-				throw new AppendableException("Second argument of get must interpret to integer. Got " + expressionIndex.toString());
-			}
-			
-			index = (LitInteger)c;
-		}
+		@SuppressWarnings("unchecked")
+		var index = (LitInteger)env.getTypeSystem().convert(
+				env.getTypeSystem().getType(expressionIndex), 
+				TypeAtom.TypeIntNative, 
+				expressionIndex, 
+				env);
 		
 		Tuple tuple = (Tuple)expressionTuple;
 		
@@ -134,6 +135,15 @@ public class Get extends SpecialFormApplication {
 	 */
 	public static Get makeGet(Expression tuple, Expression index) {
 		return new Get(new Tuple(tuple, index));
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var tCl = CodeModelInstance.instance().ref(VelkaTuple.class);
+		var ctjT = (CompileableToJava)this.getTuple();
+		var ctjI = (CompileableToJava)this.getIndex();
+		
+		return JExpr.cast(tCl, ctjT.toJavaExpr(env)).invoke("get").arg(ctjI.toJavaExpr(env));
 	}
 
 }

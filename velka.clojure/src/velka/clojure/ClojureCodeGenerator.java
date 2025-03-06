@@ -11,6 +11,7 @@ import java.util.List;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.langbase.OperatorBank;
+import velka.core.util.Constants;
 import velka.types.Type;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
@@ -26,12 +27,8 @@ import velka.util.ClojureHelper;
  */
 public class ClojureCodeGenerator {
 
-	/**
-	 * Name of default namespace if no namespace was declared by user
-	 */
-	public static final String DEFAULT_NAMESPACE = "velka.clojure.user";
 	public static final Path DEFAULT_FILENAME = Paths.get("user.clj");
-	public static final Path DEFAULT_FILE_PROJECT_PATH = Paths.get("velka", "clojure").resolve(DEFAULT_FILENAME);
+	public static final Path DEFAULT_FILE_PROJECT_PATH = velka.core.util.Constants.LOCATION.resolve(DEFAULT_FILENAME);
 	public static final Path CLASSES_PATH = Paths.get("classes");
 
 	/**
@@ -45,7 +42,7 @@ public class ClojureCodeGenerator {
 	 */
 	public static String ExpressionListToClojureCode(List<Expression> exprs, Environment env)
 			throws Exception {
-		return ExpressionListToClojureCode(DEFAULT_NAMESPACE, exprs, env);
+		return ExpressionListToClojureCode(Constants.DEFAULT_NAMESPACE, exprs, env);
 	}
 
 	/**
@@ -108,7 +105,7 @@ public class ClojureCodeGenerator {
 	 * @throws Exception
 	 */
 	public static Path ExpressionListToCljFile(Path dir, List<Expression> exprs, Environment env) throws Exception {
-		return ExpressionListToCljFile(dir.resolve(DEFAULT_FILENAME), DEFAULT_NAMESPACE, exprs, env);
+		return ExpressionListToCljFile(dir.resolve(DEFAULT_FILENAME), Constants.DEFAULT_NAMESPACE, exprs, env);
 	}
 
 	/**
@@ -118,8 +115,8 @@ public class ClojureCodeGenerator {
 	 * @throws IOException if write goes awry
 	 */
 	private static void generateOperatorBank(OperatorBank operatorBank, Path directory) throws IOException {
-		Files.createDirectories(directory.resolve(operatorBank.getPath()));
-		operatorBank.generateFile(directory);
+		Files.createDirectories(directory.resolve(operatorBank.path()));
+		operatorBank.generateClojureFile(directory);
 	}
 	
 	public static Path generateClojureProject(Path directory) throws IOException {
@@ -173,7 +170,7 @@ public class ClojureCodeGenerator {
 		
 		sb.append(":aliases {\n")
 		.append(":run {\n")
-		.append(":main-opts [\"-m\" \"velka.clojure.user\"]\n")
+		.append(":main-opts [\"-m\" \"velka.runtime.user\"]\n")
 		.append("}\n")
 		.append("}\n");
 		
@@ -185,7 +182,7 @@ public class ClojureCodeGenerator {
 		sb.append("\"./" + VelkaClojureCore.RELATIVE_PATH.toString().replace('\\', '/') + "\"\n");
 		
 		for(OperatorBank ob : OperatorBank.operatorBanks) {
-			sb.append("\"./" + ob.getRelative().toString().replace('\\', '/') + "\"\n");
+			sb.append("\"./" + ob.clojureFilePath().toString().replace('\\', '/') + "\"\n");
 		}
 		
 		//Main source file

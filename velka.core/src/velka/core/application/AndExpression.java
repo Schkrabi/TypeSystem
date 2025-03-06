@@ -2,8 +2,12 @@ package velka.core.application;
 
 import java.util.stream.Collectors;
 
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitBoolean;
 import velka.types.Substitution;
@@ -20,7 +24,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class AndExpression extends SpecialFormApplication {
+public class AndExpression extends SpecialFormApplication implements CompileableToJava {
 	
 	/**
 	 * Velka symbol for and special form
@@ -37,8 +41,11 @@ public class AndExpression extends SpecialFormApplication {
 		for(Expression e : (Tuple)args) {
 			Expression ie = e.interpret(env);
 			if(!(ie instanceof LitBoolean)) {
-				ie = ie.convert(TypeAtom.TypeBoolNative, env);
-				ie = ie.interpret(env);
+				ie = (Expression) env.getTypeSystem().convert(
+						env.getTypeSystem().getType(ie),
+						TypeAtom.TypeBoolNative,
+						ie,
+						env);
 			}
 			
 			if(ie.equals(LitBoolean.FALSE)) {
@@ -79,5 +86,18 @@ public class AndExpression extends SpecialFormApplication {
 	@Override
 	protected String applicatedToString() {
 		return AND;
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var ret = JExpr.lit(true); 
+		
+		for(Expression e : (Tuple)this.args) {
+			var ctj = (CompileableToJava)e;
+			
+			ret = ret.band(ctj.toJavaExpr(env));
+		}
+		
+		return ret;
 	}
 }

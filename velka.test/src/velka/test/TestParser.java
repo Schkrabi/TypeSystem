@@ -64,13 +64,15 @@ class TestParser extends VelkaTest{
 		this.testParse("(if #t x y)", new IfExpression(LitBoolean.TRUE, new Symbol("x"), new Symbol("y")));
 		this.testParse("(constructor Name:Unstructured ((String:Native x)) x)",
 				new DefineConstructor(new TypeAtom(new TypeName("Name"), new TypeRepresentation("Unstructured")),
-						new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
-								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), new Symbol("x"))));
+						new Lambda(
+								new Symbol("x"),
+								List.of(Pair.of(new Symbol("x"), TypeAtom.TypeStringNative)))));
 		this.testParse("(constructor Name:Structured ((String:Native x) (String:Native y)) (tuple x y))",
 				new DefineConstructor(new TypeAtom(new TypeName("Name"), new TypeRepresentation("Structured")),
-						new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
-								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeStringNative)),
-								new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))))));
+						new Lambda(
+								new Tuple(new Symbol("x"), new Symbol("y")),
+								List.of(Pair.of(new Symbol("x"), TypeAtom.TypeStringNative),
+										Pair.of(new Symbol("y"), TypeAtom.TypeStringNative)))));
 		this.testParse(
 				"(conversion Name:Structured Name:Unstructured (name) "
 						+ "(construct Name:Unstructured \"Test\"))",
@@ -92,23 +94,20 @@ class TestParser extends VelkaTest{
 		this.testParse("(convert Int:Roman Int:String x)",
 				new Convert(TypeAtom.TypeIntRoman, TypeAtom.TypeIntString, new Symbol("x")));
 
-		this.testParse("(lambda (((Int:Native String:Native Bool:Native) t)) t)", new Lambda(
-				new Tuple(Arrays.asList(new Symbol("t"))),
-				new TypeTuple(Arrays.asList(new TypeTuple(
-						Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative, TypeAtom.TypeBoolNative)))),
-				new Symbol("t")));
+		this.testParse("(lambda (((Int:Native String:Native Bool:Native) t)) t)",
+				new Lambda(new Symbol("t"), List.of(Pair.of(new Symbol("t"),
+						new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative, TypeAtom.TypeBoolNative)))));
 
 		this.testParse("(lambda ((((Int:Native) #> Int:Native) f)) f)",
-				new Lambda(new Tuple(new Symbol("f")),
-						new TypeTuple(new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeIntNative)),
-						new Symbol("f")));
+				new Lambda(new Symbol("f"),
+						List.of(Pair.of(new Symbol("f"),
+								new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeIntNative)))));
 
 		this.testParse("(lambda ((((Int:Native String:Native) #> (String:Native Int:Native)) f)) f)",
-				new Lambda(new Tuple(Arrays.asList(new Symbol("f"))),
-						new TypeTuple(Arrays.asList(new TypeArrow(
+				new Lambda(new Symbol("f"),
+						List.of(Pair.of(new Symbol("f"), new TypeArrow(
 								new TypeTuple(Arrays.asList(TypeAtom.TypeIntNative, TypeAtom.TypeStringNative)),
-								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeIntNative))))),
-						new Symbol("f")));
+								new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative, TypeAtom.TypeIntNative)))))));
 		this.testParse("(instance-of 42 Int:Native)", new InstanceOf(new LitInteger(42), TypeAtom.TypeIntNative));
 		this.testParse("(instance-of-representation 42 Int:Native)",
 				new InstanceOfRepresentation(new LitInteger(42), TypeAtom.TypeIntNative));
@@ -131,7 +130,7 @@ class TestParser extends VelkaTest{
 		this.testParse("(eapply + (tuple 1 2))",
 				new AbstractionApplication(new Symbol("+"), new Tuple(new LitInteger(1), new LitInteger(2))));
 
-		Lambda impl = new Lambda(new Tuple(new Symbol("x")), new TypeTuple(TypeAtom.TypeIntNative), new Symbol("x"));
+		Lambda impl = new Lambda(new Symbol("x"), List.of(Pair.of(new Symbol("x"), TypeAtom.TypeIntNative)));
 		List<Lambda> impls = new ArrayList<Lambda>();
 		impls.add(impl);
 		this.testParse("(extend foo bar)",
@@ -144,8 +143,8 @@ class TestParser extends VelkaTest{
 	@DisplayName("Test Lambda")
 	void testLambda() throws AppendableException {
 		String sExpr = "(lambda (x) y)";
-		Expression expr = new Lambda(new Tuple(Arrays.asList(new Symbol("x"))),
-				new TypeTuple(Arrays.asList(new TypeVariable("_x"))), new Symbol("y"));
+		Expression expr = new Lambda(new Symbol("y"),
+				List.of(Pair.of(new Symbol("x"), new TypeVariable("_x"))));
 
 		Expression parsed = parseString(sExpr).get(0);
 		assertTrue(parsed instanceof Lambda);
@@ -156,8 +155,9 @@ class TestParser extends VelkaTest{
 		assertEquals(parsedLambda, expectedLambda);
 
 		assertEquals(parseString("(lambda ((String x) (Int y)) x)").get(0),
-				new Lambda(new Tuple(Arrays.asList(new Symbol("x"), new Symbol("y"))),
-						new TypeTuple(Arrays.asList(TypeAtom.TypeString, TypeAtom.TypeInt)), new Symbol("x")));
+				new Lambda(new Symbol("x"),
+						List.of(Pair.of(new Symbol("x"), TypeAtom.TypeString),
+								Pair.of(new Symbol("y"), TypeAtom.TypeInt))));
 	}
 
 	@Test
@@ -174,8 +174,8 @@ class TestParser extends VelkaTest{
 		assertAll(() -> {
 			new UserException("test");
 			new DuplicateConversionException(TypeAtom.TypeBool, TypeAtom.TypeBoolNative,
-					new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env),
-					new Function(TypeTuple.EMPTY_TUPLE, Tuple.EMPTY_TUPLE, Expression.EMPTY_EXPRESSION, env));
+					new Function(env, Expression.EMPTY_EXPRESSION, List.of()),
+					new Function(env, Expression.EMPTY_EXPRESSION, List.of()));
 			new UndefinedTypeException("fail");
 		});
 	}
@@ -221,7 +221,8 @@ class TestParser extends VelkaTest{
 		Loop l = (Loop)e;
 		
 		Assertions.assertEquals(l,
-				new Loop(new Tuple(new Symbol("x")), new LitInteger(42), new Tuple(new LitInteger(10))));
+				new Loop(new LitInteger(42),
+						List.of(Pair.of(new Symbol("x"), new LitInteger(10)))));
 		
 		Expression f = this.parseString("(recur 42)").get(0);
 		
@@ -246,8 +247,9 @@ class TestParser extends VelkaTest{
 		
 		var l = (Lambda)cst.cost;
 		assertEquals(new LitInteger(42), l.body);
-		assertEquals(new Tuple(new Symbol("x")), l.args);
-		assertEquals(new TypeTuple(new TypeAtom(new TypeName("Type"), new TypeRepresentation("Rep1"))), l.argsType);
+		assertEquals(
+				List.of(Pair.of(new Symbol("x"), new TypeAtom(new TypeName("Type"), new TypeRepresentation("Rep1")))),
+				l.parms);
 	}
 
 	private void testParse(String parsedString, Expression expected) throws AppendableException {

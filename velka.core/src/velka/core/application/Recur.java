@@ -4,8 +4,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -21,7 +24,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Recur extends Expression {
+public class Recur extends Expression implements CompileableToJava {
 	
 	public static final String RECUR = "recur";
 	
@@ -103,7 +106,11 @@ public class Recur extends Expression {
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("doConvert not implemented");
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		throw new RuntimeException("Recur is not supported for java compilation.");
 	}
 }

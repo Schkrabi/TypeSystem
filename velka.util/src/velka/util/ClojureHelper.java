@@ -31,7 +31,7 @@ public class ClojureHelper {
 	}
 
 	/**
-	 * Creates fully qualified velka.clojure.core symbol from symbol
+	 * Creates fully qualified velka.runtime.core symbol from symbol
 	 * 
 	 * @param symbol non-qualified symbol
 	 * @return fully qualified symbol
@@ -164,7 +164,7 @@ public class ClojureHelper {
 	 */
 	public static String applyVelkaFunction_argsTuple(String funCode, String argsTuple) {
 		String code = applyClojureFunction(
-				ClojureCoreSymbols.eapplyClojureSymbol_full,
+				".apply",
 				funCode,
 				argsTuple);
 		return code;
@@ -743,6 +743,16 @@ public class ClojureHelper {
 		public static ProxyImpl of(Method method, Collection<String> args, String implCode) {
 			return new ProxyImpl(method, args, implCode);
 		}
+		
+		public static ProxyImpl of(Class<?> clazz, String methodName, Collection<String> args, String implCode, Class<?> ...mparms) {
+			Method method;
+			try {
+				method = clazz.getMethod(methodName, mparms);
+			} catch (NoSuchMethodException | SecurityException e) {
+				throw new RuntimeException(e);
+			}
+			return ProxyImpl.of(method, args, implCode);
+		}
 	}
 	
 	/**
@@ -789,7 +799,29 @@ public class ClojureHelper {
 	public static String wrapClojureOperatorToFn(int arity, String clojureOperator) {
 		var args = Stream.iterate(0, x -> x + 1).limit(arity).map(x -> "_" + Integer.toString(x)).collect(Collectors.toList());
 		String code =
-				ClojureHelper.fnHelper(args, ClojureHelper.applyClojureFunction(clojureOperator, args));
+				ClojureHelper.fnHelper(args, 
+						ClojureHelper.applyClojureFunction(clojureOperator, args));
+		return code;
+	}
+	
+	public static String wrapNullableClojureOperatorToFn(int arity, String clojureOperator) {
+		var args = Stream.iterate(0, x -> x + 1).limit(arity).map(x -> "_" + Integer.toString(x)).collect(Collectors.toList());
+		var ret = "_ret";
+		String code =
+				ClojureHelper.fnHelper(args, 
+						ClojureHelper.letHelper(
+								ClojureHelper.clojureIfHelper(ClojureHelper.applyClojureFunction("nil?", ret),
+										ClojureHelper.errorHelper(ClojureHelper.stringHelper("Wrapped null exeption")),								
+										ret),
+								Pair.of(ret, ClojureHelper.applyClojureFunction(clojureOperator, args))));
+		return code;
+	}
+	
+	public static String wrapVoidClojureOperatorToFn(int arity, String clojureOperator) {
+		var args = Stream.iterate(0, x -> x + 1).limit(arity).map(x -> "_" + Integer.toString(x)).collect(Collectors.toList());
+		String code = ClojureHelper.fnHelper(args,
+						ClojureHelper.letHelper(ClojureHelper.emptyExpression(),
+								Pair.of("tmp", ClojureHelper.applyClojureFunction(clojureOperator, args))));
 		return code;
 	}
 	
@@ -863,5 +895,9 @@ public class ClojureHelper {
 				.append("& ")
 				.append(symbol)
 				.toString();
+	}
+	
+	public static String emptyExpression() {
+		return ClojureHelper.addTypeMetaInfo_str("[]", "velka.types.TypeTuple/EMPTY_TUPLE");
 	}
 }

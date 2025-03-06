@@ -12,12 +12,14 @@ import velka.core.literal.LitComposite;
 import velka.types.Type;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
+import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
+import velka.util.ClojureHelper.ProxyImpl;
 import velka.util.Pair;
 
 /**
- * This class is generating velka.clojure.core namespace file velka/clojure/core.clj
+ * This class is generating velka.runtime.core namespace file velka/clojure/core.clj
  * @author Mgr. Radomir Skrabal
  *
  */
@@ -39,28 +41,9 @@ public class VelkaClojureCore {
 	 * Definition for get-type clojure symbol
 	 */
 	public static String getTypeClojureDef = 
-			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.getTypeClojureSymbol, Arrays.asList(getTypeClojure_expr), 
-					ClojureHelper.letHelper(
-							ClojureHelper.clojureIfHelper(ClojureHelper.applyClojureFunction("some?", declared),
-									declared,
-									ClojureHelper.condHelper(
-											Pair.of(ClojureHelper.applyClojureFunction("integer?", getTypeClojure_expr), TypeAtom.TypeIntNative.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("boolean?", getTypeClojure_expr), TypeAtom.TypeBoolNative.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("double?", getTypeClojure_expr), TypeAtom.TypeDoubleNative.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("string?", getTypeClojure_expr), TypeAtom.TypeStringNative.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("nil?", getTypeClojure_expr), TypeTuple.EMPTY_TUPLE.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.ArrayList.class.getName(), getTypeClojure_expr), TypeAtom.TypeListJavaArray.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.LinkedList.class.getName(), getTypeClojure_expr), TypeAtom.TypeListJavaLinked.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.BitSet.class.getName(), getTypeClojure_expr), TypeAtom.TypeSetBitSet.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.TreeMap.class.getName(), getTypeClojure_expr), velka.types.TypeAtom.TypeMapTree.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.Scanner.class.getName(), getTypeClojure_expr), velka.types.TypeAtom.TypeScannerNative.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("seq?", getTypeClojure_expr), TypeAtom.TypeListNative.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.ListIterator.class.getName(), getTypeClojure_expr), TypeAtom.TypeListIterator.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.TreeSet.class.getName(), getTypeClojure_expr), TypeAtom.TypeSetTree.clojureTypeRepresentation()),
-											Pair.of(ClojureHelper.applyClojureFunction("instance?", java.util.HashSet.class.getName(), getTypeClojure_expr), TypeAtom.TypeSetHash.clojureTypeRepresentation()),
-											Pair.of(":else", ClojureHelper.errorHelper(ClojureHelper.stringHelper("Unrecognized type!"))))),
-							Pair.of(declared, ClojureHelper.applyClojureFunction(":lang-type", 
-													ClojureHelper.applyClojureFunction("meta", getTypeClojure_expr)))));
+			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.getTypeClojureSymbol, List.of(getTypeClojure_expr), 
+					ClojureHelper.applyClojureFunction(".getType", ClojureCoreSymbols.typeSystem_full, getTypeClojure_expr));
+					
 	
 	private static final String ListNativeToTuple_list = "_list";
 	/**
@@ -175,13 +158,34 @@ public class VelkaClojureCore {
 	/** Definition of clojure type system */
 	public static String typeSystem = ClojureHelper.dynamicDef(
 			ClojureCoreSymbols.typeSystem_full, 
-			ClojureHelper.constructJavaClass(velka.types.typeSystem.TypeSystem.class, 
-					ClojureHelper.reify(velka.types.typeSystem.IConversionEngine.class, 
+			ClojureHelper.proxy(velka.types.typeSystem.TypeSystem.class,
+				List.of(ClojureHelper.reify(velka.types.typeSystem.IConversionEngine.class, 
 							Pair.of("convertTuple", Pair.of(List.of(me, ts, from, to, o, env), 
 									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertTupleClojureSymbol_full, to, o))),
 							Pair.of("convertFunction", Pair.of(List.of(me, ts, from, to, o, env), 
 									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertFnClojureSymbol_full, to, o))),
-							Pair.of("instantiateCollection", Pair.of(List.of(me, o), ClojureHelper.tupleHelper(o))))));
+							Pair.of("instantiateCollection", Pair.of(List.of(me, o), ClojureHelper.tupleHelper(o))))),
+				ProxyImpl.of(velka.types.typeSystem.TypeSystem.class,
+						"getType",
+						List.of(arg),
+						ClojureHelper.letHelper(
+								ClojureHelper.clojureIfHelper(ClojureHelper.applyClojureFunction("some?", declared),
+										declared,
+										ClojureHelper.condHelper(
+												Pair.of(ClojureHelper.applyClojureFunction("nil?", arg), TypeTuple.EMPTY_TUPLE.clojureTypeRepresentation()),
+												Pair.of(ClojureHelper.applyClojureFunction("seq?", arg), TypeAtom.TypeListNative.clojureTypeRepresentation()),
+												Pair.of(ClojureHelper.applyClojureFunction("instance?", "java.util.Collection", arg), TypeAtom.TypeListNative.clojureTypeRepresentation()),
+												Pair.of(":else", ClojureHelper.errorHelper(ClojureHelper.stringHelper("Unrecognized type in Clojure."))))),
+								Pair.of(declared, ClojureHelper.applyClojureFunction(":lang-type", 
+														ClojureHelper.applyClojureFunction("meta", arg))),
+								Pair.of(declared, ClojureHelper.clojureIfHelper(ClojureHelper.applyClojureFunction("nil?", declared), 
+													ClojureHelper.applyClojureFunction("velka.types.TypeAtom/javaClassToType", 
+																ClojureHelper.applyClojureFunction(".getClass", arg)),
+													declared)),
+								Pair.of(declared, ClojureHelper.clojureIfHelper(ClojureHelper.isInstanceOfClass(arg, VelkaAbstraction.class),
+																	ClojureHelper.applyClojureFunction(".getType", arg),
+																	declared))),
+						Object.class)));
 			
 	/**
 	 * Definition for convert clojure function
@@ -194,7 +198,7 @@ public class VelkaClojureCore {
 							ClojureCoreSymbols.typeSystem_full, 
 							ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, exp),
 							to,
-							ClojureHelper.tupleHelper(exp), 
+							exp, 
 							"nil"));
 	
 	//(defn can-convert-atom ([_from _to]
@@ -237,7 +241,7 @@ public class VelkaClojureCore {
 			ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.implementationCost, List.of(impl, args), 
 					ClojureHelper.letHelper(ClojureHelper.clojureIfHelper(ClojureHelper.applyClojureFunction("nil?", ccost), 
 							"nil",
-							ClojureHelper.applyClojureFunction(".aggregate", ClojureHelper.applyClojureFunction("velka.util.CostAggregation/instance"), icost, ccost)), 
+							ClojureHelper.applyClojureFunction(".aggregate", ClojureHelper.applyClojureFunction("velka.util.RankAggregation/instance"), icost, ccost)), 
 							Pair.of(icost, ClojureHelper.applyVelkaFunction_argsTuple(ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getCostFunction_full, impl), args)),
 							Pair.of(ccost, ClojureHelper.applyClojureFunction(ClojureCoreSymbols.conversionCost_full, 
 									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, args),
@@ -419,7 +423,7 @@ public class VelkaClojureCore {
 					Tuple.EMPTY_TUPLE_CLOJURE));
 
 	/**
-	 * Generates clojure code for definitions of velka.clojure.core namespace
+	 * Generates clojure code for definitions of velka.runtime.core namespace
 	 * 
 	 * @return string with code
 	 */
@@ -453,8 +457,8 @@ public class VelkaClojureCore {
 		// Definitions
 		sb.append(type2typeSymbolDef);
 		sb.append("\n");
-		sb.append(tuple2velkaListDef);
-		sb.append("\n");
+		//sb.append(tuple2velkaListDef);
+		//sb.append("\n");
 		sb.append(getTypeClojureDef);
 		sb.append("\n");
 		sb.append(listNativeToTuple);
@@ -497,12 +501,12 @@ public class VelkaClojureCore {
 	}
 
 	/**
-	 * Relative path to velka.clojure.core file
+	 * Relative path to velka.runtime.core file
 	 */
-	public static final Path VELKA_CLOJURE_CORE_PATH = Paths.get("velka", "clojure");
+	public static final Path VELKA_CLOJURE_CORE_PATH = Paths.get("velka", "runtime");
 	
 	/**
-	 * Name of the velka.clojure.core file
+	 * Name of the velka.runtime.core file
 	 */
 	public static final Path VELKA_CLOJURE_CORE_NAME = Paths.get("core.clj");
 

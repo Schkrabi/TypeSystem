@@ -3,11 +3,15 @@ package velka.core.application;
 import java.util.Arrays;
 import java.util.Optional;
 
+import com.sun.codemodel.JExpression;
+
 import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitString;
+import velka.java.runtime.VelkaThrower;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -25,7 +29,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class ExceptionExpr extends SpecialFormApplication {
+public class ExceptionExpr extends SpecialFormApplication implements CompileableToJava {
 	
 	/**
 	 * Symbol for error special form
@@ -45,13 +49,18 @@ public class ExceptionExpr extends SpecialFormApplication {
 		Tuple iArgs = (Tuple)this.args.interpret(env);
 		Expression iArg = iArgs.get(0);
 		if(!(iArg instanceof LitString)) {
-			iArg = iArg.convert(TypeAtom.TypeStringNative, env);
+			iArg = (Expression)env.getTypeSystem().convert(
+					env.getTypeSystem().getType(iArg),
+					TypeAtom.TypeStringNative,
+					iArg,
+					env);
+					
 			iArg = iArg.interpret(env);
 		}
 		
 		String message = ((LitString)iArg).value;
 		
-		throw new UserException(message);
+		throw new RuntimeException(message);
 	}
 
 	@Override
@@ -96,5 +105,13 @@ public class ExceptionExpr extends SpecialFormApplication {
 	@Override
 	protected String applicatedToString() {
 		return ERROR;
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var ctj = (CompileableToJava)this.getMessage();
+		var msgJexpr = ctj.toJavaExpr(env);
+		
+		return VelkaThrower._throw(msgJexpr);
 	}
 }

@@ -1,8 +1,14 @@
 package velka.core.application;
 
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitBoolean;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -15,7 +21,7 @@ import velka.util.Pair;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class InstanceOf extends Expression {
+public class InstanceOf extends Expression implements CompileableToJava {
 	
 	/**
 	 * Symbol for special form instance-of
@@ -96,8 +102,18 @@ public class InstanceOf extends Expression {
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression e = this.interpret(env);
-		return e.convert(to, env);
+		throw new RuntimeException("doConvert not implemented");
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var tCl = CodeModelInstance.instance().ref(Type.class);
+		var ctj = (CompileableToJava)this.expression;
+		
+		return tCl.staticInvoke("unifyTypes")
+				.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(ctj.toJavaExpr(env)))
+				.arg(TypeUtil.instance().type2java(this.type))
+				.invoke("isPresent");
 	}
 
 }

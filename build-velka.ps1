@@ -17,6 +17,12 @@ ant
 cd ..
 cp .\velka.types\jar\velka.types.jar .\lib\velka.types.jar
 
+echo Building velka.java
+cd .\velka.java
+ant
+cd ..
+cp .\velka.java\jar\velka.java.jar .\lib\velka.java.jar
+
 echo Building velka.core
 cd .\velka.core
 ant
@@ -40,5 +46,11 @@ cd .\velka.compiler
 ant
 cd ..
 cp .\velka.compiler\jar\velka.compiler.jar .\lib\velka.compiler.jar
+
+echo Building velka.java.generate
+cd .\velka.java.generate
+ant
+cd ..
+cp .\velka.java.generate\jar\velka.java.generate.jar .\lib\velka.java.generate.jar
 
 echo Velka build finished

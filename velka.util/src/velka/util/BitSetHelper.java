@@ -76,7 +76,7 @@ public class BitSetHelper {
 	/** Converts bitset to hashset */
 	public static HashSet<Object> bitset2hashset(BitSet bitset){
 		var hs = new HashSet<Object>();
-		bitset.stream().forEach(i -> hs.add(Long.valueOf((long)i)));
+		bitset.stream().forEach(i -> hs.add(Integer.valueOf(i)));
 		return hs;
 	}
 }

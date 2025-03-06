@@ -7,8 +7,16 @@ import velka.util.Pair;
 
 import java.util.List;
 
+import com.sun.codemodel.JClassAlreadyExistsException;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JMod;
+
 import velka.core.abstraction.Operator;
+import velka.core.exceptions.UnboundVariableException;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
+import velka.java.CodeModelInstance;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeVariable;
@@ -19,7 +27,7 @@ import velka.types.TypeVariable;
  * @author Mgr. Radomir Skrabal
  *
  */
-public class Symbol extends Expression implements Comparable<Expression> {
+public class Symbol extends Expression implements Comparable<Expression>, CompileableToJava {
 
 	/**
 	 * Name of the variable
@@ -91,7 +99,7 @@ public class Symbol extends Expression implements Comparable<Expression> {
 		if (env.containsVariable(this)) {
 			Expression e = env.getVariableValue(this);
 			if (e instanceof Operator) {
-				return ((Operator) e).getClojureSymbol().toClojureCode(env);
+				return ((Operator) e).getInternalSymbol().toClojureCode(env);
 			}
 		}
 		
@@ -114,11 +122,7 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression intprt = this.interpret(env);
-		if(intprt.equals(this)) {
-			return this;
-		}
-		return intprt.convert(to, env);
+		throw new RuntimeException("doConvert not implemented");
 	}
 	
 	/** Creates a list of unique new symbols */
@@ -131,5 +135,34 @@ public class Symbol extends Expression implements Comparable<Expression> {
 	/** Creates a list of unique new symbols */
 	public static List<Symbol> uniqueSymbolList(int size){
 		return uniqueSymbolList(size);
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		if (env.containsVariable(this)) {
+			Expression e;
+			try {
+				e = env.getVariableValue(this);
+				if (e instanceof Operator o) {
+					var intSym = o.getInternalSymbol();
+					var v = CodeModelInstance.findOrCreateClass(intSym.namespace).staticRef(intSym.name);
+					return v;
+				}
+				if(e instanceof TypeHolder) {
+					var v = CodeModelInstance.makeJVar(this.name);
+					return v;
+				}
+			} catch (UnboundVariableException er) {
+				throw new RuntimeException(er);
+			}
+			
+		}
+		else if(this.namespace.isEmpty()) {
+			var v = CodeModelInstance.makeJVar(this.name);
+			return v;
+		}
+		
+		var v = CodeModelInstance.instance()._getClass(this.namespace).staticRef(this.name);
+		return v;
 	}
 }

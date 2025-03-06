@@ -1,19 +1,20 @@
 package velka.core.langbase;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMod;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
+import velka.core.application.Let;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -22,6 +23,8 @@ import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.Literal;
+import velka.java.CodeModelInstance;
+import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -33,7 +36,6 @@ import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 import velka.util.ClojureHelper.ProxyImpl;
-import velka.util.Functions;
 import velka.util.annotations.Description;
 import velka.util.annotations.Example;
 import velka.util.annotations.Header;
@@ -49,14 +51,8 @@ import velka.util.annotations.VelkaOperatorBank;
 @Description("Operators for working with java.util.TreeSet.") 
 @Header("Tree Set")
 public class TreeSet extends OperatorBank {
-
-	/** Clojure namespace */
-	public static final String NAMESPACE = "velka.clojure.treeSet";
 	
-	public static final Path PATH = Paths.get("velka", "clojure");
-	public static final Path FILE = Paths.get("treeSet.clj");
-	
-	public static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
+	public static final Symbol constructorSymbol = new Symbol("velka_construct", TreeSet.instance().getNamespace());
 	
 	@VelkaConstructor
 	@Description("Constructs Set:Tree.") 
@@ -90,7 +86,7 @@ public class TreeSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return constructorSymbol;
 		}
 
@@ -140,7 +136,26 @@ public class TreeSet extends OperatorBank {
 		@Override
 		public String toString() {
 			return "construct Set:Tree ";
-		}		
+		}	
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var cmpCl = CodeModelInstance.instance().ref(java.util.Comparator.class);
+			var oCl = CodeModelInstance.instance().ref(Object.class);
+			var aCl = CodeModelInstance.instance().anonymousClass(cmpCl);
+			
+			var cmpMth = aCl.method(JMod.PUBLIC, CodeModelInstance.instance().INT, "compare");
+			var o1 = cmpMth.param(oCl, "o1");
+			var o2 = cmpMth.param(oCl, "o2");
+			
+			var ret = cmpMth.body().decl(oCl, "ret",
+					mappedArgs.get(new Symbol("_0")).invoke("apply").arg(VelkaTuple._velkaTuple(o1, o2)));
+			
+			cmpMth.body()._return(JExpr.cast(CodeModelInstance.instance().INT, ret));
+			
+			method.body()._return(JExpr._new(CodeModelInstance.instance().ref(java.util.TreeSet.class))
+					.arg(JExpr._new(aCl)));
+		}
 	};
 	
 	@VelkaConstructor
@@ -159,8 +174,8 @@ public class TreeSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-construct-copy", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("velka-construct-copy", TreeSet.instance().getNamespace());
 		}
 
 		@Override
@@ -180,83 +195,90 @@ public class TreeSet extends OperatorBank {
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var tsCl = CodeModelInstance.instance().ref(java.util.TreeSet.class);
+			
+			method.body()._return(
+					JExpr._new(tsCl).arg(mappedArgs.get(new Symbol("_0"))));
+		}
 	};
 	
 	@VelkaOperator
 	@Description("Adds the specified element to this set if it is not already present.") 
 	@Example("(map-tree-ceiling-entry (construct Map Tree (lambda (x y) -1)))") 
 	@Syntax("(map-tree-ceiling-entry <map>)")
-	public static Operator add = Operator.wrapJavaMethod(java.util.TreeSet.class, "add", "set-tree-add", NAMESPACE, Object.class);
+	public static Operator add = Operator.wrapJavaMethod(java.util.TreeSet.class, "add", "set-tree-add", TreeSet.instance().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Adds the specified element to this set if it is not already present.")
-	public static Operator addAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "addAll", "set-tree-add-all", NAMESPACE, Collection.class);
+	public static Operator addAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "addAll", "set-tree-add-all", TreeSet.instance().getNamespace(), Collection.class);
 	
 	@VelkaOperator
 	@Description("Returns the least element in this set greater than or equal to the given element, or null if there is no such element.")
-	public static Operator ceiling = Operator.wrapJavaMethod(java.util.TreeSet.class, "ceiling", "set-tree-ceiling", NAMESPACE, Object.class);
+	public static Operator ceiling = Operator.wrapJavaMethod(java.util.TreeSet.class, "ceiling", "set-tree-ceiling", TreeSet.instance().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Removes all of the elements from this set.")
-	public static Operator clear = Operator.wrapJavaMethod(java.util.TreeSet.class, "clear", "set-tree-clear", NAMESPACE);
+	public static Operator clear = Operator.wrapJavaMethod(java.util.TreeSet.class, "clear", "set-tree-clear", TreeSet.instance().getNamespace());
 	
 	@VelkaOperator
 	@Description("Returns true if this set contains the specified element.")
-	public static Operator contains = Operator.wrapJavaMethod(java.util.TreeSet.class, "contains", "set-tree-contains", NAMESPACE, Object.class);
+	public static Operator contains = Operator.wrapJavaMethod(java.util.TreeSet.class, "contains", "set-tree-contains", TreeSet.instance().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Returns the first (lowest) element currently in this set.")
-	public static Operator first = Operator.wrapJavaMethod(java.util.TreeSet.class, "first", "set-tree-first", NAMESPACE);
+	public static Operator first = Operator.wrapJavaMethod(java.util.TreeSet.class, "first", "set-tree-first", TreeSet.instance().getNamespace());
 	
 	@VelkaOperator
 	@Description("Returns the greatest element in this set less than or equal to the given element, or null if there is no such element.")
-	public static Operator floor = Operator.wrapJavaMethod(java.util.TreeSet.class, "floor", "set-tree-floor", NAMESPACE, Object.class);
+	public static Operator floor = Operator.wrapJavaMethod(java.util.TreeSet.class, "floor", "set-tree-floor", TreeSet.instance().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Returns the least element in this set strictly greater than the given element, or null if there is no such element.")
-	public static Operator higher = Operator.wrapJavaMethod(java.util.TreeSet.class, "higher", "set-tree-higher", NAMESPACE, Object.class);
+	public static Operator higher = Operator.wrapJavaMethod(java.util.TreeSet.class, "higher", "set-tree-higher", TreeSet.instance().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Returns true if this set contains no elements.")
-	public static Operator isEmpty = Operator.wrapJavaMethod(java.util.TreeSet.class, "isEmpty", "set-tree-is-empty", NAMESPACE);
+	public static Operator isEmpty = Operator.wrapJavaMethod(java.util.TreeSet.class, "isEmpty", "set-tree-is-empty", TreeSet.instance().getNamespace());
 	
 	@VelkaOperator
 	@Description("Returns the last (highest) element currently in this set.")
-	public static Operator last = Operator.wrapJavaMethod(java.util.TreeSet.class, "last", "set-tree-last", NAMESPACE);
+	public static Operator last = Operator.wrapJavaMethod(java.util.TreeSet.class, "last", "set-tree-last", TreeSet.instance().getNamespace());
 	
 	@VelkaOperator
 	@Description("Returns the greatest element in this set strictly less than the given element, or null if there is no such element.")
-	public static Operator lower = Operator.wrapJavaMethod(java.util.TreeSet.class, "lower", "set-tree-lower", NAMESPACE, Object.class);
+	public static Operator lower = Operator.wrapJavaMethod(java.util.TreeSet.class, "lower", "set-tree-lower", TreeSet.instance().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Retrieves and removes the first (lowest) element, or returns null if this set is empty.")
-	public static Operator pollFirst = Operator.wrapJavaMethod(java.util.TreeSet.class, "pollFirst", "set-tree-poll-first", NAMESPACE);
+	public static Operator pollFirst = Operator.wrapJavaMethod(java.util.TreeSet.class, "pollFirst", "set-tree-poll-first", TreeSet.instance().getNamespace());
 	
 	@VelkaOperator
 	@Description("Retrieves and removes the last (highest) element, or returns null if this set is empty.")
-	public static Operator pollLast = Operator.wrapJavaMethod(java.util.TreeSet.class, "pollLast", "set-tree-poll-last", NAMESPACE);
+	public static Operator pollLast = Operator.wrapJavaMethod(java.util.TreeSet.class, "pollLast", "set-tree-poll-last", TreeSet.instance().getNamespace());
 	
 	@VelkaOperator
 	@Description("Removes the specified element from this set if it is present.")
-	public static Operator remove = Operator.wrapJavaMethod(java.util.TreeSet.class, "remove", "set-tree-remove", NAMESPACE, Object.class);
+	public static Operator remove = Operator.wrapJavaMethod(java.util.TreeSet.class, "remove", "set-tree-remove", TreeSet.instance().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Returns the number of elements in this set (its cardinality).")
-	public static Operator size = Operator.wrapJavaMethod(java.util.TreeSet.class, "size", "set-tree-size", NAMESPACE);
+	public static Operator size = Operator.wrapJavaMethod(java.util.TreeSet.class, "size", "set-tree-size", TreeSet.instance().getNamespace());
 	
 	@VelkaOperator
 	@Description("Returns true if this collection contains all of the elements in the specified collection. ")
-	public static Operator containsAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "containsAll", "set-tree-contains-all", NAMESPACE, Collection.class);
+	public static Operator containsAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "containsAll", "set-tree-contains-all", TreeSet.instance().getNamespace(), Collection.class);
 	
 	@VelkaOperator
 	@Description("Retains only the elements in this collection that are contained in the specified collection (optional operation). In other words, removes from this collection all of its elements that are not contained in the specified collection. ")
-	public static Operator retainAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "retainAll", "set-tree-retain-all", NAMESPACE, Collection.class);
+	public static Operator retainAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "retainAll", "set-tree-retain-all", TreeSet.instance().getNamespace(), Collection.class);
 	
 	@VelkaOperator
 	@Description("Removes from this set all of its elements that are contained in the specified collection (optional operation). If the specified collection is also a set, this operation effectively modifies this set so that its value is the asymmetric set difference of the two sets.")
-	public static Operator removeAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "removeAll", "set-tree-remove-all", NAMESPACE, Collection.class);
+	public static Operator removeAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "removeAll", "set-tree-remove-all", TreeSet.instance().getNamespace(), Collection.class);
 	
-	public static final Symbol mapSymbol = new Symbol("velka-map", NAMESPACE);
+	public static final Symbol mapSymbol = new Symbol("velka_map", TreeSet.instance().getNamespace());
 	public static final Symbol mapSymbol_out = new Symbol("set-tree-map");
 	
 	@VelkaOperator
@@ -272,8 +294,7 @@ public class TreeSet extends OperatorBank {
 			var code = ClojureHelper.fnHelper(List.of(set, fun),
 						ClojureHelper.letHelper(
 								ret,
-								Pair.of(ret, ClojureHelper.constructJavaClass(java.util.TreeSet.class, 
-												ClojureHelper.applyClojureFunction(".comparator", set))),
+								Pair.of(ret, ClojureHelper.constructJavaClass(java.util.ArrayList.class)),
 								Pair.of("tmp", ClojureHelper.applyClojureFunction(".addAll", 
 										ret,
 										ClojureHelper.applyClojureFunction("map", 
@@ -283,7 +304,7 @@ public class TreeSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return mapSymbol;
 		}
 
@@ -294,7 +315,7 @@ public class TreeSet extends OperatorBank {
 			@SuppressWarnings("unchecked")
 			var tSet = (java.util.TreeSet<Object>)set.javaObject;
 			
-			var rSet = new java.util.TreeSet<Object>(tSet.comparator());
+			var rSet = new java.util.ArrayList<Object>();
 			
 			tSet.stream().forEach(x -> {
 				var ex = Literal.objectToLiteral(x);
@@ -308,7 +329,7 @@ public class TreeSet extends OperatorBank {
 				}
 			});
 			
-			return new LitInteropObject(rSet, TypeAtom.TypeSetTree);
+			return new LitInteropObject(rSet, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -316,13 +337,29 @@ public class TreeSet extends OperatorBank {
 			var A = new TypeVariable(NameGenerator.next());
 			var B = new TypeVariable(NameGenerator.next());
 			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree, new TypeArrow(new TypeTuple(A), B)),
-					TypeAtom.TypeSetTree);
+					TypeAtom.TypeListNative);
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
 		@Override
 		public String toString() {
 			return mapSymbol_out.toString();
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var oCl = CodeModelInstance.instance().ref(Object.class);
+			var lCl = CodeModelInstance.instance().ref(java.util.ArrayList.class);
+			var s = mappedArgs.get(new Symbol("_0"));
+			var f = mappedArgs.get(new Symbol("_1"));
+			
+			var l = method.body().decl(lCl, "lst", JExpr._new(lCl));
+			
+			var _forEach = method.body().forEach(oCl, "o", s);
+			var r = _forEach.body().decl(oCl, "_r", f.invoke("apply").arg(VelkaTuple._velkaTuple(_forEach.var())));
+			_forEach.body().add(l.invoke("add").arg(r));
+			
+			method.body()._return(l);
 		}
 	};
 	
@@ -333,13 +370,13 @@ public class TreeSet extends OperatorBank {
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			var set = "_set";
 			var code = ClojureHelper.fnHelper(List.of(set),
-							ClojureHelper.applyClojureFunction("seq", set));
+							ClojureHelper.constructJavaClass(ArrayList.class, set));
 			return code;
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("to-list", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("to_list", TreeSet.instance().getNamespace());
 		}
 
 		@Override
@@ -348,8 +385,7 @@ public class TreeSet extends OperatorBank {
 			@SuppressWarnings("unchecked")
 			var tSet = (java.util.TreeSet<Object>)set.javaObject;
 			
-			var l = new ArrayList<Expression>();
-			tSet.stream().forEach(o -> l.add(Literal.objectToLiteral(o)));
+			var l = new ArrayList<Object>(tSet);
 			
 			return new LitInteropObject(l, TypeAtom.TypeListNative);
 		}
@@ -365,6 +401,12 @@ public class TreeSet extends OperatorBank {
 			return "set-tree-to-list";
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(
+					JExpr._new(CodeModelInstance.instance().ref(java.util.ArrayList.class))
+					.arg(mappedArgs.get(new Symbol("_0"))));
+		}
 	};
 	
 	@VelkaConversion
@@ -380,49 +422,18 @@ public class TreeSet extends OperatorBank {
 
 		@Override
 		public Expression cost() {
-			final var f = Functions.linearFunctionFromPoints(costX1, costY1, costX2, costY2);
-			var l = new Operator() {
-
-				@Override
-				protected String toClojureOperator(Environment env) throws AppendableException {
-					var arg = "_arg";
-					var code = ClojureHelper.fnHelper(List.of(arg),
-							ClojureHelper.applyClojureFunction("min", costY1.toString(),
-									ClojureHelper.applyClojureFunction("max", costY2.toString(),
-											ClojureHelper.applyClojureFunction(".apply",
-													ClojureHelper.applyClojureFunction(
-															"velka.util.Functions/linearFunctionFromPoints",
-															costX1.toString(), costY1.toString(), costX2.toString(),
-															costY2.toString()),
-													ClojureHelper.applyClojureFunction("double", ClojureHelper.applyClojureFunction(".size", arg))))));
-					return code;
-				}
-
-				@Override
-				public Symbol getClojureSymbol() {
-					return new Symbol(NameGenerator.next());
-				}
-
-				@Override
-				protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-					var lio = (LitInteropObject)args.get(0);
-					@SuppressWarnings("unchecked")
-					var set = (java.util.TreeSet<Object>)lio.javaObject;
-					
-					var cost = Math.min(0.8d, Math.max(0.5d, f.apply((double)set.size())));
-					
-					return new LitDouble(cost);
-				}
-
-				@Override
-				public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-					var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree), TypeAtom.TypeDoubleNative);
-					return Pair.of(type, Substitution.EMPTY);
-				}
-				
-			};
+			var f = new Symbol("_f");
+			var car = new Symbol("_cardinality");
+			var set = new Symbol("_set");
+			var cst = new Lambda(
+					new Let(new AbstractionApplication(f,
+							new Tuple(new AbstractionApplication(Operators.IntToDouble, new Tuple(car)))),
+							Pair.of(f, new AbstractionApplication(Operators.linFunPoints, 
+									new Tuple(new LitDouble(costX1), new LitDouble(costY1), new LitDouble(costX2), new LitDouble(costY2)))),
+							Pair.of(car, new AbstractionApplication(TreeSet.size, new Tuple(set)))),
+					List.of(Pair.of(set, TypeAtom.TypeSet)));					
 			
-			return l;
+			return cst;
 		}
 
 		@Override
@@ -439,8 +450,8 @@ public class TreeSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("tree-set-2-bit-set", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("tree_set_2_bit_set", TreeSet.instance().getNamespace());
 		}
 
 		@Override
@@ -474,6 +485,26 @@ public class TreeSet extends OperatorBank {
 			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree), TypeAtom.TypeSetBitSet);
 			return Pair.of(type, Substitution.EMPTY);
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var oCl = CodeModelInstance.instance().ref(Object.class);
+			var _int = CodeModelInstance.instance().ref(Integer.class);
+			var reCl = CodeModelInstance.instance().ref(RuntimeException.class);
+			var bsCl = CodeModelInstance.instance().ref(BitSet.class);
+			
+			var s = mappedArgs.get(new Symbol("_0"));
+			var r = method.body().decl(bsCl, "r", JExpr._new(bsCl));
+			
+			var _forEach = method.body().forEach(oCl, "o", s);
+			
+			var _if = _forEach.body()._if(_forEach.var()._instanceof(_int).not());
+			_if._then()._throw(JExpr._new(reCl).arg(JExpr.lit("Can only convert integer sets to bit sets")));
+			
+			_forEach.body().add(r.invoke("set").arg(JExpr.cast(_int, _forEach.var())));
+			
+			method.body()._return(r);			
+		}
 	};
 	
 	@VelkaOperator
@@ -494,8 +525,8 @@ public class TreeSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-intersect", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("velka_intersect", TreeSet.instance().getNamespace());
 		}
 
 		@Override
@@ -524,6 +555,17 @@ public class TreeSet extends OperatorBank {
 		public String toString() {
 			return "set-tree-intersect";
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var tsCl = CodeModelInstance.instance().ref(java.util.TreeSet.class);
+			
+			var s1 = mappedArgs.get(new Symbol("_0"));
+			var s2 = mappedArgs.get(new Symbol("_1"));
+			var s = method.body().decl(tsCl, "s", JExpr._new(tsCl).arg(s1));
+			method.body().add(s.invoke("retainAll").arg(s2));
+			method.body()._return(s);
+		}
 	};
 	
 	@VelkaOperator
@@ -542,8 +584,8 @@ public class TreeSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-union", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("velka_union", TreeSet.instance().getNamespace());
 		}
 
 		@Override
@@ -571,6 +613,16 @@ public class TreeSet extends OperatorBank {
 			return "set-tree-union";
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var tsCl = CodeModelInstance.instance().ref(java.util.TreeSet.class);
+			
+			var s1 = mappedArgs.get(new Symbol("_0"));
+			var s2 = mappedArgs.get(new Symbol("_1"));
+			var s = method.body().decl(tsCl, "s", JExpr._new(tsCl).arg(s1));
+			method.body().add(s.invoke("addAll").arg(s2));
+			method.body()._return(s);
+		}
 	};
 	
 	@VelkaOperator
@@ -606,18 +658,15 @@ public class TreeSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("from-list", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("from_list", TreeSet.instance().getNamespace());
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var lst = (LitInteropObject)args.get(0);
 			var cmp = args.get(1);
-			@SuppressWarnings("unchecked")
-			var l = ((java.util.List<Expression>) lst.javaObject).stream()
-					.map(e -> Literal.literalToObject(e))
-					.collect(Collectors.toList());
 			
 			var set = new java.util.TreeSet<Object>(
 					new java.util.Comparator<Object>() {
@@ -643,7 +692,7 @@ public class TreeSet extends OperatorBank {
 						}
 					});
 			
-			set.addAll(l);
+			set.addAll((Collection<? extends Object>)lst.javaObject);
 			
 			return new LitInteropObject(set, TypeAtom.TypeSetTree);
 		}
@@ -661,6 +710,32 @@ public class TreeSet extends OperatorBank {
 		public String toString() {
 			return "set-tree-from-list";
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var tsCl = CodeModelInstance.instance().ref(java.util.TreeSet.class);
+			var cmpCl = CodeModelInstance.instance().ref(java.util.Comparator.class);
+			var oCl = CodeModelInstance.instance().ref(Object.class);
+			var aCl = CodeModelInstance.instance().anonymousClass(cmpCl);
+			
+			var l = mappedArgs.get(new Symbol("_0"));
+			var f = mappedArgs.get(new Symbol("_1"));
+			
+			var cmpMth = aCl.method(JMod.PUBLIC, CodeModelInstance.instance().INT, "compare");
+			var o1 = cmpMth.param(oCl, "o1");
+			var o2 = cmpMth.param(oCl, "o2");
+			
+			var ret = cmpMth.body().decl(oCl, "ret",
+					f.invoke("apply").arg(VelkaTuple._velkaTuple(o1, o2)));
+			
+			cmpMth.body()._return(JExpr.cast(CodeModelInstance.instance().INT, ret));
+			
+			var s = method.body().decl(tsCl, "set", JExpr._new(tsCl)
+					.arg(JExpr._new(aCl)));
+			
+			method.body().add(s.invoke("addAll").arg(l));
+			method.body()._return(s);
+		}
 	};
 	
 	@VelkaConversion
@@ -671,15 +746,13 @@ public class TreeSet extends OperatorBank {
 			var hashSet = new Symbol(NameGenerator.next());
 			
 			var cost = new Lambda(
-					new Tuple(hashSet), 
-					new TypeTuple(TypeAtom.TypeSetHash),
 					new AbstractionApplication(
-							new AbstractionApplication(
-									Operators.linFunPoints, 
-									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
-							new Tuple(
-									new AbstractionApplication(Operators.IntToDouble,
-											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(hashSet)))))));
+							new AbstractionApplication(Operators.linFunPoints,
+									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d),
+											new LitDouble(0.5d))),
+							new Tuple(new AbstractionApplication(Operators.IntToDouble,
+									new Tuple(new AbstractionApplication(HashSet.size, new Tuple(hashSet)))))),
+					List.of(Pair.of(hashSet, TypeAtom.TypeSetHash)));
 			return cost;
 		}
 
@@ -693,8 +766,8 @@ public class TreeSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("treeset-2-hashset");
+		public Symbol getInternalSymbol() {
+			return new Symbol("treeset_2_hashset");
 		}
 
 		@Override
@@ -718,22 +791,14 @@ public class TreeSet extends OperatorBank {
 		public String toString() {
 			return "treeset-2-hashset";
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var hsCl = CodeModelInstance.instance().ref(java.util.HashSet.class);
+			method.body()._return(
+					JExpr._new(hsCl).arg(mappedArgs.get(new Symbol("_0"))));
+		}
 	};
-	
-	@Override
-	public String getNamespace() {
-		return NAMESPACE;
-	}
-
-	@Override
-	public Path getPath() {
-		return PATH;
-	}
-
-	@Override
-	public Path getFileName() {
-		return FILE;
-	}
 	
 	private static TreeSet singleton = null;
 	
@@ -742,6 +807,11 @@ public class TreeSet extends OperatorBank {
 			singleton = new TreeSet();
 		}
 		return singleton;
+	}
+
+	@Override
+	protected String name() {
+		return "treeSet";
 	}
 
 }

@@ -5,11 +5,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import velka.core.abstraction.Abstraction;
-import velka.core.exceptions.InvalidNumberOfArgumentsException;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
+import velka.java.CodeModelInstance;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
@@ -20,9 +23,9 @@ import velka.types.Substitution;
 import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
 import velka.types.TypeArrow;
-import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.types.TypesDoesNotUnifyException;
+import velka.types.typeSystem.VelkaAbstraction;
 
 /**
  * Expression for function application in form (fun arg1 arg2 ...)
@@ -30,7 +33,7 @@ import velka.types.TypesDoesNotUnifyException;
  * @author Mgr. Radomir Skrabal
  * 
  */
-public class AbstractionApplication extends Application {
+public class AbstractionApplication extends Application implements CompileableToJava {
 	
 	/**
 	 * Symbol for eapply special form
@@ -49,42 +52,24 @@ public class AbstractionApplication extends Application {
 
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		// Interpret the abstraction
-		Expression ifun = this.fun.interpret(env);
-
-		if (!(ifun instanceof Abstraction)) {
-			throw new AppendableException(ifun.toString() + " is not an abstration");
-		}
-		Abstraction abst = (Abstraction) ifun;
-
-		// Interpret arguments
-		Expression intArgs = this.args.interpret(env);
-		if(!(intArgs instanceof Tuple)) {
-			throw new AppendableException("Invalid argument expression " + intArgs.toString() + " in " + this.toString());
-		}
+		var abst = this.fun.interpret(env);
+		var args = this.args.interpret(env);
 		
-		Tuple iArgs = (Tuple)intArgs; 
-		Pair<Type, Substitution> iArgsInfered = iArgs.infer(env);
-
-		// Select implementation to use (if applicable)
-		abst = abst.selectImplementation(iArgs, env);
-
-		// Convert arguments to specific representations
-		Pair<Type, Substitution> abstInfered = abst.inferWithArgs(iArgs, env);
-		Type abstArgsType = ((TypeArrow) abstInfered.first).ltype;
-
-		int expectedNumberOfArgs = ((TypeTuple) abstArgsType).size();
-		int providedNumberOfArgs = ((TypeTuple) iArgsInfered.first).size();
-
-		if (expectedNumberOfArgs != providedNumberOfArgs) {
-			throw new InvalidNumberOfArgumentsException(expectedNumberOfArgs, iArgs, this);
+		if(abst instanceof VelkaAbstraction va) {
+			if(args instanceof Tuple t) {
+				var ret = va.apply(t);
+				return (Expression)ret;
+			}
+			throw new RuntimeException(new StringBuilder("Arguments ")
+					.append(this.args)
+					.append(" does not interpret to tuple, got: ")
+					.append(args)
+					.toString());
 		}
-
-		Expression cArgs = iArgs.convert(abstArgsType, env);
-		Tuple cArgsTuple = (Tuple) cArgs.interpret(env);
-
-		// Finally evaluate application
-		return abst.substituteAndEvaluate(cArgsTuple, env);
+		throw new RuntimeException(new StringBuilder("Applied ")
+				.append(this.fun)
+				.append(" does not interpret to VelkaAbstraction, got: ")
+				.append(abst).toString());
 	}
 
 	/**
@@ -173,7 +158,7 @@ public class AbstractionApplication extends Application {
 				Substitution finalSubst = substs.stream().reduce(Substitution.EMPTY, (agg, s) -> agg.compose(s));
 				
 				Type finalType = RepresentationOr
-						.makeRepresentationOr(l.stream().map(x -> x.first).collect(Collectors.toList()));
+						.factory(l.stream().map(x -> x.first).collect(Collectors.toList()));
 				return new Pair<Type, Substitution>(finalType, finalSubst);
 			}
 
@@ -232,7 +217,19 @@ public class AbstractionApplication extends Application {
 	@Override
 	protected Expression doConvert(Type from, Type to, Environment env)
 			throws AppendableException {
-		Expression intprt = this.interpret(env);
-		return intprt.convert(to, env);
+		throw new RuntimeException("doConvert is not implemented for AbstractionApplication");
+	}
+
+	@Override
+	public JExpression toJavaExpr(Environment env) {
+		var cmpargs = (CompileableToJava)this.args;
+		var cmpfun = (CompileableToJava)this.fun;
+		
+		var ret = JExpr
+				.invoke(JExpr.cast(CodeModelInstance.instance()._ref(VelkaAbstraction.class), cmpfun.toJavaExpr(env)),
+						"apply")
+				.arg(cmpargs.toJavaExpr(env));
+		
+		return ret;
 	}
 }

@@ -1,11 +1,15 @@
 package velka.core.langbase;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Map;
+
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMethod;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JVar;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
@@ -21,8 +25,9 @@ import velka.core.literal.LitBoolean;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
-import velka.core.literal.LitString;
 import velka.core.literal.Literal;
+import velka.java.CodeModelInstance;
+import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -55,95 +60,20 @@ import velka.util.annotations.VelkaOperatorBank;
 @Header("Bit Set")
 public class JavaBitSet extends OperatorBank {
 	
-	/**
-	 * Clojure namespace for JavaArrayList
-	 */
-	public static final String NAMESPACE = "velka.clojure.bitSet";
-	
-	public static final Symbol constructorSymbol = new Symbol("velka-construct", NAMESPACE);
+	public static final Symbol constructorSymbol = new Symbol("velka_construct", JavaBitSet.singleton().getNamespace());
 	
 	
 	@VelkaConstructor
 	@Description("Constructs empty Set:BitSet.")
 	@Name("Construct Empty bitset")
 	@Syntax("(construct Set:BitSet)")
-	public static final Constructor constructor = new Constructor() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String code = ClojureHelper.fnHelper(
-							Arrays.asList(),
-							ClojureHelper.applyClojureFunction("java.util.BitSet."));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return constructorSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			Expression e = new LitInteropObject(new BitSet(), TypeAtom.TypeSetBitSet);
-			return e;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public String toString() {
-			return "construct Set BitSet";
-		}
-	};
-	
-	public static final Symbol nBitsConstructorSymbol = new Symbol("nbits-construct", NAMESPACE);
+	public static final Constructor constructor = Constructor.wrapJavaConstructor(BitSet.class, JavaBitSet.singleton().getNamespace());
 	
 	@VelkaConstructor
 	@Description("Creates a bit set whose initial size is large enough to explicitly represent bits with indices in the range 0 through nbits-1.")
 	@Name("Construct bit set with capacity")
 	@Syntax("(construct Set:BitSet <nbits>)")
-	public static final Constructor nBitsConstructor = new Constructor() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String nbits = "_nbits";
-			String code = ClojureHelper.fnHelper(
-							Arrays.asList(nbits),
-							ClojureHelper.applyClojureFunction(
-									"java.util.BitSet.",
-									nbits));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return nBitsConstructorSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			LitInteger nbits = (LitInteger)args.get(0);
-			Expression e = new LitInteropObject(new BitSet((int) nbits.value), TypeAtom.TypeSetBitSet);
-			return e;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeIntNative), TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return "construct Set BitSet";
-		}		
-	};
+	public static final Constructor nBitsConstructor = Constructor.wrapJavaConstructor(BitSet.class, JavaBitSet.singleton().getNamespace(), int.class); 
 	
 	@VelkaConstructor
 	public static final Constructor copyConstructor = new Constructor() {
@@ -160,8 +90,8 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("copy-construct", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("copy_construct", JavaBitSet.singleton().getNamespace());
 		}
 
 		@Override
@@ -181,12 +111,19 @@ public class JavaBitSet extends OperatorBank {
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var bscl = CodeModelInstance.instance()._ref(BitSet.class);
+			var _s = method.body().decl(bscl, "_s",
+					JExpr._new(bscl).arg(mappedArgs.get(new Symbol("_0")).invoke("length")));
+			method.body().add(_s.invoke("or").arg(mappedArgs.get(new Symbol("_0"))));
+			method.body()._return(_s);
+		}
 	};
 	
 	/**
 	 * Symbol for void and(BitSet set)
 	 */
-	private static final Symbol andSymbol = new Symbol("velka-and", NAMESPACE);
 	public static final Symbol andSymbol_out = new Symbol("bit-set-and");
 
 	/**
@@ -200,62 +137,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-and s1 s2)") 
 	@Syntax("(bit-set-and <set1> <set2>)")
-	public static final Operator and = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set1 = "_set1";
-			String set2 = "_set2";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set1, set2),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-								ClojureHelper.applyClojureFunction(
-										".and",
-										set1,
-										set2),
-								set1)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return andSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			
-			LitInteropObject set2 = (LitInteropObject)args.get(1);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			BitSet bSet2 = (BitSet)set2.javaObject;
-			
-			bSet1.and(bSet2);
-			
-			return set1;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return andSymbol_out.toString();
-		}
-	};
+	public static final Operator and = Operator.wrapJavaMethod(BitSet.class, "and", "bit-set-and",
+			JavaBitSet.singleton().getNamespace(), BitSet.class);
 	
-	public static final Symbol andNotSymbol = new Symbol("andNot", NAMESPACE);
+	public static final Symbol andNotSymbol = new Symbol("and_not", JavaBitSet.singleton().getNamespace());
 	public static final Symbol andNotSymbol_out = new Symbol("bit-set-and-not");
 	
 	@VelkaOperator
@@ -266,62 +151,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-and-not s1 s2)") 
 	@Syntax("(bit-set-and-not <set1> <set2>)")
-	public static final Operator andNot = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set1 = "_set1";
-			String set2 = "_set2";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set1, set2),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-								ClojureHelper.applyClojureFunction(
-										".andNot",
-										set1,
-										set2),
-								set1)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return andNotSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			
-			LitInteropObject set2 = (LitInteropObject)args.get(1);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			BitSet bSet2 = (BitSet)set2.javaObject;
-			
-			bSet1.andNot(bSet2);
-			
-			return set1;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		} 
-		
-		@Override
-		public String toString() {
-			return andNotSymbol_out.toString();
-		}
-	};
+	public static final Operator andNot = Operator.wrapJavaMethod(BitSet.class, "andNot", "bit-set-and-not",
+			JavaBitSet.singleton().getNamespace(), BitSet.class);
 	
-	public static final Symbol cardinalitySymbol = new Symbol("cardinality", NAMESPACE);
+	public static final Symbol cardinalitySymbol = new Symbol("cardinality", JavaBitSet.singleton().getNamespace());
 	public static final Symbol cardinalitySymbol_out = new Symbol("bit-set-cardinality");
 	
 	@VelkaOperator
@@ -330,53 +163,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-cardinality s1)") 
 	@Syntax("(bit-set-cardinality <set>)")
-	public static final Operator cardinality = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".cardinality",
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return cardinalitySymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set = (LitInteropObject)args.get(0);
-			
-			BitSet bSet = (BitSet)set.javaObject;
-			
-			long card = (long)bSet.cardinality();
-			
-			return new LitInteger(card);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeIntNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-
-		@Override
-		public String toString() {
-			return cardinalitySymbol_out.toString();
-		}
-	};
+	public static final Operator cardinality = Operator.wrapJavaMethod(BitSet.class, "cardinality",
+			"bit-set-cardinality", JavaBitSet.singleton().getNamespace()); 
 	
-	public static final Symbol clearSymbol = new Symbol("clear", NAMESPACE);
+	public static final Symbol clearSymbol = new Symbol("clear", JavaBitSet.singleton().getNamespace());
 	public static final Symbol clearSymbol_out = new Symbol("bit-set-clear");
 	
 	@VelkaOperator
@@ -385,52 +175,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-clear s1)") 
 	@Syntax("(bit-set-clear <set>)")
-	public static final Operator clear = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String code =
-					ClojureHelper.fnHelper(
-							Arrays.asList(set),
-							ClojureHelper.applyClojureFunction(
-									"second",
-									ClojureHelper.clojureVectorHelper(
-											ClojureHelper.applyClojureFunction(
-													".clear",
-													set),
-											set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return clearSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set = (LitInteropObject)args.get(0);
-			BitSet bSet = (BitSet)set.javaObject;
-			bSet.clear();
-			return set;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet), TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override 
-		public String toString() {
-			return clearSymbol_out.toString();
-		}
-	};
+	public static final Operator clear = Operator.wrapJavaMethod(BitSet.class, "clear", "bit-set-clear",
+			JavaBitSet.singleton().getNamespace());
 	
-	public static final Symbol clearBitIndexSymbol = new Symbol("clear-bit-index", NAMESPACE);
+	public static final Symbol clearBitIndexSymbol = new Symbol("clear_bit_index", JavaBitSet.singleton().getNamespace());
 	public static final Symbol clearBitIndexSymbol_out = new Symbol("bit-set-clear-bit-index");
 	
 	@VelkaOperator
@@ -439,56 +187,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-clear-bit-index s1 3)") 
 	@Syntax("(bit-set-clear-bit-index <set> <index>)")
-	public static final Operator clearBitIndex = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String bitIndex = "_bit-index";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, bitIndex),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".clear",
-											set,
-											bitIndex),
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return clearBitIndexSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set = (LitInteropObject)args.get(0);
-			LitInteger bitIndex = (LitInteger)args.get(1);
-			BitSet bSet = (BitSet)set.javaObject;
-			bSet.clear((int)bitIndex.value);
-			return set;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return clearBitIndexSymbol_out.toString();
-		}
-	};
+	public static final Operator clearBitIndex = Operator.wrapJavaMethod(BitSet.class, "clear",
+			"bit-set-clear-bit-index", JavaBitSet.singleton().getNamespace(), int.class);
 	
-	public static final Symbol clearIntervalSymbol = new Symbol("clear-interval", NAMESPACE);
+	public static final Symbol clearIntervalSymbol = new Symbol("clear_interval", JavaBitSet.singleton().getNamespace());
 	public static final Symbol clearIntervalSymbol_out = new Symbol("bit-set-clear-interval");
 	
 	@VelkaOperator
@@ -497,59 +199,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-clear-interval s1 2 4)") 
 	@Syntax("(bit-set-clear-interval <set> <fromIndex> <toIndex>)")
-	public static final Operator clearInterval = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String fromIndex = "_fromIndex";
-			String toIndex = "_toIndex";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, fromIndex, toIndex),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".clear",
-											set,
-											fromIndex,
-											toIndex),
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return clearIntervalSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set = (LitInteropObject)args.get(0);
-			LitInteger fromIndex = (LitInteger)args.get(1);
-			LitInteger toIndex = (LitInteger)args.get(2);
-			BitSet bSet = (BitSet)set.javaObject;
-			bSet.clear((int)fromIndex.value, (int)toIndex.value);
-			return set;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return clearIntervalSymbol_out.toString();
-		}		
-	};
+	public static final Operator clearInterval = Operator.wrapJavaMethod(BitSet.class, "clear",
+			"bit-set-clear-interval", JavaBitSet.singleton().getNamespace(), int.class, int.class);
 	
-	public static final Symbol cloneSymbol = new Symbol("velka-clone", NAMESPACE);
+	public static final Symbol cloneSymbol = new Symbol("velka_clone", JavaBitSet.singleton().getNamespace());
 	public static final Symbol cloneSymbol_out = new Symbol("bit-set-clone");
 	
 	@VelkaOperator
@@ -572,7 +225,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return cloneSymbol;
 		}
 
@@ -598,9 +251,17 @@ public class JavaBitSet extends OperatorBank {
 			return cloneSymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var bscl = CodeModelInstance.instance()._ref(BitSet.class);
+			var _s = method.body().decl(bscl, "_s",
+					JExpr._new(bscl).arg(mappedArgs.get(new Symbol("_0")).invoke("length")));
+			method.body().add(_s.invoke("or").arg(mappedArgs.get(new Symbol("_0"))));
+			method.body()._return(_s);
+		}
 	};
 	
-	public static final Symbol equalsSymbol = new Symbol("velka-equal", NAMESPACE);
+	public static final Symbol equalsSymbol = new Symbol("velka_equal", JavaBitSet.singleton().getNamespace());
 	public static final Symbol equalsSymbol_out = new Symbol("bit-set-equalp");
 	
 	@VelkaOperator
@@ -611,57 +272,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-equalp s1 s2)")
 	@Syntax("(bit-set-equalp <set1> <set2>)")
-	public static final Operator equals = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set1 = "_set1";
-			String set2 = "_set2";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set1, set2),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".equals",
-									set1,
-									set2)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return equalsSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			
-			LitInteropObject set2 = (LitInteropObject)args.get(1);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			BitSet bSet2 = (BitSet)set2.javaObject;
-			
-			return bSet1.equals(bSet2) ? LitBoolean.TRUE : LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeBoolNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return equalsSymbol_out.toString();
-		}
-	};
+	public static final Operator equals = Operator.wrapJavaMethod(BitSet.class, "equals",
+			"bit-set-equalp", JavaBitSet.singleton().getNamespace(), Object.class);
 	
-	public static final Symbol flipSymbol = new Symbol("flip", NAMESPACE);
+	public static final Symbol flipSymbol = new Symbol("flip", JavaBitSet.singleton().getNamespace());
 	public static final Symbol flipSymbol_out = new Symbol("bit-set-flip");
 	
 	@VelkaOperator
@@ -669,58 +283,10 @@ public class JavaBitSet extends OperatorBank {
 	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-flip s1 3)")
 	@Syntax("(bit-set-flip <set> <bitIndex>)")
-	public static final Operator flip = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String bitIndex = "_bitIndex";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, bitIndex),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".flip",
-											set,
-											bitIndex),
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return flipSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set = (LitInteropObject)args.get(0);
-			BitSet bSet = (BitSet)set.javaObject;
-			
-			LitInteger bitIndex = (LitInteger)args.get(1);
-			
-			bSet.flip((int)bitIndex.value);
-			return set;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return flipSymbol_out.toString();
-		}
-	};
+	public static final Operator flip = Operator.wrapJavaMethod(BitSet.class, "flip",
+			"bit-set-flip", JavaBitSet.singleton().getNamespace(), int.class);
 	
-	public static final Symbol flipIntervalSymbol = new Symbol("flip-interval", NAMESPACE);
+	public static final Symbol flipIntervalSymbol = new Symbol("flip_interval", JavaBitSet.singleton().getNamespace());
 	public static final Symbol flipIntervalSymbol_out = new Symbol("bit-set-flip-interval");
 	
 	@VelkaOperator
@@ -728,61 +294,10 @@ public class JavaBitSet extends OperatorBank {
 	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-flip-interval s1 3 5)")
 	@Syntax("(bit-set-flip-interval <set> <fromIndex> <toIndex>)")
-	public static final Operator flipInterval = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String fromIndex = "_fromIndex";
-			String toIndex = "_toIndex";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, fromIndex, toIndex),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".flip",
-											set,
-											fromIndex,
-											toIndex),
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return flipIntervalSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set = (LitInteropObject)args.get(0);
-			BitSet bSet = (BitSet)set.javaObject;
-			
-			LitInteger fromIndex = (LitInteger)args.get(1);
-			LitInteger toIndex = (LitInteger)args.get(2);
-			
-			bSet.flip((int)fromIndex.value, (int)toIndex.value);
-			return set;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return flipIntervalSymbol_out.toString();
-		}
-	};
+	public static final Operator flipInterval = Operator.wrapJavaMethod(BitSet.class, "flip",
+			"bit-set-flip-interval", JavaBitSet.singleton().getNamespace(), int.class, int.class);
 	
-	public static final Symbol getSymbol = new Symbol("velka-get", NAMESPACE);
+	public static final Symbol getSymbol = new Symbol("velka_get", JavaBitSet.singleton().getNamespace());
 	public static final Symbol getSymbol_out = new Symbol("bit-set-get");
 	
 	@VelkaOperator
@@ -791,53 +306,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-get s1 3)") 
 	@Syntax("(bit-set-get <set> <index>)")
-	public static final Operator get = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String index = "_index";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, index),
-					LitBoolean.clojureLit(
-					ClojureHelper.applyClojureFunction(
-							".get",
-							set,
-							index)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return getSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set = (LitInteropObject)args.get(0);
-			BitSet bSet = (BitSet)set.javaObject;
-			
-			LitInteger index = (LitInteger)args.get(1);
-			return bSet.get((int)index.value) ? LitBoolean.TRUE : LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeAtom.TypeBoolNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return getSymbol_out.toString();
-		}
-	};
+	public static final Operator get = Operator.wrapJavaMethod(BitSet.class, "get", "bit-set-get",
+			JavaBitSet.singleton().getNamespace(), int.class);
 	
-	public static final Symbol getIntervalSymbol = new Symbol("get-interval", NAMESPACE);
+	public static final Symbol getIntervalSymbol = new Symbol("get_interval", JavaBitSet.singleton().getNamespace());
 	public static final Symbol getIntervalSymbol_out = new Symbol("bit-set-get-interval");
 	
 	@VelkaOperator
@@ -846,56 +318,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-get-interval s1 2 4)") 
 	@Syntax("(bit-set-get-interval <set> <fromIndex> <toIndex>)")
-	public static final Operator getInterval = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String fromIndex = "_fromIndex";
-			String toIndex = "_toIndex";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, fromIndex, toIndex),
-							ClojureHelper.applyClojureFunction(
-									".get",
-									set,
-									fromIndex,
-									toIndex));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return getIntervalSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set = (LitInteropObject)args.get(0);
-			BitSet bSet = (BitSet)set.javaObject;
-			
-			LitInteger fromIndex = (LitInteger)args.get(1);
-			LitInteger toIndex = (LitInteger)args.get(2);
-			return new LitInteropObject(bSet.get((int) fromIndex.value, (int) toIndex.value),
-					TypeAtom.TypeSetBitSet);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return getIntervalSymbol_out.toString();
-		}
-	};
+	public static final Operator getInterval = Operator.wrapJavaMethod(BitSet.class, "get",
+			"bit-set-get-interval", JavaBitSet.singleton().getNamespace(), int.class, int.class);
 	
-	public static final Symbol intersectsSymbol = new Symbol("intersects", NAMESPACE);
+	public static final Symbol intersectsSymbol = new Symbol("intersects", JavaBitSet.singleton().getNamespace());
 	public static final Symbol intersectsSymbol_out = new Symbol("bit-set-intersects");
 	
 	@VelkaOperator
@@ -906,57 +332,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-intersects s1 s2)") 
 	@Syntax("(bit-set-intersects <set1> <set2>)")
-	public static final Operator intersects = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set1 = "_set1";
-			String set2 = "_set2";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set1, set2),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".intersects",
-									set1,
-									set2)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return intersectsSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			
-			LitInteropObject set2 = (LitInteropObject)args.get(1);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			BitSet bSet2 = (BitSet)set2.javaObject;
-			
-			return bSet1.intersects(bSet2) ? LitBoolean.TRUE : LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return intersectsSymbol_out.toString();
-		}
-	};
+	public static final Operator intersects = Operator.wrapJavaMethod(java.util.BitSet.class, "intersects", "bit-set-intersects",
+			JavaBitSet.singleton().getNamespace(), java.util.BitSet.class);
 	
-	public static final Symbol isEmptySymbol = new Symbol("velka-is-empty", NAMESPACE);
+	public static final Symbol isEmptySymbol = new Symbol("velka_is_empty", JavaBitSet.singleton().getNamespace());
 	public static final Symbol isEmptySymbol_out = new Symbol("bit-set-is-empty");
 	
 	@VelkaOperator
@@ -966,50 +345,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-is-empty s1)") 
 	@Syntax("(bit-set-is-empty <set>)")
-	public static final Operator isEmpty = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set),
-					LitBoolean.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".isEmpty",
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return isEmptySymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			return bSet1.isEmpty() ? LitBoolean.TRUE : LitBoolean.FALSE;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeBoolNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return isEmptySymbol_out.toString();
-		}
-	};
+	public static final Operator isEmpty = Operator.wrapJavaMethod(BitSet.class, "isEmpty", "bit-set-is-empty",
+			JavaBitSet.singleton().getNamespace());
 	
-	public static final Symbol lengthSymbol = new Symbol("velka-length", NAMESPACE);
+	public static final Symbol lengthSymbol = new Symbol("velka_length", JavaBitSet.singleton().getNamespace());
 	public static final Symbol lengthSymbol_out = new Symbol("bit-set-length");
 	
 	@VelkaOperator
@@ -1018,158 +357,30 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s1 0 5)\n"
 					+ "(bit-set-length s1);; = 5") 
 	@Syntax("(bit-set-length <set>)")
-	public static final Operator length = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".length",
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return lengthSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			return new LitInteger(bSet1.length());
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeIntNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return lengthSymbol_out.toString();
-		}		
-	};
+	public static final Operator length = Operator.wrapJavaMethod(BitSet.class, "length", "bit-set-length",
+			JavaBitSet.singleton().getNamespace());
 	
-	public static final Symbol nextClearBitSymbol = new Symbol("next-clear-bit", NAMESPACE);
+	public static final Symbol nextClearBitSymbol = new Symbol("next_clear_bit", JavaBitSet.singleton().getNamespace());
 	public static final Symbol nextClearBitSymbol_out = new Symbol("bit-set-next-clear-bit");
 	
 	//TODO Example
 	@VelkaOperator
 	@Description("Returns the index of the first bit that is set to false that occurs on or after the specified starting index.")  
 	@Syntax("(bit-set-next-clear-bit <set> <fromIndex>)")
-	public static final Operator nextClearBit = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String fromIndex = "_fromIndex";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, fromIndex),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".nextClearBit",
-									set,
-									fromIndex)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return nextClearBitSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			LitInteger fromIndex = (LitInteger)args.get(1);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			return new LitInteger(bSet1.nextClearBit((int)fromIndex.value));
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeAtom.TypeIntNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return nextClearBitSymbol_out.toString();
-		}
-	};
+	public static final Operator nextClearBit = Operator.wrapJavaMethod(BitSet.class, "nextClearBit", "bit-set-next-clear-bit",
+			JavaBitSet.singleton().getNamespace(), int.class);
 	
-	public static final Symbol nextSetBitSymbol = new Symbol("next-set-bit", NAMESPACE);
+	public static final Symbol nextSetBitSymbol = new Symbol("next_set_bit", JavaBitSet.singleton().getNamespace());
 	public static final Symbol nextSetBitSymbol_out = new Symbol("bit-set-next-set-bit");
 	
 	//TODO Example
 	@VelkaOperator
 	@Description("Returns the index of the first bit that is set to true that occurs on or after the specified starting index.") 
 	@Syntax("(bit-set-next-set-bit <set> <fromIndex>)")
-	public static final Operator nextSetBit = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String fromIndex = "_fromIndex";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, fromIndex),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".nextSetBit",
-									set,
-									fromIndex)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return nextSetBitSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			LitInteger fromIndex = (LitInteger)args.get(1);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			return new LitInteger(bSet1.nextSetBit((int)fromIndex.value));
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeAtom.TypeIntNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return nextSetBitSymbol_out.toString();
-		}
-	};
+	public static final Operator nextSetBit = Operator.wrapJavaMethod(BitSet.class, "nextSetBit", "bit-set-next-set-bit",
+			JavaBitSet.singleton().getNamespace(), int.class);
 	
-	public static final Symbol orSymbol = new Symbol("velka-or", NAMESPACE);
+	public static final Symbol orSymbol = new Symbol("velka_or", JavaBitSet.singleton().getNamespace());
 	public static final Symbol orSymbol_out = new Symbol("bit-set-or");
 	
 	@VelkaOperator
@@ -1180,170 +391,30 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-or s1 s2)") 
 	@Syntax("(bit-set-or <set1> <set2>)")
-	public static final Operator or = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set1 = "_set1";
-			String set2 = "_set2";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set1, set2),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".or",
-											set1,
-											set2),
-									set1)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return orSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			
-			LitInteropObject set2 = (LitInteropObject)args.get(1);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			BitSet bSet2 = (BitSet)set2.javaObject;
-			
-			bSet1.or(bSet2);
-			
-			return set1;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return orSymbol_out.toString();
-		}
-	};
+	public static final Operator or = Operator.wrapJavaMethod(BitSet.class, "or", "bit-set-or",
+			JavaBitSet.singleton().getNamespace(), BitSet.class);
 	
-	public static final Symbol previousClearBitSymbol = new Symbol("previous-clear-bit", NAMESPACE);
+	public static final Symbol previousClearBitSymbol = new Symbol("previous_clear_bit", JavaBitSet.singleton().getNamespace());
 	public static final Symbol previousClearBitSymbol_out = new Symbol("bit-set-previous-clear-bit");
 	
 	//TODO Example
 	@VelkaOperator
 	@Description("Returns the index of the nearest bit that is set to false that occurs on or before the specified starting index.")  
 	@Syntax("(bit-set-previous-clear-bit <set> <fromIndex>)")
-	public static final Operator previousClearBit = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String fromIndex = "_fromIndex";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, fromIndex),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".previousClearBit",
-									set,
-									fromIndex)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return previousClearBitSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			LitInteger fromIndex = (LitInteger)args.get(1);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			return new LitInteger(bSet1.previousClearBit((int)fromIndex.value));
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeAtom.TypeIntNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return previousClearBitSymbol_out.toString();
-		}
-	};
+	public static final Operator previousClearBit = Operator.wrapJavaMethod(BitSet.class, "previousClearBit", "bit-set-previous-clear-bit",
+			JavaBitSet.singleton().getNamespace(), int.class);
 	
-	public static final Symbol previousSetBitSymbol = new Symbol("previous-set-bit", NAMESPACE);
+	public static final Symbol previousSetBitSymbol = new Symbol("previous_set_bit", JavaBitSet.singleton().getNamespace());
 	public static final Symbol previousSetBitSymbol_out = new Symbol("bit-set-previous-set-bit");
 	
 	//TODO Example
 	@VelkaOperator
 	@Description("Returns the index of the nearest bit that is set to true that occurs on or before the specified starting index.")  
 	@Syntax("(bit-set-previous-set-bit <set> <fromIndex>)")
-	public static final Operator previousSetBit = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String fromIndex = "_fromIndex";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, fromIndex),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".previousSetBit",
-									set,
-									fromIndex)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return previousSetBitSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			LitInteger fromIndex = (LitInteger)args.get(1);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			return new LitInteger(bSet1.previousSetBit((int)fromIndex.value));
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeAtom.TypeIntNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return previousSetBitSymbol_out.toString();
-		}
-	};
+	public static final Operator previousSetBit = Operator.wrapJavaMethod(BitSet.class, "previousSetBit", "bit-set-previous-set-bit",
+			JavaBitSet.singleton().getNamespace(), int.class);
 	
-	public static final Symbol setSymbol = new Symbol("velka-set", NAMESPACE);
+	public static final Symbol setSymbol = new Symbol("velka_set", JavaBitSet.singleton().getNamespace());
 	public static final Symbol setSymbol_out = new Symbol("bit-set-set");
 	
 	@VelkaOperator
@@ -1351,58 +422,10 @@ public class JavaBitSet extends OperatorBank {
 	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set s1 3)") 
 	@Syntax("(bit-set-set <set> <bitIndex>)")
-	public static final Operator set = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String bitIndex = "_bitIndex";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, bitIndex),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".set",
-											set,
-											bitIndex),
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return setSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			LitInteger bitIndex = (LitInteger)args.get(1);
-			
-			BitSet s = (BitSet)set1.javaObject;
-			s.set((int)bitIndex.value);
-			return set1;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return setSymbol_out.toString();
-		}
-	};
+	public static final Operator set = Operator.wrapJavaMethod(BitSet.class, "set", "bit-set-set",
+			JavaBitSet.singleton().getNamespace(), int.class);
 	
-	public static final Symbol setValueSymbol = new Symbol("set-value", NAMESPACE);
+	public static final Symbol setValueSymbol = new Symbol("set_value", JavaBitSet.singleton().getNamespace());
 	public static final Symbol setValueSymbol_out = new Symbol("bit-set-set-value");
 	
 	@VelkaOperator
@@ -1410,61 +433,10 @@ public class JavaBitSet extends OperatorBank {
 	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-value s1 3 #t)") 
 	@Syntax("(bit-set-set-value <set> <bitIndex> <value>)")
-	public static final Operator setValue = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String bitIndex = "_bitIndex";
-			String value = "_value";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, bitIndex, value),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".set",
-											set,
-											bitIndex,
-											value),
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return setValueSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			LitInteger bitIndex = (LitInteger)args.get(1);
-			LitBoolean value = (LitBoolean)args.get(2);
-			
-			BitSet s = (BitSet)set1.javaObject;
-			s.set((int)bitIndex.value, value.value);
-			return set1;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return setValueSymbol_out.toString();
-		}		
-	};
+	public static final Operator setValue = Operator.wrapJavaMethod(BitSet.class, "set", "bit-set-set-value",
+			JavaBitSet.singleton().getNamespace(), int.class, boolean.class);
 	
-	public static final Symbol setIntervalSymbol = new Symbol("set-interval", NAMESPACE);
+	public static final Symbol setIntervalSymbol = new Symbol("set_interval", JavaBitSet.singleton().getNamespace());
 	public static final Symbol setIntervalSymbol_out = new Symbol("bit-set-set-interval");
 	
 	@VelkaOperator
@@ -1472,61 +444,10 @@ public class JavaBitSet extends OperatorBank {
 	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval s1 3 5)") 
 	@Syntax("(bit-set-set-interval <set> <fromIndex> <toIndex>)")
-	public static final Operator setInterval = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String fromIndex = "_fromIndex";
-			String toIndex = "_toIndex";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, fromIndex, toIndex),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".set",
-											set,
-											fromIndex,
-											toIndex),
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return setIntervalSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			LitInteger fromIndex = (LitInteger)args.get(1);
-			LitInteger toIndex = (LitInteger)args.get(2);
-			
-			BitSet s = (BitSet)set1.javaObject;
-			s.set((int)fromIndex.value, (int)toIndex.value);
-			return set1;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return setIntervalSymbol_out.toString();
-		}
-	};
+	public static final Operator setInterval = Operator.wrapJavaMethod(BitSet.class, "set",
+			"bit-set-set-interval", JavaBitSet.singleton().getNamespace(), int.class, int.class);
 	
-	public static final Symbol setIntervalValueSymbol = new Symbol("set-interval-value", NAMESPACE);
+	public static final Symbol setIntervalValueSymbol = new Symbol("set_interval_value", JavaBitSet.singleton().getNamespace());
 	public static final Symbol setIntervalValueSymbol_out = new Symbol("bit-set-set-interval-value");
 	
 	@VelkaOperator
@@ -1534,65 +455,10 @@ public class JavaBitSet extends OperatorBank {
 	@Example("(define s1 (construct Set:BitSet))\n"
 					+ "(bit-set-set-interval-value s1 3 5 #f)") 
 	@Syntax("(bit-set-set-interval-value <set> <fromIndex> <toIndex> <value>)")	
-	public static final Operator setIntervalValue = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String fromIndex = "_fromIndex";
-			String toIndex = "_toIndex";
-			String value = "_value";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set, fromIndex, toIndex, value),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-									ClojureHelper.applyClojureFunction(
-											".set",
-											set,
-											fromIndex,
-											toIndex,
-											value),
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return setIntervalValueSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			LitInteger fromIndex = (LitInteger)args.get(1);
-			LitInteger toIndex = (LitInteger)args.get(2);
-			
-			BitSet s = (BitSet)set1.javaObject;
-			
-			LitBoolean value = (LitBoolean)args.get(3);
-			s.set((int)fromIndex.value, (int)toIndex.value, (boolean)value.value);
-			return set1;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeIntNative, TypeAtom.TypeIntNative, TypeAtom.TypeBoolNative),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return setIntervalValueSymbol_out.toString();
-		}
-	};
+	public static final Operator setIntervalValue = Operator.wrapJavaMethod(BitSet.class, "set",
+			"bit-set-set-interval-value", JavaBitSet.singleton().getNamespace(), int.class, int.class, boolean.class);
 	
-	public static final Symbol sizeSymbol = new Symbol("velka-size", NAMESPACE);
+	public static final Symbol sizeSymbol = new Symbol("velka_size", JavaBitSet.singleton().getNamespace());
 	public static final Symbol sizeSymbol_out = new Symbol("bit-set-size");
 	
 	@VelkaOperator
@@ -1601,50 +467,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s1 3 5)\n"
 					+ "(bit-set-size s1)") 
 	@Syntax("(bit-set-size <set>)")
-	public static final Operator size = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set),
-					LitInteger.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".size",
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return sizeSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			BitSet s = (BitSet)set1.javaObject;
-			return new LitInteger(s.size());
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeIntNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return sizeSymbol_out.toString();
-		}
-	};
+	public static final Operator size = Operator.wrapJavaMethod(BitSet.class, "size", "bit-set-size",
+			JavaBitSet.singleton().getNamespace());
 	
-	public static final Symbol strSymbol = new Symbol("velka-str", NAMESPACE);
+	public static final Symbol strSymbol = new Symbol("velka_str", JavaBitSet.singleton().getNamespace());
 	public static final Symbol strSymbol_out = new Symbol("bit-set-str");
 	
 	@VelkaOperator
@@ -1653,50 +479,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s1 3 5)\n"
 					+ "(bit-set-str s1)") 
 	@Syntax("(bit-set-str <set>)")
-	public static final Operator str = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set = "_set";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set),
-					LitString.clojureLit(
-							ClojureHelper.applyClojureFunction(
-									".toString",
-									set)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return strSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			BitSet s = (BitSet)set1.javaObject;
-			return new LitString(s.toString());
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeStringNative);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return strSymbol_out.toString();
-		}		
-	};
+	public static final Operator str = Operator.wrapJavaMethod(BitSet.class, "toString", "bit-set-str",
+			JavaBitSet.singleton().getNamespace());
 	
-	public static final Symbol xorSymbol = new Symbol("velka-xor", NAMESPACE);
+	public static final Symbol xorSymbol = new Symbol("velka_xor", JavaBitSet.singleton().getNamespace());
 	public static final Symbol xorSymbol_out = new Symbol("bit-set-xor");
 	
 	@VelkaOperator
@@ -1707,62 +493,10 @@ public class JavaBitSet extends OperatorBank {
 					+ "(bit-set-set-interval s2 3 7)\n"
 					+ "(bit-set-xor s1 s2)") 
 	@Syntax("(bit-set-xor <set1> <set2>)")
-	public static final Operator xor = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String set1 = "_set1";
-			String set2 = "_set2";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(set1, set2),
-					ClojureHelper.applyClojureFunction(
-							"second",
-							ClojureHelper.clojureVectorHelper(
-								ClojureHelper.applyClojureFunction(
-										".xor",
-										set1,
-										set2),
-								set1)));
-			return code;
-		}
-
-		@Override
-		public Symbol getClojureSymbol() {
-			return xorSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
-				throws AppendableException {
-			
-			LitInteropObject set1 = (LitInteropObject)args.get(0);
-			
-			
-			LitInteropObject set2 = (LitInteropObject)args.get(1);
-			
-			BitSet bSet1 = (BitSet)set1.javaObject;
-			BitSet bSet2 = (BitSet)set2.javaObject;
-			
-			bSet1.xor(bSet2);
-			
-			return set1;
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			Type type = new TypeArrow(
-					new TypeTuple(TypeAtom.TypeSetBitSet, TypeAtom.TypeSetBitSet),
-					TypeAtom.TypeSetBitSet);
-			return Pair.of(type, Substitution.EMPTY);
-		}
-		
-		@Override
-		public String toString() {
-			return xorSymbol_out.toString();
-		}
-	};
+	public static final Operator xor = Operator.wrapJavaMethod(BitSet.class, "xor", "bit-set-xor",
+			JavaBitSet.singleton().getNamespace(), BitSet.class);
 	
-	public static final Symbol mapSymbol = new Symbol("velka-map", NAMESPACE);
+	public static final Symbol mapSymbol = new Symbol("velka_map", JavaBitSet.singleton().getNamespace());
 	public static final Symbol mapSymbol_out = new Symbol("bit-set-map");
 	
 	@VelkaOperator
@@ -1781,22 +515,6 @@ public class JavaBitSet extends OperatorBank {
 			var idx = "_idx";
 			var vl = "_vl";
 			var tmp = "_tmp";
-//			var code = ClojureHelper.fnHelper(
-//					List.of(set, fun),
-//					ClojureHelper.applyClojureFunction(
-//							"map", fun,
-//							ClojureHelper.applyClojureFunction("loop",
-//									ClojureHelper.clojureVectorHelper(
-//											acc, "'()",
-//											idx, ClojureHelper.applyClojureFunction(".size", set)),
-//									ClojureHelper.letHelper(
-//											ClojureHelper.clojureIfHelper(
-//													ClojureHelper.applyClojureFunction("=", vl, "-1"), 
-//													acc, 
-//													ClojureHelper.applyClojureFunction("recur", 
-//															ClojureHelper.applyClojureFunction("conj", acc, vl),
-//															ClojureHelper.applyClojureFunction("-", vl, "1"))), 
-//											Pair.of(vl, ClojureHelper.applyClojureFunction(".previousSetBit", set, idx))))));
 			var code = ClojureHelper.fnHelper(
 					List.of(set, fun),
 							ClojureHelper.applyClojureFunction("loop",
@@ -1818,7 +536,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return mapSymbol;
 		}
 
@@ -1831,7 +549,7 @@ public class JavaBitSet extends OperatorBank {
 			var retSet = new BitSet();
 			
 			bSet.stream().forEach(i -> {
-				var app = new AbstractionApplication(fun, new Tuple(new LitInteger((long)i)));
+				var app = new AbstractionApplication(fun, new Tuple(new LitInteger(i)));
 				try {
 					var exp = app.interpret(env);
 					if(exp instanceof LitInteger li) {
@@ -1860,9 +578,36 @@ public class JavaBitSet extends OperatorBank {
 			return mapSymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var bitSetCl = CodeModelInstance.instance()._ref(BitSet.class);
+			var _newBitSet = method.body().decl(bitSetCl, "newBitSet",
+					JExpr._new(bitSetCl));
+			
+			
+			var consCl = CodeModelInstance.instance().anonymousClass(java.util.function.IntConsumer.class);
+			
+			var acceptMth = consCl.method(JMod.PUBLIC, void.class, "accept");
+			var valueParm = acceptMth.param(int.class, "value");
+			
+			var valueLong = acceptMth.body().decl(CodeModelInstance.instance()._ref(Integer.class), "lvalue", 
+					CodeModelInstance.instance().ref(Integer.class).staticInvoke("valueOf").arg(valueParm));
+			
+			var retVal = acceptMth.body().decl(CodeModelInstance.instance().INT, "retVal",
+					JExpr.cast(CodeModelInstance.instance()._ref(Integer.class),
+							mappedArgs.get(new Symbol("_1")).invoke("apply").arg(VelkaTuple._velkaTuple(valueLong)))
+							.invoke("intValue"));
+			
+			acceptMth.body().add(_newBitSet.invoke("set").arg(retVal));
+			
+			method.body()
+					.add(mappedArgs.get(new Symbol("_0")).invoke("stream").invoke("forEach").arg(JExpr._new(consCl)));
+			
+			method.body()._return(_newBitSet);
+		}
 	};
 	
-	public static Symbol containsAllSymbol = new Symbol("velka-contains-all", NAMESPACE);
+	public static Symbol containsAllSymbol = new Symbol("velka_contains_all", JavaBitSet.singleton().getNamespace());
 	public static Symbol containsAllSymbol_out = new Symbol("bit-set-contains-all");
 	
 	@VelkaOperator
@@ -1889,7 +634,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return containsAllSymbol;
 		}
 
@@ -1900,11 +645,11 @@ public class JavaBitSet extends OperatorBank {
 			
 			var bset = (java.util.BitSet)set.javaObject;
 			@SuppressWarnings("unchecked")
-			var l = (java.util.List<Expression>)lst.javaObject;
+			var l = (java.util.List<Object>)lst.javaObject;
 			
 			var ret = l.stream().allMatch(e -> {
-				if(e instanceof LitInteger li) {
-					return bset.get((int)li.value);
+				if(e instanceof Integer i) {
+					return bset.get(i);
 				}
 				throw new RuntimeException("Invalid set.");
 			});
@@ -1923,9 +668,19 @@ public class JavaBitSet extends OperatorBank {
 		public String toString() {
 			return containsAllSymbol_out.toString();
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var _foreach = method.body().forEach(CodeModelInstance.instance()._ref(Object.class), "val", mappedArgs.get(new Symbol("_1")));
+			var _if = _foreach.body()._if(mappedArgs.get(new Symbol("_0")).invoke("get")
+					.arg(JExpr.cast(CodeModelInstance.instance()._ref(Integer.class), _foreach.var()))
+					.not());
+			_if._then()._return(JExpr.FALSE);
+			method.body()._return(JExpr.TRUE);
+		}
 	};
 	
-	public static Symbol setAllSymbol = new Symbol("set-all", NAMESPACE);
+	public static Symbol setAllSymbol = new Symbol("set_all", JavaBitSet.singleton().getNamespace());
 	public static Symbol setAllSymbol_out = new Symbol("bit-set-set-all");
 	
 	@VelkaOperator
@@ -1948,7 +703,7 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
+		public Symbol getInternalSymbol() {
 			return setAllSymbol;
 		}
 
@@ -1959,11 +714,11 @@ public class JavaBitSet extends OperatorBank {
 			
 			var bset = (java.util.BitSet)set.javaObject;
 			@SuppressWarnings("unchecked")
-			var l = (java.util.List<Expression>)lst.javaObject;
+			var l = (java.util.List<Object>)lst.javaObject;
 			
 			l.stream().forEach(e ->{
-				if(e instanceof LitInteger li) {
-					bset.set((int)li.value);
+				if(e instanceof Integer i) {
+					bset.set(i);
 				}
 			});
 			
@@ -1981,6 +736,14 @@ public class JavaBitSet extends OperatorBank {
 			return setAllSymbol_out.toString();
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var _foreach = method.body().forEach(CodeModelInstance.instance()._ref(Object.class), "val", mappedArgs.get(new Symbol("_1")));
+			_foreach.body().add(mappedArgs.get(new Symbol("_0")).invoke("set")
+					.arg(JExpr.cast(CodeModelInstance.instance()._ref(Integer.class), _foreach.var())));
+			
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
 	};
 	
 	@VelkaOperator
@@ -2006,20 +769,20 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("from-list", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("from_list", JavaBitSet.singleton().getNamespace());
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var lst = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			var l = (java.util.List<Expression>)lst.javaObject;
+			var l = (java.util.List<Object>)lst.javaObject;
 			
 			var set = new java.util.BitSet(l.size());
 			l.stream().forEach(e ->{
-				if(e instanceof LitInteger li) {
-					set.set((int)li.value);
+				if(e instanceof Integer i) {
+					set.set(i);
 					return;
 				}
 				throw new RuntimeException("All elements of initialization list must be Int:Native, got " + e);
@@ -2040,6 +803,18 @@ public class JavaBitSet extends OperatorBank {
 			return "bit-set-from-list";                                                                                                                                         
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var bsCl = CodeModelInstance.instance()._ref(BitSet.class);
+			var bset = method.body().decl(bsCl, "_bs",
+					JExpr._new(bsCl));
+			
+			var _foreach = method.body().forEach(CodeModelInstance.instance()._ref(Object.class), "val", mappedArgs.get(new Symbol("_0")));
+			_foreach.body().add(bset.invoke("set")
+					.arg(JExpr.cast(CodeModelInstance.instance()._ref(Integer.class), _foreach.var())));
+			
+			method.body()._return(bset);
+		}
 	};
 	
 	@VelkaOperator
@@ -2048,25 +823,34 @@ public class JavaBitSet extends OperatorBank {
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			var set = "_set";
-			var i = "_i";
 			var acc = "_acc";
+			var indices = "_indices";
+			var index = "_index";
 			var code = ClojureHelper.fnHelper(
 					List.of(set),
-					ClojureHelper.applyClojureFunction("loop", 
-							ClojureHelper.clojureVectorHelper(i, ClojureHelper.applyClojureFunction(".nextSetBit", set, "0"), 
-									acc, ClojureHelper.tupleHelper()),
-							ClojureHelper.clojureIfHelper(
-									ClojureHelper.applyClojureFunction("<", i, "0"), 
-									ClojureHelper.applyClojureFunction("seq", acc), 
-									ClojureHelper.applyClojureFunction("recur", 
-											ClojureHelper.applyClojureFunction(".nextSetBit", set, ClojureHelper.applyClojureFunction("+", i, "1")),
-											ClojureHelper.applyClojureFunction("conj", acc, i)))));
+					ClojureHelper.letHelper(
+							ClojureHelper.constructJavaClass(ArrayList.class, indices),
+							Pair.of(indices,
+									ClojureHelper.applyClojureFunction("loop",
+											ClojureHelper.clojureVectorHelper(
+													index, ClojureHelper.applyClojureFunction(".nextSetBit", set, "0"),
+													acc, ClojureHelper.clojureVectorHelper()),
+											ClojureHelper.clojureIfHelper(
+													ClojureHelper.applyClojureFunction("neg?", index),
+													acc,
+													ClojureHelper.applyClojureFunction(
+															"recur",
+															ClojureHelper.applyClojureFunction(
+																	".nextSetBit",
+																	set, 
+																	ClojureHelper.applyClojureFunction("inc", index)),
+															ClojureHelper.applyClojureFunction("conj", acc, index)))))));
 			return code;
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("to-list", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("to_list", JavaBitSet.singleton().getNamespace());
 		}
 
 		@Override
@@ -2074,11 +858,11 @@ public class JavaBitSet extends OperatorBank {
 			var lio = (LitInteropObject)args.get(0);
 			var bset = (java.util.BitSet)lio.javaObject;
 			
-			var l = new ArrayList<Expression>();
+			var l = new ArrayList<Object>();
 			
 			int i = bset.nextSetBit(0);
 			while(i >= 0) {
-				l.add(new LitInteger((long)i));
+				l.add(Integer.valueOf(i));
 				
 				i = bset.nextSetBit(i + 1);
 			}
@@ -2097,13 +881,27 @@ public class JavaBitSet extends OperatorBank {
 			return "bit-set-to-list";
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var lCl = CodeModelInstance.instance().ref(ArrayList.class);
+			var lst = method.body().decl(lCl, "_lst", JExpr._new(lCl));
+			
+			var i = method.body().decl(CodeModelInstance.instance().INT, "_i",
+						mappedArgs.get(new Symbol("_0")).invoke("nextSetBit").arg(JExpr.lit(0)));
+			
+			var _while = method.body()._while(i.gte(JExpr.lit(0)));
+			_while.body().add(lst.invoke("add").arg(i));
+			_while.body().assign(i, mappedArgs.get(new Symbol("_0")).invoke("nextSetBit").arg(i.plus(JExpr.lit(1))));
+			
+			method.body()._return(lst);
+		}
 	};
 	
 	@VelkaConversion
 	@Description("Converts Set:BitSet into Set:Tree.") 
 	@Example("(convert Set:BitSet Set:Tree (bit-set-set (bit-set-set (bit-set-set (construct Set:BitSet) 3) 6) 9))") 
 	@Syntax("(convert Set:BitSet Set:Tree <arg>)")
-	public static final Conversion bitSetToTreeSet = new Conversion() {
+	public static final Conversion toTreeSet = new Conversion() {
 
 		Double costX1 = 0d;
 		Double costY1 = 0.8d;
@@ -2112,48 +910,18 @@ public class JavaBitSet extends OperatorBank {
 		
 		@Override
 		public Expression cost() {
-			final var f = Functions.linearFunctionFromPoints(costX1, costY1, costX2, costY2);
-			var l = new Operator() {
-
-				@Override
-				protected String toClojureOperator(Environment env) throws AppendableException {
-					var arg = "_arg";
-					var code = ClojureHelper.fnHelper(List.of(arg),
-							ClojureHelper.applyClojureFunction("min", costY1.toString(),
-									ClojureHelper.applyClojureFunction("max", costY2.toString(),
-											ClojureHelper.applyClojureFunction(".apply",
-													ClojureHelper.applyClojureFunction(
-															"velka.util.Functions/linearFunctionFromPoints",
-															costX1.toString(), costY1.toString(), costX2.toString(),
-															costY2.toString()),
-													ClojureHelper.applyClojureFunction("double", ClojureHelper.applyClojureFunction(".cardinality", arg))))));
-					return code;
-				}
-
-				@Override
-				public Symbol getClojureSymbol() {
-					return new Symbol(NameGenerator.next());
-				}
-
-				@Override
-				protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-					var lio = (LitInteropObject)args.get(0);
-					var set = (java.util.BitSet)lio.javaObject;
-					
-					var cost = Math.max(0.5d, Math.min(0.8d, f.apply((double) set.cardinality())));
-					
-					return new LitDouble(cost);
-				}
-
-				@Override
-				public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-					var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetBitSet), TypeAtom.TypeDoubleNative);
-					return Pair.of(type, Substitution.EMPTY);
-				}
-				
-			};
+			var arg = new Symbol(NameGenerator.next());
 			
-			return l;
+			var cost = new Lambda(
+					new AbstractionApplication(
+							new AbstractionApplication(
+									Operators.linFunPoints, 
+									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
+							new Tuple(
+									new AbstractionApplication(Operators.IntToDouble,
+											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(arg)))))),
+					List.of(Pair.of(arg, TypeAtom.TypeSetHash)));
+			return cost;
 		}
 
 		@Override
@@ -2167,8 +935,8 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("bit-set-2-tree-set", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("bit-set-2-tree-set", JavaBitSet.singleton().getNamespace());
 		}
 
 		@Override
@@ -2186,15 +954,15 @@ public class JavaBitSet extends OperatorBank {
 						var a1 = new Symbol(NameGenerator.next());
 						var a2 = new Symbol(NameGenerator.next());
 						
-						var cmp = new Lambda(new Tuple(a1, a2),
-								new TypeTuple(TypeAtom.TypeIntNative, TypeAtom.TypeIntNative),
+						var cmp = new Lambda(
 								new velka.core.application.IfExpression(
 										new velka.core.application.AbstractionApplication(Operators.Equals,
 												new Tuple(a1, a2)),
 										new LitInteger(0),
 										new IfExpression(
 												new AbstractionApplication(Operators.LesserThan, new Tuple(a1, a2)),
-												new LitInteger(-1), new LitInteger(1))));
+												new LitInteger(-1), new LitInteger(1))),
+								List.of(Pair.of(a1, TypeAtom.TypeIntNative), Pair.of(a2, TypeAtom.TypeIntNative)));
 						
 						var appl = new velka.core.application.AbstractionApplication(cmp,
 								new Tuple(arg1, arg2));
@@ -2213,7 +981,7 @@ public class JavaBitSet extends OperatorBank {
 				
 			});
 			
-			bitSet.stream().forEach(x -> treeSet.add(Long.valueOf(x)));
+			bitSet.stream().forEach(x -> treeSet.add(Integer.valueOf(x)));
 			
 			return new LitInteropObject(treeSet, TypeAtom.TypeSetTree);
 		}
@@ -2224,6 +992,21 @@ public class JavaBitSet extends OperatorBank {
 			return Pair.of(type, Substitution.EMPTY);
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var tsCl = CodeModelInstance.instance().ref(java.util.TreeSet.class);
+			var ts = method.body().decl(tsCl, "_ts", JExpr._new(tsCl));
+			
+			
+			var i = method.body().decl(CodeModelInstance.instance().INT, "_i",
+						mappedArgs.get(new Symbol("_0")).invoke("nextSetBit").arg(JExpr.lit(0)));
+			
+			var _while = method.body()._while(i.gte(JExpr.lit(0)));
+			_while.body().add(ts.invoke("add").arg(i));
+			_while.body().assign(i, mappedArgs.get(new Symbol("_0")).invoke("nextSetBit").arg(i.plus(JExpr.lit(1))));
+			
+			method.body()._return(ts);
+		}
 	};
 	
 	@VelkaConversion
@@ -2234,15 +1017,14 @@ public class JavaBitSet extends OperatorBank {
 			var arg = new Symbol(NameGenerator.next());
 			
 			var cost = new Lambda(
-					new Tuple(arg), 
-					new TypeTuple(TypeAtom.TypeSetHash),
 					new AbstractionApplication(
 							new AbstractionApplication(
 									Operators.linFunPoints, 
 									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
 							new Tuple(
 									new AbstractionApplication(Operators.IntToDouble,
-											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(arg)))))));
+											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(arg)))))),
+					List.of(Pair.of(arg, TypeAtom.TypeSetHash)));
 			return cost;
 		}
 
@@ -2256,8 +1038,8 @@ public class JavaBitSet extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("bit-set-2-hash-set", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("bit_set_2_hash_set", JavaBitSet.singleton().getNamespace());
 		}
 
 		@Override
@@ -2280,26 +1062,24 @@ public class JavaBitSet extends OperatorBank {
 		public String toString() {
 			return "bit-set-2-hash-set";
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var hsCl = CodeModelInstance.instance().ref(java.util.HashSet.class);
+			var hs = method.body().decl(hsCl, "_hs", JExpr._new(hsCl));
+			
+			
+			var i = method.body().decl(CodeModelInstance.instance().INT, "_i",
+						mappedArgs.get(new Symbol("_0")).invoke("nextSetBit").arg(JExpr.lit(0)));
+			
+			var _while = method.body()._while(i.gte(JExpr.lit(0)));
+			_while.body().add(hs.invoke("add").arg(i));
+			_while.body().assign(i, mappedArgs.get(new Symbol("_0")).invoke("nextSetBit").arg(i.plus(JExpr.lit(1))));
+			
+			method.body()._return(hs);
+		}
 	};
 	
-	public static final Path VELKA_CLOJURE_BITSET_PATH = Paths.get("velka", "clojure");
-	public static final Path VELKA_CLOJURE_BITSET_NAME = Paths.get("bitSet.clj");
-	public static final Path RELATIVE_PATH = VELKA_CLOJURE_BITSET_PATH.resolve(VELKA_CLOJURE_BITSET_NAME);
-
-	@Override
-	public String getNamespace() {
-		return NAMESPACE;
-	}
-
-	@Override
-	public Path getPath() {
-		return VELKA_CLOJURE_BITSET_PATH;
-	}
-
-	@Override
-	public Path getFileName() {
-		return VELKA_CLOJURE_BITSET_NAME;
-	}
 	
 	private JavaBitSet() {}
 	private static JavaBitSet instance = null;
@@ -2308,5 +1088,10 @@ public class JavaBitSet extends OperatorBank {
 			instance = new JavaBitSet();
 		}
 		return instance;
+	}
+
+	@Override
+	protected String name() {
+		return "bitSet";
 	}
 }

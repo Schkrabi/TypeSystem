@@ -7,14 +7,24 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.XMLFormatter;
+
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMethod;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JVar;
+
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
+import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Operator;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
@@ -25,12 +35,16 @@ import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.LitString;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
+import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
@@ -55,11 +69,6 @@ import velka.util.annotations.VelkaOperatorBank;
 @Description("General operators for primitive types and utility.")
 public final class Operators extends OperatorBank {
 	
-	/**
-	 * Namespace for velka.clojure.operators
-	 */
-	public static final String NAMESPACE = "velka.clojure.operators";
-
 	/**
 	 * Addition (+) operator
 	 */
@@ -95,8 +104,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-addition", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_addition", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).plus(mappedArgs.get(new Symbol("_1"))));
 		}
 
 	};
@@ -136,8 +150,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-bit-and", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_bit_and", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).band(mappedArgs.get(new Symbol("_1"))));
 		}
 	};
 	
@@ -159,7 +178,7 @@ public final class Operators extends OperatorBank {
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitInteger l = (LitInteger) args.get(0);
 
-			long ret = ~l.value;
+			int ret = ~l.value;
 			return new LitInteger(ret);
 		}
 
@@ -175,10 +194,14 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-bit-not", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_bit_not", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).complement());
+		}
 	};
 	
 	/**
@@ -216,8 +239,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-bit-or", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_bit_or", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).bor(mappedArgs.get(new Symbol("_1"))));
 		}
 	};
 	
@@ -247,7 +275,7 @@ public final class Operators extends OperatorBank {
 				n = (LitInteger) args.get(1);
 			}
 
-			long res = num.value << n.value;
+			var res = num.value << n.value;
 
 			return new LitInteger(res);
 		}
@@ -265,10 +293,14 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-shr", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_shr", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).shl(mappedArgs.get(new Symbol("_1"))));
+		}
 	};
 
 	/**
@@ -290,7 +322,7 @@ public final class Operators extends OperatorBank {
 			LitInteger num = (LitInteger) args.get(0);
 			LitInteger n = (LitInteger) args.get(1);
 
-			long res = num.value >> n.value;
+			var res = num.value >> n.value;
 
 			return new LitInteger(res);
 		}
@@ -308,10 +340,14 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-bit-shr", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_bit_shr", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).shr(mappedArgs.get(new Symbol("_1"))));
+		}
 	};
 
 	/**
@@ -333,7 +369,7 @@ public final class Operators extends OperatorBank {
 			LitInteger val1 = (LitInteger) args.get(0);
 			LitInteger val2 = (LitInteger) args.get(1);
 
-			long ret = val1.value ^ val2.value;
+			var ret = val1.value ^ val2.value;
 
 			return new LitInteger(ret);
 		}
@@ -351,8 +387,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-bit-xor", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_bit_xor", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).xor(mappedArgs.get(new Symbol("_1"))));
 		}
 	};
 	
@@ -390,8 +431,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-car", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_car", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).invoke("get").arg(JExpr.lit(0)));
 		}
 	};
 	
@@ -430,8 +476,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-cdr", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_cdr", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).invoke("get").arg(JExpr.lit(1)));
 		}
 	};
 	
@@ -471,14 +522,18 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-concat", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_concat", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).plus(mappedArgs.get(new Symbol("_1"))));
+		}
 	};
 	
-	public static final String conversionCostSym = "converison-cost";
-	public static final String conversionCostSym_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, conversionCostSym);
+	public static final String conversionCostSym = "_converison_cost";
+	public static final String conversionCostSym_full = ClojureHelper.fullyQualifySymbol(Operators.singleton().getNamespace(), conversionCostSym);
 
 	/**
 	 * Operator for computing conversion cost
@@ -490,7 +545,7 @@ public final class Operators extends OperatorBank {
 		+ "	(lambda ((Int:Native x) (Int:Native y)) (+ x y))\r\n"
 		+ "	(tuple\r\n"
 		+ "		(construct Int String \"42\")\r\n"
-		+ "		(construct Int Roman \"XLII\"))) ; = 2")
+		+ "		(construct Int Roman \"XLII\"))) ")
 	public static final Operator ConversionCost = new Operator() {
 		
 		@Override
@@ -523,8 +578,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol(conversionCostSym, NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol(conversionCostSym, Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -579,6 +634,24 @@ public final class Operators extends OperatorBank {
 		public String toString() {
 			return "conversion-cost";
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var typeSystem = JavaTypeSystem.codeInstance();
+			var ftype = method.body().decl(TypeUtil.instance().typeArrowJType(), "ftype",
+					JExpr.cast(TypeUtil.instance().typeArrowJType(), typeSystem.invoke("getType").arg(mappedArgs.get(new Symbol("_0")))));
+			var fatype = method.body().decl(TypeUtil.instance().typeTupleJType(), "fatype",
+					JExpr.cast(TypeUtil.instance().typeTupleJType(), ftype.ref("ltype")));
+			var atype = method.body().decl(TypeUtil.instance().typeTupleJType(), "atype",
+					JExpr.cast(TypeUtil.instance().typeTupleJType(), typeSystem.invoke("getType").arg(mappedArgs.get(new Symbol("_1")))));
+			
+			method.body()._return(
+					typeSystem.invoke("conversionCost")
+						.arg(atype)
+						.arg(fatype)
+						.arg(mappedArgs.get(new Symbol("_1")))
+						.arg(JExpr._null()));			
+		}
 	};
 	
 	/**
@@ -612,25 +685,18 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-//			String x = "_x";
-//			String y = "_y";
-//			String code = ClojureHelper.fnHelper(
-//							Arrays.asList(x, y),
-//							LitInteger.clojureLit(
-//								ClojureHelper.applyClojureFunction("int",
-//										ClojureHelper.applyClojureFunction("/",
-//												ClojureHelper.getLiteralInnerValue(x),
-//												ClojureHelper.getLiteralInnerValue(y)))));
-//			
-//			return code;
 			return ClojureHelper.binaryOperatorToFn("/");
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-division", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_division", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).div(mappedArgs.get(new Symbol("_1"))));
+		}
 	};
 	
 	/**
@@ -648,8 +714,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-double-add", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_double_add", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -673,6 +739,10 @@ public final class Operators extends OperatorBank {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).plus(mappedArgs.get(new Symbol("_1"))));
+		}
 	};
 	
 	/**
@@ -690,8 +760,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-double-div", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_double_div", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -715,6 +785,11 @@ public final class Operators extends OperatorBank {
 			return "ddiv";
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).div(mappedArgs.get(new Symbol("_1"))));
+		}
+		
 	};
 	
 	/**
@@ -733,8 +808,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("double-lesser-than", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_double_lesser_than", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -760,6 +835,10 @@ public final class Operators extends OperatorBank {
 			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).lt(mappedArgs.get(new Symbol("_1"))));
+		}
 	};
 	
 	/**
@@ -792,7 +871,7 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		public String toString() {
-			return "equals?";
+			return "equalp";
 		}
 
 		@Override
@@ -801,10 +880,20 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-equals", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_equals", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			Method mthd;
+			try {
+				mthd = Object.class.getMethod("equals", Object.class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				throw new RuntimeException(e);
+			}
+			this.wrapNaryMethod(method, mthd, mappedArgs, 1);
+		}
 	};
 	
 	/** > operator */
@@ -840,8 +929,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-greater-than", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_greater_than", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).gt(mappedArgs.get(new Symbol("_1"))));
 		}
 	};
 	
@@ -878,8 +972,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-greater-than-or-equals", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_greater_than_or_equals", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).gte(mappedArgs.get(new Symbol("_1"))));
 		}
 	};
 	
@@ -892,7 +991,7 @@ public final class Operators extends OperatorBank {
 					+ "[]")
 	@Syntax("(init-logger <name>)")
 	public static Operator InitLogger = new Operator() {
-
+		
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			String name = "_name", logger = "_looger", rootLogger = "_rootLogger", consoleHandler = "_consolehandler", file = "_file", formatter = "_formatter";
@@ -965,10 +1064,44 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-init-logger", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_init_logger", Operators.singleton().getNamespace());
 		}
-
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var loggerCl = CodeModelInstance.instance().ref(Logger.class);
+			
+			var logger = method.body().decl(loggerCl, "logger", loggerCl.staticInvoke("getLogger").arg(loggerCl.staticRef("GLOBAL_LOGGER_NAME")));
+			var rootLogger = method.body().decl(loggerCl, "rootLogger", loggerCl.staticInvoke("getLogger").arg(JExpr.lit("")));
+			
+			var handlers = method.body().decl(CodeModelInstance.instance().ref(Handler.class).array(), "handlers",
+					rootLogger.invoke("getHandlers"));
+			
+			method.body()._if(handlers.ref("length").gt(JExpr.lit(0)).cand(handlers.component(JExpr.lit(0))._instanceof(CodeModelInstance.instance()._ref(ConsoleHandler.class))))
+				._then().add(rootLogger.invoke("removeHandler").arg(handlers.component(JExpr.lit(0))));
+			
+			method.body().add(logger.invoke("setLevel").arg(CodeModelInstance.instance().ref(Level.class).staticRef("INFO")));
+			
+			var name = method.body().decl(CodeModelInstance.instance().ref(String.class), "name", mappedArgs.get(new Symbol("_0")));
+			
+			var fileHandlerCl = CodeModelInstance.instance().ref(FileHandler.class);
+			var file = method.body().decl(fileHandlerCl, "file", JExpr._null());
+			
+			var _try = method.body()._try();
+			_try.body().assign(file, JExpr._new(fileHandlerCl).arg(name));
+			var _catch = _try._catch(CodeModelInstance.instance().ref(Exception.class));
+			var e = _catch.param("e");
+			var runtimeExceptionCl = CodeModelInstance.instance()._ref(RuntimeException.class);
+			var re = _catch.body().decl(runtimeExceptionCl, "re", JExpr._new(runtimeExceptionCl).arg(JExpr.lit("Error initalizing logger in file ").plus(name)));
+			_catch.body().add(re.invoke("initCause").arg(e));
+			
+			var formatter = method.body().decl(CodeModelInstance.instance().ref(Formatter.class), "formatter", JExpr._new(CodeModelInstance.instance().ref(XMLFormatter.class)));
+			method.body().add(file.invoke("setFormatter").arg(formatter));
+			method.body().add(logger.invoke("addHandler").arg(file));				
+			
+			method.body()._return(CodeModelInstance.emptyExpression());
+		}
 	};
 	
 	/**
@@ -986,8 +1119,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("int-to-double-clj", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("int_to_double_clj", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -1007,6 +1140,11 @@ public final class Operators extends OperatorBank {
 			return "int-to-double";
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()
+				._return(mappedArgs.get(new Symbol("_0")).invoke("doubleValue"));
+		}
 	};
 	
 	
@@ -1015,9 +1153,9 @@ public final class Operators extends OperatorBank {
 	 * Floor operator
 	 */
 	@VelkaOperator
-	@Description("Coerces _arg_ to _Double:Native_ type.") 
-	@Example("(int-to-double 42) ; = 42.0") 
-	@Syntax("(int-to-double <arg>)")
+	@Description("Floor operator.") 
+	@Example("(floor 42.4) ; = 42.0") 
+	@Syntax("(floor <arg>)")
 	public static final Operator Floor = new Operator() {
 
 		@Override
@@ -1026,8 +1164,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-floor", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_floor", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -1036,7 +1174,7 @@ public final class Operators extends OperatorBank {
 			
 			double floored = Math.floor(d.value);
 			
-			return new LitInteger((long)floored);
+			return new LitInteger(Double.valueOf(floored).intValue());
 		}
 
 		@Override
@@ -1050,6 +1188,13 @@ public final class Operators extends OperatorBank {
 			return "floor";
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()
+					._return(CodeModelInstance.instance().ref(Integer.class).staticInvoke("valueOf")
+							.arg(JExpr.cast(CodeModelInstance.instance().INT, CodeModelInstance.instance()
+									.ref(Math.class).staticInvoke("floor").arg(mappedArgs.get(new Symbol("_0"))))));
+		}
 	};
 	
 	/**
@@ -1104,10 +1249,22 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-is-same-representation", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_is_same_representation", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var t1 = method.body().decl(TypeUtil.instance().typeJType(), "t1",
+					JavaTypeSystem.codeInstance().invoke("getType").arg(mappedArgs.get(new Symbol("_0"))));
+			var t2 = method.body().decl(TypeUtil.instance().typeJType(), "t2",
+					JavaTypeSystem.codeInstance().invoke("getType").arg(mappedArgs.get(new Symbol("_1"))));
+			
+			method.body()._return(
+					TypeUtil.instance().typeJClass().staticInvoke("unifyRepresentation")
+						.arg(t1).arg(t2)
+						.invoke("isPresent"));
+		}
 	};
 	
 	/**
@@ -1162,10 +1319,22 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-is-same-type", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_is_same_type", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var t1 = method.body().decl(TypeUtil.instance().typeJType(), "t1",
+					JavaTypeSystem.codeInstance().invoke("getType").arg(mappedArgs.get(new Symbol("_0"))));
+			var t2 = method.body().decl(TypeUtil.instance().typeJType(), "t2",
+					JavaTypeSystem.codeInstance().invoke("getType").arg(mappedArgs.get(new Symbol("_1"))));
+			
+			method.body()._return(
+					TypeUtil.instance().typeJClass().staticInvoke("unifyTypes")
+						.arg(t1).arg(t2)
+						.invoke("isPresent"));
+		}
 	};
 	
 	/**
@@ -1203,8 +1372,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-lesser-than", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_lesser_than", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).lt(mappedArgs.get(new Symbol("_1"))));
 		}
 	};
 	
@@ -1241,8 +1415,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-lesser-than-or-equals", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_lesser_than_or_equals", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).lte(mappedArgs.get(new Symbol("_1"))));
 		}
 	};
 	
@@ -1289,10 +1468,18 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-log", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_log", Operators.singleton().getNamespace());
 		}
-
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var loggerCl = CodeModelInstance.instance().ref(Logger.class);
+			var logger = method.body().decl(loggerCl, "logger", loggerCl.staticInvoke("getLogger").arg(loggerCl.staticRef("GLOBAL_LOGGER_NAME")));
+			method.body().add(logger.invoke("info").arg(mappedArgs.get(new Symbol("_0"))));
+			
+			method.body()._return(CodeModelInstance.emptyExpression());
+		}
 	};
 	
 	@VelkaOperator
@@ -1307,8 +1494,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("integer-max", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_integer_max", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -1331,6 +1518,14 @@ public final class Operators extends OperatorBank {
 		public String toString() {
 			return "max";
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(
+					CodeModelInstance.instance().ref(Math.class).staticInvoke("max")
+						.arg(mappedArgs.get(new Symbol("_0")))
+						.arg(mappedArgs.get(new Symbol("_1"))));
+		}
 	};
 	
 	@VelkaOperator
@@ -1345,8 +1540,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("integer-min", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_integer_min", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -1369,6 +1564,14 @@ public final class Operators extends OperatorBank {
 		public String toString() {
 			return "min";
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {			
+			method.body()._return(
+					CodeModelInstance.instance().ref(Math.class).staticInvoke("min")
+						.arg(mappedArgs.get(new Symbol("_0")))
+						.arg(mappedArgs.get(new Symbol("_1"))));
+		}
 	};
 	
 	@VelkaOperator
@@ -1383,8 +1586,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("integer-modulo", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_integer_modulo", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -1392,7 +1595,7 @@ public final class Operators extends OperatorBank {
 			LitInteger i = (LitInteger)args.get(0);
 			LitInteger j = (LitInteger)args.get(1);
 			
-			long res = i.value % j.value;
+			var res = i.value % j.value;
 						
 			return new LitInteger(res);
 		}
@@ -1408,6 +1611,11 @@ public final class Operators extends OperatorBank {
 		@Override
 		public String toString() {
 			return "mod";
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).mod(mappedArgs.get(new Symbol("_1"))));
 		}
 	};
 	
@@ -1446,8 +1654,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-multiplication", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_multiplication", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).mul(mappedArgs.get(new Symbol("_1"))));
 		}
 	};
 	/**
@@ -1482,8 +1695,13 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-not", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_not", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).not());
 		}
 	};
 	
@@ -1522,10 +1740,14 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-numeric-equals", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_numeric_equals", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")).eq(mappedArgs.get(new Symbol("_1"))));
+		}
 	};
 	
 	/**
@@ -1569,10 +1791,14 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-parse-int", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_parse_int", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(CodeModelInstance.instance().ref(Integer.class).staticInvoke("parseInt").arg(mappedArgs.get(new Symbol("_0"))));
+		}
 	};
 	
 	/**
@@ -1585,25 +1811,15 @@ public final class Operators extends OperatorBank {
 	public static final Operator PrintlnOperator = new Operator() {
 
 		private final TypeArrow type = new TypeArrow(
-				new TypeTuple(Arrays.asList(new TypeVariable(NameGenerator.next()))), TypeAtom.TypeIntNative);
+				new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntNative);
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			Expression arg = (Expression) args.get(0);
-
-			String s = arg.toString();
-			if(arg instanceof LitInteropObject lio) {				
-				if(lio.type.equals(TypeAtom.TypeListNative)) {
-					s = s.replace('[', '(').replace(']', ')').replace(",", "");
-				}
-				else if (lio.type.equals(TypeAtom.TypeSetTree) || lio.type.equals(TypeAtom.TypeSetHash)) {
-					s = s.replace("[", "#{").replace(']', '}').replace(",", "");
-				}
-			}
+			var arg = (LitString) args.get(0);
 			
-			System.out.println(s);
+			System.out.println(arg.value);
 
-			return new LitInteger(s.length());
+			return Expression.EMPTY_EXPRESSION;
 		}
 
 		@Override
@@ -1618,23 +1834,26 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			String expr = "_expr";
-			String str = "_str";
-			return ClojureHelper.fnHelper(Arrays.asList(expr), 
-					ClojureHelper.letHelper(
-							LitInteger.clojureLit(
-								ClojureHelper.applyClojureFunction("second",
-										ClojureHelper.applyClojureFunction("doall",
-												ClojureHelper.clojureVectorHelper(
-														ClojureHelper.applyClojureFunction("clojure.core/println", str),
-														ClojureHelper.applyClojureFunction("count", str))))), 
-							new Pair<String, String>(str, ClojureHelper.applyClojureFunction("pr-str", expr)))
-					);
+			var str = "_str";
+			return ClojureHelper.wrapVoidClojureOperatorToFn(1,
+					ClojureHelper.fnHelper(List.of(str), 
+							ClojureHelper.applyClojureFunction(".println",
+									"System/out",
+									str)));
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-println", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_println", Operators.singleton().getNamespace());
+		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body().add(
+					CodeModelInstance.instance().ref(System.class).staticRef("out").invoke("println")
+					.arg(mappedArgs.get(new Symbol("_0"))));
+							
+			method.body()._return(CodeModelInstance.emptyExpression());
 		}
 	};
 	
@@ -1680,10 +1899,25 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-read-file", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_read_file", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var content = method.body().decl(CodeModelInstance.instance()._ref(String.class), "content", JExpr.lit(""));
+			var _try = method.body()._try();
+			_try.body().assign(content, CodeModelInstance.instance().ref(Files.class).staticInvoke("readString")
+					.arg(CodeModelInstance.instance().ref(Path.class).staticInvoke("of").arg(mappedArgs.get(new Symbol("_0")))));
+			var _catch = _try._catch(CodeModelInstance.instance().ref(IOException.class));
+			var ioe = _catch.param("ioe");
+			var reCl = CodeModelInstance.instance().ref(RuntimeException.class);
+			var e = _catch.body().decl(reCl, "e", JExpr._new(reCl).arg(ioe.invoke("getMessage")));
+			_catch.body().add(e.invoke("initCause").arg(ioe));
+			_catch.body()._throw(e);
+			
+			method.body()._return(content);
+		}
 	};
 	
 	/**
@@ -1711,10 +1945,9 @@ public final class Operators extends OperatorBank {
 			LitString lsBy = (LitString) args.get(1);
 
 			String[] splitted = lsStr.value.split(lsBy.value);
-			LinkedList<Expression> l = new LinkedList<Expression>();
+			var l = new ArrayList<Object>(splitted.length);
 			for(String s : splitted) {
-				LitString ls = new LitString(s);
-				l.add(ls);
+				l.add(s);
 			}
 
 			return new LitInteropObject(l, TypeAtom.TypeListNative);
@@ -1733,10 +1966,20 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-str-split", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_str_split", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			Method mthd;
+			try {
+				mthd = String.class.getMethod("split", String.class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				throw new RuntimeException(e);
+			}
+			this.wrapNaryMethod(method, mthd, mappedArgs, 1);
+		}
 	};
 	
 	/**
@@ -1774,10 +2017,15 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-subtraction", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_subtraction", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()
+				._return(mappedArgs.get(new Symbol("_0")).minus(mappedArgs.get(new Symbol("_1"))));
+		}
 	};
 	
 	
@@ -1798,7 +2046,7 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			return new LitInteger(System.currentTimeMillis());
+			return new LitInteger(Long.valueOf(System.currentTimeMillis()).intValue());
 		}
 
 		@Override
@@ -1813,10 +2061,15 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-timestamp", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_timestamp", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()
+				._return(CodeModelInstance.instance().ref(System.class).staticInvoke("currentTimeMillis"));
+		}
 	};
 
 	/**
@@ -1830,7 +2083,7 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			return ClojureHelper.unaryOperatorToFn("str");
+			return ClojureHelper.unaryOperatorToFn(".toString");
 		}
 
 		@Override
@@ -1838,21 +2091,7 @@ public final class Operators extends OperatorBank {
 			Expression e = args.get(0);
 			String s;
 			
-//			if(e instanceof LitInteger) {
-//				s = Long.toString(((LitInteger)e).value);
-//			}
-//			else if(e instanceof LitDouble) {
-//				s = Double.toString(((LitDouble)e).value);
-//			}
-//			else if(e instanceof LitBoolean) {
-//				s = Boolean.toString(((LitBoolean)e).value);
-//			}
-//			else if(e instanceof LitString) {
-//				s = ((LitString)e).value;
-//			}
-//			else {
-				s = e.toString();
-//			}
+			s = e.toString();
 			
 			return new LitString(s);
 		}
@@ -1870,10 +2109,20 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-to-str", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_to_str", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			Method mthd;
+			try {
+				mthd = Object.class.getMethod("toString");
+			} catch (NoSuchMethodException | SecurityException e) {
+				throw new RuntimeException(e);
+			}
+			this.wrapNaryMethod(method, mthd, mappedArgs, 0);
+		}
 	};
 	
 	/**
@@ -1887,7 +2136,7 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			return ClojureHelper.binaryOperatorToFn("unsigned-bit-shift-right");
+			return ClojureHelper.binaryOperatorToFn("velka.util.BitwiseOperations/ushr");
 		}
 
 		@Override
@@ -1895,7 +2144,7 @@ public final class Operators extends OperatorBank {
 			LitInteger num = (LitInteger) args.get(0);
 			LitInteger n = (LitInteger) args.get(1);
 
-			long res = num.value >>> n.value;
+			var res = num.value >>> n.value;
 
 			return new LitInteger(res);
 		}
@@ -1913,10 +2162,15 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-unsigned-bit-shr", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_unsigned_bit_shr", Operators.singleton().getNamespace());
 		}
 
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()
+				._return(mappedArgs.get(new Symbol("_0")).shrz(mappedArgs.get(new Symbol("_1"))));
+		}
 	};
 	
 	@VelkaOperator
@@ -1943,8 +2197,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-type-str", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_type_str", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -1969,6 +2223,23 @@ public final class Operators extends OperatorBank {
 			return "type-str";
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var type = method.body().decl(TypeUtil.instance().typeJType(), "type", JExpr._null());
+			
+			var _try = method.body()._try();
+			_try.body().assign(type, JavaTypeSystem.codeInstance()
+					.invoke("getType").arg(mappedArgs.get(new Symbol("_0")))
+					.invoke("removeRepresentationInformation"));
+			
+			var rteCl = CodeModelInstance.instance().ref(RuntimeException.class);
+			var _catch = _try._catch(CodeModelInstance.instance().ref(AppendableException.class));
+			var e = _catch.param("e");
+			_catch.body()._throw(JExpr._new(rteCl).arg(e));
+			
+			method.body()
+				._return(type.invoke("toString"));
+		}
 	};
 	
 	@VelkaOperator
@@ -1993,8 +2264,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-representation-str", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_representation_str", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -2019,6 +2290,13 @@ public final class Operators extends OperatorBank {
 			return "representation-str";
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {			
+			method.body()
+				._return(JavaTypeSystem.codeInstance()
+							.invoke("getType").arg(mappedArgs.get(new Symbol("_0")))
+							.invoke("toString"));
+		}
 	};
 	
 	@VelkaOperator
@@ -2044,8 +2322,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-substr", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_substr", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -2072,6 +2350,17 @@ public final class Operators extends OperatorBank {
 		public String toString() {
 			return "substr";
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			Method mthd;
+			try {
+				mthd = String.class.getMethod("substring", int.class, int.class);
+			} catch (NoSuchMethodException | SecurityException e) {
+				throw new RuntimeException(e);
+			}
+			this.wrapNaryMethod(method, mthd, mappedArgs, 2);
+		}
 	};
 	
 	@VelkaOperator
@@ -2082,19 +2371,12 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-//			String str = "_str";
-//			String code = ClojureHelper.fnHelper(
-//					Arrays.asList(str),
-//					LitInteger.clojureLit(
-//							ClojureHelper.applyClojureFunction(
-//									".length",
-//									str)));
 			return ClojureHelper.unaryOperatorToFn(".length");
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-strlen", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_strlen", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -2115,6 +2397,17 @@ public final class Operators extends OperatorBank {
 		public String toString() {
 			return "strlen";
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			Method mthd;
+			try {
+				mthd = String.class.getMethod("length");
+			} catch (NoSuchMethodException | SecurityException e) {
+				throw new RuntimeException(e);
+			}
+			this.wrapNaryMethod(method, mthd, mappedArgs, 0);
+		}
 	};
 	
 	@VelkaOperator
@@ -2126,17 +2419,21 @@ public final class Operators extends OperatorBank {
 			var k = "_k";
 			var f = "_f";
 			var x = "_x";
+			var _rhis = "_rhis";
 			var code = ClojureHelper.fnHelper(List.of(k, q),
-					ClojureHelper.letHelper(ClojureHelper.addTypeMetaInfo_str(
-							ClojureHelper.fnHelper(List.of(x), ClojureHelper.applyClojureFunction(".apply", f, x)), 
-							new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative).clojureTypeRepresentation()), 
+					ClojureHelper.letHelper(
+							ClojureHelper.reify(velka.types.typeSystem.VelkaAbstraction.class, 
+									Pair.of("apply", Pair.of(List.of(_rhis, x), ClojureHelper.applyClojureFunction(".apply", f, 
+											ClojureHelper.applyClojureFunction("first", x)))),
+									Pair.of("getType", Pair.of(List.of(_rhis), new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), 
+											TypeAtom.TypeDoubleNative).clojureTypeRepresentation()))), 
 							Pair.of(f, ClojureHelper.applyClojureFunction("velka.util.Functions/linearFunction", k, q))));
 			return code;
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("lin-fun", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_lin_fun", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -2154,7 +2451,7 @@ public final class Operators extends OperatorBank {
 				}
 
 				@Override
-				public Symbol getClojureSymbol() {
+				public Symbol getInternalSymbol() {
 					return null;
 				}
 
@@ -2171,6 +2468,10 @@ public final class Operators extends OperatorBank {
 				public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 					var type = new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative);
 					return Pair.of(type, Substitution.EMPTY);
+				}
+
+				@Override
+				protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {				
 				}
 				
 			};
@@ -2190,6 +2491,26 @@ public final class Operators extends OperatorBank {
 			return "lin-fun";
 		}
 		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var aClass = CodeModelInstance.instance().anonymousClass(VelkaAbstraction.class);
+			aClass.method(JMod.PUBLIC, Type.class, "getType").body()
+				._return(TypeUtil.instance().type2java(new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative)));
+			
+			var apply = aClass.method(JMod.PUBLIC, Object.class, "apply");
+			
+			var t = new Symbol("t");
+			var innerArgs = Abstraction.convertAndDeclareParms(List.of(Pair.of(t, TypeAtom.TypeDoubleNative)), apply);
+			
+			var f = method.body().decl(CodeModelInstance.instance().ref(Function.class), "f", 
+					CodeModelInstance.instance().ref(Functions.class).staticInvoke("linearFunction")
+						.arg(mappedArgs.get(new Symbol("_0")))
+						.arg(mappedArgs.get(new Symbol("_1"))));
+			
+			apply.body()._return(f.invoke("apply").arg(innerArgs.get(t)));
+			
+			method.body()._return(JExpr._new(aClass));
+		}
 	};
 	
 	@VelkaOperator
@@ -2203,17 +2524,21 @@ public final class Operators extends OperatorBank {
 			var y2 = "_y2";
 			var f = "_f";
 			var x = "_x";
+			var _rhis = "_rhis";
 			var code = ClojureHelper.fnHelper(List.of(x1, y1, x2, y2),
-					ClojureHelper.letHelper(ClojureHelper.addTypeMetaInfo_str(
-							ClojureHelper.fnHelper(List.of(x), ClojureHelper.applyClojureFunction(".apply", f, x)), 
-							new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative).clojureTypeRepresentation()), 
+					ClojureHelper.letHelper(
+							ClojureHelper.reify(velka.types.typeSystem.VelkaAbstraction.class, 
+									Pair.of("apply", Pair.of(List.of(_rhis, x), ClojureHelper.applyClojureFunction(".apply", f, 
+											ClojureHelper.applyClojureFunction("first", x)))),
+									Pair.of("getType", Pair.of(List.of(_rhis), new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), 
+											TypeAtom.TypeDoubleNative).clojureTypeRepresentation()))), 
 							Pair.of(f, ClojureHelper.applyClojureFunction("velka.util.Functions/linearFunctionFromPoints", x1, y1, x2, y2))));
 			return code;
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("lin-fun-pts", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_lin_fun_pts", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -2233,7 +2558,7 @@ public final class Operators extends OperatorBank {
 				}
 
 				@Override
-				public Symbol getClojureSymbol() {
+				public Symbol getInternalSymbol() {
 					return null;
 				}
 
@@ -2250,6 +2575,10 @@ public final class Operators extends OperatorBank {
 				public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 					var type = new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative);
 					return Pair.of(type, Substitution.EMPTY);
+				}
+
+				@Override
+				protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
 				}
 				
 			};
@@ -2268,6 +2597,29 @@ public final class Operators extends OperatorBank {
 		public String toString() {
 			return "lin-fun-pts";
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			var aClass = CodeModelInstance.instance().anonymousClass(VelkaAbstraction.class);
+			aClass.method(JMod.PUBLIC, Type.class, "getType").body()
+				._return(TypeUtil.instance().type2java(new TypeArrow(new TypeTuple(TypeAtom.TypeDoubleNative), TypeAtom.TypeDoubleNative)));
+			
+			var apply = aClass.method(JMod.PUBLIC, Object.class, "apply");
+			
+			var t = new Symbol("t");
+			var innerArgs = Abstraction.convertAndDeclareParms(List.of(Pair.of(t, TypeAtom.TypeDoubleNative)), apply);
+			
+			var f = method.body().decl(CodeModelInstance.instance().ref(Function.class), "f", 
+					CodeModelInstance.instance().ref(Functions.class).staticInvoke("linearFunctionFromPoints")
+						.arg(mappedArgs.get(new Symbol("_0")))
+						.arg(mappedArgs.get(new Symbol("_1")))
+						.arg(mappedArgs.get(new Symbol("_2")))
+						.arg(mappedArgs.get(new Symbol("_3"))));
+			
+			apply.body()._return(f.invoke("apply").arg(innerArgs.get(t)));
+			
+			method.body()._return(JExpr._new(aClass));
+		}
 	};
 	
 	@VelkaOperator
@@ -2282,8 +2634,8 @@ public final class Operators extends OperatorBank {
 		}
 
 		@Override
-		public Symbol getClojureSymbol() {
-			return new Symbol("velka-doall", NAMESPACE);
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_doall", Operators.singleton().getNamespace());
 		}
 
 		@Override
@@ -2303,20 +2655,25 @@ public final class Operators extends OperatorBank {
 		public String toString() {
 			return "doall";
 		}
+		
+		@Override
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
 	};
 	
 	public static final String defaultCostFunction = "default-cost-function";
-	public static final String defaultCostFunction_full = ClojureHelper.fullyQualifySymbol(NAMESPACE, defaultCostFunction);
+	public static final String defaultCostFunction_full = ClojureHelper.fullyQualifySymbol(Operators.singleton().getNamespace(), defaultCostFunction);
 
 	/**
 	 * Relative path to velka.clojure.operators file
 	 */
-	public static final Path VELKA_CLOJURE_OPERATORS_PATH = Paths.get("velka", "clojure");
+	public static final Path VELKA_CLOJURE_OPERATORS_PATH = velka.core.util.Constants.LOCATION;
 
 	/**
 	 * Name of the velka.clojure.operators file
 	 */
-	public static final Path VELKA_CLOJURE_OPERAOTRS_NAME = Paths.get("operators.clj");
+	public static final Path VELKA_CLOJURE_OPERAOTRS_NAME = Paths.get("operators");
 
 	public static final String defaultCostFunctionDef_fn = "_fn";
 
@@ -2334,22 +2691,10 @@ public final class Operators extends OperatorBank {
 									defaultCostFunctionDef_fn,
 									ClojureHelper.tupleHelper_str(defaultCostFunctionDef_args))),
 				new TypeArrow(new TypeVariable(NameGenerator.next()), TypeAtom.TypeIntNative)));
-	@Override
-	public String getNamespace() {
-		return NAMESPACE;
-	}
-	@Override
-	public Path getPath() {
-		return VELKA_CLOJURE_OPERATORS_PATH;
-	}
-	@Override
-	public Path getFileName() {
-		return VELKA_CLOJURE_OPERAOTRS_NAME;
-	}
 	
 	@Override
-	protected String writeDefinitions(Class<?> clazz, String Namespace) {
-		StringBuilder sb = new StringBuilder(super.writeDefinitions(clazz, Namespace));
+	protected String clojureDefinitions(Class<?> clazz, String namespace) {
+		StringBuilder sb = new StringBuilder(super.clojureDefinitions(clazz, namespace));
 		
 		sb.append("\n" + Operators.defaultCostFunctionDef);
 		
@@ -2363,5 +2708,9 @@ public final class Operators extends OperatorBank {
 			instance = new Operators();
 		}
 		return instance;
+	}
+	@Override
+	protected String name() {
+		return "operators";
 	}
 }

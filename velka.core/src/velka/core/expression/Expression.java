@@ -1,9 +1,15 @@
 package velka.core.expression;
 
 import velka.util.AppendableException;
+import velka.util.ClojureHelper;
 import velka.util.Pair;
+
+import com.sun.codemodel.JExpression;
+
 import velka.core.exceptions.ConversionException;
+import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
+import velka.java.CodeModelInstance;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -84,11 +90,9 @@ public abstract class Expression implements Comparable<Expression>, IConvertable
 		e.infer(env);
 		return e;
 	}
+	
+	private static class EmptyExpression extends Expression implements CompileableToJava {
 
-	/**
-	 * Empty expression
-	 */
-	public static final Expression EMPTY_EXPRESSION = new Expression() {
 		@Override
 		public Expression interpret(Environment env) {
 			return this;
@@ -101,7 +105,7 @@ public abstract class Expression implements Comparable<Expression>, IConvertable
 
 		@Override
 		public String toClojureCode(Environment env) throws AppendableException {
-			return Type.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE);
+			return ClojureHelper.emptyExpression();
 		}
 		
 		@Override
@@ -116,5 +120,15 @@ public abstract class Expression implements Comparable<Expression>, IConvertable
 			}
 			return this;
 		}
-	};
+
+		@Override
+		public JExpression toJavaExpr(Environment env) {
+			return CodeModelInstance.emptyExpression();
+		}		
+	}
+
+	/**
+	 * Empty expression
+	 */
+	public static final Expression EMPTY_EXPRESSION = new EmptyExpression();
 }

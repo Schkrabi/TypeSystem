@@ -3,6 +3,7 @@ package velka.core.langbase;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -25,17 +26,31 @@ public abstract class OperatorBank {
 	 * Gets namespace name of this operator bank
 	 * @return
 	 */
-	public abstract String getNamespace();
+	public String getNamespace() {
+		return velka.core.util.Constants.PACKAGE + "." + this.name();
+	}
+	
 	/**
 	 * Gets relative directory where clojure code file will be located 
 	 * @return
 	 */
-	public abstract Path getPath();
+	public Path path() {
+		return velka.core.util.Constants.LOCATION;
+	}
+	
 	/**
 	 * Gets file name of the clojure code file
 	 * @return
 	 */
-	public abstract Path getFileName();	
+	protected abstract String name();
+	
+	public Path fileNameJava() {
+		return Paths.get(this.name() + ".java");
+	}
+	
+	public Path fileNameClojure() {
+		return Paths.get(this.name() + ".clj");
+	}
 	
 	/**
 	 * Initializes this operator bank in type environment
@@ -65,7 +80,7 @@ public abstract class OperatorBank {
 			
 			// Operators
 			for(Operator o : OperatorBankUtil.getOperators(this.getClass())) {
-				env.put(o.getClojureSymbol(), o);
+				env.put(o.getInternalSymbol(), o);
 			}
 			
 		} catch (IllegalArgumentException e) {
@@ -79,8 +94,12 @@ public abstract class OperatorBank {
 	 * Gets relative path of clojure code file
 	 * @return
 	 */
-	public Path getRelative() {
-		return this.getPath().resolve(this.getFileName());
+	public Path clojureFilePath() {
+		return this.path().resolve(this.fileNameClojure());
+	}
+	
+	public Path javaFilePath() {
+		return this.path().resolve(this.fileNameJava());
 	}
 	
 	/**
@@ -89,16 +108,16 @@ public abstract class OperatorBank {
 	 * @return Path to the file
 	 * @throws IOException if write is not successful
 	 */
-	public Path generateFile(Path dest) throws IOException {
-		Path finalPath = dest.resolve(this.getRelative());
-		return Files.writeString(finalPath, this.writeDefinitions(this.getClass(), this.getNamespace()));
+	public Path generateClojureFile(Path dest) throws IOException {
+		Path finalPath = dest.resolve(this.clojureFilePath());
+		return Files.writeString(finalPath, this.clojureDefinitions(this.getClass(), this.getNamespace()));
 	}
 	
 	/**
 	 * Writes definitions of operator bank file
 	 * @return
 	 */
-	protected String writeDefinitions(Class<?> clazz, String Namespace) {
+	protected String clojureDefinitions(Class<?> clazz, String Namespace) {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append(ClojureHelper.requireNamespace("clojure.string"));
@@ -140,7 +159,6 @@ public abstract class OperatorBank {
 			ConversionOperators.singleton(),
 			Operators.singleton(),
 			ListNative.singleton(),
-			JavaArrayList.singleton(),
 			JavaLinkedList.singleton(),
 			JavaBitSet.singleton(),
 			Scanner.singleton(),

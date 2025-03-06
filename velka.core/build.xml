@@ -10,10 +10,14 @@
 
     <property name="velka.util.lib" value="../lib/velka.util.jar" />
     <property name="velka.types.lib" value="../lib/velka.types.jar" />
+	<property name="velka.java.lib" value="../lib/velka.java.jar" />
+	<property name="com.sun.codemodel.lib" value="../lib/codemodel-4.0.5.jar" />
     
     <path id="modulepath">
         <pathelement location="${velka.util.lib}" />
         <pathelement location="${velka.types.lib}" />
+		<pathelement location="${velka.java.lib}" />
+		<pathelement location="${com.sun.codemodel.lib}" />
     </path>
 
     <target name="clean">
