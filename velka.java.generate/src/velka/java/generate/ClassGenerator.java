@@ -239,14 +239,14 @@ public class ClassGenerator {
 	}
 	
 	/** Builds a single file project*/
-	public Map<String, Path> build(InputStream stream, File workingDirectory){
+	public Map<String, Path> build(InputStream stream, File workingDirectory, boolean hasEntrypoint){
 		List<Expression> exprs;
 		try {
 			exprs = Parser.read(stream);
 		} catch (IOException | AppendableException e) {
 			throw new RuntimeException(e);
 		}
-		var ret = this.build(exprs, workingDirectory, true);
+		var ret = this.build(exprs, workingDirectory, hasEntrypoint);
 		return ret;
 	}
 	
@@ -258,7 +258,7 @@ public class ClassGenerator {
 			throw new RuntimeException(e);
 		}
 		var srcDir = srcPath.toFile();
-		this.build(stream, srcDir);
+		this.build(stream, srcDir, true);
 		this.outputBuildXml(workingDirectory);
 		this.outputModuleInfo(srcDir);
 	}

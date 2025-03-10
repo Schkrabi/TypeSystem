@@ -38,11 +38,11 @@
 	<target name="create-launcher" depends="compile">
         <echo file="${lin.launch}">
             #!/bin/sh
-            java --module-path ${module.path} -m ${module.name}/${main.class}
+            java --module-path ${module.path} -m ${module.name}/${main.class} $@
         </echo>
         <echo file="${win.launch}">
             $$cp = "${module.path}".Replace(":", ";")
-            java --module-path $$cp -m ${module.name}/${main.class}
+            java --module-path $$cp -m ${module.name}/${main.class} $$args
         </echo>
     </target>
 
