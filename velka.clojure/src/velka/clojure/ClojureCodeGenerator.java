@@ -12,6 +12,7 @@ import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.langbase.OperatorBank;
 import velka.core.util.Constants;
+import velka.core.util.OperatorBankUtil;
 import velka.types.Type;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
@@ -170,7 +171,9 @@ public class ClojureCodeGenerator {
 		
 		sb.append(":aliases {\n")
 		.append(":run {\n")
-		.append(":main-opts [\"-m\" \"velka.runtime.user\"]\n")
+		.append(":main-opts [\"-m\" \"")
+		.append(velka.core.util.Constants.DEFAULT_NAMESPACE)
+		.append("\"]\n")
 		.append("}\n")
 		.append("}\n");
 		

@@ -136,6 +136,10 @@ public class Symbol extends Expression implements Comparable<Expression>, Compil
 	public static List<Symbol> uniqueSymbolList(int size){
 		return uniqueSymbolList(size);
 	}
+	
+	private String getJavaCompatibleName() {
+		return this.name.replace('-', '_');
+	}
 
 	@Override
 	public JExpression toJavaExpr(Environment env) {
@@ -149,7 +153,7 @@ public class Symbol extends Expression implements Comparable<Expression>, Compil
 					return v;
 				}
 				if(e instanceof TypeHolder) {
-					var v = CodeModelInstance.makeJVar(this.name);
+					var v = CodeModelInstance.makeJVar(this.getJavaCompatibleName());
 					return v;
 				}
 			} catch (UnboundVariableException er) {
@@ -158,11 +162,11 @@ public class Symbol extends Expression implements Comparable<Expression>, Compil
 			
 		}
 		else if(this.namespace.isEmpty()) {
-			var v = CodeModelInstance.makeJVar(this.name);
+			var v = CodeModelInstance.makeJVar(this.getJavaCompatibleName());
 			return v;
 		}
 		
-		var v = CodeModelInstance.instance()._getClass(this.namespace).staticRef(this.name);
+		var v = CodeModelInstance.instance()._getClass(this.namespace).staticRef(this.getJavaCompatibleName());
 		return v;
 	}
 }

@@ -527,7 +527,7 @@ public class VelkaTest {
 			
 			var generator = new ClassGenerator(localCodeModel);
 			
-			var files = generator.build(es, workingDir);
+			var files = generator.build(es, workingDir, false);
 			
 			var compiler = ToolProvider.getSystemJavaCompiler();
 	        var fileManager = compiler.getStandardFileManager(null, null, null);

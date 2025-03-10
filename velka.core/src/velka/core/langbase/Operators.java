@@ -2068,7 +2068,10 @@ public final class Operators extends OperatorBank {
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
 			method.body()
-				._return(CodeModelInstance.instance().ref(System.class).staticInvoke("currentTimeMillis"));
+				._return(
+						CodeModelInstance.instance().ref(Long.class).staticInvoke("valueOf")
+							.arg(CodeModelInstance.instance().ref(System.class).staticInvoke("currentTimeMillis"))
+							.invoke("intValue"));
 		}
 	};
 

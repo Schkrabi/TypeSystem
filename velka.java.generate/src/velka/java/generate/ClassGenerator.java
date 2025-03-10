@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,6 +31,7 @@ import velka.java.runtime.VelkaTuple;
 import velka.parser.Parser;
 import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.AppendableException;
+import velka.util.FileReaderUtil;
 
 public class ClassGenerator {
 	
@@ -194,7 +196,7 @@ public class ClassGenerator {
 	 * @param workingDir directory where the source is generated
 	 * @return Map of fully qualified class name : path to java file
 	 */
-	public Map<String, Path> build(Collection<? extends Expression> exprs, File workingDir) {
+	public Map<String, Path> build(Collection<? extends Expression> exprs, File workingDir, boolean hasEntrypoint) {
 		var ret = new HashMap<String, Path>();
 		var wdPath = Path.of(workingDir.getAbsolutePath());
 		
@@ -204,7 +206,12 @@ public class ClassGenerator {
 			ret.put(operatorBank.getNamespace(), wdPath.resolve(operatorBank.javaFilePath()));
 		}
 		
-		this.generate(velka.core.util.Constants.DEFAULT_NAMESPACE, exprs);
+		if(hasEntrypoint) {
+			this.generateEntrypoint(velka.core.util.Constants.DEFAULT_NAMESPACE, exprs);
+		}
+		else {
+			this.generate(velka.core.util.Constants.DEFAULT_NAMESPACE, exprs);
+		}
 		ret.put(velka.core.util.Constants.DEFAULT_NAMESPACE, wdPath.resolve(velka.core.util.Constants.DEFAULT_JAVA_FILE));
 		
 		try {
@@ -239,8 +246,30 @@ public class ClassGenerator {
 		} catch (IOException | AppendableException e) {
 			throw new RuntimeException(e);
 		}
-		var ret = this.build(exprs, workingDirectory);
+		var ret = this.build(exprs, workingDirectory, true);
 		return ret;
+	}
+	
+	public void buildProject(InputStream stream, File workingDirectory) {
+		var srcPath = workingDirectory.toPath().resolve("src");
+		try {
+			Files.createDirectories(srcPath);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		var srcDir = srcPath.toFile();
+		this.build(stream, srcDir);
+		this.outputBuildXml(workingDirectory);
+		this.outputModuleInfo(srcDir);
+	}
+	
+	public void outputBuildXml(File workingDirectory) {
+		FileReaderUtil.copyResourceTo("resources/build.xml", workingDirectory.toPath().resolve("build.xml"));
+	}
+	
+	public void outputModuleInfo(File workingDirectory) {
+		FileReaderUtil.copyResourceTo("resources/module-info._java",
+				workingDirectory.toPath().resolve("module-info.java"));
 	}
 
 	public boolean isDisplayFileNamesInOutput() {

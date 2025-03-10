@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="velka.user" basedir="." default="main">
+
+    <property name="build.dir" value="." />
+	<property name="src.dir" value="${build.dir}/src" />
+    <property name="classes.dir" value="${build.dir}/classes" />
+	
+	<property name="velka.util.lib" value="./velka.util.jar" />
+    <property name="velka.types.lib" value="./velka.types.jar" />
+	<property name="velka.java.lib" value="./velka.java.jar" />
+	<property name="com.sun.codemodel.lib" value="./codemodel-4.0.5.jar" />
+	
+	<property name="module.path" value="${classes.dir}:${velka.util.lib}:${velka.types.lib}:${velka.java.lib}:${com.sun.codemodel.lib}" />
+	<property name="module.name" value="velka.runtime" />
+	<property name="main.class" value="velka.runtime.user" />
+	
+	<property name="win.launch" value="run.ps1" />
+	<property name="lin.launch" value="run.sh" />
+	
+	<path id="modulepath">
+        <pathelement location="${velka.util.lib}" />
+        <pathelement location="${velka.types.lib}" />
+		<pathelement location="${velka.java.lib}" />
+		<pathelement location="${com.sun.codemodel.lib}" />
+    </path>
+	
+	<target name="clean">
+        <delete dir="${classes.dir}" />
+		<delete file="${win.launch}" />
+		<delete file="${lin.launch}" />
+    </target>
+	
+	<target name="compile">
+        <mkdir dir="${classes.dir}" />
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" modulepathref="modulepath" />
+    </target>
+	
+	<target name="create-launcher" depends="compile">
+        <echo file="${lin.launch}">
+            #!/bin/sh
+            java --module-path ${module.path} -m ${module.name}/${main.class}
+        </echo>
+        <echo file="${win.launch}">
+            $$cp = "${module.path}".Replace(":", ";")
+            java --module-path $$cp -m ${module.name}/${main.class}
+        </echo>
+    </target>
+
+    <target name="main" depends="clean,create-launcher" />
+    
+</project>

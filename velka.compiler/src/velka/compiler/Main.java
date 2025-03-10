@@ -1,11 +1,13 @@
 package velka.compiler;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,6 +21,8 @@ import velka.core.interpretation.Environment;
 import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.langbase.OperatorBank;
 import velka.core.literal.LitString;
+import velka.java.CodeModelInstance;
+import velka.java.generate.ClassGenerator;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 
@@ -30,8 +34,9 @@ import velka.util.ClojureCoreSymbols;
  */
 public class Main {
 	
-	public static final String COMPILE = "compile";
-	public static final String BUILD = "build";
+	public static final String COMPILE_CLJ = "compile_clj";
+	public static final String BUILD_CLJ = "build_clj";
+	public static final String BUILD_JAVA = "build_java";
 	public static final String INTERPRET = "interpret";
 	public static final String REPL = "repl";
 	public static final String PREPARE = "prepare";
@@ -42,9 +47,10 @@ public class Main {
 			"Usage:\n" 
 			+ "    java -jar velka.clojure.compiler.jar OPTION args\n"
 			+ "    Options:\n"
-			+ "        " + COMPILE + " <file> - compiles file into clojure code\n"
+			+ "        " + COMPILE_CLJ + " <file> - compiles file into clojure code\n"
 			+ "        " + PREPARE + " - prepares current folder for clojure project\n"
-			+ "        " + BUILD + " <file> - prepares current folder for clojure project and compiles code to clojure\n"
+			+ "        " + BUILD_CLJ + " <file> - prepares current folder for clojure project and compiles code to clojure\n"
+			+ "        " + BUILD_JAVA + " <file> <output dir> - builds a java project in given working directory"
 			+ "        " + INTERPRET + " <file> - interprets file\n"
 			+ "        " + REPL + " - runs repl\n"
 			+ "        " + HELP + " - prints this help\n";
@@ -67,7 +73,7 @@ public class Main {
 		try {
 			switch(args[0].toLowerCase()) {
 			
-				case COMPILE:{
+				case COMPILE_CLJ:{
 						var fileArg = Path.of(args[1]);
 						var topLevel = TopLevelEnvironment.instantiate();
 						var fld = Path.of(System.getProperty("user.dir"));
@@ -79,7 +85,7 @@ public class Main {
 						ClojureCodeGenerator.generateClojureProject(fld);
 					}
 					break;
-				case BUILD:{
+				case BUILD_CLJ:{
 						var topLevel = TopLevelEnvironment.instantiate();
 						var fld = Path.of(System.getProperty("user.dir"));
 						var fileArg = Path.of(args[1]);
@@ -87,16 +93,22 @@ public class Main {
 						Compiler.clojureCompile(fileArg, fld.resolve(ClojureCodeGenerator.DEFAULT_FILE_PROJECT_PATH), topLevel);
 					}
 					break;
+				case BUILD_JAVA:
+					var file = Files.newInputStream(Path.of(args[1]));
+					var workingDir = new File(args[2]);
+					var generator = new ClassGenerator(CodeModelInstance.instance());
+					generator.buildProject(file, workingDir);
+					break;
 				case INTERPRET:{
 						var inStream = Files.newInputStream(Path.of(args[1]));
 						var topLevel = TopLevelEnvironment.instantiate();
-						var l = new ArrayList<Expression>(args.length - 2);
-						for(int i = 2; i < args.length; i++) {
-							l.add(new LitString(args[i]));
-						}
-						topLevel.put(new Symbol(ClojureCoreSymbols.CONSOLE_ARGS_SYMBOL), new Tuple(l));
+//						var l = new ArrayList<Expression>(args.length - 2);
+//						for(int i = 2; i < args.length; i++) {
+//							l.add(new LitString(args[i]));
+//						}
+//						topLevel.put(new Symbol(ClojureCoreSymbols.CONSOLE_ARGS_SYMBOL), new Tuple(l));
 						
-						Compiler.interpret(inStream, topLevel);
+						Compiler.interpret(inStream, topLevel, Arrays.copyOfRange(args, 2, args.length));
 					}
 					break;
 				case REPL:{

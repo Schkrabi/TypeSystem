@@ -12,10 +12,17 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import velka.clojure.ClojureCodeGenerator;
+import velka.core.application.AbstractionApplication;
 import velka.core.expression.Expression;
+import velka.core.expression.Symbol;
+import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
+import velka.core.literal.LitString;
+import velka.java.generate.ClassGenerator;
 import velka.parser.Parser;
 import velka.util.AppendableException;
 
@@ -159,8 +166,14 @@ public class Compiler {
 	 * @throws AppendableException 
 	 * @throws Exception 
 	 */
-	public static void interpret(InputStream in, Environment topLevel) throws AppendableException, IOException {
-		Compiler.print(eval(Parser.read(in), topLevel));
+	public static void interpret(InputStream in, Environment topLevel, String[] args)
+			throws AppendableException, IOException {
+		var exprs = Parser.read(in);
+		var _args = new Tuple(Stream.of(args).map(a -> new LitString(a)).collect(Collectors.toList()));
+		exprs.add(new AbstractionApplication(new Symbol(ClassGenerator._EXTERNAL_MAIN_SYMBOL),
+				new Tuple((Expression)_args)));
+
+		Compiler.print(eval(exprs, topLevel));
 	}
 
 }
