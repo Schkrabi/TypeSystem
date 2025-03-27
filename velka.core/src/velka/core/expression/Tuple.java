@@ -314,9 +314,8 @@ public class Tuple extends Expression implements Iterable<Expression>, Collectio
 			listof.arg(compileableExpr.toJavaExpr(env));
 		}
 		
-		var expr = JExpr._new(CodeModelInstance.instance().ref(VelkaTuple.class))
-				.arg(listof)
-				.arg(TypeUtil.instance().type2java(t));
+		var expr = CodeModelInstance.instance().ref(VelkaTuple.class).staticInvoke("of")
+				.arg(listof);
 		
 		return expr;
 	}

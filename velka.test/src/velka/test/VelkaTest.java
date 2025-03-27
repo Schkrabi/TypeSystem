@@ -570,7 +570,7 @@ public class VelkaTest {
 	                        }
 	                    }
 	                }, 
-	        		List.of("-classpath", classpath, "-Xlint:unchecked"), 
+	        		List.of("-classpath", classpath, "-Xlint:unchecked", "-g"), 
 	        		null, 
 	        		compilationUnits)
 	        	.call();

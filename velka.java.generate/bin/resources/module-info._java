@@ -1,0 +1,7 @@
+module velka.runtime {
+	requires java.logging;
+	requires velka.util;
+	requires velka.types;
+	requires velka.java;
+	requires com.sun.codemodel;
+}

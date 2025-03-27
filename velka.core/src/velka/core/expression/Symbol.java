@@ -137,8 +137,9 @@ public class Symbol extends Expression implements Comparable<Expression>, Compil
 		return uniqueSymbolList(size);
 	}
 	
-	private String getJavaCompatibleName() {
-		return this.name.replace('-', '_');
+	public String getJavaCompatibleName() {
+		return this.name.replace('-', '_')
+				.replace("*", "_ast_");
 	}
 
 	@Override

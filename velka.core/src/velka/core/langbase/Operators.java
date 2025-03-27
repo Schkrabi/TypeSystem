@@ -1811,7 +1811,7 @@ public final class Operators extends OperatorBank {
 	public static final Operator PrintlnOperator = new Operator() {
 
 		private final TypeArrow type = new TypeArrow(
-				new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntNative);
+				new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeTuple.EMPTY_TUPLE);
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {

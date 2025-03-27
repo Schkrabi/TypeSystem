@@ -262,6 +262,14 @@ public class TypeAtom extends TerminalType {
 	};
 	
 	@LangbaseType
+	public static final TypeAtom TypeMap = new TypeAtom(new TypeName("Map"), TypeRepresentation.WILDCARD) {
+		@Override
+		public String clojureTypeRepresentation() {
+			return "velka.types.TypeAtom/TypeMap";
+		}
+	};
+	
+	@LangbaseType
 	public static final TypeAtom TypeMapTree = new TypeAtom(new TypeName("Map"), new TypeRepresentation("Tree")) {
 		@Override
 		public String clojureTypeRepresentation() {

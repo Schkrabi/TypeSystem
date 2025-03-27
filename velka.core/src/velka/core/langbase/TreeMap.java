@@ -9,8 +9,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JStatement;
+import com.sun.codemodel.JVar;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Operator;
@@ -1328,8 +1330,88 @@ public class TreeMap extends OperatorBank{
 	@Description("Associates the specified value with the specified key in the map.") 
 	@Example("(map-tree-put (construct Map Tree (lambda (x y) -1)) 1 \"foo\")") 
 	@Syntax("(map-tree-put <map> <key> <value>)")
-	public static final Operator put = Operator.wrapJavaMethod(java.util.TreeMap.class, "put", "map-tree-put",
-			TreeMap.singleton().getNamespace(), Object.class, Object.class);
+	public static final Operator put = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			String map = "_map";
+			String key = "_key";
+			String value = "_value";
+			String tmp = "_tmp";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(map, key, value),
+					ClojureHelper.letHelper(
+							map,
+							Pair.of(tmp,
+									ClojureHelper.applyClojureFunction(
+											".put",
+											map,
+											key,
+											value))));
+			return code;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return putSymbol;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env)
+				throws AppendableException {
+			
+			LitInteropObject lji = (LitInteropObject)args.get(0);
+			@SuppressWarnings("unchecked")
+			java.util.TreeMap<Object, Object> map = (java.util.TreeMap<Object, Object>)lji.javaObject;
+			
+			var k = args.get(1);
+			Object key = null;
+			if(k instanceof Literal l) {
+				key = Literal.literalToObject(l);
+			}
+			else {
+				key = k;
+			}
+			
+			var v = args.get(2);
+			Object value = null;
+			if(v instanceof Literal l) {
+				value = Literal.literalToObject(l);
+			}
+			else {
+				value = v;
+			}
+			
+			map.put(key, value);
+			
+			return lji;
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			TypeVariable K = new TypeVariable(NameGenerator.next());
+			TypeVariable V = new TypeVariable(NameGenerator.next());
+			Type type = new TypeArrow(new TypeTuple(TypeAtom.TypeMapTree, K, V), TypeAtom.TypeMapTree);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return putSymbol_out.toString();
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var tmcl = CodeModelInstance.instance().ref(java.util.TreeMap.class);
+			var tm = method.body().decl(tmcl, "_tm", mappedArgs.get(new Symbol("_0")));
+			
+			method.body().add(tm.invoke("put")
+					.arg(mappedArgs.get(new Symbol("_1")))
+					.arg(mappedArgs.get(new Symbol("_2"))));
+			method.body()._return(tm);
+		}
+		
+	};
 	
 	private static final Symbol putAllSymbol = new Symbol("put_all", TreeMap.singleton().getNamespace());
 	public static final Symbol putAllSymbol_out = new Symbol("map-tree-put-all");

@@ -59,16 +59,10 @@ class TestTreeMap extends VelkaTest {
 	}
 	
 	@Test
-	void testPut() throws Exception {
-		Expression e = this.parseString("(map-tree-put (construct Map:Tree (lambda (x y) -1)) 1 \"foo\")").get(0);
-		e.interpret(this.env);
-
-		this.assertInterpretationEquals("(map-tree-put (construct Map:Tree (lambda (x y) -1)) 1 \"foo\")", Expression.EMPTY_EXPRESSION);
-		
-		this.assertIntprtAndCompPrintSameValues("(map-tree-put (construct Map:Tree (lambda (x y) -1)) 1 \"foo\")");
-		
-		this.assertJExprEquals(null,
-				"(map-tree-put (construct Map:Tree (lambda (x y) -1)) 1 \"foo\")", env);
+	void testPut() throws Exception {				
+		this.assertVelkaCode(
+				"(map-tree-put (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (= x y) 0 1)))) 1 \"foo\")",
+				new java.util.TreeMap<Integer, String>(Map.of(1, "foo")));
 	}
 	
 	@Test

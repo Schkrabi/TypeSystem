@@ -217,8 +217,9 @@ public final class ConversionOperators extends OperatorBank{
 			var _try = method.body()._try();
 			_try.body()
 					._return(CodeModelInstance.instance().ref(RomanNumbers.class).staticInvoke("roman2int")
-									.arg(JExpr.cast(CodeModelInstance.instance()._ref(String.class),
-											mappedArgs.get(new Symbol("_0")).ref("object"))));
+							.arg(JExpr.cast(CodeModelInstance.instance()._ref(String.class),
+									JExpr.cast(CodeModelInstance.instance().ref(TypedObject.class),
+											mappedArgs.get(new Symbol("_0"))).ref("object"))));
 			
 			var _catch = _try._catch(CodeModelInstance.instance().ref(AppendableException.class));
 			var e = _catch.param("e");
@@ -287,7 +288,8 @@ public final class ConversionOperators extends OperatorBank{
 					.arg(CodeModelInstance.instance().ref(Long.class).staticInvoke("toString")
 							.arg(CodeModelInstance.instance().ref(RomanNumbers.class).staticInvoke("roman2int")
 									.arg(JExpr.cast(CodeModelInstance.instance()._ref(String.class),
-											mappedArgs.get(new Symbol("_0")).ref("object")))))
+											JExpr.cast(CodeModelInstance.instance().ref(TypedObject.class),
+													mappedArgs.get(new Symbol("_0"))).ref("object")))))
 					.arg(TypeUtil.instance().type2java(TypeAtom.TypeIntString)));
 			
 			var _catch = _try._catch(CodeModelInstance.instance().ref(AppendableException.class));
@@ -350,8 +352,10 @@ public final class ConversionOperators extends OperatorBank{
 		
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			method.body()._return(CodeModelInstance.instance().ref(Integer.class).staticInvoke("parseInt").arg(JExpr.cast(
-					CodeModelInstance.instance()._ref(String.class), mappedArgs.get(new Symbol("_0")).ref("object"))));
+			method.body()._return(CodeModelInstance.instance().ref(Integer.class).staticInvoke("parseInt")
+					.arg(JExpr.cast(CodeModelInstance.instance()._ref(String.class), JExpr
+							.cast(CodeModelInstance.instance().ref(TypedObject.class), mappedArgs.get(new Symbol("_0")))
+							.ref("object"))));
 		}
 	};
 	
@@ -409,13 +413,14 @@ public final class ConversionOperators extends OperatorBank{
 		
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			method.body()._return(
-					JExpr._new(CodeModelInstance.instance().ref(TypedObject.class))
-						.arg(CodeModelInstance.instance().ref(RomanNumbers.class).staticInvoke("int2roman")
-								.arg(CodeModelInstance.instance().ref(Long.class).staticInvoke("parseLong")
+			method.body()
+					._return(JExpr._new(CodeModelInstance.instance().ref(TypedObject.class))
+							.arg(CodeModelInstance.instance().ref(RomanNumbers.class).staticInvoke("int2roman")
+									.arg(CodeModelInstance.instance().ref(Long.class).staticInvoke("parseLong")
 											.arg(JExpr.cast(CodeModelInstance.instance()._ref(String.class),
-													mappedArgs.get(new Symbol("_0")).ref("object")))))
-						.arg(TypeUtil.instance().type2java(TypeAtom.TypeIntRoman)));
+													JExpr.cast(CodeModelInstance.instance().ref(TypedObject.class),
+															mappedArgs.get(new Symbol("_0"))).ref("object")))))
+							.arg(TypeUtil.instance().type2java(TypeAtom.TypeIntRoman)));
 		}
 	};
 	

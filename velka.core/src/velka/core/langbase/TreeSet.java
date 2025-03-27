@@ -52,7 +52,7 @@ import velka.util.annotations.VelkaOperatorBank;
 @Header("Tree Set")
 public class TreeSet extends OperatorBank {
 	
-	public static final Symbol constructorSymbol = new Symbol("velka_construct", TreeSet.instance().getNamespace());
+	public static final Symbol constructorSymbol = new Symbol("velka_construct", TreeSet.singleton().getNamespace());
 	
 	@VelkaConstructor
 	@Description("Constructs Set:Tree.") 
@@ -175,7 +175,7 @@ public class TreeSet extends OperatorBank {
 
 		@Override
 		public Symbol getInternalSymbol() {
-			return new Symbol("velka-construct-copy", TreeSet.instance().getNamespace());
+			return new Symbol("velka-construct-copy", TreeSet.singleton().getNamespace());
 		}
 
 		@Override
@@ -208,77 +208,77 @@ public class TreeSet extends OperatorBank {
 	@Description("Adds the specified element to this set if it is not already present.") 
 	@Example("(map-tree-ceiling-entry (construct Map Tree (lambda (x y) -1)))") 
 	@Syntax("(map-tree-ceiling-entry <map>)")
-	public static Operator add = Operator.wrapJavaMethod(java.util.TreeSet.class, "add", "set-tree-add", TreeSet.instance().getNamespace(), Object.class);
+	public static Operator add = Operator.wrapJavaMethod(java.util.TreeSet.class, "add", "set-tree-add", TreeSet.singleton().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Adds the specified element to this set if it is not already present.")
-	public static Operator addAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "addAll", "set-tree-add-all", TreeSet.instance().getNamespace(), Collection.class);
+	public static Operator addAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "addAll", "set-tree-add-all", TreeSet.singleton().getNamespace(), Collection.class);
 	
 	@VelkaOperator
 	@Description("Returns the least element in this set greater than or equal to the given element, or null if there is no such element.")
-	public static Operator ceiling = Operator.wrapJavaMethod(java.util.TreeSet.class, "ceiling", "set-tree-ceiling", TreeSet.instance().getNamespace(), Object.class);
+	public static Operator ceiling = Operator.wrapJavaMethod(java.util.TreeSet.class, "ceiling", "set-tree-ceiling", TreeSet.singleton().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Removes all of the elements from this set.")
-	public static Operator clear = Operator.wrapJavaMethod(java.util.TreeSet.class, "clear", "set-tree-clear", TreeSet.instance().getNamespace());
+	public static Operator clear = Operator.wrapJavaMethod(java.util.TreeSet.class, "clear", "set-tree-clear", TreeSet.singleton().getNamespace());
 	
 	@VelkaOperator
 	@Description("Returns true if this set contains the specified element.")
-	public static Operator contains = Operator.wrapJavaMethod(java.util.TreeSet.class, "contains", "set-tree-contains", TreeSet.instance().getNamespace(), Object.class);
+	public static Operator contains = Operator.wrapJavaMethod(java.util.TreeSet.class, "contains", "set-tree-contains", TreeSet.singleton().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Returns the first (lowest) element currently in this set.")
-	public static Operator first = Operator.wrapJavaMethod(java.util.TreeSet.class, "first", "set-tree-first", TreeSet.instance().getNamespace());
+	public static Operator first = Operator.wrapJavaMethod(java.util.TreeSet.class, "first", "set-tree-first", TreeSet.singleton().getNamespace());
 	
 	@VelkaOperator
 	@Description("Returns the greatest element in this set less than or equal to the given element, or null if there is no such element.")
-	public static Operator floor = Operator.wrapJavaMethod(java.util.TreeSet.class, "floor", "set-tree-floor", TreeSet.instance().getNamespace(), Object.class);
+	public static Operator floor = Operator.wrapJavaMethod(java.util.TreeSet.class, "floor", "set-tree-floor", TreeSet.singleton().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Returns the least element in this set strictly greater than the given element, or null if there is no such element.")
-	public static Operator higher = Operator.wrapJavaMethod(java.util.TreeSet.class, "higher", "set-tree-higher", TreeSet.instance().getNamespace(), Object.class);
+	public static Operator higher = Operator.wrapJavaMethod(java.util.TreeSet.class, "higher", "set-tree-higher", TreeSet.singleton().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Returns true if this set contains no elements.")
-	public static Operator isEmpty = Operator.wrapJavaMethod(java.util.TreeSet.class, "isEmpty", "set-tree-is-empty", TreeSet.instance().getNamespace());
+	public static Operator isEmpty = Operator.wrapJavaMethod(java.util.TreeSet.class, "isEmpty", "set-tree-is-empty", TreeSet.singleton().getNamespace());
 	
 	@VelkaOperator
 	@Description("Returns the last (highest) element currently in this set.")
-	public static Operator last = Operator.wrapJavaMethod(java.util.TreeSet.class, "last", "set-tree-last", TreeSet.instance().getNamespace());
+	public static Operator last = Operator.wrapJavaMethod(java.util.TreeSet.class, "last", "set-tree-last", TreeSet.singleton().getNamespace());
 	
 	@VelkaOperator
 	@Description("Returns the greatest element in this set strictly less than the given element, or null if there is no such element.")
-	public static Operator lower = Operator.wrapJavaMethod(java.util.TreeSet.class, "lower", "set-tree-lower", TreeSet.instance().getNamespace(), Object.class);
+	public static Operator lower = Operator.wrapJavaMethod(java.util.TreeSet.class, "lower", "set-tree-lower", TreeSet.singleton().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Retrieves and removes the first (lowest) element, or returns null if this set is empty.")
-	public static Operator pollFirst = Operator.wrapJavaMethod(java.util.TreeSet.class, "pollFirst", "set-tree-poll-first", TreeSet.instance().getNamespace());
+	public static Operator pollFirst = Operator.wrapJavaMethod(java.util.TreeSet.class, "pollFirst", "set-tree-poll-first", TreeSet.singleton().getNamespace());
 	
 	@VelkaOperator
 	@Description("Retrieves and removes the last (highest) element, or returns null if this set is empty.")
-	public static Operator pollLast = Operator.wrapJavaMethod(java.util.TreeSet.class, "pollLast", "set-tree-poll-last", TreeSet.instance().getNamespace());
+	public static Operator pollLast = Operator.wrapJavaMethod(java.util.TreeSet.class, "pollLast", "set-tree-poll-last", TreeSet.singleton().getNamespace());
 	
 	@VelkaOperator
 	@Description("Removes the specified element from this set if it is present.")
-	public static Operator remove = Operator.wrapJavaMethod(java.util.TreeSet.class, "remove", "set-tree-remove", TreeSet.instance().getNamespace(), Object.class);
+	public static Operator remove = Operator.wrapJavaMethod(java.util.TreeSet.class, "remove", "set-tree-remove", TreeSet.singleton().getNamespace(), Object.class);
 	
 	@VelkaOperator
 	@Description("Returns the number of elements in this set (its cardinality).")
-	public static Operator size = Operator.wrapJavaMethod(java.util.TreeSet.class, "size", "set-tree-size", TreeSet.instance().getNamespace());
+	public static Operator size = Operator.wrapJavaMethod(java.util.TreeSet.class, "size", "set-tree-size", TreeSet.singleton().getNamespace());
 	
 	@VelkaOperator
 	@Description("Returns true if this collection contains all of the elements in the specified collection. ")
-	public static Operator containsAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "containsAll", "set-tree-contains-all", TreeSet.instance().getNamespace(), Collection.class);
+	public static Operator containsAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "containsAll", "set-tree-contains-all", TreeSet.singleton().getNamespace(), Collection.class);
 	
 	@VelkaOperator
 	@Description("Retains only the elements in this collection that are contained in the specified collection (optional operation). In other words, removes from this collection all of its elements that are not contained in the specified collection. ")
-	public static Operator retainAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "retainAll", "set-tree-retain-all", TreeSet.instance().getNamespace(), Collection.class);
+	public static Operator retainAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "retainAll", "set-tree-retain-all", TreeSet.singleton().getNamespace(), Collection.class);
 	
 	@VelkaOperator
 	@Description("Removes from this set all of its elements that are contained in the specified collection (optional operation). If the specified collection is also a set, this operation effectively modifies this set so that its value is the asymmetric set difference of the two sets.")
-	public static Operator removeAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "removeAll", "set-tree-remove-all", TreeSet.instance().getNamespace(), Collection.class);
+	public static Operator removeAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "removeAll", "set-tree-remove-all", TreeSet.singleton().getNamespace(), Collection.class);
 	
-	public static final Symbol mapSymbol = new Symbol("velka_map", TreeSet.instance().getNamespace());
+	public static final Symbol mapSymbol = new Symbol("velka_map", TreeSet.singleton().getNamespace());
 	public static final Symbol mapSymbol_out = new Symbol("set-tree-map");
 	
 	@VelkaOperator
@@ -376,7 +376,7 @@ public class TreeSet extends OperatorBank {
 
 		@Override
 		public Symbol getInternalSymbol() {
-			return new Symbol("to_list", TreeSet.instance().getNamespace());
+			return new Symbol("to_list", TreeSet.singleton().getNamespace());
 		}
 
 		@Override
@@ -451,7 +451,7 @@ public class TreeSet extends OperatorBank {
 
 		@Override
 		public Symbol getInternalSymbol() {
-			return new Symbol("tree_set_2_bit_set", TreeSet.instance().getNamespace());
+			return new Symbol("tree_set_2_bit_set", TreeSet.singleton().getNamespace());
 		}
 
 		@Override
@@ -526,7 +526,7 @@ public class TreeSet extends OperatorBank {
 
 		@Override
 		public Symbol getInternalSymbol() {
-			return new Symbol("velka_intersect", TreeSet.instance().getNamespace());
+			return new Symbol("velka_intersect", TreeSet.singleton().getNamespace());
 		}
 
 		@Override
@@ -585,7 +585,7 @@ public class TreeSet extends OperatorBank {
 
 		@Override
 		public Symbol getInternalSymbol() {
-			return new Symbol("velka_union", TreeSet.instance().getNamespace());
+			return new Symbol("velka_union", TreeSet.singleton().getNamespace());
 		}
 
 		@Override
@@ -659,7 +659,7 @@ public class TreeSet extends OperatorBank {
 
 		@Override
 		public Symbol getInternalSymbol() {
-			return new Symbol("from_list", TreeSet.instance().getNamespace());
+			return new Symbol("from_list", TreeSet.singleton().getNamespace());
 		}
 
 		@SuppressWarnings("unchecked")
@@ -800,13 +800,13 @@ public class TreeSet extends OperatorBank {
 		}
 	};
 	
-	private static TreeSet singleton = null;
+	private static TreeSet _singleton = null;
 	
-	public static TreeSet instance() {
-		if(singleton == null) {
-			singleton = new TreeSet();
+	public static TreeSet singleton() {
+		if(_singleton == null) {
+			_singleton = new TreeSet();
 		}
-		return singleton;
+		return _singleton;
 	}
 
 	@Override

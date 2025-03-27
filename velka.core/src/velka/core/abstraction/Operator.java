@@ -172,7 +172,7 @@ public abstract class Operator extends Expression implements CompileableToJava, 
 		
 		var aClass = CodeModelInstance.instance().anonymousClass(VelkaAbstraction.class);
 		aClass.method(JMod.PUBLIC, Type.class, "getType").body()
-			._return(TypeUtil.instance().type2java(retType));
+			._return(TypeUtil.instance().type2java(type));
 		
 		var apply = aClass.method(JMod.PUBLIC, Object.class, "apply");
 		var argmap = Abstraction.convertAndDeclareParms(

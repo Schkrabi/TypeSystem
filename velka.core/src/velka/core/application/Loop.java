@@ -3,12 +3,17 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import com.sun.codemodel.JAssignmentTarget;
+import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JMod;
 
 import velka.core.abstraction.Lambda;
 import velka.core.expression.Expression;
@@ -17,6 +22,9 @@ import velka.core.expression.Tuple;
 import velka.core.expression.TypeHolder;
 import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeTuple;
@@ -37,10 +45,13 @@ public class Loop extends Expression implements CompileableToJava {
 	
 	public static final String LOOP = "loop";
 	
+	
 	/**
 	 * Symbol for marking recurrence point
 	 */
 	public static final Symbol RECUR_MARK_SYMBOL = new Symbol(NameGenerator.next());
+	/** Used for java compilation */
+	public static final String JAVA_BIND_CACHE = NameGenerator.next();
 	
 	private final List<Pair<Symbol, Expression>> bindings;
 	
@@ -49,6 +60,10 @@ public class Loop extends Expression implements CompileableToJava {
 	public Loop(Expression body, Collection<Pair<Symbol, Expression>> bindings) {
 		this.bindings = new ArrayList<Pair<Symbol, Expression>>(bindings);
 		this.body = body;
+	}
+	
+	public Collection<Pair<Symbol, Expression>> getBindings(){
+		return new ArrayList<Pair<Symbol, Expression>>(this.bindings);
 	}
 	
 	private Lambda createLoopLambda(Environment env) throws AppendableException {
@@ -174,6 +189,66 @@ public class Loop extends Expression implements CompileableToJava {
 
 	@Override
 	public JExpression toJavaExpr(Environment env) {
-		throw new RuntimeException("Loop is not supported for java compilation.");
+		Environment markedEnv;
+		try {
+			markedEnv = Environment.create(env);
+		} catch (AppendableException e) {
+			throw new RuntimeException(e);
+		}
+		markedEnv.put(RECUR_MARK_SYMBOL, this);
+		
+		Pair<Type, Substitution> inf;
+		try {
+			inf = this.infer(env);
+		} catch (AppendableException e) {
+			throw new RuntimeException(e);
+		}
+		var retType = TypeUtil.instance().velkaTypeToJType(inf.first);
+		
+		var spcl = CodeModelInstance.instance().anonymousClass(java.util.function.Supplier.class);
+		var _get = spcl.method(JMod.PUBLIC, CodeModelInstance.instance()._ref(Object.class), "get");
+		
+		var _ret = _get.body().decl(retType, "_ret", JExpr._null());
+		var objcl = CodeModelInstance.instance().ref(Object.class);
+		var _bindArr = _get.body().decl(JMod.FINAL, objcl.array(), JAVA_BIND_CACHE,
+				JExpr.newArray(objcl, this.bindings.size()));
+		
+		int i = 0;
+		for(var p : this.bindings) {
+			var ctj = (CompileableToJava)p.second;
+			_get.body().assign(
+					_bindArr.component(JExpr.lit(i)),
+					JExpr.cast(objcl, ctj.toJavaExpr(env)));
+			i++;
+		}
+		
+		var _while = _get.body()._while(_ret.eq(JExpr._null()));
+		
+		//Need to add additional Supplier layer in order to define bindings as final
+		var bindSpcl = CodeModelInstance.instance().anonymousClass(java.util.function.Supplier.class);
+		var bindGet = bindSpcl.method(JMod.PUBLIC, CodeModelInstance.instance()._ref(Object.class), "get");
+		
+		//Define final bindings
+		i = 0;
+		for(var p : this.bindings) {
+			Pair<Type, Substitution> binf;
+			try {
+				binf = p.second.infer(env);
+			}catch(Exception e) {
+				throw new RuntimeException(e);
+			}
+			var btype = TypeUtil.instance().velkaTypeToJType(binf.first);
+			bindGet.body().decl(JMod.FINAL, btype, p.first.getJavaCompatibleName(), 
+					JExpr.cast(btype, _bindArr.component(JExpr.lit(i))));
+			i++;
+		}
+		var ctj = (CompileableToJava)this.body;
+		bindGet.body()._return(JExpr.cast(retType, ctj.toJavaExpr(markedEnv)));
+				
+		_while.body().assign(_ret, JExpr.cast(retType, JExpr._new(bindSpcl).invoke(bindGet)));
+		
+		_get.body()._return(_ret);
+		
+		return JExpr._new(spcl).invoke(_get);
 	}
 }

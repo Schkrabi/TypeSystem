@@ -124,6 +124,9 @@ public class TopLevelEnvironment extends Environment {
 						else if(object instanceof VelkaAbstraction va) {
 							return va.getType();
 						}
+						else if(object.equals(Expression.EMPTY_EXPRESSION)) {
+							return TypeTuple.EMPTY_TUPLE;
+						}
 						//Other expressions should not be found here, since this should only discern evaluated object
 						
 						throw new RuntimeException("Unrecognized type!");

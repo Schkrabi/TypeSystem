@@ -120,12 +120,8 @@ public class Compiler {
 	public static void clojureCompile(Path in, Path out, Environment env) {
 		try {
 			Compiler.clojure(Files.newInputStream(in), new PrintStream(Files.newOutputStream(out)), env);
-		} catch (AppendableException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
 

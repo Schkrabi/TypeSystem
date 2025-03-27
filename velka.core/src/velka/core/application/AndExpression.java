@@ -10,6 +10,7 @@ import velka.core.expression.Tuple;
 import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitBoolean;
+import velka.java.CodeModelInstance;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeAtom;
@@ -91,11 +92,13 @@ public class AndExpression extends SpecialFormApplication implements Compileable
 	@Override
 	public JExpression toJavaExpr(Environment env) {
 		var ret = JExpr.lit(true); 
+		var bcl = CodeModelInstance.instance().ref(Boolean.class);
 		
 		for(Expression e : (Tuple)this.args) {
 			var ctj = (CompileableToJava)e;
 			
-			ret = ret.band(ctj.toJavaExpr(env));
+			ret = ret.cand(JExpr.cast(bcl,				
+					ctj.toJavaExpr(env)));
 		}
 		
 		return ret;

@@ -143,7 +143,7 @@ public abstract class Abstraction extends Expression implements VelkaAbstraction
 		
 		for(var p : parms) {
 			var jt = TypeUtil.instance().velkaTypeToJType(p.second);
-			var v = method.body().decl(jt, p.first.name,
+			var v = method.body().decl(jt, p.first.getJavaCompatibleName(),
 					JExpr.cast(jt, cparm.invoke("get").arg(JExpr.lit(i))));
 			ret.put(p.first, v);
 			i++;
@@ -167,7 +167,7 @@ public abstract class Abstraction extends Expression implements VelkaAbstraction
 			var sym = p.first;
 			var type = p.second;
 			var jt = TypeUtil.instance().velkaTypeToJType(type);
-			var v = method.body().decl(jt, sym.name, 					
+			var v = method.body().decl(jt, sym.getJavaCompatibleName(), 					
 					JExpr.cast(jt, tparm.invoke("get").arg(JExpr.lit(i))));
 			ret.put(sym, v);
 			i++;

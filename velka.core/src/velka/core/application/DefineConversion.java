@@ -96,13 +96,13 @@ public class DefineConversion extends Expression implements CompileableToJava {
 				new velka.util.IEvalueable() {
 
 					@Override
-					public Object evaluate(Collection<? extends Object> args, Object env) {
+					public Object evaluate(Collection<? extends Object> args, Object _env) {
 						var eargs = new ArrayList<Expression>(args.size());
 						args.stream().forEach(o -> eargs.add((Expression)o));
 						
 						var appl = new AbstractionApplication(lambda, new Tuple(eargs));
 						try {
-							var eenv = (Environment)env;
+							Environment eenv = (Environment)_env;
 							
 							return appl.interpret(eenv);
 						} catch (AppendableException e) {
@@ -114,13 +114,13 @@ public class DefineConversion extends Expression implements CompileableToJava {
 				new velka.util.IEvalueable() {
 
 					@Override
-					public Object evaluate(Collection<? extends Object> args, Object env) {
+					public Object evaluate(Collection<? extends Object> args, Object _env) {
 						var eargs = new ArrayList<Expression>(args.size());
 						args.stream().forEach(o -> eargs.add((Expression)o));
 						
 						var appl = new AbstractionApplication(me.cost, new Tuple(eargs));
 						try {
-							var eenv = (Environment)env;
+							Environment eenv = (Environment)_env;
 							
 							LitDouble ld = (LitDouble)appl.interpret(eenv);
 							return Double.valueOf(ld.value);

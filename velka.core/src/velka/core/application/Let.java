@@ -24,6 +24,7 @@ import velka.types.Type;
 import velka.types.TypeTuple;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
+import velka.util.NameGenerator;
 import velka.util.Pair;
 
 /** Let special form */
@@ -146,6 +147,7 @@ public class Let extends Expression implements CompileableToJava {
 
 	@Override
 	public JExpression toJavaExpr(Environment env) {
+		var objcl = CodeModelInstance.instance().ref(Object.class);
 		var spcl = CodeModelInstance.instance().anonymousClass(java.util.function.Supplier.class);
 		var _get = spcl.method(JMod.PUBLIC, CodeModelInstance.instance()._ref(Object.class), "get");
 		var wenv = env;
@@ -172,19 +174,25 @@ public class Let extends Expression implements CompileableToJava {
 						_var = defined.get(p.first);
 						_get.body().assign(_var, CodeModelInstance.emptyExpression());
 					} else {
-						_var = _get.body().decl(CodeModelInstance.instance()._ref(Object.class), p.first.name,
+						_var = _get.body().decl(CodeModelInstance.instance()._ref(Object.class), p.first.getJavaCompatibleName(),
 								CodeModelInstance.emptyExpression());
 					}
 				}
 			}
 			else {
+				var tmpVar = _get.body().decl(objcl, NameGenerator.next(), jexpr);
+				jexpr = JavaTypeSystem.codeInstance().invoke("convert")
+							.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(tmpVar))
+							.arg(TypeUtil.instance().type2java(type))
+							.arg(tmpVar)
+							.arg(JExpr._null());
 				var jtype = TypeUtil.instance().velkaTypeToJType(type);
 				
 				if(defined.containsKey(p.first)) {
 					_var = defined.get(p.first);
 					_get.body().assign(_var, JExpr.cast(jtype, jexpr));
 				} else {
-					_var = _get.body().decl(jtype, p.first.name, 
+					_var = _get.body().decl(jtype, p.first.getJavaCompatibleName(), 
 							JExpr.cast(jtype, jexpr));
 				}
 			}

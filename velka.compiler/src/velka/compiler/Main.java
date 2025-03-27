@@ -76,7 +76,7 @@ public class Main {
 				case COMPILE_CLJ:{
 						var fileArg = Path.of(args[1]);
 						var topLevel = TopLevelEnvironment.instantiate();
-						var fld = Path.of(System.getProperty("user.dir"));
+						var fld = Path.of(System.getProperty("user.dir")).resolve("user.clj");
 						Compiler.clojureCompile(fileArg, fld, topLevel);
 					}
 					break;

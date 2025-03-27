@@ -35,17 +35,34 @@
         <javac srcdir="${src.dir}" destdir="${classes.dir}" modulepathref="modulepath" />
     </target>
 	
+	<target name="compile-dbg">
+		<mkdir dir="${classes.dir}" />
+		<javac srcdir="${src.dir}" destdir="${classes.dir}" modulepathref="modulepath" debug="true" />
+    </target>
+	
 	<target name="create-launcher" depends="compile">
         <echo file="${lin.launch}">
             #!/bin/sh
-            java --module-path ${module.path} -m ${module.name}/${main.class} $@
+            java --module-path ${module.path} -m ${module.name}/${main.class} $$@
         </echo>
         <echo file="${win.launch}">
             $$cp = "${module.path}".Replace(":", ";")
             java --module-path $$cp -m ${module.name}/${main.class} $$args
         </echo>
     </target>
+	
+	<target name="dbg-launcher" depends="compile-dbg">
+		<echo file="${lin.launch}">
+            #!/bin/sh
+            java --module-path ${module.path} -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005 -m ${module.name}/${main.class} $$@
+        </echo>
+        <echo file="${win.launch}">
+            $$cp = "${module.path}".Replace(":", ";")
+            java --module-path $$cp -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005 -m ${module.name}/${main.class} $$args
+        </echo>
+	</target>
 
     <target name="main" depends="clean,create-launcher" />
+	<target name="dbg" depends="clean,dbg-launcher" />
     
 </project>

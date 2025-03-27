@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -21,13 +20,11 @@ import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.types.typeSystem.VelkaAbstraction;
-import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
-import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -570,16 +567,25 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
+			String abst = "_abst";
+			String term = "_term";
 			String list = "_list";
-			String terminator = "_term";
-			String fn = "_fn";
-			String arg1 = "_arg1";
-			String arg2 = "_arg2";
-			String code = ClojureHelper.fnHelper(Arrays.asList(fn, terminator, list),
-					ClojureHelper.applyClojureFunction("reduce",
-							ClojureHelper.fnHelper(Arrays.asList(arg1, arg2),
-									ClojureHelper.applyVelkaFunction(fn, arg1, arg2)),
-							terminator, list));
+			String agg = "_agg";
+			String element = "_element";
+			String code = ClojureHelper.fnHelper(
+					Arrays.asList(abst, term, list),
+					ClojureHelper.applyClojureFunction(
+							"reduce",
+							ClojureHelper.fnHelper(
+									Arrays.asList(agg, element),
+									ClojureHelper.applyVelkaFunction(
+											abst,
+											agg,
+											element)),
+							term,
+							ClojureHelper.applyClojureFunction(
+									"reverse",
+									list)));
 			return code;
 		}
 
@@ -595,25 +601,22 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			Expression f = args.get(0);
-			Expression term = args.get(1);
-			var iOp = (LitInteropObject)args.get(2);
+			var abst = args.get(0);
+			var terminator = args.get(1);
+			var io = (LitInteropObject) args.get(2);
 			@SuppressWarnings("unchecked")
-			var l = (List<Object>) iOp.javaObject;
+			var list = (ArrayList<Object>) io.javaObject;
 
-			for (var e : l) {
-				AbstractionApplication appl;
-				
-				if(e instanceof Expression expr) {
-					appl = new AbstractionApplication(f, new Tuple(term, expr));
-				}
-				else {
-					appl = new AbstractionApplication(f, new Tuple(term, Literal.objectToLiteral(e)));
-				}
-				term = appl.interpret(env);
+			Expression agg = terminator;
+			var i = list.listIterator(list.size());
+			while (i.hasPrevious()) {
+				var element = i.previous();
+				AbstractionApplication app = new AbstractionApplication(abst,
+						new Tuple(agg, Literal.objectToLiteral(element)));
+				agg = app.interpret(env);
 			}
 
-			return term;
+			return agg;
 		}
 
 		@Override
@@ -628,13 +631,17 @@ public class ListNative extends OperatorBank{
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {			
 			var oCl = CodeModelInstance.instance().ref(Object.class);
+			var itCl = CodeModelInstance.instance().ref(ListIterator.class);
+			var l = mappedArgs.get(new Symbol("_2"));
+			var f = JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class), mappedArgs.get(new Symbol("_0")));
 			
 			var agg = method.body().decl(oCl, "ret", mappedArgs.get(new Symbol("_1")));
+			var _i = method.body().decl(itCl, "_it", l.invoke("listIterator").arg(l.invoke("size")));
 			
-			var _forEach = method.body().forEach(oCl, "o", mappedArgs.get(new Symbol("_2")));
+			var _while = method.body()._while(_i.invoke("hasPrevious"));
+			var _o = _while.body().decl(oCl, "_o", _i.invoke("previous"));
 			
-			_forEach.body().assign(agg, JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class),
-					mappedArgs.get(new Symbol("_0"))).invoke("apply").arg(VelkaTuple._velkaTuple(agg, _forEach.var())));
+			_while.body().assign(agg, f.invoke("apply").arg(VelkaTuple._velkaTuple(agg, _o)));
 			
 			method.body()._return(agg);
 		}		
@@ -729,7 +736,7 @@ public class ListNative extends OperatorBank{
 			String list = "_list";
 			String code = ClojureHelper
 					.fnHelper(List.of(list),
-							ClojureHelper.constructJavaClass(LinkedList.class, list));
+							ClojureHelper.constructJavaClass(java.util.LinkedList.class, list));
 			return code;
 		}
 
@@ -768,7 +775,7 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var lCl = CodeModelInstance.instance().ref(LinkedList.class);
+			var lCl = CodeModelInstance.instance().ref(java.util.LinkedList.class);
 			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl).arg(mappedArgs.get(new Symbol("_0"))));
 			method.body()._return(ll);
 		}
@@ -867,7 +874,7 @@ public class ListNative extends OperatorBank{
 					mappedArgs.get(new Symbol("_1"))).invoke("apply").arg(VelkaTuple._velkaTuple(_forEach.var())));
 			
 			var _if = _forEach.body()._if(JExpr.cast(CodeModelInstance.instance().ref(Boolean.class), r));
-			_if._then().add(ll.invoke("add").arg(r));
+			_if._then().add(ll.invoke("add").arg(_forEach.var()));
 			
 			method.body()._return(ll);
 		}
@@ -1159,7 +1166,7 @@ public class ListNative extends OperatorBank{
 			@SuppressWarnings("unchecked")
 			List<Object> l = (List<Object>) iOp.javaObject;
 			ListIterator<Object> li = l.listIterator(l.size());
-			List<Object> r = new LinkedList<Object>();
+			List<Object> r = new ArrayList<Object>();
 			while (li.hasPrevious()) {
 				r.add(li.previous());
 			}
@@ -1422,46 +1429,40 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			String abst = "_abst";
-			String term = "_term";
 			String list = "_list";
-			String agg = "_agg";
-			String element = "_element";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(abst, term, list),
-					ClojureHelper.applyClojureFunction(
-							"reduce",
-							ClojureHelper.fnHelper(
-									Arrays.asList(agg, element),
-									ClojureHelper.applyVelkaFunction(
-											abst,
-											agg,
-											element)),
-							term,
-							ClojureHelper.applyClojureFunction(
-									"reverse",
-									list)));
+			String terminator = "_term";
+			String fn = "_fn";
+			String arg1 = "_arg1";
+			String arg2 = "_arg2";
+			String code = ClojureHelper.fnHelper(Arrays.asList(fn, terminator, list),
+					ClojureHelper.applyClojureFunction("reduce",
+							ClojureHelper.fnHelper(Arrays.asList(arg1, arg2),
+									ClojureHelper.applyVelkaFunction(fn, arg1, arg2)),
+							terminator, list));
 			return code;
 		}
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			var abst = args.get(0);
-			var terminator = args.get(1);
-			var io = (LitInteropObject) args.get(2);
+			Expression f = args.get(0);
+			Expression term = args.get(1);
+			var iOp = (LitInteropObject)args.get(2);
 			@SuppressWarnings("unchecked")
-			var list = (ArrayList<Object>) io.javaObject;
+			var l = (List<Object>) iOp.javaObject;
 
-			Expression agg = terminator;
-			var i = list.listIterator(list.size());
-			while (i.hasPrevious()) {
-				var element = i.previous();
-				AbstractionApplication app = new AbstractionApplication(abst,
-						new Tuple(agg, Literal.objectToLiteral(element)));
-				agg = app.interpret(env);
+			for (var e : l) {
+				AbstractionApplication appl;
+				
+				if(e instanceof Expression expr) {
+					appl = new AbstractionApplication(f, new Tuple(term, expr));
+				}
+				else {
+					appl = new AbstractionApplication(f, new Tuple(term, Literal.objectToLiteral(e)));
+				}
+				term = appl.interpret(env);
 			}
 
-			return agg;
+			return term;
 		}
 
 		private TypeVariable A = new TypeVariable(NameGenerator.next());
@@ -1488,17 +1489,13 @@ public class ListNative extends OperatorBank{
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {			
 			var oCl = CodeModelInstance.instance().ref(Object.class);
-			var itCl = CodeModelInstance.instance().ref(ListIterator.class);
-			var l = mappedArgs.get(new Symbol("_2"));
-			var f = JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class), mappedArgs.get(new Symbol("_0")));
 			
 			var agg = method.body().decl(oCl, "ret", mappedArgs.get(new Symbol("_1")));
-			var _i = method.body().decl(itCl, "_it", l.invoke("listIterator").arg(l.invoke("size")));
 			
-			var _while = method.body()._while(_i.invoke("hasPrevious"));
-			var _o = _while.body().decl(oCl, "_o", _i.invoke("previous"));
+			var _forEach = method.body().forEach(oCl, "o", mappedArgs.get(new Symbol("_2")));
 			
-			_while.body().assign(agg, f.invoke("apply").arg(VelkaTuple._velkaTuple(agg, _o)));
+			_forEach.body().assign(agg, JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class),
+					mappedArgs.get(new Symbol("_0"))).invoke("apply").arg(VelkaTuple._velkaTuple(agg, _forEach.var())));
 			
 			method.body()._return(agg);
 		}
@@ -1523,7 +1520,7 @@ public class ListNative extends OperatorBank{
 	 */
 	public static Expression tupleToListNative(Tuple t) {
 		return 
-				new LitInteropObject(new LinkedList<Expression>(t.stream().collect(Collectors.toList())),
+				new LitInteropObject(new ArrayList<Expression>(t.stream().collect(Collectors.toList())),
 				TypeAtom.TypeListNative);
 	}
 

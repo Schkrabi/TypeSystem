@@ -11,6 +11,7 @@ import velka.util.Pair;
 
 public class ImplementationSelector {
 	private final TypeSystem typeSystem;
+	private Object env = null;
 	
 	private double implRank(
 			VelkaAbstraction impl,
@@ -28,7 +29,7 @@ public class ImplementationSelector {
 			var arg = itArgs.next();
 			var ftype =  this.typeSystem.getType(arg);
 			
-			var cc = this.typeSystem.conversionCost(ftype, ttype, arg, null);
+			var cc = this.typeSystem.conversionCost(ftype, ttype, arg, this.env);
 			
 			//There is no conversion
 			if(cc == null) {
@@ -67,5 +68,9 @@ public class ImplementationSelector {
 	public ImplementationSelector(TypeSystem typeSystem) 
 	{
 		this.typeSystem = typeSystem;
+	}
+	
+	public void setEnvironment(Object env) {
+		this.env = env;
 	}
 }

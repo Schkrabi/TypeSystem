@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -131,17 +132,21 @@ public class TypeUtil {
 					TypeAtom.TypeList, List.class,
 					TypeAtom.TypeListIterator, ListIterator.class,
 					TypeAtom.TypeMapTree, TreeMap.class,
+					TypeAtom.TypeMap, Map.class,
 					TypeAtom.TypeSetBitSet, BitSet.class,
 					TypeAtom.TypeScannerNative, Scanner.class,
 					TypeAtom.TypeSetTree, TreeSet.class,
-					TypeAtom.TypeSetHash, HashSet.class))
+					TypeAtom.TypeSetHash, HashSet.class,
+					TypeAtom.TypeSet, Object.class))
 			.flatMap(map -> map.entrySet().stream())
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	
 	/** Gets the JType for given velka type */
 	public JType velkaTypeToJType(Type vtype) {
 		Class<?> clazz = null;
-		if(vtype instanceof TypeArrow) {
+		if(vtype instanceof TypeArrow
+			|| (vtype instanceof RepresentationOr set
+					&& set.isApplicableType())) {
 			clazz = VelkaAbstraction.class;
 		}
 		else if(vtype instanceof TypeTuple) {
@@ -154,7 +159,7 @@ public class TypeUtil {
 			clazz = velkaTypeMap.get(vtype);;
 			
 			if(clazz == null) {
-				clazz = TypedObject.class;
+				clazz = Object.class;
 			}
 		}
 		

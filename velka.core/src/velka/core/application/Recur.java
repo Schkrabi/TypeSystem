@@ -4,12 +4,18 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.sun.codemodel.JAssignmentTarget;
+import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JMod;
 
+import velka.core.exceptions.UnboundVariableException;
 import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
+import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeVariable;
@@ -111,6 +117,38 @@ public class Recur extends Expression implements CompileableToJava {
 
 	@Override
 	public JExpression toJavaExpr(Environment env) {
-		throw new RuntimeException("Recur is not supported for java compilation.");
+		Expression l;
+		try {
+			l = env.getVariableValue(Loop.RECUR_MARK_SYMBOL);
+		} catch (UnboundVariableException e) {
+			throw new RuntimeException(e);
+		}
+		
+		if(l instanceof Loop loop) {
+			var spcl = CodeModelInstance.instance().anonymousClass(java.util.function.Supplier.class);
+			var _get = spcl.method(JMod.PUBLIC, CodeModelInstance.instance()._ref(Object.class), "get");
+			
+			int i = 0;
+			for(var r : this.rebidings) {
+				var ctj = (CompileableToJava)r;
+				Pair<Type, Substitution> inf;
+				try {
+					inf = r.infer(env);
+				} catch (AppendableException e) {
+					throw new RuntimeException(e);
+				}
+				var rtype = TypeUtil.instance().velkaTypeToJType(inf.first);
+				
+				_get.body().assign(CodeModelInstance.makeJVar(Loop.JAVA_BIND_CACHE).component(JExpr.lit(i)), 
+						JExpr.cast(rtype, ctj.toJavaExpr(env))); 
+				i++;
+			}
+			
+			_get.body()._return(JExpr._null());
+			
+			return JExpr._new(spcl).invoke(_get);
+		}
+		
+		throw new RuntimeException("Unexpected expression on Loop Mark " + l);
 	}
 }

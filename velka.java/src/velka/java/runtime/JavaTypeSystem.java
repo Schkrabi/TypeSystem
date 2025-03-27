@@ -6,6 +6,7 @@ import velka.java.CodeModelInstance;
 import velka.types.Type;
 import velka.types.TypeAtom;
 import velka.types.typeSystem.TypeSystem;
+import velka.types.typeSystem.VelkaAbstraction;
 
 /** Type system singleton instance for java runtime*/
 public class JavaTypeSystem extends TypeSystem {
@@ -30,7 +31,10 @@ public class JavaTypeSystem extends TypeSystem {
 		else if(o instanceof TypedObject to) {
 			return to.velkaType;
 		}
-		var t = TypeAtom.typeMapping.get(o.getClass());
+		else if(o instanceof VelkaAbstraction va) {
+			return va.getType();
+		}
+		var t = TypeAtom.javaClassToType(o.getClass());
 		if(t != null) {
 			return t;
 		}

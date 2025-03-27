@@ -32,6 +32,7 @@ import velka.parser.Parser;
 import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.AppendableException;
 import velka.util.FileReaderUtil;
+import velka.util.NameGenerator;
 
 public class ClassGenerator {
 	
@@ -76,14 +77,22 @@ public class ClassGenerator {
 			}
 
 			for (var op : OperatorBankUtil.getOperators(operatorBank.getClass())) {
-				cl.field(JMod.PUBLIC | JMod.STATIC, VelkaAbstraction.class, op.getInternalSymbol().name,
-						op.toJavaExpr(env));
+				cl.field(JMod.PUBLIC | JMod.STATIC, VelkaAbstraction.class,
+						op.getInternalSymbol().getJavaCompatibleName(), op.toJavaExpr(env));
 			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			throw new RuntimeException(e);
 		}
 
 		return cl;
+	}
+	
+	private void buildClassLoadingBlock(JDefinedClass cl) {
+		for(var operatorBank : OperatorBank.operatorBanks) {
+			var ocl = CodeModelInstance.instance().ref(operatorBank.getNamespace());
+			cl.field(JMod.PRIVATE | JMod.STATIC, Object.class, NameGenerator.next(),
+					JExpr._new(ocl));
+		}
 	}
 	
 	public static final String _INTERNAL_MAIN_SYMBOL = "_main";
@@ -100,6 +109,8 @@ public class ClassGenerator {
 		}
 		
 		try {
+			this.buildClassLoadingBlock(cl);
+			
 			var env = TopLevelEnvironment.instantiate();
 			
 			for(var expr : exprs) {
@@ -115,7 +126,7 @@ public class ClassGenerator {
 							cl.field(JMod.PRIVATE | JMod.STATIC, jtype, _INTERNAL_MAIN_SYMBOL, code);
 						}
 						else {
-							cl.field(JMod.PUBLIC | JMod.STATIC, jtype, ds.name.name, code);
+							cl.field(JMod.PUBLIC | JMod.STATIC, jtype, ds.name.getJavaCompatibleName(), code);
 						}
 					}
 					else if(code instanceof com.sun.codemodel.JStatement js) {

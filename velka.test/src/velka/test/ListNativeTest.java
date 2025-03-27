@@ -90,8 +90,8 @@ class ListNativeTest extends VelkaTest {
     @Test
     void testFoldlListNative() throws Exception {
     	this.assertVelkaCode(
-    			"(list-native-foldl + 0 (construct List:Native 1 (construct List:Native 2 (construct List:Native))))",
-                Integer.valueOf(3));
+    			"(list-native-foldl concat \"\" (list \"foo\" \"bar\" \"baz\"))",
+                "bazbarfoo");
     }
 
     @Test
@@ -317,7 +317,7 @@ class ListNativeTest extends VelkaTest {
     @Test
     void testFoldr() throws Exception {
     	this.assertVelkaCode(
-    			"(let ((l (list \"o\" \"o\" \"f\"))) (list-native-foldr (lambda (x y) (concat x y)) \"\" l))",
-    			"foo");
+    			"(list-native-foldr concat \"\" (list \"foo\" \"bar\" \"baz\"))",
+    			"foobarbaz");
     }
 }

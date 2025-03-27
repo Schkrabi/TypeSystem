@@ -175,12 +175,17 @@ public class Lambda extends Expression implements CompileableToJava {
 		
 		var apply = aClass.method(JMod.PUBLIC, Object.class, "apply");
 		
+		var parmTypeTuple = (TypeTuple)((TypeArrow)inf.first).ltype;
+		var i = parmTypeTuple.iterator();
+		var parmList = new ArrayList<Pair<Symbol, Type>>();
 		for(var p : this.parms) {
-			clj.put(p.first, new TypeHolder(p.second.apply(inf.second)));
+			var t = i.next();
+			clj.put(p.first, new TypeHolder(t));
+			parmList.add(Pair.of(p.first, t));
 		}
 		
 		Abstraction.convertAndDeclareParms(
-				this.parms.stream().map(x -> Pair.of(x.first, x.second.apply(inf.second))).toList(), apply);
+				parmList, apply);
 		
 		var compileablebody = (CompileableToJava)this.body;
 		apply.body()._return(compileablebody.toJavaExpr(clj));

@@ -14,6 +14,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Supplier;
+
 import javax.tools.JavaCompiler;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
@@ -626,9 +628,55 @@ class TestComplex extends VelkaTest {
 	@Test
 	@DisplayName("Test Loop Recur")
 	void testLoopRecur() throws Exception {
-		this.assertIntprtAndCompPrintSameValues("(println (to-str (loop ((x 1)) (if (= x 2) x (recur (+ x 1))))))");
-		this.assertIntprtAndCompPrintSameValues("(println (to-str (loop ((x 1) (a (construct List:Native))) (if (= x 2) a (recur (+ x 1) (cdr (tuple (list-native-add-to-end-in-place a x) a)))))))");
-		this.assertIntprtAndCompPrintSameValues("(println (to-str (loop ((x 0) (s \"\")) (if (= x 3) s (recur (+ x 1) (loop ((y 0) (z s)) (if (= y 2) z (recur (+ y 1) (concat z \"a\")))))))))");
+		final Object[] aux = new Object[1];
+		aux[0] = 1;
+		Integer ret = null;
+		while(ret == null) {
+			ret = (Integer) (new Supplier() {
+
+				@Override
+				public Object get() {
+					final Integer x = (Integer)aux[0];
+					
+					return (new Supplier() {
+
+						@Override
+						public Object get() {
+							if(x == 2) {
+								return x;
+							}
+							else {
+								return (new Supplier() {
+
+									@Override
+									public Object get() {
+										aux[0] = x + 1;
+										return null;
+									}
+									
+								}).get();
+							}
+						}
+						
+					}).get();
+				}
+				
+			}).get();
+		}
+		
+		
+		this.assertVelkaCode(
+				"(loop ((x 1)) (if (= x 2) x (recur (+ x 1))))",
+				2);
+		this.assertVelkaCode(
+				"(loop ((x 1) (a (construct List:Native))) "
+				+ "(if (= x 2) a (recur (+ x 1) (cdr (tuple (list-native-add-to-end-in-place a x) a)))))",
+				List.of(1));
+		this.assertVelkaCode(
+				"(loop ((x 0) (s \"\")) "
+				+ "(if (= x 3) s (recur (+ x 1) (loop ((y 0) (z s)) "
+					+ "(if (= y 2) z (recur (+ y 1) (concat z \"a\")))))))",
+				"aaaaaa");
 	}
 	
 	@Test
@@ -660,7 +708,6 @@ class TestComplex extends VelkaTest {
 		var t2 = new TypeArrow(new TypeTuple(tv, tv), TypeAtom.TypeIntNative);
 		
 		assertTrue(env.getTypeSystem().canConvert(t1, t2));
-		
 	}
 	
 	@Test

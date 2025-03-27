@@ -11,6 +11,7 @@ import velka.core.expression.Tuple;
 import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitBoolean;
+import velka.java.CodeModelInstance;
 import velka.types.Substitution;
 import velka.types.SubstitutionsCannotBeMergedException;
 import velka.types.Type;
@@ -111,12 +112,14 @@ public class OrExpression extends SpecialFormApplication implements CompileableT
 	
 	@Override
 	public JExpression toJavaExpr(Environment env) {
-		var ret = JExpr.lit(true); 
+		var ret = JExpr.lit(false); 
+		var bcl = CodeModelInstance.instance().ref(Boolean.class);
 		
 		for(Expression e : (Tuple)this.args) {
 			var ctj = (CompileableToJava)e;
 			
-			ret = ret.bor(ctj.toJavaExpr(env));
+			ret = ret.cor(JExpr.cast(bcl,				
+					ctj.toJavaExpr(env)));
 		}
 		
 		return ret;

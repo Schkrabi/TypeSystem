@@ -39,6 +39,14 @@ private Environment env;
 		this.assertVelkaCode(
 				"(and #t #f)",
 				false);
+		
+		this.assertVelkaCode(
+				"(and (< 4 5) (> 5 4))", 
+				true);
+		
+		this.assertVelkaCode(
+				"(and (< 4 5) (< 5 4))",
+				false);
 	}
 	
 	@Test

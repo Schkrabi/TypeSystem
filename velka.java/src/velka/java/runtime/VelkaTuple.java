@@ -177,13 +177,16 @@ public class VelkaTuple implements Iterable<Object>, Collection<Object> {
 	
 	/** Creates a VelkaTuple from elements */
 	public static VelkaTuple of(Object ...elements) {
+		return of(List.of(elements));
+	}
+	
+	public static VelkaTuple of(Collection<Object> elements) {
 		var ts = new ArrayList<Type>();
 		for(var e : elements) {
 			var t = JavaTypeSystem.instance().getType(e);
 			ts.add(t);
 		}
-		
-		return new VelkaTuple(elements, new TypeTuple(ts));
+		return new VelkaTuple(new ArrayList<Object>(elements), new TypeTuple(ts));
 	}
 	
 	/** Creates a code that creates the velka tuple in code */

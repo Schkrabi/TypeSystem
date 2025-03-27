@@ -13,6 +13,8 @@ import velka.core.expression.Tuple;
 import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.VelkaTuple;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
 import velka.util.NameGenerator;
@@ -228,7 +230,7 @@ public class AbstractionApplication extends Application implements CompileableTo
 		var ret = JExpr
 				.invoke(JExpr.cast(CodeModelInstance.instance()._ref(VelkaAbstraction.class), cmpfun.toJavaExpr(env)),
 						"apply")
-				.arg(cmpargs.toJavaExpr(env));
+				.arg(JExpr.cast(CodeModelInstance.instance().ref(VelkaTuple.class), cmpargs.toJavaExpr(env)));
 		
 		return ret;
 	}
