@@ -2665,6 +2665,95 @@ public final class Operators extends OperatorBank {
 		}
 	};
 	
+	/** Lists file names in folder */
+	@VelkaOperator
+	public static final Operator listFilepaths = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var path = "_path";
+			var code = ClojureHelper.fnHelper(
+					List.of(path),
+					ClojureHelper.constructJavaClass(ArrayList.class,
+							ClojureHelper.applyClojureFunction("map",
+									"str",
+									ClojureHelper.applyClojureFunction(".toList",
+											ClojureHelper.applyClojureFunction("java.nio.file.Files/list", 
+													ClojureHelper.applyClojureFunction("java.nio.file.Path/of",
+															path,
+															//Simulate empty varargs
+															ClojureHelper.applyClojureFunction("into-array", 
+																	"String",
+																	"[]")))))));
+			
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			String path = null;
+			if(args.get(0) instanceof LitString l) {
+				path = l.value;
+			}
+			
+			List<Object> ret = null;
+			try {
+				
+				ret = new ArrayList<Object>(Files.list(Path.of(path)).map(Path::toString).toList());
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+			
+			return new LitInteropObject(ret, TypeAtom.TypeListNative);
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("list_filepaths", Operators.singleton().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var pathcl = CodeModelInstance.instance().ref(Path.class);
+			var filescl = CodeModelInstance.instance().ref(Files.class);
+			var lcl = CodeModelInstance.instance().ref(List.class);
+			var alcl = CodeModelInstance.instance().ref(ArrayList.class);
+			
+			var path = method.body().decl(pathcl, "_path",
+					pathcl.staticInvoke("of").arg(mappedArgs.get(new Symbol("_0"))));
+			
+			var list = method.body().decl(lcl, "_list", JExpr._null());
+			
+			var _try = method.body()._try();
+			
+			_try.body().assign(list,
+					filescl.staticInvoke("list").arg(path)
+					.invoke("map").arg(JExpr.direct("java.nio.file.Path::toString"))
+					.invoke("toList"));
+			
+			var ioecl = CodeModelInstance.instance().ref(IOException.class);
+			var rtecl = CodeModelInstance.instance().ref(RuntimeException.class);
+			var _catch = _try._catch(ioecl);
+			var _e = _catch.param("_e");
+			_catch.body()._throw(JExpr._new(rtecl).arg(_e));
+			
+			method.body()._return(JExpr._new(alcl)
+					.arg(list));			
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeStringNative), TypeAtom.TypeListNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "list-filepaths";
+		}
+		
+	};
+	
 	public static final String defaultCostFunction = "default-cost-function";
 	public static final String defaultCostFunction_full = ClojureHelper.fullyQualifySymbol(Operators.singleton().getNamespace(), defaultCostFunction);
 

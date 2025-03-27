@@ -525,6 +525,21 @@ class TestOperators extends VelkaTest{
 				"hamburger".length());
 	}
 
-
-
+	@Test
+	void testListFilepaths() throws IOException {
+		var tmpDir = Files.createTempDirectory("_testListFilepaths");
+		var foo = Files.createFile(tmpDir.resolve("foo.txt"));
+		var bar = Files.createFile(tmpDir.resolve("bar.bin"));
+		
+		this.assertVelkaCode(
+				new StringBuilder("(list-filepaths \"")
+				.append(tmpDir.toString())
+				.append("\")")
+				.toString(),
+				List.of(bar.toString(), foo.toString()));
+		
+		Files.delete(foo);
+		Files.delete(bar);
+		Files.delete(tmpDir);
+	}
 }

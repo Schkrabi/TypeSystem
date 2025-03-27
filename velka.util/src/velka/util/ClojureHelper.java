@@ -272,13 +272,25 @@ public class ClojureHelper {
 		return "(throw (Throwable. " + code + "))";
 	}
 	
+	/** Escapes all escape charater in string */
+	public static String escape(String str) {
+        return str.replace("\\", "\\\\")
+                  .replace("\b", "\\b")
+                  .replace("\n", "\\n")
+                  .replace("\t", "\\t")
+                  .replace("\f", "\\f")
+                  .replace("\r", "\\r")
+                  .replace("\"", "\\\"")
+                  .replace("\'", "\\'");
+    }
+	
 	/**
 	 * Creates code for string in clojure
 	 * @param str string 
 	 * @return string with code
 	 */
 	public static String stringHelper(String str) {
-		return "\"" + str + "\"";
+		return "\"" + ClojureHelper.escape(str) + "\"";
 	}
 	
 	/**
