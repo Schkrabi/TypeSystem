@@ -5,10 +5,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Vector;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -31,37 +31,27 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	/**
 	 * Values of the tuple
 	 */
-	private final Vector<Type> values;
+	private final Type[] values;
 
 	/**
 	 * Empty type tuple object
 	 */
 	public static final TypeTuple EMPTY_TUPLE = new TypeTuple();
 
-	public TypeTuple(Collection<? extends Type> values) {
-		if(values.stream().anyMatch(x -> x == null)) {
-			throw new RuntimeException("Null in typetuple");
-		}
-		this.values = new Vector<Type>(values);
+	public TypeTuple(Collection<? extends Type> vls) {
+		this.values = vls.toArray(i -> new Type[i]);
 	}
 	
 	public TypeTuple(Type ...types) {
-		if(Stream.of(types).anyMatch(x -> x == null)) {
-			throw new RuntimeException("Null in typetuple");
-		}
-		this.values = new Vector<Type>(Arrays.asList(types));
+		this.values = types;
 	}
 	
 	public TypeTuple(Stream<? extends Type> values) {
-		var vls = values.collect(Collectors.toList());
-		if(vls.stream().anyMatch(x -> x == null)) {
-			throw new RuntimeException("Null in typetuple");
-		}
-		this.values = new Vector<Type>(vls);
+		this.values = values.toArray(i -> new Type[i]);
 	}
 
 	private TypeTuple() {
-		this.values = new Vector<Type>();
+		this.values = new Type[0];
 	}
 
 	/**
@@ -71,7 +61,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	 * @return element on given index
 	 */
 	public Type get(int index) {
-		return this.values.get(index);
+		return this.values[index];
 	}
 
 	/**
@@ -80,7 +70,7 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	 * @return integer
 	 */
 	public int size() {
-		return this.values.size();
+		return this.values.length;
 	}
 
 	/**
@@ -89,46 +79,26 @@ public class TypeTuple extends Type implements Iterable<Type> {
 	 * @return
 	 */
 	public Stream<Type> stream() {
-		return this.values.stream();
-	}
-
-	/**
-	 * Revreses this type tuple
-	 * 
-	 * @return new type tuple
-	 */
-	public TypeTuple reverse() {
-		List<Type> l = new LinkedList<Type>();
-
-		for (int i = this.values.size() - 1; i >= 0; i--) {
-			l.add(this.values.get(i));
-		}
-		return new TypeTuple(l);
+		return Arrays.stream(this.values);
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder s = new StringBuilder("[");
-		Iterator<Type> i = this.iterator();
-		while (i.hasNext()) {
-			Type t = i.next();
-			s.append(t.toString());
-			if (i.hasNext()) {
-				s.append(", ");
-			}
-		}
-		s.append("]");
-		return s.toString();
+		return Arrays.deepToString(values).replace(",", "");
+	}
+	
+	@Override
+	public int hashCode() {
+		return Arrays.deepHashCode(values);
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if(this == o) return true;
-		if (!(o instanceof TypeTuple)) {
-			return false;
+		if(o instanceof TypeTuple tt) {
+			return Arrays.deepEquals(this.values, tt.values);
 		}
-		TypeTuple other = (TypeTuple) o;
-		return this.values.equals(other.values);
+		return false;
 	}
 
 	@Override
@@ -148,8 +118,8 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		}
 		TypeTuple other = (TypeTuple) o;
 
-		if (this.values.size() != other.values.size()) {
-			return Integer.compare(this.values.size(), other.values.size());
+		if (this.values.length != other.values.length) {
+			return Integer.compare(this.values.length, other.values.length);
 		}
 
 		Iterator<Type> i = this.iterator();
@@ -168,17 +138,30 @@ public class TypeTuple extends Type implements Iterable<Type> {
 
 	@Override
 	public Iterator<Type> iterator() {
-		return this.values.iterator();
+		return new Iterator<Type>() {
+			private int pos = -1;
+			private final Type[] vls = values;
+			
+			@Override
+			public boolean hasNext() {
+				return (this.pos + 1) < vls.length; 
+			}
+
+			@Override
+			public Type next() {
+				if(this.hasNext()) {
+					this.pos += 1;
+					return this.vls[this.pos];
+				}
+				throw new NoSuchElementException();
+			}
+			
+		};
 	}
 
 	@Override
 	public Type apply(Substitution s) {
 		return new TypeTuple(this.stream().map(x -> x.apply(s)).collect(Collectors.toList()));
-	}
-
-	@Override
-	public int hashCode() {
-		return this.values.hashCode();
 	}
 
 	/**

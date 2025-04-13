@@ -922,8 +922,10 @@ public class ListNative extends OperatorBank{
 																	ClojureHelper.applyVelkaFunction(fn,
 																			LitInteger.clojureLit(
 																					arg))),
-															ClojureHelper.applyClojureFunction("range",
-																	n))));
+															ClojureHelper.applyClojureFunction("map",
+																	"int",
+																	ClojureHelper.applyClojureFunction("range",
+																			n)))));
 			return code;
 		}
 

@@ -10,6 +10,7 @@ import java.util.List;
 import velka.core.expression.Tuple;
 import velka.core.literal.LitComposite;
 import velka.types.Type;
+import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.typeSystem.VelkaAbstraction;
@@ -83,77 +84,65 @@ public class VelkaClojureCore {
 									exp)),
 					to));
 	
+	private static String lunify = "_lunify";
+	private static String runify = "_runify";
+	private static String from_ltype = "_from_ltype";
+	private static String from_rtype = "_from_rtype";
+	private static String to_ltype = "_to_ltype";
+	private static String to_rtype = "_to_rtype";
+	private static final String type = "_type";
+	private static final String args = "_args";
+	
 	/** Definition for convert-fn clojure function */
 	public static String convertFnClojureDef = ClojureHelper.clojureDefnHelper(ClojureCoreSymbols.convertFnClojureSymbol, 
-			Arrays.asList(to, exp), 
+			Arrays.asList(from, to, exp), 
 			ClojureHelper.letHelper(
 					impl,
-					new Pair<String, String>(
-							from, 
-							ClojureHelper.applyClojureFunction(
-									ClojureCoreSymbols.getTypeClojureSymbol, 
-									exp)),
-					new Pair<String, String>(
-						toNormal, 
-						ClojureHelper.applyClojureFunction(
-							"velka.types.TypeArrow.",
-							ClojureHelper.applyClojureFunction(
-									"if",
-									ClojureHelper.applyClojureFunction(
-											"instance?",
-											"velka.types.TypeTuple",
-											ClojureHelper.applyClojureFunction(
-													".ltype",
-													to)),
-									ClojureHelper.applyClojureFunction(
-											".ltype", 
-											to),
-									ClojureHelper.applyClojureFunction(
-											".ltype",
-											from)),
-							ClojureHelper.applyClojureFunction(
-								".rtype",
-								to))),
-					new Pair<String, String>(impl, 
+					Pair.of(from_ltype, ClojureHelper.applyClojureFunction(".ltype", from)),
+					Pair.of(from_rtype, ClojureHelper.applyClojureFunction(".rtype", from)),
+					Pair.of(to_ltype, ClojureHelper.applyClojureFunction(".ltype", to)),
+					Pair.of(to_rtype, ClojureHelper.applyClojureFunction(".rtype", to)),
+					Pair.of(lunify, 
+							ClojureHelper.applyClojureFunction(".isPresent",
+									ClojureHelper.applyClojureFunction("velka.types.Type/unifyRepresentation", 
+											from_ltype,
+											to_ltype))),
+					Pair.of(runify, 
+							ClojureHelper.applyClojureFunction(".isPresent",
+									ClojureHelper.applyClojureFunction("velka.types.Type/unifyRepresentation", 
+											from_rtype,
+											to_rtype))),
+					Pair.of(impl, 
 							ClojureHelper.condHelper(
-									new Pair<String, String>(
-											ClojureHelper.applyClojureFunction("=", 
-													ClojureHelper.applyClojureFunction(".ltype", from),
-													"velka.types.TypeTuple/EMPTY_TUPLE"),
-											ClojureHelper.addTypeMetaInfo_str(
-													ClojureHelper.fnHelper(Arrays.asList(), 
-															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
-																	ClojureHelper.applyClojureFunction(".rtype", toNormal),
-																	ClojureHelper.applyVelkaFunction_argsTuple(
-																			exp,
-																			Type.addTypeMetaInfo("[]", TypeTuple.EMPTY_TUPLE)))), 
-													toNormal)),
-									new Pair<String, String>(
-											ClojureHelper.applyClojureFunction("instance?",
-													"velka.types.TypeVariable",
-													ClojureHelper.applyClojureFunction(".ltype", toNormal)),
-											ClojureHelper.addTypeMetaInfo_str(
-													ClojureHelper.fnHelper(
-															Arrays.asList("& " + arg), 
-															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
-																	ClojureHelper.applyClojureFunction(".rtype", toNormal),
-																	ClojureHelper.applyVelkaFunction_argsTuple( 
-																			exp,
-																			arg))), toNormal)),
-									new Pair<String, String>(
-											":else",
-											ClojureHelper.addTypeMetaInfo_str(
-													ClojureHelper.fnHelper(
-															Arrays.asList("& " + arg), 
-															ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol, 
-																	ClojureHelper.applyClojureFunction(".rtype", toNormal),
-																	ClojureHelper.applyVelkaFunction_argsTuple( 
-																			exp,
-																			ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertClojureSymbol,
-																					ClojureHelper.applyClojureFunction(".ltype", from),
-																					ClojureHelper.addTypeMetaInfo_str(arg, 
-																							ClojureHelper.applyClojureFunction(".ltype", toNormal)))))), 
-													toNormal))))));
+									Pair.of(ClojureHelper.applyClojureFunction("and", lunify, runify), exp),
+									Pair.of(lunify, 
+											ClojureHelper.letHelper(
+												ClojureHelper.reify(
+														velka.types.typeSystem.VelkaAbstraction.class,
+														Pair.of("apply", Pair.of(List.of(me, args), ClojureHelper.applyClojureFunction(".convert",
+																ClojureCoreSymbols.typeSystem, from_rtype, to_rtype, 
+																ClojureHelper.applyClojureFunction(".apply", exp, args), "nil"))),
+														Pair.of("getType", Pair.of(List.of(me), type))),
+												Pair.of(type, ClojureHelper.constructJavaClass(TypeArrow.class, from_ltype, to_rtype)))),
+									Pair.of(runify,
+											ClojureHelper.letHelper(
+													ClojureHelper.reify(
+															velka.types.typeSystem.VelkaAbstraction.class,
+															Pair.of("apply", Pair.of(List.of(me, args), 
+																	ClojureHelper.applyClojureFunction(".apply", exp, 
+																			ClojureHelper.applyClojureFunction(".convert", ClojureCoreSymbols.typeSystem, 
+																					to_ltype, from_ltype, args, "nil")))),
+															Pair.of("getType", Pair.of(List.of(me), type))),
+													Pair.of(type, ClojureHelper.constructJavaClass(TypeArrow.class, to_ltype, from_rtype)))),
+									Pair.of(":else",
+											ClojureHelper.reify(
+													velka.types.typeSystem.VelkaAbstraction.class,
+													Pair.of("apply", Pair.of(List.of(me, args), ClojureHelper.applyClojureFunction(".convert",
+															ClojureCoreSymbols.typeSystem, from_rtype, to_rtype, 
+															ClojureHelper.applyClojureFunction(".apply", exp,
+																	ClojureHelper.applyClojureFunction(".convert", ClojureCoreSymbols.typeSystem,
+																			to_ltype, from_ltype, args, "nil")), "nil"))),
+													Pair.of("getType", Pair.of(List.of(me), to))))))));
 	
 	/** Definition of clojure type system */
 	public static String typeSystem = ClojureHelper.dynamicDef(
@@ -163,7 +152,7 @@ public class VelkaClojureCore {
 							Pair.of("convertTuple", Pair.of(List.of(me, ts, from, to, o, env), 
 									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertTupleClojureSymbol_full, to, o))),
 							Pair.of("convertFunction", Pair.of(List.of(me, ts, from, to, o, env), 
-									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertFnClojureSymbol_full, to, o))),
+									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.convertFnClojureSymbol_full, from, to, o))),
 							Pair.of("instantiateCollection", Pair.of(List.of(me, o), ClojureHelper.tupleHelper(o))))),
 				ProxyImpl.of(velka.types.typeSystem.TypeSystem.class,
 						"getType",
@@ -231,7 +220,7 @@ public class VelkaClojureCore {
 							ClojureCoreSymbols.typeSystem_full,
 							from, to, exp, "nil"));	
 	
-	private static final String args = "_args", icost = "_icost", ccost = "_ccost";
+	private static final String icost = "_icost", ccost = "_ccost";
 	//(defn impl-cost ([_impl _args]
 	//				   (let [_icost (eapply (getcost _impl) _args)
 	//						 _ccost (conversion-cost (get-type _args) (.ltype (get-type _impl)) _args)]
@@ -247,12 +236,6 @@ public class VelkaClojureCore {
 									ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, args),
 									ClojureHelper.applyClojureFunction(".ltype", ClojureHelper.applyClojureFunction(ClojureCoreSymbols.getTypeClojureSymbol_full, impl)),
 									args))));
-	
-	//(defn select-impl ([_efun _args]
-	//					(first (reduce 
-	//						(fn [p1 p2] (if (or (< (second p2) (second p1)) (nil? (first p1))) p2 p1))
-	//						[nil java.lang.Long/MAX_VALUE] 
-	//						(filter (fn [_x] (not (nil? (second _x)))) (map (fn [_impl] [_impl (implementation-cost _impl _args)]) _efun)))))))
 	
 	private static final String efun = "_efun", p1 = "_p1", p2 = "_p2";
 	public static final String selectImplementation =
@@ -403,7 +386,6 @@ public class VelkaClojureCore {
 									"meta",
 									getCostFunctionDef_fun)));
 	
-	private static final String type = "_type";
 	public static final String canDeconstructAsDef =
 			ClojureHelper.clojureDefnHelper(
 					ClojureCoreSymbols.canDeconstructAs, 

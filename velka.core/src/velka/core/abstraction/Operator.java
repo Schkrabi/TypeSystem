@@ -423,7 +423,7 @@ public abstract class Operator extends Expression implements CompileableToJava, 
 		}		
 		
 		if(type.rtype.equals(TypeAtom.TypeIntNative)) {
-			invocation = CodeModelInstance.instance().ref(Long.class).staticInvoke("valueOf").arg(invocation);
+			invocation = CodeModelInstance.instance().ref(Integer.class).staticInvoke("valueOf").arg(invocation);
 		}
 		else if(type.rtype.equals(TypeAtom.TypeListNative)) {
 			invocation = CodeModelInstance.instance().ref(List.class).staticInvoke("of").arg(invocation);

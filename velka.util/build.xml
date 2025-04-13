@@ -15,6 +15,11 @@
     
     <target name="compile">
         <mkdir dir="${classes.dir}" />
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" debug="false"/>
+    </target>
+	
+	<target name="compile-dbg">
+        <mkdir dir="${classes.dir}" />
         <javac srcdir="${src.dir}" destdir="${classes.dir}" debug="true"/>
     </target>
     
@@ -22,7 +27,13 @@
         <mkdir dir="${jar.dir}" />
         <jar destfile="${jar.name}" basedir="${classes.dir}" />
     </target>
+	
+	<target name="jar-dbg" depends="compile-dbg">
+        <mkdir dir="${jar.dir}" />
+        <jar destfile="${jar.name}" basedir="${classes.dir}" />
+    </target>
 
     <target name="main" depends="clean,jar" />
+	<target name="dbg" depends="clean,jar-dbg" />
     
 </project>

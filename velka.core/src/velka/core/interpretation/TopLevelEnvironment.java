@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import velka.core.abstraction.Function;
+import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
 import velka.core.application.Convert;
 import velka.core.expression.Expression;
@@ -69,25 +70,102 @@ public class TopLevelEnvironment extends Environment {
 						
 						return new Tuple(l);
 					}
+					
+					private Expression convertOp(
+							TypeSystem typeSystem, 
+							TypeArrow from, 
+							TypeArrow to,
+							Operator op,
+							Environment env) {
+						if(Type.unifyRepresentation(from.ltype, to.ltype)
+								.isEmpty()) {
+							List<Pair<Symbol, Type>> tparms = ((TypeTuple) to.ltype).stream()
+									.map(t -> Pair.of(new Symbol(NameGenerator.next()), t)).toList();
+							Tuple parms = new Tuple(tparms.stream().map(p -> p.first).toList());
+							
+							if(Type.unifyRepresentation(from.rtype, to.rtype)
+									.isEmpty()) {								
+								return new Function(env,
+										new Convert(from.rtype, to.rtype,
+												new AbstractionApplication(op, 
+														new Convert(to.ltype, from.ltype,
+														parms))),
+												tparms);
+							}
+							
+							return new Function(env,
+											new AbstractionApplication(op, 
+													new Convert(to.ltype, from.ltype,
+													parms)),
+											tparms);
+						}
+						
+						if(Type.unifyRepresentation(from.rtype, to.rtype)
+								.isEmpty()) {
+							List<Pair<Symbol, Type>> tparms = ((TypeTuple) to.ltype).stream()
+									.map(t -> Pair.of(new Symbol(NameGenerator.next()), t)).toList();
+							Tuple parms = new Tuple(tparms.stream().map(p -> p.first).toList());
+							
+							return new Function(env,
+									new Convert(from.rtype, to.rtype,
+											new AbstractionApplication(op, 
+													parms)),
+											tparms);
+						}
+						
+						return op;
+					}
+					
+					private Expression convertF(
+							TypeSystem typeSystem,
+							TypeArrow from,
+							TypeArrow to,
+							Function f,
+							Environment env) {
+						Expression body = null;
+						List<Pair<Symbol, Type>> tparms = null;
+						Tuple parms = null;
+						
+						if(Type.unifyRepresentation(from.ltype, to.ltype)
+								.isEmpty()) {
+							tparms = ((TypeTuple) to.ltype).stream()
+									.map(t -> Pair.of(new Symbol(NameGenerator.next()), t)).toList();
+							parms = new Tuple(tparms.stream().map(p -> p.first).toList());
+							body = new AbstractionApplication(f, new Convert(to.ltype, from.ltype, parms));
+						} else {
+							tparms = f.parms;
+							body = f.body;
+						}
+						
+						if(Type.unifyRepresentation(from.rtype, to.rtype)
+								.isEmpty()) {
+							body = new Convert(from.rtype, to.rtype, body);
+						}
+						else {
+							body = f.body; 
+						}
+						
+						Function exp = null;
+						if(body != f.body) {
+							exp = new Function(f.env, body, tparms);
+						}
+						else {
+							exp = f;
+						}
+						
+						return exp;
+					}
 
 					@Override
 					public Object convertFunction(TypeSystem typeSystem, TypeArrow from, TypeArrow to, Object o, Object env) {
-						var f = (Expression)o;
-						List<Pair<Symbol, Type>> tparms = ((TypeTuple) to.ltype).stream()
-								.map(t -> Pair.of(new Symbol(NameGenerator.next()), t)).toList();
-						
-						var parms = new Tuple(tparms.stream().map(p -> p.first).toList());
-						
 						var eenv = (Environment)env;
-						
-						var exp = new Function(eenv,
-								new Convert(from.rtype, to.rtype,
-								new AbstractionApplication(f, 
-										new Convert(to.ltype, from.ltype,
-										parms))),
-								tparms);
-						
-						return exp;
+						if(o instanceof Function fun) {
+							return this.convertF(typeSystem, from, to, fun, eenv);
+						}
+						else if(o instanceof Operator op) {
+							return this.convertOp(typeSystem, from, to, op, eenv);
+						}
+						throw new RuntimeException("Unrecognized abstraction");
 					}
 
 					@Override

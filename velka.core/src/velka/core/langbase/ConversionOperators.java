@@ -118,7 +118,7 @@ public final class ConversionOperators extends OperatorBank{
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitInteger arg = (LitInteger) args.get(0);
-			return new LitComposite(new LitString(Long.toString(arg.value)), TypeAtom.TypeIntString);
+			return new LitComposite(new LitString(Integer.toString(arg.value)), TypeAtom.TypeIntString);
 		}
 	
 		@Override
@@ -157,7 +157,7 @@ public final class ConversionOperators extends OperatorBank{
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
 			method.body()._return(JExpr._new(CodeModelInstance.instance()._ref(TypedObject.class))
-					.arg(CodeModelInstance.instance().ref(Long.class).staticInvoke("toString")
+					.arg(CodeModelInstance.instance().ref(Integer.class).staticInvoke("toString")
 							.arg(mappedArgs.get(new Symbol("_0"))))
 					.arg(TypeUtil.instance().type2java(TypeAtom.TypeIntString)));
 		}
@@ -285,7 +285,7 @@ public final class ConversionOperators extends OperatorBank{
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
 			var _try = method.body()._try();
 			_try.body()._return(JExpr._new(CodeModelInstance.instance().ref(TypedObject.class))
-					.arg(CodeModelInstance.instance().ref(Long.class).staticInvoke("toString")
+					.arg(CodeModelInstance.instance().ref(Integer.class).staticInvoke("toString")
 							.arg(CodeModelInstance.instance().ref(RomanNumbers.class).staticInvoke("roman2int")
 									.arg(JExpr.cast(CodeModelInstance.instance()._ref(String.class),
 											JExpr.cast(CodeModelInstance.instance().ref(TypedObject.class),
@@ -416,7 +416,7 @@ public final class ConversionOperators extends OperatorBank{
 			method.body()
 					._return(JExpr._new(CodeModelInstance.instance().ref(TypedObject.class))
 							.arg(CodeModelInstance.instance().ref(RomanNumbers.class).staticInvoke("int2roman")
-									.arg(CodeModelInstance.instance().ref(Long.class).staticInvoke("parseLong")
+									.arg(CodeModelInstance.instance().ref(Integer.class).staticInvoke("parseInt")
 											.arg(JExpr.cast(CodeModelInstance.instance()._ref(String.class),
 													JExpr.cast(CodeModelInstance.instance().ref(TypedObject.class),
 															mappedArgs.get(new Symbol("_0"))).ref("object")))))

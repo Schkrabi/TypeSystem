@@ -2,15 +2,12 @@ package velka.java.runtime;
 
 import velka.types.TypeTuple;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Stream;
-
-import com.sun.codemodel.JExpr;
 
 import velka.java.CodeModelInstance;
 import velka.types.Type;
@@ -43,13 +40,7 @@ public class VelkaTuple implements Iterable<Object>, Collection<Object> {
 	}
 	
 	public Stream<Object> stream(){
-		var sb = Stream.builder();
-		
-		for(Object o : this) {
-			sb.add(o);
-		}
-		
-		return sb.build();
+		return Arrays.stream(this.data);
 	}
 	
 	@Override
@@ -177,16 +168,16 @@ public class VelkaTuple implements Iterable<Object>, Collection<Object> {
 	
 	/** Creates a VelkaTuple from elements */
 	public static VelkaTuple of(Object ...elements) {
-		return of(List.of(elements));
+		var ts = new Type[elements.length];
+		for(int i = 0; i < elements.length; i++) {
+			var t = JavaTypeSystem.instance().getType(elements[i]);
+			ts[i] = t;
+		}
+		return new VelkaTuple(elements, new TypeTuple(ts));
 	}
 	
 	public static VelkaTuple of(Collection<Object> elements) {
-		var ts = new ArrayList<Type>();
-		for(var e : elements) {
-			var t = JavaTypeSystem.instance().getType(e);
-			ts.add(t);
-		}
-		return new VelkaTuple(new ArrayList<Object>(elements), new TypeTuple(ts));
+		return VelkaTuple.of(elements.toArray(x -> new Object[x]));
 	}
 	
 	/** Creates a code that creates the velka tuple in code */

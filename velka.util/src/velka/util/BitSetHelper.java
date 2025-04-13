@@ -8,12 +8,12 @@ import java.util.TreeSet;
 public class BitSetHelper {
 	
 	/** Converts bit set to tree set */
-	public static TreeSet<Long> bitset2treeset(BitSet bs){
-		var treeSet = new java.util.TreeSet<Long>((Long e1, Long e2) -> {
-			return Long.compare(e1, e2);
+	public static TreeSet<Integer> bitset2treeset(BitSet bs){
+		var treeSet = new java.util.TreeSet<Integer>((Integer e1, Integer e2) -> {
+			return Integer.compare(e1, e2);
 		});
 		
-		bs.stream().forEach(x -> treeSet.add((long) x));
+		bs.stream().forEach(x -> treeSet.add(x));
 		
 		return treeSet;
 	}
@@ -21,15 +21,15 @@ public class BitSetHelper {
 	/** Converts hashset with integers or doubles to a treeset */
 	public static TreeSet<Object> hashset2treeset(HashSet<Object> hs){
 		java.util.Comparator<Object> cmp = null;
-		if(hs.stream().allMatch(x -> x instanceof Long || x instanceof Integer)) {
+		if(hs.stream().allMatch(x -> x instanceof Integer)) {
 			cmp = new java.util.Comparator<Object>() {
 
 				@Override
 				public int compare(Object o1, Object o2) {
-					var i1 = (Long)o1;
-					var i2 = (Long)o2;
+					var i1 = (Integer)o1;
+					var i2 = (Integer)o2;
 					
-					return Long.compare(i1, i2);
+					return Integer.compare(i1, i2);
 				}
 				
 			};
@@ -56,7 +56,7 @@ public class BitSetHelper {
 	
 	/** Convers integer hashset to bit set */
 	public static BitSet hashset2bitset(HashSet<Object> hashset) {
-		if(!hashset.stream().allMatch(x -> x instanceof Long || x instanceof Integer)) {
+		if(!hashset.stream().allMatch(x -> x instanceof Integer)) {
 			throw new RuntimeException("Only integer sets can be converted to bit sets");
 		}
 		var bitset = new BitSet();
@@ -64,10 +64,6 @@ public class BitSetHelper {
 			if(x instanceof Integer) {
 				var i = (Integer)x;
 				bitset.set(i.intValue());
-			}
-			if(x instanceof Long) {
-				var l = (Long)x;
-				bitset.set(l.intValue());
 			}
 		});
 		return bitset;

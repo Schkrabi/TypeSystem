@@ -139,7 +139,6 @@ class HashSet extends VelkaTest {
 
 	@Test
 	void testLargest() throws Exception {
-		var hs = new java.util.HashSet<Object>(List.of(1, 2, 3));
 		this.assertVelkaCode(
 				"(set-hash-largest (set-hash-from-list (list 1 2 3)) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1))))",
 				Integer.valueOf(3));

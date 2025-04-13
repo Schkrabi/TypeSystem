@@ -590,12 +590,12 @@ public class JavaBitSet extends OperatorBank {
 			var acceptMth = consCl.method(JMod.PUBLIC, void.class, "accept");
 			var valueParm = acceptMth.param(int.class, "value");
 			
-			var valueLong = acceptMth.body().decl(CodeModelInstance.instance()._ref(Integer.class), "lvalue", 
+			var valueInt = acceptMth.body().decl(CodeModelInstance.instance()._ref(Integer.class), "lvalue", 
 					CodeModelInstance.instance().ref(Integer.class).staticInvoke("valueOf").arg(valueParm));
 			
 			var retVal = acceptMth.body().decl(CodeModelInstance.instance().INT, "retVal",
 					JExpr.cast(CodeModelInstance.instance()._ref(Integer.class),
-							mappedArgs.get(new Symbol("_1")).invoke("apply").arg(VelkaTuple._velkaTuple(valueLong)))
+							mappedArgs.get(new Symbol("_1")).invoke("apply").arg(VelkaTuple._velkaTuple(valueInt)))
 							.invoke("intValue"));
 			
 			acceptMth.body().add(_newBitSet.invoke("set").arg(retVal));

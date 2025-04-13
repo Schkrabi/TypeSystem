@@ -512,15 +512,17 @@ class TestComplex extends VelkaTest {
 		
 		Lambda l = (Lambda)(this.parseString("(lambda ((Int:String x)) 1)").get(0));
 		TypeArrow lambda_to = new TypeArrow(new TypeTuple(TypeAtom.TypeIntRoman), TypeAtom.TypeIntString);
+		var lambda_from = new TypeArrow(new TypeTuple(TypeAtom.TypeIntString), TypeAtom.TypeIntNative);
 		
 		Expression arg = new LitComposite(new LitString("XLII"), TypeAtom.TypeIntRoman);
 		assertClojureFunction(
 				definitions.toString(),
 				ClojureHelper.applyClojureFunction(
 						"println",
-						ClojureHelper.applyClojureFunction(
+						ClojureHelper.applyVelkaFunction(
 								ClojureHelper.applyClojureFunction(
 										ClojureCoreSymbols.convertFnClojureSymbol_full,
+										lambda_from.clojureTypeRepresentation(),
 										lambda_to.clojureTypeRepresentation(),
 										l.toClojureCode(env)),
 								arg.toClojureCode(env))),
@@ -528,12 +530,14 @@ class TestComplex extends VelkaTest {
 		
 		Lambda l2 = (Lambda)(this.parseString("(lambda () 1)")).get(0);
 		TypeArrow l2_to = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeIntString);
+		var l2_from = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeIntNative);
 		assertClojureFunction(
 				definitions.toString(),
 				ClojureHelper.applyClojureFunction("println", 
-						ClojureHelper.applyClojureFunction(
+						ClojureHelper.applyVelkaFunction(
 										ClojureHelper.applyClojureFunction(
-												ClojureCoreSymbols.convertFnClojureSymbol_full, 
+												ClojureCoreSymbols.convertFnClojureSymbol_full,
+												l2_from.clojureTypeRepresentation(),
 												l2_to.clojureTypeRepresentation(),
 												l2.toClojureCode(env)))),
 				"[1]");
@@ -781,8 +785,8 @@ class TestComplex extends VelkaTest {
 	
 	@Test
 	void sandbox() throws NoSuchMethodException, SecurityException {
-		var arcl = java.util.ArrayList.class;
-		var m = arcl.getMethod("set", int.class, Object.class);
-		System.out.println(m.getName());
+		this.assertVelkaCode(
+				"((lambda ((((Int:Native) #> Int:Native) f)) (f 42)) (lambda ((Int:* a)) a))",
+				Integer.valueOf(42));
 	}
 }

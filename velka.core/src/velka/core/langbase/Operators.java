@@ -100,7 +100,14 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {			
-			return ClojureHelper.binaryOperatorToFn("unchecked-add");
+			var x = "_x";
+			var y = "_y";
+			
+			return ClojureHelper.fnHelper(
+					List.of(x, y),
+					ClojureHelper.applyClojureFunction("int",
+							ClojureHelper.applyClojureFunction("unchecked-add",
+									x, y)));
 		}
 
 		@Override
@@ -685,7 +692,14 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			return ClojureHelper.binaryOperatorToFn("/");
+			var x = "_x";
+			var y = "_y";
+			
+			return ClojureHelper.fnHelper(
+					List.of(x, y),
+					ClojureHelper.applyClojureFunction("int",
+							ClojureHelper.applyClojureFunction("/",
+									x, y)));
 		}
 
 		@Override
@@ -1582,7 +1596,14 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			return ClojureHelper.binaryOperatorToFn("mod");
+			var x = "_x";
+			var y = "_y";
+			
+			return ClojureHelper.fnHelper(
+					List.of(x, y),
+					ClojureHelper.applyClojureFunction("int",
+							ClojureHelper.applyClojureFunction("mod",
+									x, y)));
 		}
 
 		@Override
@@ -1650,7 +1671,14 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			return ClojureHelper.binaryOperatorToFn("unchecked-multiply");
+			var x = "_x";
+			var y = "_y";
+			
+			return ClojureHelper.fnHelper(
+					List.of(x, y),
+					ClojureHelper.applyClojureFunction("int",
+							ClojureHelper.applyClojureFunction("unchecked-multiply",
+									x, y)));
 		}
 
 		@Override
@@ -1761,7 +1789,7 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			return ClojureHelper.unaryOperatorToFn("Long/parseLong");
+			return ClojureHelper.unaryOperatorToFn("Integer/parseInt");
 		}
 
 		@Override
@@ -2013,7 +2041,14 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			return ClojureHelper.binaryOperatorToFn("unchecked-subtract");
+			var x = "_x";
+			var y = "_y";
+			
+			return ClojureHelper.fnHelper(
+					List.of(x, y),
+					ClojureHelper.applyClojureFunction("int",
+							ClojureHelper.applyClojureFunction("unchecked-subtract",
+									x, y)));
 		}
 
 		@Override
@@ -2753,6 +2788,11 @@ public final class Operators extends OperatorBank {
 		}
 		
 	};
+	
+	@VelkaOperator
+	public static final Operator strCmp = 
+		Operator.wrapJavaMethod(String.class, "compareTo", "str-cmp", 
+				Operators.singleton().getNamespace(), String.class);
 	
 	public static final String defaultCostFunction = "default-cost-function";
 	public static final String defaultCostFunction_full = ClojureHelper.fullyQualifySymbol(Operators.singleton().getNamespace(), defaultCostFunction);

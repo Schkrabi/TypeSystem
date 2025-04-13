@@ -63,6 +63,7 @@ public abstract class TypeSystem {
 	
 	/** Returns true if from type is convertable to to type. Otherwise returns false */
 	public boolean canConvertAtom(TypeAtom from, TypeAtom to) {
+		if(from.equals(to)) return true;
 		var info = this.getOrCreateTypeInfo(from);
 		return info.canConvertTo(to);
 	}
@@ -70,7 +71,7 @@ public abstract class TypeSystem {
 	/** Returns true if first type is converable to the second */
 	public boolean canConvert(Type from, Type to) {
 		if(from == null || to == null) return false;
-		else if(from == to || from.equals(to)) return true;
+		else if(from == to) return true;
 		else if((from instanceof TypeVariable) || (to instanceof TypeVariable)) return true;
 		else if((from instanceof TypeAtom f) && (to instanceof TypeAtom t)) {
 			return this.canConvertAtom(f, t);
@@ -107,18 +108,26 @@ public abstract class TypeSystem {
 	
 	/** Gets the cost of representation conversion */
 	public Double conversionCost(Type from, Type to, Object e, Object env) {
-		if(from.equals(to)) {
+		if (from.equals(to) || to instanceof TypeVariable) {
 			return RankAggregation.instance().neutralRank();
 		}
-		else if(!this.canConvert(from, to)) {
+		else if(from instanceof TypeArrow) {
+			// The time to convert the function is constant
+			// What can change is the execution time of the function
+			// However that is not traceable for Velka
+			return RankAggregation.instance().functionConversionRank();
+		}
+		else if(from instanceof RepresentationOr
+				|| to instanceof RepresentationOr) {
+			if(this.canConvert(from, to)) {
+				return RankAggregation.instance().neutralRank();	
+			}
 			return null;
 		}
-		else if(to instanceof TypeVariable
-				|| from instanceof RepresentationOr
-				|| to instanceof RepresentationOr) {
-			return RankAggregation.instance().neutralRank();
-		}
 		else if(from instanceof TypeAtom ta) {
+			if(!this.canConvert(from, to)) {
+				return null;
+			}			
 			var toTa = (TypeAtom)to;
 			if(toTa.representation.equals(TypeRepresentation.WILDCARD)) {
 				return RankAggregation.instance().neutralRank();
@@ -158,30 +167,14 @@ public abstract class TypeSystem {
 			}
 			return sum;
 		}
-		else if(from instanceof TypeArrow) {
-			// The time to convert the function is constant
-			// What can change is the execution time of the function
-			// However that is not traceable for Velka
-			return RankAggregation.instance().functionConversionRank();
-		}
 		throw new RuntimeException("Invalid conversion cost: unrecognized type: " + from + " or " + to);
 	}
 	
 	/** Converts type atom */
 	public Object convertAtom(TypeAtom from, TypeAtom to, Object arg, Object env) {
-		var ti = this.getOrCreateTypeInfo(from);
-		var ret = ti.convert(to, arg, env);
-		return ret;
-	}
-	
-	/** Convert types */
-	public Object convert(Type from, Type to, Object arg, Object env) {
-		if(		from == to
-			||	from.equals(to)
-			||	Type.unifyRepresentation(from, to).isPresent()) {
+		if(from.equals(to)) {
 			return arg;
 		}
-		
 		if(!this.canConvert(from, to)) {
 			throw new RuntimeException(
 					new StringBuilder("Cannot convert ")
@@ -190,12 +183,30 @@ public abstract class TypeSystem {
 						.append(to != null ? to.toString() : "nil")
 						.toString());
 		}
-		
-		if (from instanceof TypeVariable 
-				|| from instanceof RepresentationOr
-				|| to instanceof TypeVariable 
-				|| to instanceof RepresentationOr)
+		var ti = this.getOrCreateTypeInfo(from);
+		var ret = ti.convert(to, arg, env);
+		return ret;
+	}
+	
+	/** Convert types */
+	public Object convert(Type from, Type to, Object arg, Object env) {
+		if(from == to) {
 			return arg;
+		}
+		
+		if(from instanceof TypeVariable) {
+			throw new RuntimeException(new StringBuilder("Cannot be type variable")
+					.toString());
+		}
+		if(to instanceof TypeVariable) {
+			return arg;
+		}
+		
+		if (from instanceof RepresentationOr 
+				|| to instanceof RepresentationOr) {
+			if(this.canConvert(from, to)) return arg;
+			throw new RuntimeException("Cannot convert");
+		}
 		
 		if(from instanceof TypeTuple ftt) {
 			var ttt = (TypeTuple)to;

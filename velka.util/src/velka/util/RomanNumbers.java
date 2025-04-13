@@ -70,8 +70,8 @@ public class RomanNumbers {
 	 * @param val value to be converted
 	 * @return String object containing roman number
 	 */
-	public static String int2roman(long val) {
-		long tmpVal = val;
+	public static String int2roman(int val) {
+		int tmpVal = val;
 		StringBuilder s = new StringBuilder();
 
 		while (tmpVal >= 1000) {

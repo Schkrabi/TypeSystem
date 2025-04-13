@@ -1,5 +1,6 @@
 package velka.core.literal;
 
+import velka.util.ClojureHelper;
 import velka.util.Pair;
 
 import com.sun.codemodel.JExpr;
@@ -33,12 +34,12 @@ public class LitInteger extends Literal implements CompileableToJava {
 
 	@Override
 	public String valueToClojure(Environment env) {
-		return Long.toString(this.value);
+		return ClojureHelper.applyClojureFunction("int", Integer.toString(this.value));
 	}
 
 	@Override
 	public String toString() {
-		return Long.toString(this.value);
+		return Integer.toString(this.value);
 	}
 
 	@Override
@@ -58,7 +59,7 @@ public class LitInteger extends Literal implements CompileableToJava {
 	@Override
 	public int compareTo(Expression other) {
 		if (other instanceof LitInteger) {
-			return Long.compare(this.value, ((LitInteger) other).value);
+			return Integer.compare(this.value, ((LitInteger) other).value);
 		}
 		return super.compareTo(other);
 	}

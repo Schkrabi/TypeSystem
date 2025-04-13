@@ -1,56 +1,17 @@
-﻿rm .\lib\velka.util.jar
-rm .\lib\velka.types.jar
-rm .\lib\velka.core.jar
-rm .\lib\velka.clojure.jar
-rm .\lib\velka.parser.jar
-rm .\lib\velka.compiler.jar
+﻿$projects = @("velka.util", "velka.types", "velka.java", "velka.core", "velka.clojure", "velka.parser", "velka.compiler", "velka.java.generate")
 
-echo Building velka.util
-cd .\velka.util
-ant
-cd ..
-cp .\velka.util\jar\velka.util.jar .\lib\velka.util.jar
+foreach($project in $projects) {
+	echo "Building $project"
+	
+	$lib = ".\lib\$($project).jar"
+	if(Test-Path $lib){
+		Remove-Item $lib -Force
+	}
+	
+	cd ".\$project"
+	ant $args
+	cd ..
+	cp (".\$($project)\jar\$($project).jar") $lib
+}
 
-echo Building velka.types
-cd .\velka.types
-ant
-cd ..
-cp .\velka.types\jar\velka.types.jar .\lib\velka.types.jar
-
-echo Building velka.java
-cd .\velka.java
-ant
-cd ..
-cp .\velka.java\jar\velka.java.jar .\lib\velka.java.jar
-
-echo Building velka.core
-cd .\velka.core
-ant
-cd ..
-cp .\velka.core\jar\velka.core.jar .\lib\velka.core.jar
-
-echo Building velka.clojure
-cd .\velka.clojure
-ant 
-cd ..
-cp .\velka.clojure\jar\velka.clojure.jar .\lib\velka.clojure.jar
-
-echo Building velka.parser
-cd .\velka.parser
-ant
-cd ..
-cp .\velka.parser\jar\velka.parser.jar .\lib\velka.parser.jar
-
-echo Building velka.compiler
-cd .\velka.compiler
-ant
-cd ..
-cp .\velka.compiler\jar\velka.compiler.jar .\lib\velka.compiler.jar
-
-echo Building velka.java.generate
-cd .\velka.java.generate
-ant
-cd ..
-cp .\velka.java.generate\jar\velka.java.generate.jar .\lib\velka.java.generate.jar
-
-echo Velka build finished
+echo "VELKA BUILD FINISHED"

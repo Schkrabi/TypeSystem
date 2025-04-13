@@ -542,4 +542,17 @@ class TestOperators extends VelkaTest{
 		Files.delete(bar);
 		Files.delete(tmpDir);
 	}
+	
+	@Test
+	void testStringCompare() {
+		this.assertVelkaCode(
+				"(str-cmp \"foo\" \"bar\")",
+				"foo".compareTo("bar"));
+		this.assertVelkaCode(
+				"(str-cmp \"bar\" \"foo\")",
+				"bar".compareTo("foo"));
+		this.assertVelkaCode(
+				"(str-cmp \"foo\" \"foo\")",
+				"foo".compareTo("foo"));
+	}
 }
