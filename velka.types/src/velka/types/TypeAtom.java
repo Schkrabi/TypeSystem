@@ -1,5 +1,6 @@
 package velka.types;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -370,60 +371,43 @@ public class TypeAtom extends TerminalType {
 			return true;
 		}
 		return atomCheck.apply(this, (TypeAtom) other);
-	}
+	}	
 	
-	public static final Map<Class<?>, Type> primitiveTypeMapping = Map.of(
-			byte.class, TypeAtom.TypeIntNative,
-			short.class, TypeAtom.TypeIntNative,
-			int.class, TypeAtom.TypeIntNative,
-			long.class, TypeAtom.TypeIntNative,
-			float.class, TypeAtom.TypeDoubleNative,
-			double.class, TypeAtom.TypeDoubleNative,
-			boolean.class, TypeAtom.TypeBoolNative,
-			void.class, TypeTuple.EMPTY_TUPLE
-			);
-	
-	public static final Map<Class<?>, Type> javaLangTypeMapping = Map.of(
-			java.lang.Byte.class, TypeAtom.TypeIntNative,
-			java.lang.Short.class, TypeAtom.TypeIntNative,
-			java.lang.Integer.class, TypeAtom.TypeIntNative,
-			java.lang.Long.class, TypeAtom.TypeIntNative,
-			java.lang.Float.class, TypeAtom.TypeDoubleNative,
-			java.lang.Double.class, TypeAtom.TypeDoubleNative,
-			java.lang.String.class, TypeAtom.TypeStringNative,
-			java.lang.Boolean.class, TypeAtom.TypeBoolNative);
-	
-	public static final Map<Class<?>, Type> javaTypeMapping = 
-			Map.of( java.util.Collection.class, TypeListNative,
-					java.util.LinkedList.class, TypeListJavaLinked,
-					java.util.List.class, TypeListNative,
-					java.util.ArrayList.class, TypeListNative,
-					java.util.ListIterator.class, TypeListIterator,
-					java.util.TreeMap.class, TypeMapTree,
-					java.util.BitSet.class, TypeSetBitSet,
-					java.util.Scanner.class, TypeScannerNative,
-					java.util.TreeSet.class, TypeSetTree,
-					java.util.HashSet.class, TypeSetHash);
-	
-	public static final Map<Class<?>, Type> typeMapping = Stream.of(primitiveTypeMapping, javaLangTypeMapping, javaTypeMapping)
-            .flatMap(map -> map.entrySet().stream())
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+	private static Class<?> listItrCl = (new java.util.LinkedList<Object>()).listIterator().getClass();
+	private static Class<?> immListCl = List.of().getClass();
+	private static Class<?> immSetCl = Set.of().getClass();
 	
 	public static Type javaClassToType(Class<?> clazz) {
-		if(clazz.equals(Object.class)) {
-			return new TypeVariable(NameGenerator.next());
-		}		
-		var t = typeMapping.get(clazz);
-		if(t == null) {
-			for(var e : TypeAtom.javaTypeMapping.entrySet()) {
-				
-				if(e.getKey().isAssignableFrom(clazz)) {
-					return e.getValue();
-				}
-			}
-			
-			return null;
-		}
-		return t;
+		if(Object.class == clazz) return new TypeVariable(NameGenerator.next());
+		else if(byte.class == clazz) return TypeAtom.TypeIntNative;
+		else if(short.class == clazz) return TypeAtom.TypeIntNative;
+		else if(int.class == clazz) return TypeAtom.TypeIntNative;
+		else if(long.class == clazz) return TypeAtom.TypeIntNative;
+		else if(float.class == clazz) return TypeAtom.TypeDoubleNative;
+		else if(double.class == clazz) return TypeAtom.TypeDoubleNative;
+		else if(boolean.class == clazz) return TypeAtom.TypeBoolNative;
+		else if(void.class == clazz) return TypeTuple.EMPTY_TUPLE;
+		else if(java.lang.Byte.class == clazz) return TypeAtom.TypeIntNative;
+		else if(java.lang.Short.class == clazz) return TypeAtom.TypeIntNative;
+		else if(java.lang.Integer.class == clazz) return TypeAtom.TypeIntNative;
+		else if(java.lang.Long.class == clazz) return TypeAtom.TypeIntNative;
+		else if(java.lang.Float.class == clazz) return TypeAtom.TypeDoubleNative;
+		else if(java.lang.Double.class == clazz) return TypeAtom.TypeDoubleNative;
+		else if(java.lang.String.class == clazz) return TypeAtom.TypeStringNative;
+		else if(java.lang.Boolean.class == clazz) return TypeAtom.TypeBoolNative;
+		else if(java.util.Collection.class == clazz) return TypeListNative;
+		else if(java.util.LinkedList.class == clazz) return TypeListJavaLinked;
+		else if(java.util.List.class == clazz) return TypeListNative;
+		else if(java.util.ArrayList.class == clazz) return TypeListNative;
+		else if(java.util.ListIterator.class == clazz) return TypeListIterator;
+		else if(java.util.TreeMap.class == clazz) return TypeMapTree;
+		else if(java.util.BitSet.class == clazz) return TypeSetBitSet;
+		else if(java.util.Scanner.class == clazz) return TypeScannerNative;
+		else if(java.util.TreeSet.class == clazz) return TypeSetTree;
+		else if(java.util.HashSet.class == clazz) return TypeSetHash;
+		else if(listItrCl == clazz) return TypeListIterator;
+		else if(immListCl == clazz) return TypeListNative;
+		else if(immSetCl == clazz) return TypeSetTree;
+		return null;
 	}
 }

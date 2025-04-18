@@ -3,15 +3,11 @@ package velka.core.langbase;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
-import com.sun.codemodel.JStatement;
 import com.sun.codemodel.JVar;
 
 import velka.core.abstraction.Constructor;
@@ -297,13 +293,12 @@ public class TreeMap extends OperatorBank{
 			method.body()._if(e.eq(JExpr._null()))
 				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
 			
-			method.body()._return(VelkaTuple._velkaTuple(
+			method.body()._return(VelkaTuple._of(
 					e.invoke("getKey"),
 					e.invoke("getValue")));
 		}
 	};
 	
-	private static final Symbol ceilingKeySymbol = new Symbol("ceiling_key", TreeMap.singleton().getNamespace());
 	public static final Symbol ceilingKeySymbol_out = new Symbol("map-tree-ceiling-key");
 	
 	@VelkaOperator
@@ -313,7 +308,6 @@ public class TreeMap extends OperatorBank{
 	public static final Operator ceilingKey = Operator.wrapNullableJavaMethod(java.util.TreeMap.class, "ceilingKey",
 			"map-tree-ceiling-key", TreeMap.singleton().getNamespace(), Object.class);
 	
-	private static final Symbol containsKeySymbol = new Symbol("contains_key", TreeMap.singleton().getNamespace());
 	public static final Symbol containsKeySymbol_out = new Symbol("map-tree-contains-key");
 	
 	@VelkaOperator
@@ -323,7 +317,6 @@ public class TreeMap extends OperatorBank{
 	public static final Operator containsKey = Operator.wrapJavaMethod(java.util.TreeMap.class, "containsKey",
 			"map-tree-contains-key", TreeMap.singleton().getNamespace(), Object.class);	
 	
-	private static final Symbol containsValueSymbol = new Symbol("contains_value", TreeMap.singleton().getNamespace());
 	public static final Symbol containsValueSymbol_out = new Symbol("map-tree-contains-value");
 	
 	@VelkaOperator
@@ -429,13 +422,12 @@ public class TreeMap extends OperatorBank{
 			method.body()._if(e.eq(JExpr._null()))
 				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
 			
-			method.body()._return(VelkaTuple._velkaTuple(
+			method.body()._return(VelkaTuple._of(
 					e.invoke("getKey"),
 					e.invoke("getValue")));
 		}
 	};
 	
-	private static final Symbol firstKeySymbol = new Symbol("first_key", TreeMap.singleton().getNamespace());
 	public static final Symbol firstKeySymbol_out = new Symbol("map-tree-first-key");
 	
 	@VelkaOperator
@@ -551,13 +543,12 @@ public class TreeMap extends OperatorBank{
 			method.body()._if(e.eq(JExpr._null()))
 				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
 			
-			method.body()._return(VelkaTuple._velkaTuple(
+			method.body()._return(VelkaTuple._of(
 					e.invoke("getKey"),
 					e.invoke("getValue")));
 		}
 	};
 	
-	private static final Symbol floorKeySymbol = new Symbol("floor_key", TreeMap.singleton().getNamespace());
 	public static final Symbol floorKeySymbol_out = new Symbol("map-tree-floor-key");
 	
 	@VelkaOperator
@@ -567,7 +558,6 @@ public class TreeMap extends OperatorBank{
 	public static final Operator floorKey = Operator.wrapNullableJavaMethod(java.util.TreeMap.class, "floorKey", 
 			"map-tree-floor-key", TreeMap.singleton().getNamespace(), Object.class); 
 	
-	private static final Symbol getSymbol = new Symbol("velka_get", TreeMap.singleton().getNamespace());
 	public static final Symbol getSymbol_out = new Symbol("map-tree-get");
 	
 	@VelkaOperator
@@ -818,13 +808,12 @@ public class TreeMap extends OperatorBank{
 			method.body()._if(e.eq(JExpr._null()))
 				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
 			
-			method.body()._return(VelkaTuple._velkaTuple(
+			method.body()._return(VelkaTuple._of(
 					e.invoke("getKey"),
 					e.invoke("getValue")));
 		}
 	};
 	
-	private static final Symbol higherKeySymbol = new Symbol("higher_key", TreeMap.singleton().getNamespace());
 	public static final Symbol higherKeySymbol_out = new Symbol("map-tree-higher-key");
 	
 	@VelkaOperator
@@ -987,13 +976,12 @@ public class TreeMap extends OperatorBank{
 			method.body()._if(e.eq(JExpr._null()))
 				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
 			
-			method.body()._return(VelkaTuple._velkaTuple(
+			method.body()._return(VelkaTuple._of(
 					e.invoke("getKey"),
 					e.invoke("getValue")));
 		}
 	};
 	
-	private static final Symbol lastKeySymbol = new Symbol("last_key", TreeMap.singleton().getNamespace());
 	public static final Symbol lastKeySymbol_out = new Symbol("map-tree-last-key");
 	
 	@VelkaOperator
@@ -1103,13 +1091,12 @@ public class TreeMap extends OperatorBank{
 			method.body()._if(e.eq(JExpr._null()))
 				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
 			
-			method.body()._return(VelkaTuple._velkaTuple(
+			method.body()._return(VelkaTuple._of(
 					e.invoke("getKey"),
 					e.invoke("getValue")));
 		}
 	};
 	
-	private static final Symbol lowerKeySymbol = new Symbol("lower_key", TreeMap.singleton().getNamespace());
 	public static final Symbol lowerKeySymbol_out = new Symbol("map-tree-lower-key");
 	
 	@VelkaOperator
@@ -1215,7 +1202,7 @@ public class TreeMap extends OperatorBank{
 			method.body()._if(e.eq(JExpr._null()))
 				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
 			
-			method.body()._return(VelkaTuple._velkaTuple(
+			method.body()._return(VelkaTuple._of(
 					e.invoke("getKey"),
 					e.invoke("getValue")));
 		}
@@ -1317,7 +1304,7 @@ public class TreeMap extends OperatorBank{
 			method.body()._if(e.eq(JExpr._null()))
 				._then().add(VelkaThrower._throw(JExpr.lit(ERROR)));
 			
-			method.body()._return(VelkaTuple._velkaTuple(
+			method.body()._return(VelkaTuple._of(
 					e.invoke("getKey"),
 					e.invoke("getValue")));
 		}
@@ -1480,7 +1467,6 @@ public class TreeMap extends OperatorBank{
 		}
 	};
 	
-	private static final Symbol removeSymbol = new Symbol("velka_remove", TreeMap.singleton().getNamespace());
 	public static final Symbol removeSymbol_out = new Symbol("map-tree-remove");
 	
 	@VelkaOperator
@@ -1490,7 +1476,6 @@ public class TreeMap extends OperatorBank{
 	public static final Operator remove = Operator.wrapNullableJavaMethod(java.util.TreeMap.class, "remove", 
 			"map-tree-remove", TreeMap.singleton().getNamespace(), Object.class); 
 	
-	private static final Symbol sizeSymbol = new Symbol("velka_size", TreeMap.singleton().getNamespace());
 	public static final Symbol sizeSymbol_out = new Symbol("map-tree-size");
 	
 	@VelkaOperator

@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JMod;
 
-import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Lambda;
@@ -28,6 +27,8 @@ import velka.core.literal.LitComposite;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.Literal;
 import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
 import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -398,7 +399,7 @@ public class JavaLinkedList extends OperatorBank {
 			
 			applyMth.body()._return(
 					mappedArgs.get(new Symbol("_1")).invoke("apply")
-						.arg(VelkaTuple._velkaTuple(applyArg)));
+						.arg(VelkaTuple._of(applyArg)));
 			
 			_method.body()._return(
 					JExpr._new(CodeModelInstance.instance()._ref(LinkedList.class)).arg(
@@ -548,7 +549,7 @@ public class JavaLinkedList extends OperatorBank {
 			var e2 = _while.body().decl(objCl, "_e2", it2.invoke("next"));
 			
 			var rslt = _while.body().decl(objCl, "_rslt", mappedArgs.get(new Symbol("_2")).invoke("apply")
-							.arg(VelkaTuple._velkaTuple(e1, e2)));
+							.arg(VelkaTuple._of(e1, e2)));
 			
 			_while.body().add(ret.invoke("add").arg(rslt));
 			
@@ -645,14 +646,23 @@ public class JavaLinkedList extends OperatorBank {
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod _method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
 			var objCl = CodeModelInstance.instance().ref(Object.class);
 			
-			var i = _method.body().decl(CodeModelInstance.instance()._ref(Iterator.class), "_i",
-					mappedArgs.get(new Symbol("_2")).invoke("iterator"));
 			var ret = _method.body().decl(objCl, "_ret", mappedArgs.get(new Symbol("_1")));
+			var rettype = _method.body().decl(TypeUtil.instance().typeJType(), "_retType", 
+					JExpr.direct("_cparm").invoke("getType").arg(JExpr.lit(1)));
 			
-			var _while = _method.body()._while(i.invoke("hasNext"));
-			var e = _while.body().decl(objCl, "_e", i.invoke("next"));
-			_while.body().assign(ret,
-					mappedArgs.get(new Symbol("_0")).invoke("apply").arg(VelkaTuple._velkaTuple(ret, e)));
+			var _for = _method.body()._for();
+			var _i = _for.init(CodeModelInstance.instance().INT, "_i", JExpr.lit(0));
+			_for.test(_i.lt(mappedArgs.get(new Symbol("_2")).invoke("size")));
+			_for.update(_i.incr());
+			
+			var _e = _for.body().decl(objCl, "_e", mappedArgs.get(new Symbol("_2")).invoke("get").arg(_i));
+			_for.body()
+					.assign(ret,
+							mappedArgs.get(new Symbol("_0")).invoke("apply")
+									.arg(VelkaTuple._velkaTupleTypeExpr(
+											JExpr._new(TypeUtil.instance().typeTupleJClass()).arg(rettype)
+													.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_e)),
+											ret, _e)));
 			
 			_method.body()._return(ret);
 		}
@@ -753,14 +763,22 @@ public class JavaLinkedList extends OperatorBank {
 			var objCl = CodeModelInstance.instance().ref(Object.class);
 			
 			var l = mappedArgs.get(new Symbol("_2"));			
-			var i = _method.body().decl(CodeModelInstance.instance()._ref(ListIterator.class), "_i",
-					l.invoke("listIterator").arg(l.invoke("size")));
-			var ret = _method.body().decl(objCl, "_ret", mappedArgs.get(new Symbol("_1")));
 			
-			var _while = _method.body()._while(i.invoke("hasPrevious"));
-			var e = _while.body().decl(objCl, "_e", i.invoke("previous"));
-			_while.body().assign(ret,
-					mappedArgs.get(new Symbol("_0")).invoke("apply").arg(VelkaTuple._velkaTuple(ret, e)));
+			var ret = _method.body().decl(objCl, "_ret", mappedArgs.get(new Symbol("_1")));
+			var rettype = _method.body().decl(TypeUtil.instance().typeJType(), "_retType", 
+					JExpr.direct("_cparm").invoke("getType").arg(JExpr.lit(1)));
+			
+			var _for = _method.body()._for();
+			var _i = _for.init(CodeModelInstance.instance().INT, "_i", l.invoke("size").minus(JExpr.lit(1)));
+			_for.test(_i.gte(JExpr.lit(0)));
+			_for.update(_i.decr());
+			
+			var _e = _for.body().decl(objCl, "_e", l.invoke("get").arg(_i));
+			_for.body().assign(ret,
+					mappedArgs.get(new Symbol("_0")).invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(
+							JExpr._new(TypeUtil.instance().typeTupleJClass()).arg(rettype)
+								.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_e)),
+							ret, _e)));
 			
 			_method.body()._return(ret);
 		}
@@ -819,7 +837,7 @@ public class JavaLinkedList extends OperatorBank {
 		public Expression cost() {
 			var arg = new Symbol(NameGenerator.next());
 			return new Lambda(new AbstractionApplication(JavaLinkedList.size, new Tuple(arg)),
-					List.of(Pair.of(arg, TypeAtom.TypeListJavaLinked)));
+					List.of(Pair.of(arg, TypeAtom.TypeList)));
 		}
 		
 		@Override
@@ -913,7 +931,7 @@ public class JavaLinkedList extends OperatorBank {
 			
 			var _if = _while.body()
 					._if(JExpr.cast(CodeModelInstance.instance()._ref(Boolean.class),
-							mappedArgs.get(new Symbol("_1")).invoke("apply").arg(VelkaTuple._velkaTuple(e))).not());
+							mappedArgs.get(new Symbol("_1")).invoke("apply").arg(VelkaTuple._of(e))).not());
 			_if._then()._return(JExpr.FALSE);
 			
 			method.body()._return(JExpr.TRUE);

@@ -24,6 +24,8 @@ import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;
 import velka.core.literal.Literal;
 import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
 import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -143,13 +145,21 @@ public class TreeSet extends OperatorBank {
 			var cmpCl = CodeModelInstance.instance().ref(java.util.Comparator.class);
 			var oCl = CodeModelInstance.instance().ref(Object.class);
 			var aCl = CodeModelInstance.instance().anonymousClass(cmpCl);
+			var ttCl = TypeUtil.instance().typeTupleJType();
+			
+			var argType = aCl.field(JMod.PRIVATE, ttCl, "_argType", JExpr._null());
 			
 			var cmpMth = aCl.method(JMod.PUBLIC, CodeModelInstance.instance().INT, "compare");
 			var o1 = cmpMth.param(oCl, "o1");
 			var o2 = cmpMth.param(oCl, "o2");
 			
+			cmpMth.body()._if(argType.eq(JExpr._null()))
+				._then().assign(argType, JExpr._new(ttCl)
+						.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(o1))
+						.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(o2)));
+			
 			var ret = cmpMth.body().decl(oCl, "ret",
-					mappedArgs.get(new Symbol("_0")).invoke("apply").arg(VelkaTuple._velkaTuple(o1, o2)));
+					mappedArgs.get(new Symbol("_0")).invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(argType, o1, o2)));
 			
 			cmpMth.body()._return(JExpr.cast(CodeModelInstance.instance().INT, ret));
 			
@@ -350,13 +360,21 @@ public class TreeSet extends OperatorBank {
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
 			var oCl = CodeModelInstance.instance().ref(Object.class);
 			var lCl = CodeModelInstance.instance().ref(java.util.ArrayList.class);
+			var ttCl = TypeUtil.instance().typeTupleJClass();
 			var s = mappedArgs.get(new Symbol("_0"));
 			var f = mappedArgs.get(new Symbol("_1"));
 			
 			var l = method.body().decl(lCl, "lst", JExpr._new(lCl));
+			var argType = method.body().decl(ttCl, "_argType", JExpr._null());
+			
 			
 			var _forEach = method.body().forEach(oCl, "o", s);
-			var r = _forEach.body().decl(oCl, "_r", f.invoke("apply").arg(VelkaTuple._velkaTuple(_forEach.var())));
+			_forEach.body()._if(argType.eq(JExpr._null()))
+				._then().assign(argType, JExpr._new(ttCl)
+						.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_forEach.var())));
+			
+			var r = _forEach.body().decl(oCl, "_r",
+					f.invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(argType, _forEach.var())));
 			_forEach.body().add(l.invoke("add").arg(r));
 			
 			method.body()._return(l);
@@ -413,7 +431,7 @@ public class TreeSet extends OperatorBank {
 	@Description("Converts Set:BitSet into Set:Tree.") 
 	@Example("(convert Set:BitSet Set:Tree (bit-set-set (bit-set-set (bit-set-set (construct Set:BitSet) 3) 6) 9))") 
 	@Syntax("(convert Set:BitSet Set:Tree <arg>)")
-	public static Conversion treeSetToBitSet = new Conversion() {
+	public static Conversion toBitSet = new Conversion() {
 		
 		Double costX1 = 0d;
 		Double costY1 = 0.8d;
@@ -721,12 +739,21 @@ public class TreeSet extends OperatorBank {
 			var l = mappedArgs.get(new Symbol("_0"));
 			var f = mappedArgs.get(new Symbol("_1"));
 			
+			var ttCl = TypeUtil.instance().typeTupleJType();
+			
+			var argType = aCl.field(JMod.PRIVATE, ttCl, "_argType", JExpr._null());
+			
 			var cmpMth = aCl.method(JMod.PUBLIC, CodeModelInstance.instance().INT, "compare");
 			var o1 = cmpMth.param(oCl, "o1");
 			var o2 = cmpMth.param(oCl, "o2");
 			
+			cmpMth.body()._if(argType.eq(JExpr._null()))
+				._then().assign(argType, JExpr._new(ttCl)
+						.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(o1))
+						.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(o2)));
+			
 			var ret = cmpMth.body().decl(oCl, "ret",
-					f.invoke("apply").arg(VelkaTuple._velkaTuple(o1, o2)));
+					f.invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(argType, o1, o2)));
 			
 			cmpMth.body()._return(JExpr.cast(CodeModelInstance.instance().INT, ret));
 			
@@ -751,8 +778,8 @@ public class TreeSet extends OperatorBank {
 									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d),
 											new LitDouble(0.5d))),
 							new Tuple(new AbstractionApplication(Operators.IntToDouble,
-									new Tuple(new AbstractionApplication(HashSet.size, new Tuple(hashSet)))))),
-					List.of(Pair.of(hashSet, TypeAtom.TypeSetHash)));
+									new Tuple(new AbstractionApplication(TreeSet.size, new Tuple(hashSet)))))),
+					List.of(Pair.of(hashSet, TypeAtom.TypeSet)));
 			return cost;
 		}
 

@@ -55,7 +55,6 @@ import velka.core.interpretation.Environment;
 import velka.core.interpretation.TopLevelEnvironment;
 import velka.core.langbase.ConstructorOperators;
 import velka.core.langbase.ConversionOperators;
-import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
 import velka.core.langbase.Operators;

@@ -306,16 +306,18 @@ public class Tuple extends Expression implements Iterable<Expression>, Collectio
 			throw new RuntimeException(e);
 		}
 		
-		var listof = CodeModelInstance.instance().ref(List.class)
-				.staticInvoke("of");
+		var objCl = CodeModelInstance.instance().ref(Object.class);
+		var arr = JExpr.newArray(objCl);
+		
 		
 		for(var expr : this.values) {
 			var compileableExpr = (CompileableToJava)expr;
-			listof.arg(compileableExpr.toJavaExpr(env));
+			arr.add(compileableExpr.toJavaExpr(env));
 		}
 		
-		var expr = CodeModelInstance.instance().ref(VelkaTuple.class).staticInvoke("of")
-				.arg(listof);
+		var expr = JExpr._new(CodeModelInstance.instance().ref(VelkaTuple.class))
+				.arg(arr)
+				.arg(TypeUtil.instance().type2java(t));
 		
 		return expr;
 	}

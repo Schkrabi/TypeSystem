@@ -595,7 +595,8 @@ public class JavaBitSet extends OperatorBank {
 			
 			var retVal = acceptMth.body().decl(CodeModelInstance.instance().INT, "retVal",
 					JExpr.cast(CodeModelInstance.instance()._ref(Integer.class),
-							mappedArgs.get(new Symbol("_1")).invoke("apply").arg(VelkaTuple._velkaTuple(valueInt)))
+							mappedArgs.get(new Symbol("_1")).invoke("apply").arg(VelkaTuple._velkaTuple(
+									new TypeTuple(TypeAtom.TypeIntNative), valueInt)))
 							.invoke("intValue"));
 			
 			acceptMth.body().add(_newBitSet.invoke("set").arg(retVal));
@@ -919,8 +920,8 @@ public class JavaBitSet extends OperatorBank {
 									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
 							new Tuple(
 									new AbstractionApplication(Operators.IntToDouble,
-											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(arg)))))),
-					List.of(Pair.of(arg, TypeAtom.TypeSetHash)));
+											new Tuple(new AbstractionApplication(JavaBitSet.cardinality, new Tuple(arg)))))),
+					List.of(Pair.of(arg, TypeAtom.TypeSet)));
 			return cost;
 		}
 
@@ -1023,8 +1024,8 @@ public class JavaBitSet extends OperatorBank {
 									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
 							new Tuple(
 									new AbstractionApplication(Operators.IntToDouble,
-											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(arg)))))),
-					List.of(Pair.of(arg, TypeAtom.TypeSetHash)));
+											new Tuple(new AbstractionApplication(JavaBitSet.cardinality, new Tuple(arg)))))),
+					List.of(Pair.of(arg, TypeAtom.TypeSet)));
 			return cost;
 		}
 

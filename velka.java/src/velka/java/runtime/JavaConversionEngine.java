@@ -19,8 +19,8 @@ public class JavaConversionEngine implements IConversionEngine {
 		if (o instanceof VelkaTuple tuple) {
 	        int size = tuple.size();
 	        if (size == to.size() && size == from.size()) {
-	            var l = new ArrayList<Object>(size);
-	            var lt = new ArrayList<Type>(size);
+	            var l = new Object[size];
+	            var lt = new Type[size];
 	            boolean changed = false;
 
 	            for (int i = 0; i < size; i++) {
@@ -39,8 +39,8 @@ public class JavaConversionEngine implements IConversionEngine {
 	                    }
 	                }
 
-	                l.add(conv);
-	                lt.add(targetType);
+	                l[i] = conv;
+	                lt[i] = targetType;
 	            }
 
 	            return changed 

@@ -13,7 +13,6 @@ import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TopLevelEnvironment;
-import velka.core.langbase.JavaArrayList;
 import velka.core.langbase.JavaLinkedList;
 import velka.core.langbase.ListNative;
 import velka.core.literal.LitBoolean;

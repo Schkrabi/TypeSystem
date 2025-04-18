@@ -14,7 +14,6 @@ import velka.core.expression.Expression;
 import velka.core.expression.Tuple;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TopLevelEnvironment;
-import velka.core.langbase.JavaArrayList;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitInteger;
 import velka.core.literal.LitInteropObject;

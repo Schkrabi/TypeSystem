@@ -9,7 +9,10 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
+import com.sun.codemodel.JExpr;
+
 import velka.java.CodeModelInstance;
+import velka.java.TypeUtil;
 import velka.types.Type;
 import velka.types.TypeAtom;
 
@@ -181,7 +184,24 @@ public class VelkaTuple implements Iterable<Object>, Collection<Object> {
 	}
 	
 	/** Creates a code that creates the velka tuple in code */
-	public static com.sun.codemodel.JInvocation _velkaTuple(com.sun.codemodel.JExpression ...elements){
+	public static com.sun.codemodel.JInvocation _velkaTuple(TypeTuple type, com.sun.codemodel.JExpression ...elements){
+		return VelkaTuple._velkaTupleTypeExpr(TypeUtil.instance().type2java(type), elements);
+	}
+	
+	public static com.sun.codemodel.JInvocation _velkaTupleTypeExpr(com.sun.codemodel.JExpression typeExpr,
+			com.sun.codemodel.JExpression... elements) {
+		var tCl = CodeModelInstance.instance().ref(VelkaTuple.class);
+		var objCl = CodeModelInstance.instance().ref(Object.class);
+		var arr = JExpr.newArray(objCl);
+		
+		for(var e : elements) {
+			arr.add(e);
+		}
+		
+		return JExpr._new(tCl).arg(arr).arg(typeExpr);
+	}
+	
+	public static com.sun.codemodel.JInvocation _of(com.sun.codemodel.JExpression ...elements){
 		var _new = CodeModelInstance.instance().ref(VelkaTuple.class).staticInvoke("of");
 		
 		for(var e : elements) {

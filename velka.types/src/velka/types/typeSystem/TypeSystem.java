@@ -172,10 +172,11 @@ public abstract class TypeSystem {
 	
 	/** Converts type atom */
 	public Object convertAtom(TypeAtom from, TypeAtom to, Object arg, Object env) {
-		if(from.equals(to)) {
+		if (from.equals(to) || (from.name.equals(to.name) && (from.representation.equals(TypeRepresentation.WILDCARD)
+				|| to.representation.equals(TypeRepresentation.WILDCARD)))) {
 			return arg;
 		}
-		if(!this.canConvert(from, to)) {
+		if(!this.canConvertAtom(from, to)) {
 			throw new RuntimeException(
 					new StringBuilder("Cannot convert ")
 						.append(from != null ? from.toString() : "nil")
