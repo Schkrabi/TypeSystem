@@ -212,4 +212,9 @@ public class TypeArrow extends Type {
 		
 		return canConvertL && canConvertR;
 	}
+
+	@Override
+	public boolean isRepUncertain() {
+		return this.ltype.isRepUncertain() && this.rtype.isRepUncertain();
+	}
 }

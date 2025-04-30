@@ -412,18 +412,19 @@ public class HashSet extends OperatorBank {
 
 		@Override
 		public Expression cost() {
-			var hashSet = new Symbol(NameGenerator.next());
-			
-			var cost = new Lambda(
-					new AbstractionApplication(
-							new AbstractionApplication(
-									Operators.linFunPoints, 
-									new Tuple(new LitDouble(0d), new LitDouble(0.6d), new LitDouble(1000d), new LitDouble(0.3d))), 
-							new Tuple(
-									new AbstractionApplication(Operators.IntToDouble,
-											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(hashSet)))))),
-					List.of(Pair.of(hashSet, TypeAtom.TypeSetHash)));
-			return cost;
+			return Lambda.constFun(1, new LitDouble(0.7d));
+//			var hashSet = new Symbol(NameGenerator.next());
+//			
+//			var cost = new Lambda(
+//					new AbstractionApplication(
+//							new AbstractionApplication(
+//									Operators.linFunPoints, 
+//									new Tuple(new LitDouble(0d), new LitDouble(0.6d), new LitDouble(1000d), new LitDouble(0.3d))), 
+//							new Tuple(
+//									new AbstractionApplication(Operators.IntToDouble,
+//											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(hashSet)))))),
+//					List.of(Pair.of(hashSet, TypeAtom.TypeSetHash)));
+//			return cost;
 		}
 
 		@Override
@@ -470,18 +471,19 @@ public class HashSet extends OperatorBank {
 
 		@Override
 		public Expression cost() {
-			var hashSet = new Symbol(NameGenerator.next());
-			
-			var cost = new Lambda(
-					new AbstractionApplication(
-							new AbstractionApplication(
-									Operators.linFunPoints, 
-									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
-							new Tuple(
-									new AbstractionApplication(Operators.IntToDouble,
-											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(hashSet)))))),
-					List.of(Pair.of(hashSet, TypeAtom.TypeSetHash)));
-			return cost;
+			return Lambda.constFun(1, new LitDouble(0.7d));
+//			var hashSet = new Symbol(NameGenerator.next());
+//			
+//			var cost = new Lambda(
+//					new AbstractionApplication(
+//							new AbstractionApplication(
+//									Operators.linFunPoints, 
+//									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
+//							new Tuple(
+//									new AbstractionApplication(Operators.IntToDouble,
+//											new Tuple(new AbstractionApplication(HashSet.size, new Tuple(hashSet)))))),
+//					List.of(Pair.of(hashSet, TypeAtom.TypeSetHash)));
+//			return cost;
 		}
 
 		@Override

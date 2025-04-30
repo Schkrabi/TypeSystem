@@ -374,4 +374,9 @@ public class TypeTuple extends Type implements Iterable<Type> {
 		}
 		return true;
 	}
+
+	@Override
+	public boolean isRepUncertain() {
+		return Arrays.stream(this.values).map(t -> t.isRepUncertain()).reduce(true, Boolean::logicalOr);
+	}
 }

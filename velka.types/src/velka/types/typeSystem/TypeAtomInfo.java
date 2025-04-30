@@ -16,10 +16,10 @@ public class TypeAtomInfo {
 	public final TypeAtom type;
 	private final TypeSystem typeSystem;
 	
-	record ConversionInfo(TypeAtom from, TypeAtom to, IEvalueable conversion, IEvalueable cost) {}
+	//record ConversionInfo(TypeAtom from, TypeAtom to, IEvalueable conversion, IEvalueable cost) {}
 	
 	private Map<TypeTuple, IEvalueable> constructors = new HashMap<TypeTuple, IEvalueable>();
-	private Map<TypeAtom, ConversionInfo> conversions = new HashMap<TypeAtom, ConversionInfo>();
+	//private Map<TypeAtom, ConversionInfo> conversions = new HashMap<TypeAtom, ConversionInfo>();
 	
 	public TypeAtomInfo(TypeAtom type, TypeSystem typeSystem) {
 		this.type = type;
@@ -58,18 +58,18 @@ public class TypeAtomInfo {
 		this.constructors.put(argsType, constructorLambda);
 	}
 	
-	/** Add conversion to specified type atom */
-	public void addConversion(TypeAtom toType, IEvalueable conv, IEvalueable cost) {
-		if (this.conversions.containsKey(toType)) {
-			throw new RuntimeException("Duplicate conversion " + this.type + " to " + toType);
-		}
-		this.conversions.put(toType, new ConversionInfo(this.type, toType, conv, cost));
-	}
-	
-	/** Gers conversion info to given type */
-	protected ConversionInfo getConversion(TypeAtom toType) {
-		return this.conversions.get(toType);
-	}
+//	/** Add conversion to specified type atom */
+//	public void addConversion(TypeAtom toType, IEvalueable conv, IEvalueable cost) {
+//		if (this.conversions.containsKey(toType)) {
+//			throw new RuntimeException("Duplicate conversion " + this.type + " to " + toType);
+//		}
+//		this.conversions.put(toType, new ConversionInfo(this.type, toType, conv, cost));
+//	}
+//	
+//	/** Gers conversion info to given type */
+//	protected ConversionInfo getConversion(TypeAtom toType) {
+//		return this.conversions.get(toType);
+//	}
 	
 	/** Predicate if TypeAtom can be converted to another */
 	public boolean canConvertTo(TypeAtom toType) {
@@ -78,16 +78,16 @@ public class TypeAtomInfo {
 				|| this.type.name.equals(toType.name);
 	}
 	
-	/** Converts typa atom */
-	public Object convert(TypeAtom to, Object arg, Object env) {
-		var conv = this.getConversion(to);
-		if(conv == null) {
-			throw new RuntimeException(new StringBuilder("There is no suitable conversion from ")
-					.append(this.type).append(" to ").append(to).toString());
-		}
-		var ret = conv.conversion.evaluate(this.typeSystem.conversionEngine.instantiateCollection(arg), env);
-		return ret;
-	}
+//	/** Converts typa atom */
+//	public Object convert(TypeAtom to, Object arg, Object env) {
+//		var conv = this.getConversion(to);
+//		if(conv == null) {
+//			throw new RuntimeException(new StringBuilder("There is no suitable conversion from ")
+//					.append(this.type).append(" to ").append(to).toString());
+//		}
+//		var ret = conv.conversion.evaluate(this.typeSystem.conversionEngine.instantiateCollection(arg), env);
+//		return ret;
+//	}
 	
 	@Override
 	public String toString() {

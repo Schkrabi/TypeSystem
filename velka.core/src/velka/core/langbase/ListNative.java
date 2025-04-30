@@ -20,6 +20,7 @@ import velka.types.TypeAtom;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.types.typeSystem.VelkaAbstraction;
+import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Lambda;
@@ -673,7 +674,7 @@ public class ListNative extends OperatorBank{
 			_for.body()._if(elType.eq(JExpr._null()))
 				._then().assign(elType, 
 						JExpr._new(tt)
-							.arg(JExpr.direct("_cparm").invoke("getType").arg(JExpr.lit(1)))
+							.arg(JExpr.direct(Abstraction.CAD_ARG_TYPE).invoke("get").arg(JExpr.lit(1)))
 							.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_o)));
 			
 			_for.body().assign(agg, f.invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(elType, agg, _o)));
@@ -1569,7 +1570,7 @@ public class ListNative extends OperatorBank{
 			_for.body()._if(elType.eq(JExpr._null()))
 				._then().assign(elType, 
 						JExpr._new(tt)
-							.arg(JExpr.direct("_cparm").invoke("getType").arg(JExpr.lit(1)))
+							.arg(JExpr.direct(Abstraction.CAD_ARG_TYPE).invoke("get").arg(JExpr.lit(1)))
 							.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_o)));
 			
 			_for.body().assign(agg, f.invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(elType, agg, _o)));

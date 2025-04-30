@@ -369,4 +369,9 @@ public class RepresentationOr extends Type implements Iterable<Type>{
 	public Iterator<Type> iterator() {
 		return this.representations.iterator();
 	}
+
+	@Override
+	public boolean isRepUncertain() {
+		return true;
+	}
 }

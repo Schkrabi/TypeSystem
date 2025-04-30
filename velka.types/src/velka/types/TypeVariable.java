@@ -144,4 +144,9 @@ public class TypeVariable extends TerminalType {
 	public static TypeVariable generate() {
 		return new TypeVariable(NameGenerator.next());
 	}
+
+	@Override
+	public boolean isRepUncertain() {
+		return true;
+	}
 }

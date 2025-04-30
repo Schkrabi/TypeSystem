@@ -50,7 +50,7 @@ public class TypeAtom extends TerminalType {
 
 	@Override
 	public int hashCode() {
-		return this.name.hashCode() * this.representation.hashCode();
+		return 31 * this.name.name.hashCode() + this.representation.name.hashCode();
 	}
 
 	@Override
@@ -409,5 +409,10 @@ public class TypeAtom extends TerminalType {
 		else if(immListCl == clazz) return TypeListNative;
 		else if(immSetCl == clazz) return TypeSetTree;
 		return null;
+	}
+
+	@Override
+	public boolean isRepUncertain() {
+		return this.representation.equals(TypeRepresentation.WILDCARD);
 	}
 }

@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JMod;
 
+import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
 import velka.core.abstraction.Lambda;
@@ -647,8 +648,8 @@ public class JavaLinkedList extends OperatorBank {
 			var objCl = CodeModelInstance.instance().ref(Object.class);
 			
 			var ret = _method.body().decl(objCl, "_ret", mappedArgs.get(new Symbol("_1")));
-			var rettype = _method.body().decl(TypeUtil.instance().typeJType(), "_retType", 
-					JExpr.direct("_cparm").invoke("getType").arg(JExpr.lit(1)));
+			var rettype = _method.body().decl(TypeUtil.instance().typeJType(), "_retType",
+					JExpr.direct(Abstraction.CAD_ARG_TYPE).invoke("get").arg(JExpr.lit(1)));
 			
 			var _for = _method.body()._for();
 			var _i = _for.init(CodeModelInstance.instance().INT, "_i", JExpr.lit(0));
@@ -766,7 +767,7 @@ public class JavaLinkedList extends OperatorBank {
 			
 			var ret = _method.body().decl(objCl, "_ret", mappedArgs.get(new Symbol("_1")));
 			var rettype = _method.body().decl(TypeUtil.instance().typeJType(), "_retType", 
-					JExpr.direct("_cparm").invoke("getType").arg(JExpr.lit(1)));
+					JExpr.direct(Abstraction.CAD_ARG_TYPE).invoke("get").arg(JExpr.lit(1)));
 			
 			var _for = _method.body()._for();
 			var _i = _for.init(CodeModelInstance.instance().INT, "_i", l.invoke("size").minus(JExpr.lit(1)));

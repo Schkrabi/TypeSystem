@@ -124,27 +124,38 @@ public abstract class Abstraction extends Expression implements VelkaAbstraction
 		return code;
 	}
 	
+	public static final String CAD_ARG_TYPE = "_CADargType";
+	
 	/** Converts and declares the arguments in the method*/
 	public static Map<Symbol, JVar> convertAndDeclareParms(Collection<Pair<Symbol, Type>> parms, JMethod method){
-		var typeSystem = JavaTypeSystem.codeInstance();
 		var parm = method.param(Collection.class, "_parm");
 		
 		var vtCl = CodeModelInstance.instance().ref(VelkaTuple.class);
-		var cparm = method.body().decl(vtCl, "_cparm", 
-				JExpr.cast(vtCl,
-						typeSystem.invoke("convert")
-						.arg(typeSystem.invoke("getType").arg(parm))
-						.arg(TypeUtil.instance().type2java(new TypeTuple(parms.stream().map(x -> x.second).toList())))
-						.arg(parm)
-						.arg(JExpr._null())));
+		var ttCl = TypeUtil.instance().typeTupleJType();
+		
+		var _parm = method.body().decl(vtCl, "_tupleParm", JExpr.cast(vtCl, parm));
+		var _argType = method.body().decl(ttCl, CAD_ARG_TYPE, 
+				JExpr.cast(vtCl, parm).ref("type"));
+				
 		
 		var ret = new HashMap<Symbol, JVar>();
 		int i = 0;
 		
 		for(var p : parms) {
+			JVar v = null;
 			var jt = TypeUtil.instance().velkaTypeToJType(p.second);
-			var v = method.body().decl(jt, p.first.getJavaCompatibleName(),
-					JExpr.cast(jt, cparm.invoke("get").arg(JExpr.lit(i))));
+			if(p.second.isRepUncertain()) {
+				v = method.body().decl(jt, p.first.getJavaCompatibleName(),
+						JExpr.cast(jt, _parm.invoke("get").arg(JExpr.lit(i))));
+			}
+			else {
+				v = method.body().decl(jt, p.first.getJavaCompatibleName(),
+						JExpr.cast(jt, JavaTypeSystem.codeInstance().invoke("convert")
+								.arg(_argType.invoke("get").arg(JExpr.lit(i)))
+								.arg(TypeUtil.instance().type2java(p.second))
+								.arg(_parm.invoke("get").arg(JExpr.lit(i)))
+								.arg(JExpr._null())));
+			}
 			ret.put(p.first, v);
 			i++;
 		}

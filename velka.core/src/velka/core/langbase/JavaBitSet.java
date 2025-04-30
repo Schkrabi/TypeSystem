@@ -39,6 +39,7 @@ import velka.util.ClojureHelper;
 import velka.util.Functions;
 import velka.util.NameGenerator;
 import velka.util.Pair;
+import velka.util.RankAggregation;
 import velka.util.annotations.Description;
 import velka.util.annotations.Example;
 import velka.util.annotations.Header;
@@ -911,18 +912,20 @@ public class JavaBitSet extends OperatorBank {
 		
 		@Override
 		public Expression cost() {
-			var arg = new Symbol(NameGenerator.next());
-			
-			var cost = new Lambda(
-					new AbstractionApplication(
-							new AbstractionApplication(
-									Operators.linFunPoints, 
-									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
-							new Tuple(
-									new AbstractionApplication(Operators.IntToDouble,
-											new Tuple(new AbstractionApplication(JavaBitSet.cardinality, new Tuple(arg)))))),
-					List.of(Pair.of(arg, TypeAtom.TypeSet)));
-			return cost;
+			return Lambda.constFun(1, new LitDouble(0.7d));
+//			
+//			var arg = new Symbol(NameGenerator.next());
+//			
+//			var cost = new Lambda(
+//					new AbstractionApplication(
+//							new AbstractionApplication(
+//									Operators.linFunPoints, 
+//									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
+//							new Tuple(
+//									new AbstractionApplication(Operators.IntToDouble,
+//											new Tuple(new AbstractionApplication(JavaBitSet.cardinality, new Tuple(arg)))))),
+//					List.of(Pair.of(arg, TypeAtom.TypeSet)));
+//			return cost;
 		}
 
 		@Override
@@ -1015,18 +1018,19 @@ public class JavaBitSet extends OperatorBank {
 
 		@Override
 		public Expression cost() {
-			var arg = new Symbol(NameGenerator.next());
-			
-			var cost = new Lambda(
-					new AbstractionApplication(
-							new AbstractionApplication(
-									Operators.linFunPoints, 
-									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
-							new Tuple(
-									new AbstractionApplication(Operators.IntToDouble,
-											new Tuple(new AbstractionApplication(JavaBitSet.cardinality, new Tuple(arg)))))),
-					List.of(Pair.of(arg, TypeAtom.TypeSet)));
-			return cost;
+			return Lambda.constFun(1, new LitDouble(0.7d));
+//			var arg = new Symbol(NameGenerator.next());
+//			
+//			var cost = new Lambda(
+//					new AbstractionApplication(
+//							new AbstractionApplication(
+//									Operators.linFunPoints, 
+//									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
+//							new Tuple(
+//									new AbstractionApplication(Operators.IntToDouble,
+//											new Tuple(new AbstractionApplication(JavaBitSet.cardinality, new Tuple(arg)))))),
+//					List.of(Pair.of(arg, TypeAtom.TypeSet)));
+//			return cost;
 		}
 
 		@Override

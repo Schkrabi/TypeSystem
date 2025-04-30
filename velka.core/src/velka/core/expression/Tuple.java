@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JMod;
 
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
@@ -24,6 +25,7 @@ import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.java.CodeModelInstance;
 import velka.java.TypeUtil;
+import velka.java.runtime.JavaTypeSystem;
 import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.SubstitutionsCannotBeMergedException;
@@ -299,16 +301,19 @@ public class Tuple extends Expression implements Iterable<Expression>, Collectio
 
 	@Override
 	public JExpression toJavaExpr(Environment env) {
-		Type t;
+		TypeTuple t;
 		try {
-			t = this.infer(env).first;
+			t = (TypeTuple)this.infer(env).first;
 		}catch(AppendableException e) {
 			throw new RuntimeException(e);
 		}
 		
+		if(t.isRepUncertain()) {
+			return this.toJavaUncertainRep(t, env);
+		}
+		
 		var objCl = CodeModelInstance.instance().ref(Object.class);
 		var arr = JExpr.newArray(objCl);
-		
 		
 		for(var expr : this.values) {
 			var compileableExpr = (CompileableToJava)expr;
@@ -320,5 +325,41 @@ public class Tuple extends Expression implements Iterable<Expression>, Collectio
 				.arg(TypeUtil.instance().type2java(t));
 		
 		return expr;
+	}
+	
+	private JExpression toJavaUncertainRep(TypeTuple type, Environment env) {
+		var oCl = CodeModelInstance.instance().ref(Object.class);
+		var vtCl = CodeModelInstance.instance().ref(VelkaTuple.class);
+		var spCl = CodeModelInstance.instance().ref(java.util.function.Supplier.class);
+		var aCl = CodeModelInstance.instance().anonymousClass(spCl);
+		
+		var _get = aCl.method(JMod.PUBLIC, oCl, "get");
+		
+		var arr = JExpr.newArray(oCl);
+		
+		for(var v : this.values) {
+			var ctj = (CompileableToJava)v;
+			arr.add(ctj.toJavaExpr(env));
+		}
+		
+		var _data = _get.body().decl(oCl.array(), "_data", arr);
+		
+		var tarr = JExpr.newArray(TypeUtil.instance().typeJType());
+		
+		for(int i = 0; i < type.size(); i++) {
+			var t = type.get(i);
+			if(t.isRepUncertain()) {
+				tarr.add(JavaTypeSystem.codeInstance().invoke("getType").arg(_data.component(JExpr.lit(i))));
+			}
+			else {
+				tarr.add(TypeUtil.instance().type2java(t));
+			}
+		}
+		var _type = _get.body().decl(TypeUtil.instance().typeTupleJClass(), "_type",
+				JExpr._new(TypeUtil.instance().typeTupleJClass()).arg(tarr));
+		
+		_get.body()._return(JExpr._new(vtCl).arg(_data).arg(_type));
+		
+		return  JExpr.cast(vtCl, JExpr._new(aCl).invoke(_get));
 	}
 }

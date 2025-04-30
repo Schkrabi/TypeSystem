@@ -2,7 +2,9 @@ package velka.types.typeSystem;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import velka.types.RepresentationOr;
 import velka.types.Type;
@@ -18,6 +20,13 @@ import velka.util.IEvalueable;
 public abstract class TypeSystem {
 	protected final Map<TypeAtom, TypeAtomInfo> typeInfo = new HashMap<TypeAtom, TypeAtomInfo>();
 	protected final IConversionEngine conversionEngine;
+	
+	record ConversionKey(TypeAtom from, TypeAtom to) {}
+	
+	private Map<ConversionKey, IEvalueable> conversionMap = new HashMap<>();
+	private Map<ConversionKey, IEvalueable> conversionCostMap = new HashMap<>();
+	
+	private RankAggregation agg = RankAggregation.instance();
 	
 	public TypeSystem(IConversionEngine conversionEngine) {
 		this.conversionEngine = conversionEngine;
@@ -57,15 +66,18 @@ public abstract class TypeSystem {
 			throw new RuntimeException("Can only define conversions between representations!");
 		}
 
-		var info = this.getOrCreateTypeInfo(fromType);
-		info.addConversion(toType, conv, cost);
+//		var info = this.getOrCreateTypeInfo(fromType);
+//		info.addConversion(toType, conv, cost);
+		this.conversionMap.put(new ConversionKey(fromType, toType), conv);
+		this.conversionCostMap.put(new ConversionKey(fromType, toType), cost);
 	}
 	
 	/** Returns true if from type is convertable to to type. Otherwise returns false */
 	public boolean canConvertAtom(TypeAtom from, TypeAtom to) {
 		if(from.equals(to)) return true;
-		var info = this.getOrCreateTypeInfo(from);
-		return info.canConvertTo(to);
+		return  to.representation.equals(TypeRepresentation.WILDCARD)
+				|| from.representation.equals(TypeRepresentation.WILDCARD)
+				|| from.name.equals(to.name);
 	}
 	
 	/** Returns true if first type is converable to the second */
@@ -106,68 +118,65 @@ public abstract class TypeSystem {
 		return false;
 	}
 	
-	/** Gets the cost of representation conversion */
 	public Double conversionCost(Type from, Type to, Object e, Object env) {
-		if (from.equals(to) || to instanceof TypeVariable) {
-			return RankAggregation.instance().neutralRank();
-		}
-		else if(from instanceof TypeArrow) {
-			// The time to convert the function is constant
-			// What can change is the execution time of the function
-			// However that is not traceable for Velka
-			return RankAggregation.instance().functionConversionRank();
-		}
-		else if(from instanceof RepresentationOr
-				|| to instanceof RepresentationOr) {
-			if(this.canConvert(from, to)) {
-				return RankAggregation.instance().neutralRank();	
-			}
-			return null;
-		}
-		else if(from instanceof TypeAtom ta) {
-			if(!this.canConvert(from, to)) {
-				return null;
-			}			
-			var toTa = (TypeAtom)to;
-			if(toTa.representation.equals(TypeRepresentation.WILDCARD)) {
-				return RankAggregation.instance().neutralRank();
-			}
-			
-			var ti = this.getOrCreateTypeInfo(ta);
-			var ci = ti.getConversion((TypeAtom)to);
-			
-			if(ci == null) return null;		
-			
-			var c = ci.cost().evaluate(this.conversionEngine.instantiateCollection(e), env);
-			
-			if(!(c instanceof Double)) {
-				throw new RuntimeException("Invalid conversion cost: conversion " + from + " to " + to + " has improper cost function.");
-			}
-			
-			return (Double)c;
-		}
-		else if(from instanceof TypeTuple) {
-			var sum = RankAggregation.instance().neutralRank();
-			if(!(e instanceof Iterable)) {
-				throw new RuntimeException("Converting not iterable object with type tuple type " + e.toString());
-			}
-			
-			@SuppressWarnings("unchecked")
-			var ite = ((Iterable<Object>)e).iterator();
-			var itf = ((TypeTuple)from).iterator();
-			var itt = ((TypeTuple)to).iterator();
-			while(itf.hasNext()) {
-				var sef = itf.next();
-				var set = itt.next();
-				var te = ite.next();
-				var cost = this.conversionCost(sef, set, te, env);
-				if(cost == null) return null;
-				
-				sum = RankAggregation.instance().aggregate(sum, cost);
-			}
-			return sum;
-		}
-		throw new RuntimeException("Invalid conversion cost: unrecognized type: " + from + " or " + to);
+		return this.conversionCost(from, to, e, env, agg.worstRank());
+	}
+	
+	/** Gets the cost of representation conversion */
+	public double conversionCost(Type from, Type to, Object e, Object env, double bestRank) {		
+	    if (from == to || from.equals(to) || to instanceof TypeVariable
+	            || from instanceof RepresentationOr
+	            || to instanceof RepresentationOr) {
+	        return agg.neutralRank();
+	    }
+
+	    if (from instanceof TypeArrow) {
+	        return agg.functionConversionRank();
+	    }
+
+	    if (from instanceof TypeAtom ta && to instanceof TypeAtom toTa) {
+	        // wildcard representation shortcut
+	        if (TypeRepresentation.WILDCARD.equals(ta.representation) 
+	        		|| TypeRepresentation.WILDCARD.equals(toTa.representation)) {
+	            return agg.neutralRank();
+	        }
+
+	        var costFun = this.conversionCostMap.get(new ConversionKey(ta, toTa));
+	        
+	        if(costFun == null) return agg.worstRank();
+
+	        var evaluatedCost = (Double)costFun.evaluate(this.conversionEngine.instantiateCollection(e), env);
+
+	        return evaluatedCost.doubleValue();
+	    }
+
+	    if (from instanceof TypeTuple ftpl && to instanceof TypeTuple ttpl) {
+	        if (!(e instanceof Iterable<?> itrbl)) {
+	            throw new RuntimeException("Converting non-iterable object with tuple type: " + e);
+	        }
+
+	        Iterator<?> ite = itrbl.iterator();
+	        double sum = agg.neutralRank();
+	        Object te;
+	        double cost;
+
+	        for (int i = 0; i < ftpl.size(); i++) {
+	            te = ite.next();
+	            cost = this.conversionCost(ftpl.get(i), ttpl.get(i), te, env, bestRank);
+	            if (cost == agg.invalidRank()) return agg.invalidRank();
+
+	            sum *= cost;
+	            
+	            //Prune 
+	            if(sum <= bestRank) {
+	            	return agg.worstRank();
+	            }
+	        }
+
+	        return sum;
+	    }
+
+	    throw new RuntimeException("Invalid conversion cost: unrecognized type: " + from + " or " + to);
 	}
 	
 	/** Converts type atom */
@@ -184,9 +193,15 @@ public abstract class TypeSystem {
 						.append(to != null ? to.toString() : "nil")
 						.toString());
 		}
-		var ti = this.getOrCreateTypeInfo(from);
-		var ret = ti.convert(to, arg, env);
-		return ret;
+//		var ti = this.getOrCreateTypeInfo(from);
+//		var ret = ti.convert(to, arg, env);
+		var convFun = this.conversionMap.get(new ConversionKey(from, to));
+		
+		if(convFun == null) {
+			throw new RuntimeException(new StringBuilder("There is no suitable conversion from ")
+					.append(from).append(" to ").append(to).toString());
+		}
+		return convFun.evaluate(this.conversionEngine.instantiateCollection(arg), env);
 	}
 	
 	/** Convert types */
@@ -247,6 +262,6 @@ public abstract class TypeSystem {
 	 * @return
 	 */
 	public double extractRank(Object object) {
-		return (Double)object;
+		return ((Double)object).doubleValue();
 	}
 }

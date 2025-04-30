@@ -270,6 +270,8 @@ public abstract class Type implements Comparable<Type> {
 	public Type removeRepresentationInformation() throws AppendableException {
 		return this.map(t -> t instanceof TypeAtom ? new TypeAtom(((TypeAtom)t).name, TypeRepresentation.WILDCARD) : t);
 	}
+	
+	public abstract boolean isRepUncertain();
 
 	/**
 	 * Adds type meta information to given clojure code piece
