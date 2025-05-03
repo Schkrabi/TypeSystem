@@ -5,12 +5,15 @@ import java.util.Map;
 import velka.java.CodeModelInstance;
 import velka.types.Type;
 import velka.types.TypeAtom;
+import velka.types.typeSystem.ImplementationSelector;
 import velka.types.typeSystem.TypeSystem;
 import velka.types.typeSystem.VelkaAbstraction;
 
 /** Type system singleton instance for java runtime*/
 public class JavaTypeSystem extends TypeSystem {
 
+	private ImplementationSelector implementationSelector = new ImplementationSelector(this);
+	
 	private JavaTypeSystem() {
 		super(new JavaConversionEngine());
 	}
@@ -52,5 +55,10 @@ public class JavaTypeSystem extends TypeSystem {
 	/** Gets the type system instance in the codemodel */
 	public static com.sun.codemodel.JExpression codeInstance() {
 		return CodeModelInstance.instance().ref(JavaTypeSystem.class).staticInvoke("instance");	
+	}
+
+	@Override
+	public ImplementationSelector getImplementationSelector() {
+		return this.implementationSelector;
 	}
 }

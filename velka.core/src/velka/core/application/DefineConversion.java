@@ -19,6 +19,7 @@ import velka.core.literal.LitDouble;
 import velka.java.CodeModelInstance;
 import velka.java.TypeUtil;
 import velka.java.runtime.JavaTypeSystem;
+import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -111,19 +112,17 @@ public class DefineConversion extends Expression implements CompileableToJava {
 					}
 					
 				}, 
-				new velka.util.IEvalueable() {
-
+				new velka.util.IConversionRanker() {
+					
 					@Override
-					public Object evaluate(Collection<? extends Object> args, Object _env) {
+					public double eval(Object arg) {
 						var eargs = new ArrayList<Expression>(args.size());
 						args.stream().forEach(o -> eargs.add((Expression)o));
 						
 						var appl = new AbstractionApplication(me.cost, new Tuple(eargs));
 						try {
-							Environment eenv = (Environment)_env;
-							
-							LitDouble ld = (LitDouble)appl.interpret(eenv);
-							return Double.valueOf(ld.value);
+							LitDouble ld = (LitDouble)appl.interpret(env);
+							return ld.value;
 						} catch (AppendableException e) {
 							throw new RuntimeException(e);
 						}
@@ -164,8 +163,9 @@ public class DefineConversion extends Expression implements CompileableToJava {
 				ClojureHelper.reify(velka.util.IEvalueable.class, 
 						Pair.of("evaluate", Pair.of(List.of(rhis, arg, cenv), ClojureHelper.applyVelkaFunction_argsTuple(lambda.toClojureCode(env), 
 								arg)))),
-				ClojureHelper.reify(velka.util.IEvalueable.class, 
-						Pair.of("evaluate", Pair.of(List.of(rhis, arg, cenv), ClojureHelper.applyVelkaFunction_argsTuple(this.cost.toClojureCode(env), 
+				ClojureHelper.reify(velka.util.IConversionRanker.class, 
+						Pair.of("eval", Pair.of(List.of(rhis, arg), 
+								ClojureHelper.applyVelkaFunction(this.cost.toClojureCode(env), 
 								arg)))));
 		return code;
 	}
@@ -240,6 +240,8 @@ public class DefineConversion extends Expression implements CompileableToJava {
 			throws AppendableException {
 		throw new RuntimeException("doConvert not implemented");
 	}
+	
+	
 
 	@Override
 	public JExpression toJavaExpr(Environment env) {
@@ -248,10 +250,31 @@ public class DefineConversion extends Expression implements CompileableToJava {
 		
 		var ievCl = CodeModelInstance.instance().ref(velka.util.IEvalueable.class);
 		
+		TypeArrow costType;
+		try {
+			costType = (TypeArrow)(this.cost.infer(env).first);
+		} catch (AppendableException e) {
+			throw new RuntimeException(e);
+		}
+		var costParmType = (TypeTuple)costType.ltype;
+		
+		var iConvRanker = CodeModelInstance.instance().anonymousClass(velka.util.IConversionRanker.class);
+		
+		var convRanker = iConvRanker.method(com.sun.codemodel.JMod.PUBLIC, double.class, "eval");
+		var rnkParm = convRanker.param(Object.class, "arg");
+		var rnkRet = convRanker
+				.body().decl(
+						CodeModelInstance.instance().DOUBLE, "ret", JExpr
+								.cast(CodeModelInstance.instance().ref(Double.class),
+										ctjcst.toJavaExpr(env).invoke("apply")
+												.arg(VelkaTuple._velkaTuple(costParmType, rnkParm)))
+								.invoke("doubleValue"));
+		convRanker.body()._return(rnkRet);
+		
 		return JavaTypeSystem.codeInstance().invoke("addConversion")
 				.arg(TypeUtil.instance().type2java(from))
 				.arg(TypeUtil.instance().type2java(to))
 				.arg(JExpr.cast(ievCl, ctjlbd.toJavaExpr(env)))
-				.arg(JExpr.cast(ievCl, ctjcst.toJavaExpr(env)));
+				.arg(JExpr._new(iConvRanker));
 	}
 }

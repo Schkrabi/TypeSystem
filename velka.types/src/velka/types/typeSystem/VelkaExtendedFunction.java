@@ -39,7 +39,7 @@ public class VelkaExtendedFunction implements VelkaAbstraction {
 
 	@Override
 	public Object apply(Collection<? extends Object> arg) {
-		var selector = new ImplementationSelector(this.ts);
+		var selector = this.ts.getImplementationSelector();
 		var impl = selector.selectImplementation(this.impls, arg);
 		
 		return impl.apply(arg);

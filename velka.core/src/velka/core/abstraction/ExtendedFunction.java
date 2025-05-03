@@ -49,7 +49,7 @@ public class ExtendedFunction extends Expression implements VelkaAbstraction {
 
 	@Override
 	public Object apply(Collection<? extends Object> arg) {
-		var selector = new ImplementationSelector(this.env.getTypeSystem());
+		var selector = this.env.getTypeSystem().getImplementationSelector();
 		selector.setEnvironment(this.env);
 		var impl = selector.selectImplementation(
 				this.implementations, 

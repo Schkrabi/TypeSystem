@@ -433,28 +433,6 @@ public class TreeSet extends OperatorBank {
 	@Example("(convert Set:BitSet Set:Tree (bit-set-set (bit-set-set (bit-set-set (construct Set:BitSet) 3) 6) 9))") 
 	@Syntax("(convert Set:BitSet Set:Tree <arg>)")
 	public static Conversion toBitSet = new Conversion() {
-		
-		Double costX1 = 0d;
-		Double costY1 = 0.8d;
-		Double costX2 = 1000d;
-		Double costY2 = 0.5d;
-
-		@Override
-		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(0.7d));
-//			var f = new Symbol("_f");
-//			var car = new Symbol("_cardinality");
-//			var set = new Symbol("_set");
-//			var cst = new Lambda(
-//					new Let(new AbstractionApplication(f,
-//							new Tuple(new AbstractionApplication(Operators.IntToDouble, new Tuple(car)))),
-//							Pair.of(f, new AbstractionApplication(Operators.linFunPoints, 
-//									new Tuple(new LitDouble(costX1), new LitDouble(costY1), new LitDouble(costX2), new LitDouble(costY2)))),
-//							Pair.of(car, new AbstractionApplication(TreeSet.size, new Tuple(set)))),
-//					List.of(Pair.of(set, TypeAtom.TypeSet)));					
-//			
-//			return cst;
-		}
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
@@ -769,22 +747,6 @@ public class TreeSet extends OperatorBank {
 	
 	@VelkaConversion
 	public static Conversion toHashSet = new Conversion() {
-
-		@Override
-		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(0.7d));
-//			var hashSet = new Symbol(NameGenerator.next());
-//			
-//			var cost = new Lambda(
-//					new AbstractionApplication(
-//							new AbstractionApplication(Operators.linFunPoints,
-//									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d),
-//											new LitDouble(0.5d))),
-//							new Tuple(new AbstractionApplication(Operators.IntToDouble,
-//									new Tuple(new AbstractionApplication(TreeSet.size, new Tuple(hashSet)))))),
-//					List.of(Pair.of(hashSet, TypeAtom.TypeSet)));
-//			return cost;
-		}
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {

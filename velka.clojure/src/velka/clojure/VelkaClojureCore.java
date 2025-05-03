@@ -13,6 +13,7 @@ import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
+import velka.types.typeSystem.ImplementationSelector;
 import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
@@ -174,7 +175,11 @@ public class VelkaClojureCore {
 								Pair.of(declared, ClojureHelper.clojureIfHelper(ClojureHelper.isInstanceOfClass(arg, VelkaAbstraction.class),
 																	ClojureHelper.applyClojureFunction(".getType", arg),
 																	declared))),
-						Object.class)));
+						Object.class),
+				ProxyImpl.of(velka.types.typeSystem.TypeSystem.class, 
+						"getImplementationSelector", 
+						List.of(),
+						ClojureHelper.constructJavaClass(ImplementationSelector.class, "this"))));
 			
 	/**
 	 * Definition for convert clojure function

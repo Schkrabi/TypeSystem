@@ -18,6 +18,7 @@ import velka.types.Type;
 import velka.types.TypeArrow;
 import velka.types.TypeAtom;
 import velka.types.TypeTuple;
+import velka.types.typeSystem.ImplementationSelector;
 import velka.types.typeSystem.TypeSystem;
 import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.AppendableException;
@@ -47,7 +48,7 @@ public class TopLevelEnvironment extends Environment {
 	}
 	
 	public static TopLevelEnvironment instantiate() {
-		var ts = new TypeSystem(
+		var ts = new TypeSystem(				
 				new velka.types.typeSystem.IConversionEngine() {
 
 					@Override
@@ -216,6 +217,11 @@ public class TopLevelEnvironment extends Environment {
 							return lt.value;
 						}
 						throw new RuntimeException("Rank is not an LitDouble!");
+					}
+
+					@Override
+					public ImplementationSelector getImplementationSelector() {
+						return new ImplementationSelector(this);
 					}
 			
 		};

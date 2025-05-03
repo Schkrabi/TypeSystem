@@ -91,11 +91,6 @@ public final class ConversionOperators extends OperatorBank{
 		public Symbol getInternalSymbol() {
 			return new Symbol("int-native-2-int-roman", ConversionOperators.singleton().getNamespace());
 		}
-
-		@Override
-		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
-		}
 		
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
@@ -147,11 +142,6 @@ public final class ConversionOperators extends OperatorBank{
 		@Override
 		public Symbol getInternalSymbol() {
 			return new Symbol("int-native-2-int-string", ConversionOperators.singleton().getNamespace());
-		}
-
-		@Override
-		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
 		}
 		
 		@Override
@@ -205,11 +195,6 @@ public final class ConversionOperators extends OperatorBank{
 		@Override
 		public Symbol getInternalSymbol() {
 			return new Symbol("int-roman-2-int-native", ConversionOperators.singleton().getNamespace());
-		}
-
-		@Override
-		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
 		}
 		
 		@Override
@@ -275,11 +260,6 @@ public final class ConversionOperators extends OperatorBank{
 		public Symbol getInternalSymbol() {
 			return new Symbol("int-roman-2-int-string", ConversionOperators.singleton().getNamespace());
 		}
-
-		@Override
-		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
-		}
 	
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
@@ -344,11 +324,6 @@ public final class ConversionOperators extends OperatorBank{
 		public Symbol getInternalSymbol() {
 			return new Symbol("int-string-2-int-native", ConversionOperators.singleton().getNamespace());
 		}
-
-		@Override
-		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
-		}
 		
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
@@ -404,11 +379,6 @@ public final class ConversionOperators extends OperatorBank{
 		@Override
 		public Symbol getInternalSymbol() {
 			return new Symbol("int-string-2-int-roman", ConversionOperators.singleton().getNamespace());
-		}
-
-		@Override
-		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(RankAggregation.instance().defaultConversionRank()));
 		}
 		
 		@Override

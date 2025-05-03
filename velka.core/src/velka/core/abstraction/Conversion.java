@@ -18,6 +18,7 @@ import velka.core.util.DeclarableInTypeEnvironment;
 import velka.java.CodeModelInstance;
 import velka.java.TypeUtil;
 import velka.java.runtime.JavaTypeSystem;
+import velka.java.runtime.VelkaTuple;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
@@ -35,9 +36,6 @@ import velka.util.Pair;
  *
  */
 public abstract class Conversion extends Operator implements DeclarableInTypeEnvironment {
-
-	/** Returns the cost of the conversion */
-	public abstract Expression cost();
 	
 	/**
 	 * Declares this conversion in TypeEnvironment
@@ -76,29 +74,7 @@ public abstract class Conversion extends Operator implements DeclarableInTypeEnv
 					}
 			
 				}, 
-				new velka.util.IEvalueable() {
-
-					@Override
-					public Object evaluate(Collection<? extends Object> args, Object _env) {
-						var eargs = new ArrayList<Expression>(args.size());
-						args.stream().forEach(o -> eargs.add((Expression)o));
-						
-						VelkaAbstraction cabst;
-						try {
-							cabst = (VelkaAbstraction)me.cost().interpret(env);
-						} catch (AppendableException e) {
-							throw new RuntimeException(e);
-						}
-						
-						var r = cabst.apply(args);
-						if(r instanceof LitDouble ld) {
-							return Double.valueOf(ld.value);
-						}
-						throw new RuntimeException("Invalid cost for conversion operator " + me);
-					}
-					
-					
-				});
+				velka.util.IConversionRanker.DEFAULT);
 	}
 	
 	@Override
@@ -124,10 +100,7 @@ public abstract class Conversion extends Operator implements DeclarableInTypeEnv
 							Pair.of("evaluate", Pair.of(List.of(rhis, arg, cenv), ClojureHelper.applyVelkaFunction_argsTuple(
 									super.toClojureCode(env), 
 									arg)))),
-					ClojureHelper.reify(velka.util.IEvalueable.class, 
-							Pair.of("evaluate", Pair.of(List.of(rhis, arg, cenv), ClojureHelper.applyVelkaFunction_argsTuple(
-									this.cost().toClojureCode(env), 
-									arg)))));
+					"velka.util.IConversionRanker/DEFAULT");
 		} catch (AppendableException e) {
 			throw new RuntimeException(e);
 		}
@@ -156,8 +129,6 @@ public abstract class Conversion extends Operator implements DeclarableInTypeEnv
 		
 		this.modifyJavaMethod(eval, argmap);
 		
-		var cost = (CompileableToJava)this.cost();
-		
 		eval.param(Object.class, "env");
 		
 		var jexpr = 
@@ -165,7 +136,7 @@ public abstract class Conversion extends Operator implements DeclarableInTypeEnv
 					.arg(JExpr.cast(TypeUtil.instance().typeAtomJType(), TypeUtil.instance().type2java(from)))
 					.arg(JExpr.cast(TypeUtil.instance().typeAtomJType(), TypeUtil.instance().type2java(to)))
 					.arg(JExpr._new(ieval))
-					.arg(cost.toJavaExpr(env));
+					.arg(CodeModelInstance.instance().ref(velka.util.IConversionRanker.class).staticRef("DEFAULT"));
 		return jexpr;
 	}
 }

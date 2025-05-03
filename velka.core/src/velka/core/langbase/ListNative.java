@@ -803,13 +803,6 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		public Expression cost() {
-			var arg = new Symbol(NameGenerator.next());
-			return new Lambda(new AbstractionApplication(ListNative.size, new Tuple(arg)),
-					List.of(Pair.of(arg, TypeAtom.TypeList)));
-		}
-
-		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
 			var lCl = CodeModelInstance.instance().ref(java.util.LinkedList.class);
 			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl).arg(mappedArgs.get(new Symbol("_0"))));

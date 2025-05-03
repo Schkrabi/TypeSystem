@@ -905,29 +905,6 @@ public class JavaBitSet extends OperatorBank {
 	@Syntax("(convert Set:BitSet Set:Tree <arg>)")
 	public static final Conversion toTreeSet = new Conversion() {
 
-		Double costX1 = 0d;
-		Double costY1 = 0.8d;
-		Double costX2 = 1000d;
-		Double costY2 = 0.5d;
-		
-		@Override
-		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(0.7d));
-//			
-//			var arg = new Symbol(NameGenerator.next());
-//			
-//			var cost = new Lambda(
-//					new AbstractionApplication(
-//							new AbstractionApplication(
-//									Operators.linFunPoints, 
-//									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
-//							new Tuple(
-//									new AbstractionApplication(Operators.IntToDouble,
-//											new Tuple(new AbstractionApplication(JavaBitSet.cardinality, new Tuple(arg)))))),
-//					List.of(Pair.of(arg, TypeAtom.TypeSet)));
-//			return cost;
-		}
-
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			final var arg = "_arg";
@@ -1015,23 +992,6 @@ public class JavaBitSet extends OperatorBank {
 	
 	@VelkaConversion
 	public static Conversion toHashSet = new Conversion() {
-
-		@Override
-		public Expression cost() {
-			return Lambda.constFun(1, new LitDouble(0.7d));
-//			var arg = new Symbol(NameGenerator.next());
-//			
-//			var cost = new Lambda(
-//					new AbstractionApplication(
-//							new AbstractionApplication(
-//									Operators.linFunPoints, 
-//									new Tuple(new LitDouble(0d), new LitDouble(0.8d), new LitDouble(1000d), new LitDouble(0.5d))), 
-//							new Tuple(
-//									new AbstractionApplication(Operators.IntToDouble,
-//											new Tuple(new AbstractionApplication(JavaBitSet.cardinality, new Tuple(arg)))))),
-//					List.of(Pair.of(arg, TypeAtom.TypeSet)));
-//			return cost;
-		}
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {

@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import velka.types.RepresentationOr;
 import velka.types.Type;
@@ -14,6 +13,7 @@ import velka.types.TypeRepresentation;
 import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.util.RankAggregation;
+import velka.util.IConversionRanker;
 import velka.util.IEvalueable;
 
 /** Type system */
@@ -24,7 +24,7 @@ public abstract class TypeSystem {
 	record ConversionKey(TypeAtom from, TypeAtom to) {}
 	
 	private Map<ConversionKey, IEvalueable> conversionMap = new HashMap<>();
-	private Map<ConversionKey, IEvalueable> conversionCostMap = new HashMap<>();
+	private Map<ConversionKey, IConversionRanker> conversionCostMap = new HashMap<>();
 	
 	private RankAggregation agg = RankAggregation.instance();
 	
@@ -61,13 +61,11 @@ public abstract class TypeSystem {
 	}
 	
 	/** Adds new conversion to the type system */
-	public void addConversion(TypeAtom fromType, TypeAtom toType, IEvalueable conv, IEvalueable cost) {
+	public void addConversion(TypeAtom fromType, TypeAtom toType, IEvalueable conv, IConversionRanker cost) {
 		if (!TypeAtom.isSameBasicType(fromType, toType)) {
 			throw new RuntimeException("Can only define conversions between representations!");
 		}
 
-//		var info = this.getOrCreateTypeInfo(fromType);
-//		info.addConversion(toType, conv, cost);
 		this.conversionMap.put(new ConversionKey(fromType, toType), conv);
 		this.conversionCostMap.put(new ConversionKey(fromType, toType), cost);
 	}
@@ -145,9 +143,9 @@ public abstract class TypeSystem {
 	        
 	        if(costFun == null) return agg.worstRank();
 
-	        var evaluatedCost = (Double)costFun.evaluate(this.conversionEngine.instantiateCollection(e), env);
+	        var evaluatedCost = costFun.eval(e);
 
-	        return evaluatedCost.doubleValue();
+	        return evaluatedCost;
 	    }
 
 	    if (from instanceof TypeTuple ftpl && to instanceof TypeTuple ttpl) {
@@ -254,6 +252,8 @@ public abstract class TypeSystem {
 	
 	/** Gets type of an object */
 	public abstract Type getType(Object object);
+	/** Gets implementation selector of this type system*/
+	public abstract ImplementationSelector getImplementationSelector();
 	
 	/** extracts rank from an object returned 
 	 * by rank functions identity by default,

@@ -833,13 +833,6 @@ public class JavaLinkedList extends OperatorBank {
 		public String toString() {
 			return LinkedListToNativeListSymbol_out.toString();
 		}
-
-		@Override
-		public Expression cost() {
-			var arg = new Symbol(NameGenerator.next());
-			return new Lambda(new AbstractionApplication(JavaLinkedList.size, new Tuple(arg)),
-					List.of(Pair.of(arg, TypeAtom.TypeList)));
-		}
 		
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
