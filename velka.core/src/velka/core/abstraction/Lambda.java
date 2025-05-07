@@ -170,8 +170,11 @@ public class Lambda extends Expression implements CompileableToJava {
 		}
 		
 		var aClass = CodeModelInstance.instance().anonymousClass(VelkaAbstraction.class);
+		var fType = aClass.field(JMod.PRIVATE | JMod.FINAL, Type.class, "_type", 
+				TypeUtil.instance().type2java(inf.first));
+		
 		aClass.method(JMod.PUBLIC, Type.class, "getType").body()
-			._return(TypeUtil.instance().type2java(inf.first));
+			._return(fType);
 		
 		var apply = aClass.method(JMod.PUBLIC, Object.class, "apply");
 		

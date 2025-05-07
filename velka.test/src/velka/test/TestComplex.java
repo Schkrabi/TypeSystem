@@ -59,6 +59,7 @@ import velka.types.TypeVariable;
 import velka.util.AppendableException;
 import velka.util.ClojureCoreSymbols;
 import velka.util.ClojureHelper;
+import velka.util.IImplementationRanker;
 import velka.util.Pair;
 import velka.util.RankAggregation;
 
@@ -435,14 +436,11 @@ class TestComplex extends VelkaTest {
 		
 		var efun_default = (new ExtendedFunction(this.env))
 				.extend(impl1,
-						new Function(this.env, new LitDouble(RankAggregation.instance().defaultImplementationRank()),
-								List.of(Pair.of(parm, TypeAtom.TypeInt))))
+						IImplementationRanker.DEFAULT)
 				.extend(impl2,
-						new Function(this.env, new LitDouble(RankAggregation.instance().defaultImplementationRank()),
-								List.of(Pair.of(parm, TypeAtom.TypeInt))))
+						IImplementationRanker.DEFAULT)
 				.extend(impl3,
-						new Function(this.env, new LitDouble(RankAggregation.instance().defaultImplementationRank()),
-								List.of(Pair.of(parm, TypeAtom.TypeInt))));
+						IImplementationRanker.DEFAULT);
 		
 		var app_defCostFunction = 
 				new AbstractionApplication(
@@ -453,14 +451,11 @@ class TestComplex extends VelkaTest {
 		
 		var efun_custom = (new ExtendedFunction(this.env))
 				.extend(impl1,
-						new Function(this.env, new LitDouble(.1d),
-								List.of(Pair.of(parm, TypeAtom.TypeInt))))
+						IImplementationRanker.constRanker(.1d))
 				.extend(impl2,
-						new Function(this.env, new LitDouble(.1d),
-								List.of(Pair.of(parm, TypeAtom.TypeInt))))
+						IImplementationRanker.constRanker(.1d))
 				.extend(impl3,
-						new Function(this.env, new LitDouble(.999999999d),
-								List.of(Pair.of(parm, TypeAtom.TypeInt))));
+						IImplementationRanker.constRanker(.999999999d));
 
 		var app_customCostFunction = 
 				new AbstractionApplication(

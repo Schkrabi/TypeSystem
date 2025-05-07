@@ -4,9 +4,7 @@ import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
 import velka.types.TypeArrow;
-import velka.types.TypeTuple;
 import velka.types.TypeVariable;
-import velka.types.typeSystem.ImplementationSelector;
 import velka.types.typeSystem.VelkaAbstraction;
 
 import java.util.ArrayList;
@@ -14,6 +12,7 @@ import java.util.Collection;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.util.AppendableException;
+import velka.util.IImplementationRanker;
 import velka.util.Pair;
 
 /**
@@ -23,15 +22,15 @@ import velka.util.Pair;
  *
  */
 public class ExtendedFunction extends Expression implements VelkaAbstraction {
-	private final Collection<Pair<? extends VelkaAbstraction, ? extends VelkaAbstraction>> implementations;
+	private final Collection<Pair<? extends VelkaAbstraction, ? extends IImplementationRanker>> implementations;
 	private final Environment env;
 	
 	public ExtendedFunction(Environment env) {
-		this.implementations = new ArrayList<Pair<? extends VelkaAbstraction, ? extends VelkaAbstraction>>();
+		this.implementations = new ArrayList<Pair<? extends VelkaAbstraction, ? extends IImplementationRanker>>();
 		this.env = env;
 	}
 	
-	public ExtendedFunction extend(Function function, VelkaAbstraction cost) {
+	public ExtendedFunction extend(Function function, IImplementationRanker cost) {
 		var ef = new ExtendedFunction(this.env);
 		ef.implementations.addAll(this.implementations);
 		ef.implementations.add(Pair.of(function, cost));

@@ -1,15 +1,11 @@
 package velka.types.typeSystem;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.DoubleStream;
 
 import velka.types.TypeArrow;
 import velka.types.TypeTuple;
-import velka.types.Type;
 import velka.util.RankAggregation;
-import velka.util.IEvalueable;
-import velka.util.Pair;
+import velka.util.IImplementationRanker;
 
 public class ImplementationSelector {
 	private final TypeSystem typeSystem;
@@ -20,7 +16,7 @@ public class ImplementationSelector {
 	
 	private double implRank(
 			VelkaAbstraction impl,
-			VelkaAbstraction cost,
+			IImplementationRanker cost,
 			Collection<? extends Object> args,
 			TypeTuple argType) {
 		var parmType = (TypeTuple)((TypeArrow)impl.getType()).ltype;
@@ -46,17 +42,16 @@ public class ImplementationSelector {
 			}
 		}
 		
-		var ic = cost.apply(args);
-		var dic = this.typeSystem.extractRank(ic);
+		var ic = cost.eval(args);
 		
 		//agg = RankAggregation.instance().aggregate(agg, dic);
-		agg = agg * dic;
+		agg = agg * ic;
 		
 		return agg;
 	}
 	
 	public VelkaAbstraction selectImplementation(
-			Collection<velka.util.Pair<? extends VelkaAbstraction, ? extends VelkaAbstraction>> impls,
+			Collection<velka.util.Pair<? extends VelkaAbstraction, ? extends IImplementationRanker>> impls,
 			Collection<? extends Object> args) {
 		VelkaAbstraction bestImpl = null;
 		

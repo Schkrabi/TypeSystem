@@ -254,14 +254,4 @@ public abstract class TypeSystem {
 	public abstract Type getType(Object object);
 	/** Gets implementation selector of this type system*/
 	public abstract ImplementationSelector getImplementationSelector();
-	
-	/** extracts rank from an object returned 
-	 * by rank functions identity by default,
-	 * can be overriden for different representatons.
-	 * @param object
-	 * @return
-	 */
-	public double extractRank(Object object) {
-		return ((Double)object).doubleValue();
-	}
 }

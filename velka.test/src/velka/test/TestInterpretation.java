@@ -38,9 +38,7 @@ import velka.core.application.IfExpression;
 import velka.core.application.InstanceOf;
 import velka.core.application.InstanceOfRepresentation;
 import velka.core.application.OrExpression;
-import velka.core.exceptions.InvalidArgumentsException;
 import velka.core.exceptions.UnboundVariableException;
-import velka.core.exceptions.UserException;
 import velka.core.expression.Expression;
 import velka.core.expression.Symbol;
 import velka.core.expression.Tuple;
@@ -72,7 +70,7 @@ import velka.types.TypeTuple;
 import velka.types.TypeVariable;
 import velka.types.TypesDoesNotUnifyException;
 import velka.util.AppendableException;
-import velka.util.RankAggregation;
+import velka.util.IImplementationRanker;
 import velka.util.NameGenerator;
 import velka.util.Pair;
 
@@ -679,13 +677,11 @@ class TestInterpretation extends VelkaTest{
 		var function = new ExtendedFunction(bound);
 		var function2 = function.extend(
 				new Function(bound, new Symbol("y"), List.of(Pair.of(new Symbol("y"), TypeAtom.TypeIntRoman))),
-				new Function(bound, new LitDouble(RankAggregation.instance().defaultImplementationRank()),
-						List.of(Pair.of(new Symbol("y"), TypeAtom.TypeInt))));
+				IImplementationRanker.DEFAULT);
 		
 		var function3 = function2.extend(
 				new Function(bound, new Symbol("y"), List.of(Pair.of(new Symbol("y"), TypeAtom.TypeIntString))),
-				new Function(bound, new LitDouble(RankAggregation.instance().defaultImplementationRank()),
-						List.of(Pair.of(new Symbol("y"), TypeAtom.TypeInt))));
+				IImplementationRanker.DEFAULT);
 
 		this.assertReflexivity(function);
 		this.assertReflexivity(function2);
@@ -1396,8 +1392,7 @@ class TestInterpretation extends VelkaTest{
 		assertAll(() -> {
 			ef.extend(
 					new Function(env, new LitInteger(1), List.of(Pair.of(new Symbol("x"), TypeAtom.TypeIntNative))),
-					new Function(this.env, new LitDouble(RankAggregation.instance().defaultImplementationRank()),
-							List.of(Pair.of(new Symbol("x"), TypeAtom.TypeInt))));
+					IImplementationRanker.DEFAULT);
 			
 			this.parseString("(extend (extended-lambda (Int)) (lambda ((Int:Native x)) 1))").get(0)
 					.interpret(this.env);

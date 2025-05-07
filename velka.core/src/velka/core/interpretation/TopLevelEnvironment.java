@@ -210,14 +210,6 @@ public class TopLevelEnvironment extends Environment {
 						
 						throw new RuntimeException("Unrecognized type!");
 					}
-					
-					@Override
-					public double extractRank(Object rank) {
-						if(rank instanceof LitDouble lt) {
-							return lt.value;
-						}
-						throw new RuntimeException("Rank is not an LitDouble!");
-					}
 
 					@Override
 					public ImplementationSelector getImplementationSelector() {

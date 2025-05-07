@@ -1,7 +1,11 @@
 package velka.core.application;
 
+import java.util.Collection;
 import java.util.Optional;
+
+import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JMod;
 
 import velka.core.abstraction.ExtendedFunction;
 import velka.core.abstraction.Function;
@@ -12,6 +16,8 @@ import velka.core.expression.Tuple;
 import velka.core.interfaces.CompileableToJava;
 import velka.core.interpretation.Environment;
 import velka.core.literal.LitDouble;
+import velka.java.CodeModelInstance;
+import velka.java.runtime.VelkaTuple;
 import velka.types.RepresentationOr;
 import velka.types.Substitution;
 import velka.types.Type;
@@ -21,6 +27,7 @@ import velka.types.TypeTuple;
 import velka.types.typeSystem.VelkaAbstraction;
 import velka.util.AppendableException;
 import velka.util.ClojureHelper;
+import velka.util.IImplementationRanker;
 import velka.util.RankAggregation;
 import velka.util.NameGenerator;
 import velka.util.Pair;
@@ -148,7 +155,26 @@ public class Extend extends Expression implements Comparable<Expression>, Compil
 			
 			if(impli instanceof Function impl) {
 				if(costi instanceof VelkaAbstraction cost) {
-					return ef.extend(impl, cost);
+					return ef.extend(impl, 
+							new IImplementationRanker() {
+
+								@Override
+								public double eval(Collection<? extends Object> args) {
+									if(args instanceof Tuple tpl) {
+										Expression ret;
+										try {
+											ret = new AbstractionApplication(costi, tpl).interpret(env);
+										} catch (AppendableException e) {
+											throw new RuntimeException(e);
+										}
+										if(ret instanceof LitDouble ld) {
+											return ld.value;
+										}
+									}
+									throw new RuntimeException("Invalid implementation cost function");
+								}
+						
+					});
 				}
 				throw new AppendableException(
 						new StringBuilder()
@@ -198,11 +224,16 @@ public class Extend extends Expression implements Comparable<Expression>, Compil
 
 	@Override
 	public String toClojureCode(Environment env) throws AppendableException {
+		var arg = "_arg";
 		var code = ClojureHelper.applyClojureFunction(
 				".extend",
 				this.extendedFunction.toClojureCode(env),
 				this.implementation.toClojureCode(env),
-				this.getCostFunction(env).toClojureCode(env));
+				ClojureHelper.reify(IImplementationRanker.class,
+						Pair.of("eval", Pair.of(java.util.List.of("_rhis", arg), 
+								ClojureHelper.applyVelkaFunction_argsTuple(
+										this.getCostFunction(env).toClojureCode(env),
+										arg)))));
 		
 		return code;
 	}
@@ -273,10 +304,20 @@ public class Extend extends Expression implements Comparable<Expression>, Compil
 		var impl = (CompileableToJava)this.implementation;
 		var cost = (CompileableToJava)this.getCostFunction(env);
 		
+		var aimplRankCl = CodeModelInstance.instance().anonymousClass(IImplementationRanker.class);
+		var meval = aimplRankCl.method(JMod.PUBLIC, double.class, "eval");
+		var margs = meval.param(Collection.class, "_arg");
+		meval.body()._return(
+				JExpr.cast(CodeModelInstance.instance().ref(Double.class),
+					JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class),
+							cost.toJavaExpr(env)).invoke("apply")
+					.arg(JExpr.cast(CodeModelInstance.instance().ref(VelkaTuple.class), margs)))
+				.invoke("doubleValue"));
+		
 		var _ef = ef.toJavaExpr(env);
 		var ret = _ef.invoke("extend")
 				.arg(impl.toJavaExpr(env))
-				.arg(cost.toJavaExpr(env));
+				.arg(JExpr._new(aimplRankCl));
 		
 		return ret;
 	}

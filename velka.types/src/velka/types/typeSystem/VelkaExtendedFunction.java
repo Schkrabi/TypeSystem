@@ -8,12 +8,13 @@ import velka.types.RepresentationOr;
 import velka.types.Type;
 import velka.util.AppendableException;
 import velka.util.Pair;
+import velka.util.IImplementationRanker;
 
 /** Class to represent an extended function in Clojure and Java */
 public class VelkaExtendedFunction implements VelkaAbstraction {
 	
-	private final List<Pair<? extends VelkaAbstraction, ? extends VelkaAbstraction>> impls
-		= new ArrayList<Pair<? extends VelkaAbstraction, ? extends VelkaAbstraction>>();
+	private final List<Pair<? extends VelkaAbstraction, ? extends IImplementationRanker>> impls
+		= new ArrayList<Pair<? extends VelkaAbstraction, ? extends IImplementationRanker>>();
 	
 	private final TypeSystem ts;
 	private final Type type;
@@ -24,7 +25,7 @@ public class VelkaExtendedFunction implements VelkaAbstraction {
 	}
 	
 	/** Creates new extended function with added implementation and cost */
-	public VelkaExtendedFunction extend(VelkaAbstraction impl, VelkaAbstraction cost) {
+	public VelkaExtendedFunction extend(VelkaAbstraction impl, IImplementationRanker cost) {
 		var t = RepresentationOr.or(this.type, impl.getType());			
 		var ef = new VelkaExtendedFunction(this.ts, t);
 		ef.impls.addAll(this.impls);
