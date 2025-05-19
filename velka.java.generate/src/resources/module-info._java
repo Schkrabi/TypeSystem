@@ -4,4 +4,5 @@ module velka.runtime {
 	requires velka.types;
 	requires velka.java;
 	requires com.sun.codemodel;
+	requires io.vavr;
 }

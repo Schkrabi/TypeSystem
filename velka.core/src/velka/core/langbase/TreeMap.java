@@ -837,7 +837,7 @@ public class TreeMap extends OperatorBank{
 			String map = "_map";
 			String code = ClojureHelper.fnHelper(
 					List.of(map),
-					ClojureHelper.constructJavaClass(ArrayList.class,
+					ClojureHelper.applyClojureFunction("lazy-seq",
 									ClojureHelper.applyClojureFunction(
 											".keySet",
 											map)));
@@ -857,7 +857,7 @@ public class TreeMap extends OperatorBank{
 			@SuppressWarnings("unchecked")
 			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
-			return new LitInteropObject(new ArrayList<Object>(map.keySet()), TypeAtom.TypeListNative);
+			return new LitInteropObject(io.vavr.collection.Stream.ofAll(map.keySet().stream()), TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -876,7 +876,8 @@ public class TreeMap extends OperatorBank{
 			var ks = method.body().decl(CodeModelInstance.instance()._ref(java.util.Set.class), "_ks",
 					mappedArgs.get(new Symbol("_0")).invoke("keySet"));
 			method.body()._return(
-					JExpr._new(CodeModelInstance.instance()._ref(java.util.ArrayList.class)).arg(ks));
+					CodeModelInstance.instance().ref(io.vavr.collection.Stream.class)
+						.staticInvoke("ofAll").arg(ks.invoke("stream")));
 		}
 	};
 	
@@ -1814,7 +1815,7 @@ public class TreeMap extends OperatorBank{
 			var map = (java.util.TreeMap<Object, Object>)lji.javaObject;
 			
 			var l = map.values();
-			return new LitInteropObject(new ArrayList<Object>(l), TypeAtom.TypeListNative);
+			return new LitInteropObject(io.vavr.collection.Stream.ofAll(l.stream()), TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -1833,10 +1834,8 @@ public class TreeMap extends OperatorBank{
 			var vls = method.body().decl(CodeModelInstance.instance()._ref(Collection.class), "_vls",
 					mappedArgs.get(new Symbol("_0")).invoke("values"));
 			
-			var arrListCl = CodeModelInstance.instance().ref(ArrayList.class);
-			var ret = method.body().decl(arrListCl, "_ret",
-					JExpr._new(arrListCl).arg(vls));
-			method.body()._return(ret);
+			method.body()._return(CodeModelInstance.instance().ref(io.vavr.collection.Stream.class)
+					.staticInvoke("ofAll").arg(vls.invoke("stream")));
 		}
 	};
 	

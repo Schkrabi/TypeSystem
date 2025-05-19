@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JMethod;
@@ -647,17 +650,11 @@ public class JavaBitSet extends OperatorBank {
 			
 			var bset = (java.util.BitSet)set.javaObject;
 			@SuppressWarnings("unchecked")
-			var l = (java.util.List<Object>)lst.javaObject;
+			var l = (io.vavr.collection.Stream<Object>)lst.javaObject;
 			
-			var ret = l.stream().allMatch(e -> {
-				if(e instanceof Integer i) {
-					return bset.get(i);
-				}
-				throw new RuntimeException("Invalid set.");
-			});
+			var r = l.foldLeft(true, (x, y) -> (Boolean)x && bset.get(((Integer)y).intValue()));		
 			
-			
-			return ret ? LitBoolean.TRUE : LitBoolean.FALSE;
+			return Literal.objectToLiteral(r);
 		}
 
 		@Override
@@ -673,12 +670,21 @@ public class JavaBitSet extends OperatorBank {
 		
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var _foreach = method.body().forEach(CodeModelInstance.instance()._ref(Object.class), "val", mappedArgs.get(new Symbol("_1")));
-			var _if = _foreach.body()._if(mappedArgs.get(new Symbol("_0")).invoke("get")
-					.arg(JExpr.cast(CodeModelInstance.instance()._ref(Integer.class), _foreach.var()))
-					.not());
-			_if._then()._return(JExpr.FALSE);
-			method.body()._return(JExpr.TRUE);
+			var aCl = CodeModelInstance.instance().anonymousClass(BiFunction.class);
+			var apply = aCl.method(JMod.PUBLIC, Object.class, "apply");
+			var o1 = apply.param(Object.class, "_o1");
+			var o2 = apply.param(Object.class, "_o2");
+			
+			var _i = apply.body().decl(CodeModelInstance.instance().INT, "_i", 
+					JExpr.cast(CodeModelInstance.instance().ref(Integer.class), o2).invoke("intValue"));
+			apply.body()._return(JExpr.cast(CodeModelInstance.instance().ref(Boolean.class), o1)
+					.cand(mappedArgs.get(new Symbol("_0")).invoke("get").arg(_i)));
+			
+			method.body()._return(
+					mappedArgs.get(new Symbol("_1"))
+						.invoke("foldLeft")
+						.arg(JExpr.TRUE)
+						.arg(JExpr._new(aCl)));
 		}
 	};
 	
@@ -716,9 +722,9 @@ public class JavaBitSet extends OperatorBank {
 			
 			var bset = (java.util.BitSet)set.javaObject;
 			@SuppressWarnings("unchecked")
-			var l = (java.util.List<Object>)lst.javaObject;
+			var l = (io.vavr.collection.Stream<Object>)lst.javaObject;
 			
-			l.stream().forEach(e ->{
+			l.forEach(e ->{
 				if(e instanceof Integer i) {
 					bset.set(i);
 				}
@@ -740,9 +746,15 @@ public class JavaBitSet extends OperatorBank {
 		
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var _foreach = method.body().forEach(CodeModelInstance.instance()._ref(Object.class), "val", mappedArgs.get(new Symbol("_1")));
-			_foreach.body().add(mappedArgs.get(new Symbol("_0")).invoke("set")
-					.arg(JExpr.cast(CodeModelInstance.instance()._ref(Integer.class), _foreach.var())));
+			var aCl = CodeModelInstance.instance().anonymousClass(Consumer.class);
+			var accept = aCl.method(JMod.PUBLIC, void.class, "accept");
+			var o = accept.param(Object.class, "_o");
+			
+			var i = accept.body().decl(CodeModelInstance.instance().INT, "_i",
+					JExpr.cast(CodeModelInstance.instance().ref(Integer.class), o).invoke("intValue"));
+			accept.body().add(mappedArgs.get(new Symbol("_0")).invoke("set").arg(i));
+			
+			method.body().add(mappedArgs.get(new Symbol("_1")).invoke("forEach").arg(JExpr._new(aCl)));
 			
 			method.body()._return(mappedArgs.get(new Symbol("_0")));
 		}
@@ -779,10 +791,10 @@ public class JavaBitSet extends OperatorBank {
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var lst = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			var l = (java.util.List<Object>)lst.javaObject;
+			var l = (io.vavr.collection.Stream<Object>)lst.javaObject;
 			
 			var set = new java.util.BitSet(l.size());
-			l.stream().forEach(e ->{
+			l.forEach(e ->{
 				if(e instanceof Integer i) {
 					set.set(i);
 					return;
@@ -811,10 +823,15 @@ public class JavaBitSet extends OperatorBank {
 			var bset = method.body().decl(bsCl, "_bs",
 					JExpr._new(bsCl));
 			
-			var _foreach = method.body().forEach(CodeModelInstance.instance()._ref(Object.class), "val", mappedArgs.get(new Symbol("_0")));
-			_foreach.body().add(bset.invoke("set")
-					.arg(JExpr.cast(CodeModelInstance.instance()._ref(Integer.class), _foreach.var())));
+			var aCl = CodeModelInstance.instance().anonymousClass(Consumer.class);
+			var accept = aCl.method(JMod.PUBLIC, void.class, "accept");
+			var o = accept.param(Object.class, "_o");
 			
+			var i = accept.body().decl(CodeModelInstance.instance().INT, "_i",
+					JExpr.cast(CodeModelInstance.instance().ref(Integer.class), o).invoke("intValue"));
+			accept.body().add(bset.invoke("set").arg(i));
+			
+			method.body().add(mappedArgs.get(new Symbol("_0")).invoke("forEach").arg(JExpr._new(aCl)));			
 			method.body()._return(bset);
 		}
 	};
@@ -831,7 +848,7 @@ public class JavaBitSet extends OperatorBank {
 			var code = ClojureHelper.fnHelper(
 					List.of(set),
 					ClojureHelper.letHelper(
-							ClojureHelper.constructJavaClass(ArrayList.class, indices),
+							ClojureHelper.applyClojureFunction("lazy-seq", indices),
 							Pair.of(indices,
 									ClojureHelper.applyClojureFunction("loop",
 											ClojureHelper.clojureVectorHelper(
@@ -860,16 +877,13 @@ public class JavaBitSet extends OperatorBank {
 			var lio = (LitInteropObject)args.get(0);
 			var bset = (java.util.BitSet)lio.javaObject;
 			
-			var l = new ArrayList<Object>();
+			var s = 
+					io.vavr.collection.Stream.unfoldRight(bset.nextSetBit(0), 
+							i -> i >= 0
+								? io.vavr.control.Option.of(new io.vavr.Tuple2<>(i, bset.nextSetBit(i + 1)))
+								: io.vavr.control.Option.none());
 			
-			int i = bset.nextSetBit(0);
-			while(i >= 0) {
-				l.add(Integer.valueOf(i));
-				
-				i = bset.nextSetBit(i + 1);
-			}
-			
-			return new LitInteropObject(l, TypeAtom.TypeListNative);
+			return new LitInteropObject(s, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -885,17 +899,29 @@ public class JavaBitSet extends OperatorBank {
 		
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var lCl = CodeModelInstance.instance().ref(ArrayList.class);
-			var lst = method.body().decl(lCl, "_lst", JExpr._new(lCl));
+			var bset = mappedArgs.get(new Symbol("_0"));
 			
-			var i = method.body().decl(CodeModelInstance.instance().INT, "_i",
-						mappedArgs.get(new Symbol("_0")).invoke("nextSetBit").arg(JExpr.lit(0)));
+			var aCl = CodeModelInstance.instance().anonymousClass(Function.class);
+			var apply = aCl.method(JMod.PUBLIC, Object.class, "apply");
+			var o = apply.param(Object.class, "_o");
+			var i = apply.body().decl(CodeModelInstance.instance().INT, "_i",
+					JExpr.cast(CodeModelInstance.instance().ref(Integer.class), o).invoke("intValue"));
 			
-			var _while = method.body()._while(i.gte(JExpr.lit(0)));
-			_while.body().add(lst.invoke("add").arg(i));
-			_while.body().assign(i, mappedArgs.get(new Symbol("_0")).invoke("nextSetBit").arg(i.plus(JExpr.lit(1))));
+			var optCl = CodeModelInstance.instance().ref(io.vavr.control.Option.class);
+			var _if = apply.body()._if(i.gt(JExpr.lit(0)));
+			_if._then()._return(
+					optCl.staticInvoke("of")
+						.arg(JExpr._new(CodeModelInstance.instance().ref(io.vavr.Tuple2.class))
+								.arg(i)
+								.arg(bset.invoke("nextSetBit").arg(i.plus(JExpr.lit(1))))));
+			_if._else()._return(
+					optCl.staticInvoke("none"));
 			
-			method.body()._return(lst);
+			method.body()._return(
+					CodeModelInstance.instance().ref(io.vavr.collection.Stream.class)
+						.staticInvoke("unfoldRight")
+						.arg(bset.invoke("nextSetBit").arg(JExpr.lit(0)))
+						.arg(JExpr._new(aCl)));
 		}
 	};
 	

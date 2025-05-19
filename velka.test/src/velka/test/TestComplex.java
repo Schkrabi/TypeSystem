@@ -668,9 +668,9 @@ class TestComplex extends VelkaTest {
 				"(loop ((x 1)) (if (= x 2) x (recur (+ x 1))))",
 				2);
 		this.assertVelkaCode(
-				"(loop ((x 1) (a (construct List:Native))) "
-				+ "(if (= x 2) a (recur (+ x 1) (cdr (tuple (list-native-add-to-end-in-place a x) a)))))",
-				List.of(1));
+				"(loop ((x 1) (a (construct List:JavaLinked))) "
+				+ "(if (= x 2) a (recur (+ x 1) (cdr (tuple (java-linked-list-add-to-end a x) a)))))",
+				new java.util.LinkedList<>(List.of(1)));
 		this.assertVelkaCode(
 				"(loop ((x 0) (s \"\")) "
 				+ "(if (= x 3) s (recur (+ x 1) (loop ((y 0) (z s)) "
@@ -780,8 +780,24 @@ class TestComplex extends VelkaTest {
 	
 	@Test
 	void sandbox() throws NoSuchMethodException, SecurityException {
-		this.assertVelkaCode(
-				"((lambda ((((Int:Native) #> Int:Native) f)) (f 42)) (lambda ((Int:* a)) a))",
-				Integer.valueOf(42));
+//		this.assertVelkaCode(
+//				"((lambda ((((Int:Native) #> Int:Native) f)) (f 42)) (lambda ((Int:* a)) a))",
+//				Integer.valueOf(42));
+		
+		var l = io.vavr.collection.Stream.empty();
+		System.out.println(l.mkString("(", " ", ")"));
+		
+		l = l.prepend(1);
+		System.out.println(l.mkString());
+		
+		l = l.prependAll(io.vavr.collection.Stream.of(5, 4, 3, 2));
+		System.out.println(l.mkString());
+		
+		System.out.println(l.tail().mkString());
+		System.out.println(l.map(x -> ((Integer)x) + 1).mkString());
+		System.out.println(l.filter(x -> ((Integer)x) < 3).mkString());
+		
+		System.out.println(io.vavr.collection.Stream.empty().prepend(42).equals(
+				io.vavr.collection.Stream.empty().prepend(42)));
 	}
 }

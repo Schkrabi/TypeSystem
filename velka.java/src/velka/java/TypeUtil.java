@@ -126,10 +126,10 @@ public class TypeUtil {
 					TypeAtom.TypeBoolNative, Boolean.class,
 					TypeAtom.TypeStringNative, String.class,
 					TypeAtom.TypeString, String.class,
-					TypeAtom.TypeListNative, List.class),
+					TypeAtom.TypeListNative, io.vavr.collection.Stream.class),
 				Map.of(
 					TypeAtom.TypeListJavaLinked, List.class,
-					TypeAtom.TypeList, List.class,
+					TypeAtom.TypeList, Object.class,
 					TypeAtom.TypeListIterator, ListIterator.class,
 					TypeAtom.TypeMapTree, TreeMap.class,
 					TypeAtom.TypeMap, Map.class,

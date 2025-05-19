@@ -9,8 +9,9 @@
     <property name="velka.types.lib" value="./velka.types.jar" />
 	<property name="velka.java.lib" value="./velka.java.jar" />
 	<property name="com.sun.codemodel.lib" value="./codemodel-4.0.5.jar" />
+	<property name="io.vavr.lib" value="./vavr-1.0.0-alpha-4.jar" />
 	
-	<property name="module.path" value="${classes.dir}:${velka.util.lib}:${velka.types.lib}:${velka.java.lib}:${com.sun.codemodel.lib}" />
+	<property name="module.path" value="${classes.dir}:${velka.util.lib}:${velka.types.lib}:${velka.java.lib}:${com.sun.codemodel.lib}:${io.vavr.lib}" />
 	<property name="module.name" value="velka.runtime" />
 	<property name="main.class" value="velka.runtime.user" />
 	
@@ -22,6 +23,7 @@
         <pathelement location="${velka.types.lib}" />
 		<pathelement location="${velka.java.lib}" />
 		<pathelement location="${com.sun.codemodel.lib}" />
+		<pathelement location="${io.vavr.lib}" />
     </path>
 	
 	<target name="clean">

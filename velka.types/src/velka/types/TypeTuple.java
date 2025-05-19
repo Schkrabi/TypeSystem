@@ -205,6 +205,10 @@ public class TypeTuple extends Type implements Iterable<Type> {
 					Type t = i.next();
 					Type u = j.next();
 
+					if(t == null) {
+						throw new RuntimeException();
+					}
+					
 					Optional<Substitution> ot = Type.unifyTypes(t.apply(s), u.apply(s));
 					if(ot.isEmpty()) {
 						return Optional.empty();

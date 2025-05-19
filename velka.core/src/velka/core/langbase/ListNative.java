@@ -9,9 +9,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMethod;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JVar;
 
 import velka.types.Substitution;
 import velka.types.Type;
@@ -62,12 +68,12 @@ public class ListNative extends OperatorBank{
 	 * Empty list native
 	 */
 	public static final Expression EMPTY_LIST_NATIVE = 
-			new LitInteropObject(new ArrayList<Object>(), TypeAtom.TypeListNative);
+			new LitInteropObject(io.vavr.collection.Stream.empty(), TypeAtom.TypeListNative);
 
 	/**
 	 * Clojure code for empty list
 	 */
-	public static final String EMPTY_LIST_NATIVE_CLOJURE = ClojureHelper.constructJavaClass(ArrayList.class);
+	public static final String EMPTY_LIST_NATIVE_CLOJURE = "'()";
 
 	/**
 	 * Construtor for empty list
@@ -76,7 +82,39 @@ public class ListNative extends OperatorBank{
 	@Description("Constructs Empty List:Native.")
 	@Name("Construct Empty List") 
 	@Syntax("(construct List:Native)")
-	public static final Constructor constructorEmpty = Constructor.wrapJavaConstructor(java.util.ArrayList.class, ListNative.singleton().getNamespace());
+	public static final Constructor constructorEmpty = new Constructor() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			String code = ClojureHelper.fnHelper(Arrays.asList(),
+					Type.addTypeMetaInfo("'()", TypeAtom.TypeListNative));
+			return code;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("velka-construct-empty-list-native", ListNative.singleton().getNamespace());
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			return new LitInteropObject(io.vavr.collection.Stream.empty(), TypeAtom.TypeListNative);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			TypeArrow type = new TypeArrow(TypeTuple.EMPTY_TUPLE, TypeAtom.TypeListNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var stCl = CodeModelInstance.instance().ref(io.vavr.collection.Stream.class);
+			
+			method.body()._return(stCl.staticInvoke("empty"));
+		}
+
+	};
 
 	public static final Symbol constructorSymbol = new Symbol("velka_construct_list_native", ListNative.singleton().getNamespace());
 
@@ -93,13 +131,10 @@ public class ListNative extends OperatorBank{
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			String val = "_value";
 			String rest = "_rest";
-			var ll = "_ll";
-			var tmp = "_tmp";
-			String code = ClojureHelper.fnHelper(List.of(val, rest),
-					ClojureHelper.letHelper(ll,
-							Pair.of(ll, ClojureHelper.constructJavaClass(ArrayList.class)),
-							Pair.of(tmp, ClojureHelper.applyClojureFunction(".add", ll, val)),
-							Pair.of(tmp, ClojureHelper.applyClojureFunction(".addAll", ll, rest))));
+			String code = ClojureHelper.fnHelper(Arrays.asList(val, rest),
+					ClojureHelper.applyClojureFunction("lazy-seq", Type.addTypeMetaInfo(
+							ClojureHelper.applyClojureFunction("cons", val, rest),
+							TypeAtom.TypeListNative)));
 			return code;
 		}
 
@@ -113,20 +148,19 @@ public class ListNative extends OperatorBank{
 			var val = args.get(0);			
 			var interop = (LitInteropObject) args.get(1);
 			@SuppressWarnings("unchecked")
-			var l = (List<Object>) interop.javaObject;
+			var s = (io.vavr.collection.Stream<Object>) interop.javaObject;
 
-			var ll = new ArrayList<Object>();
-			
+			Object o = null;
 			if(val instanceof Literal lit) {
-				ll.add(Literal.literalToObject(lit));
+				o = Literal.literalToObject(lit);
 			}
 			else {
-				ll.add(val);
+				o = val;
 			}
 			
-			ll.addAll(l);
+			s = s.prepend(o);			
 
-			return new LitInteropObject(ll, TypeAtom.TypeListNative);
+			return new LitInteropObject(s, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -139,33 +173,14 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var lCl = CodeModelInstance.instance().ref(ArrayList.class);
-			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl));
-			method.body().add(ll.invoke("add").arg(mappedArgs.get(new Symbol("_0"))));
-			method.body().add(ll.invoke("addAll").arg(mappedArgs.get(new Symbol("_1"))));
-			method.body()._return(ll);
+			var stCl = CodeModelInstance.instance().ref(io.vavr.collection.Stream.class);
+			
+			method.body()._return(
+					JExpr.cast(stCl, mappedArgs.get(new Symbol("_1")))
+						.invoke("prepend")
+						.arg(mappedArgs.get(new Symbol("_0"))));
 		}
 	};
-	
-	/**
-	 * Operator for contructor from list
-	 */
-	@VelkaConstructor
-	@Description("Construct List:JavaArray from existing list inserting all its elements.") 
-	@Name("Construct from list") 
-	@Syntax("(construct List:JavaArray <list>)")
-	public static Constructor constructorFromList = Constructor.wrapJavaConstructor(java.util.ArrayList.class,
-			ListNative.singleton().getNamespace(), Collection.class);
-	
-	/**
-	 * Operator for capacity constructor
-	 */
-	@VelkaConstructor
-	@Description("Constructs List:JavaArray with specified pre-allocated capacity.") 
-	@Name("Construct with capacity") 
-	@Syntax("(construc List JavaArray <capacity>)")
-	public static Constructor constructorCapacity = Constructor.wrapJavaConstructor(java.util.ArrayList.class, 
-			ListNative.singleton().getNamespace(), int.class);
 
 	/**
 	 * is-list-native-empty operator
@@ -174,8 +189,49 @@ public class ListNative extends OperatorBank{
 	@Description("Returns _true_ if list is empty. Returns _false_ otherwise.") 
 	@Example("(is-list-native-empty (construct List:Native)) ;; = #t") 
 	@Syntax("(is-list-native-empty <list>)")
-	public static final Operator isEmpty = Operator.wrapJavaMethod(ArrayList.class, "isEmpty", "is-list-native-empty",
-			ListNative.singleton().getNamespace()); 
+	public static final Operator isEmpty = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			String code = ClojureHelper.wrapClojureOperatorToFn(1, "empty?");
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			@SuppressWarnings("unchecked")
+			var s = (io.vavr.collection.Stream<Object>)lio.javaObject;
+			if(s.isEmpty()) {
+				return LitBoolean.TRUE;
+			}
+			return LitBoolean.FALSE;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_velka_is_list_native_empty", ListNative.singleton().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			method.body()._return(
+					mappedArgs.get(new Symbol("_0")).invoke("isEmpty"));
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(Arrays.asList(TypeAtom.TypeListNative)),
+					TypeAtom.TypeBoolNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "is-list-native-empty";
+		}
+		
+	};
 
 	/**
 	 * head-list-native symbol
@@ -217,16 +273,10 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			
-			LitInteropObject interop = (LitInteropObject) args.get(0);
+			var lio = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			var l = (List<Object>) interop.javaObject;
-
-			if (l.isEmpty()) {
-				throw new RuntimeException(errorMsg);
-			}
-			
-			var e = l.get(0);
+			var s = (io.vavr.collection.Stream<Object>)lio.javaObject;
+			var e = s.head();
 			
 			if(e instanceof Expression expr) {
 				return expr;
@@ -244,11 +294,8 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var l = mappedArgs.get(new Symbol("_0"));
-			var _if = method.body()._if(l.invoke("isEmpty"));
-			_if._then()._throw(JExpr._new(CodeModelInstance.instance().ref(RuntimeException.class)).arg(JExpr.lit(errorMsg)));
-			
-			method.body()._return(l.invoke("get").arg(JExpr.lit(0)));
+			method.body()._return(
+					mappedArgs.get(new Symbol("_0")).invoke("head"));
 		}
 	};
 
@@ -269,14 +316,16 @@ public class ListNative extends OperatorBank{
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
-			String code = ClojureHelper.fnHelper(List.of(list),
+			String code = ClojureHelper.fnHelper(Arrays.asList(list),
+					LitComposite.clojureValueToClojureLiteral(
+							ClojureHelper.applyClojureFunction("lazy-seq",
 									ClojureHelper.clojureIfHelper(
 											ClojureHelper.applyClojureFunction("empty?",
 													list),
 											ClojureHelper.errorHelper(ClojureHelper.stringHelper(errorMsg)),
-											ClojureHelper.constructJavaClass(ArrayList.class,
-													ClojureHelper.applyClojureFunction("rest",
-															list))));
+											ClojureHelper.applyClojureFunction("rest",
+													list))),
+							TypeAtom.TypeListNative));
 			return code;
 		}
 
@@ -292,17 +341,12 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			
-			LitInteropObject interop = (LitInteropObject) args.get(0);
+			var lio = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			List<Expression> l = (List<Expression>) interop.javaObject;
+			var s = (io.vavr.collection.Stream<Object>)lio.javaObject;
+			var l = s.tail();
 
-			if (l.isEmpty()) {
-				throw new RuntimeException(errorMsg);
-			}
-
-			List<Expression> ll = new ArrayList<Expression>(l.subList(1, l.size()));
-			return new LitInteropObject(ll, TypeAtom.TypeListNative);
+			return new LitInteropObject(l, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -315,13 +359,8 @@ public class ListNative extends OperatorBank{
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
 			var l = mappedArgs.get(new Symbol("_0"));
-			var _if = method.body()._if(l.invoke("isEmpty"));
-			_if._then()._throw(JExpr._new(CodeModelInstance.instance().ref(RuntimeException.class)).arg(JExpr.lit(errorMsg)));
-			
 			method.body()._return(
-					JExpr._new(CodeModelInstance.instance().ref(ArrayList.class))
-						.arg(l.invoke("subList").arg(JExpr.lit(1))
-								.arg(l.invoke("size"))));
+					l.invoke("tail"));
 		}
 	};
 
@@ -348,11 +387,14 @@ public class ListNative extends OperatorBank{
 			String fn = "_fn";
 			String arg = "_arg";
 			String code = ClojureHelper.fnHelper(Arrays.asList(fn, list),
-									ClojureHelper.constructJavaClass(ArrayList.class, 
+					LitComposite
+							.clojureValueToClojureLiteral(
+									ClojureHelper.applyClojureFunction("lazy-seq",
 											ClojureHelper.applyClojureFunction("map",
 													ClojureHelper.fnHelper(Arrays.asList(arg),
 															ClojureHelper.applyVelkaFunction(fn, arg)),
-													list)));
+													list)),
+									TypeAtom.TypeListNative));
 			return code;
 		}
 
@@ -371,29 +413,32 @@ public class ListNative extends OperatorBank{
 			Expression f = args.get(0);
 			LitInteropObject interop = (LitInteropObject) args.get(1);
 			@SuppressWarnings("unchecked")
-			var l = (List<Object>) interop.javaObject;
+			var s = (io.vavr.collection.Stream<Object>) interop.javaObject;
 
-			var agg = new ArrayList<Object>();
-
-			for (var e : l) {
-				AbstractionApplication appl;
+			var m = s.map(o -> {
+				Expression a = null;
+				if(o instanceof Expression e) {
+					a = e;
+				}
+				else {
+					a = Literal.objectToLiteral(o);
+				}
+				var app = new AbstractionApplication(f, new Tuple(a));
+				Expression ret;
+				try {
+					ret = app.interpret(env);
+				} catch (AppendableException e1) {
+					throw new RuntimeException(e1);
+				}
 				
-				if(e instanceof Expression expr) {
-					appl = new AbstractionApplication(f, new Tuple(expr));
+				if(ret instanceof Literal l) {
+					return Literal.literalToObject(l);
 				}
-				else {
-					appl = new AbstractionApplication(f, new Tuple(Literal.objectToLiteral(e)));
-				}
-				Expression res = appl.interpret(env);
-				if(res instanceof Literal lit) {
-					agg.add(Literal.literalToObject(lit));
-				}
-				else {
-					agg.add(res);
-				}
-			}
-
-			return new LitInteropObject(agg, TypeAtom.TypeListNative);
+				
+				return ret;
+			});
+			
+			return new LitInteropObject(m, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -408,31 +453,17 @@ public class ListNative extends OperatorBank{
 		}
 
 		@Override
-		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var lCl = CodeModelInstance.instance().ref(ArrayList.class);
-			var _size = method.body().decl(CodeModelInstance.instance().INT, "_size", mappedArgs.get(new Symbol("_1")).invoke("size"));
-			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl).arg(_size));
-			
-			var ttcl = TypeUtil.instance().typeTupleJClass();
-			var argType = method.body().decl(ttcl, "_elementType", JExpr._null());
-			
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {			
 			var oCl = CodeModelInstance.instance().ref(Object.class);
-			var _for = method.body()._for();
-			var _i = _for.init(CodeModelInstance.instance().INT, "_i", JExpr.lit(0));
-			_for.test(_i.lt(_size));
-			_for.update(_i.incr());
+			var aCl = CodeModelInstance.instance().anonymousClass(java.util.function.Function.class);
+			var app = aCl.method(JMod.PUBLIC, Object.class, "apply");
+			var o = app.param(Object.class, "_o");
+			var r = app.body().decl(oCl, "r", JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class),
+					mappedArgs.get(new Symbol("_0"))).invoke("apply").arg(VelkaTuple._of(o)));
+			app.body()._return(r);
 			
-			var _o = _for.body().decl(oCl, "_o", mappedArgs.get(new Symbol("_1")).invoke("get").arg(_i));
-			_for.body()._if(argType.eq(JExpr._null()))
-				._then().assign(argType, JExpr._new(ttcl)
-						.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_o)));
-			
-			var r = _for.body().decl(oCl, "r", JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class),
-					mappedArgs.get(new Symbol("_0"))).invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(argType, _o)));
-			
-			_for.body().add(ll.invoke("add").arg(r));
-			
-			method.body()._return(ll);
+			method.body()._return(
+					mappedArgs.get(new Symbol("_1")).invoke("map").arg(JExpr._new(aCl)));
 		}		
 	};
 
@@ -464,12 +495,14 @@ public class ListNative extends OperatorBank{
 
 			String code = ClojureHelper
 					.fnHelper(Arrays.asList(fn, list1, list2),
-									ClojureHelper.constructJavaClass(ArrayList.class,
+							LitComposite.clojureValueToClojureLiteral(
+									ClojureHelper.applyClojureFunction("lazy-seq",
 											ClojureHelper.applyClojureFunction("map",
 													ClojureHelper.fnHelper(Arrays.asList(arg1, arg2),
 															ClojureHelper.applyVelkaFunction(fn, arg1, arg2)),
 													list1,
-													list2)));
+													list2)),
+									TypeAtom.TypeListNative));
 			return code;
 		}
 
@@ -490,45 +523,37 @@ public class ListNative extends OperatorBank{
 			var iOp2 = (LitInteropObject) args.get(2);
 			
 			@SuppressWarnings("unchecked")
-			var l1 = (List<Object>) iOp1.javaObject;
+			var l1 = (io.vavr.collection.Stream<Object>) iOp1.javaObject;
 			@SuppressWarnings("unchecked")
-			var l2 = (List<Object>) iOp2.javaObject;
+			var l2 = (io.vavr.collection.Stream<Object>) iOp2.javaObject;
 
-			var agg = new ArrayList<Object>();
+			var l = l1.zip(l2).map(
+					tuple -> {
+						Function<Object, Expression> extr = (Object x) -> {
+							if(x instanceof Expression e) {
+								return e;
+							}
+							return Literal.objectToLiteral(x);
+						};
+						var t = tuple.map(extr, extr);
+						var arg = new Tuple(t._1, t._2);
+						
+						var app = new AbstractionApplication(f, arg);
+						Expression ret;
+						try {
+							ret = app.interpret(env);
+						} catch (AppendableException e1) {
+							throw new RuntimeException(e1);
+						}
+						
+						if(ret instanceof Literal lit) {
+							return Literal.literalToObject(lit);
+						}
+						
+						return ret;
+					});
 
-			var i1 = l1.iterator();
-			var i2 = l2.iterator();
-			while (i1.hasNext() && i2.hasNext()) {
-				var o1 = i1.next();
-				Expression e1;
-				if(o1 instanceof Expression expr) {
-					e1 = expr;
-				}
-				else {
-					e1 = Literal.objectToLiteral(o1);
-				}
-				
-				var o2 = i2.next();
-				Expression e2;
-				if(o2 instanceof Expression expr) {
-					e2 = expr;
-				}
-				else {
-					e2 = Literal.objectToLiteral(o2);
-				}				
-				
-				var appl = new AbstractionApplication(f, new Tuple(e1, e2));
-				var ret = appl.interpret(env);
-				
-				if(ret instanceof Literal lit) {
-					agg.add(Literal.literalToObject(lit));
-				}
-				else {
-					agg.add(ret);
-				}
-			}
-
-			return new LitInteropObject(agg, TypeAtom.TypeListNative);
+			return new LitInteropObject(l, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -543,35 +568,22 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var lCl = CodeModelInstance.instance().ref(ArrayList.class);
-			var _size = method.body().decl(CodeModelInstance.instance().INT, "_size",
-					mappedArgs.get(new Symbol("_1")).invoke("size"));
-			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl).arg(_size));
-			
 			var oCl = CodeModelInstance.instance().ref(Object.class);
+			var aCl = CodeModelInstance.instance().anonymousClass(java.util.function.Function.class);
+			var app = aCl.method(JMod.PUBLIC, Object.class, "apply");
 			
-			var elType = method.body().decl(TypeUtil.instance().typeTupleJType(), "elementType", JExpr._null());
+			var o = app.param(Object.class, "_o");
 			
-			var _for = method.body()._for();
-			var _i = _for.init(CodeModelInstance.instance().INT, "_i", JExpr.lit(0));
-			_for.test(_i.lt(_size));
-			_for.update(_i.incr());
+			var t2Cl = CodeModelInstance.instance().ref(io.vavr.Tuple2.class);
+			var t = app.body().decl(t2Cl, "_t",
+					JExpr.cast(t2Cl, o));
 			
-			var o1 = _for.body().decl(oCl, "o1", mappedArgs.get(new Symbol("_1")).invoke("get").arg(_i));
-			var o2 = _for.body().decl(oCl, "o2", mappedArgs.get(new Symbol("_2")).invoke("get").arg(_i));
+			var r = app.body().decl(oCl, "r", JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class),
+					mappedArgs.get(new Symbol("_0"))).invoke("apply").arg(VelkaTuple._of(t.invoke("_1"), t.invoke("_2"))));
+			app.body()._return(r);
 			
-			_for.body()._if(elType.eq(JExpr._null()))._then().assign(elType,
-					JExpr._new(TypeUtil.instance().typeTupleJClass())
-							.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(o1))
-							.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(o2)));
-			
-			var r = _for.body().decl(oCl, "r", JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class),
-					mappedArgs.get(new Symbol("_0"))).invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(
-							elType,	o1, o2)));
-			
-			_for.body().add(ll.invoke("add").arg(r));
-			
-			method.body()._return(ll);
+			method.body()._return(mappedArgs.get(new Symbol("_1")).invoke("zip").arg(mappedArgs.get(new Symbol("_2")))
+					.invoke("map").arg(JExpr._new(aCl)));
 		}
 	};
 
@@ -592,25 +604,17 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			String abst = "_abst";
-			String term = "_term";
 			String list = "_list";
-			String agg = "_agg";
-			String element = "_element";
-			String code = ClojureHelper.fnHelper(
-					Arrays.asList(abst, term, list),
-					ClojureHelper.applyClojureFunction(
-							"reduce",
-							ClojureHelper.fnHelper(
-									Arrays.asList(agg, element),
-									ClojureHelper.applyVelkaFunction(
-											abst,
-											agg,
-											element)),
-							term,
-							ClojureHelper.applyClojureFunction(
-									"reverse",
-									list)));
+			String terminator = "_term";
+			String fn = "_fn";
+			String arg1 = "_arg1";
+			String arg2 = "_arg2";
+			String code = ClojureHelper.fnHelper(Arrays.asList(fn, terminator, list),
+					ClojureHelper.applyClojureFunction("reduce",
+							ClojureHelper.fnHelper(Arrays.asList(arg1, arg2),
+									ClojureHelper.applyVelkaFunction(fn, arg1, arg2)),
+							terminator, 
+							ClojureHelper.applyClojureFunction("reverse", list)));
 			return code;
 		}
 
@@ -630,18 +634,28 @@ public class ListNative extends OperatorBank{
 			var terminator = args.get(1);
 			var io = (LitInteropObject) args.get(2);
 			@SuppressWarnings("unchecked")
-			var list = (ArrayList<Object>) io.javaObject;
-
-			Expression agg = terminator;
-			var i = list.listIterator(list.size());
-			while (i.hasPrevious()) {
-				var element = i.previous();
-				AbstractionApplication app = new AbstractionApplication(abst,
-						new Tuple(agg, Literal.objectToLiteral(element)));
-				agg = app.interpret(env);
-			}
-
-			return agg;
+			var s = (io.vavr.collection.Stream<Object>) io.javaObject;
+			
+			var ret = s.foldRight(terminator, (o1, e2) -> {
+				Expression e1 = null;
+				if(o1 instanceof Expression e) {
+					e1 = e;
+				}
+				else {
+					e1 = Literal.objectToLiteral(o1);
+				}
+				
+				var app = new AbstractionApplication(abst, new Tuple(e2, e1));
+				Expression r;
+				try {
+					r = app.interpret(env);
+				} catch (AppendableException e3) {
+					throw new RuntimeException(e3);
+				}
+				return r;				
+			});
+			
+			return ret;
 		}
 
 		@Override
@@ -654,108 +668,23 @@ public class ListNative extends OperatorBank{
 		}
 		
 		@Override
-		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {			
-			var oCl = CodeModelInstance.instance().ref(Object.class);
-			var l = mappedArgs.get(new Symbol("_2"));
-			var f = JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class), mappedArgs.get(new Symbol("_0")));
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {		
+			var aCl = CodeModelInstance.instance().anonymousClass(BiFunction.class);
+			var app = aCl.method(JMod.PUBLIC, Object.class, "apply");
+			var o1 = app.param(Object.class, "_o1");
+			var o2 = app.param(Object.class, "_o2");
 			
-			var tt = TypeUtil.instance().typeTupleJType();
-			var elType = method.body().decl(tt, "_elType", JExpr._null());
+			app.body()._return(
+					JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class), mappedArgs.get(new Symbol("_0")))
+						.invoke("apply")
+						.arg(VelkaTuple._of(o2, o1)));
 			
-			var agg = method.body().decl(oCl, "ret", mappedArgs.get(new Symbol("_1")));
-			
-			var _for = method.body()._for();
-			var _i = _for.init(CodeModelInstance.instance().INT, "_i", l.invoke("size").minus(JExpr.lit(1)));
-			_for.test(_i.gte(JExpr.lit(0)));
-			_for.update(_i.decr());
-			
-			var _o = _for.body().decl(oCl, "_o", l.invoke("get").arg(_i));
-			
-			_for.body()._if(elType.eq(JExpr._null()))
-				._then().assign(elType, 
-						JExpr._new(tt)
-							.arg(JExpr.direct(Abstraction.CAD_ARG_TYPE).invoke("get").arg(JExpr.lit(1)))
-							.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_o)));
-			
-			_for.body().assign(agg, f.invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(elType, agg, _o)));
-			
-			method.body()._return(agg);
+			method.body()._return(
+					mappedArgs.get(new Symbol("_2"))
+						.invoke("foldRight")
+							.arg(mappedArgs.get(new Symbol("_1")))
+							.arg(JExpr._new(aCl)));
 		}		
-	};
-
-	/**
-	 * Symbol for add-to-end function
-	 */
-	private static final Symbol addToEndSymbol = new Symbol("add_to_end", ListNative.singleton().getNamespace());
-	public static final Symbol addToEndSymbol_out = new Symbol("list-native-add-to-end");
-
-	/**
-	 * add-to-end operator
-	 */
-	@VelkaOperator
-	@Description("Creates new list with appended the specified element to the end of list.") 
-	@Example("(add-to-end-list-native (construct List:Native) 42) ;; = (42)") 
-	@Syntax("(add-to-end-list-native <list> <element>)")
-	public static final Operator addToEndOperator = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String element = "_element";
-			var ll = "_ll";
-			var tmp = "_tmp";
-
-			String code = ClojureHelper.fnHelper(List.of(list, element),
-							ClojureHelper.letHelper(ll,
-									Pair.of(ll, ClojureHelper.constructJavaClass(ArrayList.class, list)),
-									Pair.of(tmp, ClojureHelper.applyClojureFunction(".add", ll, element))));
-			return code;
-		}
-
-		@Override
-		public String toString() {
-			return ListNative.addToEndSymbol_out.toString();
-		}
-
-		@Override
-		public Symbol getInternalSymbol() {
-			return ListNative.addToEndSymbol;
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			var iOp = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			var l = (List<Object>) iOp.javaObject;
-			Object e;
-			
-			if(args.get(1) instanceof Literal lit) {
-				e = Literal.literalToObject(lit);
-			}
-			else {
-				e = args.get(1);
-			}			
-
-			var ll = new ArrayList<Object>(l);
-			ll.add(e);
-
-			return new LitInteropObject(ll, TypeAtom.TypeListNative);
-		}
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeVariable A = new TypeVariable(NameGenerator.next());
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, A), TypeAtom.TypeListNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var lCl = CodeModelInstance.instance().ref(ArrayList.class);
-			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl).arg(mappedArgs.get(new Symbol("_0"))));
-			method.body().add(ll.invoke("add").arg(mappedArgs.get(new Symbol("_1"))));
-			method.body()._return(ll);
-		}
 	};
 
 	public static final Symbol ListNativeToLinkedListSymbol = new Symbol("to_linked_list", ListNative.singleton().getNamespace());
@@ -790,8 +719,9 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			List<Expression> l = (List<Expression>) iOp.javaObject;
-			List<Expression> a = new ArrayList<Expression>(l);
+			var l = (io.vavr.collection.Stream<Object>) iOp.javaObject;
+			
+			var a = new java.util.LinkedList<Object>(l.asJava());
 
 			return new LitInteropObject(a, TypeAtom.TypeListJavaLinked);
 		}
@@ -804,22 +734,12 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
+			
 			var lCl = CodeModelInstance.instance().ref(java.util.LinkedList.class);
-			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl).arg(mappedArgs.get(new Symbol("_0"))));
+			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl).arg(mappedArgs.get(new Symbol("_0")).invoke("asJava")));
 			method.body()._return(ll);
 		}
 	};
-
-	/**
-	 * contains operator
-	 */
-	@VelkaOperator
-	@Description("Returns true if this list contains the specified element.") 
-	@Example("(contains-list-native (build-list-native 3 (lambda (x) x)) 0) ; = #t\n"
-					+ "(contains-list-native (build-list-native 3 (lambda (x) x)) 5) ; = #f") 
-	@Syntax("(contains-list-native <list> <element>)")
-	public static final Operator contains = Operator.wrapJavaMethod(ArrayList.class, "contains",
-			"list-native-contains", ListNative.singleton().getNamespace(), Object.class);
 
 	public static final Symbol filterSymbol = new Symbol("velka_filter", ListNative.singleton().getNamespace());
 	public static final Symbol filterSymbol_out = new Symbol("list-native-filter");
@@ -836,13 +756,16 @@ public class ListNative extends OperatorBank{
 			String pred = "_pred";
 			String arg = "_arg";
 			String code = ClojureHelper
-					.fnHelper(List.of(list, pred),
-							ClojureHelper.constructJavaClass(ArrayList.class,
+					.fnHelper(Arrays.asList(list, pred),
+							LitComposite
+									.clojureValueToClojureLiteral(
+											ClojureHelper.applyClojureFunction("lazy-seq",
 													ClojureHelper.applyClojureFunction("filter",
 															ClojureHelper.fnHelper(Arrays.asList(arg),
 																	ClojureHelper
 																			.applyVelkaFunction(pred, arg)),
-															list)));
+															list)),
+											TypeAtom.TypeListNative));
 			return code;
 		}
 
@@ -860,12 +783,10 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			var l = (List<Object>) iOp.javaObject;
+			var s = (io.vavr.collection.Stream<Object>) iOp.javaObject;
 			var pred = args.get(1);
-
-			var ll = new ArrayList<Object>();
-
-			for (var e : l) {
+			
+			var r = s.filter(e -> {
 				AbstractionApplication app;
 				if(e instanceof Expression expr) {
 					app = new AbstractionApplication(pred, new Tuple(expr));
@@ -874,13 +795,16 @@ public class ListNative extends OperatorBank{
 					app = new AbstractionApplication(pred, new Tuple(Literal.objectToLiteral(e)));
 				}
 				
-				Expression rsl = app.interpret(env);
-				if (rsl.equals(LitBoolean.TRUE)) {
-					ll.add(e);
+				Expression rsl = null;
+				try {
+					rsl = app.interpret(env);
+				} catch (AppendableException e1) {
+					throw new RuntimeException(e1);
 				}
-			}
+				return rsl == LitBoolean.TRUE;
+			});
 
-			return new LitInteropObject(ll, TypeAtom.TypeListNative);
+			return new LitInteropObject(r, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -894,31 +818,21 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var lCl = CodeModelInstance.instance().ref(ArrayList.class);
-			var _size = method.body().decl(CodeModelInstance.instance().INT, "_size", mappedArgs.get(new Symbol("_0")).invoke("size"));
-			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl).arg(_size));
+			var aCl = CodeModelInstance.instance().anonymousClass(Predicate.class);
+			var app = aCl.method(JMod.PUBLIC, boolean.class, "test");
+			var o = app.param(Object.class, "_o");
 			
-			var ttcl = TypeUtil.instance().typeTupleJClass();
-			var argType = method.body().decl(ttcl, "_elementType", JExpr._null());
+			app.body()
+					._return(JExpr
+							.cast(CodeModelInstance.instance().ref(Boolean.class),
+									JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class),
+											mappedArgs.get(new Symbol("_1"))).invoke("apply").arg(VelkaTuple._of(o)))
+							.invoke("booleanValue"));
 			
-			var oCl = CodeModelInstance.instance().ref(Object.class);
-			var _for = method.body()._for();
-			var _i = _for.init(CodeModelInstance.instance().INT, "_i", JExpr.lit(0));
-			_for.test(_i.lt(_size));
-			_for.update(_i.incr());
-			
-			var _o = _for.body().decl(oCl, "_o", mappedArgs.get(new Symbol("_0")).invoke("get").arg(_i));
-			_for.body()._if(argType.eq(JExpr._null()))
-				._then().assign(argType, JExpr._new(ttcl)
-						.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_o)));
-			
-			var r = _for.body().decl(oCl, "r", JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class),
-					mappedArgs.get(new Symbol("_1"))).invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(argType, _o)));
-			
-			var _if = _for.body()._if(JExpr.cast(CodeModelInstance.instance().ref(Boolean.class), r));
-			_if._then().add(ll.invoke("add").arg(_o));
-			
-			method.body()._return(ll);
+			method.body()._return(
+					mappedArgs.get(new Symbol("_0"))
+					.invoke("filter")
+					.arg(JExpr._new(aCl)));
 		}
 	};
 
@@ -938,8 +852,59 @@ public class ListNative extends OperatorBank{
 	@Description("Returns the element at the specified position in this list.") 
 	@Example("(get-list-native (build-list-native 5 (lambda (x) (* 2 x))) 1) ;; = 2") 
 	@Syntax("(get-list-native <list> <index>)")
-	public static final Operator get = Operator.wrapJavaMethod(ArrayList.class, "get", "list-native-get",
-			ListNative.singleton().getNamespace(), int.class); 
+	public static final Operator get = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			String list = "_list";
+			String index = "_index";
+			String code = ClojureHelper.fnHelper(Arrays.asList(list, index), ClojureHelper.applyClojureFunction("nth",
+					list, index));
+
+			return code;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return getSymbol;
+		}
+		
+		@Override
+		public String toString() {
+			return ListNative.getSymbol_out.toString();
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
+			@SuppressWarnings("unchecked")
+			var s = (io.vavr.collection.Stream<Object>) iOp.javaObject;
+			LitInteger index = (LitInteger) args.get(1);
+
+			var val = s.get(index.value);
+			if(val instanceof Expression expr) {
+				return expr;
+			}
+			return Literal.objectToLiteral(val);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			TypeVariable A = new TypeVariable(NameGenerator.next());
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, TypeAtom.TypeIntNative), A);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			method.body()
+				._return(
+						mappedArgs.get(new Symbol("_0"))
+							.invoke("get")
+							.arg(mappedArgs.get(new Symbol("_1"))));
+		}
+
+	};
 
 	public static final Symbol buildListSymbol = new Symbol("build_list", ListNative.singleton().getNamespace());
 	public static final Symbol buildListSymbol_out = new Symbol("list-native-build");
@@ -957,17 +922,19 @@ public class ListNative extends OperatorBank{
 			String fn = "_fn";
 			String arg = "_arg";
 			String code = ClojureHelper
-					.fnHelper(List.of(n, fn),
-							ClojureHelper.constructJavaClass(ArrayList.class,													
+					.fnHelper(Arrays.asList(n, fn),
+							LitComposite
+									.clojureValueToClojureLiteral(
+											ClojureHelper.applyClojureFunction("lazy-seq",
 													ClojureHelper.applyClojureFunction("map",
 															ClojureHelper.fnHelper(Arrays.asList(arg),
 																	ClojureHelper.applyVelkaFunction(fn,
 																			LitInteger.clojureLit(
 																					arg))),
-															ClojureHelper.applyClojureFunction("map",
-																	"int",
-																	ClojureHelper.applyClojureFunction("range",
-																			n)))));
+															ClojureHelper.applyClojureFunction("range",
+																	n))),
+											TypeAtom.TypeListNative));
+
 			return code;
 		}
 
@@ -985,21 +952,22 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			LitInteger n = (LitInteger) args.get(0);
 			Expression fn = args.get(1);
+			
+			var s = io.vavr.collection.Stream.range(0, n.value).map(i ->{
+				var app = new AbstractionApplication(fn, new Tuple(new LitInteger(i)));
+				Expression ret;
+				try {
+					ret = app.interpret(env);
+				} catch (AppendableException e) {
+					throw new RuntimeException(e);
+				}
+				if(ret instanceof Literal l) {
+					return Literal.literalToObject(l);
+				}
+				return ret;
+			});
 
-			List<Object> l = new ArrayList<Object>();
-
-			for (int i = 0; i < n.value; i++) {
-				AbstractionApplication appl = new AbstractionApplication(fn, new Tuple(new LitInteger(i)));
-
-				Expression expr = appl.interpret(env);
-				
-				if(expr instanceof Literal lit)
-					l.add(Literal.literalToObject(lit));
-				else
-					l.add(expr);
-			}
-
-			return new LitInteropObject(l, TypeAtom.TypeListNative);
+			return new LitInteropObject(s, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -1014,95 +982,22 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var lCl = CodeModelInstance.instance().ref(ArrayList.class);
-			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl).arg(mappedArgs.get(new Symbol("_0"))));
+			var aCl = CodeModelInstance.instance().anonymousClass(Function.class);
+			var app = aCl.method(JMod.PUBLIC, Object.class, "apply");
+			var o = app.param(Object.class, "_o");
 			
-			var oCl = CodeModelInstance.instance().ref(Object.class);
+			app.body()._return(
+					mappedArgs.get(new Symbol("_1"))
+					.invoke("apply")
+					.arg(VelkaTuple._of(o)));
 			
-			var _for = method.body()._for();
-			var _i = _for.init(CodeModelInstance.instance().INT, "_i", JExpr.lit(0));
-			_for.test(_i.lt(mappedArgs.get(new Symbol("_0"))));
-			_for.update(_i.incr());
-			
-			var r = _for.body().decl(oCl, "_r", JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class), mappedArgs.get(new Symbol("_1")))
-					.invoke("apply").arg(VelkaTuple._velkaTuple(new TypeTuple(TypeAtom.TypeIntNative), _i)));
-			
-			_for.body().add(ll.invoke("add").arg(r));
-			
-			method.body()._return(ll);
-		}
-	};
-
-	public static final Symbol removeSymbol = new Symbol("velka_remove", ListNative.singleton().getNamespace());
-	public static final Symbol removeSymbol_out = new Symbol("list-native-remove");
-
-	@VelkaOperator
-	@Description("Removes the first occurrence of the specified element from this list, if it is present.") 
-	@Example("(remove-list-native build-list-native 3 (lambda (x) x)) 1) ;; = (0 2)") 
-	@Syntax("(remove-list-native <list> <element>)")
-	public static final Operator remove = new Operator() {
-
-		@Override
-		protected String toClojureOperator(Environment env) throws AppendableException {
-			String list = "_list";
-			String element = "_element";
-			var ll = "_ll";
-			var tmp = "_tmp";
-			String code = ClojureHelper
-					.fnHelper(List.of(list, element),
-							ClojureHelper.letHelper(ll,
-									Pair.of(ll, ClojureHelper.constructJavaClass(ArrayList.class, list)),
-									Pair.of(tmp, ClojureHelper.applyClojureFunction(".remove", ll, element))));
-			return code;
-		}
-
-		@Override
-		public Symbol getInternalSymbol() {
-			return removeSymbol;
-		}
-		
-		@Override
-		public String toString() {
-			return ListNative.removeSymbol_out.toString();
-		}
-
-		@Override
-		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			var iOp = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			List<Expression> l = (List<Expression>) iOp.javaObject;
-			Object e;
-			
-			if(args.get(1) instanceof Literal lit) {
-				e = Literal.literalToObject(lit);
-			}
-			else {
-				e = args.get(1);
-			}
-
-			List<Expression> ll = new ArrayList<Expression>(l);
-			ll.remove(e);
-
-			return new LitInteropObject(ll, TypeAtom.TypeListNative);
-		}
-
-		/**
-		 * Type variable for use in lambda
-		 */
-		private final TypeVariable A = new TypeVariable(NameGenerator.next());
-
-		@Override
-		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative, A), TypeAtom.TypeListNative);
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
-		}
-
-		@Override
-		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var lCl = CodeModelInstance.instance().ref(ArrayList.class);
-			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl).arg(mappedArgs.get(new Symbol("_0"))));
-			method.body().add(ll.invoke("remove").arg(mappedArgs.get(new Symbol("_1"))));
-			method.body()._return(ll);
+			method.body()._return(
+					CodeModelInstance.instance().ref(io.vavr.collection.Stream.class)
+					.staticInvoke("range")
+					.arg(JExpr.lit(0))
+					.arg(mappedArgs.get(new Symbol("_0")))
+						.invoke("map")
+						.arg(JExpr._new(aCl)));
 		}
 	};
 
@@ -1110,8 +1005,48 @@ public class ListNative extends OperatorBank{
 	@Description("Returns the number of elements in this list.") 
 	@Example("(size-list-native (build-list-native 3 (lambda (x) x))) ;; = 3") 
 	@Syntax("(size-list-native <list>)")
-	public static final Operator size = Operator.wrapJavaMethod(ArrayList.class, "size", "list-native-size", 
-			ListNative.singleton().getNamespace());
+	public static final Operator size = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			String list = "_list";
+			String code = ClojureHelper.fnHelper(Arrays.asList(list), LitInteger.clojureLit(
+					ClojureHelper.applyClojureFunction("count", list)));
+
+			return code;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_list_native_size", ListNative.singleton().getNamespace());
+		}
+		
+		@Override
+		public String toString() {
+			return "list-native-size";
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var iOp = (LitInteropObject)args.get(0);
+			@SuppressWarnings("unchecked")
+			var l = (io.vavr.collection.Stream<Object>) iOp.javaObject;
+
+			return new LitInteger(l.size());
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			TypeArrow type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeIntNative);
+			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			method.body()._return(
+					mappedArgs.get(new Symbol("_0")).invoke("size"));
+		}
+	};
 
 	public static final Symbol appendSymbol = new Symbol("append", ListNative.singleton().getNamespace());
 	public static final Symbol appendSymbol_out = new Symbol("list-native-append");
@@ -1126,12 +1061,10 @@ public class ListNative extends OperatorBank{
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list1 = "_list1";
 			String list2 = "_list2";
-			var ll = "_ll";
-			var tmp = "_tmp";
-			String code = ClojureHelper.fnHelper(List.of(list1, list2),
-					ClojureHelper.letHelper(ll,
-							Pair.of(ll, ClojureHelper.constructJavaClass(ArrayList.class, list1)),
-							Pair.of(tmp, ClojureHelper.applyClojureFunction(".addAll", ll, list2))));
+			String code = ClojureHelper.fnHelper(Arrays.asList(list1, list2), LitComposite.clojureValueToClojureLiteral(
+					ClojureHelper.applyClojureFunction("lazy-seq", ClojureHelper.applyClojureFunction("concat",
+							list1, list2)),
+					TypeAtom.TypeListNative));
 			return code;
 		}
 
@@ -1149,15 +1082,14 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp1 = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			List<Expression> l0 = (List<Expression>) iOp1.javaObject;
+			var l0 = (io.vavr.collection.Stream<Object>) iOp1.javaObject;
 			var iOp2 = (LitInteropObject)args.get(1);
 			@SuppressWarnings("unchecked")
-			List<Expression> l1 = (List<Expression>) iOp2.javaObject;
+			var l1 = (io.vavr.collection.Stream<Object>) iOp2.javaObject;
 
-			List<Expression> aux = new ArrayList<Expression>(l0);
-			aux.addAll(l1);
-
-			return new LitInteropObject(aux, TypeAtom.TypeListNative);
+			var l = l0.appendAll(l1);
+			
+			return new LitInteropObject(l, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -1169,10 +1101,10 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var lCl = CodeModelInstance.instance().ref(ArrayList.class);
-			var ll = method.body().decl(lCl, "ll", JExpr._new(lCl).arg(mappedArgs.get(new Symbol("_0"))));
-			method.body().add(ll.invoke("addAll").arg(mappedArgs.get(new Symbol("_1"))));
-			method.body()._return(ll);
+			method.body()._return(
+					mappedArgs.get(new Symbol("_0"))
+						.invoke("appendAll")
+						.arg(mappedArgs.get(new Symbol("_1"))));
 		}
 	};
 
@@ -1188,9 +1120,10 @@ public class ListNative extends OperatorBank{
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "list";
-			String code = ClojureHelper.fnHelper(List.of(list),
-					ClojureHelper.constructJavaClass(ArrayList.class,
-							ClojureHelper.applyClojureFunction("reverse", list)));
+			String code = ClojureHelper.fnHelper(Arrays.asList(list),
+					LitComposite.clojureValueToClojureLiteral(
+							ClojureHelper.applyClojureFunction("reverse", list),
+							TypeAtom.TypeListNative));
 			return code;
 		}
 
@@ -1208,13 +1141,8 @@ public class ListNative extends OperatorBank{
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			List<Object> l = (List<Object>) iOp.javaObject;
-			ListIterator<Object> li = l.listIterator(l.size());
-			List<Object> r = new ArrayList<Object>();
-			while (li.hasPrevious()) {
-				r.add(li.previous());
-			}
-
+			var l = (io.vavr.collection.Stream<Object>) iOp.javaObject;
+			var r = l.reverse();
 			return new LitInteropObject(r, TypeAtom.TypeListNative);
 		}
 
@@ -1226,19 +1154,9 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var lCl = CodeModelInstance.instance().ref(ArrayList.class);
-			var itCl = CodeModelInstance.instance().ref(ListIterator.class);
-			var l = mappedArgs.get(new Symbol("_0"));
-			var _ll = method.body().decl(lCl, "_ll", JExpr._new(lCl).arg(l.invoke("size")));
-			
-			var _it = method.body().decl(itCl, "_it", l.invoke("listIterator").arg(l.invoke("size")));
-			
-			var _while = method.body()._while(_it.invoke("hasPrevious"));
-			var oCl = CodeModelInstance.instance().ref(Object.class);
-			var _o = _while.body().decl(oCl, "_o", _it.invoke("previous"));
-			_while.body().add(_ll.invoke("add").arg(_o));
-			
-			method.body()._return(_ll);
+			method.body()._return(
+					mappedArgs.get(new Symbol("_0"))
+						.invoke("reverse"));
 		}
 	};
 
@@ -1257,11 +1175,11 @@ public class ListNative extends OperatorBank{
 			String list = "_list";
 			String pred = "_pred";
 			String pred_arg = "_arg";
-			String code = ClojureHelper.fnHelper(List.of(list, pred),
-					ClojureHelper.applyClojureFunction("every?",
+			String code = ClojureHelper.fnHelper(Arrays.asList(list, pred),
+					LitBoolean.clojureLit(ClojureHelper.applyClojureFunction("every?",
 							ClojureHelper.fnHelper(Arrays.asList(pred_arg),
 									ClojureHelper.applyVelkaFunction(pred, pred_arg)),
-							list));
+							list)));
 			return code;
 		}
 
@@ -1275,30 +1193,35 @@ public class ListNative extends OperatorBank{
 			return ListNative.everypSymbol_out.toString();
 		}
 
+		@SuppressWarnings("deprecation")
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var iOp = (LitInteropObject)args.get(0);
-			@SuppressWarnings("unchecked")
-			var l = (List<Object>) iOp.javaObject;
 			Expression pred = args.get(1);
-
-			for(var e : l) {
-				Expression arg;
+			@SuppressWarnings("unchecked")
+			var l = (io.vavr.collection.Stream<Object>) iOp.javaObject;
+			var r = l.forAll(e -> {
+				Expression exp = null;
 				if(e instanceof Expression expr) {
-					arg = expr;
+					exp = expr;
 				}
 				else {
-					arg = Literal.objectToLiteral(e);
+					exp = Literal.objectToLiteral(e);
 				}
-				var appl = new AbstractionApplication(pred, new Tuple(arg));
-				var rslt = appl.interpret(env);				
 				
-				if(rslt.equals(LitBoolean.FALSE)){
-					return LitBoolean.FALSE;
+				var app = new AbstractionApplication(pred, new Tuple(exp));
+				Expression ret;
+				try {
+					ret = app.interpret(env);
+				} catch (AppendableException e1) {
+					throw new RuntimeException(e1);
 				}
-			}
-
-			return LitBoolean.TRUE;
+				
+				return ret == LitBoolean.TRUE;
+			});
+			
+			if(r) return LitBoolean.TRUE;
+			return LitBoolean.FALSE;
 		}
 
 		@Override
@@ -1312,165 +1235,22 @@ public class ListNative extends OperatorBank{
 		
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var oCl = CodeModelInstance.instance().ref(Object.class);
-			var l = mappedArgs.get(new Symbol("_0"));
-			var f = JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class), mappedArgs.get(new Symbol("_1")));
+			var aCl = CodeModelInstance.instance().anonymousClass(Predicate.class);
+			var tst = aCl.method(JMod.PUBLIC, boolean.class, "test");
+			var o = tst.param(Object.class, "_o");
 			
-			var ttt = TypeUtil.instance().typeTupleJType();
-			var argType = method.body().decl(ttt, "_argType", JExpr._null());
+			tst.body()._return(
+					JExpr.cast(CodeModelInstance.instance().ref(Boolean.class),
+					mappedArgs.get(new Symbol("_1"))
+					.invoke("apply")
+					.arg(VelkaTuple._of(o))).invoke("booleanValue"));
 			
-			var _for = method.body()._for();
-			var _i = _for.init(CodeModelInstance.instance().INT, "_i", JExpr.lit(0));
-			_for.test(_i.lt(l.invoke("size")));
-			_for.update(_i.incr());
-			
-			var _o = _for.body().decl(oCl, "_o", l.invoke("get").arg(_i));
-			_for.body()._if(argType.eq(JExpr._null()))._then().assign(argType,
-					JExpr._new(ttt).arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_o)));
-			
-			var bCl = CodeModelInstance.instance().ref(Boolean.class);
-			var _r = _for.body().decl(bCl, "_r", JExpr.cast(bCl, f.invoke("apply")
-					.arg(VelkaTuple._velkaTupleTypeExpr(argType, _o))));
-			
-			var _if = _for.body()._if(_r.not());
-			_if._then()._return(JExpr.FALSE);
-			
-			method.body()._return(JExpr.TRUE);
+			method.body()._return(
+					mappedArgs.get(new Symbol("_0"))
+						.invoke("forAll")
+						.arg(JExpr._new(aCl)));
 		}
 	};
-	
-	/**
-	 * Operator for boolean add(E e)
-	 */
-	@VelkaOperator
-	@Description("Appends the specified element to the end of list.") 
-	@Example("(list-native-add-to-end-in-place (construct List:JavaArray) 42)") 
-	@Syntax("(list-native-add-to-end-in-place <list> <element>)")
-	public static final Operator addToEndInPlace = Operator.wrapJavaMethod(ArrayList.class, "add",
-			"list-native-add-to-end-in-place", ListNative.singleton().getNamespace(), Object.class);
-	
-	/**
-	 * Operator for void add(int index, E element)
-	 */
-	@VelkaOperator
-	@Description("Inserts the specified element at the specified position in list.") 
-	@Example("(java-array-list-to-index (construct List:JavaArray) 0 42)") 
-	@Syntax("(java-array-list-to-index <list> <index> <element>)")
-	public static final Operator addToIndex = Operator.wrapJavaMethod(ArrayList.class, "add", "list-native-add-to-index",
-			ListNative.singleton().getNamespace(), int.class, Object.class); 
-	
-	/**
-	 * operator for boolean addAll(Collection<? extends E> c)
-	 */
-	@VelkaOperator
-	@Description("Appends all of the elements in the specified collection to the end of this list, in the order that they are returned by the specified collection's Iterator.")
-	@Example("(def l (construct List:JavaArray))\n" + "(java-array-list-add l 42)\n"
-			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n" + "(println l)\n" + ";;(42 0 1 2)")
-	@Syntax("(java-array-list-add-all <list1> <list2>)")
-	public static final Operator addAll = Operator.wrapJavaMethod(ArrayList.class, "addAll", "list-native-add-all",
-			ListNative.singleton().getNamespace(), Collection.class);
-	
-	/**
-	 * Operator for boolean containsAll(Collection<?> c)
-	 */
-	@VelkaOperator
-	@Description("Returns true if this list contains all of the elements in the specified list.")
-	@Example("(def l (construct List:JavaArray))\n"
-			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-			+ "(java-array-list-contains-all k (build-list-native 2 (lambda (x) x))) ;; = #t")
-	@Syntax("(java-array-list-contains-all <list1> <list2>)")
-	public static final Operator containsAll = Operator.wrapJavaMethod(ArrayList.class, "containsAll",
-			"list-native-contains-all", ListNative.singleton().getNamespace(), Collection.class);
-	
-	/**
-	 * Operator for int indexOf(Object o)
-	 */
-	@VelkaOperator
-	@Description("Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.")
-	@Example("(def l (construct List:JavaArray))\n"
-			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-			+ "(list-native-index-of l 1) ;; = 1")
-	@Syntax("(java-array-list-index-of <list> <element>)")
-	public static final Operator indexOf = Operator.wrapJavaMethod(java.util.ArrayList.class, "indexOf",
-			"list-native-index-of", ListNative.singleton().getNamespace(), Object.class);
-	
-	/**
-	 * Operator for int lastIndexOf(E e)
-	 */
-	@VelkaOperator
-	@Description("Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.")
-	@Example("(def l (construct List:JavaArray))\n"
-			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
-			+ "(list-native-last-index-of l 1) ;; = 2")
-	@Syntax("(java-array-list-last-index-of <list> <element>)")
-	public static final Operator lastIndexOf = Operator.wrapJavaMethod(ArrayList.class, "lastIndexOf",
-			"list-native-last-index-of", ListNative.singleton().getNamespace(), Object.class);
-
-	/**
-	 * Operator for boolean remove(Object o)
-	 */
-	@VelkaOperator
-	@Description("Removes the first occurrence of the specified element from this list, if it is present.")
-	@Example("(def l (construct List:JavaArray))\n"
-			+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n" + "(java-array-list-remove l 1)\n"
-			+ "(println l)\n" + "(0 2)")
-	@Syntax("(java-array-list-remove <list> <element>)")
-	public static final Operator removeInPlace = Operator.wrapJavaMethod(ArrayList.class, "remove", "list-native-remove-in-place",
-			ListNative.singleton().getNamespace(), Object.class);
-	
-	/**
-	 * Operator for boolean removeAll(Collection<?> c)
-	 */
-	@VelkaOperator
-	@Description("Removes from this list all of its elements that are contained in the specified collection.")
-	@Example("(let ((l (construct List:JavaArray (list 1 2 3)))"
-			+ "(tmp (java-array-list-remove-all l (list 1 2))))"
-			+ "l) ;;(3)")
-	@Syntax("(java-array-list-remove-all <list> <removed-list>)")
-	public static final Operator removeAll = Operator.wrapJavaMethod(ArrayList.class, "removeAll",
-			"list-native-remove-all", ListNative.singleton().getNamespace(), Collection.class);
-	
-	/**
-	 * Operator for boolean retainAll(Collection<?> c)
-	 */
-	@VelkaOperator
-	@Description("Retains only the elements in this list that are contained in the specified collection.") 
-	@Example("(def l (construct List:JavaArray))\n"
-					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) 1)))\n"
-					+ "(java-array-list-retain-all l (build-list-native 2 (lambda (x) (+ 1 x))))\n"
-					+ "(println l)\n"
-					+ "(2 3)") 
-	@Syntax("(java-array-list-retain-all <retained-list> <retainee-list>)")
-	public static final Operator retainAll = Operator.wrapJavaMethod(ArrayList.class, "retainAll",
-			"list-native-retain-all", ListNative.singleton().getNamespace(), Collection.class);
-	
-	/**
-	 * Operator for E set(int index, E element)
-	 */
-	@VelkaOperator
-	@Description("Replaces the element at the specified position in this list with the specified element.") 
-	@Example("(def l (construct List:JavaArray))\n"
-					+ "(java-array-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
-					+ "(java-array-list-set l 1 42)\n"
-					+ "(println l)\n"
-					+ "(0 42 2)") 
-	@Syntax("(java-array-list-set <list> <index> <element>)")
-	public static final Operator set = Operator.wrapJavaMethod(ArrayList.class, "set", "list-native-set",
-			ListNative.singleton().getNamespace(), int.class, Object.class);
-	
-	/**
-	 * Operator for List<E> subList(int fromIndex, int toIndex)
-	 */
-	@VelkaOperator
-	@Description("Returns a view of the portion of this list between the specified fromIndex, inclusive, and toIndex, exclusive.") 
-	@Example("(def l (construct List:JavaArray))\n"
-					+ "(java-array-list-add-all l (build-list-native 10 (lambda (x) x)))\n"
-					+ "(java-array-list-sublist l 3 7)\n"
-					+ ";; = (2 3 4 5 6 7)")
-	@Syntax("(java-array-list-sublist <list> <fromIndex> <toIndex>)")
-	public static final Operator sublist = Operator.wrapJavaMethod(ArrayList.class, "subList", "list-native-sublist",
-			ListNative.singleton().getNamespace(), int.class, int.class);
 
 	/**
 	 * Operator for T foldr(Function<T, E, T>)
@@ -1500,25 +1280,32 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
-			Expression f = args.get(0);
-			Expression term = args.get(1);
-			var iOp = (LitInteropObject)args.get(2);
+			var abst = args.get(0);
+			var terminator = args.get(1);
+			var io = (LitInteropObject) args.get(2);
 			@SuppressWarnings("unchecked")
-			var l = (List<Object>) iOp.javaObject;
-
-			for (var e : l) {
-				AbstractionApplication appl;
-				
-				if(e instanceof Expression expr) {
-					appl = new AbstractionApplication(f, new Tuple(term, expr));
+			var s = (io.vavr.collection.Stream<Object>) io.javaObject;
+			
+			var ret = s.foldLeft(terminator, (e1, o2) -> {
+				Expression e2 = null;
+				if(o2 instanceof Expression e) {
+					e2 = e;
 				}
 				else {
-					appl = new AbstractionApplication(f, new Tuple(term, Literal.objectToLiteral(e)));
+					e2 = Literal.objectToLiteral(o2);
 				}
-				term = appl.interpret(env);
-			}
-
-			return term;
+				
+				var app = new AbstractionApplication(abst, new Tuple(e1, e2));
+				Expression r;
+				try {
+					r = app.interpret(env);
+				} catch (AppendableException e3) {
+					throw new RuntimeException(e3);
+				}
+				return r;				
+			});
+			
+			return ret;
 		}
 
 		private TypeVariable A = new TypeVariable(NameGenerator.next());
@@ -1544,31 +1331,21 @@ public class ListNative extends OperatorBank{
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {			
-			var oCl = CodeModelInstance.instance().ref(Object.class);
-			var l = mappedArgs.get(new Symbol("_2"));
-			var f = JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class), mappedArgs.get(new Symbol("_0")));
+			var aCl = CodeModelInstance.instance().anonymousClass(BiFunction.class);
+			var app = aCl.method(JMod.PUBLIC, Object.class, "apply");
+			var o1 = app.param(Object.class, "_o1");
+			var o2 = app.param(Object.class, "_o2");
 			
-			var tt = TypeUtil.instance().typeTupleJType();
-			var elType = method.body().decl(tt, "_elType", JExpr._null());
+			app.body()._return(
+					JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class), mappedArgs.get(new Symbol("_0")))
+						.invoke("apply")
+						.arg(VelkaTuple._of(o1, o2)));
 			
-			var agg = method.body().decl(oCl, "ret", mappedArgs.get(new Symbol("_1")));
-			
-			var _for = method.body()._for();
-			var _i = _for.init(CodeModelInstance.instance().INT, "_i", JExpr.lit(0));
-			_for.test(_i.lt(l.invoke("size")));
-			_for.update(_i.incr());
-			
-			var _o = _for.body().decl(oCl, "_o", l.invoke("get").arg(_i));
-			
-			_for.body()._if(elType.eq(JExpr._null()))
-				._then().assign(elType, 
-						JExpr._new(tt)
-							.arg(JExpr.direct(Abstraction.CAD_ARG_TYPE).invoke("get").arg(JExpr.lit(1)))
-							.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_o)));
-			
-			_for.body().assign(agg, f.invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(elType, agg, _o)));
-			
-			method.body()._return(agg);
+			method.body()._return(
+					mappedArgs.get(new Symbol("_2"))
+						.invoke("foldLeft")
+							.arg(mappedArgs.get(new Symbol("_1")))
+							.arg(JExpr._new(aCl)));
 		}
 	};
 	
@@ -1591,7 +1368,7 @@ public class ListNative extends OperatorBank{
 	 */
 	public static Expression tupleToListNative(Tuple t) {
 		return 
-				new LitInteropObject(new ArrayList<Expression>(t.stream().collect(Collectors.toList())),
+				new LitInteropObject(io.vavr.collection.Stream.ofAll(t.stream()),
 				TypeAtom.TypeListNative);
 	}
 
@@ -1602,16 +1379,8 @@ public class ListNative extends OperatorBank{
 	 * @return list native literal (LitComposite instance)
 	 */
 	public static Expression makeListNativeExpression(List<Expression> l) {
-		List<Object> ll = new ArrayList<Object>();
-		l.forEach(e -> {
-			if(e instanceof Literal lit) {
-				ll.add(Literal.literalToObject(lit));
-			}
-			else {
-				ll.add(e);
-			}
-		});
-		return new LitInteropObject(ll, TypeAtom.TypeListNative);
+		var s = io.vavr.collection.Stream.ofAll(l.stream());
+		return new LitInteropObject(s, TypeAtom.TypeListNative);
 	}
 
 	/**
@@ -1632,29 +1401,9 @@ public class ListNative extends OperatorBank{
 	 */
 	public static Tuple listNativeToTuple(LitComposite list) {
 		@SuppressWarnings("unchecked")
-		List<Expression> l = (List<Expression>) ((LitInteropObject) list.value).javaObject;
+		var s = (io.vavr.collection.Stream<Expression>) ((LitInteropObject) list.value).javaObject;
 
-		return new Tuple(l);
-	}
-
-	/**
-	 * Prints list in clojure style
-	 * 
-	 * @param l printed list
-	 * @return string with printed list
-	 */
-	public static String toStringListNative(List<Expression> l) {
-		StringBuilder sb = new StringBuilder("(");
-		Iterator<Expression> i = l.iterator();
-		while (i.hasNext()) {
-			Expression e = i.next();
-			sb.append(e.toString());
-			if (i.hasNext()) {
-				sb.append(" ");
-			}
-		}
-		sb.append(")");
-		return sb.toString();
+		return new Tuple(s.asJava());
 	}
 	
 	public static String listNativeClojure(String clojureCode) {

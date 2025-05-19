@@ -39,7 +39,8 @@ public class List extends Expression implements CompileableToJava {
 	
 	@Override
 	public Expression interpret(Environment env) throws AppendableException {
-		var l = this.args.stream().map(e -> {
+		var s = io.vavr.collection.Stream.ofAll(this.args.stream())
+			.map(e -> {
 			try {
 				var exp = e.interpret(env);
 				if(exp instanceof Literal lit) {
@@ -49,9 +50,9 @@ public class List extends Expression implements CompileableToJava {
 			}catch(AppendableException ex) {
 				throw new RuntimeException(ex);
 			}
-		}).collect(Collectors.toList());
+		});
 		
-		return new LitInteropObject(l, TypeAtom.TypeListNative);
+		return new LitInteropObject(s, TypeAtom.TypeListNative);
 	}
 
 	@Override
@@ -76,8 +77,7 @@ public class List extends Expression implements CompileableToJava {
 			}		
 			}).collect(Collectors.toList());
 		
-		var code = ClojureHelper.constructJavaClass(java.util.ArrayList.class, 
-				ClojureHelper.applyClojureFunction("list", argCodes)); 
+		var code = ClojureHelper.applyClojureFunction("list", argCodes); 
 		
 		return code;
 	}
@@ -101,7 +101,8 @@ public class List extends Expression implements CompileableToJava {
 
 	@Override
 	public JExpression toJavaExpr(Environment env) {
-		var inv = CodeModelInstance.instance().ref(java.util.List.class).staticInvoke("of");
+		var inv = CodeModelInstance.instance().ref(io.vavr.collection.Stream.class)
+				.staticInvoke("of");
 		
 		for(var a : this.args) {
 			var ctj = (CompileableToJava)a;
@@ -109,6 +110,6 @@ public class List extends Expression implements CompileableToJava {
 			inv.arg(je);
 		}
 		
-		return JExpr._new(CodeModelInstance.instance().ref(java.util.ArrayList.class)).arg(inv);
+		return inv;
 	}
 }

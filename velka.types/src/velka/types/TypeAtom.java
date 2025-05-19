@@ -376,6 +376,8 @@ public class TypeAtom extends TerminalType {
 	private static Class<?> listItrCl = (new java.util.LinkedList<Object>()).listIterator().getClass();
 	private static Class<?> immListCl = List.of().getClass();
 	private static Class<?> immSetCl = Set.of().getClass();
+	private static Class<?> emptyVavRstreamCl = io.vavr.collection.Stream.empty().getClass();
+	private static Class<?> headVavrStreamCl = io.vavr.collection.Stream.empty().prepend(null).getClass();
 	
 	public static Type javaClassToType(Class<?> clazz) {
 		if(Object.class == clazz) return new TypeVariable(NameGenerator.next());
@@ -395,10 +397,15 @@ public class TypeAtom extends TerminalType {
 		else if(java.lang.Double.class == clazz) return TypeAtom.TypeDoubleNative;
 		else if(java.lang.String.class == clazz) return TypeAtom.TypeStringNative;
 		else if(java.lang.Boolean.class == clazz) return TypeAtom.TypeBoolNative;
+		else if(io.vavr.collection.Stream.class == clazz) return TypeListNative;
+		else if(emptyVavRstreamCl == clazz) return TypeListNative;
+		else if(headVavrStreamCl == clazz) return TypeListNative;
+		//TODO remove or replace
 		else if(java.util.Collection.class == clazz) return TypeListNative;
 		else if(java.util.LinkedList.class == clazz) return TypeListJavaLinked;
 		else if(java.util.List.class == clazz) return TypeListNative;
 		else if(java.util.ArrayList.class == clazz) return TypeListNative;
+		//TODO remove or replace END
 		else if(java.util.ListIterator.class == clazz) return TypeListIterator;
 		else if(java.util.TreeMap.class == clazz) return TypeMapTree;
 		else if(java.util.BitSet.class == clazz) return TypeSetBitSet;

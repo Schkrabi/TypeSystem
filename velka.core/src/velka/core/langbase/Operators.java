@@ -1839,7 +1839,7 @@ public final class Operators extends OperatorBank {
 	public static final Operator PrintlnOperator = new Operator() {
 
 		private final TypeArrow type = new TypeArrow(
-				new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeTuple.EMPTY_TUPLE);
+				new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntNative);
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
@@ -1847,12 +1847,12 @@ public final class Operators extends OperatorBank {
 			
 			System.out.println(arg.value);
 
-			return Expression.EMPTY_EXPRESSION;
+			return new LitInteger(arg.value.length());
 		}
 
 		@Override
 		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
-			return new Pair<Type, Substitution>(type, Substitution.EMPTY);
+			return Pair.of(type, Substitution.EMPTY);
 		}
 
 		@Override
@@ -1863,11 +1863,10 @@ public final class Operators extends OperatorBank {
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			var str = "_str";
-			return ClojureHelper.wrapVoidClojureOperatorToFn(1,
-					ClojureHelper.fnHelper(List.of(str), 
-							ClojureHelper.applyClojureFunction(".println",
-									"System/out",
-									str)));
+			return ClojureHelper.fnHelper(List.of(str),
+					ClojureHelper.letHelper(
+							ClojureHelper.applyClojureFunction("count", str),
+							Pair.of("_tmp", ClojureHelper.applyClojureFunction("println", str))));
 		}
 
 		@Override
@@ -1881,7 +1880,7 @@ public final class Operators extends OperatorBank {
 					CodeModelInstance.instance().ref(System.class).staticRef("out").invoke("println")
 					.arg(mappedArgs.get(new Symbol("_0"))));
 							
-			method.body()._return(CodeModelInstance.emptyExpression());
+			method.body()._return(mappedArgs.get(new Symbol("_0")).invoke("length"));
 		}
 	};
 	
@@ -1973,12 +1972,9 @@ public final class Operators extends OperatorBank {
 			LitString lsBy = (LitString) args.get(1);
 
 			String[] splitted = lsStr.value.split(lsBy.value);
-			var l = new ArrayList<Object>(splitted.length);
-			for(String s : splitted) {
-				l.add(s);
-			}
+			var s = io.vavr.collection.Stream.of(splitted);
 
-			return new LitInteropObject(l, TypeAtom.TypeListNative);
+			return new LitInteropObject(s, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -2000,13 +1996,10 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			Method mthd;
-			try {
-				mthd = String.class.getMethod("split", String.class);
-			} catch (NoSuchMethodException | SecurityException e) {
-				throw new RuntimeException(e);
-			}
-			this.wrapNaryMethod(method, mthd, mappedArgs, 1);
+			method.body()._return(
+					CodeModelInstance.instance().ref(io.vavr.collection.Stream.class)
+						.staticInvoke("of")
+						.arg(mappedArgs.get(new Symbol("_0")).invoke("split").arg(mappedArgs.get(new Symbol("_1")))));
 		}
 	};
 	
@@ -2121,7 +2114,14 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
-			return ClojureHelper.unaryOperatorToFn(".toString");
+			var arg = "_arg";
+			var code = ClojureHelper.fnHelper(List.of(arg),
+					ClojureHelper.condHelper(
+							Pair.of(ClojureHelper.applyClojureFunction("instance?", "java.util.BitSet", arg), 
+									ClojureHelper.applyClojureFunction(".toString", arg)),
+							Pair.of(":else", ClojureHelper.applyClojureFunction("pr-str", arg))));
+			
+			return code;
 		}
 
 		@Override
@@ -2129,7 +2129,15 @@ public final class Operators extends OperatorBank {
 			Expression e = args.get(0);
 			String s;
 			
-			s = e.toString();
+			
+			if(e instanceof LitInteropObject lio
+					&& lio.type == TypeAtom.TypeListNative) {
+				var st = (io.vavr.collection.Stream<Object>)lio.javaObject;
+				s = st.mkString("(", " ", ")");
+			}
+			else {
+				s = e.toString();
+			}
 			
 			return new LitString(s);
 		}
@@ -2153,13 +2161,16 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			Method mthd;
-			try {
-				mthd = Object.class.getMethod("toString");
-			} catch (NoSuchMethodException | SecurityException e) {
-				throw new RuntimeException(e);
-			}
-			this.wrapNaryMethod(method, mthd, mappedArgs, 0);
+			var stCl = CodeModelInstance.instance().ref(io.vavr.collection.Stream.class);
+			var a = mappedArgs.get(new Symbol("_0"));
+			var _if = method.body()._if(a._instanceof(stCl));
+			_if._then()._return(
+					JExpr.cast(stCl, a).invoke("mkString")
+					.arg(JExpr.lit("("))
+					.arg(JExpr.lit(" "))
+					.arg(JExpr.lit(")")));
+			_if._else()._return(
+					a.invoke("toString"));
 		}
 	};
 	
@@ -2709,17 +2720,16 @@ public final class Operators extends OperatorBank {
 			var path = "_path";
 			var code = ClojureHelper.fnHelper(
 					List.of(path),
-					ClojureHelper.constructJavaClass(ArrayList.class,
-							ClojureHelper.applyClojureFunction("map",
-									"str",
-									ClojureHelper.applyClojureFunction(".toList",
-											ClojureHelper.applyClojureFunction("java.nio.file.Files/list", 
-													ClojureHelper.applyClojureFunction("java.nio.file.Path/of",
-															path,
-															//Simulate empty varargs
-															ClojureHelper.applyClojureFunction("into-array", 
-																	"String",
-																	"[]")))))));
+					ClojureHelper.applyClojureFunction("map",
+							"str",
+							ClojureHelper.applyClojureFunction(".toList",
+									ClojureHelper.applyClojureFunction("java.nio.file.Files/list", 
+											ClojureHelper.applyClojureFunction("java.nio.file.Path/of",
+													path,
+													//Simulate empty varargs
+													ClojureHelper.applyClojureFunction("into-array", 
+															"String",
+															"[]"))))));
 			
 			return code;
 		}
@@ -2731,10 +2741,11 @@ public final class Operators extends OperatorBank {
 				path = l.value;
 			}
 			
-			List<Object> ret = null;
+			io.vavr.collection.Stream<Object> ret = null;
 			try {
 				
-				ret = new ArrayList<Object>(Files.list(Path.of(path)).map(Path::toString).toList());
+				ret = io.vavr.collection.Stream.ofAll(
+						Files.list(Path.of(path)).map(Path::toString));
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -2751,20 +2762,21 @@ public final class Operators extends OperatorBank {
 		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
 			var pathcl = CodeModelInstance.instance().ref(Path.class);
 			var filescl = CodeModelInstance.instance().ref(Files.class);
-			var lcl = CodeModelInstance.instance().ref(List.class);
-			var alcl = CodeModelInstance.instance().ref(ArrayList.class);
+			var sCl = CodeModelInstance.instance().ref(io.vavr.collection.Stream.class);
+			
 			
 			var path = method.body().decl(pathcl, "_path",
 					pathcl.staticInvoke("of").arg(mappedArgs.get(new Symbol("_0"))));
 			
-			var list = method.body().decl(lcl, "_list", JExpr._null());
+			var list = method.body().decl(sCl, "_list", JExpr._null());
 			
 			var _try = method.body()._try();
 			
 			_try.body().assign(list,
+					sCl.staticInvoke("ofAll").arg(
 					filescl.staticInvoke("list").arg(path)
-					.invoke("map").arg(JExpr.direct("java.nio.file.Path::toString"))
-					.invoke("toList"));
+					.invoke("map").arg(JExpr.direct("java.nio.file.Path::toString"))));
+					
 			
 			var ioecl = CodeModelInstance.instance().ref(IOException.class);
 			var rtecl = CodeModelInstance.instance().ref(RuntimeException.class);
@@ -2772,8 +2784,7 @@ public final class Operators extends OperatorBank {
 			var _e = _catch.param("_e");
 			_catch.body()._throw(JExpr._new(rtecl).arg(_e));
 			
-			method.body()._return(JExpr._new(alcl)
-					.arg(list));			
+			method.body()._return(list);		
 		}
 
 		@Override

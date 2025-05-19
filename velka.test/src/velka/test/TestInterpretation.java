@@ -1321,10 +1321,10 @@ class TestInterpretation extends VelkaTest{
 		
 		//Testing side effects
 		this.assertInterpretationEquals(
-				"(loop ((x 1) (a (construct List:Native))) (if (= x 2) a (let ((z (list-native-add-to-end-in-place a x))) (recur (+ x 1) a))))",
+				"(loop ((x 1) (a (construct List:JavaLinked))) (if (= x 2) a (let ((z (java-linked-list-add-to-end a x))) (recur (+ x 1) a))))",
 				
 						new LitInteropObject(
-								new ArrayList<Object>(List.of(1)),
+								new java.util.LinkedList<>(List.of(1)),
 						TypeAtom.TypeListNative));
 		
 		//Testing nested loops

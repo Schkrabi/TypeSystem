@@ -5,6 +5,7 @@ module velka.core {
 	requires java.logging;
 	requires java.base;
 	requires com.sun.codemodel;
+	requires io.vavr;
 	
 	exports velka.core.abstraction;
 	exports velka.core.application;

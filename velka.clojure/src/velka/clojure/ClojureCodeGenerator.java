@@ -193,6 +193,7 @@ public class ClojureCodeGenerator {
 		//Velka libs
 		sb.append("\"./velka.util.jar\"\n");
 		sb.append("\"./velka.types.jar\"\n");
+		sb.append("\"./vavr-1.0.0-alpha-4.jar\"\n");
 		//Path for ahead of time clojure compilation
 		sb.append("\"classes\"");
 		

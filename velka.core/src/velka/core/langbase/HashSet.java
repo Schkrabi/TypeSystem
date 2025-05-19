@@ -3,9 +3,15 @@ package velka.core.langbase;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMethod;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JVar;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
@@ -52,10 +58,6 @@ public class HashSet extends OperatorBank {
 	public static final Constructor constructor = Constructor.wrapJavaConstructor(java.util.HashSet.class,
 			HashSet.instance().getNamespace());
 	
-	@VelkaConstructor
-	public static Constructor copyConstructor = Constructor.wrapJavaConstructor(java.util.HashSet.class, 
-			HashSet.instance().getNamespace(), java.util.Collection.class);
-	
 	@VelkaOperator
 	public static Operator fromList = new Operator() {
 
@@ -76,9 +78,10 @@ public class HashSet extends OperatorBank {
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
 			var lio = (LitInteropObject)args.get(0);
 			@SuppressWarnings("unchecked")
-			var l = (java.util.List<Expression>)lio.javaObject;
+			var l = (io.vavr.collection.Stream<Object>)lio.javaObject;
 			
-			var s = new java.util.HashSet<Object>(l);
+			var s = new java.util.HashSet<Object>();
+			l.forEach(e -> s.add(e));
 			
 			return new LitInteropObject(s, TypeAtom.TypeSetHash);
 		}
@@ -95,8 +98,19 @@ public class HashSet extends OperatorBank {
 		}
 		
 		@Override
-		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			method.body()._return(JExpr._new(CodeModelInstance.instance()._ref(java.util.HashSet.class)).arg(mappedArgs.get(new Symbol("_0"))));
+		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {			
+			var hsCl = CodeModelInstance.instance()._ref(java.util.HashSet.class);
+			var hs = method.body().decl(hsCl, "_hs", JExpr._new(hsCl));
+			
+			var aCl = CodeModelInstance.instance().anonymousClass(Consumer.class);
+			var accept = aCl.method(JMod.PUBLIC, void.class, "accept");
+			var o = accept.param(Object.class, "_o");
+			
+			accept.body().add(hs.invoke("add").arg(o));
+			
+			method.body().add(mappedArgs.get(new Symbol("_0")).invoke("forEach").arg(JExpr._new(aCl)));
+			
+			method.body()._return(hs);
 		}
 	};
 	
@@ -119,17 +133,120 @@ public class HashSet extends OperatorBank {
 	public static Operator size = Operator.wrapJavaMethod(java.util.HashSet.class, "size", "set-hash-size", HashSet.instance().getNamespace());
 	
 	@VelkaOperator
-	public static Operator addAll = Operator.wrapJavaMethod(java.util.HashSet.class, "addAll", "set-hash-add-all", HashSet.instance().getNamespace(), Collection.class);
-	
+	public static Operator addAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var hs = "_hs";
+			var l = "_l";
+			var code = ClojureHelper.fnHelper(List.of(hs, l),
+					ClojureHelper.applyClojureFunction(".addAll", hs, l));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var hs = (java.util.HashSet<Object>)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var s = (io.vavr.collection.Stream<Object>)lio1.javaObject;
+			
+			s.forEach(e -> hs.add(e));
+			
+			return lio;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_set_hash_add_all", HashSet.instance().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var aCl = CodeModelInstance.instance().anonymousClass(Consumer.class);
+			var accept = aCl.method(JMod.PUBLIC, void.class, "accept");
+			var o = accept.param(Object.class, "_o");
+			
+			accept.body().add(mappedArgs.get(new Symbol("_0")).invoke("add").arg(o));
+			
+			method.body().add(mappedArgs.get(new Symbol("_1")).invoke("forEach").arg(JExpr._new(aCl)));
+			
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetHash, TypeAtom.TypeListNative), TypeAtom.TypeSetHash);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-hash-add-all";
+		}
+	};
+
 	@VelkaOperator
-	public static Operator containsAll = Operator.wrapJavaMethod(java.util.HashSet.class, "containsAll", "set-hash-contains-all", HashSet.instance().getNamespace(), Collection.class);
-	
-	@VelkaOperator
-	public static Operator removeAll = Operator.wrapJavaMethod(java.util.HashSet.class, "removeAll", "set-hash-remove-all", HashSet.instance().getNamespace(), Collection.class);
-	
-	@VelkaOperator
-	public static Operator retainAll = Operator.wrapJavaMethod(java.util.HashSet.class, "retainAll", "set-hash-retain-all", HashSet.instance().getNamespace(), Collection.class);
-	
+	public static Operator containsAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var hs = "_hs";
+			var l = "_l";
+			var code = ClojureHelper.fnHelper(List.of(hs, l),
+					ClojureHelper.applyClojureFunction(".containsAll", hs, l));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var hs = (java.util.HashSet<Object>)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var s = (io.vavr.collection.Stream<Object>)lio1.javaObject;
+			
+			var r = s.foldLeft(true, (x, y) -> x && hs.contains(y));
+			
+			return Literal.objectToLiteral(r);
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_set_hash_contains_all", HashSet.instance().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var aCl = CodeModelInstance.instance().anonymousClass(BiFunction.class);
+			var apply = aCl.method(JMod.PUBLIC, Object.class, "apply");
+			var o1 = apply.param(Object.class, "_o1");
+			var o2 = apply.param(Object.class, "_o2");
+			
+			apply.body()._return(JExpr.cast(CodeModelInstance.instance().ref(Boolean.class), o1)
+					.cand(mappedArgs.get(new Symbol("_0")).invoke("contains").arg(o2)));
+			
+			method.body()._return(
+					mappedArgs.get(new Symbol("_1"))
+						.invoke("foldLeft")
+						.arg(JExpr.TRUE)
+						.arg(JExpr._new(aCl)));
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetHash, TypeAtom.TypeListNative), TypeAtom.TypeBoolNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-hash-contains-all";
+		}
+		
+	};
+		
 	@VelkaOperator
 	public static Operator intersect = new Operator() {
 
@@ -253,7 +370,7 @@ public class HashSet extends OperatorBank {
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			var hs = "_hash-set";
 			var code = ClojureHelper.fnHelper(List.of(hs),
-					ClojureHelper.constructJavaClass(java.util.ArrayList.class, hs));
+					ClojureHelper.applyClojureFunction("lazy-seq", hs));
 			return code;
 		}
 
@@ -268,7 +385,7 @@ public class HashSet extends OperatorBank {
 			@SuppressWarnings("unchecked")
 			var hs = (java.util.HashSet<Object>)lio.javaObject;
 			
-			var l = hs.stream().toList();
+			var l = io.vavr.collection.Stream.ofAll(hs.stream());
 			
 			return new LitInteropObject(l, TypeAtom.TypeListNative);
 		}
@@ -287,7 +404,9 @@ public class HashSet extends OperatorBank {
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
 			method.body()._return(
-					JExpr._new(CodeModelInstance.instance()._ref(java.util.ArrayList.class)).arg(mappedArgs.get(new Symbol("_0"))));	
+					CodeModelInstance.instance().ref(io.vavr.collection.Stream.class)
+						.staticInvoke("ofAll")
+						.arg(mappedArgs.get(new Symbol("_0")).invoke("stream")));
 		}
 	};
 	
@@ -487,6 +606,112 @@ public class HashSet extends OperatorBank {
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
 			method.body()._return(CodeModelInstance.instance().ref(BitSetHelper.class).staticInvoke("hashset2bitset")
 					.arg(mappedArgs.get(new Symbol("_0"))));
+		}
+	};
+	
+	@VelkaOperator
+	public static Operator removeAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var hs = "_hs";
+			var l = "_l";
+			var code = ClojureHelper.fnHelper(List.of(hs, l),
+					ClojureHelper.letHelper(hs, 
+							Pair.of("_tmp", ClojureHelper.applyClojureFunction(".removeAll", hs, l))));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var ll = (java.util.HashSet)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var l = (io.vavr.collection.Stream)lio1.javaObject;
+			
+			l.forEach(e -> ll.remove(e));
+			
+			return lio;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_set_hash_remove_all", HashSet.instance().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var aCl = CodeModelInstance.instance().anonymousClass(Consumer.class);
+			var accept = aCl.method(JMod.PUBLIC, void.class, "accept");
+			var o = accept.param(Object.class, "_o");
+			
+			accept.body().add(mappedArgs.get(new Symbol("_0")).invoke("remove").arg(o));
+			
+			method.body().add(mappedArgs.get(new Symbol("_1")).invoke("forEach").arg(JExpr._new(aCl)));
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetHash, TypeAtom.TypeListNative), TypeAtom.TypeSetHash);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-hash-remove-all";
+		}
+	};
+	
+	@VelkaOperator
+	public static Operator retainAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var hs = "_hs";
+			var l = "_l";
+			var code = ClojureHelper.fnHelper(List.of(hs, l),
+					ClojureHelper.letHelper(hs, 
+							Pair.of("_tmp", ClojureHelper.applyClojureFunction(".retainAll", hs, l))));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var ts = (java.util.HashSet)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var l = (io.vavr.collection.Stream)lio1.javaObject;
+			
+			ts.retainAll(l.asJava());
+			
+			return lio;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_set_hash_retain_all", HashSet.instance().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			method.body()
+			.add(mappedArgs.get(new Symbol("_0")).invoke("retainAll")
+					.arg(mappedArgs.get(new Symbol("_1")).invoke("asJava")));
+		method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetHash, TypeAtom.TypeListNative), TypeAtom.TypeSetHash);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-hash-retain-all";
 		}
 	};
 	

@@ -30,13 +30,6 @@ class HashSet extends VelkaTest {
 		this.assertVelkaCode("(construct Set:Hash)",
 				new java.util.HashSet<Object>());
 	}
-
-	@Test
-	void testCopyConstructor() throws Exception {
-		var hs = new java.util.HashSet<Object>(List.of(1, 2, 3));
-		this.assertVelkaCode("(construct Set:Hash (list 1 2 3))",
-				hs);
-	}
 	
 	@Test
 	void testFromList() throws Exception {
@@ -134,7 +127,7 @@ class HashSet extends VelkaTest {
 	void testToList() throws Exception {
 		this.assertVelkaCode(
 				"(set-hash-to-list (set-hash-from-list (list 1 2 3)))",
-				List.of(1, 2, 3));
+				io.vavr.collection.Stream.of(1, 2, 3));
 	}
 
 	@Test

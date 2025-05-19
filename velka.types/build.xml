@@ -9,9 +9,11 @@
     <property name="jar.name" value="${jar.dir}/${ant.project.name}.jar" />
 
     <property name="velka.util.lib" value="../lib/velka.util.jar" />
+	<property name="io.vavr.lib" value="../lib/vavr-1.0.0-alpha-4.jar" />
     
     <path id="modulepath">
         <pathelement location="${velka.util.lib}" />
+		<pathelement location="${io.vavr.lib}" />
     </path>
 
     <target name="clean">

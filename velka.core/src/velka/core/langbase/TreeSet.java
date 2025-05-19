@@ -6,11 +6,17 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+
 import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JVar;
 
 import velka.core.abstraction.Constructor;
 import velka.core.abstraction.Conversion;
+import velka.core.abstraction.Function;
 import velka.core.abstraction.Lambda;
 import velka.core.abstraction.Operator;
 import velka.core.application.AbstractionApplication;
@@ -223,7 +229,61 @@ public class TreeSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Adds the specified element to this set if it is not already present.")
-	public static Operator addAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "addAll", "set-tree-add-all", TreeSet.singleton().getNamespace(), Collection.class);
+	public static Operator addAll = new Operator() {
+		
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var ts = "_ts";
+			var l = "_l";
+			var code = ClojureHelper.fnHelper(List.of(ts, l),
+					ClojureHelper.applyClojureFunction(".addAll", ts, l));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var hs = (java.util.TreeSet<Object>)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var s = (io.vavr.collection.Stream<Object>)lio1.javaObject;
+			
+			s.forEach(e -> hs.add(e));
+			
+			return lio;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_set_hash_add_all", TreeSet.singleton().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var aCl = CodeModelInstance.instance().anonymousClass(Consumer.class);
+			var accept = aCl.method(JMod.PUBLIC, void.class, "accept");
+			var o = accept.param(Object.class, "_o");
+			
+			accept.body().add(mappedArgs.get(new Symbol("_0")).invoke("add").arg(o));
+			
+			method.body().add(mappedArgs.get(new Symbol("_1")).invoke("forEach").arg(JExpr._new(aCl)));
+			
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree, TypeAtom.TypeListNative), TypeAtom.TypeSetTree);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-tree-add-all";
+		}
+	};
+	
+//	= Operator.wrapJavaMethod(java.util.TreeSet.class, "addAll", "set-tree-add-all", TreeSet.singleton().getNamespace(), Collection.class);
 	
 	@VelkaOperator
 	@Description("Returns the least element in this set greater than or equal to the given element, or null if there is no such element.")
@@ -279,15 +339,174 @@ public class TreeSet extends OperatorBank {
 	
 	@VelkaOperator
 	@Description("Returns true if this collection contains all of the elements in the specified collection. ")
-	public static Operator containsAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "containsAll", "set-tree-contains-all", TreeSet.singleton().getNamespace(), Collection.class);
+	public static Operator containsAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var ts = "_ts";
+			var l = "_l";
+			var code = ClojureHelper.fnHelper(List.of(ts, l),
+					ClojureHelper.applyClojureFunction(".containsAll", ts, l));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var ts = (java.util.TreeSet)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var l = (io.vavr.collection.Stream)lio1.javaObject;
+			
+			var r = l.foldLeft(true, (x, y) -> (Boolean)x && ts.contains(y));
+			
+			return Literal.objectToLiteral(r);
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_set_tree_contains_all", TreeSet.singleton().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var aCl = CodeModelInstance.instance().anonymousClass(BiFunction.class);
+			var apply = aCl.method(JMod.PUBLIC, Object.class, "apply");
+			var o1 = apply.param(Object.class, "_o1");
+			var o2 = apply.param(Object.class, "_o2");
+			
+			apply.body()._return(JExpr.cast(CodeModelInstance.instance().ref(Boolean.class), o1)
+					.cand(mappedArgs.get(new Symbol("_0")).invoke("contains").arg(o2)));
+			
+			method.body()._return(
+					mappedArgs.get(new Symbol("_1"))
+						.invoke("foldLeft")
+						.arg(JExpr.TRUE)
+						.arg(JExpr._new(aCl)));
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree, TypeAtom.TypeListNative), TypeAtom.TypeBoolNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-tree-contains-all";
+		}
+		
+	};	
 	
 	@VelkaOperator
 	@Description("Retains only the elements in this collection that are contained in the specified collection (optional operation). In other words, removes from this collection all of its elements that are not contained in the specified collection. ")
-	public static Operator retainAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "retainAll", "set-tree-retain-all", TreeSet.singleton().getNamespace(), Collection.class);
+	public static Operator retainAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var l = "_l";
+			var ts = "_ts";
+			var code = ClojureHelper.fnHelper(List.of(ts, l),
+					ClojureHelper.letHelper(ts,
+							Pair.of("_tmp", ClojureHelper.applyClojureFunction(".retainAll", ts, l))));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var ts = (java.util.TreeSet)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var l = (io.vavr.collection.Stream)lio1.javaObject;
+			
+			ts.retainAll(l.asJava());
+			
+			return lio;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_set_tree_retain_all", TreeSet.singleton().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			method.body()
+				.add(mappedArgs.get(new Symbol("_0")).invoke("retainAll")
+						.arg(mappedArgs.get(new Symbol("_1")).invoke("asJava")));
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+			
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree, TypeAtom.TypeListNative), TypeAtom.TypeSetTree);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-tree-retain-all";
+		}
+		
+	};
 	
 	@VelkaOperator
 	@Description("Removes from this set all of its elements that are contained in the specified collection (optional operation). If the specified collection is also a set, this operation effectively modifies this set so that its value is the asymmetric set difference of the two sets.")
-	public static Operator removeAll = Operator.wrapJavaMethod(java.util.TreeSet.class, "removeAll", "set-tree-remove-all", TreeSet.singleton().getNamespace(), Collection.class);
+	public static Operator removeAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var l = "_l";
+			var ts = "_ts";
+			var code = ClojureHelper.fnHelper(List.of(ts, l),
+					ClojureHelper.letHelper(ts,
+							Pair.of("_tmp", ClojureHelper.applyClojureFunction(".removeAll", ts, l))));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var ts = (java.util.TreeSet)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var l = (io.vavr.collection.Stream)lio1.javaObject;
+			
+			l.forEach(e -> ts.remove(e));
+			
+			return lio;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_set_tree_remove_all", TreeSet.singleton().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var aCl = CodeModelInstance.instance().anonymousClass(Consumer.class);
+			var accept = aCl.method(JMod.PUBLIC, void.class, "accept");
+			var o = accept.param(Object.class, "_o");
+			
+			accept.body().add(mappedArgs.get(new Symbol("_0")).invoke("remove").arg(o));
+			
+			method.body().add(mappedArgs.get(new Symbol("_1")).invoke("forEach").arg(JExpr._new(aCl)));
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeSetTree, TypeAtom.TypeListNative), TypeAtom.TypeSetTree);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "set-tree-remove-all";
+		}
+	};
 	
 	public static final Symbol mapSymbol = new Symbol("velka_map", TreeSet.singleton().getNamespace());
 	public static final Symbol mapSymbol_out = new Symbol("set-tree-map");
@@ -303,14 +522,9 @@ public class TreeSet extends OperatorBank {
 			var x = "_x";
 			var ret = "_ret";
 			var code = ClojureHelper.fnHelper(List.of(set, fun),
-						ClojureHelper.letHelper(
-								ret,
-								Pair.of(ret, ClojureHelper.constructJavaClass(java.util.ArrayList.class)),
-								Pair.of("tmp", ClojureHelper.applyClojureFunction(".addAll", 
-										ret,
-										ClojureHelper.applyClojureFunction("map", 
-												ClojureHelper.fnHelper(List.of(x), ClojureHelper.applyVelkaFunction(fun, x)),
-												set)))));
+								ClojureHelper.applyClojureFunction("map", 
+										ClojureHelper.fnHelper(List.of(x), ClojureHelper.applyVelkaFunction(fun, x)),
+										set));
 			return code;
 		}
 
@@ -326,21 +540,19 @@ public class TreeSet extends OperatorBank {
 			@SuppressWarnings("unchecked")
 			var tSet = (java.util.TreeSet<Object>)set.javaObject;
 			
-			var rSet = new java.util.ArrayList<Object>();
-			
-			tSet.stream().forEach(x -> {
+			var r = io.vavr.collection.Stream.ofAll(tSet.stream().map(x -> {
 				var ex = Literal.objectToLiteral(x);
 				var app = new AbstractionApplication(fun, new Tuple(ex));
 				try {
 					var exp = app.interpret(env);
 					var o = Literal.literalToObject(exp);
-					rSet.add(o); 
-				}catch(Exception e) {
+					return o;
+				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}
-			});
+			}));
 			
-			return new LitInteropObject(rSet, TypeAtom.TypeListNative);
+			return new LitInteropObject(r, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -359,26 +571,19 @@ public class TreeSet extends OperatorBank {
 		
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			var oCl = CodeModelInstance.instance().ref(Object.class);
-			var lCl = CodeModelInstance.instance().ref(java.util.ArrayList.class);
-			var ttCl = TypeUtil.instance().typeTupleJClass();
 			var s = mappedArgs.get(new Symbol("_0"));
 			var f = mappedArgs.get(new Symbol("_1"));
 			
-			var l = method.body().decl(lCl, "lst", JExpr._new(lCl));
-			var argType = method.body().decl(ttCl, "_argType", JExpr._null());
+			var aCl = CodeModelInstance.instance().anonymousClass(java.util.function.Function.class);
+			var apply = aCl.method(JMod.PUBLIC, Object.class, "apply");
+			var o = apply.param(Object.class, "_o");
 			
+			apply.body()._return(f.invoke("apply").arg(VelkaTuple._of(o)));
 			
-			var _forEach = method.body().forEach(oCl, "o", s);
-			_forEach.body()._if(argType.eq(JExpr._null()))
-				._then().assign(argType, JExpr._new(ttCl)
-						.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_forEach.var())));
-			
-			var r = _forEach.body().decl(oCl, "_r",
-					f.invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(argType, _forEach.var())));
-			_forEach.body().add(l.invoke("add").arg(r));
-			
-			method.body()._return(l);
+			method.body()._return(
+					CodeModelInstance.instance().ref(io.vavr.collection.Stream.class)
+						.staticInvoke("ofAll")
+						.arg(s.invoke("stream").invoke("map").arg(JExpr._new(aCl))));
 		}
 	};
 	
@@ -389,7 +594,7 @@ public class TreeSet extends OperatorBank {
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			var set = "_set";
 			var code = ClojureHelper.fnHelper(List.of(set),
-							ClojureHelper.constructJavaClass(ArrayList.class, set));
+							ClojureHelper.applyClojureFunction("lazy-seq", set));
 			return code;
 		}
 
@@ -404,9 +609,9 @@ public class TreeSet extends OperatorBank {
 			@SuppressWarnings("unchecked")
 			var tSet = (java.util.TreeSet<Object>)set.javaObject;
 			
-			var l = new ArrayList<Object>(tSet);
+			var s = io.vavr.collection.Stream.ofAll(tSet.stream());
 			
-			return new LitInteropObject(l, TypeAtom.TypeListNative);
+			return new LitInteropObject(s, TypeAtom.TypeListNative);
 		}
 
 		@Override
@@ -423,8 +628,8 @@ public class TreeSet extends OperatorBank {
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
 			method.body()._return(
-					JExpr._new(CodeModelInstance.instance().ref(java.util.ArrayList.class))
-					.arg(mappedArgs.get(new Symbol("_0"))));
+					CodeModelInstance.instance().ref(io.vavr.collection.Stream.class)
+						.staticInvoke("ofAll").arg(mappedArgs.get(new Symbol("_0")).invoke("stream")));
 		}
 	};
 	
@@ -690,7 +895,9 @@ public class TreeSet extends OperatorBank {
 						}
 					});
 			
-			set.addAll((Collection<? extends Object>)lst.javaObject);
+			var s = (io.vavr.collection.Stream)lst.javaObject;
+			
+			s.forEach(e -> set.add(e));
 			
 			return new LitInteropObject(set, TypeAtom.TypeSetTree);
 		}
@@ -740,7 +947,13 @@ public class TreeSet extends OperatorBank {
 			var s = method.body().decl(tsCl, "set", JExpr._new(tsCl)
 					.arg(JExpr._new(aCl)));
 			
-			method.body().add(s.invoke("addAll").arg(l));
+			var consCl = CodeModelInstance.instance().anonymousClass(Consumer.class);
+			var accept = consCl.method(JMod.PUBLIC, void.class, "accept");
+			var o = accept.param(Object.class, "_o");
+			
+			accept.body().add(s.invoke("add").arg(o));
+			
+			method.body().add(l.invoke("forEach").arg(JExpr._new(consCl)));
 			method.body()._return(s);
 		}
 	};

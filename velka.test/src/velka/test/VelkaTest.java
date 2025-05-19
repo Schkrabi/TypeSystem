@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
@@ -97,6 +99,9 @@ public class VelkaTest {
 		ClojureCodeGenerator.generateClojureProject(tmpDir);
 		Files.copy(velkaUtilJar, tmpDir.resolve(Paths.get("velka.util.jar")), StandardCopyOption.REPLACE_EXISTING);
 		Files.copy(velkaTypesJar, tmpDir.resolve(Paths.get("velka.types.jar")), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(Paths.get("..", "lib", "vavr-1.0.0-alpha-4.jar"), 
+				tmpDir.resolve(Paths.get("vavr-1.0.0-alpha-4.jar")), 
+				StandardCopyOption.REPLACE_EXISTING);
 	}
 	
 	@BeforeEach
@@ -230,7 +235,6 @@ public class VelkaTest {
 		List<Expression> exprs = Parser.read(code);
 		this.assertCompiledCodePrints(exprs, expectedPrintou);
 	}
-	
 	
 	/** asserts compiled code prints the given value */
 	public void assertCompiledCodePrints(List<Expression> in, String expectedPrintout) throws Exception {
@@ -462,43 +466,6 @@ public class VelkaTest {
 	public VelkaTest() {
 		super();
 	}
-	
-//	private com.sun.codemodel.JCodeModel prepareClass(Collection<JExpression> exprs, String className, String methodName) {
-//		if(exprs.isEmpty()) {
-//			throw new RuntimeException("No expressions to add to class!");
-//		}
-//		
-//		var localCodeModel = new com.sun.codemodel.JCodeModel();
-//		JDefinedClass testClass;
-//		try {
-//			testClass = localCodeModel._class(className);
-//		} catch (JClassAlreadyExistsException e) {
-//			throw new RuntimeException(e);
-//		}
-//		
-//		var testMethod = testClass.method(JMod.PUBLIC, localCodeModel.ref(Object.class), methodName);
-//		testMethod._throws(AppendableException.class);
-//		
-//		var it = exprs.iterator();
-//		JExpression last = null;
-//		while(it.hasNext()) {
-//			var expr = it.next();
-//			if(!it.hasNext()) {
-//				last = expr;
-//				break;
-//			}
-//			
-//			if(expr instanceof com.sun.codemodel.JStatement js) {
-//				testMethod.body().add(js);
-//			}
-//			else {
-//				throw new RuntimeException("Adding non statement " + expr);
-//			}
-//		}
-//		testMethod.body()._return(last);
-//		
-//		return localCodeModel;
-//	}
 
 	/** Compiles JExpression, evaluates it and returns its value */
 	private Object compileJExprs(Collection<? extends Expression> exprs) {
@@ -535,11 +502,13 @@ public class VelkaTest {
 	        var velkautil = new File("../lib/velka.util.jar");
 	        var velkatypes = new File("../lib/velka.types.jar");
 	        var velkajava = new File("../lib/velka.java.jar");
+	        var vavr = new File("../lib/vavr-1.0.0-alpha-4.jar");
 	        
 	        var classpath = workingDir.getPath() 
 	        		+ File.pathSeparator + velkautil.getAbsolutePath()
 	        		+ File.pathSeparator + velkatypes.getAbsolutePath()
-	        		+ File.pathSeparator + velkajava.getAbsolutePath();
+	        		+ File.pathSeparator + velkajava.getAbsolutePath()
+	        		+ File.pathSeparator + vavr.getAbsolutePath();
 	        
 	        var sourceFiles = (File[])files.values().stream().map(p -> p.toFile()).toArray(l -> new File[l]);
 	        var compilationUnits = fileManager.getJavaFileObjects(sourceFiles);
@@ -624,7 +593,59 @@ public class VelkaTest {
 			this.assertInterpretationEquals(code,
 					Literal.objectToLiteral(expected));
 			
-			this.assertIntprtAndCompPrintSameValues("(println (to-str " + code + "))");
+			var cljCode = "(println (to-str " + code + "))";
+			if(expected instanceof io.vavr.collection.Stream st) {
+				var cljExpected = "";
+				if(!st.isEmpty()
+						&& st.head() instanceof String) {
+					cljExpected = st.map(s -> "\"" + s.toString().replaceAll("\\\\", "\\\\\\\\") + "\"").mkString("(", " ", ")");
+				}
+				else {
+					cljExpected = st.mkString("(", " ", ")");
+				}
+				
+				this.assertCompiledCodePrints(cljCode, cljExpected);
+			}
+			else if(expected instanceof String s) {
+				this.assertCompiledCodePrints(cljCode, "\"" + s + "\""); 
+			}
+			else if(expected instanceof LinkedList ll) {
+				var cljExpected = "()";
+				if(!ll.isEmpty()) {
+					if(ll.get(0) instanceof String) {
+						cljExpected = "(" + ll.stream().map(s -> "\"" + s.toString().replaceAll("\\\\", "\\\\\\\\") + "\"").reduce((x, y) -> x.toString() + " " + y.toString()).get() + ")";
+					}
+					else {
+						cljExpected = "(" + ll.stream().reduce((x, y) -> x.toString().replaceAll("\\\\", "\\\\\\\\") + " " + y.toString()).get() + ")";
+					}
+				}
+				
+				this.assertCompiledCodePrints(cljCode, cljExpected); 
+			}
+			else if(expected instanceof Set s) {
+				var cljExpected = "#{}";
+				if(!s.isEmpty()) {
+					cljExpected = "#{" + s.stream().reduce((x, y) -> x.toString() + " " + y.toString()).get() + "}";
+				}
+				
+				this.assertCompiledCodePrints(cljCode, cljExpected);
+			}
+			else if(expected instanceof Map m) {
+				var sb = new StringBuilder("{");
+				var i = m.entrySet().iterator();
+				while(i.hasNext()) {
+					Map.Entry<Object, Object> e = (Entry<Object, Object>) i.next();
+					sb.append(e.getKey())
+						.append(" ")
+						.append(e.getValue());
+				}
+				
+				sb.append("}");
+				this.assertCompiledCodePrints(cljCode, sb.toString());
+			}
+			else {
+				this.assertIntprtAndCompPrintSameValues(cljCode);
+			}
 			
 			this.assertJExprEquals(expected, code, env);
 		} catch (Exception e) {

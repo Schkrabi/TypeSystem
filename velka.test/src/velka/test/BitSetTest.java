@@ -464,7 +464,7 @@ class BitSetTest extends VelkaTest {
     void testToListOperation() throws Exception {        
         this.assertVelkaCode(
             "(bit-set-to-list (bit-set-from-list (list 1 3 5)))",
-            List.of(1, 3, 5)
+            io.vavr.collection.Stream.of(1, 3, 5)
         );
     }
 

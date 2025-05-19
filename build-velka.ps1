@@ -1,4 +1,4 @@
-﻿$projects = @("velka.util", "velka.types", "velka.java", "velka.core", "velka.clojure", "velka.parser", "velka.compiler", "velka.java.generate")
+﻿$projects = @("velka.util", "velka.types", "velka.java", "velka.core", "velka.clojure", "velka.parser", "velka.java.generate", "velka.compiler")
 
 foreach($project in $projects) {
 	echo "Building $project"

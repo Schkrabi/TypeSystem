@@ -29,8 +29,8 @@ class LinkedList extends VelkaTest {
 	
 	@Test
 	void copyConstructor() throws Exception {
-		this.assertVelkaCode("(construct List:JavaLinked (list \"foo\" \"bar\"))",
-				new java.util.LinkedList<Object>(java.util.List.of("foo", "bar")));
+		this.assertVelkaCode("(construct List:JavaLinked (list 1 2))",
+				new java.util.LinkedList<Object>(java.util.List.of(1, 2)));
 	}
 
 	@Test
@@ -111,13 +111,13 @@ class LinkedList extends VelkaTest {
 	@Test
 	void removeAll() throws Exception {
 		this.assertVelkaCode("(" + JavaLinkedList.removeAllSymbol_out + " (construct List:JavaLinked (list 1 2 3)) (list 1 2))",
-				Boolean.TRUE);
+				new java.util.LinkedList<>(java.util.List.of(3)));
 	}
 	
 	@Test
 	void retainAll() throws Exception {
 		this.assertVelkaCode("(" + JavaLinkedList.retainAllSymbol_out + " (construct List:JavaLinked (list 1 2 3)) (list 1 2))",
-				Boolean.TRUE);
+				new java.util.LinkedList<>(java.util.List.of(1, 2)));
 	}
 	
 	@Test
@@ -164,8 +164,8 @@ class LinkedList extends VelkaTest {
 	
 	@Test
 	void convertToListNative() throws Exception {
-		this.assertVelkaCode("(convert List:JavaLinked List:Native (construct List:JavaLinked (list \"foo\" \"bar\")))",
-				new java.util.ArrayList<Object>(java.util.List.of("foo", "bar")));
+		this.assertVelkaCode("(convert List:JavaLinked List:Native (construct List:JavaLinked (list 1 2)))",
+				io.vavr.collection.Stream.of(1, 2));
 	}
 	
 	@Test

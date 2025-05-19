@@ -61,8 +61,8 @@ class TestTreeMap extends VelkaTest {
 	@Test
 	void testPut() throws Exception {				
 		this.assertVelkaCode(
-				"(map-tree-put (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (= x y) 0 1)))) 1 \"foo\")",
-				new java.util.TreeMap<Integer, String>(Map.of(1, "foo")));
+				"(map-tree-put (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (= x y) 0 1)))) 1 1)",
+				new java.util.TreeMap<>(Map.of(1, 1)));
 	}
 	
 	@Test
@@ -282,7 +282,7 @@ class TestTreeMap extends VelkaTest {
 						+ "(tmp (map-tree-put m 2 \"bar\"))"
 						+ "(tmp (map-tree-put m 3 \"baz\")))"
 				+ "(map-tree-keys m))",
-				new java.util.ArrayList<Object>(tm.keySet()));
+				io.vavr.collection.Stream.ofAll(tm.keySet().stream()));
 	}
 	
 	@Test
@@ -580,29 +580,12 @@ class TestTreeMap extends VelkaTest {
 	
 	@Test
 	void testValues() throws Exception {
-		this.assertInterpretedStringEquals(
+		this.assertVelkaCode(
 				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\"))"
-						+ "(tmp (map-tree-put m 2 \"bar\"))"
-						+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(" + TreeMap.valuesSymbol_out.toString() + " m))",
-				new LitInteropObject(java.util.List.of("foo", "bar", "baz"), TypeAtom.TypeListNative),
-				this.env
-				);
-		
-//		this.assertIntprtAndCompPrintSameValues(
-//				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-//						+ "(tmp (map-tree-put m 1 \"foo\"))"
-//						+ "(tmp (map-tree-put m 2 \"bar\"))"
-//						+ "(tmp (map-tree-put m 3 \"baz\")))"
-//				+ "(println (" + TreeMap.valuesSymbol_out.toString() + " m)))");
-		
-		this.assertJExprEquals(java.util.List.of("foo", "bar", "baz"),
-				"(let ((m (construct Map:Tree (lambda (x y) (if (< x y) -1 (if (< y x) 1 0)))))"
-						+ "(tmp (map-tree-put m 1 \"foo\"))"
-						+ "(tmp (map-tree-put m 2 \"bar\"))"
-						+ "(tmp (map-tree-put m 3 \"baz\")))"
-				+ "(" + TreeMap.valuesSymbol_out.toString() + " m))",
-				this.env);
+						+ "(tmp (map-tree-put m 1 1))"
+						+ "(tmp (map-tree-put m 2 2))"
+						+ "(tmp (map-tree-put m 3 3)))"
+						+ "(map-tree-values m))",
+						io.vavr.collection.Stream.of(1, 2, 3));
 	}
 }

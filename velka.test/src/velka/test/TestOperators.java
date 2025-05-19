@@ -384,13 +384,9 @@ class TestOperators extends VelkaTest{
 	@Test
 	@DisplayName("Test StrSplit Operator")
 	void testStrSplitOperator() throws AppendableException, IOException {
-	    this.assertOperator(Operators.StrSplit, 
-	            new Tuple(new LitString("foo bar baz"), new LitString(" ")),
-	            new LitInteropObject(List.of("foo", "bar", "baz"), TypeAtom.TypeListNative), 
-	            TypeAtom.TypeListNative);
-	    this.assertJExprEquals(List.of("foo", "bar", "baz"), 
-	            (new AbstractionApplication(Operators.StrSplit, 
-	                    new Tuple(new LitString("foo bar baz"), new LitString(" ")))));
+		this.assertVelkaCode(
+				"(str-split \"foo bar baz\" \" \")",
+				io.vavr.collection.Stream.of("foo", "bar", "baz"));
 	}
 
 	@Test
@@ -536,7 +532,7 @@ class TestOperators extends VelkaTest{
 				.append(tmpDir.toString())
 				.append("\")")
 				.toString(),
-				List.of(bar.toString(), foo.toString()));
+				io.vavr.collection.Stream.of(bar.toString(), foo.toString()));
 		
 		Files.delete(foo);
 		Files.delete(bar);

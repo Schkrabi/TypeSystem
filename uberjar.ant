@@ -19,6 +19,7 @@
             <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/codemodel-4.0.5.jar"/>
             <fileset dir="${dir.workspace}/velka.util/bin"/>
             <fileset dir="${dir.workspace}/velka.types/bin"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/vavr-1.0.0-alpha-4.jar"/>
             <fileset dir="${dir.workspace}/velka.java/bin"/>
             <fileset dir="${dir.workspace}/velka.parser/bin"/>
             <fileset dir="${dir.workspace}/velka.clojure/bin"/>

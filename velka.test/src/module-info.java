@@ -13,4 +13,5 @@ module velka.test {
 	requires java.compiler;
 	requires velka.java.generate;
 	requires transitive com.sun.codemodel;
+	requires io.vavr;
 }

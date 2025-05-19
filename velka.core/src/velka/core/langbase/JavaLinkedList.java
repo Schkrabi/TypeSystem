@@ -8,10 +8,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JVar;
 
 import velka.core.abstraction.Abstraction;
 import velka.core.abstraction.Constructor;
@@ -76,8 +80,52 @@ public class JavaLinkedList extends OperatorBank {
 			TypeAtom.TypeListJavaLinked);
 	
 	@VelkaConstructor
-	public static final Constructor copyConstructor = Constructor.wrapJavaContructorToType(LinkedList.class, JavaLinkedList.singleton().getNamespace(), 
-			TypeAtom.TypeListJavaLinked, java.util.Collection.class);
+	public static final Constructor fromNativeList = new Constructor() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var l = "_l";
+			var code = ClojureHelper.fnHelper(List.of(l),
+					ClojureHelper.constructJavaClass(java.util.LinkedList.class, l));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var s = (io.vavr.collection.Stream<Object>)lio.javaObject;
+			
+			var l = new LinkedList<Object>();
+			s.forEach(e -> l.add(e));
+			return new LitInteropObject(l, TypeAtom.TypeListJavaLinked);
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_construct_list_java_linked_from_list", JavaLinkedList.singleton().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var aCl = CodeModelInstance.instance().anonymousClass(Consumer.class);
+			var accept = aCl.method(JMod.PUBLIC, void.class, "accept");
+			var o = accept.param(Object.class, "_o");
+			
+			var llCl = CodeModelInstance.instance().ref(LinkedList.class);
+			var l = method.body().decl(llCl, "_l", JExpr._new(llCl));
+			
+			accept.body().add(l.invoke("add").arg(o));
+			
+			method.body().add(mappedArgs.get(new Symbol("_0")).invoke("forEach").arg(JExpr._new(aCl)));
+			method.body()._return(l);
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeListNative), TypeAtom.TypeListJavaLinked);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+	};
 
 	public static final Symbol addToEndSymbol_out = new Symbol("java-linked-list-add-to-end");
 
@@ -116,8 +164,55 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(println l)\n"
 					+ ";;(42 0 1 2)") 
 	@Syntax("(java-linked-list-add-all <list1> <list2>)")
-	public static final Operator addAll = Operator.wrapJavaMethod(LinkedList.class, "addAll", "java-linked-list-add-all",
-			JavaLinkedList.singleton().getNamespace(), java.util.Collection.class);
+	public static final Operator addAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var ll = "_ll";
+			var l = "_l";
+			var code = ClojureHelper.fnHelper(List.of(ll, l),
+					ClojureHelper.applyClojureFunction(".addAll", ll, l));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var ll = (java.util.LinkedList)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var l = (io.vavr.collection.Stream)lio1.javaObject;
+			
+			l.forEach(e -> ll.add(e));
+			
+			return lio;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_java_linked_list_add_all", JavaLinkedList.singleton().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var aCl = CodeModelInstance.instance().anonymousClass(Consumer.class);
+			var accept = aCl.method(JMod.PUBLIC, void.class, "accept");
+			var o = accept.param(Object.class, "_o");
+			
+			accept.body().add(mappedArgs.get(new Symbol("_0")).invoke("add").arg(o));
+			
+			method.body().add(mappedArgs.get(new Symbol("_1")).invoke("forEach").arg(JExpr._new(aCl)));
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListNative),
+					TypeAtom.TypeListJavaLinked);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+	};
 
 	public static final Symbol containsSymbol_out = new Symbol("java-linked-list-contains");
 
@@ -142,8 +237,63 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(java-linked-list-add-all l (build-list-native 3 (lambda (x) x)))\n"
 					+ "(java-linked-list-contains-all k (build-list-native 2 (lambda (x) x))) ;; = #t") 
 	@Syntax("(java-linked-list-contains-all <list1> <list2>)")
-	public static final Operator containsAll = Operator.wrapJavaMethod(LinkedList.class, "containsAll", "java-linked-list-contains-all",
-			JavaLinkedList.singleton().getNamespace(), java.util.Collection.class);
+	public static final Operator containsAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var ll = "_ll";
+			var l = "_l";
+			var code = ClojureHelper.fnHelper(List.of(ll, l),
+					ClojureHelper.applyClojureFunction(".containsAll", ll, l));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var ll = (java.util.LinkedList)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var l = (io.vavr.collection.Stream)lio1.javaObject;
+			
+			var r = l.foldLeft(true, (x, y) -> (Boolean)x && ll.contains(y));
+			
+			return Literal.objectToLiteral(r);
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_java_linked_list_contains_all", JavaLinkedList.singleton().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var aCl = CodeModelInstance.instance().anonymousClass(BiFunction.class);
+			var apply = aCl.method(JMod.PUBLIC, Object.class, "apply");
+			var o1 = apply.param(Object.class, "_o1");
+			var o2 = apply.param(Object.class, "_o2");
+			
+			apply.body()._return(JExpr.cast(CodeModelInstance.instance().ref(Boolean.class), o1)
+					.cand(mappedArgs.get(new Symbol("_0")).invoke("contains").arg(o2)));
+			
+			method.body()._return(
+					mappedArgs.get(new Symbol("_1"))
+						.invoke("foldLeft")
+						.arg(JExpr.TRUE)
+						.arg(JExpr._new(aCl)));
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListNative), TypeAtom.TypeBoolNative);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "java-linked-list-contains-all";
+		}
+	};
 
 	public static final Symbol getSymbol_out = new Symbol("java-linked-list-get");
 
@@ -231,8 +381,59 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(println l)\n"
 					+ "(0 2)")
 	@Syntax("(java-linked-list-remove <list> <element>)")
-	public static final Operator removeAll = Operator.wrapJavaMethod(LinkedList.class, "removeAll", "java-linked-list-remove-all",
-			JavaLinkedList.singleton().getNamespace(), Collection.class);
+	public static final Operator removeAll = new Operator() {
+
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var l = "_l";
+			var ll = "_ll";
+			var code = ClojureHelper.fnHelper(List.of(ll, l),
+					ClojureHelper.letHelper(ll,
+							Pair.of("_tmp", ClojureHelper.applyClojureFunction(".removeAll", ll, l))));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var ll = (java.util.LinkedList)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var l = (io.vavr.collection.Stream)lio1.javaObject;
+			
+			l.forEach(e -> ll.remove(e));
+			
+			return lio;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_java_linked_list_remove_all", JavaLinkedList.singleton().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			var aCl = CodeModelInstance.instance().anonymousClass(Consumer.class);
+			var accept = aCl.method(JMod.PUBLIC, void.class, "accept");
+			var o = accept.param(Object.class, "_o");
+			
+			accept.body().add(mappedArgs.get(new Symbol("_0")).invoke("remove").arg(o));
+			
+			method.body().add(mappedArgs.get(new Symbol("_1")).invoke("forEach").arg(JExpr._new(aCl)));
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListNative), TypeAtom.TypeListJavaLinked);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "java-linked-list-remove-all";
+		}
+	};
 
 	public static final Symbol retainAllSymbol_out = new Symbol("java-linked-list-retain-all");
 
@@ -248,8 +449,55 @@ public class JavaLinkedList extends OperatorBank {
 					+ "(println l)\n"
 					+ "(2 3)") 
 	@Syntax("(java-linked-list-retain-all <retained-list> <retainee-list>)")
-	public static final Operator retainAll = Operator.wrapJavaMethod(LinkedList.class, "retainAll", "java-linked-list-retain-all",
-			JavaLinkedList.singleton().getNamespace(), Collection.class);
+	public static final Operator retainAll = new Operator() {
+		@Override
+		protected String toClojureOperator(Environment env) throws AppendableException {
+			var l = "_l";
+			var ll = "_ll";
+			var code = ClojureHelper.fnHelper(List.of(ll, l),
+					ClojureHelper.letHelper(ll,
+							Pair.of("_tmp", ClojureHelper.applyClojureFunction(".retainAll", ll, l))));
+			return code;
+		}
+
+		@Override
+		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
+			var lio = (LitInteropObject)args.get(0);
+			var ts = (java.util.LinkedList)lio.javaObject;
+			
+			var lio1 = (LitInteropObject)args.get(1);
+			var l = (io.vavr.collection.Stream)lio1.javaObject;
+			
+			ts.retainAll(l.asJava());
+			
+			return lio;
+		}
+
+		@Override
+		public Symbol getInternalSymbol() {
+			return new Symbol("_java_linked_list_retain_all", JavaLinkedList.singleton().getNamespace());
+		}
+
+		@Override
+		protected void modifyJavaMethod(JMethod method, Map<Symbol, JVar> mappedArgs) {
+			method.body()
+				.add(mappedArgs.get(new Symbol("_0")).invoke("retainAll")
+						.arg(mappedArgs.get(new Symbol("_1")).invoke("asJava")));
+			method.body()._return(mappedArgs.get(new Symbol("_0")));
+			
+		}
+
+		@Override
+		public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
+			var type = new TypeArrow(new TypeTuple(TypeAtom.TypeListJavaLinked, TypeAtom.TypeListNative), TypeAtom.TypeListJavaLinked);
+			return Pair.of(type, Substitution.EMPTY);
+		}
+		
+		@Override
+		public String toString() {
+			return "java-linked-list-retain-all";
+		}
+	};
 
 	public static final Symbol setSymbol_out = new Symbol("java-linked-list-set");
 
@@ -801,8 +1049,7 @@ public class JavaLinkedList extends OperatorBank {
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			String list = "_list";
 			String code = ClojureHelper.fnHelper(List.of(list),
-					ClojureHelper.constructJavaClass(ArrayList.class,
-							list));
+					ClojureHelper.applyClojureFunction("lazy-seq", list));
 			return code;
 		}
 
@@ -811,11 +1058,11 @@ public class JavaLinkedList extends OperatorBank {
 			
 			LitInteropObject lio = (LitInteropObject) args.get(0);
 			@SuppressWarnings("unchecked")
-			LinkedList<Expression> l = (LinkedList<Expression>) lio.javaObject;
+			var ll = (java.util.LinkedList<Object>) lio.javaObject;
 
-			LinkedList<Expression> ll = new LinkedList<Expression>(l);
+			var s = io.vavr.collection.Stream.ofAll(ll.stream());
 
-			return new LitInteropObject(ll, TypeAtom.TypeListJavaLinked);
+			return new LitInteropObject(s, TypeAtom.TypeListJavaLinked);
 		}
 
 		@Override
@@ -836,8 +1083,9 @@ public class JavaLinkedList extends OperatorBank {
 		
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			method.body()._return(JExpr._new(CodeModelInstance.instance()._ref(ArrayList.class))
-					.arg(mappedArgs.get(new Symbol("_0"))));
+			method.body()._return(
+					CodeModelInstance.instance().ref(io.vavr.collection.Stream.class)
+						.staticInvoke("ofAll").arg(mappedArgs.get(new Symbol("_0")).invoke("stream")));
 		}
 	};
 

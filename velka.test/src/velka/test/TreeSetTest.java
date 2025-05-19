@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import velka.core.expression.Expression;
 import velka.core.interpretation.Environment;
 import velka.core.interpretation.TopLevelEnvironment;
+import velka.core.langbase.JavaLinkedList;
 import velka.core.literal.LitBoolean;
 import velka.core.literal.LitDouble;
 import velka.core.literal.LitInteger;
@@ -126,7 +127,7 @@ class TreeSetTest extends VelkaTest {
 		this.assertVelkaCode(
 				"(let ((s (set-tree-from-list (list 3 6 9) (lambda (x y) (if (< x y) -1 (if (= x y) 0 1))))))"
 				+ "(set-tree-map s (lambda (x) (+ x 1))))",
-				List.of(4, 7, 10));
+				io.vavr.collection.Stream.of(4, 7, 10));
 	}
 	
 	@Test
@@ -147,7 +148,7 @@ class TreeSetTest extends VelkaTest {
 		this.assertVelkaCode(
 				"(let ((s (set-tree-from-list (list 3 6 9) (lambda (x y) (if (< x y) -1 (if (= x y) 0 1))))))"
 				+ "(set-tree-to-list s))",
-				List.of(3, 6, 9));
+				io.vavr.collection.Stream.of(3, 6, 9));
 	}
 	
 	@Test
@@ -166,5 +167,25 @@ class TreeSetTest extends VelkaTest {
 		this.assertVelkaCode(
 			"(convert Set:Tree Set:Hash (set-tree-from-list (list 1 2 3) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))))", 
 			hs);
+	}
+	
+	@Test
+	void containsAll() throws Exception {
+		this.assertVelkaCode("(set-tree-contains-all (set-tree-from-list (list 1 2 3) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))) (list 2 3))",
+				Boolean.TRUE);
+		this.assertVelkaCode("(set-tree-contains-all (set-tree-from-list (list 1 2 3) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))) (list 2 0))",
+				Boolean.FALSE);
+	}
+	
+	@Test
+	void retainAll() throws Exception {
+		this.assertVelkaCode("(set-tree-retain-all (set-tree-from-list (list 1 2 3) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))) (list 2 3))",
+				new java.util.TreeSet<Object>(List.of(2, 3)));
+	}
+	
+	@Test
+	void removeAll() throws Exception {
+		this.assertVelkaCode("(set-tree-remove-all (set-tree-from-list (list 1 2 3) (lambda (x y) (if (= x y) 0 (if (< x y) -1 1)))) (list 2 3))",
+				new java.util.TreeSet<Object>(List.of(1)));
 	}
 }

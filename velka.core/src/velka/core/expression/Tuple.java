@@ -154,18 +154,11 @@ public class Tuple extends Expression implements Iterable<Expression>, Collectio
 
 	@Override
 	public String toClojureCode(Environment env) throws AppendableException {
-		List<String> members = null;
-		try {
-			members = this.stream().map(ThrowingFunction.wrapper(e -> e.toClojureCode(env))).collect(Collectors.toList());
-		}catch(RuntimeException re) {
-			if(re.getCause() instanceof AppendableException) {
-				AppendableException ae = (AppendableException)re.getCause();
-				ae.appendMessage(" in " + this.toString());
-				throw ae;
-			}
-			throw re;
+		List<String> members = new ArrayList<String>();
+		for(var e : this) {
+			var code = e.toClojureCode(env);
+			members.add(code);
 		}
-		
 		return ClojureHelper.tupleHelper(members);	
 	}
 
@@ -347,13 +340,7 @@ public class Tuple extends Expression implements Iterable<Expression>, Collectio
 		var tarr = JExpr.newArray(TypeUtil.instance().typeJType());
 		
 		for(int i = 0; i < type.size(); i++) {
-			var t = type.get(i);
-			if(t.isRepUncertain()) {
-				tarr.add(JavaTypeSystem.codeInstance().invoke("getType").arg(_data.component(JExpr.lit(i))));
-			}
-			else {
-				tarr.add(TypeUtil.instance().type2java(t));
-			}
+			tarr.add(JavaTypeSystem.codeInstance().invoke("getType").arg(_data.component(JExpr.lit(i))));
 		}
 		var _type = _get.body().decl(TypeUtil.instance().typeTupleJClass(), "_type",
 				JExpr._new(TypeUtil.instance().typeTupleJClass()).arg(tarr));
