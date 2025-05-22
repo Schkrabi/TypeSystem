@@ -1,12 +1,43 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="create_run_jar" name="Create Runnable Jar for Project velka.compiler">
+<project default="main" name="Create Runnable Jar for Project velka.compiler">
     <!--this file was created by Eclipse Runnable JAR Export Wizard-->
     <!--ANT 1.7 is required                                        -->
     <!--define folder properties-->
     <property name="dir.buildfile" value="."/>
     <property name="dir.workspace" value="${dir.buildfile}"/>
     <property name="dir.jarfile" value="${dir.workspace}/lib"/>
-    <target name="create_run_jar">
+	
+	<macrodef name="build-subproject">
+		<attribute name="name"/>
+		<attribute name="target"/>
+		<sequential>
+			<ant dir="@{name}" antfile="build.xml" target="main" />
+		</sequential>
+	</macrodef>
+	
+	<macrodef name="build-subprojects">
+		<attribute name="target"/>
+		<sequential>
+			<build-subproject name="velka.util" target="@{target}"/>
+			<build-subproject name="velka.types" target="@{target}"/>
+			<build-subproject name="velka.java" target="@{target}"/>
+			<build-subproject name="velka.core" target="@{target}"/>
+			<build-subproject name="velka.parser" target="@{target}"/>
+			<build-subproject name="velka.clojure" target="@{target}"/>
+			<build-subproject name="velka.java.generate" target="@{target}"/>
+			<build-subproject name="velka.compiler" target="@{target}"/>
+		</sequential>
+	</macrodef>
+	
+	<target name="subprojects-release">
+		<build-subprojects target="main" />
+	</target>
+	
+	<target name="subprojects-debug">
+		<build-subprojects target="dbg"/>
+	</target>
+	
+    <target name="uberjar">
         <jar destfile="${dir.jarfile}/velka.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Main-Class" value="velka.compiler.Main"/>
@@ -25,4 +56,20 @@
             <zipfileset excludes="META-INF/*.SF" src="${dir.workspace}/velka.clojure/jar/velka.clojure.jar"/>
         </jar>
     </target>
+	
+	<target name="copy-jars">
+		<copy todir="${dir.jarfile}/">
+			<fileset dir="${dir.workspace}/velka.core/jar" />
+			<fileset dir="${dir.workspace}/velka.compiler/jar" />
+			<fileset dir="${dir.workspace}/velka.util/jar" />
+			<fileset dir="${dir.workspace}/velka.types/jar" />
+			<fileset dir="${dir.workspace}/velka.java/jar" />
+			<fileset dir="${dir.workspace}/velka.clojure/jar" />
+			<fileset dir="${dir.workspace}/velka.java.generate/jar" />
+			<fileset dir="${dir.workspace}/velka.parser/jar" />
+		</copy>
+	</target>
+	
+	<target name="main" depends="subprojects-release, uberjar, copy-jars" />
+	<target name="dbg" depends="subprojects-debug, uberjar, copy-jars" />
 </project>
