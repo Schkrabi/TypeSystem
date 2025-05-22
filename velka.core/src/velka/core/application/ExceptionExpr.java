@@ -66,13 +66,12 @@ public class ExceptionExpr extends SpecialFormApplication implements Compileable
 	@Override
 	public Pair<Type, Substitution> infer(Environment env) throws AppendableException {
 		try {
-			Pair<Type, Substitution> infered = this.getMessage().infer(env);
-			Optional<Substitution> s = Type.unifyTypes(infered.first, TypeAtom.TypeStringNative);
+			var infered = this.getMessage().infer(env);
+			var s = Type.unifyRepresentation(infered.first, TypeAtom.TypeStringNative);
 			if(s.isEmpty()) {
 				throw new TypesDoesNotUnifyException(infered.first, TypeAtom.TypeStringNative);
 			}
-			
-			return new Pair<Type, Substitution>(new TypeVariable(NameGenerator.next()), s.get().compose(infered.second));
+			return Pair.of(new TypeVariable(NameGenerator.next()), s.get().compose(infered.second));
 		} catch (AppendableException e) {
 			e.appendMessage("in " + this);
 			throw e;
@@ -112,6 +111,6 @@ public class ExceptionExpr extends SpecialFormApplication implements Compileable
 		var ctj = (CompileableToJava)this.getMessage();
 		var msgJexpr = ctj.toJavaExpr(env);
 		
-		return VelkaThrower._throw(msgJexpr);
+		return VelkaThrower._throw(msgJexpr.invoke("toString"));
 	}
 }

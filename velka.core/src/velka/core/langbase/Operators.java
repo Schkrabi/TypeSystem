@@ -2129,7 +2129,6 @@ public final class Operators extends OperatorBank {
 			Expression e = args.get(0);
 			String s;
 			
-			
 			if(e instanceof LitInteropObject lio
 					&& lio.type == TypeAtom.TypeListNative) {
 				var st = (io.vavr.collection.Stream<Object>)lio.javaObject;

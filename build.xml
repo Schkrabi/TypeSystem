@@ -12,17 +12,18 @@
                 <attribute name="Main-Class" value="velka.compiler.Main"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
+			<zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/codemodel-4.0.5.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/antlr-4.13.1-complete.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/vavr-1.0.0-alpha-4.jar"/>
             <fileset dir="${dir.workspace}/velka.compiler/bin"/>
-            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/antlr-4.13.1-complete.jar"/>
             <fileset dir="${dir.workspace}/velka.java.generate/bin"/>
-            <fileset dir="${dir.workspace}/velka.core/bin"/>
-            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/codemodel-4.0.5.jar"/>
+            <fileset dir="${dir.workspace}/velka.core/bin"/>            
             <fileset dir="${dir.workspace}/velka.util/bin"/>
             <fileset dir="${dir.workspace}/velka.types/bin"/>
-            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/vavr-1.0.0-alpha-4.jar"/>
             <fileset dir="${dir.workspace}/velka.java/bin"/>
             <fileset dir="${dir.workspace}/velka.parser/bin"/>
             <fileset dir="${dir.workspace}/velka.clojure/bin"/>
+			<fileset dir="${dir.workspace}/velka.java.generate/bin"/>
             <zipfileset excludes="META-INF/*.SF" src="${dir.workspace}/velka.clojure/jar/velka.clojure.jar"/>
         </jar>
     </target>

@@ -467,6 +467,13 @@ class BitSetTest extends VelkaTest {
             io.vavr.collection.Stream.of(1, 3, 5)
         );
     }
+    
+    @Test
+    @DisplayName("Test fromList->toList")
+    void testFromListToList() throws Exception {
+    	this.assertVelkaCode("(bit-set-to-list (bit-set-from-list (list 0 1 2)))", 
+    			io.vavr.collection.Stream.of(0, 1, 2));
+    }
 
     @Test
         @DisplayName("Test map")

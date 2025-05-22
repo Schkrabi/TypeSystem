@@ -908,7 +908,7 @@ public class JavaBitSet extends OperatorBank {
 					JExpr.cast(CodeModelInstance.instance().ref(Integer.class), o).invoke("intValue"));
 			
 			var optCl = CodeModelInstance.instance().ref(io.vavr.control.Option.class);
-			var _if = apply.body()._if(i.gt(JExpr.lit(0)));
+			var _if = apply.body()._if(i.gte(JExpr.lit(0)));
 			_if._then()._return(
 					optCl.staticInvoke("of")
 						.arg(JExpr._new(CodeModelInstance.instance().ref(io.vavr.Tuple2.class))
