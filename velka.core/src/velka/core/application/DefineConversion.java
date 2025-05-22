@@ -115,11 +115,8 @@ public class DefineConversion extends Expression implements CompileableToJava {
 				new velka.util.IConversionRanker() {
 					
 					@Override
-					public double eval(Object arg) {
-						var eargs = new ArrayList<Expression>(args.size());
-						args.stream().forEach(o -> eargs.add((Expression)o));
-						
-						var appl = new AbstractionApplication(me.cost, new Tuple(eargs));
+					public double eval(Object arg) {						
+						var appl = new AbstractionApplication(me.cost, new Tuple((Expression)arg));
 						try {
 							LitDouble ld = (LitDouble)appl.interpret(env);
 							return ld.value;
