@@ -3,7 +3,7 @@
 
     <property name="src.dir" value="src" />
     <property name="build.dir" value="." />
-    <property name="classes.dir" value="${build.dir}/classes" />
+    <property name="classes.dir" value="${build.dir}/bin" />
     <property name="jar.dir" value="${build.dir}/jar" />
 
     <property name="jar.name" value="${jar.dir}/${ant.project.name}.jar"/>
