@@ -660,7 +660,6 @@ public class ListNative extends OperatorBank{
 			var f = JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class), mappedArgs.get(new Symbol("_0")));
 			
 			var tt = TypeUtil.instance().typeTupleJType();
-			var elType = method.body().decl(tt, "_elType", JExpr._null());
 			
 			var agg = method.body().decl(oCl, "ret", mappedArgs.get(new Symbol("_1")));
 			
@@ -671,13 +670,7 @@ public class ListNative extends OperatorBank{
 			
 			var _o = _for.body().decl(oCl, "_o", l.invoke("get").arg(_i));
 			
-			_for.body()._if(elType.eq(JExpr._null()))
-				._then().assign(elType, 
-						JExpr._new(tt)
-							.arg(JExpr.direct(Abstraction.CAD_ARG_TYPE).invoke("get").arg(JExpr.lit(1)))
-							.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_o)));
-			
-			_for.body().assign(agg, f.invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(elType, agg, _o)));
+			_for.body().assign(agg, f.invoke("apply").arg(VelkaTuple._of(agg, _o)));
 			
 			method.body()._return(agg);
 		}		
@@ -1549,7 +1542,6 @@ public class ListNative extends OperatorBank{
 			var f = JExpr.cast(CodeModelInstance.instance().ref(VelkaAbstraction.class), mappedArgs.get(new Symbol("_0")));
 			
 			var tt = TypeUtil.instance().typeTupleJType();
-			var elType = method.body().decl(tt, "_elType", JExpr._null());
 			
 			var agg = method.body().decl(oCl, "ret", mappedArgs.get(new Symbol("_1")));
 			
@@ -1560,13 +1552,7 @@ public class ListNative extends OperatorBank{
 			
 			var _o = _for.body().decl(oCl, "_o", l.invoke("get").arg(_i));
 			
-			_for.body()._if(elType.eq(JExpr._null()))
-				._then().assign(elType, 
-						JExpr._new(tt)
-							.arg(JExpr.direct(Abstraction.CAD_ARG_TYPE).invoke("get").arg(JExpr.lit(1)))
-							.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_o)));
-			
-			_for.body().assign(agg, f.invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(elType, agg, _o)));
+			_for.body().assign(agg, f.invoke("apply").arg(VelkaTuple._of(agg, _o)));
 			
 			method.body()._return(agg);
 		}

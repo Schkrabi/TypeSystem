@@ -1839,7 +1839,7 @@ public final class Operators extends OperatorBank {
 	public static final Operator PrintlnOperator = new Operator() {
 
 		private final TypeArrow type = new TypeArrow(
-				new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeTuple.EMPTY_TUPLE);
+				new TypeTuple(Arrays.asList(TypeAtom.TypeStringNative)), TypeAtom.TypeIntNative);
 
 		@Override
 		protected Expression doSubstituteAndEvaluate(Tuple args, Environment env) throws AppendableException {
@@ -1847,7 +1847,7 @@ public final class Operators extends OperatorBank {
 			
 			System.out.println(arg.value);
 
-			return Expression.EMPTY_EXPRESSION;
+			return new LitInteger(arg.value.length());
 		}
 
 		@Override
@@ -1863,11 +1863,10 @@ public final class Operators extends OperatorBank {
 		@Override
 		protected String toClojureOperator(Environment env) throws AppendableException {
 			var str = "_str";
-			return ClojureHelper.wrapVoidClojureOperatorToFn(1,
-					ClojureHelper.fnHelper(List.of(str), 
-							ClojureHelper.applyClojureFunction(".println",
-									"System/out",
-									str)));
+			return ClojureHelper.fnHelper(List.of(str),
+					ClojureHelper.letHelper(
+							ClojureHelper.applyClojureFunction("count", str),
+							Pair.of("_tmp", ClojureHelper.applyClojureFunction("println", str))));
 		}
 
 		@Override
@@ -1881,7 +1880,7 @@ public final class Operators extends OperatorBank {
 					CodeModelInstance.instance().ref(System.class).staticRef("out").invoke("println")
 					.arg(mappedArgs.get(new Symbol("_0"))));
 							
-			method.body()._return(CodeModelInstance.emptyExpression());
+			method.body()._return(mappedArgs.get(new Symbol("_0")).invoke("length"));
 		}
 	};
 	
@@ -2000,13 +1999,12 @@ public final class Operators extends OperatorBank {
 
 		@Override
 		protected void modifyJavaMethod(com.sun.codemodel.JMethod method, Map<Symbol, com.sun.codemodel.JVar> mappedArgs) {
-			Method mthd;
-			try {
-				mthd = String.class.getMethod("split", String.class);
-			} catch (NoSuchMethodException | SecurityException e) {
-				throw new RuntimeException(e);
-			}
-			this.wrapNaryMethod(method, mthd, mappedArgs, 1);
+			method.body()._return(
+					JExpr._new(CodeModelInstance.instance().ref(ArrayList.class))
+						.arg(CodeModelInstance.instance().ref(Arrays.class)
+								.staticInvoke("asList").arg(
+										mappedArgs.get(new Symbol("_0")).invoke("split")
+										.arg(mappedArgs.get(new Symbol("_1"))))));
 		}
 	};
 	

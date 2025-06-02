@@ -660,10 +660,7 @@ public class JavaLinkedList extends OperatorBank {
 			_for.body()
 					.assign(ret,
 							mappedArgs.get(new Symbol("_0")).invoke("apply")
-									.arg(VelkaTuple._velkaTupleTypeExpr(
-											JExpr._new(TypeUtil.instance().typeTupleJClass()).arg(rettype)
-													.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_e)),
-											ret, _e)));
+									.arg(VelkaTuple._of(ret, _e)));
 			
 			_method.body()._return(ret);
 		}
@@ -776,10 +773,7 @@ public class JavaLinkedList extends OperatorBank {
 			
 			var _e = _for.body().decl(objCl, "_e", l.invoke("get").arg(_i));
 			_for.body().assign(ret,
-					mappedArgs.get(new Symbol("_0")).invoke("apply").arg(VelkaTuple._velkaTupleTypeExpr(
-							JExpr._new(TypeUtil.instance().typeTupleJClass()).arg(rettype)
-								.arg(JavaTypeSystem.codeInstance().invoke("getType").arg(_e)),
-							ret, _e)));
+					mappedArgs.get(new Symbol("_0")).invoke("apply").arg(VelkaTuple._of(ret, _e)));
 			
 			_method.body()._return(ret);
 		}

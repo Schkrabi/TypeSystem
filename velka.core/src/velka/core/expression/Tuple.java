@@ -348,12 +348,12 @@ public class Tuple extends Expression implements Iterable<Expression>, Collectio
 		
 		for(int i = 0; i < type.size(); i++) {
 			var t = type.get(i);
-			if(t.isRepUncertain()) {
+//			if(t.isRepUncertain()) {
 				tarr.add(JavaTypeSystem.codeInstance().invoke("getType").arg(_data.component(JExpr.lit(i))));
-			}
-			else {
-				tarr.add(TypeUtil.instance().type2java(t));
-			}
+//			}
+//			else {
+//				tarr.add(TypeUtil.instance().type2java(t));
+//			}
 		}
 		var _type = _get.body().decl(TypeUtil.instance().typeTupleJClass(), "_type",
 				JExpr._new(TypeUtil.instance().typeTupleJClass()).arg(tarr));
